@@ -1,32 +1,205 @@
-# Soterix QA Automation - Python Playwright Framework
+# README: Playwright Python Automation for Soterix Systems
 
-This repository contains automated test scripts for the Videonetics VSaaS platform using [Playwright](https://playwright.dev/python/) with **Python 3.11** and **pytest**.
-
-> 🛠️ This repo replaces the legacy Selenium demo with a modern Python-based Playwright testing framework. It follows a Page Object Model structure and supports multi-tenancy, QA Touch integration, and is designed for use by both onshore and offshore QA teams.
+This repository contains the Playwright automation test suite built using **Python 3.11** and **pytest**, structured to support multi-tenancy and environment-specific testing for the Soterix VSAAS Platform. The project is hosted under the GitHub organization `Soterix-Systems`, though it supports the QA goals of **Soterix Systems**.
 
 ---
 
-## ✅ Prerequisites
+## Folder Structure
 
-### 1. 🐍 Install Python 3.11
-- Download from: [https://www.python.org/downloads/release/python-3110/](https://www.python.org/downloads/release/python-3110/)
-- During installation:
-  - ✅ Check **“Add Python to PATH”**
-  - ✅ Ensure **pip** is enabled
+```
+playwright-soterix-qa/
+├── config/
+│   ├── base_config.py          # Dynamically loads the right environment config
+│   └── env/
+│       ├── qa.py               # QA environment base URL
+│       ├── stage.py            # Stage / UAT environment
+│       └── prod.py             # Prod / Demo / User environments
+├── data/
+│   └── acme_login_data.py      # Acme tenant-specific credentials (baseline demo)
+├── logs/
+│   └── env_config.log          # Logs resolved config at runtime
+├── pages/
+│   └── login_page.py           # Page Object for login actions
+├── tests/
+│   ├── test_login.py           # Sample login test (tenant-agnostic for now)
+│   └── test_dashboard.py       # Sample dashboard test (tenant-agnostic for now)
+├── utils/
+│   ├── send_mail.py            # Email report sender (SMTP)
+│   ├── ssh_utility.py          # Remote SSH support
+│   ├── zipfolder.py            # Folders zipped for reports
+│   └── password.txt            # App password for email (excluded from Git)
+├── .gitignore
+├── conftest.py                 # Global fixtures, includes tenant loader
+├── pytest.ini
+├── requirements.txt
+└── venv/                       # Virtual environment (excluded)
+```
 
-### 2. 💻 VS Code Setup (Recommended)
-- Install [Visual Studio Code](https://code.visualstudio.com/)
-- Install the following extensions:
-  - Python
-  - Pylance
-  - Playwright Test for VS Code (optional)
-  
 ---
 
-## 🔧 Environment Setup
+## Setup Instructions
 
-### 1. Create a Virtual Environment
+### 1. Prerequisites
+
+- Python 3.11 installed
+- VS Code installed
+- Git properly configured (repo cloned into local workspace)
+
+### 2. Create and Activate Virtual Environment
+
 ```bash
 python -m venv venv
-venv\Scripts\activate  # On Windows
-source venv/bin/activate  # On Mac/Linux
+source venv/Scripts/activate  # For Git Bash/WSL
+```
+
+### 3. Install Requirements
+
+```bash
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+playwright install
+```
+
+### 4. Run Tests with Dynamic Config
+
+```bash
+# ENV options: qa, stage, prod, uat, demo, user
+# TENANT is optional until tenants are added
+export ENV=uat TENANT=acme
+pytest tests/
+```
+
+---
+
+## How to Use .gitignore (Step-by-Step)
+
+The `.gitignore` file tells Git which files and folders should NOT be tracked or uploaded to the remote repository. This is important for keeping sensitive data secure and the repo clean.
+
+### When to Use It
+
+- To exclude passwords or personal files (like `password.txt`)
+- To avoid syncing virtual environments (like `venv/`)
+- To prevent uploading temporary test reports or logs
+
+### How to Edit the `.gitignore` File
+
+1. Open **VS Code** and make sure your project folder is open.
+2. In the left panel, click the `.gitignore` file. If it doesn't exist, create one:
+   - Right-click on the project root > **New File** > name it `.gitignore`
+3. Add the following lines:
+
+```
+# Ignore Python virtual environment
+venv/
+
+# Ignore environment logs
+logs/
+
+# Ignore email credentials (security)
+utils/password.txt
+
+# Ignore generated test reports
+*.html
+*.zip
+```
+
+4. Save the file (Ctrl + S)
+
+### Apply the Changes to Git
+
+After editing `.gitignore`, Git will not remove already-tracked files automatically. To clean up:
+
+```bash
+git rm --cached utils/password.txt
+```
+
+Then commit the change:
+
+```bash
+git add .gitignore
+git commit -m "Updated .gitignore to exclude sensitive files"
+git push origin main
+```
+
+If this is your first time editing `.gitignore`, this ensures sensitive files like passwords are excluded before they're ever uploaded.
+
+---
+
+## Dynamic Environment Loader
+
+The `base_config.py` file:
+
+- Reads the `ENV` variable.
+- Maps aliases like `uat`, `demo`, `user`, etc. to real config files (`stage.py`, `prod.py`).
+- Logs the resolved file to `logs/env_config.log`
+
+Example log:
+
+```
+[ENV CONFIG] Resolved environment alias 'uat' -> loading config.env.stage
+```
+
+---
+
+## Tenant Login Example (Python-based)
+
+```python
+# data/acme_login_data.py
+login_data = {
+    "username": "acme_admin@soterix.com",
+    "password": "securepass",
+    "expected_landing": "/dashboard"
+}
+```
+
+---
+
+## Tenant Loader in conftest.py
+
+Even though tenants are not yet configured, the project is prepared for multi-tenant testing. The `conftest.py` includes logic that:
+
+- Reads `TENANT` from environment variables
+- Defaults to `acme` if none is provided
+- Loads `data/<tenant>_login_data.py` dynamically
+
+This allows seamless future support for:
+
+```bash
+TENANT=metropolis pytest tests/
+```
+
+Without modifying the core logic or fixtures.
+
+---
+
+## Why Multi-Tenancy Matters
+
+This framework supports:
+
+- Reuse of test logic across **multiple environments** (QA, Stage, Prod).
+- Easy onboarding of **multiple tenants** via separate login data.
+- The objective is to ensure that data from multiple tenants is securely isolated from one another.
+- CI/CD integration using dynamic environment variables.
+
+To add a new tenant:
+
+1. Create a new file like `data/metropolis_login_data.py`
+2. Run with `TENANT=metropolis ENV=prod pytest tests/`
+
+---
+
+## Logging Strategy
+
+- Environment resolution events are logged to `logs/env_config.log`
+- The structure is designed to be extended to capture debug/test logs in the future
+
+---
+
+## Goals Achieved
+
+- 100% Python stack
+- Clean repo synced with Git (.gitignore enforced)
+- Cross-environment, multi-tenant support
+- Aliased configs + logging
+- Ready for QA Touch, Slack, Jira integration
+
