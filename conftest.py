@@ -27,7 +27,7 @@ def env_config():
 @pytest.fixture(scope="session")
 def login_data():
     """Fixture to provide tenant login credentials"""
-    tenant = os.environ.get("TENANT", "acme")
+    tenant = os.environ.get("TENANT", "tenant1")
     logging.info(f"[TENANT CONFIG] Loaded tenant login data for: {tenant}")
     return resolve_tenant_data(tenant)
 

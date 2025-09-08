@@ -15,7 +15,7 @@ playwright-soterix-qa/
 │       ├── stage.py            # Stage / UAT environment
 │       └── prod.py             # Prod / Demo / User environments
 ├── data/
-│   └── acme_login_data.py      # Acme tenant-specific credentials (baseline demo)
+│   └── tenant1_login_data.py   # Tenant1 tenant-specific credentials (baseline demo)
 ├── logs/
 │   └── env_config.log          # Logs resolved config at runtime
 ├── pages/
@@ -65,7 +65,7 @@ playwright install
 ```bash
 # ENV options: qa, stage, prod, uat, demo, user
 # TENANT is optional until tenants are added
-export ENV=uat TENANT=acme
+export ENV=uat TENANT=tenant1
 pytest tests/
 ```
 
@@ -144,9 +144,9 @@ Example log:
 ## Tenant Login Example (Python-based)
 
 ```python
-# data/acme_login_data.py
+# data/tenant1_login_data.py
 login_data = {
-    "username": "acme_admin@soterix.com",
+    "username": "tenant1_admin@soterix.com",
     "password": "securepass",
     "expected_landing": "/dashboard"
 }
@@ -159,7 +159,7 @@ login_data = {
 Even though tenants are not yet configured, the project is prepared for multi-tenant testing. The `conftest.py` includes logic that:
 
 - Reads `TENANT` from environment variables
-- Defaults to `acme` if none is provided
+- Defaults to `tenant1` if none is provided
 - Loads `data/<tenant>_login_data.py` dynamically
 
 This allows seamless future support for:
