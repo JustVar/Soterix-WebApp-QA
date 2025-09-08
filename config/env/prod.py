@@ -1,6 +1,7 @@
 config = {
     "base_url": "https://app.example.invalid/auth/login",
-    "default_user": "", #add user
-    "default_password": "", #add pw
-    "tenant": "tenant1"
+    # For production, you may prefer NOT to store credentials here.
+    # If so, leave these out and pass AUTO_USER/AUTO_PASSWORD via CI secrets.
+    # "default_user": "",
+    # "default_password": ""
 }

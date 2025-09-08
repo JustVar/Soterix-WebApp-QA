@@ -1,52 +1,44 @@
+# config/base_config.py
 import os
 import importlib
 import logging
-from datetime import datetime
+from pathlib import Path
+from dotenv import load_dotenv
 
-# Setup basic logging to file
-LOG_DIR = os.path.join(os.getcwd(), "logs")
-os.makedirs(LOG_DIR, exist_ok=True)
+# Load .env if present (lets you set AUTO_USER/AUTO_PASSWORD, etc.)
+load_dotenv()
 
-log_file_path = os.path.join(LOG_DIR, "env_config.log")
+# Logging setup
+LOG_DIR = Path("logs")
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOG_FILE = LOG_DIR / "env_config.log"
+logging.basicConfig(filename=str(LOG_FILE), level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] %(message)s")
 
-logging.basicConfig(
-    filename=log_file_path,
-    filemode='a',
-    format='[%(asctime)s] %(levelname)s: %(message)s',
-    level=logging.INFO
-)
-
-# Read ENV from environment variable or fallback to "qa"
-ENV = os.getenv("ENV", "qa").lower()
+# Map aliases to real environment modules
+ENV_ALIAS = {
+    "qa":    "config.env.qa",
+    "stage": "config.env.stage",
+    "staging": "config.env.stage",
+    "prod":  "config.env.prod",
+    "production": "config.env.prod",
+    # keep room for future aliases if needed:
+    "uat":   "config.env.stage",   # until a dedicated UAT file exists
+    "demo":  "config.env.prod",
+    "user":  "config.env.prod",
+}
 
 def load_config():
-    try:
-        alias_map = {
-            "qa": "qa",
-            "stage": "stage",
-            "staging": "stage",
-            "uat": "stage",
-            "prod": "prod",
-            "production": "prod",
-            "demo": "prod",
-            "user": "prod"
-        }
+    env = (os.environ.get("ENV") or "qa").strip().lower()
+    module_path = ENV_ALIAS.get(env)
+    if not module_path:
+        raise RuntimeError(f"Unknown ENV '{env}'. Valid: {', '.join(sorted(ENV_ALIAS))}")
+    mod = importlib.import_module(module_path)
+    cfg = getattr(mod, "config", None)
+    if not isinstance(cfg, dict):
+        raise RuntimeError(f"{module_path} must define a dict named 'config'")
+    logging.info(f"[ENV RESOLVED] ENV='{env}' -> {module_path} | base_url={cfg.get('base_url')}")
+    return cfg
 
-        module_name = alias_map.get(ENV)
-        if not module_name:
-            raise ValueError(f"Unsupported ENV: '{ENV}'")
-
-        msg = f"[ENV CONFIG] Resolved environment alias '{ENV}' -> loading config.env.{module_name}"
-        print(msg)
-        logging.info(msg)
-
-        module = importlib.import_module(f"config.env.{module_name}")
-        return module.config
-
-    except Exception as e:
-        error_msg = f"Failed to load config for environment '{ENV}': {e}"
-        logging.error(error_msg)
-        raise RuntimeError(error_msg)
-
-# Global access
-test_config = load_config()
+# Exposed to the rest of the test suite:
+config = load_config()
