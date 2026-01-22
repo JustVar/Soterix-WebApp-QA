@@ -60,6 +60,16 @@ def env_config():
     logging.info(f"[ENV CONFIG] Loaded config for: {os.environ.get('ENV')}")
     return config
 
+
+@pytest.fixture(scope="session")
+def base_url(env_config):
+    """Provide a `base_url` fixture for tests that expect it.
+
+    Many tests call `base_url + '/auth/login'`; return the site root from
+    the active env config so tests can append paths as needed.
+    """
+    return env_config.get("base_url", "")
+
 @pytest.fixture(scope="session")
 def login_data():
     """
@@ -84,3 +94,13 @@ def login(page, env_config, login_data):
     page.click("button[type='submit']")
     page.wait_for_url(f"**{login_data['expected_landing']}**")
     return page
+
+
+@pytest.fixture
+def tenant_login(login_data):
+    """Backward-compatible alias for tests using the old `tenant_login` fixture name.
+
+    Returns the same dict as `login_data` so tests that expect
+    `tenant_login[...]` continue to work unchanged.
+    """
+    return login_data

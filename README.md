@@ -1,3 +1,86 @@
+# Playwright Soterix QA
+
+This repository contains the Playwright automation test suite (Python + pytest) for Soterix VSAAS. It is structured for multi-environment testing and includes Page Objects, fixtures, and pilot smoke tests.
+
+## Quick Setup
+
+Prerequisites
+- Python 3.11+ installed
+- Node.js (for Playwright browsers installer) - recommended LTS
+- Git
+
+Create & activate venv (Windows PowerShell):
+
+```powershell
+python -m venv venv
+venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python -m playwright install chromium
+```
+
+## Configure environments
+
+We support `qa`, `stage`, `prod` and partner `APP_TYPE=partner` variants. By default pilot tests target `qa` (ReCAPTCHA disabled).
+
+Copy template to `.env.qa.local` and fill secrets:
+
+```powershell
+copy .env.qa.template .env.qa.local
+# edit .env.qa.local and populate AUTO_USER/AUTO_PASSWORD
+```
+
+Key env vars
+- `ENV` - `qa|stage|prod`
+- `APP_TYPE` - `customer|partner`
+- `TENANT` - optional tenant name
+- `AUTO_USER` / `AUTO_PASSWORD` - automation credentials
+- `EXPECTED_LANDING` - optional post-login path (default `/dashboard`)
+
+## Run tests (examples)
+
+Run a single login smoke test (headed):
+
+```powershell
+$env:ENV='qa'
+$env:AUTO_USER='qa@soterixsystems.com'
+$env:AUTO_PASSWORD='***REMOVED***'
+python -m pytest tests/auth/software/smoke/test_login_sw_smoke.py -v -s --headed
+```
+
+Run all smoke tests (headless):
+
+```powershell
+$env:ENV='qa'
+pytest tests/**/smoke -q
+```
+
+CI notes
+- Ensure `python -m playwright install chromium` runs in CI.
+- Use CI secrets for `AUTO_USER` and `AUTO_PASSWORD`.
+
+## Current test structure
+
+- `tests/auth/` - login/auth smoke and regression
+- `tests/views/` - video-wall / camera playback tests (replaces CameraPage)
+- `tests/events/` - events page tests
+- `tests/media/` - media/clip tests
+- `tests/shared/pages/` - Playwright Page Objects (LoginPage, EventsPage, ViewsPage, etc.)
+
+## ReCAPTCHA handling
+
+- Production/stage include Google reCAPTCHA that blocks automated UI login.
+- For reliable automation use QA where reCAPTCHA is disabled, or ask devs to provide a test key or an auth API to bypass UI login.
+- The project contains a best-effort reCAPTCHA checkbox click in `tests/shared/pages/login_page.py` and a debug helper `scripts/debug_login_playwright.py` that saves screenshots and page HTML.
+
+## Next steps
+
+1. Implement `ViewsPage` and `tests/views/...` smoke test.
+2. Add API token login fixture to bypass UI reCAPTCHA in CI.
+3. Add CI artifact capture on test failures (screenshots + HTML) in `conftest.py`.
+
+---
+For more details see `IMPLEMENTATION_ROADMAP.md` and `ANALYSIS_SCREENSHOTS.md`.
 # README: Playwright Python Automation for Soterix Systems
 
 This repository contains the Playwright automation test suite built using **Python 3.11** and **pytest**, structured to support multi-tenancy and environment-specific testing for the Soterix VSAAS Platform. The project is hosted under the GitHub organization `Soterix-Systems`, though it supports the QA goals of **Soterix Systems**.
@@ -68,6 +151,41 @@ playwright install
 export ENV=uat TENANT=tenant1
 pytest tests/
 ```
+
+---
+
+## Staging (Primary) Setup
+
+Use `stage` as the primary test environment locally and in CI. The repository default `ENV` has been changed to `stage` so running `pytest` without setting `ENV` will target staging.
+
+Local example (Windows PowerShell):
+
+```powershell
+$env:ENV='stage'
+$env:TENANT='tenant1'   # optional
+pytest -q
+```
+
+CI snippet (install Chromium and run headless Chrome only):
+
+```yaml
+# Example CI steps (generic)
+- name: Install Python deps
+    run: python -m pip install -r requirements.txt
+
+- name: Install Playwright Chromium
+    run: playwright install chromium
+
+- name: Run tests (Chrome headless)
+    run: pytest -q
+    env:
+        ENV: stage
+        TENANT: tenant1   # set as needed or use CI secrets for credentials
+```
+
+Notes:
+- The `base_url` in the environment configs points to the site root (e.g., https://staging.example.invalid). Tests append paths such as `/auth/login`.
+- `pytest.ini` now includes `--headless` so CI runs headless Chrome by default.
 
 ---
 

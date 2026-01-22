@@ -1,1 +1,5 @@
-[]
+[
+  "tests/auth/software/smoke/test_login_sw_smoke.py::test_login_sw_smoke[chromium]",
+  "tests/cameras/software/smoke/test_play_camera_smoke.py::test_play_camera_smoke[chromium]",
+  "tests/test_login.py::test_login[chromium]"
+]

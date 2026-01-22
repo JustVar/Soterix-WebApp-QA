@@ -29,15 +29,28 @@ ENV_ALIAS = {
 }
 
 def load_config():
-    env = (os.environ.get("ENV") or "qa").strip().lower()
+    env = (os.environ.get("ENV") or "stage").strip().lower()
+    app_type = (os.environ.get("APP_TYPE") or "customer").strip().lower()
+
     module_path = ENV_ALIAS.get(env)
     if not module_path:
         raise RuntimeError(f"Unknown ENV '{env}'. Valid: {', '.join(sorted(ENV_ALIAS))}")
-    mod = importlib.import_module(module_path)
+
+    # If partner app_type requested, load partner-specific config module
+    if app_type == "partner":
+        # e.g. config.env.stage -> config.env.stage_pat
+        module_path = module_path + "_pat"
+
+    try:
+        mod = importlib.import_module(module_path)
+    except ModuleNotFoundError as e:
+        raise RuntimeError(f"Config module not found for ENV='{env}', APP_TYPE='{app_type}': {module_path}") from e
+
     cfg = getattr(mod, "config", None)
     if not isinstance(cfg, dict):
         raise RuntimeError(f"{module_path} must define a dict named 'config'")
-    logging.info(f"[ENV RESOLVED] ENV='{env}' -> {module_path} | base_url={cfg.get('base_url')}")
+
+    logging.info(f"[ENV RESOLVED] ENV='{env}' APP_TYPE='{app_type}' -> {module_path} | base_url={cfg.get('base_url')}")
     return cfg
 
 # Exposed to the rest of the test suite:
