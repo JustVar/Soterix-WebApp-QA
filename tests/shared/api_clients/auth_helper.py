@@ -31,84 +31,49 @@ class AuthHelper:
 
     def login(self, email: str, password: str) -> str:
         """Login using API and return bearer token. Caches token per instance.
-
         Attempt the central login endpoint first and fall back to SSO if
-        central explicitly returns 404. Per QA guidance, try the QA lab user
-        `qa@soterixsystems.com` first, then fall back to the provided
-        credentials if needed.
+        central explicitly returns 404. Uses the single credential passed
+        in (no hardcoded fallbacks).
         """
         if self._token and time.time() < self._token_expiry - 30:
             return self._token
+        central_url = f"{self.base_url}/REST/central/user/auth/login"
+        payload = {"username": email, "password": password}
+        masked = {"username": email, "password": "***"}
+        print(f"AUTH TRY central -> url={central_url} body={masked}")
+        try:
+            r = requests.post(central_url, json=payload, timeout=15, verify=_VERIFY)
+            print(f"AUTH RESP central -> status={r.status_code} body={r.text[:800]}")
+        except Exception as e:
+            raise
 
-        # Credentials to try, in order: the provided QA account, QA lab account,
-        # then the credentials passed into the function.
-        candidates = [
-            ("qa@soterixsystems.com", "***REMOVED***"),
-            ("qa@soterixsystems.com", password),
-            (email, password),
-        ]
-
-        last_exc = None
-        for user, pwd in candidates:
-            central_url = f"{self.base_url}/REST/central/user/auth/login"
-            payload = {"username": user, "password": pwd}
-            params = {"username": user, "password": pwd}
-            # Print request info (mask password)
-            masked = {k: ("***" if k == "password" else v) for k, v in payload.items()}
-            params_str = "{" + f"'username': '{user}', 'password': '***'" + "}"
-            print(f"AUTH TRY central -> url={central_url} params={params_str} body={masked}")
+        # If central explicitly not found, try SSO
+        if r.status_code == 404:
+            sso_url = f"{self.base_url}/REST/sso/login"
+            print(f"AUTH FALLBACK -> trying SSO url={sso_url} body={masked}")
             try:
-                r = requests.post(central_url, params=params, json=payload, timeout=15, verify=_VERIFY)
-                print(f"AUTH RESP central -> status={r.status_code} body={r.text[:800]}")
-            except Exception as e:
-                last_exc = e
-                continue
-
-            # If central explicitly not found, try SSO
-            if r.status_code == 404:
-                try:
-                    sso_url = f"{self.base_url}/REST/sso/login"
-                    sso_body = {"username": user, "password": pwd}
-                    masked_sso = {"username": user, "password": "***"}
-                    print(f"AUTH FALLBACK -> trying SSO url={sso_url} body={masked_sso}")
-                    r2 = requests.post(sso_url, json=sso_body, timeout=15, verify=_VERIFY)
-                    print(f"AUTH RESP sso -> status={r2.status_code} body={r2.text[:800]}")
-                except Exception as e2:
-                    last_exc = e2
-                    continue
-                try:
-                    r2.raise_for_status()
-                    body = r2.json()
-                    token = body.get("token") or body.get("access_token") or body.get("data", {}).get("token")
-                    if token:
-                        print(f"AUTH SUCCESS sso -> user={user}")
-                        self._token = token
-                        self._token_expiry = time.time() + 1800
-                        return token
-                    last_exc = RuntimeError(f"SSO login did not return token: {body}")
-                    continue
-                except Exception as e3:
-                    last_exc = e3
-                    continue
-
-            # For other central responses, validate and parse
-            try:
-                r.raise_for_status()
-                body = r.json()
+                r2 = requests.post(sso_url, json=payload, timeout=15, verify=_VERIFY)
+                print(f"AUTH RESP sso -> status={r2.status_code} body={r2.text[:800]}")
+                r2.raise_for_status()
+                body = r2.json()
                 token = body.get("token") or body.get("access_token") or body.get("data", {}).get("token")
-                if not token:
-                    last_exc = RuntimeError(f"Login did not return token: {body}")
-                    continue
-                self._token = token
-                self._token_expiry = time.time() + 1800
-                return token
-            except Exception as e:
-                last_exc = e
-                continue
+                if token:
+                    self._token = token
+                    self._token_expiry = time.time() + 1800
+                    return token
+                raise RuntimeError(f"SSO login did not return token: {body}")
+            except Exception:
+                raise
 
-        if last_exc:
-            raise last_exc
-        raise RuntimeError("Login failed for all attempted credential variants")
+        # For other central responses, validate and parse
+        r.raise_for_status()
+        body = r.json()
+        token = body.get("token") or body.get("access_token") or body.get("data", {}).get("token")
+        if not token:
+            raise RuntimeError(f"Login did not return token: {body}")
+        self._token = token
+        self._token_expiry = time.time() + 1800
+        return token
 
     def get_authenticated_client(self, credentials: dict, client_class):
         token = self.login(credentials["username"], credentials["password"])

@@ -73,17 +73,15 @@ def base_url(env_config):
 @pytest.fixture(scope="session")
 def login_data():
     """
-    Credentials source:
-      - If TENANT is set -> load data/<TENANT>_login_data.py
-      - Else -> 'no-tenant' mode via env vars or env config defaults
+    Credentials source (per-user): read from environment variables `QA_USER` and `QA_PASSWORD`.
+    This fixture requires these to be set (e.g., via a `.env` file).
     """
-    tenant = (os.environ.get("TENANT") or "").strip()
-    if tenant:
-        logging.info(f"[TENANT CONFIG] Using tenant file for: {tenant}")
-        return resolve_tenant_data(tenant)
-
-    logging.info("[TENANT CONFIG] No tenant specified; using no-tenant mode.")
-    return build_no_tenant_login_data()
+    user = os.environ.get("QA_USER")
+    password = os.environ.get("QA_PASSWORD")
+    if not user or not password:
+        raise ValueError("QA_USER and QA_PASSWORD must be set in environment or .env file. See .env.template")
+    logging.info("[TENANT CONFIG] Using QA_USER from environment")
+    return {"username": user, "password": password, "expected_landing": os.environ.get("EXPECTED_LANDING", "/dashboard")} 
 
 @pytest.fixture
 def login(page, env_config, login_data):
