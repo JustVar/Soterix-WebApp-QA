@@ -4,6 +4,12 @@ playwright
 python-dotenv
 pytest-html
 pytest-xdist
-requests       # remove if no API calls are needed
-paramiko       # only if you will use ssh_utility.py
-scp            # only if you will use ssh_utility.py
+requests
+paramiko
+scp
+pytest-rerunfailures
+jira
+jsonschema
+lxml
+msal
+msgraph-core

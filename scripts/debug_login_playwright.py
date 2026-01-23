@@ -38,7 +38,9 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
-        context = browser.new_context(viewport={"width": 1280, "height": 900})
+        # record HAR for network inspection
+        har_path = os.path.join("logs", "debug_login.har")
+        context = browser.new_context(viewport={"width": 1280, "height": 900}, record_har_path=har_path)
         page = context.new_page()
         print("Navigating to", login_url)
         page.goto(login_url)
@@ -84,7 +86,63 @@ def main():
             print("Click failed:", e)
 
         # wait a bit for any navigation / SPA activity
-        time.sleep(8)
+        time.sleep(2)
+
+        # collect cookies
+        try:
+            cookies = context.cookies()
+            print("\n--- Cookies ---")
+            for c in cookies:
+                print(f"name={c.get('name')} value={c.get('value')} domain={c.get('domain')}")
+        except Exception as e:
+            print("Failed to read cookies:", e)
+
+        # collect localStorage
+        try:
+            ls = page.evaluate("() => JSON.stringify(window.localStorage)")
+            print("\n--- localStorage ---")
+            if ls:
+                try:
+                    import json
+                    obj = json.loads(ls)
+                    for k, v in obj.items():
+                        print(f"{k}: {v}")
+                except Exception:
+                    print(ls)
+            else:
+                print("(no localStorage)")
+        except Exception as e:
+            print("Failed to read localStorage:", e)
+
+        # collect sessionStorage
+        try:
+            ss = page.evaluate("() => JSON.stringify(window.sessionStorage)")
+            print("\n--- sessionStorage ---")
+            if ss:
+                try:
+                    import json
+                    obj = json.loads(ss)
+                    for k, v in obj.items():
+                        print(f"{k}: {v}")
+                except Exception:
+                    print(ss)
+            else:
+                print("(no sessionStorage)")
+        except Exception as e:
+            print("Failed to read sessionStorage:", e)
+
+        # inspect network requests for Authorization header
+        print("\n--- Inspecting recent network requests for Authorization headers ---")
+        try:
+            # Use HAR file later; also inspect in-memory requests via route if needed
+            # Print HAR path for manual inspection
+            print("HAR saved to:", har_path)
+        except Exception:
+            pass
+
+        # keep browser open for manual inspection
+        print("Keeping browser open for 10s for manual inspection...")
+        time.sleep(10)
 
         # Save debug artifacts
         os.makedirs("logs", exist_ok=True)

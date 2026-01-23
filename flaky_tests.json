@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "created": "2026-01-23T00:00:00Z",
+    "confidence_threshold": 0.7,
+    "min_consecutive_failures": 2,
+    "history_keep": 10
+  },
+  "tests": {
+    "#example/tests/test_login.py::test_login_sw_smoke": {
+      "tags": ["smoke", "auth"],
+      "last_runs": [
+        {"ts": "2026-01-22T12:00:00Z", "result": "pass", "env": "qa"},
+        {"ts": "2026-01-22T12:05:00Z", "result": "fail", "env": "qa"}
+      ],
+      "notes": "example entry; real failures appended by tools/update_failure_history.py"
+    }
+  }
+}

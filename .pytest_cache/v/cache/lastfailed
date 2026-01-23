@@ -1,3 +1,4 @@
 {
-  "tests/test_login.py::test_login[chromium]": true
+  "tests/test_login.py::test_login[chromium]": true,
+  "tests/api/smoke/test_user_apis.py::test_get_user_session": true
 }

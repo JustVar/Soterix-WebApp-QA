@@ -104,3 +104,61 @@ def tenant_login(login_data):
     `tenant_login[...]` continue to work unchanged.
     """
     return login_data
+
+
+# ----------------
+# API Testing Fixtures
+# ----------------
+import tests.shared.api_clients.auth_helper as auth_helper_mod
+import tests.shared.api_clients.dashboard_api as dashboard_mod
+import tests.shared.api_clients.camera_api as camera_mod
+import tests.shared.api_clients.user_api as user_mod
+import tests.shared.api_clients.search_api as search_mod
+
+
+@pytest.fixture(scope="session")
+def api_base_url(env_config):
+    return env_config.get('base_url')
+
+
+@pytest.fixture(scope="session")
+def api_auth_token(api_base_url, login_data):
+    helper = auth_helper_mod.AuthHelper(api_base_url)
+    try:
+        token = helper.login(login_data['username'], login_data['password'])
+        return token
+    except Exception as e:
+        print(f"API login failed, falling back to UI login: {e}")
+        # Use Playwright-driven UI login to obtain a token when API auth is broken
+        token = helper.login_via_ui(login_data['username'], login_data['password'])
+        return token
+
+
+@pytest.fixture
+def dashboard_api(api_base_url, api_auth_token):
+    return dashboard_mod.DashboardAPI(api_base_url, api_auth_token)
+
+
+@pytest.fixture
+def camera_api(api_base_url, api_auth_token):
+    return camera_mod.CameraAPI(api_base_url, api_auth_token)
+
+
+@pytest.fixture
+def user_api(api_base_url, api_auth_token):
+    return user_mod.UserAPI(api_base_url, api_auth_token)
+
+
+@pytest.fixture
+def search_api(api_base_url, api_auth_token):
+    return search_mod.SearchAPI(api_base_url, api_auth_token)
+
+
+@pytest.fixture
+def test_site_id():
+    return 1
+
+
+@pytest.fixture
+def test_channel_ids():
+    return [1, 2, 3, 4, 5, 6]
