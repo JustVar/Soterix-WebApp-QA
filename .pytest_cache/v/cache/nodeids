@@ -1,5 +1,6 @@
 [
   "tests/api/smoke/test_dashboard_apis.py::test_get_site_status",
+  "tests/api/smoke/test_user_apis.py::test_get_enterprise_id_dynamic",
   "tests/api/smoke/test_user_apis.py::test_get_user_roles",
   "tests/api/smoke/test_user_apis.py::test_get_user_session",
   "tests/auth/software/smoke/test_login_sw_smoke.py::test_login_sw_smoke[chromium]",

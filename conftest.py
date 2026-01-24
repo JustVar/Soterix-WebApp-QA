@@ -119,7 +119,8 @@ import tests.shared.api_clients.enterprise_helper as enterprise_mod
 
 @pytest.fixture(scope="session")
 def api_base_url(env_config):
-    return env_config.get('base_url')
+    # Prefer explicit api_base_url (includes /v-apiserver) if provided by env config
+    return env_config.get('api_base_url', env_config.get('base_url'))
 
 
 @pytest.fixture(scope="session")
