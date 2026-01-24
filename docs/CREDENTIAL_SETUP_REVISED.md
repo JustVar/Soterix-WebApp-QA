@@ -29,3 +29,10 @@ python -m pytest tests/api/smoke/test_user_apis.py::test_get_user_session -v -s 
 - NEVER commit `.env` file
 - Each person maintains their own `.env`
 - Contact your team lead if you need credentials
+
+## Site Access Note
+
+- QA environment: Different accounts see different sites (separate edge boxes)
+- `qa-lab` account: Sees "Driver Site" (US QA Lab edge box)
+- Other accounts: May see India-based sites
+- Stage/Prod: All accounts typically see the same sites

@@ -1,4 +1,11 @@
 [
+  "tests/api/smoke/test_camera_apis.py::test_get_camera_snapshot",
+  "tests/api/smoke/test_camera_apis.py::test_get_camera_tree",
+  "tests/api/smoke/test_dashboard_apis.py::test_get_shared_widgets",
+  "tests/api/smoke/test_dashboard_apis.py::test_get_site_status",
+  "tests/api/smoke/test_search_api.py::test_search_person_basic",
+  "tests/api/smoke/test_search_api.py::test_search_vehicle_basic",
+  "tests/api/smoke/test_user_apis.py::test_get_user_roles",
   "tests/api/smoke/test_user_apis.py::test_get_user_session",
   "tests/auth/software/smoke/test_login_sw_smoke.py::test_login_sw_smoke[chromium]",
   "tests/cameras/software/smoke/test_play_camera_smoke.py::test_play_camera_smoke[chromium]",

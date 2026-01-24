@@ -28,52 +28,158 @@ class AuthHelper:
         self.base_url = b
         self._token: Optional[str] = None
         self._token_expiry: float = 0.0
+        # Session cache settings
+        self.CACHE_FILE = ".session_cache"
+        self.CACHE_MAX_AGE_HOURS = 8
 
+    def _load_cached_token(self) -> Optional[str]:
+        """Load token from cache if valid"""
+        import json as _json
+        import time as _time
+
+        print("[AUTH CACHE] Checking for cached token...")
+        print(f"[AUTH CACHE] Cache file exists: {os.path.exists(self.CACHE_FILE)}")
+        if not os.path.exists(self.CACHE_FILE):
+            return None
+
+        try:
+            with open(self.CACHE_FILE, "r", encoding="utf-8") as f:
+                cache = _json.load(f)
+
+            print(f"[AUTH CACHE] Loaded: {cache}")
+
+            cached_time = cache.get("timestamp", 0)
+            age_hours = (time.time() - cached_time) / 3600
+            if age_hours > self.CACHE_MAX_AGE_HOURS:
+                print(f"[AUTH] Cache expired ({age_hours:.1f} hours old)")
+                try:
+                    os.remove(self.CACHE_FILE)
+                except Exception:
+                    pass
+                return None
+
+            token = cache.get("token")
+            base_url = cache.get("base_url")
+
+            print(f"[AUTH CACHE] Base URL match: {base_url} == {self.base_url}")
+
+            # Ensure cached token is for the same base_url
+            if base_url and base_url != self.base_url:
+                print(f"[AUTH] Cache entry base_url mismatch: {base_url} != {self.base_url}")
+                return None
+
+            # Quick validation
+            if token and self._validate_token(token):
+                print(f"[AUTH] Using cached token ({age_hours:.1f} hours old)")
+                return token
+            else:
+                print("[AUTH] Cached token invalid, will re-login")
+                try:
+                    os.remove(self.CACHE_FILE)
+                except Exception:
+                    pass
+                return None
+
+        except Exception as e:
+            print(f"[AUTH] Cache read error: {e}")
+            return None
+
+    def _save_token_to_cache(self, token: str) -> None:
+        """Save token to cache"""
+        import json as _json
+        import time as _time
+
+        cache = {"token": token, "base_url": self.base_url, "timestamp": time.time()}
+        try:
+            with open(self.CACHE_FILE, "w", encoding="utf-8") as f:
+                _json.dump(cache, f)
+            print("[AUTH] Token saved to cache")
+        except Exception as e:
+            print(f"[AUTH] Failed to save token cache: {e}")
+
+    def _validate_token(self, token: str) -> bool:
+        """Quick check if token is still valid"""
+        try:
+            headers = {"Cookie": f"JSESSIONID={token}"}
+            url = f"{self.base_url}/REST/central/user/session"
+            r = requests.get(url, headers=headers, verify=_VERIFY, timeout=10)
+            return r.status_code == 200
+        except Exception:
+            return False
     def login(self, email: str, password: str) -> str:
-        """Login using API and return bearer token. Caches token per instance.
-        Attempt the central login endpoint first and fall back to SSO if
-        central explicitly returns 404. Uses the single credential passed
-        in (no hardcoded fallbacks).
+        """Login using API and return bearer/JSESSION token.
+
+        Flow:
+        1) Try cached token
+        2) Try API login (central -> sso)
+        3) Fallback to UI login
         """
+        # 1) Try cached token first
+        cached = self._load_cached_token()
+        if cached:
+            self._token = cached
+            self._token_expiry = time.time() + 1800
+            print("[AUTH] Returning cached token")
+            return cached
+
+        # 2) If in-memory token still fresh, use it
         if self._token and time.time() < self._token_expiry - 30:
             return self._token
-        central_url = f"{self.base_url}/REST/central/user/auth/login"
+
         payload = {"username": email, "password": password}
         masked = {"username": email, "password": "***"}
-        print(f"AUTH TRY central -> url={central_url} body={masked}")
+
+        # Try API login (central then SSO). If anything goes wrong, fall back to UI.
         try:
+            central_url = f"{self.base_url}/REST/central/user/auth/login"
+            print(f"AUTH TRY central -> url={central_url} body={masked}")
             r = requests.post(central_url, json=payload, timeout=15, verify=_VERIFY)
             print(f"AUTH RESP central -> status={r.status_code} body={r.text[:800]}")
-        except Exception as e:
-            raise
 
-        # If central explicitly not found, try SSO
-        if r.status_code == 404:
-            sso_url = f"{self.base_url}/REST/sso/login"
-            print(f"AUTH FALLBACK -> trying SSO url={sso_url} body={masked}")
-            try:
+            # If central not found, try SSO
+            if r.status_code == 404:
+                sso_url = f"{self.base_url}/REST/sso/login"
+                print(f"AUTH FALLBACK -> trying SSO url={sso_url} body={masked}")
                 r2 = requests.post(sso_url, json=payload, timeout=15, verify=_VERIFY)
                 print(f"AUTH RESP sso -> status={r2.status_code} body={r2.text[:800]}")
                 r2.raise_for_status()
                 body = r2.json()
                 token = body.get("token") or body.get("access_token") or body.get("data", {}).get("token")
-                if token:
-                    self._token = token
-                    self._token_expiry = time.time() + 1800
-                    return token
-                raise RuntimeError(f"SSO login did not return token: {body}")
-            except Exception:
-                raise
+            else:
+                r.raise_for_status()
+                body = r.json()
+                token = body.get("token") or body.get("access_token") or body.get("data", {}).get("token")
 
-        # For other central responses, validate and parse
-        r.raise_for_status()
-        body = r.json()
-        token = body.get("token") or body.get("access_token") or body.get("data", {}).get("token")
-        if not token:
-            raise RuntimeError(f"Login did not return token: {body}")
-        self._token = token
-        self._token_expiry = time.time() + 1800
-        return token
+            if token:
+                self._token = token
+                self._token_expiry = time.time() + 1800
+                try:
+                    self._save_token_to_cache(self._token)
+                except Exception:
+                    pass
+                return token
+            else:
+                print("[AUTH] API login did not return a token; will try UI fallback")
+        except Exception as e:
+            print(f"[AUTH] API login failed: {e}; will try UI fallback")
+
+        # 3) Fallback to UI login
+        try:
+            print("[AUTH] Falling back to UI login")
+            token = self.login_via_ui(email, password)
+            if token:
+                self._token = token
+                self._token_expiry = time.time() + 1800
+                try:
+                    self._save_token_to_cache(self._token)
+                except Exception:
+                    pass
+                return token
+        except Exception as e:
+            print(f"[AUTH] UI login failed: {e}")
+            raise
+
+        raise RuntimeError("All login methods failed to obtain a token")
 
     def get_authenticated_client(self, credentials: dict, client_class):
         token = self.login(credentials["username"], credentials["password"])
@@ -409,6 +515,11 @@ class AuthHelper:
         # Cache token (JSESSIONID or token-like)
         self._token = token
         self._token_expiry = time.time() + 1800
+        try:
+            # persist UI-obtained token to cache so subsequent runs reuse it
+            self._save_token_to_cache(self._token)
+        except Exception:
+            pass
 
         # Validate by calling central user session with Cookie header if token looks like a JSESSIONID
         try:

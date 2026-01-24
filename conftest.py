@@ -112,6 +112,7 @@ import tests.shared.api_clients.dashboard_api as dashboard_mod
 import tests.shared.api_clients.camera_api as camera_mod
 import tests.shared.api_clients.user_api as user_mod
 import tests.shared.api_clients.search_api as search_mod
+import tests.shared.api_clients.site_helper as site_helper
 
 
 @pytest.fixture(scope="session")
@@ -120,43 +121,109 @@ def api_base_url(env_config):
 
 
 @pytest.fixture(scope="session")
-def api_auth_token(api_base_url, login_data):
+def api_auth_helper(api_base_url):
+    """Provide a single `AuthHelper` instance for the entire test session."""
     helper = auth_helper_mod.AuthHelper(api_base_url)
+    print("[FIXUP] Created session-scoped AuthHelper")
+    return helper
+
+
+@pytest.fixture(scope="session")
+def api_auth_token(api_auth_helper, login_data):
+    # Use the shared session-scoped AuthHelper
+    helper = api_auth_helper
+    print("[FIXUP] api_auth_token fixture starting; using shared AuthHelper")
     try:
         token = helper.login(login_data['username'], login_data['password'])
+        print("[FIXUP] api_auth_token obtained token")
         return token
     except Exception as e:
-        print(f"API login failed, falling back to UI login: {e}")
-        # Use Playwright-driven UI login to obtain a token when API auth is broken
+        print(f"API login failed in fixture, falling back to UI login: {e}")
         token = helper.login_via_ui(login_data['username'], login_data['password'])
         return token
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def dashboard_api(api_base_url, api_auth_token):
     return dashboard_mod.DashboardAPI(api_base_url, api_auth_token)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def camera_api(api_base_url, api_auth_token):
     return camera_mod.CameraAPI(api_base_url, api_auth_token)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def user_api(api_base_url, api_auth_token):
     return user_mod.UserAPI(api_base_url, api_auth_token)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def search_api(api_base_url, api_auth_token):
     return search_mod.SearchAPI(api_base_url, api_auth_token)
 
 
-@pytest.fixture
-def test_site_id():
-    return 1
+@pytest.fixture(scope="session")
+def test_site_id(user_api, camera_api, login_data):
+    """Discover a site id the logged-in user can access.
+
+    Steps:
+    - Attempt to read assigned sites via `get_available_sites`.
+    - If none found, probe a small range of site ids with `camera_api.get_camera_tree`
+      and return the first site id that succeeds.
+    """
+    # Prefer known QA site for QA environment to speed up tests
+    import os as _os
+    if _os.environ.get("ENV", "").lower() == "qa":
+        return 110
+
+    sites = site_helper.get_available_sites(user_api)
+    if sites:
+        first = sites[0]
+        for k in ("siteId", "site_id", "id"):
+            if isinstance(first, dict) and k in first:
+                return first.get(k)
+    # If no sites returned from API, probe candidate site ids (small range)
+    for candidate in range(1, 51):
+        try:
+            tree = camera_api.get_camera_tree(candidate)
+            # If no exception and response seems valid, accept candidate
+            if tree:
+                return candidate
+        except Exception:
+            continue
+    # As a last resort, if using known qa-lab account, return a conservative default
+    username = login_data.get("username", "")
+    if "qa-lab" in username:
+        # Driver Site is typically on a different edge; prefer candidate 2
+        return 2
+    raise RuntimeError("Unable to discover a test site id for the current user")
 
 
-@pytest.fixture
-def test_channel_ids():
-    return [1, 2, 3, 4, 5, 6]
+@pytest.fixture(scope="session")
+def test_channel_ids(camera_api, test_site_id):
+    """Return channel ids for the selected test site."""
+    try:
+        tree = camera_api.get_camera_tree(test_site_id)
+    except Exception:
+        return [1]
+    ids = set()
+    # tree may be dict or list; try common shapes
+    if isinstance(tree, dict):
+        # common wrapper 'result'
+        candidates = tree.get("result") or tree.get("channels") or []
+    elif isinstance(tree, list):
+        candidates = tree
+    else:
+        candidates = []
+    for item in candidates:
+        if not isinstance(item, dict):
+            continue
+        for k in ("channelId", "id", "channel_id"):
+            v = item.get(k)
+            if isinstance(v, int):
+                ids.add(v)
+    if not ids:
+        # fallback
+        return [1]
+    return sorted(list(ids))
