@@ -61,3 +61,24 @@ Channel IDs appear to be assigned sequentially based on the order cameras are au
 | 17-22 | Hanwha_7, _Multi_1.1-1.4, _8 | Hanwha |
 | 23-24 | Axis_1, _2 | Axis |
 | 25 | Avigilon Video Intercom | Avigilon |
+
+## Discovery & Dynamic Environments
+
+The test suite supports dynamic camera/site topologies via a `DiscoveryHelper`.
+It attempts to discover sites and channels at session startup and prefers channels
+that expose a `snapUrl` (snapshot-capable). Discovery is cached for the test
+session to avoid repeated API calls.
+
+CLI tool: `tools/discover_cameras.py` can be used to inspect a site's cameras and
+their snapshot capability.
+
+Usage:
+
+```powershell
+python tools/discover_cameras.py --env qa
+python tools/discover_cameras.py --env staging --site 120
+```
+
+Tests adapt automatically when cameras are added/removed; the `test_channel_ids`
+fixture picks snapshot-capable channels first, then falls back to any channel
+ids discovered for the site.

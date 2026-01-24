@@ -113,6 +113,7 @@ import tests.shared.api_clients.camera_api as camera_mod
 import tests.shared.api_clients.user_api as user_mod
 import tests.shared.api_clients.search_api as search_mod
 import tests.shared.api_clients.site_helper as site_helper
+import tests.shared.api_clients.discovery_helper as discovery_mod
 
 
 @pytest.fixture(scope="session")
@@ -201,29 +202,31 @@ def test_site_id(user_api, camera_api, login_data):
 
 
 @pytest.fixture(scope="session")
-def test_channel_ids(camera_api, test_site_id):
-    """Return channel ids for the selected test site."""
+@pytest.fixture(scope="session")
+def discovery_helper(api_base_url, api_auth_token):
+    """Session-scoped DiscoveryHelper wrapping a simple BaseAPI client."""
+    from tests.shared.api_clients.base_api_client import BaseAPIClient
+    client = BaseAPIClient(api_base_url, api_auth_token)
+    return discovery_mod.DiscoveryHelper(client)
+
+
+@pytest.fixture(scope="session")
+def test_channel_ids(discovery_helper, test_site_id):
+    """Return channel ids for the selected test site, preferring snapshot-capable channels."""
+    # Prefer channels that expose a snapshot URL
     try:
-        tree = camera_api.get_camera_tree(test_site_id)
+        snapshot_ids = discovery_helper.get_snapshot_capable_channels(test_site_id)
     except Exception:
-        return [1]
-    ids = set()
-    # tree may be dict or list; try common shapes
-    if isinstance(tree, dict):
-        # common wrapper 'result'
-        candidates = tree.get("result") or tree.get("channels") or []
-    elif isinstance(tree, list):
-        candidates = tree
-    else:
-        candidates = []
-    for item in candidates:
-        if not isinstance(item, dict):
-            continue
-        for k in ("channelId", "id", "channel_id"):
-            v = item.get(k)
-            if isinstance(v, int):
-                ids.add(v)
-    if not ids:
-        # fallback
-        return [1]
-    return sorted(list(ids))
+        snapshot_ids = []
+    if snapshot_ids:
+        return sorted(snapshot_ids)
+
+    try:
+        ids = discovery_helper.get_site_channels(test_site_id)
+    except Exception:
+        ids = []
+    if ids:
+        return sorted(ids)
+
+    # fallback
+    return [1]
