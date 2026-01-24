@@ -174,6 +174,35 @@ def enterprise_helper(api_base_url, api_auth_token):
 
 
 @pytest.fixture(scope="session")
+def site_discovery(api_base_url, api_auth_token):
+    """Session-scoped SiteDiscovery for auto-discovering user sites."""
+    from tests.shared.api_clients.site_discovery import SiteDiscovery
+    return SiteDiscovery(api_base_url, api_auth_token)
+
+
+@pytest.fixture(scope="session")
+def discovered_site(site_discovery, login_data):
+    """Auto-discovered default site for the logged-in user."""
+    user_email = login_data.get("username")
+    site = site_discovery.get_default_site(user_email)
+    if not site:
+        pytest.skip(f"No sites found for user {user_email}")
+    return site
+
+
+@pytest.fixture(scope="session")
+def discovered_site_id(discovered_site):
+    """Auto-discovered site ID."""
+    return discovered_site.get("siteId")
+
+
+@pytest.fixture(scope="session")
+def discovered_enterprise_id(discovered_site):
+    """Auto-discovered enterprise ID from the user's default site."""
+    return discovered_site.get("enterpriseId")
+
+
+@pytest.fixture(scope="session")
 def test_enterprise_id(enterprise_helper, test_site_id):
     """Dynamically fetched enterpriseId for the test site."""
     return enterprise_helper.get_enterprise_id(test_site_id)

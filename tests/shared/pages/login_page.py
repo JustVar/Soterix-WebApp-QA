@@ -14,7 +14,7 @@ class LoginPage:
         self.page.goto(base_url.rstrip("/") + path)
         return self
 
-    def login(self, username: str, password: str):
+    def login(self, username: str, password: str, max_recaptcha_retries: int = 3):
         """Fill credentials using robust Playwright selectors and submit.
 
         Uses get_by_placeholder / get_by_role where possible and falls
@@ -48,51 +48,109 @@ class LoginPage:
             except Exception:
                 pytest.skip("No password field found on login page")
 
-        # Try to handle reCAPTCHA checkbox (QA shows a checkbox inside an iframe).
-        # Selector observed in debug HTML: iframe[title="reCAPTCHA"] with inner
-        # element #recaptcha-anchor. We attempt to click it and wait for the
-        # g-recaptcha-response textarea to be populated as an indication the
-        # checkbox was checked.
-        try:
-            frame_loc = p.frame_locator("iframe[title='reCAPTCHA']")
-            anchor = frame_loc.locator("#recaptcha-anchor")
-            if anchor.count():
+        # Handle reCAPTCHA with retries
+        recaptcha_success = self._handle_recaptcha(max_retries=max_recaptcha_retries)
+        if recaptcha_success:
+            print("[UI LOGIN] ReCAPTCHA verified successfully")
+        else:
+            print("[UI LOGIN] ReCAPTCHA not verified, attempting login anyway")
+
+        # Do NOT click submit here - let auth_helper handle it after ReCAPTCHA is verified
+        return self
+
+    def _handle_recaptcha(self, max_retries: int = 3) -> bool:
+        """Handle reCAPTCHA checkbox with retries.
+        
+        Returns True if ReCAPTCHA was successfully completed, False otherwise.
+        """
+        p = self.page
+        
+        for attempt in range(1, max_retries + 1):
+            print(f"[UI LOGIN] ReCAPTCHA attempt {attempt}/{max_retries}")
+            
+            try:
+                # Find the reCAPTCHA iframe
+                frame_loc = p.frame_locator("iframe[title='reCAPTCHA']")
+                anchor = frame_loc.locator("#recaptcha-anchor")
+                
+                if not anchor.count():
+                    print("[UI LOGIN] No reCAPTCHA found on page, skipping")
+                    return True  # No reCAPTCHA = success
+                
+                # Wait for anchor to be visible and clickable
                 try:
                     anchor.wait_for(state="visible", timeout=5000)
-                    anchor.click()
                 except Exception:
-                    # best-effort click; continue to submit afterwards
-                    try:
-                        anchor.click(timeout=2000)
-                    except Exception:
-                        pass
-
-                # Wait for g-recaptcha-response to be filled by the widget
+                    print(f"[UI LOGIN] ReCAPTCHA anchor not visible on attempt {attempt}")
+                    continue
+                
+                # Wait for iframe to be fully interactive
+                p.wait_for_timeout(2000)
+                
+                # Click the checkbox
+                try:
+                    anchor.click()
+                    print("[UI LOGIN] ReCAPTCHA checkbox clicked")
+                except Exception as e:
+                    print(f"[UI LOGIN] Failed to click ReCAPTCHA: {e}")
+                    continue
+                
+                # Wait for verification (g-recaptcha-response to be filled)
                 try:
                     p.wait_for_function(
-                        "() => document.querySelector('textarea.g-recaptcha-response') && document.querySelector('textarea.g-recaptcha-response').value.length > 0",
-                        timeout=10000,
+                        """() => {
+                            const response = document.querySelector('textarea.g-recaptcha-response');
+                            return response && response.value && response.value.length > 0;
+                        }""",
+                        timeout=15000,
                     )
+                    print("[UI LOGIN] ReCAPTCHA response verified")
+                    return True
                 except Exception:
-                    # If we can't detect the response, continue (best-effort)
-                    pass
-        except Exception:
-            # If frames aren't present or access denied, continue without failing
-            pass
+                    print(f"[UI LOGIN] ReCAPTCHA verification timeout on attempt {attempt}")
+                    # Wait before retry
+                    p.wait_for_timeout(2000)
+                    continue
+                    
+            except Exception as e:
+                print(f"[UI LOGIN] ReCAPTCHA error on attempt {attempt}: {e}")
+                continue
+        
+        return False
 
-        # submit (try role then common selectors)
+    def click_login_button(self):
+        """Click the login/submit button. Call this after ReCAPTCHA is verified."""
+        p = self.page
+        
+        selectors = [
+            'button[type="submit"]',
+            'button:has-text("Login")',
+            'button:has-text("Sign In")',
+            'button:has-text("LOG IN")',
+            'input[type="submit"]',
+            '.login-button',
+            '#login-btn',
+            'button.btn-primary'
+        ]
+        
+        for selector in selectors:
+            try:
+                btn = p.locator(selector).first
+                if btn.is_visible(timeout=2000):
+                    btn.click()
+                    print(f"[UI LOGIN] Clicked login button: {selector}")
+                    return True
+            except Exception:
+                continue
+        
+        # Fallback: try role-based
         try:
             if p.get_by_role("button", name="Login").count():
                 p.get_by_role("button", name="Login").click()
-            elif p.get_by_role("button").count() == 1:
-                p.get_by_role("button").first.click()
-            else:
-                p.locator("button[type='submit']").first.click()
+                print("[UI LOGIN] Clicked login button via role")
+                return True
         except Exception:
-            # last-resort click any submit-like button
-            try:
-                p.locator("button").first.click()
-            except Exception:
-                pytest.skip("No login button found to submit credentials")
-
-        return self
+            pass
+        
+        print("[UI LOGIN] WARNING: Could not find login button")
+        return False

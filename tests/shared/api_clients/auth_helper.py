@@ -246,84 +246,16 @@ class AuthHelper:
                     print(f"DEBUG: page title before login: {page.title()}" )
                 except Exception:
                     pass
-                # Call the LoginPage.login which contains recaptcha handling
+                # Call the LoginPage.login which fills credentials and handles reCAPTCHA
                 print(f"DEBUG: Calling LoginPage.login() with user={email}")
                 login_page.login(email, password)
 
-                # Wait for ReCAPTCHA to complete
+                # Click login button after ReCAPTCHA is handled
                 try:
-                    page.wait_for_timeout(2000)
-                except Exception:
-                    pass
-                print("[UI LOGIN] Credentials filled, ReCAPTCHA clicked")
+                    login_page.click_login_button()
+                except Exception as e:
+                    print(f"[UI LOGIN] click_login_button() raised: {e}")
 
-                # Check if still on login page - need to click login button
-                try:
-                    if '/auth/login' in (page.url or ''):
-                        print("[UI LOGIN] Still on login page, clicking login button...")
-
-                        # Wait for ReCAPTCHA to fully verify (checkmark / response populated)
-                        print("[UI LOGIN] Waiting for ReCAPTCHA verification to complete...")
-                        try:
-                            page.wait_for_function("""
-                                () => {
-                                    const iframe = document.querySelector('iframe[title*="reCAPTCHA"]');
-                                    if (!iframe) return false;
-                                    const response = document.querySelector('[name="g-recaptcha-response"]');
-                                    return response && response.value && response.value.length > 0;
-                                }
-                            """, timeout=15000)
-                            print("[UI LOGIN] ReCAPTCHA verification complete!")
-                        except Exception:
-                            print("[UI LOGIN] ReCAPTCHA wait timed out, trying anyway...")
-                            try:
-                                page.wait_for_timeout(5000)
-                            except Exception:
-                                pass
-
-                        # Additional buffer
-                        try:
-                            page.wait_for_timeout(1000)
-                        except Exception:
-                            pass
-                        login_button = None
-                        selectors = [
-                            'button[type="submit"]',
-                            'button:has-text("Login")',
-                            'button:has-text("Sign In")',
-                            'button:has-text("LOG IN")',
-                            'input[type="submit"]',
-                            '.login-button',
-                            '#login-btn',
-                            'button.btn-primary'
-                        ]
-                        for selector in selectors:
-                            try:
-                                btn = page.locator(selector).first
-                                if btn.is_visible(timeout=1000):
-                                    login_button = btn
-                                    print(f"[UI LOGIN] Found button with selector: {selector}")
-                                    break
-                            except Exception:
-                                continue
-
-                        if login_button:
-                            try:
-                                login_button.click()
-                                print("[UI LOGIN] Login button clicked!")
-                            except Exception as e:
-                                print(f"[UI LOGIN] Failed to click login button: {e}")
-                        else:
-                            print("[UI LOGIN] WARNING: Could not find login button")
-                            try:
-                                import os as _os
-                                _os.makedirs("logs", exist_ok=True)
-                                page.screenshot(path="logs/login_button_not_found.png")
-                                print("Saved screenshot: logs/login_button_not_found.png")
-                            except Exception:
-                                pass
-                except Exception:
-                    pass
                 try:
                     print(f"DEBUG: page title after login call: {page.title()}")
                 except Exception:
