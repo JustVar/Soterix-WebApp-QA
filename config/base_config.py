@@ -53,5 +53,43 @@ def load_config():
     logging.info(f"[ENV RESOLVED] ENV='{env}' APP_TYPE='{app_type}' -> {module_path} | base_url={cfg.get('base_url')}")
     return cfg
 
+# Helpers to expose box/credential and safety checks
+def get_active_box():
+    """Get the active box name from environment or default."""
+    return os.environ.get("BOX", "us").strip().lower()
+
+
+def get_credentials():
+    """Get credentials for the active environment and box."""
+    env_module = _get_env_module()
+    if hasattr(env_module, 'get_credentials'):
+        return env_module.get_credentials(get_active_box())
+    # Fallback for old-style configs
+    return {
+        "email": config.get("default_user", ""),
+        "password": config.get("default_password", ""),
+        "site_id": None,
+    }
+
+
+def is_write_allowed():
+    """Check if write operations (POST/PUT) are allowed in current environment."""
+    return config.get("allow_write", False)
+
+
+def is_delete_allowed():
+    """Check if delete operations are allowed in current environment."""
+    return config.get("allow_delete", False)
+
+
+def _get_env_module():
+    """Get the loaded environment module."""
+    env = (os.environ.get("ENV") or "stage").strip().lower()
+    app_type = (os.environ.get("APP_TYPE") or "customer").strip().lower()
+    module_path = ENV_ALIAS.get(env)
+    if app_type == "partner":
+        module_path = module_path + "_pat"
+    return importlib.import_module(module_path)
+
 # Exposed to the rest of the test suite:
 config = load_config()
