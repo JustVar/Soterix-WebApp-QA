@@ -12,4 +12,5 @@ def test_get_user_session(user_api):
 @pytest.mark.smoke
 def test_get_user_roles(user_api):
     roles = user_api.get_user_roles()
+    print(f"Roles response -> {roles}")
     assert isinstance(roles, (list, dict))

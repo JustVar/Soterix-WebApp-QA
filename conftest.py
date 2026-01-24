@@ -202,7 +202,6 @@ def test_site_id(user_api, camera_api, login_data):
 
 
 @pytest.fixture(scope="session")
-@pytest.fixture(scope="session")
 def discovery_helper(api_base_url, api_auth_token):
     """Session-scoped DiscoveryHelper wrapping a simple BaseAPI client."""
     from tests.shared.api_clients.base_api_client import BaseAPIClient
