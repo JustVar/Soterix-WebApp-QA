@@ -69,3 +69,4 @@ def test_auto_discover_site_and_enterprise(discovered_site, discovered_site_id, 
     assert discovered_enterprise_id is not None, "Enterprise ID should be auto-discovered"
     assert isinstance(discovered_site_id, int), "Site ID should be an integer"
     assert isinstance(discovered_enterprise_id, int), "Enterprise ID should be an integer"
+
