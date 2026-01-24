@@ -1,0 +1,59 @@
+# Soterix QA Automation - Environment Configuration
+# Passwords are stored in .env file, not here
+
+environments:
+  qa:
+    base_url: https://qa.example.invalid
+    api_base_url: https://qa.example.invalid/v-apiserver
+    allow_write: true
+    allow_delete: true
+    boxes:
+      us:
+        user_key: QA_LAB
+        email: qa@soterixsystems.com
+        default_site_id: 110
+      india:
+        user_key: JUSTIN
+        email: qa@soterixsystems.com
+        default_site_id: TBD
+
+  staging:
+    base_url: https://staging.example.invalid
+    api_base_url: https://staging.example.invalid/v-apiserver
+    allow_write: true
+    allow_delete: false
+    boxes:
+      us:
+        user_key: QA_LAB
+        email: qa@soterixsystems.com
+        default_site_id: TBD
+      india:
+        user_key: JUSTIN
+        email: qa@soterixsystems.com
+        default_site_id: TBD
+
+  preprod:
+    base_url: TBD
+    api_base_url: TBD
+    allow_write: true
+    allow_delete: false
+    boxes:
+      soterix:
+        user_key: TBD
+        email: TBD
+        default_site_id: TBD
+
+  prod:
+    base_url: https://app.example.invalid
+    api_base_url: https://app.example.invalid/v-apiserver
+    allow_write: false
+    allow_delete: false
+    boxes:
+      soterix:
+        user_key: TBD
+        email: TBD
+        default_site_id: TBD
+
+# Default environment if not specified
+default_environment: qa
+default_box: us
