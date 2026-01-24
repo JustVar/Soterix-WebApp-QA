@@ -114,6 +114,7 @@ import tests.shared.api_clients.user_api as user_mod
 import tests.shared.api_clients.search_api as search_mod
 import tests.shared.api_clients.site_helper as site_helper
 import tests.shared.api_clients.discovery_helper as discovery_mod
+import tests.shared.api_clients.enterprise_helper as enterprise_mod
 
 
 @pytest.fixture(scope="session")
@@ -162,6 +163,19 @@ def user_api(api_base_url, api_auth_token):
 @pytest.fixture(scope="session")
 def search_api(api_base_url, api_auth_token):
     return search_mod.SearchAPI(api_base_url, api_auth_token)
+
+
+@pytest.fixture(scope="session")
+def enterprise_helper(api_base_url, api_auth_token):
+    """Session-scoped EnterpriseHelper for dynamic enterpriseId lookup."""
+    from tests.shared.api_clients.enterprise_helper import EnterpriseHelper
+    return EnterpriseHelper(api_base_url, api_auth_token)
+
+
+@pytest.fixture(scope="session")
+def test_enterprise_id(enterprise_helper, test_site_id):
+    """Dynamically fetched enterpriseId for the test site."""
+    return enterprise_helper.get_enterprise_id(test_site_id)
 
 
 @pytest.fixture(scope="session")
