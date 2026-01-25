@@ -32,9 +32,16 @@ class BaseAPIClient:
         self.token = token
         self.timeout = timeout
         self.max_seconds = max_seconds
-        env = os.getenv("ENV", "").lower()
-        # Only disable verification for QA and stage per request
-        self.verify = False if env in ("qa", "stage") else True
+        # SSL verification: Check SSL_VERIFY env var first, then fall back to ENV-based logic
+        ssl_verify_env = os.getenv("SSL_VERIFY", "").lower()
+        if ssl_verify_env in ("false", "0", "no"):
+            self.verify = False
+        elif ssl_verify_env in ("true", "1", "yes"):
+            self.verify = True
+        else:
+            # Default: disable for QA/stage environments
+            env = os.getenv("ENV", "").lower()
+            self.verify = False if env in ("qa", "stage") else True
 
     def _headers(self) -> Dict[str, str]:
         h = {"Accept": "application/json"}
