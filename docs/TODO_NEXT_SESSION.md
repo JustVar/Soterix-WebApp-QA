@@ -38,6 +38,14 @@
 - [ ] Create `ViewsPage` Page Object Model
 - [ ] Migrate 27 thumbnail view tests
 - [ ] Migrate 13 full screen view tests
+### Views Module Migration (Next Priority)
+- [ ] Review Selenium Views tests in `legacy-selenium-tests/`
+- [x] Create `ViewsPage` Page Object Model
+- [ ] Migrate 27 thumbnail view tests
+- [ ] Migrate 13 full screen view tests
+
+Notes:
+- 3 basic Views tests passing
 
 ### Events Module Migration
 - [ ] Create `EventsPage` Page Object Model
@@ -59,7 +67,7 @@
 |----------|-------|
 | API Smoke | 16 |
 | Login UI | 10 |
-| **Total** | **26** |
+| **Total** | **29** |
 
 ## Commands Reference
 ```powershell

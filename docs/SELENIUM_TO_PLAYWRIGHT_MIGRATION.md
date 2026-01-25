@@ -5,11 +5,11 @@
 
 ## Current Status
 
-**Migration Progress: 12% complete (26 of ~212 tests)**
+**Migration Progress: 13% complete (29 of ~212 tests)**
 
 | Metric | Value |
 |--------|-------|
-| Playwright Tests Passing | 26 |
+| Playwright Tests Passing | 29 |
 | API Smoke Tests | 16 |
 | Login UI Tests | 10 |
 | Selenium Tests to Migrate | ~202 remaining |
@@ -54,7 +54,7 @@ tests/
 |--------|---------------|------------------|--------|
 | Login | 14 | 10 | ✅ DONE |
 | API Tests | N/A | 16 | ✅ DONE (new) |
-| Views - Thumbnail | 27 | 0 | 🔄 NEXT |
+| Views - Thumbnail | 27 | 3 | ✅ PARTIAL |
 | Views - Full Screen | 13 | 0 | PENDING |
 | Events | 26 | 0 | PENDING |
 | Search | 24 | 0 | PENDING |
@@ -68,7 +68,7 @@ tests/
 | Notifications | 3 | 0 | PENDING |
 | LPR | 0 | 0 | NOT STARTED |
 | Admin - Other | 0 | 0 | NOT STARTED |
-| **TOTAL** | **212** | **26** | **12%** |
+| **TOTAL** | **212** | **29** | **13%** |
 
 ## What's Been Migrated
 
