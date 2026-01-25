@@ -46,12 +46,13 @@ Notes:
 |----------|-------|
 | API Smoke | 16 |
 | Login UI | 10 |
+| Views UI | 9 |
 | **Total** | **35** |
 
 ## Commands Reference
 ```powershell
 # Activate environment
-.\venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 
 # Run API tests
 pytest tests/api/smoke/ -v
@@ -64,4 +65,4 @@ pytest tests/ -v
 
 # Run with SSL verification disabled (if needed for QA)
 $env:SSL_VERIFY='false'; pytest tests/ -v
-``` 
+```
