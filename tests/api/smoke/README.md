@@ -56,7 +56,6 @@ Target a specific environment by setting env variables or using the project's en
 - `discovered_site`, `discovered_site_id`, `discovered_enterprise_id`, `test_site_id`, `test_channel_ids` - auto-discovery fixtures to pick valid site/channel ids for tests
 
 ## Notes & Recommendations
-- Tests assume a QA/test environment; avoid running against prod unless allowed.
 - Some tests accept multiple valid shapes (JSON or binary) - assertions aim to be permissive to reduce false negatives.
 - Consider centralizing magic values (e.g., default channel id `1`) into fixtures or config for clarity.
 
