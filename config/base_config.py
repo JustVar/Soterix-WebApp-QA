@@ -29,7 +29,7 @@ ENV_ALIAS = {
 }
 
 def load_config():
-    env = (os.environ.get("ENV") or "stage").strip().lower()
+    env = (os.environ.get("ENV") or "qa").strip().lower()
     app_type = (os.environ.get("APP_TYPE") or "customer").strip().lower()
 
     module_path = ENV_ALIAS.get(env)
