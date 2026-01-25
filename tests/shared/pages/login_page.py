@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from playwright.sync_api import Page
+import os
 
 # Timeouts (milliseconds)
 RECAPTCHA_TIMEOUT = 15000
@@ -15,9 +16,18 @@ class LoginPage:
     ReCAPTCHA checkbox handler and robust submit button selection.
     """
 
-    def __init__(self, page: Page, base_url: str):
+    def __init__(self, page: Page, base_url: Optional[str] = None):
+        """Initialize LoginPage.
+
+        Args:
+            page: Playwright Page instance.
+            base_url: Optional base URL for the app. If not provided, will
+                attempt to derive from `page.url`.
+        """
         self.page = page
-        self.base_url = base_url.rstrip("/")
+        # Allow backward-compatible construction from callers that only pass `page`.
+        raw_base = base_url or os.environ.get('BASE_URL') or (getattr(page, 'url', None) or '')
+        self.base_url = raw_base.rstrip("/")
 
         # selector fallbacks
         self._email_selectors: List[str] = [

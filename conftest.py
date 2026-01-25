@@ -131,6 +131,112 @@ def api_auth_helper(api_base_url):
     return helper
 
 
+@pytest.fixture
+def authenticated_page(page, api_auth_helper, login_data, base_url):
+    """Provide a Playwright `page` that's authenticated.
+
+    Strategy:
+      1. Try to read `.session_cache` and inject `JSESSIONID` cookie into the
+         Playwright context. If the server accepts it (navigation away from
+         login), return the page.
+      2. Otherwise, fall back to an in-page UI login using the `LoginPage` POM.
+    """
+    import json
+    import os
+    from urllib.parse import urlparse
+
+    cache_file = getattr(api_auth_helper, 'CACHE_FILE', '.session_cache')
+
+    # 1) Try cookie injection
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                cache = json.load(f)
+
+            # Navigate to base so localStorage assignments apply to correct origin
+            try:
+                page.goto(base_url)
+                page.wait_for_load_state('networkidle')
+            except Exception:
+                pass
+
+            # Inject cookie if present (preserve path/domain from saved cookie)
+            try:
+                if isinstance(cache.get('cookie'), dict):
+                    cookie = cache.get('cookie')
+                    # Playwright requires keys: name, value, domain, path
+                    c = {
+                        'name': cookie.get('name'),
+                        'value': cookie.get('value'),
+                        'domain': cookie.get('domain') or urlparse(base_url).hostname,
+                        'path': cookie.get('path') or '/',
+                    }
+                    try:
+                        page.context.add_cookies([c])
+                    except Exception as e:
+                        print(f"Cookie injection failed: {e}")
+                elif cache.get('token'):
+                    hostname = urlparse(base_url).hostname
+                    c = {
+                        'name': 'JSESSIONID',
+                        'value': str(cache.get('token')),
+                        'domain': hostname,
+                        'path': '/v-apiserver',
+                    }
+                    try:
+                        page.context.add_cookies([c])
+                    except Exception as e:
+                        print(f"Cookie injection failed: {e}")
+            except Exception as e:
+                print(f"Cookie injection block failed: {e}")
+
+            # Inject localStorage entries if present
+            try:
+                ls = cache.get('localStorage')
+                if isinstance(ls, dict):
+                    for k, v in ls.items():
+                        try:
+                            page.evaluate(f"localStorage.setItem({json.dumps(k)}, {json.dumps(v)})")
+                        except Exception:
+                            # fallback to simple assignment
+                            try:
+                                page.evaluate(f"localStorage.setItem({json.dumps(k)}, {json.dumps(v)})")
+                            except Exception:
+                                pass
+            except Exception as e:
+                print(f"localStorage injection failed: {e}")
+
+            # Reload to apply auth state
+            try:
+                page.reload()
+                page.wait_for_load_state('networkidle')
+            except Exception:
+                pass
+
+            # Check if login recognized (not on login path)
+            try:
+                if '/auth/login' not in (page.url or ''):
+                    return page
+            except Exception:
+                pass
+        except Exception as e:
+            print(f"Failed reading cache_file {cache_file}: {e}")
+
+    # 2) Fallback to in-page UI login
+    try:
+        from tests.shared.pages.login_page import LoginPage
+        lp = LoginPage(page, base_url)
+        lp.login(login_data['username'], login_data['password'])
+        try:
+            page.wait_for_timeout(2000)
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+    return page
+
+
 @pytest.fixture(scope="session")
 def api_auth_token(api_auth_helper, login_data):
     # Use the shared session-scoped AuthHelper

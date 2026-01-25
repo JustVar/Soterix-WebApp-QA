@@ -14,7 +14,7 @@ def test_get_site_status(api_base_url, api_auth_token, discovered_site_id):
     client = BaseAPIClient(api_base_url, api_auth_token)
     path = f"/REST/dashboard/site/{discovered_site_id}/status"
     r = client.get(path)
-    assert r.status_code == 200, f"Unexpected status: {r.status_code}"
+    assert r.status_code == 200, f"Unexpected status for site status: {r.status_code}"
     try:
         j = r.json()
     except ValueError:
@@ -38,7 +38,7 @@ def test_get_camera_tree(api_base_url, api_auth_token, discovered_site_id):
     client = BaseAPIClient(api_base_url, api_auth_token)
     path = f"/REST/site/{discovered_site_id}/location/tree"
     r = client.get(path)
-    assert r.status_code == 200
+    assert r.status_code == 200, f"Unexpected status for camera tree: {r.status_code}"
     try:
         j = r.json()
     except ValueError:
@@ -56,7 +56,33 @@ def test_get_camera_tree(api_base_url, api_auth_token, discovered_site_id):
 def test_get_camera_snap(api_base_url, api_auth_token, discovered_site_id):
     """GET /REST/site/{siteId}/channel/{channelId}/snap - ensure snapshot is returned."""
     client = BaseAPIClient(api_base_url, api_auth_token)
-    channel_id = 1
+    # Attempt to discover a candidate channel id for the site. Prefer API discovery
+    # over a hardcoded channel id. If discovery fails, fall back to channel id 1.
+    channel_id = None
+    try:
+        ch_list_resp = client.get(f"/REST/site/{discovered_site_id}/channel")
+        ch_list_resp.raise_for_status()
+        channels_json = ch_list_resp.json()
+        candidates = []
+        if isinstance(channels_json, dict):
+            candidates = channels_json.get("result") or channels_json.get("channels") or channels_json.get("data") or []
+        elif isinstance(channels_json, list):
+            candidates = channels_json
+        for c in candidates:
+            if isinstance(c, dict):
+                for key in ("channelId", "id", "channel_id"):
+                    if key in c:
+                        channel_id = c.get(key)
+                        break
+            if channel_id is not None:
+                break
+    except Exception:
+        channel_id = None
+
+    if channel_id is None:
+        # fallback: first common channel id used in QA environments
+        channel_id = 1
+
     path = f"/REST/site/{discovered_site_id}/channel/{channel_id}/snap"
     r = client.get(path)
     # snap endpoints may return binary image or JSON error; accept either
@@ -68,7 +94,7 @@ def test_get_camera_snap(api_base_url, api_auth_token, discovered_site_id):
     except ValueError:
         # binary content - check for JPEG/PNG magic bytes
         data = r.content
-        assert len(data) > 0
+        assert len(data) > 0, "Snap returned empty binary data"
         assert data.startswith(b"\xff\xd8") or data.startswith(b"\x89PNG"), "Snap does not look like JPEG/PNG"
 
 
@@ -77,10 +103,11 @@ def test_get_camera_snap(api_base_url, api_auth_token, discovered_site_id):
 def test_get_widgets(api_base_url, api_auth_token, discovered_enterprise_id):
     """GET /REST/dashboard/sharedwidgets/{customerId}/data - verify widget payload structure."""
     client = BaseAPIClient(api_base_url, api_auth_token)
+    # Use dynamically discovered enterprise id rather than a hardcoded customer id
     customer_id = discovered_enterprise_id
     path = f"/REST/dashboard/sharedwidgets/{customer_id}/data"
     r = client.get(path)
-    assert r.status_code == 200
+    assert r.status_code == 200, f"Unexpected status for widgets: {r.status_code}"
     try:
         j = r.json()
     except ValueError:
@@ -133,6 +160,6 @@ def test_search_person(api_base_url, api_auth_token, discovered_site_id):
     print("test_search_person response:", json.dumps(j, indent=2))
     data = j.get("result", j)
     if isinstance(data, dict):
-        assert any(k in data for k in ("results", "data", "items")) or isinstance(data.get("results", []), list)
+        assert (any(k in data for k in ("results", "data", "items")) or isinstance(data.get("results", []), list)), "Search response missing expected keys"
     else:
-        assert isinstance(data, list)
+        assert isinstance(data, list), "Search response expected list when top-level result is not a dict"

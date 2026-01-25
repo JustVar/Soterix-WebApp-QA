@@ -3,6 +3,11 @@
   "tests/api/smoke/test_camera_apis.py::test_get_camera_tree",
   "tests/api/smoke/test_dashboard_apis.py::test_get_shared_widgets",
   "tests/api/smoke/test_dashboard_apis.py::test_get_site_status",
+  "tests/api/smoke/test_platform_apis.py::test_get_camera_snap",
+  "tests/api/smoke/test_platform_apis.py::test_get_camera_tree",
+  "tests/api/smoke/test_platform_apis.py::test_get_site_status",
+  "tests/api/smoke/test_platform_apis.py::test_get_widgets",
+  "tests/api/smoke/test_platform_apis.py::test_search_person",
   "tests/api/smoke/test_search_api.py::test_search_person_basic",
   "tests/api/smoke/test_search_api.py::test_search_vehicle_basic",
   "tests/api/smoke/test_user_apis.py::test_auto_discover_site_and_enterprise",
@@ -13,5 +18,15 @@
   "tests/api/smoke/test_user_apis.py::test_get_user_session",
   "tests/auth/software/smoke/test_login_sw_smoke.py::test_login_sw_smoke[chromium]",
   "tests/cameras/software/smoke/test_play_camera_smoke.py::test_play_camera_smoke[chromium]",
-  "tests/test_login.py::test_login[chromium]"
+  "tests/test_login.py::test_login[chromium]",
+  "tests/ui/login/test_login_invalid.py::test_empty_fields[chromium]",
+  "tests/ui/login/test_login_invalid.py::test_empty_password[chromium]",
+  "tests/ui/login/test_login_invalid.py::test_empty_username[chromium]",
+  "tests/ui/login/test_login_invalid.py::test_invalid_email_format[chromium]",
+  "tests/ui/login/test_login_invalid.py::test_wrong_credentials[chromium]",
+  "tests/ui/login/test_login_security.py::test_password_too_short[chromium]",
+  "tests/ui/login/test_login_security.py::test_sql_injection_attempt[chromium]",
+  "tests/ui/login/test_login_security.py::test_xss_attempt[chromium]",
+  "tests/ui/login/test_login_valid.py::test_logout[chromium]",
+  "tests/ui/login/test_login_valid.py::test_valid_credentials[chromium]"
 ]
