@@ -3,49 +3,28 @@
 ## Before Continuing Development
 
 ### 1. Project Cleanup & Refactor
-- [ ] Fix SSL verification issue (make configurable in `tests/shared/api_clients/base_api_client.py`)
-- [ ] Run full test suite and verify all 26 core tests pass
+- [x] Fix SSL verification issue (configured in `tests/shared/api_clients/base_api_client.py`)
+- [ ] Run full test suite and verify all 35 core tests pass
 - [ ] Check for any remaining scaffolding files that should be removed
 - [ ] Review all files in `tests/` folder for consistency
 
-# TODO - Next Session
-
 ## Immediate Tasks
 
-### 1. Fix SSL Verification Issue
-- [ ] Make SSL verification configurable in `tests/shared/api_clients/base_api_client.py`
-- [ ] Add `SSL_VERIFY` environment variable support
-- [ ] Test with `SSL_VERIFY=false` for QA environment
-
-# TODO - Next Session
-
-## Immediate Tasks
-
-### 1. Fix SSL Verification Issue
-- [ ] Make SSL verification configurable in `tests/shared/api_clients/base_api_client.py`
-- [ ] Add `SSL_VERIFY` environment variable support
-- [ ] Test with `SSL_VERIFY=false` for QA environment
-
-### 2. Verify Tests Pass
+### 1. Verify Tests Pass
 - [ ] Run: `pytest tests/api/smoke/ tests/ui/login/ -v`
-- [ ] Confirm all 26 core tests pass
+- [ ] Confirm all 35 core tests pass
 - [ ] Fix any remaining failures
 
 ## Ready to Continue Development
 
-### Views Module Migration (Next Priority)
-- [ ] Review Selenium Views tests in `legacy-selenium-tests/`
-- [ ] Create `ViewsPage` Page Object Model
-- [ ] Migrate 27 thumbnail view tests
-- [ ] Migrate 13 full screen view tests
-### Views Module Migration (Next Priority)
-- [ ] Review Selenium Views tests in `legacy-selenium-tests/`
+### Views Module Migration (In Progress)
 - [x] Create `ViewsPage` Page Object Model
-- [ ] Migrate 27 thumbnail view tests
+- [x] Implement 9 Views UI tests (tab management, thumbnails, rename functionality)
+- [ ] Migrate remaining thumbnail view tests (18 remaining)
 - [ ] Migrate 13 full screen view tests
 
 Notes:
-- 3 basic Views tests passing
+- 9 Views tests passing
 
 ### Events Module Migration
 - [ ] Create `EventsPage` Page Object Model
@@ -67,7 +46,7 @@ Notes:
 |----------|-------|
 | API Smoke | 16 |
 | Login UI | 10 |
-| **Total** | **29** |
+| **Total** | **35** |
 
 ## Commands Reference
 ```powershell
@@ -85,4 +64,4 @@ pytest tests/ -v
 
 # Run with SSL verification disabled (if needed for QA)
 $env:SSL_VERIFY='false'; pytest tests/ -v
-```
+``` 

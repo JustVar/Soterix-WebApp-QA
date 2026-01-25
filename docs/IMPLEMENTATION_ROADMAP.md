@@ -7,7 +7,8 @@
 | Total Tests Passing | 26 |
 | API Smoke Tests | 16 |
 | Login UI Tests | 10 |
-| Migration Progress | 12% (26 of ~212) |
+| Total Tests Passing | 35 |
+| Migration Progress | ~16% (35 of ~212) |
 
 ### Completed ✅
 - [x] Login Page Object Model with ReCAPTCHA handling
@@ -17,9 +18,9 @@
 - [x] Site and Enterprise auto-discovery
 - [x] Session caching with cookie + localStorage injection
 - [x] Migration documentation
+- [x] SSL verification configuration for API tests
 
 ### In Progress 🔄
-- [ ] SSL verification configuration for API tests
 - [ ] Documentation cleanup and updates
 
 ### Next Up
@@ -42,8 +43,10 @@
 ## Phase 2: Core Modules (IN PROGRESS)
 
 ### Views Module (Next)
-- [ ] Create ViewsPage Page Object Model
-- [ ] Migrate 27 thumbnail view tests
+### Views Module (Next)
+- [x] Create ViewsPage Page Object Model
+- [x] Implement 9 Views UI tests (tab management, thumbnails, rename functionality)
+- [ ] Migrate remaining thumbnail view tests (18 remaining)
 - [ ] Migrate 13 full screen view tests
 - [ ] Test camera playback functionality
 
