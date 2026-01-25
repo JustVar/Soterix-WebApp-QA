@@ -70,14 +70,22 @@ class LoginPage:
                 continue
         return None
 
-    def goto(self, app_type: str = "customer"):
-        """Navigate to the login page for the given app type.
+    def goto(self, base_url: Optional[str] = None, app_type: str = "customer"):
+        """Navigate to the login page.
 
         Args:
-            app_type: 'customer' or 'partner' to select the login path.
+            base_url: Optional base URL override (for backward compatibility)
+            app_type: 'customer' or 'partner' to determine login path
         """
+        if base_url:
+            self.base_url = base_url.rstrip("/")
         path = "/login" if app_type == "partner" else "/auth/login"
         self.page.goto(self.base_url + path)
+        try:
+            self.page.wait_for_load_state("networkidle")
+        except Exception:
+            pass
+        return self
 
     def enter_email(self, email: str):
         """Fill the email input using the first available selector."""

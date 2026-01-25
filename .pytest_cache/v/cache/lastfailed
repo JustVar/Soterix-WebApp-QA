@@ -1,4 +1,9 @@
 {
   "tests/test_login.py::test_login[chromium]": true,
-  "tests/api/smoke/test_user_apis.py::test_discover_user_role": true
+  "tests/api/smoke/test_user_apis.py::test_discover_user_role": true,
+  "tests/auth/software/smoke/test_login_sw_smoke.py::test_login_sw_smoke[chromium]": true,
+  "tests/cameras/software/smoke/test_play_camera_smoke.py::test_play_camera_smoke[chromium]": true,
+  "tests/events/software/smoke/test_events_search_smoke.py::test_events_search_smoke[chromium]": true,
+  "tests/test_dashboard.py::test_dashboard_landing[chromium]": true,
+  "tests/test_login_validator.py::test_login_page_field_validations[chromium]": true
 }
