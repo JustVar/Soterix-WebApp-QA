@@ -15,7 +15,7 @@ class ViewsPage:
         # Locators - Tabs
         self.add_tab_button = page.locator("img[src*='media/addIcon']")
         self.tab_titles = page.locator(".tabTitle")
-        self.tab_close_buttons = page.locator("img[src*='media/closeIcon']")
+        self.tab_close_buttons = page.locator("img[src*='closeIcon']")
         self.tab_edit_buttons = page.locator("img[src*='media/editIcon']")
         
         # Locators - Views
@@ -32,6 +32,11 @@ class ViewsPage:
         
         # Locators - Site/Camera Tree
         self.search_camera_input = page.locator("input[placeholder*='Search Camera']")
+
+        # Locators - Tab Names
+        self.tab_headers = page.locator("[class*='tabTitle'], [class*='tab-title']")
+        self.action_not_permitted_modal = page.locator("text=Action Not Permitted")
+        self.modal_ok_button = page.locator("button:has-text('OK'), button:has-text('Ok')")
         
         # Locators - Loading/Status
         self.loader = page.locator("[class*='CircularProgress']")
@@ -71,7 +76,20 @@ class ViewsPage:
 
     def close_tab(self, tab_index: int):
         """Close a tab by index (0-based)."""
-        self.tab_close_buttons.nth(tab_index).click()
+        # Use direct locator at time of action to avoid stale references
+        close_buttons = self.page.locator("img[src*='closeIcon']")
+        close_buttons.nth(tab_index).click()
+
+    def handle_alert_dialog(self):
+        """Set up a handler to automatically accept browser alert dialogs."""
+        def _accept(dialog):
+            try:
+                dialog.accept()
+            except Exception:
+                pass
+
+        # Register the dialog handler
+        self.page.on("dialog", _accept)
 
     def drag_camera_to_tile(self, camera_locator, tile_index: int = 0):
         """Drag a camera thumbnail to a specific tile."""
@@ -110,6 +128,34 @@ class ViewsPage:
         """Check if streaming is working (failures <= expected offline cameras)."""
         failure_count = self.streaming_failed.count()
         return failure_count <= expected_failures
+
+    def get_tab_count(self) -> int:
+        """Return the number of tabs currently open."""
+        return self.tab_close_buttons.count()
+
+    def get_tab_names(self) -> list:
+        """Return list of all tab names."""
+        count = self.tab_headers.count()
+        names = []
+        for i in range(count):
+            names.append(self.tab_headers.nth(i).inner_text())
+        return names
+
+    def get_latest_tab_name(self) -> str:
+        """Return the name of the most recently added tab (last tab)."""
+        count = self.tab_headers.count()
+        if count > 0:
+            return self.tab_headers.nth(count - 1).inner_text()
+        return ""
+
+    def is_action_not_permitted_shown(self) -> bool:
+        """Check if 'Action Not Permitted' modal is visible."""
+        return self.action_not_permitted_modal.is_visible()
+
+    def close_modal(self):
+        """Close any open modal by clicking OK."""
+        if self.modal_ok_button.is_visible():
+            self.modal_ok_button.click()
 
     def click_site(self, site_name: str):
         """Click on a site in the left panel to expand it.

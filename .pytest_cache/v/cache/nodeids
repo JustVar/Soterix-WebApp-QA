@@ -66,5 +66,14 @@
   "tests/ui/login/test_login_security.py::test_sql_injection_attempt[chromium]",
   "tests/ui/login/test_login_security.py::test_xss_attempt[chromium]",
   "tests/ui/login/test_login_valid.py::test_logout[chromium]",
-  "tests/ui/login/test_login_valid.py::test_valid_credentials[chromium]"
+  "tests/ui/login/test_login_valid.py::test_valid_credentials[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_add_multiple_tabs[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_add_new_tab[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_camera_thumbnails_visible[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_cannot_delete_last_tab[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_close_tab[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_rename_does_not_affect_sequence[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_rename_tab[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_tab_naming_after_delete[chromium]",
+  "tests/ui/views/test_views_basic.py::TestViewsBasic::test_tab_naming_sequence[chromium]"
 ]
