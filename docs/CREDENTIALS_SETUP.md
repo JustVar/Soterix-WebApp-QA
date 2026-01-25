@@ -223,6 +223,37 @@ $env:ENV="qa"; $env:BOX="us"
 
 ---
 
+## SSL Verification
+
+The test framework handles SSL certificates differently per environment:
+
+| Environment | Certificate | SSL_VERIFY | Notes |
+|-------------|-------------|------------|-------|
+| QA | Self-signed | `false` required | Internal dev environment |
+| Staging | Valid public | `true` (default) | No override needed |
+| Production | Valid public | `true` (default) | No override needed |
+
+### Running Tests with SSL Override
+
+For QA environment, you must disable SSL verification:
+```powershell
+$env:SSL_VERIFY='false'; pytest tests/ -v
+```
+
+### Why QA Needs SSL_VERIFY=false
+
+The QA server uses a self-signed certificate (not issued by a trusted authority). Python's requests library rejects these by default. Disabling verification is safe for internal QA testing but should never be done for production.
+
+### Checking Certificate Validity
+
+To verify if an environment has a valid certificate, open the URL in a browser and check for the padlock icon, or run:
+```powershell
+Invoke-WebRequest -Uri "https://[environment-url]" -Method Head -UseBasicParsing
+```
+
+If you get an SSL/TLS error (not a 500 server error), the certificate is invalid or self-signed.
+
+
 ## User Roles
 
 The system has these roles (in order of access level):
