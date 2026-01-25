@@ -17,6 +17,15 @@
 - [ ] Add `SSL_VERIFY` environment variable support
 - [ ] Test with `SSL_VERIFY=false` for QA environment
 
+# TODO - Next Session
+
+## Immediate Tasks
+
+### 1. Fix SSL Verification Issue
+- [ ] Make SSL verification configurable in `tests/shared/api_clients/base_api_client.py`
+- [ ] Add `SSL_VERIFY` environment variable support
+- [ ] Test with `SSL_VERIFY=false` for QA environment
+
 ### 2. Verify Tests Pass
 - [ ] Run: `pytest tests/api/smoke/ tests/ui/login/ -v`
 - [ ] Confirm all 26 core tests pass
@@ -45,6 +54,13 @@
 - [ ] QA Touch - waiting for yearly license purchase
 - [ ] Jira - new company-managed instance in test phase
 
+## Test Summary
+| Category | Tests |
+|----------|-------|
+| API Smoke | 16 |
+| Login UI | 10 |
+| **Total** | **26** |
+
 ## Commands Reference
 ```powershell
 # Activate environment
@@ -53,13 +69,12 @@
 # Run API tests
 pytest tests/api/smoke/ -v
 
-# Run Login UI tests  
+# Run Login UI tests
 pytest tests/ui/login/ -v
 
 # Run all tests
 pytest tests/ -v
 
-# Run with SSL verification disabled (if needed)
+# Run with SSL verification disabled (if needed for QA)
 $env:SSL_VERIFY='false'; pytest tests/ -v
 ```
-|----------|-------|
