@@ -5,14 +5,14 @@
 
 ## Current Status
 
-**Migration Progress: 13% complete (29 of ~212 tests)**
+**Migration Progress: 16% complete (35 of ~212 tests)**
 
 | Metric | Value |
 |--------|-------|
-| Playwright Tests Passing | 29 |
+| Playwright Tests Passing | 35 |
 | API Smoke Tests | 16 |
 | Login UI Tests | 10 |
-| Selenium Tests to Migrate | ~202 remaining |
+| Selenium Tests to Migrate | ~177 remaining |
 
 ## File Structure
 
@@ -50,25 +50,25 @@ tests/
 
 ## Migration Status by Module
 
-| Module | Selenium Tests | Playwright Tests | Status |
-|--------|---------------|------------------|--------|
-| Login | 14 | 10 | ✅ DONE |
-| API Tests | N/A | 16 | ✅ DONE (new) |
-| Views - Thumbnail | 27 | 3 | ✅ PARTIAL |
-| Views - Full Screen | 13 | 0 | PENDING |
-| Events | 26 | 0 | PENDING |
-| Search | 24 | 0 | PENDING |
-| Media | 30 | 0 | PENDING |
-| Insights | 26 | 0 | PENDING |
-| Maps | 4 | 0 | PENDING |
-| Admin Rules | 14 | 0 | PENDING |
-| Admin Sites | 12 | 0 | PENDING |
-| Admin Users | 9 | 0 | PENDING |
-| Chats | 12 | 0 | PENDING |
-| Notifications | 3 | 0 | PENDING |
-| LPR | 0 | 0 | NOT STARTED |
-| Admin - Other | 0 | 0 | NOT STARTED |
-| **TOTAL** | **212** | **29** | **13%** |
+| Module | Selenium Tests | Migrated | Net-New | Total Playwright | Status |
+|--------|---------------:|--------:|--------:|-----------------:|--------|
+| Login | 14 | 10 | 0 | 10 | ✅ DONE |
+| API Tests | N/A | 0 | 16 | 16 | ✅ DONE (new) |
+| Views - Thumbnail | 27 | 3 | 6 | 9 | ✅ DONE |
+| Views - Full Screen | 13 | 0 | 0 | 0 | PENDING |
+| Events | 26 | 0 | 0 | 0 | PENDING |
+| Search | 24 | 0 | 0 | 0 | PENDING |
+| Media | 30 | 0 | 0 | 0 | PENDING |
+| Insights | 26 | 0 | 0 | 0 | PENDING |
+| Maps | 4 | 0 | 0 | 0 | PENDING |
+| Admin Rules | 14 | 0 | 0 | 0 | PENDING |
+| Admin Sites | 12 | 0 | 0 | 0 | PENDING |
+| Admin Users | 9 | 0 | 0 | 0 | PENDING |
+| Chats | 12 | 0 | 0 | 0 | PENDING |
+| Notifications | 3 | 0 | 0 | 0 | PENDING |
+| LPR | 0 | 0 | 0 | 0 | NOT STARTED |
+| Admin - Other | 0 | 0 | 0 | 0 | NOT STARTED |
+| **TOTAL** | **212** | **13** | **22** | **35** | **16%** |
 
 ## What's Been Migrated
 
@@ -96,6 +96,20 @@ tests/
   - Widgets API
   - Search API
   - Site/Enterprise auto-discovery
+
+### Views Module (COMPLETE)
+**Migrated from Selenium (3 tests):**
+- test_camera_thumbnails_visible - Expand site, show camera thumbnails
+- test_add_new_tab - Add tab, verify 4 new tiles created
+- test_close_tab - Add tab, close it, verify removed
+
+**Net-New Coverage (6 tests):**
+- test_add_multiple_tabs - Verify multiple tabs can be created
+- test_tab_naming_sequence - Verify tabs increment: View 1 -> View 2 -> View 3
+- test_tab_naming_after_delete - Delete View 2, next tab is View 3
+- test_cannot_delete_last_tab - Shows alert when deleting only tab
+- test_rename_tab - Rename a tab to custom name
+- test_rename_does_not_affect_sequence - Renamed tab doesn't break sequence
 
 ## Key Improvements Over Selenium
 
