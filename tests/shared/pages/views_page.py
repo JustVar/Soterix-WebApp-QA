@@ -107,14 +107,14 @@ class ViewsPage:
 
         # Hover to reveal the checkbox
         camera.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
 
         # Click the checkbox inside the thumbnail
         checkbox = camera.locator(".sidebar-custom-checkbox")
         checkbox.click()
 
         # Wait briefly for the tile/UI to update
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
     def add_first_camera_via_checkbox(self):
         """Select the first camera by revealing its checkbox and clicking it.
@@ -126,14 +126,14 @@ class ViewsPage:
 
         # Hover to reveal the checkbox
         camera.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
 
         # Click the checkbox inside the thumbnail
         checkbox = camera.locator(".sidebar-custom-checkbox")
         checkbox.click()
 
         # Wait briefly for the tile/UI to update
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
     def open_my_views(self):
         """Click the My Views button to open saved views panel."""
@@ -152,7 +152,7 @@ class ViewsPage:
         # Open My Views panel if not already open
         my_views_btn = self.page.locator("img[src*='myviews']")
         my_views_btn.click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)
 
         # Find saved view
         view_span = self.page.locator(f"span[title='{view_name}']").first
@@ -175,12 +175,12 @@ class ViewsPage:
             }""",
             view_name
         )
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(250)
 
         # Click checkbox to open the view
         checkbox = self.page.locator(".sidebar-custom-checkbox").first
         checkbox.click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)
 
     def save_current_view(self):
         """Click the save view button."""
@@ -324,6 +324,6 @@ class ViewsPage:
     def expand_site_and_show_cameras(self, site_name: str = None):
         """Expand a site and click All Cameras to show thumbnails."""
         self.click_site(site_name)
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
         self.click_all_cameras()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)

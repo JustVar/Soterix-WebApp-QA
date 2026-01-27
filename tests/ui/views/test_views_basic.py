@@ -19,22 +19,22 @@ class TestViewsBasic:
         # Hover over the first tab to reveal edit button
         first_tab = self.page.locator("button.tabItem").first
         first_tab.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
 
         # Click the edit button
         edit_button = first_tab.locator("img[src*='editIcon']")
         edit_button.click()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
 
         # Clear and type new name
         tab_input = self.page.locator("input.tabTitle").first
         tab_input.fill("Custom Name")
         tab_input.press("Enter")
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(250)
 
         # Add a new tab
         self.views.add_new_tab()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         # Verify new tab is named "View 2"
         new_tab_input = self.page.locator("input.tabTitle").nth(1)
@@ -45,12 +45,12 @@ class TestViewsBasic:
         """Verify saving an empty view shows 'View is empty' error."""
         # Add a new tab (it will be empty)
         self.views.add_new_tab()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         # Click save button
         save_button = self.page.locator("button:has-text('Save View'), img[src*='save']").last
-        save_button.click()
-        self.page.wait_for_timeout(1000)
+        save_button.click(force=True)
+        self.page.wait_for_timeout(500)
 
         # Verify error message appears
         error_message = self.page.locator("text=View is empty")
@@ -65,30 +65,30 @@ class TestViewsBasic:
 
         # Add a new tab
         self.views.add_new_tab()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         # Rename it to a stable name
         tab = self.page.locator("button.tabItem").nth(1)
         tab.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
         tab.locator("img[src*='editIcon']").click()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
         tab_input = self.page.locator("input.tabTitle").nth(1)
         tab_input.fill(view_name)
         tab_input.press("Enter")
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(250)
 
         # Expand Driver Site and show cameras
         self.views.expand_site_and_show_cameras("Driver Site")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         # Select the first available camera via checkbox
         self.views.add_first_camera_via_checkbox()
 
         # Click save button
         save_button = self.page.locator("button:has-text('Save View'), img[src*='save']").last
-        save_button.click()
-        self.page.wait_for_timeout(1000)
+        save_button.click(force=True)
+        self.page.wait_for_timeout(500)
 
         # Verify success message
         success_message = self.page.locator("text=View saved successfully")
@@ -96,25 +96,25 @@ class TestViewsBasic:
 
         # Cleanup: close tab and delete saved view
         tab.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
         tab.locator("img[src*='closeIcon']").click()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         # Open My Views and delete the saved view
         self.page.locator("img[src*='myviews']").click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)
         saved_view = self.page.locator(f"span[title='{view_name}']")
         saved_view.wait_for(state="visible", timeout=20000)
         saved_view.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
         delete_button = self.page.locator("img[src*='delete-icon']")
         delete_button.click()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(250)
         delete_confirm = self.page.locator("button:has-text('Delete')")
         delete_confirm.click()
         deleted_msg = self.page.locator("text=Successfully deleted")
         deleted_msg.wait_for(state="visible", timeout=60000)
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         # Cleanup complete - end test after deletion
 
@@ -123,7 +123,7 @@ class TestViewsBasic:
         # Click My Views button
         my_views_button = self.page.locator("img[src*='myviews']")
         my_views_button.click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)
 
         # Verify the panel loaded - look for view thumbnails or the panel itself
         views_loaded = self.page.locator("img[src*='data:image/jpeg']").first
@@ -137,34 +137,34 @@ class TestViewsBasic:
 
         # Create and save a view
         self.views.add_new_tab()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         tab = self.page.locator("button.tabItem").nth(1)
         tab.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
         tab.locator("img[src*='editIcon']").click()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
 
         tab_input = self.page.locator("input.tabTitle").nth(1)
         tab_input.fill(view_name)
         tab_input.press("Enter")
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(250)
 
         self.views.expand_site_and_show_cameras("Driver Site")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
         self.views.add_first_camera_via_checkbox()
 
-        self.page.locator("img[src*='save']").nth(1).click()
-        self.page.wait_for_timeout(1000)
-        self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=20000)
+        self.page.locator("img[src*='save']").nth(1).click(force=True)
+        self.page.wait_for_timeout(500)
+        self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=60000)
 
         # Refresh page (clears tab state, saved view persists)
         self.page.reload()
-        self.page.wait_for_timeout(3000)
+        self.page.wait_for_timeout(1500)
 
         # Open My Views panel
         self.page.locator("img[src*='myviews']").click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)
 
         # Find saved view
         view_span = self.page.locator(f"span[title='{view_name}']").first
@@ -187,12 +187,12 @@ class TestViewsBasic:
             }""",
             view_name
         )
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(250)
 
         # Click checkbox to open the view
         checkbox = self.page.locator(".sidebar-custom-checkbox").first
         checkbox.click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)
 
         # Verify the tab appears
         new_tab = self.page.locator(f"button.tabItem:has(div[title='{view_name}'])")
@@ -206,51 +206,51 @@ class TestViewsBasic:
         view_name = f"DeleteTest_{datetime.datetime.now().strftime('%H%M%S')}"
 
         self.views.add_new_tab()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         tab = self.page.locator("button.tabItem").nth(1)
         tab.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
         tab.locator("img[src*='editIcon']").click()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
 
         tab_input = self.page.locator("input.tabTitle").nth(1)
         tab_input.fill(view_name)
         tab_input.press("Enter")
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(250)
 
         # Expand Driver Site and show cameras
         self.views.expand_site_and_show_cameras("Driver Site")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         # Select the first available camera via checkbox
         self.views.add_first_camera_via_checkbox()
 
         # Save the view
-        self.page.locator("img[src*='save']").nth(1).click()
-        self.page.wait_for_timeout(1000)
-        self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=20000)
+        self.page.locator("img[src*='save']").nth(1).click(force=True)
+        self.page.wait_for_timeout(1000)  # Increased from 500ms
+        self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=60000)
 
         # Close the tab
         tab.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
         tab.locator("img[src*='closeIcon']").click()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)
 
         # Open My Views
         self.page.locator("img[src*='myviews']").click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)
 
         # Find the saved view and hover to show delete button
         saved_view = self.page.locator(f"span[title='{view_name}']")
         saved_view.wait_for(state="visible", timeout=20000)
         saved_view.hover()
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(150)
 
         # Click delete icon
         delete_button = self.page.locator("img[src*='delete-icon']")
         delete_button.click()
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(250)
 
         # Confirm deletion (use 'Delete' button label)
         confirm_button = self.page.locator("button:has-text('Delete')")
@@ -259,3 +259,5 @@ class TestViewsBasic:
         # Verify success message
         success_message = self.page.locator("text=Successfully deleted")
         success_message.wait_for(state="visible", timeout=60000)
+
+

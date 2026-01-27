@@ -25,3 +25,13 @@ Thumbs.db
 
 # Ignore cached session token used by tests
 .session_cache
+
+# Ignore debug artifacts
+*.png
+*.har
+logs/
+
+# Playwright auth cache
+.playwright_auth.json
+# Pytest cache
+nodeids
