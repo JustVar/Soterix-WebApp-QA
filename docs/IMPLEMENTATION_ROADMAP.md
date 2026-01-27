@@ -1,14 +1,14 @@
 # Implementation Roadmap - Playwright Soterix QA
 
-## Current Status (as of January 2025)
+## Current Status (as of January 2026)
 
 | Metric | Value |
 |--------|-------|
-| Total Tests Passing | 26 |
+| Total Tests Passing | 32 |
 | API Smoke Tests | 16 |
 | Login UI Tests | 10 |
-| Total Tests Passing | 35 |
-| Migration Progress | ~16% (35 of ~212) |
+| Views UI Tests | 6 |
+| Migration Progress | 15% (32 of ~212) |
 
 ### Completed ✅
 - [x] Login Page Object Model with ReCAPTCHA handling
@@ -20,8 +20,14 @@
 - [x] Migration documentation
 - [x] SSL verification configuration for API tests
 
+- [x] Views Page Object Model with My Views panel support
+- [x] Views UI tests (6 tests - save, open, delete, rename)
+- [x] Repo cleanup and debug artifact removal
+
 ### In Progress 🔄
 - [ ] Documentation cleanup and updates
+- [ ] Views module expansion (6 of 40 migrated)
+- [ ] Events module migration (26 tests)
 
 ### Next Up
 - [ ] Views module migration (27 tests)
@@ -43,12 +49,10 @@
 ## Phase 2: Core Modules (IN PROGRESS)
 
 ### Views Module (Next)
-### Views Module (Next)
-- [x] Create ViewsPage Page Object Model
-- [x] Implement 9 Views UI tests (tab management, thumbnails, rename functionality)
-- [ ] Migrate remaining thumbnail view tests (18 remaining)
-- [ ] Migrate 13 full screen view tests
-- [ ] Test camera playback functionality
+- ViewsPage POM: COMPLETE
+- Basic tests (6): COMPLETE
+- Remaining thumbnail tests: PENDING
+- Full screen tests: PENDING
 
 ### Events Module
 - [ ] Create EventsPage Page Object Model
