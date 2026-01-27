@@ -88,3 +88,16 @@ $env:SSL_VERIFY='false'; pytest tests/ui/views/test_views_basic.py::TestViewsBas
 # Run all tests
 $env:SSL_VERIFY='false'; pytest tests/ -v
 ```
+
+## Session Update - 2025-01-27
+
+### Fixes Applied
+- Hardened `click_all_cameras()` with visibility wait + `force=True`
+- Fixed `test_open_saved_view` save icon click with `force=True`
+- Fixed `test_delete_saved_view` button selector ("Yes" -> "Delete")
+- Fixed duplicate wait in `test_save_view`
+
+### Result
+- All 6 Views UI tests passing
+- Total test count: 32 (16 API + 10 Login + 6 Views)
+
