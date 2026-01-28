@@ -33,5 +33,6 @@ logs/
 
 # Playwright auth cache
 .playwright_auth.json
+.auth_state.json
 # Pytest cache
 nodeids

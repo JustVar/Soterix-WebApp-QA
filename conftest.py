@@ -131,110 +131,118 @@ def api_auth_helper(api_base_url):
     return helper
 
 
-@pytest.fixture
-def authenticated_page(page, api_auth_helper, login_data, base_url):
-    """Provide a Playwright `page` that's authenticated.
+# ----------------
+# Session-Cached Authentication (Playwright Storage State)
+# ----------------
+# This optimization saves ~345 seconds on test runs by caching auth state.
+# See docs/SESSION_CACHING_IMPLEMENTATION.md for details.
 
-    Strategy:
-      1. Try to read `.session_cache` and inject `JSESSIONID` cookie into the
-         Playwright context. If the server accepts it (navigation away from
-         login), return the page.
-      2. Otherwise, fall back to an in-page UI login using the `LoginPage` POM.
+AUTH_STATE_FILE = ".auth_state.json"
+
+
+@pytest.fixture(scope="session")
+def auth_state_path():
+    """Path to the cached authentication state file."""
+    return AUTH_STATE_FILE
+
+
+@pytest.fixture(scope="session")
+def session_browser():
+    """Session-scoped browser instance shared across all UI tests."""
+    from playwright.sync_api import sync_playwright
+
+    pw = sync_playwright().start()
+    browser = pw.chromium.launch(headless=True)
+    yield browser
+    browser.close()
+    pw.stop()
+
+
+@pytest.fixture(scope="session")
+def authenticated_context(session_browser, auth_state_path, base_url, login_data):
+    """Session-scoped authenticated browser context.
+
+    First run: Logs in via UI and saves storage state to file.
+    Subsequent runs: Loads cached state (skips login entirely).
     """
-    import json
     import os
-    from urllib.parse import urlparse
+    import time
 
-    cache_file = getattr(api_auth_helper, 'CACHE_FILE', '.session_cache')
-
-    # 1) Try cookie injection
-    if os.path.exists(cache_file):
+    # Check if we have cached auth state
+    if os.path.exists(auth_state_path):
+        print(f"[AUTH] Loading cached session from {auth_state_path}")
         try:
-            with open(cache_file, 'r', encoding='utf-8') as f:
-                cache = json.load(f)
+            context = session_browser.new_context(storage_state=auth_state_path)
+            # Verify the session is still valid
+            page = context.new_page()
+            page.goto(base_url)
+            page.wait_for_load_state('domcontentloaded', timeout=30000)
+            # Give app time to redirect if session invalid
+            time.sleep(2)
 
-            # Navigate to base so localStorage assignments apply to correct origin
-            try:
-                page.goto(base_url)
-                page.wait_for_load_state('networkidle')
-            except Exception:
-                pass
-
-            # Inject cookie if present (preserve path/domain from saved cookie)
-            try:
-                if isinstance(cache.get('cookie'), dict):
-                    cookie = cache.get('cookie')
-                    # Playwright requires keys: name, value, domain, path
-                    c = {
-                        'name': cookie.get('name'),
-                        'value': cookie.get('value'),
-                        'domain': cookie.get('domain') or urlparse(base_url).hostname,
-                        'path': cookie.get('path') or '/',
-                    }
-                    try:
-                        page.context.add_cookies([c])
-                    except Exception as e:
-                        print(f"Cookie injection failed: {e}")
-                elif cache.get('token'):
-                    hostname = urlparse(base_url).hostname
-                    c = {
-                        'name': 'JSESSIONID',
-                        'value': str(cache.get('token')),
-                        'domain': hostname,
-                        'path': '/v-apiserver',
-                    }
-                    try:
-                        page.context.add_cookies([c])
-                    except Exception as e:
-                        print(f"Cookie injection failed: {e}")
-            except Exception as e:
-                print(f"Cookie injection block failed: {e}")
-
-            # Inject localStorage entries if present
-            try:
-                ls = cache.get('localStorage')
-                if isinstance(ls, dict):
-                    for k, v in ls.items():
-                        try:
-                            page.evaluate(f"localStorage.setItem({json.dumps(k)}, {json.dumps(v)})")
-                        except Exception:
-                            # fallback to simple assignment
-                            try:
-                                page.evaluate(f"localStorage.setItem({json.dumps(k)}, {json.dumps(v)})")
-                            except Exception:
-                                pass
-            except Exception as e:
-                print(f"localStorage injection failed: {e}")
-
-            # Reload to apply auth state
-            try:
-                page.reload()
-                page.wait_for_load_state('networkidle')
-            except Exception:
-                pass
-
-            # Check if login recognized (not on login path)
-            try:
-                if '/auth/login' not in (page.url or ''):
-                    return page
-            except Exception:
-                pass
+            # If we're not redirected to login, session is valid
+            if '/auth/login' not in page.url:
+                print("[AUTH] Cached session is valid")
+                page.close()
+                yield context
+                context.close()
+                return
+            else:
+                print("[AUTH] Cached session expired, re-authenticating...")
+                page.close()
+                context.close()
+                # Delete stale cache
+                os.remove(auth_state_path)
         except Exception as e:
-            print(f"Failed reading cache_file {cache_file}: {e}")
+            print(f"[AUTH] Failed to load cached session: {e}")
+            if os.path.exists(auth_state_path):
+                os.remove(auth_state_path)
 
-    # 2) Fallback to in-page UI login
+    # No valid cache - perform fresh login
+    print("[AUTH] Performing fresh login...")
+    context = session_browser.new_context()
+    page = context.new_page()
+
     try:
         from tests.shared.pages.login_page import LoginPage
         lp = LoginPage(page, base_url)
         lp.login(login_data['username'], login_data['password'])
-        try:
-            page.wait_for_timeout(2000)
-        except Exception:
-            pass
-    except Exception:
-        pass
 
-    return page
+        # Wait for login to complete (not on login page anymore)
+        page.wait_for_function(
+            "() => !window.location.href.includes('/auth/login')",
+            timeout=60000
+        )
+        # Use domcontentloaded instead of networkidle (app has persistent connections)
+        page.wait_for_load_state('domcontentloaded', timeout=30000)
+
+        # Save the authenticated state
+        context.storage_state(path=auth_state_path)
+        print(f"[AUTH] Session saved to {auth_state_path}")
+
+    except Exception as e:
+        print(f"[AUTH] Login failed: {e}")
+        raise
+    finally:
+        page.close()
+
+    yield context
+    context.close()
+
+
+@pytest.fixture
+def authenticated_page(authenticated_context, base_url):
+    """Provide a Playwright page from the authenticated session context.
+
+    This is function-scoped so each test gets a fresh page,
+    but they all share the same authenticated context (session-scoped).
+    The page is navigated to base_url so tests start on the main app.
+    """
+    page = authenticated_context.new_page()
+    page.goto(base_url)
+    page.wait_for_load_state('domcontentloaded', timeout=30000)
+    yield page
+    page.close()
 
 
 @pytest.fixture(scope="session")
