@@ -15,13 +15,13 @@ Our QA automation framework needs to run unattended across multiple environments
 | **QA** (vsaas-qa-env) | Disabled | ✅ Works perfectly |
 | **Stage** (staging.soterixcloud) | Enabled | ⚠️ Requires manual CAPTCHA solve |
 | **Pre-Prod** (TBD) | Not set up | 🔲 Need to configure |
-| **Production** (user.soterixcloud) | Likely enabled | ❌ Cannot automate login |
+| **Production** (user.soterixcloud) | Enabled | ⚠️ Requires manual CAPTCHA solve |
 
-### Current Workaround (Stage)
+### Current Workaround (Stage & Production)
 
 1. QA manually runs the login test
 2. QA solves the ReCAPTCHA manually in the browser
-3. Session is cached
+3. Session is cached (using Playwright storage state)
 4. Remaining automation suite runs using cached session
 
 **Problem:** This approach:
@@ -29,6 +29,7 @@ Our QA automation framework needs to run unattended across multiple environments
 - Cannot integrate with CI/CD pipelines
 - Blocks any future scheduled/triggered test runs
 - Session expires, requiring re-intervention
+- Must be repeated for each environment (Stage AND Production)
 
 ---
 
@@ -173,12 +174,13 @@ Hi Team,
 |-------------|-----------|-------------------|
 | QA | Disabled | ✅ Fully automated |
 | Stage | Enabled | ⚠️ Requires manual CAPTCHA |
-| Production | Enabled | ⚠️ Cannot automate |
+| Production | Enabled | ⚠️ Requires manual CAPTCHA |
 
-Currently on Stage, we must:
+Currently on Stage and Production, we must:
 1. Manually solve CAPTCHA before each test run
 2. Cannot schedule overnight runs
 3. Cannot integrate with CI/CD pipelines
+4. Session expires, requiring repeated manual intervention
 
 ### Request
 
