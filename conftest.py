@@ -146,34 +146,25 @@ def auth_state_path():
     return AUTH_STATE_FILE
 
 
-@pytest.fixture(scope="session")
-def session_browser():
-    """Session-scoped browser instance shared across all UI tests."""
-    from playwright.sync_api import sync_playwright
+@pytest.fixture
+def authenticated_page(browser, auth_state_path, base_url, login_data):
+    """Provide a Playwright page with cached authentication.
 
-    pw = sync_playwright().start()
-    browser = pw.chromium.launch(headless=True)
-    yield browser
-    browser.close()
-    pw.stop()
-
-
-@pytest.fixture(scope="session")
-def authenticated_context(session_browser, auth_state_path, base_url, login_data):
-    """Session-scoped authenticated browser context.
-
+    Uses pytest-playwright's browser fixture to avoid event loop conflicts.
     First run: Logs in via UI and saves storage state to file.
     Subsequent runs: Loads cached state (skips login entirely).
     """
     import os
     import time
 
+    context = None
+    page = None
+
     # Check if we have cached auth state
     if os.path.exists(auth_state_path):
         print(f"[AUTH] Loading cached session from {auth_state_path}")
         try:
-            context = session_browser.new_context(storage_state=auth_state_path)
-            # Verify the session is still valid
+            context = browser.new_context(storage_state=auth_state_path)
             page = context.new_page()
             page.goto(base_url)
             page.wait_for_load_state('domcontentloaded', timeout=30000)
@@ -183,8 +174,8 @@ def authenticated_context(session_browser, auth_state_path, base_url, login_data
             # If we're not redirected to login, session is valid
             if '/auth/login' not in page.url:
                 print("[AUTH] Cached session is valid")
+                yield page
                 page.close()
-                yield context
                 context.close()
                 return
             else:
@@ -196,11 +187,14 @@ def authenticated_context(session_browser, auth_state_path, base_url, login_data
         except Exception as e:
             print(f"[AUTH] Failed to load cached session: {e}")
             if os.path.exists(auth_state_path):
-                os.remove(auth_state_path)
+                try:
+                    os.remove(auth_state_path)
+                except Exception:
+                    pass
 
     # No valid cache - perform fresh login
     print("[AUTH] Performing fresh login...")
-    context = session_browser.new_context()
+    context = browser.new_context()
     page = context.new_page()
 
     try:
@@ -223,26 +217,10 @@ def authenticated_context(session_browser, auth_state_path, base_url, login_data
     except Exception as e:
         print(f"[AUTH] Login failed: {e}")
         raise
-    finally:
-        page.close()
 
-    yield context
-    context.close()
-
-
-@pytest.fixture
-def authenticated_page(authenticated_context, base_url):
-    """Provide a Playwright page from the authenticated session context.
-
-    This is function-scoped so each test gets a fresh page,
-    but they all share the same authenticated context (session-scoped).
-    The page is navigated to base_url so tests start on the main app.
-    """
-    page = authenticated_context.new_page()
-    page.goto(base_url)
-    page.wait_for_load_state('domcontentloaded', timeout=30000)
     yield page
     page.close()
+    context.close()
 
 
 @pytest.fixture(scope="session")

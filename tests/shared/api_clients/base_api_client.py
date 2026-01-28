@@ -39,9 +39,10 @@ class BaseAPIClient:
         elif ssl_verify_env in ("true", "1", "yes"):
             self.verify = True
         else:
-            # Default: disable for QA/stage environments
+            # Default: disable SSL verification for non-production environments
+            # This matches auth_helper.py logic and avoids SSL errors with self-signed certs
             env = os.getenv("ENV", "").lower()
-            self.verify = False if env in ("qa", "stage") else True
+            self.verify = False if env not in ("prod", "production") else True
 
     def _headers(self) -> Dict[str, str]:
         h = {"Accept": "application/json"}
