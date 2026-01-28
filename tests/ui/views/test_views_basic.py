@@ -179,7 +179,9 @@ class TestViewsBasic:
         self.page.wait_for_timeout(500)
         self.views.add_first_camera_via_checkbox()
 
-        self.page.locator("img[src*='save']").nth(1).click(force=True)
+        # Save the view - use JS click to handle viewport issues
+        save_btn = self.page.locator("img[src*='save']").nth(1)
+        save_btn.evaluate("el => el.click()")
         self.page.wait_for_timeout(500)
         self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=60000)
 
@@ -231,29 +233,37 @@ class TestViewsBasic:
         view_name = f"DeleteTest_{datetime.datetime.now().strftime('%H%M%S')}"
 
         self.views.add_new_tab()
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(1000)  # Increased wait for tab creation
 
         tab = self.page.locator("button.tabItem").nth(1)
         tab.hover()
-        self.page.wait_for_timeout(150)
+        self.page.wait_for_timeout(300)  # Increased wait for hover
         tab.locator("img[src*='editIcon']").click()
-        self.page.wait_for_timeout(150)
+        self.page.wait_for_timeout(300)
 
         tab_input = self.page.locator("input.tabTitle").nth(1)
         tab_input.fill(view_name)
         tab_input.press("Enter")
-        self.page.wait_for_timeout(250)
+        self.page.wait_for_timeout(500)
 
         # Expand Driver Site and show cameras
         self.views.expand_site_and_show_cameras("Driver Site")
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(1000)  # Extra wait for cameras to load
 
         # Select the first available camera via checkbox
         self.views.add_first_camera_via_checkbox()
+        self.page.wait_for_timeout(1000)  # Wait for camera to be added to view
 
-        # Save the view
-        self.page.locator("img[src*='save']").nth(1).click(force=True)
-        self.page.wait_for_timeout(1000)  # Increased from 500ms
+        # Save the view - wait for button visibility, then use JS click
+        save_buttons = self.page.locator("img[src*='save']")
+        self.page.wait_for_timeout(500)  # Let UI stabilize
+        if save_buttons.count() > 1:
+            save_btn = save_buttons.nth(1)
+        else:
+            save_btn = save_buttons.first
+        save_btn.wait_for(state="attached", timeout=10000)
+        save_btn.evaluate("el => el.click()")
+        self.page.wait_for_timeout(1500)
         self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=60000)
 
         # Close the tab

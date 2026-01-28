@@ -155,7 +155,6 @@ def authenticated_page(browser, auth_state_path, base_url, login_data):
     Subsequent runs: Loads cached state (skips login entirely).
     """
     import os
-    import time
 
     context = None
     page = None
@@ -168,21 +167,42 @@ def authenticated_page(browser, auth_state_path, base_url, login_data):
             page = context.new_page()
             page.goto(base_url)
             page.wait_for_load_state('domcontentloaded', timeout=30000)
-            # Give app time to redirect if session invalid
-            time.sleep(2)
 
-            # If we're not redirected to login, session is valid
-            if '/auth/login' not in page.url:
-                print("[AUTH] Cached session is valid")
+            # Wait for either login form (session invalid) or nav element (session valid)
+            # This handles client-side redirects properly
+            login_form = page.locator("input[type='email'], input[type='password']").first
+            nav_element = page.locator("text=Views, text=Dashboard, text=Alerts").first
+
+            # Race: whichever appears first tells us the session state
+            try:
+                # Wait up to 15s for either element
+                page.wait_for_timeout(2000)  # Brief initial wait for app to initialize
+
+                # Check which element is visible
+                for _ in range(13):  # 13 more seconds of checking
+                    if login_form.is_visible():
+                        raise Exception("Login form appeared - session invalid")
+                    if nav_element.is_visible():
+                        print("[AUTH] Cached session is valid")
+                        yield page
+                        page.close()
+                        context.close()
+                        return
+                    page.wait_for_timeout(1000)
+
+                # Neither appeared in time - check URL as fallback
+                if '/auth/login' in page.url:
+                    raise Exception("Redirected to login - session invalid")
+                print("[AUTH] Cached session is valid (URL check)")
                 yield page
                 page.close()
                 context.close()
                 return
-            else:
-                print("[AUTH] Cached session expired, re-authenticating...")
+
+            except Exception as e:
+                print(f"[AUTH] Cached session expired: {e}")
                 page.close()
                 context.close()
-                # Delete stale cache
                 os.remove(auth_state_path)
         except Exception as e:
             print(f"[AUTH] Failed to load cached session: {e}")
