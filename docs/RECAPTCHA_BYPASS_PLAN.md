@@ -1,344 +1,324 @@
 # ReCAPTCHA Bypass Plan for Test Automation
 
-## Overview
+## Executive Summary
 
-Our test automation framework needs to authenticate against multiple environments. ReCAPTCHA blocks automated logins, which prevents our tests from running reliably.
+Our QA automation framework needs to run unattended across multiple environments. Currently, ReCAPTCHA on Stage (and likely Production) requires manual intervention, which blocks overnight and CI/CD automation runs.
 
-This document contains:
-1. Email templates to request ReCAPTCHA bypass from the tech team
-2. Environment-by-environment plan
-3. Automation account naming convention
+**Goal:** Enable fully automated test runs across all environments without manual CAPTCHA solving.
 
 ---
 
-## First Step: Find Out ReCAPTCHA Process
+## Current Environment Status
 
-Before requesting accounts, ask your tech team:
+| Environment | ReCAPTCHA Status | Automation Impact |
+|-------------|------------------|-------------------|
+| **QA** (vsaas-qa-env) | Disabled | ✅ Works perfectly |
+| **Stage** (staging.soterixcloud) | Enabled | ⚠️ Requires manual CAPTCHA solve |
+| **Pre-Prod** (TBD) | Not set up | 🔲 Need to configure |
+| **Production** (user.soterixcloud) | Likely enabled | ❌ Cannot automate login |
 
-> **"How is ReCAPTCHA bypass handled for test automation? Is there an existing whitelist we can add accounts to?"**
+### Current Workaround (Stage)
 
-Their answer will determine:
-- How much effort is needed per account
-- Whether we need to minimize accounts or can have multiple
-- Which bypass method to use in our requests
+1. QA manually runs the login test
+2. QA solves the ReCAPTCHA manually in the browser
+3. Session is cached
+4. Remaining automation suite runs using cached session
 
----
-
-## Automation Account Naming Convention
-
-We need **3 accounts per environment** to test different permission levels:
-
-### QA Environment (qa.example.invalid)
-| Email | Role | Purpose |
-|-------|------|---------|
-| automation@soterixsystems.com | Admin | Full access tests |
-| automation-supervisor@soterixsystems.com | Supervisor | Limited admin tests |
-| automation-operator@soterixsystems.com | Operator | Basic user permission tests |
-
-### Staging Environment (staging.example.invalid)
-| Email | Role | Purpose |
-|-------|------|---------|
-| automation-stage@soterixsystems.com | Admin | Full access tests |
-| automation-stage-supervisor@soterixsystems.com | Supervisor | Limited admin tests |
-| automation-stage-operator@soterixsystems.com | Operator | Basic user permission tests |
-
-### Pre-Prod Environment (URL TBD)
-| Email | Role | Purpose |
-|-------|------|---------|
-| automation-preprod@soterixsystems.com | Admin | Full access tests |
-| automation-preprod-supervisor@soterixsystems.com | Supervisor | Limited admin tests |
-| automation-preprod-operator@soterixsystems.com | Operator | Basic user permission tests |
-
-### Production Environment (app.example.invalid)
-| Email | Role | Purpose |
-|-------|------|---------|
-| automation-prod@soterixsystems.com | Operator | Read-only tests only |
-
-**Note:** Production only needs one Operator account - no destructive testing allowed.
-
-### Summary: 10 Total Accounts
-- QA: 3 accounts
-- Staging: 3 accounts
-- Pre-Prod: 3 accounts
-- Production: 1 account (read-only)
+**Problem:** This approach:
+- Cannot run overnight without human presence
+- Cannot integrate with CI/CD pipelines
+- Blocks any future scheduled/triggered test runs
+- Session expires, requiring re-intervention
 
 ---
 
-## Email Template 1: ReCAPTCHA Bypass Request
+## Proposed Solutions for Tech Team
 
-**Subject:** Request: ReCAPTCHA Bypass for Test Automation Accounts
+### Option 1: Disable ReCAPTCHA on Non-Production Environments (Recommended)
 
-**To:** [Tech Team / DevOps]
+**What:** Disable ReCAPTCHA entirely on Stage and Pre-Prod (matching QA setup)
 
-**Body:**
+**Pros:**
+- Simplest implementation
+- Zero maintenance
+- Already proven on QA environment
+- Standard practice for test environments
+
+**Cons:**
+- Requires environment configuration change
+
+**Implementation:** Environment variable or config flag to disable ReCAPTCHA check
+
+```
+# Example config
+RECAPTCHA_ENABLED=false  # Stage, Pre-Prod
+RECAPTCHA_ENABLED=true   # Production only
+```
+
+---
+
+### Option 2: Email Whitelist for Automation Accounts
+
+**What:** Skip ReCAPTCHA check if login email matches a whitelist
+
+**Pros:**
+- Surgical approach - only automation accounts bypass
+- Works on any environment including Production
+- Audit trail shows automation vs human logins
+
+**Cons:**
+- Requires code change in login flow
+- Need to maintain whitelist
+
+**Implementation:**
+```python
+# Backend pseudocode
+AUTOMATION_EMAILS = [
+    "automation@soterixsystems.com",
+    "automation-stage@soterixsystems.com",
+    "automation-prod@soterixsystems.com"
+]
+
+def should_show_recaptcha(email):
+    return email not in AUTOMATION_EMAILS
+```
+
+---
+
+### Option 3: IP Address Whitelist
+
+**What:** Skip ReCAPTCHA for requests from known automation server IPs
+
+**Pros:**
+- No account-specific changes needed
+- Works for any user logging in from whitelisted IP
+
+**Cons:**
+- Need static IP for automation server
+- Won't work from developer machines (good or bad?)
+- Requires network configuration
+
+**Implementation:** Firewall or application-level IP check before ReCAPTCHA
+
+---
+
+### Option 4: API-Based Authentication (Bypass UI Login)
+
+**What:** Create an API endpoint for programmatic login without ReCAPTCHA
+
+**Pros:**
+- Cleaner separation of human vs automation flows
+- Can add rate limiting, API keys for security
+- Faster than UI login
+
+**Cons:**
+- Requires new API endpoint development
+- Doesn't test the actual UI login flow
+
+**Implementation:**
+```
+POST /api/v1/auth/automation-login
+Headers: X-Automation-Key: <secret>
+Body: { "email": "...", "password": "..." }
+Response: { "token": "JSESSIONID..." }
+```
+
+---
+
+### Option 5: Long-Lived API Tokens
+
+**What:** Generate non-expiring or long-lived tokens for automation accounts
+
+**Pros:**
+- One-time setup
+- No login needed at all
+- Works even if login flow changes
+
+**Cons:**
+- Security risk if tokens are compromised
+- Need token management/revocation capability
+- Still requires periodic refresh (90 days, etc.)
+
+---
+
+## Recommended Approach
+
+**For Stage and Pre-Prod:** Option 1 (Disable ReCAPTCHA)
+- Matches QA environment behavior
+- Zero ongoing maintenance
+- Enables immediate overnight automation
+
+**For Production:** Option 2 (Email Whitelist) OR Option 4 (API Login)
+- Production should keep ReCAPTCHA for regular users
+- Single read-only automation account whitelisted
+- Limits blast radius if account is compromised
+
+---
+
+## Email Template for Tech Team
+
+**Subject:** Request: Enable Unattended Automation Testing on Stage Environment
+
+**To:** [Tech Team / Engineering]
+
+---
 
 Hi Team,
 
-We are setting up automated QA testing across our environments and need ReCAPTCHA bypassed for dedicated automation accounts.
+**TL;DR:** We need ReCAPTCHA bypassed on Stage (and future Pre-Prod) to enable overnight/CI automation runs.
 
-**Request:**
-Please whitelist the following email addresses to bypass ReCAPTCHA during login:
+### Current Situation
 
-**QA Environment (qa.example.invalid)**
-- automation@soterixsystems.com (Admin)
-- automation-supervisor@soterixsystems.com (Supervisor)
-- automation-operator@soterixsystems.com (Operator)
+| Environment | ReCAPTCHA | Automation Status |
+|-------------|-----------|-------------------|
+| QA | Disabled | ✅ Fully automated |
+| Stage | Enabled | ⚠️ Requires manual CAPTCHA |
+| Production | Enabled | ⚠️ Cannot automate |
 
-**Staging Environment (staging.example.invalid)**
-- automation-stage@soterixsystems.com (Admin)
-- automation-stage-supervisor@soterixsystems.com (Supervisor)
-- automation-stage-operator@soterixsystems.com (Operator)
+Currently on Stage, we must:
+1. Manually solve CAPTCHA before each test run
+2. Cannot schedule overnight runs
+3. Cannot integrate with CI/CD pipelines
 
-**Pre-Prod Environment ([pre-prod URL])**
-- automation-preprod@soterixsystems.com (Admin)
-- automation-preprod-supervisor@soterixsystems.com (Supervisor)
-- automation-preprod-operator@soterixsystems.com (Operator)
+### Request
 
-**Production Environment (app.example.invalid)**
-- automation-prod@soterixsystems.com (Operator - read-only)
+**Stage & Pre-Prod:** Please disable ReCAPTCHA (matching QA configuration)
 
-**Why this is needed:**
-- ReCAPTCHA is designed to block bots, which includes our test automation
-- We currently use retry logic and delays, but this is unreliable and slow (adds 60-90 seconds per login)
-- Whitelisting specific automation accounts is the industry-standard approach
+This is standard practice for test environments and enables:
+- Overnight regression runs
+- CI/CD integration (run tests on every deploy)
+- Faster feedback loops for development
 
-**Suggested implementation options:**
+**Production (Future):** When we're ready to test Production, we'd like to discuss:
+- Email whitelist for a single read-only automation account, OR
+- API-based authentication endpoint for automation
 
-1. **Email whitelist** (Preferred) - Skip ReCAPTCHA check if email matches automation account
-2. **IP whitelist** - Skip ReCAPTCHA for requests from our office IP / test server IP
-3. **Secret header** - Skip ReCAPTCHA if request includes a secret header (e.g., `X-Automation-Key: <secret>`)
-4. **Test mode flag** - Environment variable to disable ReCAPTCHA entirely on non-prod environments
+### Proposed Automation Accounts
 
-**Security considerations:**
-- Automation accounts will have strong, rotated passwords
-- Production account will be read-only (no write/delete permissions)
-- We can restrict automation accounts to specific IP ranges if needed
+| Environment | Account | Role |
+|-------------|---------|------|
+| Stage | automation-stage@soterixsystems.com | Admin |
+| Pre-Prod | automation-preprod@soterixsystems.com | Admin |
+| Production | automation-prod@soterixsystems.com | Operator (read-only) |
 
-Please let me know which approach works best for your infrastructure, and I can provide additional details.
+### Timeline
+
+We'd like to enable overnight runs on Stage as soon as possible. Can we schedule a quick call to discuss implementation options?
 
 Thanks,
 [Your Name]
-QA Team
+QA Automation Team
 
 ---
 
-## Email Template 2: Automation Account Creation Request
+## Automation Account Requirements
 
-**Subject:** Request: Create Automation Test Accounts for QA Environments
+### Stage Environment (Priority)
+| Email | Role | Purpose |
+|-------|------|---------|
+| automation-stage@soterixsystems.com | Admin | Full regression testing |
+| automation-stage-supervisor@soterixsystems.com | Supervisor | Permission boundary tests |
+| automation-stage-operator@soterixsystems.com | Operator | Basic user flow tests |
 
-**To:** [Admin / Account Management]
+### Pre-Prod Environment (When Available)
+| Email | Role | Purpose |
+|-------|------|---------|
+| automation-preprod@soterixsystems.com | Admin | Pre-release validation |
+| automation-preprod-supervisor@soterixsystems.com | Supervisor | Permission tests |
+| automation-preprod-operator@soterixsystems.com | Operator | User flow tests |
 
-**Body:**
-
-Hi,
-
-We need dedicated automation accounts created for our test framework. These accounts will be used exclusively by automated tests, not human users.
-
-**Accounts to create:**
-
-**QA Environment (qa.example.invalid)**
-| Email | Role |
-|-------|------|
-| automation@soterixsystems.com | Admin |
-| automation-supervisor@soterixsystems.com | Supervisor |
-| automation-operator@soterixsystems.com | Operator |
-
-**Staging Environment (staging.example.invalid)**
-| Email | Role |
-|-------|------|
-| automation-stage@soterixsystems.com | Admin |
-| automation-stage-supervisor@soterixsystems.com | Supervisor |
-| automation-stage-operator@soterixsystems.com | Operator |
-
-**Pre-Prod Environment ([URL TBD])**
-| Email | Role |
-|-------|------|
-| automation-preprod@soterixsystems.com | Admin |
-| automation-preprod-supervisor@soterixsystems.com | Supervisor |
-| automation-preprod-operator@soterixsystems.com | Operator |
-
-**Production Environment (app.example.invalid)**
-| Email | Role |
-|-------|------|
-| automation-prod@soterixsystems.com | Operator |
-
-**Total: 10 accounts**
-
-**For each account, please:**
-1. Create the user with the specified email
-2. Assign to the appropriate role
-3. Grant access to all test sites (or specify which sites)
-4. Send the temporary password to me securely (1Password, encrypted email, or Slack DM)
-
-**Why dedicated accounts:**
-- Audit trail shows "automation" vs human actions
-- Can disable automation accounts without affecting human users
-- Easier to manage permissions and access
-- Industry best practice for test automation
-
-Let me know if you need any additional information.
-
-Thanks,
-[Your Name]
-QA Team
+### Production Environment (Future, Read-Only)
+| Email | Role | Purpose |
+|-------|------|---------|
+| automation-prod@soterixsystems.com | Operator | Smoke tests only, NO write operations |
 
 ---
 
-## Email Template 3: Combined Request (If Same Team Handles Both)
+## Implementation Checklist
 
-**Subject:** Request: Automation Test Accounts + ReCAPTCHA Bypass for QA Framework
+### Stage Environment
+- [ ] Request ReCAPTCHA disable (or whitelist)
+- [ ] Create automation-stage@soterixsystems.com (Admin)
+- [ ] Create automation-stage-supervisor@soterixsystems.com (Supervisor)
+- [ ] Create automation-stage-operator@soterixsystems.com (Operator)
+- [ ] Update config/env/stage.py with credentials
+- [ ] Verify unattended login works
+- [ ] Schedule first overnight run
 
-**To:** [Tech Team]
+### Pre-Prod Environment
+- [ ] Confirm Pre-Prod URL when available
+- [ ] Request ReCAPTCHA disable (match Stage)
+- [ ] Create automation accounts (3)
+- [ ] Create config/env/preprod.py
+- [ ] Verify login and run smoke tests
 
-**Body:**
-
-Hi Team,
-
-We're implementing automated testing across all environments and need two things:
-
-### 1. Create Automation Accounts
-
-**QA Environment** (qa.example.invalid)
-- automation@soterixsystems.com (Admin)
-- automation-supervisor@soterixsystems.com (Supervisor)
-- automation-operator@soterixsystems.com (Operator)
-
-**Staging Environment** (staging.example.invalid)
-- automation-stage@soterixsystems.com (Admin)
-- automation-stage-supervisor@soterixsystems.com (Supervisor)
-- automation-stage-operator@soterixsystems.com (Operator)
-
-**Pre-Prod Environment** ([URL TBD])
-- automation-preprod@soterixsystems.com (Admin)
-- automation-preprod-supervisor@soterixsystems.com (Supervisor)
-- automation-preprod-operator@soterixsystems.com (Operator)
-
-**Production Environment** (app.example.invalid)
-- automation-prod@soterixsystems.com (Operator - read-only)
-
-### 2. Bypass ReCAPTCHA for All 10 Accounts Above
-
-Please whitelist the above emails to skip ReCAPTCHA during login. Options:
-- Email-based whitelist (preferred)
-- IP whitelist (provide our test server IP)
-- Secret header bypass
-- Disable ReCAPTCHA on non-prod environments
-
-### Why This Matters
-
-- Current approach: Retry ReCAPTCHA 3 times with delays -> 60-90 seconds per login, still flaky
-- With bypass: Instant login -> faster, reliable tests
-- Industry standard: Dedicated automation accounts with ReCAPTCHA bypass
-
-Please let me know the best path forward and timeline.
-
-Thanks,
-[Your Name]
-QA Team
+### Production Environment
+- [ ] Discuss whitelist approach with tech team
+- [ ] Create automation-prod@soterixsystems.com (Operator ONLY)
+- [ ] Ensure account has NO write/delete permissions
+- [ ] Update config/env/prod.py
+- [ ] Verify with read-only smoke tests
+- [ ] Add safety flags to prevent destructive tests
 
 ---
 
-## Environment-by-Environment Plan
+## Security Considerations
 
-### QA Environment (qa.example.invalid)
-**Current State:** Working with ReCAPTCHA retry logic (slow but functional)
-**Action Items:**
-1. ☐ Create automation@soterixsystems.com (Admin)
-2. ☐ Create automation-supervisor@soterixsystems.com (Supervisor)
-3. ☐ Create automation-operator@soterixsystems.com (Operator)
-4. ☐ Request ReCAPTCHA bypass for all 3 accounts
-5. ☐ Update config/env/qa.py with new credentials
-6. ☐ Replace current qa@soterixsystems.com in tests
-
-### Staging Environment (staging.example.invalid)
-**Current State:** Not tested yet, ReCAPTCHA will block automation
-**Action Items:**
-1. ☐ Create automation-stage@soterixsystems.com (Admin)
-2. ☐ Create automation-stage-supervisor@soterixsystems.com (Supervisor)
-3. ☐ Create automation-stage-operator@soterixsystems.com (Operator)
-4. ☐ Request ReCAPTCHA bypass for all 3 accounts
-5. ☐ Update config/env/stage.py with new credentials
-6. ☐ Verify login and run smoke tests
-
-### Pre-Prod Environment (URL TBD)
-**Current State:** Environment details needed
-**Action Items:**
-1. ☐ Confirm Pre-Prod URL
-2. ☐ Create automation-preprod@soterixsystems.com (Admin)
-3. ☐ Create automation-preprod-supervisor@soterixsystems.com (Supervisor)
-4. ☐ Create automation-preprod-operator@soterixsystems.com (Operator)
-5. ☐ Request ReCAPTCHA bypass for all 3 accounts
-6. ☐ Create config/env/preprod.py
-7. ☐ Verify login and run smoke tests
-
-### Production Environment (app.example.invalid)
-**Current State:** Config exists, not tested
-**Action Items:**
-1. ☐ Create automation-prod@soterixsystems.com (Operator - READ-ONLY)
-2. ☐ Request ReCAPTCHA bypass for this account
-3. ☐ Update config/env/prod.py with new credentials
-4. ☐ Verify login works (run read-only tests only)
-5. ☐ Ensure safety flags prevent any write/delete operations
-
-**Note:** Production only gets Operator role - no Admin/Supervisor testing in prod.
+1. **Dedicated Accounts:** Automation accounts are separate from human users for audit trail
+2. **Role Restrictions:** Production only gets Operator (read-only) role
+3. **Password Management:** Credentials stored in .env file, never committed to Git
+4. **Rotation Policy:** Passwords rotated quarterly
+5. **IP Restrictions:** Consider limiting automation accounts to specific IPs if required
+6. **Monitoring:** Alert if automation accounts used outside normal test windows
 
 ---
 
-## Alternative: If ReCAPTCHA Bypass is Denied
+## Fallback Options (If Bypass Denied)
 
-If the tech team cannot bypass ReCAPTCHA, here are fallback options:
+If the tech team cannot bypass ReCAPTCHA:
 
-### Option A: API-Only Testing
+### Option A: Session Caching with Manual Bootstrap
+- QA manually logs in once per day/week
+- Session cached and reused until expiration
+- Limitation: Cannot handle expired sessions overnight
+
+### Option B: CAPTCHA Solving Service (Last Resort)
+- Services like 2Captcha, Anti-Captcha
+- Cost: ~$3 per 1000 CAPTCHAs
+- Limitation: Adds latency, cost, external dependency
+
+### Option C: API-Only Testing
 - Skip UI login entirely
-- Get JSESSIONID token via direct API call (if login API exists without ReCAPTCHA)
-- Limitation: Can't test UI flows
+- Use API token if available
+- Limitation: Doesn't test UI login flow
 
-### Option B: Pre-Generated Tokens
-- Manually login once, save the JSESSIONID
-- Use long-lived tokens if available
-- Limitation: Tokens expire, need manual refresh
-
-### Option C: Browser Profile with Saved Session
-- Login manually once in a browser profile
-- Playwright reuses that profile's cookies
-- Limitation: Sessions expire, need periodic manual refresh
-
-### Option D: Selenium Grid with Human Verification
-- First login done manually or with CAPTCHA-solving service
-- Token cached and reused
-- Limitation: Cost, complexity
-
-**Recommendation:** Push for Option 1 (email whitelist) - it's the cleanest solution and industry standard.
+**Recommendation:** Push for Option 1 (disable on non-prod) - it's the cleanest solution.
 
 ---
 
 ## Next Steps
 
-1. [ ] Send Email Template 1 or 3 to tech team
-2. [ ] Wait for ReCAPTCHA bypass confirmation
-3. [ ] Send Email Template 2 for account creation (if not combined)
-4. [ ] Receive credentials securely
-5. [ ] Update .env and config files
-6. [ ] Test each environment
-7. [ ] Update CREDENTIALS_SETUP.md with new accounts
+1. [ ] Send email to tech team (use template above)
+2. [ ] Schedule follow-up call if needed
+3. [ ] Get confirmation on approach
+4. [ ] Receive/create automation accounts
+5. [ ] Update framework configuration
+6. [ ] Verify unattended runs work
+7. [ ] Set up scheduled overnight runs
 
 ---
 
-## Security Notes
+## Appendix: QA Environment Reference
 
-- Store all passwords in .env file (never commit to Git)
-- Use 1Password or similar for team credential sharing
-- Rotate passwords quarterly
-- Production account must be read-only
-- Consider IP restrictions for automation accounts
+QA environment has ReCAPTCHA disabled, and our automation works perfectly:
 
----
-
-**After you create the file:**
-
-**Tell Tooling Code:**
+```python
+# Current working setup (QA)
+# config/env/qa.py
+qa_config = {
+    "base_url": "https://qa.example.invalid",
+    # No CAPTCHA handling needed - disabled server-side
+}
 ```
-git add docs/RECAPTCHA_BYPASS_PLAN.md
-git commit -m "docs: Add ReCAPTCHA bypass plan with email templates"
-git push
-```
+
+This is the model we want to replicate for Stage and Pre-Prod.
