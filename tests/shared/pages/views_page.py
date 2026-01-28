@@ -187,12 +187,14 @@ class ViewsPage:
         self.save_view_button.click()
 
     def navigate(self):
-        """Navigate to the Views page if possible (best-effort)."""
+        """Navigate to the Views page."""
         try:
-            # Try clicking a Views nav item if present
+            # Wait for the Views nav item to be visible and click it
             nav = self.page.locator("text=Views").first
-            if nav.count() > 0:
-                nav.click()
+            nav.wait_for(state="visible", timeout=10000)
+            nav.click()
+            # Wait for navigation
+            self.page.wait_for_timeout(2000)
         except Exception:
             pass
 
