@@ -206,56 +206,40 @@ class ViewsPage:
         """Navigate to the Views page with verification.
 
         Clicks the Views nav link and verifies the page loaded by checking
-        for the add tab button. Retries once if initial navigation fails.
+        for the add tab button. Uses force=True to bypass any overlays.
+        Tests should start within 2 seconds after page elements are loaded.
         """
         max_attempts = 2
         for attempt in range(max_attempts):
             try:
-                # Wait for the Views nav item to be visible and click it
+                # Wait for the Views nav item to be visible
                 nav = self.page.locator("text=Views").first
                 nav.wait_for(state="visible", timeout=10000)
 
-                # Wait for any loading overlays to disappear (MUI Box overlays)
-                overlay = self.page.locator("div.MuiBox-root[class*='mui-1rzq1k9']")
-                try:
-                    overlay.wait_for(state="hidden", timeout=10000)
-                except Exception:
-                    pass  # Overlay may not exist
-
-                # Also wait for circular progress loader if present
-                try:
-                    self.loader.wait_for(state="hidden", timeout=5000)
-                except Exception:
-                    pass
-
-                # Click with force=True as fallback for any remaining overlay issues
+                # Click with force=True to bypass any overlays
                 nav.click(force=True)
-                # Wait for navigation
-                self.page.wait_for_timeout(2000)
 
-                # Verify we're on the Views page by checking for the add tab button
+                # Verify we're on the Views page - this is the key element
                 self.add_tab_button.wait_for(state="visible", timeout=15000)
                 return  # Success
             except Exception as e:
                 if attempt < max_attempts - 1:
                     # Retry: refresh and try again
                     self.page.reload()
-                    self.page.wait_for_timeout(2000)
+                    self.page.wait_for_timeout(500)
                 else:
                     raise RuntimeError(f"Failed to navigate to Views page after {max_attempts} attempts: {e}")
 
-    def wait_for_page_load(self, timeout: int = 20000):
-        """Wait for the Views page to finish loading (loader hidden).
+    def wait_for_page_load(self, timeout: int = 5000):
+        """Wait for the Views page to finish loading.
 
-        If loader is not found or already hidden, continues without error.
+        Only waits if loader is actually visible. Quick check - doesn't block.
         """
         try:
-            # Check if loader exists and is visible first
             if self.loader.count() > 0 and self.loader.first.is_visible():
                 self.loader.wait_for(state="hidden", timeout=timeout)
         except Exception:
-            # Loader may not exist or may have already hidden - that's OK
-            pass
+            pass  # Loader may not exist or may have already hidden
 
     def delete_view(self, view_name: str):
         """Delete a saved view by name."""
@@ -544,8 +528,16 @@ class ViewsPage:
         all_cameras.click(force=True)
 
     def expand_site_and_show_cameras(self, site_name: str = None):
-        """Expand a site and click All Cameras to show thumbnails."""
+        """Expand a site and click All Cameras to show thumbnails.
+
+        Idempotent: skips clicks if cameras are already visible to avoid
+        redundant UI interactions between tests.
+        """
+        # Check if cameras are already visible - skip if so
+        if self.camera_thumbnails.count() > 0:
+            return  # Already expanded, nothing to do
+
         self.click_site(site_name)
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(300)
         self.click_all_cameras()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(500)

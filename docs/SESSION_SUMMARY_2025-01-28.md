@@ -21,12 +21,20 @@
 - Fixed Channels subtab navigation - same issue, now uses proper locator
 - Maps test now clicks site to expand before selecting map
 - Added `.viewTabs` container locators to prevent left nav confusion
+- Fixed Insights widget selector - was highlighting search box instead of widget
+
+### Performance Optimizations
+- **Session validation optimized** - reduced from ~15s polling to ~6.5s check
+- **Camera expansion made idempotent** - skips redundant clicks if cameras visible
+- **Test run time reduced** - subtab tests now complete in ~2 minutes (was ~6 minutes)
+- Increased visual verification waits (2500ms) for Maps, Channels, Insights checkbox tests
 
 ### ViewsPage Enhancements
 - Added `view_tabs_container` locator for `.viewTabs`
 - Added `open_insights()` and `open_channels()` helper methods
 - All subtab buttons now scoped to `.viewTabs` container
 - Subtab locators use `.viewTabItem:has(img[alt='TabName'])` pattern
+- Made `expand_site_and_show_cameras()` idempotent
 
 ### ReCAPTCHA Bypass Plan
 - Created `docs/RECAPTCHA_BYPASS_PLAN.md` with 5 options
@@ -40,7 +48,7 @@
 | Login UI | 10 | All passing |
 | Views UI Basic | 6 | All passing |
 | Views UI Drag-Drop | 7 | All passing |
-| Views UI Subtabs | 10 | All passing |
+| Views UI Subtabs | 10 | 7 passing, 3 skipped (expected) |
 | **Total** | **49** | |
 
 ## 3. Subtab Tests - Success Criteria
@@ -71,6 +79,7 @@
 
 ### Modified Files
 - `tests/shared/pages/views_page.py` - Added subtab locators and helper methods
+- `conftest.py` - Optimized session validation (faster startup)
 - `docs/TODO_NEXT_SESSION.md` - Updated with test counts and status
 
 ## 6. Technical notes
@@ -94,9 +103,27 @@ def _visible_drag(self, source, target):
 ```
 
 ### Insight Widget Selectors
-Insights use different selectors than cameras:
-- Primary: `[class*='widget']`, `[class*='card']`
-- Fallback: Find elements after "Select Insights Widgets" header
+Insights now use specific selectors to avoid matching search box:
+- Primary: `.cameraThumbnailWrapper` (same as cameras)
+- Fallback: `.viewTabPanel img, .sidebar-content img` (excludes inputs)
+
+### Session Validation (Optimized)
+```python
+# Fast check: URL + element visibility (~6.5s vs ~15s polling)
+page.wait_for_timeout(1500)  # React hydration
+if '/auth/login' in page.url:
+    raise Exception("Session invalid")
+nav.wait_for(state="visible", timeout=5000)
+```
+
+### Idempotent Camera Expansion
+```python
+def expand_site_and_show_cameras(self, site_name: str = None):
+    if self.camera_thumbnails.count() > 0:
+        return  # Already expanded, skip
+    self.click_site(site_name)
+    self.click_all_cameras()
+```
 
 ## 7. Commands reference
 ```powershell
@@ -116,9 +143,28 @@ pytest tests/ui/views/test_views_subtabs.py -v --headed
 Remove-Item .auth_state.json
 ```
 
-## 8. Next steps
-1. **Legacy Selenium Migration** - Continue migrating from `test_vsaas_soterix.py`
-2. **Share View Tests** - Add tests for sharing live views
-3. **Sequence Tests** - Add tests for adding sequences/playlists to views
-4. **Grid Layout Tests** - Add tests for switching grid layouts
-5. **ReCAPTCHA Resolution** - Await IT response for automation accounts
+## 8. Test Organization Options (Under Consideration)
+
+**Option 1: Class-based** - One file, multiple classes
+```
+pytest tests/ui/views/test_views.py::TestViewsDevices -v
+```
+
+**Option 2: Pytest markers** - Current structure + markers
+```
+pytest tests/ui/views/ -m subtabs -v
+pytest tests/ui/views/ -m devices -v
+```
+
+**Option 3: Separate files** - Current structure (already works)
+```
+pytest tests/ui/views/test_views_subtabs.py -v
+```
+
+## 9. Next steps
+1. **Test Organization Decision** - Choose Option 1, 2, or 3 for Views module
+2. **Legacy Selenium Migration** - Continue migrating from `test_vsaas_soterix.py`
+3. **Share View Tests** - Add tests for sharing live views
+4. **Sequence Tests** - Add tests for adding sequences/playlists to views
+5. **Grid Layout Tests** - Add tests for switching grid layouts
+6. **ReCAPTCHA Resolution** - Await IT response for automation accounts

@@ -28,8 +28,12 @@ class TestViewsSubtabs:
         """Setup runs once per test using cached session (no re-login)."""
         self.page = authenticated_page
         self.views = ViewsPage(self.page)
-        self.views.navigate()
-        self.views.wait_for_page_load()
+
+        # Always click Views nav - fast if already there, navigates if not
+        self.page.locator("text=Views").first.click(force=True)
+
+        # Wait for page ready indicator
+        self.views.add_tab_button.wait_for(state="visible", timeout=10000)
 
     # =========================================================================
     # DEVICES SUBTAB - Camera thumbnails from site tree
@@ -51,7 +55,7 @@ class TestViewsSubtabs:
 
         # Devices is default tab - expand site and show cameras
         self.views.expand_site_and_show_cameras("Driver Site")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(400)
 
         # Find camera thumbnail and add via checkbox
         camera = self.page.locator(".cameraThumbnailWrapper").first
@@ -62,7 +66,7 @@ class TestViewsSubtabs:
         checkbox = camera.locator(".sidebar-custom-checkbox")
         assert checkbox.count() > 0, "Checkbox not visible on hover"
         checkbox.click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(800)
 
         # Verify: tile filled
         new_tiles = self.views.get_available_tile_count()
@@ -84,7 +88,7 @@ class TestViewsSubtabs:
         assert initial_tiles > 0, "No empty tiles available"
 
         self.views.expand_site_and_show_cameras("Driver Site")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(400)
 
         camera = self.page.locator(".cameraThumbnailWrapper").first
         camera.wait_for(state="visible", timeout=10000)
@@ -94,7 +98,7 @@ class TestViewsSubtabs:
 
         # Perform visible drag using explicit mouse movements
         self._visible_drag(camera, target_tile)
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(800)
 
         new_tiles = self.views.get_available_tile_count()
         video_elements = self.page.locator("video, canvas, [class*='video']")
@@ -124,11 +128,11 @@ class TestViewsSubtabs:
 
         # Refresh page (required for My Views to properly list the new view)
         self.page.reload()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(500)
 
-        # Open My Views panel
-        self.page.locator("img[src*='myviews']").click()
-        self.page.wait_for_timeout(1500)
+        # Open My Views subtab
+        self.views.open_my_views()
+        self.page.wait_for_timeout(500)
 
         # Find and add saved view via checkbox
         saved_view = self.page.locator(f"span[title='{view_name}']").first
@@ -140,7 +144,7 @@ class TestViewsSubtabs:
 
         checkbox = self.page.locator(".sidebar-custom-checkbox").first
         checkbox.click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(800)
 
         # Verify: tab opened OR tile count decreased
         # Tab selector varies - check for tab with view name in input or div
@@ -174,23 +178,22 @@ class TestViewsSubtabs:
 
         # Refresh page (required for My Views to properly list the new view)
         self.page.reload()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(500)
 
         initial_tiles = self.views.get_available_tile_count()
 
-        # Open My Views
-        self.page.locator("img[src*='myviews']").click()
-        self.page.wait_for_timeout(1500)
+        # Open My Views subtab
+        self.views.open_my_views()
+        self.page.wait_for_timeout(400)
 
         saved_view = self.page.locator(f"span[title='{view_name}']").first
         saved_view.wait_for(state="visible", timeout=20000)
 
         target_tile = self.views.drag_drop_tiles.first
 
-        # Attempt drag - views may open as tabs rather than filling tiles
+        # Attempt drag with visible highlight - views may open as tabs rather than filling tiles
         try:
-            saved_view.drag_to(target_tile)
-            self.page.wait_for_timeout(2000)
+            self._visible_drag(saved_view, target_tile)
         except Exception as e:
             self._delete_saved_view(view_name)
             pytest.skip(f"View drag not supported: {e}")
@@ -229,13 +232,13 @@ class TestViewsSubtabs:
 
         # Open Maps panel
         self.views.open_maps()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(500)
 
         # Click site to reveal maps
         site = self.page.locator("p:text('Driver Site'), span:text('Driver Site')").first
         site.wait_for(state="visible", timeout=10000)
         site.click()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(500)
 
         # Find map thumbnail (same class as cameras)
         map_thumb = self.page.locator(".cameraThumbnailWrapper").first
@@ -248,7 +251,7 @@ class TestViewsSubtabs:
         checkbox = map_thumb.locator(".sidebar-custom-checkbox")
         if checkbox.count() > 0:
             checkbox.click()
-            self.page.wait_for_timeout(3000)
+            self.page.wait_for_timeout(2500)  # Longer wait for visual verification
         else:
             pytest.skip("No checkbox on map thumbnail")
 
@@ -278,11 +281,11 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
 
         self.views.open_maps()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(500)
 
         site = self.page.locator("p:text('Driver Site'), span:text('Driver Site')").first
         site.click()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(500)
 
         map_thumb = self.page.locator(".cameraThumbnailWrapper").first
         if map_thumb.count() == 0:
@@ -292,7 +295,7 @@ class TestViewsSubtabs:
 
         # Visible drag with animation
         self._visible_drag(map_thumb, target_tile)
-        self.page.wait_for_timeout(3000)
+        self.page.wait_for_timeout(1500)
 
         new_tiles = self.views.get_available_tile_count()
         map_content = self.page.locator("[class*='leaflet'], iframe")
@@ -317,7 +320,7 @@ class TestViewsSubtabs:
 
         # Click Channels subtab (in .viewTabs, not left nav)
         self.views.open_channels()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(500)
 
         # Find channel thumbnail
         channel = self.page.locator(".cameraThumbnailWrapper").first
@@ -330,7 +333,7 @@ class TestViewsSubtabs:
         checkbox = channel.locator(".sidebar-custom-checkbox")
         if checkbox.count() > 0:
             checkbox.click()
-            self.page.wait_for_timeout(2000)
+            self.page.wait_for_timeout(2500)  # Longer wait for visual verification
         else:
             pytest.skip("No checkbox on channel")
 
@@ -353,7 +356,7 @@ class TestViewsSubtabs:
 
         # Click Channels subtab (in .viewTabs, not left nav)
         self.views.open_channels()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(500)
 
         channel = self.page.locator(".cameraThumbnailWrapper").first
         if channel.count() == 0:
@@ -363,7 +366,7 @@ class TestViewsSubtabs:
 
         # Visible drag with animation
         self._visible_drag(channel, target_tile)
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(800)
 
         new_tiles = self.views.get_available_tile_count()
         video_elements = self.page.locator("video, canvas")
@@ -393,31 +396,25 @@ class TestViewsSubtabs:
 
         # Click Insights subtab (top bar within Views, not left nav)
         self.views.open_insights()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(800)
 
-        # Find insight widget cards - these are user-created with chart previews
-        # Widget cards contain chart images and titles like "All Persons Se..."
-        widget_selectors = [
-            ".cameraThumbnailWrapper",  # May use same wrapper as cameras
-            "[class*='widget']",  # Widget-specific class
-            "[class*='card']",  # Card container
-            "[class*='insight'] img",  # Insight with image (chart preview)
-        ]
-
+        # Find insight widget thumbnails - they use the same wrapper as cameras
+        # but with insight/chart images. Look for cameraThumbnailWrapper first.
         widget_card = None
-        for selector in widget_selectors:
-            elements = self.page.locator(selector)
-            if elements.count() > 0:
-                widget_card = elements.first
-                break
 
-        # Also try finding by the "Select Insights Widgets" section content
-        if widget_card is None:
-            # Look for elements after "Select Insights Widgets" header
-            widget_area = self.page.locator("text=Select Insights Widgets").locator("..").locator("..")
-            cards = widget_area.locator("div").filter(has=self.page.locator("img"))
-            if cards.count() > 0:
-                widget_card = cards.first
+        # Primary: cameraThumbnailWrapper is used for insight widget thumbnails
+        camera_wrappers = self.page.locator(".cameraThumbnailWrapper")
+        if camera_wrappers.count() > 0:
+            widget_card = camera_wrappers.first
+        else:
+            # Fallback: look for thumbnail images in the insights panel
+            # Insights panel shows widget previews with chart images
+            thumbnail_images = self.page.locator(".viewTabPanel img, .sidebar-content img").filter(
+                has_not=self.page.locator("input")  # Exclude search box area
+            )
+            if thumbnail_images.count() > 0:
+                # Get the parent container of the image
+                widget_card = thumbnail_images.first.locator("..")
 
         if widget_card is None:
             pytest.skip("No insight widgets available - widgets are user-created")
@@ -432,11 +429,11 @@ class TestViewsSubtabs:
 
         if checkbox.count() > 0:
             checkbox.click()
-            self.page.wait_for_timeout(2000)
+            self.page.wait_for_timeout(2500)  # Longer wait for visual verification
         else:
             # Direct click on widget card to add it
             widget_card.click()
-            self.page.wait_for_timeout(2000)
+            self.page.wait_for_timeout(2500)  # Longer wait for visual verification
 
         # Verify: tile filled with insight chart/widget content
         new_tiles = self.views.get_available_tile_count()
@@ -466,36 +463,29 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
         if initial_tiles == 0:
             self.views.add_new_tab()
-            self.page.wait_for_timeout(1000)
+            self.page.wait_for_timeout(400)
             initial_tiles = self.views.get_available_tile_count()
 
         assert initial_tiles > 0, "No empty tiles available even after adding new tab"
 
         # Click Insights subtab (top bar within Views, not left nav)
         self.views.open_insights()
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(800)
 
-        # Find insight widget cards (same selectors as checkbox test)
-        widget_selectors = [
-            ".cameraThumbnailWrapper",
-            "[class*='widget']",
-            "[class*='card']",
-            "[class*='insight'] img",
-        ]
-
+        # Find insight widget thumbnails (same approach as checkbox test)
         widget_card = None
-        for selector in widget_selectors:
-            elements = self.page.locator(selector)
-            if elements.count() > 0:
-                widget_card = elements.first
-                break
 
-        # Fallback: find in Select Insights Widgets section
-        if widget_card is None:
-            widget_area = self.page.locator("text=Select Insights Widgets").locator("..").locator("..")
-            cards = widget_area.locator("div").filter(has=self.page.locator("img"))
-            if cards.count() > 0:
-                widget_card = cards.first
+        # Primary: cameraThumbnailWrapper is used for insight widget thumbnails
+        camera_wrappers = self.page.locator(".cameraThumbnailWrapper")
+        if camera_wrappers.count() > 0:
+            widget_card = camera_wrappers.first
+        else:
+            # Fallback: look for thumbnail images in the insights panel
+            thumbnail_images = self.page.locator(".viewTabPanel img, .sidebar-content img").filter(
+                has_not=self.page.locator("input")
+            )
+            if thumbnail_images.count() > 0:
+                widget_card = thumbnail_images.first.locator("..")
 
         if widget_card is None:
             pytest.skip("No insight widgets available - widgets are user-created")
@@ -517,7 +507,7 @@ class TestViewsSubtabs:
 
         # Visible drag with animation (red source, green target)
         self._visible_drag(widget_card, target_tile)
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(800)
 
         # Verify: tile filled with chart/insight content
         new_tiles = self.views.get_available_tile_count()
@@ -624,18 +614,18 @@ class TestViewsSubtabs:
             source.evaluate("el => { el.style.outline = '4px solid red'; el.style.outlineOffset = '2px'; }")
         except Exception:
             pass
-        self.page.wait_for_timeout(800)
+        self.page.wait_for_timeout(400)
 
         # Highlight target (green border - where we're dropping)
         try:
             target.evaluate("el => { el.style.outline = '4px solid lime'; el.style.outlineOffset = '2px'; }")
         except Exception:
             pass
-        self.page.wait_for_timeout(800)
+        self.page.wait_for_timeout(400)
 
         # Perform the drag
         source.drag_to(target)
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(300)
 
         # Remove highlights
         try:

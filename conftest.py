@@ -168,32 +168,23 @@ def authenticated_page(browser, auth_state_path, base_url, login_data):
             page.goto(base_url)
             page.wait_for_load_state('domcontentloaded', timeout=30000)
 
-            # Wait for either login form (session invalid) or nav element (session valid)
-            # This handles client-side redirects properly
-            login_form = page.locator("input[type='email'], input[type='password']").first
-            nav_element = page.locator("text=Views, text=Dashboard, text=Alerts").first
-
-            # Race: whichever appears first tells us the session state
+            # Fast session validation - check URL and key elements
+            # Wait briefly for app to initialize, then check state
             try:
-                # Wait up to 15s for either element
-                page.wait_for_timeout(2000)  # Brief initial wait for app to initialize
+                page.wait_for_timeout(1500)  # Brief wait for React to hydrate
 
-                # Check which element is visible
-                for _ in range(13):  # 13 more seconds of checking
-                    if login_form.is_visible():
-                        raise Exception("Login form appeared - session invalid")
-                    if nav_element.is_visible():
-                        print("[AUTH] Cached session is valid")
-                        yield page
-                        page.close()
-                        context.close()
-                        return
-                    page.wait_for_timeout(1000)
-
-                # Neither appeared in time - check URL as fallback
+                # Check if we're on login page (session expired)
                 if '/auth/login' in page.url:
                     raise Exception("Redirected to login - session invalid")
-                print("[AUTH] Cached session is valid (URL check)")
+
+                # Check for login form (another sign of expired session)
+                if page.locator("input[type='email']").is_visible():
+                    raise Exception("Login form visible - session invalid")
+
+                # Session is valid - verify nav element exists
+                nav = page.locator("text=Views").first
+                nav.wait_for(state="visible", timeout=5000)
+                print("[AUTH] Cached session is valid")
                 yield page
                 page.close()
                 context.close()
