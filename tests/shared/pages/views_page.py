@@ -18,9 +18,14 @@ class ViewsPage:
         self.tab_close_buttons = page.locator("img[src*='closeIcon']")
         self.tab_edit_buttons = page.locator("img[src*='media/editIcon']")
         
-        # Locators - Views
-        self.my_views_button = page.locator("img[src*='media/myviews']")
-        self.maps_button = page.locator("img[src*='media/maps']")
+        # Locators - Views subtab buttons (inside .viewTabs container, NOT left nav)
+        # Structure: div.viewTabs > div.viewTabItem > img[alt="TabName"] + "TabName"
+        self.view_tabs_container = page.locator(".viewTabs")
+        self.devices_subtab = self.view_tabs_container.locator(".viewTabItem:has(img[alt='Devices'])")
+        self.my_views_button = self.view_tabs_container.locator(".viewTabItem:has(img[alt='My Views'])")
+        self.insights_button = self.view_tabs_container.locator(".viewTabItem:has(img[alt='Insights'])")
+        self.maps_button = self.view_tabs_container.locator(".viewTabItem:has(img[alt='Maps'])")
+        self.channels_button = self.view_tabs_container.locator(".viewTabItem:has(img[alt='Channels'])")
         self.save_view_button = page.locator("img[src*='media/saveIcon']")
 
         # Locators - Left Panel Navigation
@@ -142,6 +147,17 @@ class ViewsPage:
     def open_maps(self):
         """Click the Maps button to open maps panel."""
         self.maps_button.click()
+
+    def open_insights(self):
+        """Click the Insights subtab button to open insights widget panel.
+
+        Insights is a subtab in the top bar within Views (between My Views and Maps).
+        """
+        self.insights_button.click()
+
+    def open_channels(self):
+        """Click the Channels button to open channels panel."""
+        self.channels_button.click()
 
     def open_saved_view_by_name(self, view_name: str):
         """Open a saved view from My Views panel by clicking its checkbox.
@@ -302,6 +318,174 @@ class ViewsPage:
 
         result = self.page.evaluate(script, view_selector, tile_index)
         return result
+
+    def get_available_tiles(self) -> list:
+        """Return list of empty 'Drag & Drop Camera here' tile locators.
+
+        Returns:
+            List of Locator objects for each available tile.
+        """
+        tiles = []
+        count = self.drag_drop_tiles.count()
+        for i in range(count):
+            tiles.append(self.drag_drop_tiles.nth(i))
+        return tiles
+
+    def get_available_tile_count(self) -> int:
+        """Return the number of empty 'Drag & Drop' tiles available."""
+        return self.drag_drop_tiles.count()
+
+    def drag_camera_to_tile_by_name(self, camera_name: str, tile_index: int = 0):
+        """Drag a camera thumbnail to a specific tile by camera name.
+
+        Args:
+            camera_name: The visible name of the camera to drag.
+            tile_index: Target tile index (0-based). Default is first tile.
+        """
+        # Find the camera thumbnail by name
+        camera = self.page.locator(f".cameraThumbnailWrapper:has-text('{camera_name}')").first
+        camera.wait_for(state="visible", timeout=10000)
+
+        target_tile = self.drag_drop_tiles.nth(tile_index)
+        target_tile.wait_for(state="visible", timeout=10000)
+
+        try:
+            # Try Playwright's high-level drag first
+            camera.drag_to(target_tile)
+            self.page.wait_for_timeout(1000)
+        except Exception:
+            # Fall back to JS-driven DataTransfer-based drag/drop simulation
+            self._simulate_camera_drag_via_js(camera_name, tile_index)
+
+    def _simulate_camera_drag_via_js(self, camera_name: str, tile_index: int = 0):
+        """Simulate HTML5 drag-and-drop for camera using DataTransfer via page.evaluate.
+
+        This is a fallback when Playwright's native drag doesn't trigger the
+        application's drop handlers (common with React drag libraries).
+        """
+        script = r"""
+        (cameraName, tileIndex) => {
+            // Find camera by text content
+            const thumbnails = Array.from(document.querySelectorAll('.cameraThumbnailWrapper'));
+            const src = thumbnails.find(t => t.textContent && t.textContent.includes(cameraName));
+            if (!src) return {ok:false, reason: 'camera-not-found'};
+
+            // Find tiles by text content
+            const allDivs = Array.from(document.querySelectorAll('div'));
+            const tileCandidates = allDivs.filter(d => d.textContent && d.textContent.includes('Drag & Drop Camera here'));
+            const tgt = tileCandidates[tileIndex];
+            if (!tgt) return {ok:false, reason: 'target-tile-not-found'};
+
+            const dt = new DataTransfer();
+            try { dt.setData('text/plain', cameraName); } catch(e) {}
+
+            function dispatch(el, name, extra={}){
+                const ev = new DragEvent(name, Object.assign({bubbles:true, cancelable:true, dataTransfer: dt}, extra));
+                return el.dispatchEvent(ev);
+            }
+
+            // Sequence: dragstart on source, dragenter/dragover on target, drop, dragend
+            dispatch(src, 'dragstart');
+            dispatch(tgt, 'dragenter');
+            dispatch(tgt, 'dragover');
+            const dropped = dispatch(tgt, 'drop');
+            dispatch(src, 'dragend');
+
+            return {ok: true, dropped: !!dropped};
+        }
+        """
+        result = self.page.evaluate(script, camera_name, tile_index)
+        self.page.wait_for_timeout(1000)
+        return result
+
+    def drag_location_to_tile(self, location_name: str, tile_index: int = 0):
+        """Drag a location/site from the left panel to a tile.
+
+        Args:
+            location_name: The visible name of the location/site to drag.
+            tile_index: Target tile index (0-based). Default is first tile.
+        """
+        # Find the location in the left panel (site tree)
+        location = self.page.locator(f"text={location_name}").first
+        location.wait_for(state="visible", timeout=10000)
+
+        target_tile = self.drag_drop_tiles.nth(tile_index)
+        target_tile.wait_for(state="visible", timeout=10000)
+
+        try:
+            # Try Playwright's high-level drag first
+            location.drag_to(target_tile)
+            self.page.wait_for_timeout(1000)
+        except Exception:
+            # Fall back to JS simulation
+            self._simulate_location_drag_via_js(location_name, tile_index)
+
+    def _simulate_location_drag_via_js(self, location_name: str, tile_index: int = 0):
+        """Simulate drag-and-drop for location using DataTransfer via page.evaluate."""
+        script = r"""
+        (locationName, tileIndex) => {
+            // Find location element by text
+            const allElements = Array.from(document.querySelectorAll('*'));
+            const src = allElements.find(el =>
+                el.textContent === locationName ||
+                (el.innerText && el.innerText.trim() === locationName)
+            );
+            if (!src) return {ok:false, reason: 'location-not-found'};
+
+            // Find tiles
+            const allDivs = Array.from(document.querySelectorAll('div'));
+            const tileCandidates = allDivs.filter(d => d.textContent && d.textContent.includes('Drag & Drop Camera here'));
+            const tgt = tileCandidates[tileIndex];
+            if (!tgt) return {ok:false, reason: 'target-tile-not-found'};
+
+            const dt = new DataTransfer();
+            try { dt.setData('text/plain', locationName); } catch(e) {}
+
+            function dispatch(el, name, extra={}){
+                const ev = new DragEvent(name, Object.assign({bubbles:true, cancelable:true, dataTransfer: dt}, extra));
+                return el.dispatchEvent(ev);
+            }
+
+            dispatch(src, 'dragstart');
+            dispatch(tgt, 'dragenter');
+            dispatch(tgt, 'dragover');
+            const dropped = dispatch(tgt, 'drop');
+            dispatch(src, 'dragend');
+
+            return {ok: true, dropped: !!dropped};
+        }
+        """
+        result = self.page.evaluate(script, location_name, tile_index)
+        self.page.wait_for_timeout(1000)
+        return result
+
+    def drag_map_to_tile(self, map_name: str = None, tile_index: int = 0):
+        """Drag a map element to a tile.
+
+        Args:
+            map_name: The name of the map to drag. If None, drags the first map.
+            tile_index: Target tile index (0-based). Default is first tile.
+        """
+        # Open maps panel first
+        self.open_maps()
+        self.page.wait_for_timeout(1000)
+
+        # Find the map element
+        if map_name:
+            map_element = self.page.locator(f"text={map_name}").first
+        else:
+            # Try to find any map thumbnail or element
+            map_element = self.page.locator("[class*='map'], img[src*='map']").first
+
+        map_element.wait_for(state="visible", timeout=10000)
+        target_tile = self.drag_drop_tiles.nth(tile_index)
+
+        try:
+            map_element.drag_to(target_tile)
+            self.page.wait_for_timeout(1000)
+        except Exception:
+            # Maps may need special handling
+            pass
 
     def is_streaming_working(self, expected_failures: int = 0) -> bool:
         """Check if streaming is working (failures <= expected offline cameras)."""
