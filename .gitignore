@@ -36,3 +36,6 @@ logs/
 .auth_state.json
 # Pytest cache
 nodeids
+
+# Tooling Code startup prompt (local only)
+docs/STARTUP_PROMPT.md
