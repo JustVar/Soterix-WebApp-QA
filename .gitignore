@@ -39,3 +39,8 @@ nodeids
 
 # Tooling Code startup prompt (local only)
 docs/STARTUP_PROMPT.md
+
+# Session tracking files (personal/local only)
+docs/SESSION_SUMMARY_*.md
+docs/PROJECT_HOURS_LOG.md
+docs/templates/
