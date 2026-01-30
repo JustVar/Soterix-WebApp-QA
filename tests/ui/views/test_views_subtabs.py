@@ -39,6 +39,10 @@ class TestViewsSubtabs:
     # DEVICES SUBTAB - Camera thumbnails from site tree
     # =========================================================================
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_devices
+    @pytest.mark.checkbox
     def test_devices_add_camera_via_checkbox(self):
         """DEVICES: Add camera to tile using checkbox selection.
 
@@ -75,6 +79,10 @@ class TestViewsSubtabs:
         assert (new_tiles < initial_tiles or video_elements.count() > 0), \
             f"Camera not added. Tiles: {initial_tiles} -> {new_tiles}"
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_devices
+    @pytest.mark.dragdrop
     def test_devices_drag_camera_to_tile(self):
         """DEVICES: Drag camera thumbnail directly to empty tile.
 
@@ -110,6 +118,10 @@ class TestViewsSubtabs:
     # MY VIEWS SUBTAB - Saved views
     # =========================================================================
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_myviews
+    @pytest.mark.checkbox
     def test_my_views_add_saved_view_via_checkbox(self):
         """MY VIEWS: Add saved view to tile using checkbox.
 
@@ -161,6 +173,10 @@ class TestViewsSubtabs:
 
         assert tab_found, f"View '{view_name}' not opened as tab"
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_myviews
+    @pytest.mark.dragdrop
     def test_my_views_drag_saved_view_to_tile(self):
         """MY VIEWS: Drag saved view directly to tile.
 
@@ -217,6 +233,10 @@ class TestViewsSubtabs:
     # MAPS SUBTAB - Map thumbnails under sites
     # =========================================================================
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_maps
+    @pytest.mark.checkbox
     def test_maps_add_map_via_checkbox(self):
         """MAPS: Add map to tile using checkbox.
 
@@ -269,6 +289,10 @@ class TestViewsSubtabs:
         assert (new_tiles < initial_tiles or map_content.count() > 0), \
             f"Map not added. Tiles: {initial_tiles} -> {new_tiles}"
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_maps
+    @pytest.mark.dragdrop
     def test_maps_drag_map_to_tile(self):
         """MAPS: Drag map thumbnail directly to tile.
 
@@ -307,6 +331,10 @@ class TestViewsSubtabs:
     # CHANNELS SUBTAB - Channel thumbnails
     # =========================================================================
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_channels
+    @pytest.mark.checkbox
     def test_channels_add_channel_via_checkbox(self):
         """CHANNELS: Add channel to tile using checkbox.
 
@@ -343,6 +371,10 @@ class TestViewsSubtabs:
         assert (new_tiles < initial_tiles or video_elements.count() > 0), \
             "Channel not added via checkbox"
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_channels
+    @pytest.mark.dragdrop
     def test_channels_drag_channel_to_tile(self):
         """CHANNELS: Drag channel thumbnail to tile.
 
@@ -378,6 +410,10 @@ class TestViewsSubtabs:
     # INSIGHTS SUBTAB - Analytics/Insight widget thumbnails
     # =========================================================================
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_insights
+    @pytest.mark.checkbox
     def test_insights_add_via_checkbox(self):
         """INSIGHTS: Add insight widget to tile using checkbox.
 
@@ -446,6 +482,10 @@ class TestViewsSubtabs:
         assert (new_tiles < initial_tiles or insight_content.count() > 0), \
             f"Insight widget not added. Tiles: {initial_tiles} -> {new_tiles}"
 
+    @pytest.mark.ui
+    @pytest.mark.subtabs
+    @pytest.mark.views_insights
+    @pytest.mark.dragdrop
     def test_insights_drag_to_tile(self):
         """INSIGHTS: Drag insight widget card to tile.
 

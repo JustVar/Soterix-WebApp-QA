@@ -14,6 +14,8 @@ class TestViewsBasic:
         self.views.navigate()
         self.views.wait_for_page_load()
 
+    @pytest.mark.ui
+    @pytest.mark.sanity
     def test_rename_does_not_affect_sequence(self):
         """Verify renaming a tab doesn't break the sequential naming for new tabs."""
         # Hover over the first tab to reveal edit button
@@ -41,6 +43,8 @@ class TestViewsBasic:
         new_tab_value = new_tab_input.get_attribute("value")
         assert new_tab_value == "View 2", f"Expected 'View 2', got '{new_tab_value}'"
 
+    @pytest.mark.ui
+    @pytest.mark.sanity
     def test_save_empty_view_shows_error(self):
         """Verify saving an empty view shows an error or is prevented."""
         # Add a new tab (it will be empty)
@@ -81,6 +85,9 @@ class TestViewsBasic:
             assert not success_msg.is_visible(), \
                 "Empty view should not save successfully without error"
 
+    @pytest.mark.ui
+    @pytest.mark.views_myviews
+    @pytest.mark.checkbox
     def test_save_view(self):
         """Verify a view can be saved with content using checkbox selection."""
         import datetime
@@ -143,6 +150,8 @@ class TestViewsBasic:
 
         # Cleanup complete - end test after deletion
 
+    @pytest.mark.ui
+    @pytest.mark.views_myviews
     def test_open_my_views(self):
         """Verify My Views panel opens and shows saved views."""
         # Click My Views button
@@ -154,6 +163,9 @@ class TestViewsBasic:
         views_loaded = self.page.locator("img[src*='data:image/jpeg']").first
         expect(views_loaded).to_be_visible(timeout=20000)
 
+    @pytest.mark.ui
+    @pytest.mark.views_myviews
+    @pytest.mark.checkbox
     def test_open_saved_view(self):
         """Verify a saved view can be reopened from My Views after page refresh."""
         import datetime
@@ -225,6 +237,9 @@ class TestViewsBasic:
         new_tab = self.page.locator(f"button.tabItem:has(div[title='{view_name}'])")
         assert new_tab.count() == 1, f"Tab '{view_name}' should be reopened"
 
+    @pytest.mark.ui
+    @pytest.mark.views_myviews
+    @pytest.mark.checkbox
     def test_delete_saved_view(self):
         """Verify a saved view can be deleted."""
         import datetime

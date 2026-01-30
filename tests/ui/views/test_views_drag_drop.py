@@ -14,6 +14,9 @@ class TestViewsDragDrop:
         self.views.navigate()
         self.views.wait_for_page_load()
 
+    @pytest.mark.ui
+    @pytest.mark.dragdrop
+    @pytest.mark.views_devices
     def test_drag_camera_to_tile(self):
         """Verify a camera thumbnail can be dragged to an empty tile."""
         # Expand Driver Site and show cameras
@@ -45,6 +48,9 @@ class TestViewsDragDrop:
 
         assert stream_loaded, f"Camera drag failed - tiles before: {initial_tile_count}, after: {new_tile_count}"
 
+    @pytest.mark.ui
+    @pytest.mark.dragdrop
+    @pytest.mark.views_devices
     def test_drag_camera_by_name_to_tile(self):
         """Verify a specific camera can be dragged to a tile by name."""
         # Expand Driver Site and show cameras
@@ -77,6 +83,9 @@ class TestViewsDragDrop:
         else:
             pytest.skip("Could not determine camera name for test")
 
+    @pytest.mark.ui
+    @pytest.mark.dragdrop
+    @pytest.mark.views_myviews
     def test_drag_saved_view_to_tile(self):
         """Verify a saved view can be dragged from My Views to an empty tile."""
         import datetime
@@ -159,6 +168,8 @@ class TestViewsDragDrop:
                 tab_exists or
                 video_elements.count() > 0), "Saved view drag-and-drop failed"
 
+    @pytest.mark.ui
+    @pytest.mark.dragdrop
     def test_drag_location_to_tile(self):
         """Verify a location/site can be dragged to an empty tile (shows all cameras)."""
         # Get initial tile count
@@ -180,6 +191,9 @@ class TestViewsDragDrop:
         if new_tile_count >= initial_tile_count and video_elements.count() == 0:
             pytest.skip("Location drag-to-tile feature may not be supported in current app version")
 
+    @pytest.mark.ui
+    @pytest.mark.dragdrop
+    @pytest.mark.views_maps
     def test_drag_map_to_tile(self):
         """Verify a map can be dragged to an empty tile.
 
@@ -246,6 +260,9 @@ class TestViewsDragDrop:
         except Exception as e:
             pytest.skip(f"Map drag test failed: {e}")
 
+    @pytest.mark.ui
+    @pytest.mark.dragdrop
+    @pytest.mark.views_channels
     def test_add_channel_to_tile(self):
         """Verify a channel can be added to a tile via checkbox or drag.
 
@@ -313,6 +330,9 @@ class TestViewsDragDrop:
         except Exception as e:
             pytest.skip(f"Channel test failed: {e}")
 
+    @pytest.mark.ui
+    @pytest.mark.checkbox
+    @pytest.mark.views_devices
     def test_multiple_cameras_to_multiple_tiles(self):
         """Verify multiple cameras can be added to multiple tiles."""
         # Expand site and show cameras
