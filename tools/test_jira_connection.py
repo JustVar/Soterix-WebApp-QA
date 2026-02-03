@@ -5,7 +5,7 @@ Test Jira connection and basic bug creation/cleanup.
 Loads credentials from a local .env file (JIRA_URL, JIRA_USER, JIRA_TOKEN).
 Performs:
  - list all projects
- - get project details for key/name containing 'SOTE'
+ - get project details for key/name containing 'NC'
  - list available issue types
  - list custom fields
  - create a test Bug prefixed with [TEST]
@@ -85,14 +85,14 @@ def main():
         traceback.print_exc()
 
     # b) Get target project details (from env or fallback)
-    target_key = JIRA_PROJECT_KEY or "SOTE"
+    target_key = JIRA_PROJECT_KEY or "NC"
     project = None
     try:
         try:
             project = jira.project(target_key)
             print(f"Project '{target_key}' details: key={project.key}, name={project.name}")
         except Exception:
-            # fallback: find by name containing SOTE
+            # fallback: find by name containing NC
             for p in projects:
                 if (target_key and target_key in (p.key or "")) or (target_key and target_key in (p.name or "")):
                     project = p
@@ -127,7 +127,7 @@ def main():
     # e) Create a TEST bug
     test_issue = None
     if project is None:
-        print("Skipping test issue creation because SOTE project was not found.")
+        print("Skipping test issue creation because NC project was not found.")
     else:
         # find bug issue type id
         bug_type = next((it for it in issue_types if it.name.lower() == "bug"), None)
