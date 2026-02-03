@@ -36,11 +36,33 @@ logs/
 .auth_state.json
 # Pytest cache
 nodeids
+.pytest_cache/
 
-# Tooling Code startup prompt (local only)
+# Tooling Code settings and prompts (local only)
+.notes/
+STARTUP_PROMPT.md
 docs/STARTUP_PROMPT.md
+
+# Bugasura extraction artifacts (local only)
+BUGASURA_EXTRACTION_GUIDE.md
+BUGASURA_STARTUP_PROMPT.md
+docs/BUGASURA_EXTRACTION_STARTUP.md
+batch_scripts/
+extraction_progress.json
+
+# QA Touch local-only files
+docs/QA_Touch_Setup_Guide.md
+docs/QA_TOUCH_COMPARISON_GUIDE.md
 
 # Session tracking files (personal/local only)
 docs/SESSION_SUMMARY_*.md
+docs/SESSION_CONTINUE.md
 docs/PROJECT_HOURS_LOG.md
 docs/templates/
+
+# Test data files (large, not automation code)
+tests/data/
+testcases_export.json
+
+# Windows artifacts
+nul
