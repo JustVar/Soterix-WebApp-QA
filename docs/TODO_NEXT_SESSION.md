@@ -1,6 +1,6 @@
 # TODO - Next Session
 
-## Session Summary (2026-02-03) - Jira NC Update, API Tests, QA Touch Team Guide
+## Session Summary (2026-02-03) - JIRA NexaiQ-Core Update, API Tests, QA Touch Team Guide
 
 ### Completed This Session
 - ✅ Updated Jira project key from SOTE to NC across codebase (.env.template, test_jira_connection.py)
@@ -130,7 +130,7 @@ pytest tests/ui/views/ -v --headed
 
 - [ ] ReCAPTCHA bypass - request sent to IT/Support (pending response)
 - [x] QA Touch - 1,528 test cases imported & verified ✅ (2026-02-02)
-- [ ] Jira NC - company-managed instance in test phase (project key updated to NC)
+- [ ] JIRA NexaiQ-Core - company-managed instance in test phase (project key updated to NC)
 - [ ] Incoming spreadsheet - for filling in "Title Only" test case steps (~1,100 need steps)
 - [ ] QA Touch suite tagging - tag test cases with SMOKE and REGRESSION tags
 
