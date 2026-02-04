@@ -65,8 +65,8 @@
 - Update `.env` with new passwords
 - Verify all tests still pass
 
-### Jira Custom Field Review
-- **Action:** Check if NC project custom fields changed
+### JIRA NexaiQ-Core Custom Field Review
+- **Action:** Check if NexaiQ-Core (NC) project custom fields changed
 - **Command:** `python tools/test_jira_connection.py`
 - **Update:** `smart_jira_bug_creator.py` if field IDs changed
 
@@ -101,8 +101,8 @@
 - App Name: QA Test Automation
 - App ID: ***REMOVED***
 
-**For Jira Issues:**
-- Project: NC (NexaiQ-Core)
+**For JIRA NexaiQ-Core Issues:**
+- Project: NexaiQ-Core (key: NC)
 - Admin: [Project Admin Name]
 - URL: https://soterixsystems.atlassian.net
 
