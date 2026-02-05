@@ -111,14 +111,53 @@ When checkbox disappears between hover and click, combine both in single JS:
     3. **Secret header** - `X-Automation-Key` header bypasses check
     4. **Environment flag** - Disable ReCAPTCHA on non-prod environments
 
-    **Accounts Requested:**
-    | Environment | Account | Role |
-    |-------------|---------|------|
-    | QA | automation@soterixsystems.com | Admin |
-    | QA | automation-supervisor@soterixsystems.com | Supervisor |
-    | QA | automation-operator@soterixsystems.com | Operator |
-    | Staging | automation-stage@soterixsystems.com | Admin |
-    | Production | automation-prod@soterixsystems.com | Operator (read-only) |
+    **Automation Accounts:**
+    | Environment | Account | Role | Notes |
+    |-------------|---------|------|-------|
+    | QA | test-auto-qa@soterixsystems.com | Admin | Full write/delete |
+    | Staging | test-auto-stage@soterixsystems.com | Admin | Write access |
+    | Production | test-auto-prod@soterixsystems.com | Admin | Manually set read-only if needed |
+
+    ---
+
+    ## Email Reporting
+
+    ### Sender Address: `qa-reports@soterixsystems.com`
+
+    Test report emails are sent from `qa-reports@soterixsystems.com` (shared mailbox) using the Microsoft Graph API with OAuth.
+
+    **Why not `noreply@`?**
+    - Many mail servers and spam filters flag or outright reject emails from `noreply@` addresses
+    - Exchange Online and Microsoft 365 may block sending from `noreply@` due to organizational policies
+    - If a test report bounces or a recipient replies with a question, there's no way to receive that feedback
+    - Some corporate spam filters score `noreply@` senders higher for spam likelihood
+
+    **Why not `autoreply@`?**
+    - The name is misleading - it implies an auto-responder, not a report sender
+    - Exchange Application Access Policies must explicitly allow each mailbox; using a shared company address like `autoreply@` may conflict with other organizational uses
+    - Hard to audit - if multiple systems use `autoreply@`, you can't tell which one sent what
+
+    **Why `qa-reports@`?**
+    - Self-documenting: anyone receiving the email knows it's a QA test report
+    - Must be a full user account (not a shared mailbox) - OAuth requires a licensed mailbox
+    - Contained: Application Access Policy restricts the OAuth app to only this mailbox
+    - Replies go somewhere useful if someone has questions about a report
+
+    ### OAuth Setup Requirements
+
+    The Azure app registration (`QA Test Automation`, App ID: `***REMOVED***`) needs:
+    1. **Microsoft Graph** -> Application permission -> `Mail.Send` -> Admin consent granted
+    2. **Exchange Online Application Access Policy** (PowerShell - must be run by an admin):
+    ```powershell
+    Connect-ExchangeOnline
+    New-ApplicationAccessPolicy `
+      -AppId "***REMOVED***" `
+      -PolicyScopeGroupId "qa-reports@soterixsystems.com" `
+      -AccessRight RestrictAccess `
+      -Description "Allow QA Automation to send test reports"
+    ```
+
+    **Azure client secret expires: 2026-07-22** - set a reminder to regenerate before then.
 
     ---
 

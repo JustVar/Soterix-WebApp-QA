@@ -11,9 +11,9 @@ config = {
     # Box configurations
     "boxes": {
         "us": {
-            "user_key": "JUSTIN_STAGE",
-            "email": "qa@soterixsystems.com",
-            "password_env": "JUSTIN_STAGE_PASSWORD",
+            "user_key": "TEST_AUTO_STAGE",
+            "email": "test-auto-stage@soterixsystems.com",
+            "password_env": "TEST_AUTO_STAGE_PASSWORD",
             "default_site_id": None,  # TBD - update when known
         },
     },

@@ -11,9 +11,9 @@ config = {
     # Box configurations
     "boxes": {
         "soterix": {
-            "user_key": "JUSTIN_PROD",
-            "email": "qa@soterixsystems.com",
-            "password_env": "JUSTIN_PROD_PASSWORD",
+            "user_key": "TEST_AUTO_PROD",
+            "email": "test-auto-prod@soterixsystems.com",
+            "password_env": "TEST_AUTO_PROD_PASSWORD",
             "default_site_id": None,  # TBD
         },
     },

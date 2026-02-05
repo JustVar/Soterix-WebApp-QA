@@ -11,9 +11,9 @@ config = {
     # Box configurations
     "boxes": {
         "us": {
-            "user_key": "QA_LAB",
-            "email": "qa@soterixsystems.com",
-            "password_env": "QA_LAB_PASSWORD",
+            "user_key": "TEST_AUTO_QA",
+            "email": "test-auto-qa@soterixsystems.com",
+            "password_env": "TEST_AUTO_QA_PASSWORD",
             "default_site_id": 110,
         },
         "india": {

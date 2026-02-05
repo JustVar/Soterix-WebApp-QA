@@ -9,8 +9,8 @@ environments:
     allow_delete: true
     boxes:
       us:
-        user_key: QA_LAB
-        email: qa@soterixsystems.com
+        user_key: TEST_AUTO_QA
+        email: test-auto-qa@soterixsystems.com
         default_site_id: 110
       india:
         user_key: JUSTIN
@@ -24,12 +24,8 @@ environments:
     allow_delete: false
     boxes:
       us:
-        user_key: QA_LAB
-        email: qa@soterixsystems.com
-        default_site_id: TBD
-      india:
-        user_key: JUSTIN
-        email: qa@soterixsystems.com
+        user_key: TEST_AUTO_STAGE
+        email: test-auto-stage@soterixsystems.com
         default_site_id: TBD
 
   preprod:
@@ -50,8 +46,8 @@ environments:
     allow_delete: false
     boxes:
       soterix:
-        user_key: TBD
-        email: TBD
+        user_key: TEST_AUTO_PROD
+        email: test-auto-prod@soterixsystems.com
         default_site_id: TBD
 
 # Default environment if not specified
