@@ -46,6 +46,9 @@ STATUS_MAP = {
 # Also match "[x]" as complete
 COMPLETED_CHECKBOX = re.compile(r"^\s*-\s*\[x\]", re.IGNORECASE)
 
+# Date pattern for completion dates (MM/DD/YYYY)
+DATE_PATTERN = re.compile(r"\((\d{2}/\d{2}/\d{4})\)\s*$")
+
 
 def read_roadmap(path: Path) -> str:
     """Read the roadmap markdown file."""
@@ -127,8 +130,12 @@ def extract_items(body: str) -> list[dict]:
     - Table rows with status icons (| Item | ✅ | ... |)
     - Checkbox items (- [x] completed thing)
     - Table rows with status text matching our icons
+
+    Items are sorted by status: ✅ Complete -> 🔄 In Progress -> 🔜 Planned -> 💡 Ideas -> 🚫 Blocked
     """
     items = []
+    # Status sort order: Complete first, Blocked last
+    STATUS_ORDER = {"✅": 0, "🔄": 1, "🔜": 2, "💡": 3, "⏸️": 4, "🚫": 5}
 
     # --- Table rows ---
     # Match rows like: | Some item | ✅ | details |
@@ -196,12 +203,19 @@ def extract_items(body: str) -> list[dict]:
             item_text = re.sub(r"`(.+?)`", r"\1", item_text)  # remove code ticks
             # Extract details from last cell (if more than 2 meaningful cells)
             details = ""
+            completed_date = None
             non_empty = [c for c in cells if c and c != "---" and not any(ic in c for ic in STATUS_MAP)]
             if len(non_empty) >= 2:
                 last_cell = non_empty[-1].strip()
                 if last_cell != item_text.strip():
                     details = re.sub(r"\*\*(.+?)\*\*", r"\1", last_cell)
                     details = re.sub(r"`(.+?)`", r"\1", details)
+            # Check for Completed column (MM/DD/YYYY format)
+            for cell in cells:
+                date_match = re.match(r"^(\d{2}/\d{2}/\d{4})$", cell.strip())
+                if date_match:
+                    completed_date = date_match.group(1)
+                    break
             items.append({
                 "text": item_text.strip(),
                 "details": details,
@@ -209,13 +223,20 @@ def extract_items(body: str) -> list[dict]:
                 "status_label": info["label"],
                 "status_color": info["color"],
                 "css_class": info["css_class"],
+                "completed_date": completed_date,
             })
 
-    # --- Checkbox items: - [x] some completed thing ---
+    # --- Checkbox items: - [x] some completed thing (MM/DD/YYYY) ---
     for line in body.split("\n"):
         if COMPLETED_CHECKBOX.match(line):
             text = re.sub(r"^\s*-\s*\[x\]\s*", "", line, flags=re.IGNORECASE).strip()
             if text:
+                # Extract date from end of line if present
+                completed_date = None
+                date_match = DATE_PATTERN.search(text)
+                if date_match:
+                    completed_date = date_match.group(1)
+                    text = DATE_PATTERN.sub("", text).strip()
                 items.append({
                     "text": text,
                     "details": "",
@@ -223,7 +244,11 @@ def extract_items(body: str) -> list[dict]:
                     "status_label": "Complete",
                     "status_color": "#22c55e",
                     "css_class": "complete",
+                    "completed_date": completed_date,
                 })
+
+    # Sort items by status: ✅ Complete -> 🔄 In Progress -> 🔜 Planned -> 💡 Ideas -> 🚫 Blocked
+    items.sort(key=lambda x: STATUS_ORDER.get(x["status_icon"], 99))
 
     return items
 
@@ -265,6 +290,60 @@ def extract_priorities(text: str) -> list[dict]:
     return priorities
 
 
+def extract_completions_with_dates(sections: list[dict]) -> list[dict]:
+    """Extract all completed items with dates for velocity tracking."""
+    completions = []
+    for section in sections:
+        for item in section["items"]:
+            if item["status_icon"] == "✅" and item.get("completed_date"):
+                completions.append({
+                    "text": item["text"],
+                    "date": item["completed_date"],
+                    "section": section["title"],
+                    "section_num": section["number"],
+                })
+    # Sort by date (most recent first)
+    def parse_date(d):
+        try:
+            parts = d.split("/")
+            return (int(parts[2]), int(parts[0]), int(parts[1]))  # (year, month, day)
+        except:
+            return (0, 0, 0)
+    completions.sort(key=lambda x: parse_date(x["date"]), reverse=True)
+    return completions
+
+
+def calculate_velocity(completions: list[dict]) -> dict:
+    """Calculate completion velocity metrics."""
+    if not completions:
+        return {"weekly_avg": 0, "total_with_dates": 0, "date_range": "N/A"}
+
+    # Parse dates and calculate
+    dates = []
+    for c in completions:
+        try:
+            parts = c["date"].split("/")
+            dates.append(datetime(int(parts[2]), int(parts[0]), int(parts[1])))
+        except:
+            pass
+
+    if len(dates) < 2:
+        return {"weekly_avg": len(dates), "total_with_dates": len(dates), "date_range": completions[0]["date"] if completions else "N/A"}
+
+    earliest = min(dates)
+    latest = max(dates)
+    weeks = max(1, (latest - earliest).days / 7)
+    weekly_avg = round(len(dates) / weeks, 1)
+
+    return {
+        "weekly_avg": weekly_avg,
+        "total_with_dates": len(dates),
+        "date_range": f"{earliest.strftime('%m/%d/%Y')} - {latest.strftime('%m/%d/%Y')}",
+        "earliest": earliest.strftime('%m/%d/%Y'),
+        "latest": latest.strftime('%m/%d/%Y'),
+    }
+
+
 def extract_timeline(text: str) -> list[dict]:
     """Extract the Timeline Overview table."""
     timeline = []
@@ -287,13 +366,15 @@ def extract_timeline(text: str) -> list[dict]:
     return timeline
 
 
-def generate_html(sections, metadata, priorities, timeline, logo_svg):
+def generate_html(sections, metadata, priorities, timeline, logo_svg, completions, velocity):
     """Generate the complete HTML dashboard."""
 
     # Build section cards JSON for JS
     sections_json = json.dumps(sections, ensure_ascii=False, indent=2)
     priorities_json = json.dumps(priorities, ensure_ascii=False, indent=2)
     timeline_json = json.dumps(timeline, ensure_ascii=False, indent=2)
+    completions_json = json.dumps(completions[:20], ensure_ascii=False, indent=2)  # Top 20 recent
+    velocity_json = json.dumps(velocity, ensure_ascii=False, indent=2)
 
     # Calculate totals
     total_items = sum(s["total"] for s in sections)
@@ -375,14 +456,14 @@ body {{
     color: var(--white);
 }}
 .header-subtitle {{
-    font-size: 14px;
+    font-size: 16px;
     color: var(--oslo-gray);
     font-weight: 300;
     margin-top: 2px;
 }}
 .header-meta {{
     text-align: right;
-    font-size: 13px;
+    font-size: 15px;
     color: var(--oslo-gray);
     font-weight: 300;
 }}
@@ -396,6 +477,77 @@ body {{
     max-width: 1280px;
     margin: 0 auto;
     padding: 24px 20px;
+}}
+
+/* ===== SEARCH BAR ===== */
+.search-container {{
+    margin-bottom: 24px;
+}}
+.search-input {{
+    width: 100%;
+    padding: 14px 20px 14px 48px;
+    font-size: 15px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}}
+.search-input:focus {{
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(18,124,163,0.2);
+}}
+.search-input::placeholder {{
+    color: var(--text-muted);
+}}
+.search-wrapper {{
+    position: relative;
+}}
+.search-icon {{
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 18px;
+    pointer-events: none;
+}}
+.search-clear {{
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: none;
+}}
+.search-clear:hover {{
+    color: var(--text-primary);
+    background: var(--card-bg-hover);
+}}
+.search-clear.visible {{
+    display: block;
+}}
+.no-results {{
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 15px;
+}}
+.section-card.hidden {{
+    display: none;
+}}
+.highlight {{
+    background: rgba(18,124,163,0.3);
+    border-radius: 2px;
+    padding: 0 2px;
 }}
 
 /* ===== SUMMARY CARDS ===== */
@@ -421,13 +573,13 @@ body {{
     background: var(--card-bg-hover);
 }}
 .summary-card .number {{
-    font-size: 36px;
+    font-size: 48px;
     font-weight: 900;
     line-height: 1;
     margin-bottom: 4px;
 }}
 .summary-card .label {{
-    font-size: 12px;
+    font-size: 15px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     color: var(--text-secondary);
@@ -527,13 +679,14 @@ body {{
     align-items: flex-start;
     gap: 8px;
     padding: 7px 0;
-    font-size: 15px;
+    font-size: 17px;
     color: var(--text-primary);
     line-height: 1.45;
 }}
 .modal-item .item-icon {{
     flex-shrink: 0;
-    width: 20px;
+    width: 24px;
+    font-size: 24px;
     text-align: center;
 }}
 .modal-item .item-detail {{
@@ -681,7 +834,7 @@ body {{
     justify-content: space-between;
 }}
 .section-title {{
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--text-primary);
     display: flex;
@@ -691,10 +844,10 @@ body {{
 .section-num {{
     background: var(--primary-blue);
     color: var(--white);
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 700;
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -702,7 +855,7 @@ body {{
     flex-shrink: 0;
 }}
 .section-pct {{
-    font-size: 14px;
+    font-size: 19px;
     font-weight: 700;
     color: var(--primary-blue);
 }}
@@ -724,13 +877,13 @@ body {{
     flex-wrap: wrap;
 }}
 .badge {{
-    font-size: 11px;
-    padding: 2px 8px;
+    font-size: 16px;
+    padding: 3px 10px;
     border-radius: 20px;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
 }}
 .badge.complete {{ background: rgba(34,197,94,0.15); color: #4ade80; }}
 .badge.in-progress {{ background: rgba(18,124,163,0.2); color: #5bb8d4; }}
@@ -739,7 +892,7 @@ body {{
 .badge.blocked {{ background: rgba(239,68,68,0.15); color: #f87171; }}
 
 .chevron {{
-    font-size: 18px;
+    font-size: 22px;
     color: var(--oslo-gray);
     transition: transform 0.3s;
     flex-shrink: 0;
@@ -768,22 +921,24 @@ body {{
     gap: 10px;
     padding: 8px 0;
     border-bottom: 1px solid rgba(74,73,87,0.5);
-    font-size: 14px;
+    font-size: 17px;
 }}
 .item-row:last-child {{ border-bottom: none; }}
 .item-status {{
-    font-size: 16px;
+    font-size: 22px;
     flex-shrink: 0;
-    margin-top: 1px;
+    margin-top: -1px;
 }}
 .item-text {{
     flex: 1;
     color: var(--text-secondary);
 }}
 .item-text.complete-text {{
+    color: var(--text-secondary);
+}}
+.item-detail {{
     color: var(--text-muted);
-    text-decoration: line-through;
-    text-decoration-color: #555;
+    font-size: 13px;
 }}
 
 /* ===== PRIORITY SECTION ===== */
@@ -808,7 +963,7 @@ body {{
 }}
 .priority-tier:last-child {{ margin-bottom: 0; }}
 .tier-label {{
-    font-size: 12px;
+    font-size: 16px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 700;
@@ -827,7 +982,7 @@ body {{
 }}
 .priority-list li {{
     padding: 6px 0 6px 16px;
-    font-size: 14px;
+    font-size: 17px;
     color: var(--text-secondary);
     position: relative;
 }}
@@ -836,8 +991,8 @@ body {{
     position: absolute;
     left: 0;
     top: 13px;
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--primary-blue);
 }}
@@ -895,12 +1050,12 @@ body {{
 }}
 .timeline-period {{
     font-weight: 700;
-    font-size: 14px;
+    font-size: 18px;
     color: var(--text-primary);
     margin-bottom: 4px;
 }}
 .timeline-focus {{
-    font-size: 13px;
+    font-size: 16px;
     color: var(--text-secondary);
     line-height: 1.4;
 }}
@@ -1027,18 +1182,38 @@ body {{
                 <div class="ai-label">Deliverables Completed</div>
             </div>
             <div class="ai-highlight-card">
-                <div class="ai-num">{len(sections)}</div>
-                <div class="ai-label">Workstreams Active</div>
+                <div class="ai-num">{velocity.get('weekly_avg', 0)}</div>
+                <div class="ai-label">Items / Week (Velocity)</div>
             </div>
             <div class="ai-highlight-card">
-                <div class="ai-num">{total_items}</div>
-                <div class="ai-label">Items Tracked</div>
+                <div class="ai-num">{len(sections)}</div>
+                <div class="ai-label">Workstreams Active</div>
             </div>
             <div class="ai-highlight-card">
                 <div class="ai-num">3</div>
                 <div class="ai-label">Tooling Interfaces Used</div>
             </div>
         </div>
+    </div>
+
+    <!-- RECENT COMPLETIONS -->
+    <div class="priority-section" id="recent-completions">
+        <h2>Recent Completions</h2>
+        <div id="completions-list"></div>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div class="search-container">
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="search-input" placeholder="Search sections and items..." autocomplete="off">
+            <button class="search-clear" id="search-clear" onclick="clearSearch()">&times;</button>
+        </div>
+    </div>
+
+    <!-- NO RESULTS MESSAGE -->
+    <div class="no-results" id="no-results" style="display:none;">
+        No sections or items match your search.
     </div>
 
     <!-- SECTION CARDS -->
@@ -1067,6 +1242,24 @@ body {{
 const sections = {sections_json};
 const priorities = {priorities_json};
 const timeline = {timeline_json};
+const recentCompletions = {completions_json};
+const velocity = {velocity_json};
+
+// ===== RENDER RECENT COMPLETIONS =====
+const completionsList = document.getElementById('completions-list');
+if (recentCompletions.length > 0) {{
+    let html = '<ul class="priority-list">';
+    recentCompletions.slice(0, 10).forEach(c => {{
+        html += `<li><strong>${{c.date}}</strong> - ${{c.text}} <span style="color:var(--text-muted);font-size:13px;">(Section ${{c.section_num}})</span></li>`;
+    }});
+    html += '</ul>';
+    if (velocity.date_range && velocity.date_range !== 'N/A') {{
+        html += `<div style="margin-top:12px;font-size:13px;color:var(--text-muted);">Tracking ${{velocity.total_with_dates}} completions from ${{velocity.date_range}}</div>`;
+    }}
+    completionsList.innerHTML = html;
+}} else {{
+    completionsList.innerHTML = '<div style="color:var(--text-muted);font-size:14px;">No completion dates tracked yet. Add (MM/DD/YYYY) to completed items.</div>';
+}}
 
 // ===== RENDER SECTIONS =====
 const grid = document.getElementById('sections-grid');
@@ -1096,10 +1289,11 @@ sections.forEach(section => {{
     let itemsHtml = '';
     section.items.forEach(item => {{
         const textClass = item.css_class === 'complete' ? 'item-text complete-text' : 'item-text';
+        const detailSpan = item.details ? `<span class="item-detail"> - ${{item.details}}</span>` : '';
         itemsHtml += `
             <div class="item-row">
                 <span class="item-status">${{item.status_icon}}</span>
-                <span class="${{textClass}}">${{item.text}}</span>
+                <span class="${{textClass}}">${{item.text}}${{detailSpan}}</span>
             </div>`;
     }});
 
@@ -1247,6 +1441,60 @@ function closeDrilldown() {{
 document.addEventListener('keydown', e => {{
     if (e.key === 'Escape') closeDrilldown();
 }});
+
+// ===== SEARCH FUNCTIONALITY =====
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+const noResults = document.getElementById('no-results');
+
+searchInput.addEventListener('input', function() {{
+    const query = this.value.toLowerCase().trim();
+    searchClear.classList.toggle('visible', query.length > 0);
+    filterSections(query);
+}});
+
+function clearSearch() {{
+    searchInput.value = '';
+    searchClear.classList.remove('visible');
+    filterSections('');
+    searchInput.focus();
+}}
+
+function filterSections(query) {{
+    const cards = document.querySelectorAll('.section-card');
+    let visibleCount = 0;
+
+    cards.forEach((card, index) => {{
+        const section = sections[index];
+        const titleMatch = section.title.toLowerCase().includes(query);
+        const itemsMatch = section.items.some(item =>
+            item.text.toLowerCase().includes(query) ||
+            (item.details && item.details.toLowerCase().includes(query))
+        );
+
+        if (query === '' || titleMatch || itemsMatch) {{
+            card.classList.remove('hidden');
+            visibleCount++;
+            // Auto-expand cards with matching items when searching
+            if (query && itemsMatch && !titleMatch) {{
+                card.classList.add('open');
+            }}
+        }} else {{
+            card.classList.add('hidden');
+        }}
+    }});
+
+    noResults.style.display = visibleCount === 0 && query ? 'block' : 'none';
+}}
+
+// Focus search with Ctrl+K or /
+document.addEventListener('keydown', e => {{
+    if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && document.activeElement.tagName !== 'INPUT')) {{
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+    }}
+}});
 </script>
 
 </body>
@@ -1302,8 +1550,16 @@ def main():
     timeline = extract_timeline(text)
     print(f"  {len(timeline)} timeline entries found")
 
+    print("Extracting completions with dates...")
+    completions = extract_completions_with_dates(sections)
+    print(f"  {len(completions)} completions with dates found")
+
+    print("Calculating velocity...")
+    velocity = calculate_velocity(completions)
+    print(f"  Weekly average: {velocity.get('weekly_avg', 0)} items/week")
+
     print("Generating HTML...")
-    html = generate_html(sections, metadata, priorities, timeline, logo_html)
+    html = generate_html(sections, metadata, priorities, timeline, logo_html, completions, velocity)
 
     print(f"Writing to {OUTPUT_PATH}...")
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:

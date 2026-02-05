@@ -93,13 +93,13 @@ python tools/generate_dashboard.py
 
 ### Foundation
 
-| Item | Status | Details |
-|------|--------|---------|
-| pytest markers setup | ✅ | smoke, regression, api, ui, drag_drop, live_streaming |
-| Page Object Model structure | ✅ | shared page objects folder |
-| Session caching implementation | ✅ | cookies + localStorage injection (86% test time reduction) |
-| Test organization approach | ✅ | mix of classes, functions, and markers |
-| API tests | ✅ | 16 endpoints tested across 5 categories |
+| Item | Status | Completed | Details |
+|------|--------|-----------|---------|
+| pytest markers setup | ✅ | 01/29/2026 | smoke, regression, api, ui, drag_drop, live_streaming |
+| Page Object Model structure | ✅ | 01/24/2026 | shared page objects folder |
+| Session caching implementation | ✅ | 01/27/2026 | cookies + localStorage injection (86% test time reduction) |
+| Test organization approach | ✅ | 01/24/2026 | mix of classes, functions, and markers |
+| API tests | ✅ | 01/24/2026 | 16 endpoints tested across 5 categories |
 
 ### Phase 1: Initial Migration (IN PROGRESS)
 
@@ -177,16 +177,16 @@ Modules to migrate from Selenium or add new coverage:
 | **Waiting for corrected file** | Admin-LPR (200 rows duplicate of Admin-General) |
 
 **Completed:**
-- [x] Full import v3: 2,552 test cases with steps prepared (2026-02-04)
-- [x] Comparison analysis document generated (IMPORT_COMPARISON_ANALYSIS.md)
-- [x] Import tracking document generated (IMPORT_TRACKING.md)
-- [x] QA Touch team guide created (QA_TOUCH_TEAM_GUIDE.md)
-- [x] Module structure created with 425 sub-modules
-- [x] Admin > General sub-modules programmatically assigned
-- [x] Admin > Maps sub-modules programmatically assigned
-- [x] CSV import issues resolved (pipe separator -> newline, duplicates, grammar)
-- [x] DELETE-REQUEST saved filter setup
-- [x] Field mapping finalized
+- [x] Full import v3: 2,552 test cases with steps prepared (02/04/2026)
+- [x] Comparison analysis document generated (02/04/2026)
+- [x] Import tracking document generated (02/04/2026)
+- [x] QA Touch team guide created (02/03/2026)
+- [x] Module structure created with 425 sub-modules (02/03/2026)
+- [x] Admin > General sub-modules programmatically assigned (02/03/2026)
+- [x] Admin > Maps sub-modules programmatically assigned (02/03/2026)
+- [x] CSV import issues resolved (02/03/2026)
+- [x] DELETE-REQUEST saved filter setup (02/03/2026)
+- [x] Field mapping finalized (02/03/2026)
 
 ### Pending Tasks
 
@@ -253,7 +253,7 @@ Modules to migrate from Selenium or add new coverage:
 | #qa-release-gates channel setup | 🔜 (Low) | Go/No-Go release workflow with automated reporting |
 
 **Completed:**
-- [x] Automated weekly Slack standup report system (Python + Slack SDK + pandas + openpyxl)
+- [x] Automated weekly Slack standup report system (01/25/2026)
 
 ---
 
@@ -291,9 +291,9 @@ Modules to migrate from Selenium or add new coverage:
 - Email Reporting: `qa-reports@soterixsystems.com` (User account, OAuth sender)
 
 **Completed:**
-- [x] QA environment ReCAPTCHA disabled for automation
-- [x] Automation accounts created (test-auto-qa/stage/prod@)
-- [x] OAuth email reporting configured (qa-reports@, Mail.Send Application permission, Exchange Access Policy)
+- [x] QA environment ReCAPTCHA disabled for automation (01/25/2026)
+- [x] Automation accounts created (test-auto-qa/stage/prod@) (02/05/2026)
+- [x] OAuth email reporting configured (02/05/2026)
 
 **See:** [ReCAPTCHA Bypass Plan](RECAPTCHA_BYPASS_PLAN.md)
 
@@ -319,8 +319,8 @@ Modules to migrate from Selenium or add new coverage:
 **Current Environment:** App connects to Production. QR code feature is being implemented to allow environment switching (QA/Stage/Prod) - will enable multi-environment testing when available.
 
 **Completed:**
-- [x] Mac justification document created
-- [x] Identified backend environment (Production)
+- [x] Mac justification document created (01/25/2026)
+- [x] Identified backend environment (Production) (01/25/2026)
 
 ---
 
@@ -455,7 +455,7 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 | White-label configuration testing | 💡 | |
 
 **Completed:**
-- [x] Partner Admin test cases created and in use
+- [x] Partner Admin test cases created and in use (01/25/2026)
 
 ---
 
@@ -469,9 +469,9 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 | Standardized test execution reports template | 🔜 | |
 
 **Completed:**
-- [x] Automated weekly Slack standup report system (Python + Slack SDK + pandas + openpyxl)
-- [x] iOS/Android mobile category tracking in reports
-- [x] Automation vs. Manual tracking in reports
+- [x] Automated weekly Slack standup report system (01/25/2026)
+- [x] iOS/Android mobile category tracking in reports (01/25/2026)
+- [x] Automation vs. Manual tracking in reports (01/25/2026)
 
 ---
 
@@ -483,22 +483,22 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 | Standardized test execution reports template | 🔜 | |
 
 **Completed:**
-- [x] Triple-Helix Testing Methodology document
-- [x] Simplified QA Priority Matrix / Bug Priority Guide (HTML)
-- [x] Soterix brand-compliant PPTX template (validated)
-- [x] QA Touch Setup Guide v2.0 (1,360 lines, 13 sections + appendices)
-- [x] Future Roadmap doc (`FUTURE_ROADMAP.md`)
-- [x] Selenium to Playwright Migration status (`SELENIUM_TO_PLAYWRIGHT_MIGRATION.md`)
-- [x] ReCAPTCHA bypass plan (`RECAPTCHA_BYPASS_PLAN.md`)
-- [x] Mac justification document (`MAC_JUSTIFICATION_FOR_IOS_TESTING.md`)
-- [x] Session summary template
-- [x] Credentials setup guide (`CREDENTIALS_SETUP.md`)
-- [x] API testing notes (`API_TESTING_NOTES.md`)
-- [x] Session caching implementation doc (`SESSION_CACHING_IMPLEMENTATION.md`)
-- [x] QA Touch import plan (`QA_TOUCH_IMPORT_PLAN.md`)
-- [x] QA Touch team guide (`QA_TOUCH_TEAM_GUIDE.md`)
-- [x] QA Things to Know guide (`QA_THINGS_TO_KNOW.md`)
-- [x] Interactive HTML dashboard (`dashboard.html`) with auto-generation script
+- [x] Triple-Helix Testing Methodology document (01/25/2026)
+- [x] Simplified QA Priority Matrix / Bug Priority Guide (01/25/2026)
+- [x] Soterix brand-compliant PPTX template (01/25/2026)
+- [x] QA Touch Setup Guide v2.0 (01/25/2026)
+- [x] Future Roadmap doc (01/25/2026)
+- [x] Selenium to Playwright Migration status (01/25/2026)
+- [x] ReCAPTCHA bypass plan (01/25/2026)
+- [x] Mac justification document (01/25/2026)
+- [x] Session summary template (01/25/2026)
+- [x] Credentials setup guide (01/25/2026)
+- [x] API testing notes (01/24/2026)
+- [x] Session caching implementation doc (01/27/2026)
+- [x] QA Touch import plan (02/03/2026)
+- [x] QA Touch team guide (02/03/2026)
+- [x] QA Things to Know guide (01/27/2026)
+- [x] Interactive HTML dashboard with auto-generation script (02/03/2026)
 
 ---
 
@@ -512,8 +512,8 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 | Secrets management for India team | 🔜 | No 1Password - secure .env sharing process needed |
 
 **Completed:**
-- [x] Team structure defined (QA Lead Justin + QA Engineer A + QA Engineer B in India)
-- [x] Daily Slack standups at 9:15 AM CST (automated via Slack workflow)
+- [x] Team structure defined (01/25/2026)
+- [x] Daily Slack standups at 9:15 AM CST (01/25/2026)
 
 ---
 
