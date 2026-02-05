@@ -1,8 +1,8 @@
 # Unified Roadmap - Soterix QA Automation
 
-> **Last Updated:** 2026-02-03
+> **Last Updated:** 2026-02-05
 > **Sources:** Tooling Code (Terminal), Tooling Code (VS Code), Tooling Chat (tooling.ai project)
-> **Migration Progress:** ~16% (49 of ~212 Selenium tests migrated)
+> **Migration Progress:** ~23% (49 of ~212 Selenium tests migrated)
 > **Owner:** Justin Varughese, System Platform QA Lead
 
 ---
@@ -78,44 +78,65 @@ python tools/generate_dashboard.py
 
 ---
 
-## 1. Playwright Test Migration
+## 1. Test Automation Development
 
-### Phase 2: Core Modules (IN PROGRESS)
+### Current State (as of 2026-02-05)
+
+| Metric | Value |
+|--------|-------|
+| **Playwright tests written** | 49 |
+| **QA Touch manual test cases** | 2,552 |
+| **Automation coverage** | ~2% (49 / 2,552) |
+| **Target (Selenium migration)** | ~212 tests |
+| **Selenium migration progress** | ~23% (49 / 212) |
+| **Environment** | QA only (Stage/Prod planned) |
+
+### Foundation
+
+| Item | Status | Details |
+|------|--------|---------|
+| pytest markers setup | ✅ | smoke, regression, api, ui, drag_drop, live_streaming |
+| Page Object Model structure | ✅ | shared page objects folder |
+| Session caching implementation | ✅ | cookies + localStorage injection (86% test time reduction) |
+| Test organization approach | ✅ | mix of classes, functions, and markers |
+| API tests | ✅ | 16 endpoints tested across 5 categories |
+
+### Phase 1: Initial Migration (IN PROGRESS)
 
 | Item | Tests | Status | Details |
 |------|-------|--------|---------|
-| Add markers to Login tests | 10 | 🔜 | `ui`, `smoke`/`sanity` markers |
-| Add markers to API tests | 16 | 🔜 | `api`, `smoke` markers |
-| Views module expansion | ~34 remaining | 🔄 | 6 of ~40 migrated; live view, sequence/playlist, grid layout remaining |
-| Events module migration | 26 | 🔜 | Need EventsPage POM first |
-| Logout tests | - | 🔜 | Standalone test suite |
+| Login tests migration | 10 | 🔄 | Basic login tests exist; `smoke`/`sanity` markers still needed |
+| API tests migration | 16 | 🔄 | All 16 have markers; need validation against QA Touch cases |
+| Views module migration | ~40 | 🔄 | 23 of ~40 migrated; live view, sequence/playlist, grid layout remaining |
+| Events module migration | 26 | 🔜 | EventsPage POM complete; test files still needed |
+| Logout tests | - | 🔜 | `test_logout()` exists in login suite; standalone suite not yet created |
 
-### Phase 3: Extended Coverage (PLANNED)
+### Phase 2: Extended Coverage (PLANNED)
 
-| Module | Tests | Priority | Notes |
-|--------|-------|----------|-------|
-| Search | 24 | High | HAR capture needed |
-| Media | 30 | Medium | Clip management |
-| Insights | 26 | Medium | System Status dashboard click-through |
-| Admin Rules | 14 | Medium | |
-| Admin Sites | 12 | Low | |
-| Admin Users | 9 | Low | |
-| Chats | 12 | Low | |
-| Maps | 4 | Low | |
-| Notifications | 3 | Low | |
+Modules to migrate from Selenium or add new coverage:
 
-### Phase 4: New Coverage (FUTURE)
+| Module | Status | Notes |
+|--------|--------|-------|
+| Search | 🔜 | HAR capture needed |
+| Media | 🔜 | Clip management |
+| Insights | 🔜 | System Status dashboard click-through |
+| Chats | 🔜 | |
+| Maps | 🔜 | |
+| Notifications | 🔜 | |
+| LPR | 💡 | No existing Selenium coverage |
 
-Modules with no existing Selenium coverage:
+### Phase 3: Admin Module Coverage (FUTURE)
 
-| Module | Test Cases Identified |
-|--------|----------------------|
-| LPR | 14 |
-| Admin Maps | 17 |
-| Admin Integrations | 21 |
-| Admin General | 16 |
-| Admin LPR | 10 |
-| Admin Licenses | 10 |
+| Module | Status | Notes |
+|--------|--------|-------|
+| Admin Rules | 🔜 | |
+| Admin Sites | 🔜 | |
+| Admin Users | 🔜 | |
+| Admin Maps | 💡 | No existing Selenium coverage |
+| Admin Integrations | 💡 | No existing Selenium coverage |
+| Admin General | 💡 | No existing Selenium coverage |
+| Admin LPR | 💡 | No existing Selenium coverage |
+| Admin Licenses | 💡 | No existing Selenium coverage |
 
 ### Video/Streaming Validation (Planned)
 
@@ -131,44 +152,67 @@ Modules with no existing Selenium coverage:
 | Item | Status | Details |
 |------|--------|---------|
 | Playwright trace viewer setup | 🔜 | For detailed failure analysis |
-| Test organization decision | 💡 | Class-based vs markers vs separate files - pending |
-| Project hours tracking system | 💡 | PROJECT_HOURS_LOG.md proposed |
 
-**Completed:**
-- [x] pytest markers setup (smoke, regression, api, ui, drag_drop, live_streaming)
-- [x] Page Object Model structure (shared page objects folder)
-- [x] Session caching implementation (cookies + localStorage injection)
-- [x] Session summary template created
-
----
-
-## 2. QA Touch Integration
+### Manual Test Case Identification (PENDING)
 
 | Item | Status | Details |
 |------|--------|---------|
-| Fill in ~1,100 "Title Only" test case steps | 🚫 | Waiting on incoming spreadsheet from QA team |
-| QA Touch Setup Guide v2.0 expansion | 🔄 | Expanded from 619 to 1,360 lines |
-| Tag test cases with SMOKE (~50-75) | 🔜 | |
-| Tag test cases with REGRESSION (~200-400) | 🔜 | |
-| Set up test execution plans | 🔜 | |
-| Test Run creation workflows | 🔜 | 5 run types: Release, Smoke, Sprint, Nightly, Full Regression |
-| Manual Playwright result upload to QA Touch | 🔜 | Batch import process before automation is ready |
-| Automated Playwright -> QA Touch result upload | 🔜 (High) | Needs QA Touch API + Playwright migration further along |
-| AUTOMATED tag sync script | 🔜 (Low) | Auto-tag test cases matching Playwright tests |
-| QA Touch API integration for bulk ops | 🔜 (Medium) | |
-| Gap analysis automation | 🔜 (Medium) | Compare QA Touch vs Playwright vs website features |
-| Test case versioning and maintenance procedures | 🔜 | |
-| Requirements traceability in QA Touch | 🔜 | |
-| QA dashboards | 🔜 | Test execution metrics, pass/fail rates, coverage |
-| Leadership/PM dashboards | 🔜 | Milestone-based, release readiness, quality trends |
-| Additional QA Touch projects | 💡 | NexaiQ-Private Cloud, NexaiQ-iOS, NexaiQ-Android, NexaiQ-Technician App, NexaiQ-Partner Admin Tool |
+| Map QA Touch test cases to automation candidates | 🔜 | Identify which manual tests should be automated |
+| Prioritize automation based on execution frequency | 🔜 | Focus on high-run-rate tests first |
+| Gap analysis: QA Touch vs Playwright coverage | 🔜 | Track what's automated vs manual-only |
+
+---
+
+## 2. Test Management Platform
+
+### Current State (as of 2026-02-05)
+
+| Metric | Value |
+|--------|-------|
+| **Total test cases (target)** | 2,583 |
+| **Incoming from spreadsheet** | 2,552 |
+| **Preserved (Login/Logout/Audio)** | 31 |
+| **With full steps** | 2,552 (100% of incoming) |
+| **Unique modules (incl. sub-modules)** | 425 |
+| **Waiting for corrected file** | Admin-LPR (200 rows duplicate of Admin-General) |
 
 **Completed:**
-- [x] 1,528 test cases imported (verified 2026-02-02)
-- [x] QA Touch team guide created
-- [x] Module structure created (mirrors NexaiQ navigation)
-- [x] CSV import issues resolved (pipe separator, duplicates, grammar)
+- [x] Full import v3: 2,552 test cases with steps prepared (2026-02-04)
+- [x] Comparison analysis document generated (IMPORT_COMPARISON_ANALYSIS.md)
+- [x] Import tracking document generated (IMPORT_TRACKING.md)
+- [x] QA Touch team guide created (QA_TOUCH_TEAM_GUIDE.md)
+- [x] Module structure created with 425 sub-modules
+- [x] Admin > General sub-modules programmatically assigned
+- [x] Admin > Maps sub-modules programmatically assigned
+- [x] CSV import issues resolved (pipe separator -> newline, duplicates, grammar)
 - [x] DELETE-REQUEST saved filter setup
+- [x] Field mapping finalized
+
+### Pending Tasks
+
+| Item | Status | Details |
+|------|--------|---------|
+| Verify import total = 2,583 | 🔜 | 2,552 imported + 31 preserved |
+| Tag test cases with SMOKE (~100-150) | 🔜 | Critical path tests for deployment validation |
+| Tag test cases with REGRESSION (~500-700) | 🔜 | Broader coverage for release testing |
+| Set up test execution plans | 🔜 | |
+| Test Run creation workflows | 🔜 | 5 run types: Release, Smoke, Sprint, Nightly, Full Regression |
+| Import corrected Admin-LPR sheet | 🚫 | Waiting for corrected file from QA team |
+
+### Future Enhancements
+
+| Item | Status | Priority | Details |
+|------|--------|----------|---------|
+| Manual Playwright result upload to QA Touch | 🔜 | Medium | Batch import process before automation is ready |
+| Automated Playwright -> QA Touch result upload | 🔜 | High | Needs QA Touch API + Playwright migration further along |
+| AUTOMATED tag sync script | 🔜 | Low | Auto-tag test cases matching Playwright tests |
+| QA Touch API integration for bulk ops | 🔜 | Medium | API key available |
+| Gap analysis automation | 🔜 | Medium | Compare QA Touch vs Playwright vs website features |
+| Test case versioning and maintenance procedures | 🔜 | Low | |
+| Requirements traceability in QA Touch | 🔜 | Low | |
+| QA dashboards | 🔜 | Medium | Test execution metrics, pass/fail rates, coverage |
+| Leadership/PM dashboards | 🔜 | Medium | Milestone-based, release readiness, quality trends |
+| Additional QA Touch projects | 💡 | Future | NexaiQ-Private Cloud, NexaiQ-iOS, NexaiQ-Android, NexaiQ-Technician App, NexaiQ-Partner Admin Tool |
 
 ---
 
@@ -177,16 +221,13 @@ Modules with no existing Selenium coverage:
 | Item | Status | Details |
 |------|--------|---------|
 | Complete Jira instance setup/testing | 🔄 | Company-managed, project key = NC |
+| Smart bug creation scripts | 🔄 | `smart_jira_bug_creator.py`, `update_failure_history.py`, `review_queue.py`, `flaky_tests.json` - scripts created |
+| Review custom labels | 🔄 | Updating Jira labels |
 | Define project structure and workflows | 🔜 | |
 | Configure QA Touch -> Jira integration | 🔜 | API token setup, field mapping |
 | Configure Playwright -> Jira integration | 🔜 | Automated bug creation on test failure |
-| Smart bug creation scripts | 🔜 | `smart_jira_bug_creator.py`, `update_failure_history.py`, `review_queue.py`, `flaky_tests.json` |
 | Sprint/release test coverage reports | 🔜 | |
 | Create QA metrics dashboards | 🔜 | |
-| Jira custom field review | Quarterly | Recurring maintenance |
-
-**Completed:**
-- [x] Jira instance created (https://soterixsystems.atlassian.net)
 
 ---
 
@@ -240,15 +281,19 @@ Modules with no existing Selenium coverage:
 | Pre-Prod URL | 🚫 | URL needed |
 | Staging environment access | 🚫 | Needs ReCAPTCHA bypass |
 | Production environment access | 🚫 | Needs ReCAPTCHA bypass |
-| Dedicated automation accounts | 🔜 | Disabled password expiration, disabled MFA, enabled IMAP |
+| Dedicated automation accounts | ✅ | Created as shared mailboxes with Admin role |
+| OAuth email reporting setup | ✅ | qa-reports@ with Mail.Send (Application) permission |
 
-**Requested Automation Accounts:**
-- Stage: `automation-stage@soterixsystems.com` (Admin)
-- Pre-Prod: `automation-preprod@soterixsystems.com` (Admin)
-- Production: `automation-prod@soterixsystems.com` (Operator, read-only)
+**Automation Accounts (Created):**
+- QA: `test-auto-qa@soterixsystems.com` (Admin, shared mailbox)
+- Stage: `test-auto-stage@soterixsystems.com` (Admin, shared mailbox)
+- Production: `test-auto-prod@soterixsystems.com` (Admin, shared mailbox - manually restrict to read-only if needed)
+- Email Reporting: `qa-reports@soterixsystems.com` (User account, OAuth sender)
 
 **Completed:**
 - [x] QA environment ReCAPTCHA disabled for automation
+- [x] Automation accounts created (test-auto-qa/stage/prod@)
+- [x] OAuth email reporting configured (qa-reports@, Mail.Send Application permission, Exchange Access Policy)
 
 **See:** [ReCAPTCHA Bypass Plan](RECAPTCHA_BYPASS_PLAN.md)
 
@@ -271,13 +316,11 @@ Modules with no existing Selenium coverage:
 - Android: Fully native, tested manually via APK/Play Store internal testing
 - No mobile web version exists
 
-**To Request from India Developer:**
-- [ ] Documentation on which backend environment the app connects to
-- [ ] Instructions for switching environments in the app (if possible)
-- [ ] Release notes for each TestFlight/APK build
+**Current Environment:** App connects to Production. QR code feature is being implemented to allow environment switching (QA/Stage/Prod) - will enable multi-environment testing when available.
 
 **Completed:**
 - [x] Mac justification document created
+- [x] Identified backend environment (Production)
 
 ---
 
@@ -302,14 +345,23 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 
 | Item | Status | Details |
 |------|--------|---------|
-| Edge box health monitoring | 🔜 | Docker, RAID, GPU (A-100/A-1000/A-4000) |
-| Camera connectivity testing | 🔜 | Hanwha, i-Pro, Avigilon, Vivotek, Axis, VCA |
+| Edge box health monitoring | 🔜 | Docker, RAID, GPU |
+| Camera connectivity testing | 🔜 | Hanwha, i-Pro, Avigilon, Vivotek, Axis, VCA, and more |
 | Temperature/power/storage monitoring | 🔜 | Environmental monitoring |
 | Power management testing | 🔜 | |
 | RAID/network/firmware validation | 🔜 | |
 | ONVIF compliance & camera discovery | 🔜 | Protocol compliance testing |
 | Storage health (RAID status) | 🔜 | |
 | Network interface testing | 🔜 | |
+
+### Phase 3: LLM Testing (Future)
+
+| Item | Status | Details |
+|------|--------|---------|
+| Identify LLM testing requirements | 💡 | Define scope for on-device LLM validation |
+| LLM hardware testing | 💡 | GPU utilization, memory requirements, thermal performance |
+| LLM software testing | 💡 | Model loading, inference accuracy, response quality |
+| LLM benchmarking | 💡 | Latency, throughput, tokens/second metrics |
 
 **Access:**
 - WireGuard VPN configured for remote access
@@ -337,11 +389,12 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 |------|--------|---------|
 | Linode instance monitoring | 🚫 | Console access request needed |
 | MongoDB test data validation | 🚫 | Read-only access requested |
-| Prometheus custom metrics | 🚫 | Direct access request needed |
+| Prometheus/Grafana dashboards | 🔄 | Basic setup from Richard available; evaluating DCT (3rd party MSP) platform |
 | Performance/load testing (k6 or Locust) | 🔜 | |
 
 **Current Access:**
 - Grafana dashboards (view-only)
+- Basic Prometheus/Grafana setup (Richard)
 
 ---
 
@@ -375,7 +428,7 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 | WCAG compliance for web UI | 💡 | |
 | Screen reader compatibility | 💡 | |
 | Keyboard navigation | 💡 | |
-| Localization testing | 💡 | Multi-language, date/time formats |
+| Timezone testing | 💡 | English-only; timezone format validation |
 
 ---
 
@@ -396,11 +449,13 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 
 | Item | Status | Details |
 |------|--------|---------|
-| Partner login and authentication testing | 💡 | Credentials available per environment |
-| Customer/site management testing | 💡 | System Integrator workflows |
-| Site provisioning testing | 💡 | |
+| Site provisioning testing | 🔄 | Edge Box device certification underway |
+| Automated edge box validation tool testing | 🔜 | Test the automated validation tool devs are building |
 | Billing and licensing testing | 💡 | |
 | White-label configuration testing | 💡 | |
+
+**Completed:**
+- [x] Partner Admin test cases created and in use
 
 ---
 
@@ -415,7 +470,6 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 
 **Completed:**
 - [x] Automated weekly Slack standup report system (Python + Slack SDK + pandas + openpyxl)
-- [x] Customer-feature mapping (Video Wall -> UTSW, etc.)
 - [x] iOS/Android mobile category tracking in reports
 - [x] Automation vs. Manual tracking in reports
 
@@ -429,17 +483,22 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 | Standardized test execution reports template | 🔜 | |
 
 **Completed:**
-- [x] Triple-Helix Testing Methodology document (85% alignment with 2025 QA trends)
-- [x] Triple-Helix Venn diagram visual (three-circle design)
+- [x] Triple-Helix Testing Methodology document
 - [x] Simplified QA Priority Matrix / Bug Priority Guide (HTML)
-- [x] Brand Guidelines skill for Tooling (installed in private user folder)
 - [x] Soterix brand-compliant PPTX template (validated)
 - [x] QA Touch Setup Guide v2.0 (1,360 lines, 13 sections + appendices)
-- [x] Future Roadmap doc in Playwright repo
-- [x] Migration status tracking
-- [x] ReCAPTCHA bypass plan documented
-- [x] Mac justification document for iOS testing
+- [x] Future Roadmap doc (`FUTURE_ROADMAP.md`)
+- [x] Selenium to Playwright Migration status (`SELENIUM_TO_PLAYWRIGHT_MIGRATION.md`)
+- [x] ReCAPTCHA bypass plan (`RECAPTCHA_BYPASS_PLAN.md`)
+- [x] Mac justification document (`MAC_JUSTIFICATION_FOR_IOS_TESTING.md`)
 - [x] Session summary template
+- [x] Credentials setup guide (`CREDENTIALS_SETUP.md`)
+- [x] API testing notes (`API_TESTING_NOTES.md`)
+- [x] Session caching implementation doc (`SESSION_CACHING_IMPLEMENTATION.md`)
+- [x] QA Touch import plan (`QA_TOUCH_IMPORT_PLAN.md`)
+- [x] QA Touch team guide (`QA_TOUCH_TEAM_GUIDE.md`)
+- [x] QA Things to Know guide (`QA_THINGS_TO_KNOW.md`)
+- [x] Interactive HTML dashboard (`dashboard.html`) with auto-generation script
 
 ---
 
@@ -448,7 +507,7 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 | Item | Status | Details |
 |------|--------|---------|
 | QA Touch team setup (3 additional testers) | 🔄 | Roles and permissions |
-| Specialization streams | 🔜 | Automation Specialist + Process & Systems Specialist |
+| Onboard Nik to QA support | 🔄 | Backlogs and foundational tool ramp up |
 | Cross-training requirements | 🔜 | Prevent bottlenecks |
 | Secrets management for India team | 🔜 | No 1Password - secure .env sharing process needed |
 
