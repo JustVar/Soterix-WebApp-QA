@@ -63,7 +63,7 @@ def send_via_smtp(html: str, subject: str, to_addr: str) -> None:
 
     smtp_host = os.environ.get('SMTP_HOST', 'localhost')
     smtp_port = int(os.environ.get('SMTP_PORT', 25))
-    from_addr = os.environ.get('SMTP_FROM', 'noreply@example.com')
+    from_addr = os.environ.get('SMTP_FROM', 'qa-reports@soterixsystems.com')
 
     msg = EmailMessage()
     msg['Subject'] = subject
