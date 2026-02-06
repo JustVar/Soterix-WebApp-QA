@@ -36,6 +36,15 @@ GOOD_TIMES_FONT_PATH = Path(
 )
 
 # ---------------------------------------------------------------------------
+# Deploy target - soterix-internal-dashboards repo (NUC pulls from this)
+# ---------------------------------------------------------------------------
+DEPLOY_REPO = Path(
+    r"C:\Users\JustinVarughese\Desktop\soterix-internal-dashboards"
+)
+DEPLOY_DASHBOARD = DEPLOY_REPO / "qa-roadmap" / "index.html"
+DEPLOY_ROADMAP = DEPLOY_REPO / "qa-roadmap" / "FUTURE_ROADMAP.md"
+
+# ---------------------------------------------------------------------------
 # Status definitions
 # ---------------------------------------------------------------------------
 STATUS_MAP = {
@@ -2242,6 +2251,69 @@ document.addEventListener('keydown', e => {{
     return html
 
 
+def deploy_to_dashboards_repo(html: str, roadmap_text: str):
+    """Deploy generated dashboard to soterix-internal-dashboards repo.
+
+    Copies the dashboard HTML and roadmap source, then commits and pushes
+    so the NUC can auto-pull the latest version.
+    """
+    import subprocess
+    import shutil
+
+    if not DEPLOY_REPO.exists():
+        print(f"\n  Deploy repo not found at {DEPLOY_REPO}, skipping deploy.")
+        return False
+
+    # Ensure qa-roadmap directory exists
+    DEPLOY_DASHBOARD.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write dashboard HTML
+    with open(DEPLOY_DASHBOARD, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"  Copied dashboard -> {DEPLOY_DASHBOARD}")
+
+    # Write roadmap source
+    with open(DEPLOY_ROADMAP, "w", encoding="utf-8") as f:
+        f.write(roadmap_text)
+    print(f"  Copied roadmap   -> {DEPLOY_ROADMAP}")
+
+    # Copy generator script and logo
+    src_script = SCRIPT_DIR / "generate_dashboard.py"
+    src_logo = LOGO_PATH
+    dst_script = DEPLOY_REPO / "qa-roadmap" / "generate_dashboard.py"
+    dst_logo = DEPLOY_REPO / "qa-roadmap" / "soterix_logo.svg"
+
+    shutil.copy2(src_script, dst_script)
+    print(f"  Copied generator -> {dst_script}")
+    if src_logo.exists():
+        shutil.copy2(src_logo, dst_logo)
+        print(f"  Copied logo      -> {dst_logo}")
+
+    # Git commit and push
+    try:
+        repo = str(DEPLOY_REPO)
+        # Check if there are changes
+        result = subprocess.run(
+            ["git", "-C", repo, "status", "--porcelain"],
+            capture_output=True, text=True
+        )
+        if not result.stdout.strip():
+            print("  No changes to deploy.")
+            return True
+
+        subprocess.run(["git", "-C", repo, "add", "qa-roadmap/"], check=True)
+        subprocess.run(
+            ["git", "-C", repo, "commit", "-m", "Update QA roadmap dashboard"],
+            check=True, capture_output=True
+        )
+        subprocess.run(["git", "-C", repo, "push"], check=True, capture_output=True)
+        print("  Pushed to soterix-internal-dashboards repo.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"  Git deploy failed: {e}")
+        return False
+
+
 def main():
     """Main entry point."""
     print("Reading roadmap...")
@@ -2319,6 +2391,10 @@ def main():
     print(f"  Total items: {total}")
     print(f"  Complete: {complete}")
     print(f"  Overall: {round((complete/total)*100) if total else 0}%")
+
+    # Deploy to soterix-internal-dashboards repo (NUC auto-pulls from GitHub)
+    print("\nDeploying to dashboard server repo...")
+    deploy_to_dashboards_repo(html, text)
 
 
 if __name__ == "__main__":
