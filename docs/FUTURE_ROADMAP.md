@@ -534,6 +534,25 @@ Full automated testing framework for edge box hardware - dependent on Phase 1 in
 
 ---
 
+## 21. Dashboard Infrastructure (NUC)
+
+Setting up a dedicated Dashboard NUC to host all internal dashboards on the local network.
+
+**Server:** `http://192.168.1.174` (Ubuntu NUC)
+**Repo:** `soterix-internal-dashboards` on GitHub (NUC auto-pulls every 5 min)
+
+| Item | Status | Details |
+|------|--------|---------|
+| Dashboard NUC setup and configuration | ✅ | 02/06/2026 |
+| QA Automation Roadmap dashboard | ✅ | Live at `http://192.168.1.174/qa-roadmap/` (02/06/2026) |
+| Auto-deploy from generate_dashboard.py | ✅ | Syncs to soterix-internal-dashboards repo on each run (02/06/2026) |
+| NocoDB for inventory tracking | ✅ | Live at `http://192.168.1.174:8080` (02/06/2026) |
+| Web server configuration (Nginx) | ✅ | Serving static dashboards on port 80 (02/06/2026) |
+| Hardware Roadmap dashboard | 🔜 | Similar format to QA Roadmap dashboard |
+| Auto-refresh / scheduled regeneration | 🔜 | NUC git pull every 5 min; scheduled dashboard regen on laptop TBD |
+
+---
+
 ## Timeline Overview
 
 | Timeframe | Focus |
