@@ -313,6 +313,70 @@ def extract_completions_with_dates(sections: list[dict]) -> list[dict]:
     return completions
 
 
+# ---------------------------------------------------------------------------
+# Cost Savings Configuration
+# ---------------------------------------------------------------------------
+# Market rates for external contractor work (USD/hour)
+COST_CONFIG = {
+    "hours_per_task": 4,  # Moderate estimate: Tooling handles most work, human reviews
+    "blended_hourly_rate": 100,  # Average across task types:
+    # - Documentation/planning: $75/hr
+    # - Python development: $100/hr
+    # - Test automation: $125/hr
+    # - DevOps/infrastructure: $125/hr
+    "tooling_monthly_cost": 200,  # Tooling Pro + API usage estimate
+}
+
+
+def calculate_cost_savings(total_complete: int, velocity: dict) -> dict:
+    """
+    Calculate estimated cost savings from AI-assisted development.
+
+    Based on market rates for equivalent contractor work.
+    """
+    hours_per_task = COST_CONFIG["hours_per_task"]
+    hourly_rate = COST_CONFIG["blended_hourly_rate"]
+    tooling_cost = COST_CONFIG["tooling_monthly_cost"]
+
+    # Total hours saved
+    hours_saved = total_complete * hours_per_task
+
+    # Gross savings (what it would cost to hire someone)
+    gross_savings = hours_saved * hourly_rate
+
+    # Calculate weeks of work
+    weeks_tracked = 1
+    if velocity.get("earliest") and velocity.get("latest"):
+        try:
+            from datetime import datetime
+            earliest = datetime.strptime(velocity["earliest"], "%m/%d/%Y")
+            latest = datetime.strptime(velocity["latest"], "%m/%d/%Y")
+            weeks_tracked = max(1, (latest - earliest).days / 7)
+        except:
+            pass
+
+    # Tooling cost over that period
+    months_tracked = max(1, weeks_tracked / 4.33)
+    total_tooling_cost = tooling_cost * months_tracked
+
+    # Net savings
+    net_savings = gross_savings - total_tooling_cost
+
+    # ROI percentage
+    roi_pct = round((net_savings / total_tooling_cost) * 100) if total_tooling_cost > 0 else 0
+
+    return {
+        "hours_saved": hours_saved,
+        "gross_savings": gross_savings,
+        "net_savings": net_savings,
+        "roi_pct": roi_pct,
+        "hourly_rate": hourly_rate,
+        "hours_per_task": hours_per_task,
+        "tooling_cost": round(total_tooling_cost),
+        "weeks_tracked": round(weeks_tracked, 1),
+    }
+
+
 def calculate_velocity(completions: list[dict]) -> dict:
     """Calculate completion velocity metrics."""
     if not completions:
@@ -373,7 +437,7 @@ def generate_html(sections, metadata, priorities, timeline, logo_svg, completion
     sections_json = json.dumps(sections, ensure_ascii=False, indent=2)
     priorities_json = json.dumps(priorities, ensure_ascii=False, indent=2)
     timeline_json = json.dumps(timeline, ensure_ascii=False, indent=2)
-    completions_json = json.dumps(completions[:20], ensure_ascii=False, indent=2)  # Top 20 recent
+    completions_json = json.dumps(completions, ensure_ascii=False, indent=2)  # All completions for collapsible section
     velocity_json = json.dumps(velocity, ensure_ascii=False, indent=2)
 
     # Calculate totals
@@ -383,6 +447,11 @@ def generate_html(sections, metadata, priorities, timeline, logo_svg, completion
     total_planned = sum(s["counts"].get("🔜", 0) for s in sections)
     total_ideas = sum(s["counts"].get("💡", 0) for s in sections)
     total_blocked = sum(s["counts"].get("⏸️", 0) + s["counts"].get("🚫", 0) for s in sections)
+
+    # Calculate cost savings
+    cost_savings = calculate_cost_savings(total_complete, velocity)
+    # Pre-format currency values for template
+    cost_savings_formatted = f"${cost_savings['gross_savings']:,}"
     overall_pct = round((total_complete / total_items) * 100) if total_items else 0
 
     html = f"""<!DOCTYPE html>
@@ -1653,6 +1722,28 @@ body {{
                 <div class="ai-num">3</div>
                 <div class="ai-label">Tooling Interfaces Used</div>
             </div>
+        </div>
+        <!-- Cost Savings Row -->
+        <div class="ai-highlights" style="margin-top: 16px;">
+            <div class="ai-highlight-card">
+                <div class="ai-num">{cost_savings['hours_saved']}</div>
+                <div class="ai-label">Hours Saved</div>
+            </div>
+            <div class="ai-highlight-card">
+                <div class="ai-num">{cost_savings_formatted}</div>
+                <div class="ai-label">Est. Cost Savings</div>
+            </div>
+            <div class="ai-highlight-card">
+                <div class="ai-num">{cost_savings['roi_pct']}%</div>
+                <div class="ai-label">ROI vs Tooling Cost</div>
+            </div>
+            <div class="ai-highlight-card">
+                <div class="ai-num">${cost_savings['hourly_rate']}/hr</div>
+                <div class="ai-label">Market Rate Used</div>
+            </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; opacity: 0.75; text-align: center;">
+            Based on {cost_savings['hours_per_task']} hours saved per task at contractor rates. Tooling cost: ~${cost_savings['tooling_cost']} over {cost_savings['weeks_tracked']} weeks.
         </div>
     </div>
 
