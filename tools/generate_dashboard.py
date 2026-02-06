@@ -30,6 +30,10 @@ LOGO_PNG_PATH = Path(
     r"\Sales & Marketing Assets\Sales & Marketing Assets\Logos"
     r"\Logo-Soterix-Horizontal.png"
 )
+GOOD_TIMES_FONT_PATH = Path(
+    r"C:\Users\JustinVarughese\OneDrive - Soterix Systems\Documents"
+    r"\Soterix Fonts\good times rg.otf"
+)
 
 # ---------------------------------------------------------------------------
 # Status definitions
@@ -67,6 +71,12 @@ def read_logo_png(path: Path) -> str:
     with open(path, "rb") as f:
         data = base64.b64encode(f.read()).decode("utf-8")
     return f'<img src="data:image/png;base64,{data}" alt="Soterix Systems">'
+
+
+def read_font_base64(path: Path) -> str:
+    """Read a font file and return base64 encoded data."""
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
 
 def extract_metadata(text: str) -> dict:
@@ -430,7 +440,7 @@ def extract_timeline(text: str) -> list[dict]:
     return timeline
 
 
-def generate_html(sections, metadata, priorities, timeline, logo_svg, completions, velocity):
+def generate_html(sections, metadata, priorities, timeline, logo_svg, completions, velocity, good_times_font_b64=""):
     """Generate the complete HTML dashboard."""
 
     # Build section cards JSON for JS
@@ -464,6 +474,15 @@ def generate_html(sections, metadata, priorities, timeline, logo_svg, completion
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Yantramanav:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
+/* ===== GOOD TIMES FONT (Soterix Brand) ===== */
+@font-face {{
+    font-family: 'Good Times';
+    src: url('data:font/opentype;base64,{good_times_font_b64}') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}}
+
 /* ===== RESET & BASE ===== */
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
@@ -519,9 +538,10 @@ body {{
     width: auto;
 }}
 .header-title {{
-    font-weight: 700;
-    font-size: 28px;
-    letter-spacing: 2px;
+    font-family: 'Good Times', 'Yantramanav', sans-serif;
+    font-weight: normal;
+    font-size: 26px;
+    letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--white);
 }}
@@ -2277,8 +2297,16 @@ def main():
     velocity = calculate_velocity(completions)
     print(f"  Weekly average: {velocity.get('weekly_avg', 0)} items/week")
 
+    print("Loading Good Times font...")
+    good_times_b64 = ""
+    if GOOD_TIMES_FONT_PATH.exists():
+        good_times_b64 = read_font_base64(GOOD_TIMES_FONT_PATH)
+        print(f"  Embedded Good Times font ({len(good_times_b64)} bytes)")
+    else:
+        print("  Warning: Good Times font not found, using fallback")
+
     print("Generating HTML...")
-    html = generate_html(sections, metadata, priorities, timeline, logo_html, completions, velocity)
+    html = generate_html(sections, metadata, priorities, timeline, logo_html, completions, velocity, good_times_b64)
 
     print(f"Writing to {OUTPUT_PATH}...")
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
