@@ -430,12 +430,12 @@ body {{
 .header {{
     background: #26252d;
     color: var(--white);
-    padding: 32px 40px;
+    padding: 24px 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 16px;
     border-bottom: 2px solid var(--primary-blue);
 }}
 .header-left {{
@@ -463,9 +463,13 @@ body {{
 }}
 .header-meta {{
     text-align: right;
-    font-size: 15px;
+    font-size: 14px;
     color: var(--oslo-gray);
     font-weight: 300;
+}}
+.header-meta strong {{
+    color: var(--accent-blue);
+    font-weight: 500;
 }}
 .header-meta strong {{
     color: var(--accent-blue);
@@ -479,25 +483,26 @@ body {{
     padding: 24px 20px;
 }}
 
-/* ===== SEARCH BAR ===== */
+/* ===== SEARCH BAR (compact, in header) ===== */
 .search-container {{
-    margin-bottom: 24px;
+    margin: 0;
 }}
 .search-input {{
-    width: 100%;
-    padding: 14px 20px 14px 48px;
-    font-size: 15px;
+    width: 220px;
+    padding: 8px 14px 8px 36px;
+    font-size: 13px;
     border: 1px solid var(--border-subtle);
-    border-radius: 10px;
-    background: var(--card-bg);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
     color: var(--text-primary);
     font-family: inherit;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
 }}
 .search-input:focus {{
     outline: none;
     border-color: var(--primary-blue);
-    box-shadow: 0 0 0 3px rgba(18,124,163,0.2);
+    background: rgba(255,255,255,0.12);
+    width: 280px;
 }}
 .search-input::placeholder {{
     color: var(--text-muted);
@@ -507,16 +512,16 @@ body {{
 }}
 .search-icon {{
     position: absolute;
-    left: 16px;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
-    font-size: 18px;
+    font-size: 14px;
     pointer-events: none;
 }}
 .search-clear {{
     position: absolute;
-    right: 12px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -591,6 +596,68 @@ body {{
 .summary-card.in-progress .number {{ color: var(--primary-blue); }}
 .summary-card.planned .number {{ color: var(--accent-blue); }}
 .summary-card.blocked .number {{ color: var(--red); }}
+
+/* ===== STATUS LEGEND ITEMS (used in Projects) ===== */
+.status-legend-item {{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}}
+.status-legend-item .legend-indicator {{
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}}
+.status-legend-item .legend-dot {{
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: relative;
+}}
+/* Complete - green with checkmark */
+.status-legend-item.complete .legend-dot {{
+    background: #22c55e;
+}}
+.status-legend-item.complete .legend-dot::after {{
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 1px;
+    width: 3px;
+    height: 6px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}}
+/* In Progress - blue pulse */
+.status-legend-item.in-progress .legend-dot {{
+    background: #127CA3;
+    animation: pulse 2s ease-in-out infinite;
+}}
+/* Planned - outline */
+.status-legend-item.planned .legend-dot {{
+    background: transparent;
+    border: 2px solid #46A1B1;
+    width: 8px;
+    height: 8px;
+}}
+/* Idea - diamond */
+.status-legend-item.idea .legend-dot {{
+    background: #AD9B68;
+    border-radius: 2px;
+    transform: rotate(45deg);
+    width: 8px;
+    height: 8px;
+}}
+/* Blocked - red square */
+.status-legend-item.blocked .legend-dot {{
+    background: #ef4444;
+    border-radius: 2px;
+}}
 
 /* ===== DRILLDOWN MODAL ===== */
 .modal-overlay {{
@@ -677,17 +744,62 @@ body {{
 .modal-item {{
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    padding: 7px 0;
+    gap: 10px;
+    padding: 8px 0;
     font-size: 17px;
     color: var(--text-primary);
     line-height: 1.45;
 }}
 .modal-item .item-icon {{
     flex-shrink: 0;
-    width: 24px;
-    font-size: 24px;
-    text-align: center;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+}}
+.modal-item .status-dot {{
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    position: relative;
+}}
+/* Modal status colors */
+.modal-item.complete .status-dot {{
+    background: #22c55e;
+}}
+.modal-item.complete .status-dot::after {{
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 3px;
+    height: 7px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}}
+.modal-item.in-progress .status-dot {{
+    background: #127CA3;
+    animation: pulse-item 2s ease-in-out infinite;
+}}
+.modal-item.planned .status-dot {{
+    background: transparent;
+    border: 2px solid #46A1B1;
+    width: 10px;
+    height: 10px;
+}}
+.modal-item.idea .status-dot {{
+    background: #AD9B68;
+    border-radius: 2px;
+    transform: rotate(45deg);
+    width: 10px;
+    height: 10px;
+}}
+.modal-item.blocked .status-dot {{
+    background: #ef4444;
+    border-radius: 2px;
 }}
 .modal-item .item-detail {{
     color: var(--text-muted);
@@ -731,25 +843,6 @@ body {{
     font-weight: 700;
     color: var(--white);
     min-width: 60px;
-}}
-.progress-legend {{
-    display: flex;
-    gap: 20px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-}}
-.progress-legend span {{
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--text-secondary);
-}}
-.progress-legend .dot {{
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
 }}
 
 /* ===== AI ENABLEMENT ===== */
@@ -799,12 +892,177 @@ body {{
     margin-top: 4px;
 }}
 
+/* ===== PROJECTS SECTION ===== */
+.projects-section {{
+    margin-bottom: 28px;
+}}
+.projects-header {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--card-bg);
+    border-radius: 12px 12px 0 0;
+    border: 1px solid var(--border-subtle);
+    border-bottom: none;
+    gap: 16px;
+}}
+.projects-title {{
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}}
+.projects-title .section-count {{
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0;
+    text-transform: none;
+}}
+.projects-search {{
+    position: relative;
+}}
+.projects-search .search-input {{
+    width: 240px;
+    padding: 8px 14px 8px 36px;
+    font-size: 13px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: all 0.2s;
+}}
+.projects-search .search-input:focus {{
+    outline: none;
+    border-color: var(--primary-blue);
+    background: rgba(255,255,255,0.1);
+    width: 300px;
+}}
+.projects-search .search-input::placeholder {{
+    color: var(--text-muted);
+}}
+.projects-search .search-icon {{
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+    pointer-events: none;
+}}
+.projects-search .search-clear {{
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: none;
+}}
+.projects-search .search-clear:hover {{
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.1);
+}}
+.projects-search .search-clear.visible {{
+    display: block;
+}}
+.projects-legend {{
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    border-top: none;
+}}
+.projects-body {{
+    background: rgba(47,46,55,0.3);
+    border: 1px solid var(--border-subtle);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 16px;
+}}
+
+/* ===== COLLAPSIBLE SECTION (Recent Completions) ===== */
+.collapsible-section {{
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}}
+.collapsible-header {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+}}
+.collapsible-header:hover {{
+    background: var(--card-bg-hover);
+}}
+.collapsible-header h2 {{
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-primary);
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}}
+.collapsible-header .preview-badge {{
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(18,124,163,0.15);
+    color: var(--accent-blue);
+    letter-spacing: 0;
+    text-transform: none;
+}}
+.collapsible-header .chevron {{
+    font-size: 18px;
+    color: var(--oslo-gray);
+    transition: transform 0.3s;
+}}
+.collapsible-section.open .collapsible-header .chevron {{
+    transform: rotate(180deg);
+}}
+.collapsible-body {{
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}}
+.collapsible-section.open .collapsible-body {{
+    max-height: 2000px;
+}}
+.collapsible-body-inner {{
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border-subtle);
+}}
+
 /* ===== SECTION CARDS ===== */
 .sections-grid {{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
     gap: 16px;
-    margin-bottom: 28px;
 }}
 .section-card {{
     background: var(--card-bg);
@@ -876,35 +1134,144 @@ body {{
     gap: 8px;
     flex-wrap: wrap;
 }}
+/* ===== MODERN STATUS BADGES ===== */
 .badge {{
-    font-size: 16px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-weight: 500;
-    display: flex;
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 16px;
+    font-weight: 600;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    transition: all 0.2s ease;
+    position: relative;
 }}
-.badge.complete {{ background: rgba(34,197,94,0.15); color: #4ade80; }}
-.badge.in-progress {{ background: rgba(18,124,163,0.2); color: #5bb8d4; }}
-.badge.planned {{ background: rgba(70,161,177,0.15); color: #6ec5d4; }}
-.badge.idea {{ background: rgba(173,155,104,0.2); color: #c9b87e; }}
-.badge.blocked {{ background: rgba(239,68,68,0.15); color: #f87171; }}
-.badge.clickable {{ cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }}
-.badge.clickable:hover {{ transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }}
-.badge.active {{ box-shadow: 0 0 0 2px var(--white); transform: scale(1.08); }}
+
+/* Status indicator (geometric shapes) */
+.badge .indicator {{
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    flex-shrink: 0;
+    position: relative;
+}}
+
+/* Complete - solid green circle with checkmark */
+.badge.complete {{ 
+    background: rgba(34, 197, 94, 0.12); 
+    color: #4ade80; 
+}}
+.badge.complete .indicator {{
+    background: #22c55e;
+    border-radius: 50%;
+}}
+.badge.complete .indicator::after {{
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 1px;
+    width: 3px;
+    height: 6px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}}
+
+/* In Progress - animated pulse ring */
+.badge.in-progress {{ 
+    background: rgba(18, 124, 163, 0.15); 
+    color: #5bb8d4; 
+}}
+.badge.in-progress .indicator {{
+    background: #127CA3;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}}
+@keyframes pulse {{
+    0%, 100% {{ box-shadow: 0 0 0 0 rgba(18, 124, 163, 0.5); }}
+    50% {{ box-shadow: 0 0 0 4px rgba(18, 124, 163, 0); }}
+}}
+
+/* Planned - outline circle */
+.badge.planned {{ 
+    background: rgba(70, 161, 177, 0.12); 
+    color: #6ec5d4; 
+}}
+.badge.planned .indicator {{
+    background: transparent;
+    border: 2px solid #46A1B1;
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+}}
+
+/* Ideas - diamond shape */
+.badge.idea {{ 
+    background: rgba(173, 155, 104, 0.15); 
+    color: #c9b87e; 
+}}
+.badge.idea .indicator {{
+    background: #AD9B68;
+    border-radius: 2px;
+    transform: rotate(45deg);
+    width: 8px;
+    height: 8px;
+}}
+
+/* Blocked - red square/stop */
+.badge.blocked {{ 
+    background: rgba(239, 68, 68, 0.12); 
+    color: #f87171; 
+}}
+.badge.blocked .indicator {{
+    background: #ef4444;
+    border-radius: 2px;
+}}
+
+/* Hover & active states */
+.badge.clickable {{ 
+    cursor: pointer; 
+}}
+.badge.clickable:hover {{ 
+    transform: translateY(-1px); 
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+}}
+.badge.active {{ 
+    box-shadow: 0 0 0 2px var(--white); 
+    transform: scale(1.05); 
+}}
+
+/* Label visibility - compact by default, expand on hover */
+.badge .label {{
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: max-width 0.3s ease, margin-left 0.3s ease;
+    margin-left: 0;
+    opacity: 0;
+}}
+.badge:hover .label,
+.badge.active .label {{
+    max-width: 100px;
+    margin-left: 2px;
+    opacity: 1;
+}}
+
 .clear-filter {{
     font-size: 12px;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 12px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.08);
     color: var(--text-secondary);
     border: 1px solid var(--border-subtle);
     cursor: pointer;
-    margin-left: 4px;
-    transition: background 0.15s;
+    margin-left: 6px;
+    transition: all 0.15s;
 }}
-.clear-filter:hover {{ background: rgba(255,255,255,0.2); color: var(--text-primary); }}
+.clear-filter:hover {{ 
+    background: rgba(255,255,255,0.15); 
+    color: var(--text-primary); 
+}}
 .item-row.filtered-out {{ display: none; }}
 
 .chevron {{
@@ -940,11 +1307,73 @@ body {{
     font-size: 17px;
 }}
 .item-row:last-child {{ border-bottom: none; }}
+
+/* ===== ITEM STATUS INDICATORS (geometric) ===== */
 .item-status {{
-    font-size: 22px;
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
-    margin-top: -1px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }}
+.item-status .status-dot {{
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    position: relative;
+}}
+
+/* Complete - green with checkmark */
+.item-status.complete .status-dot {{
+    background: #22c55e;
+}}
+.item-status.complete .status-dot::after {{
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 3px;
+    height: 7px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}}
+
+/* In Progress - blue with pulse */
+.item-status.in-progress .status-dot {{
+    background: #127CA3;
+    animation: pulse-item 2s ease-in-out infinite;
+}}
+@keyframes pulse-item {{
+    0%, 100% {{ box-shadow: 0 0 0 0 rgba(18, 124, 163, 0.4); }}
+    50% {{ box-shadow: 0 0 0 3px rgba(18, 124, 163, 0); }}
+}}
+
+/* Planned - outline circle */
+.item-status.planned .status-dot {{
+    background: transparent;
+    border: 2px solid #46A1B1;
+    width: 10px;
+    height: 10px;
+}}
+
+/* Idea - diamond */
+.item-status.idea .status-dot {{
+    background: #AD9B68;
+    border-radius: 2px;
+    transform: rotate(45deg);
+    width: 10px;
+    height: 10px;
+}}
+
+/* Blocked - red square */
+.item-status.blocked .status-dot {{
+    background: #ef4444;
+    border-radius: 2px;
+}}
+
 .item-text {{
     flex: 1;
     color: var(--text-secondary);
@@ -1094,17 +1523,39 @@ body {{
         padding: 20px;
         flex-direction: column;
         text-align: center;
+        gap: 12px;
     }}
     .header-left {{
         flex-direction: column;
     }}
     .header-meta {{ text-align: center; }}
     .header-title {{ font-size: 20px; }}
+    .projects-header {{
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }}
+    .projects-search .search-input {{
+        width: 100%;
+    }}
+    .projects-search .search-input:focus {{
+        width: 100%;
+    }}
+    .projects-legend {{
+        gap: 12px;
+        padding: 10px;
+    }}
+    .status-legend-item {{
+        font-size: 11px;
+    }}
     .sections-grid {{
         grid-template-columns: 1fr;
     }}
     .summary-row {{
         grid-template-columns: repeat(3, 1fr);
+    }}
+    .collapsible-header h2 {{
+        font-size: 14px;
     }}
 }}
 
@@ -1127,7 +1578,7 @@ body {{
         </div>
     </div>
     <div class="header-meta">
-        <div>Last Updated: <strong>{metadata['last_updated']}</strong></div>
+        <div>Updated: <strong>{metadata['last_updated']}</strong></div>
         <div>{metadata['owner']}</div>
     </div>
 </div>
@@ -1179,13 +1630,6 @@ body {{
         <div class="progress-bar-wrap">
             <div class="progress-bar-fill" style="width: {overall_pct}%">{overall_pct}%</div>
         </div>
-        <div class="progress-legend">
-            <span><span class="dot" style="background:#22c55e"></span> Complete ({total_complete})</span>
-            <span><span class="dot" style="background:#127CA3"></span> In Progress ({total_in_progress})</span>
-            <span><span class="dot" style="background:#46A1B1"></span> Planned ({total_planned})</span>
-            <span><span class="dot" style="background:#AD9B68"></span> Ideas ({total_ideas})</span>
-            <span><span class="dot" style="background:#ef4444"></span> Blocked ({total_blocked})</span>
-        </div>
     </div>
 
     <!-- AI ENABLEMENT -->
@@ -1212,28 +1656,65 @@ body {{
         </div>
     </div>
 
-    <!-- RECENT COMPLETIONS -->
-    <div class="priority-section" id="recent-completions">
-        <h2>Recent Completions</h2>
-        <div id="completions-list"></div>
-    </div>
-
-    <!-- SEARCH BAR -->
-    <div class="search-container">
-        <div class="search-wrapper">
-            <span class="search-icon">🔍</span>
-            <input type="text" class="search-input" id="search-input" placeholder="Search sections and items..." autocomplete="off">
-            <button class="search-clear" id="search-clear" onclick="clearSearch()">&times;</button>
+    <!-- RECENT COMPLETIONS (collapsible, closed by default) -->
+    <div class="collapsible-section" id="recent-completions">
+        <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+            <h2>
+                Recent Completions
+                <span class="preview-badge">{len(completions)} items</span>
+            </h2>
+            <span class="chevron">&#9660;</span>
+        </div>
+        <div class="collapsible-body">
+            <div class="collapsible-body-inner" id="completions-list"></div>
         </div>
     </div>
 
-    <!-- NO RESULTS MESSAGE -->
-    <div class="no-results" id="no-results" style="display:none;">
-        No sections or items match your search.
-    </div>
+    <!-- PROJECTS SECTION -->
+    <div class="projects-section">
+        <div class="projects-header">
+            <div class="projects-title">
+                Projects
+                <span class="section-count">{len(sections)} workstreams</span>
+            </div>
+            <div class="projects-search">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-input" placeholder="Search projects..." autocomplete="off">
+                <button class="search-clear" id="search-clear" onclick="clearSearch()">&times;</button>
+            </div>
+        </div>
+        <div class="projects-legend">
+            <div class="status-legend-item complete">
+                <span class="legend-indicator"><span class="legend-dot"></span></span>
+                <span>Complete</span>
+            </div>
+            <div class="status-legend-item in-progress">
+                <span class="legend-indicator"><span class="legend-dot"></span></span>
+                <span>In Progress</span>
+            </div>
+            <div class="status-legend-item planned">
+                <span class="legend-indicator"><span class="legend-dot"></span></span>
+                <span>Planned</span>
+            </div>
+            <div class="status-legend-item idea">
+                <span class="legend-indicator"><span class="legend-dot"></span></span>
+                <span>Idea</span>
+            </div>
+            <div class="status-legend-item blocked">
+                <span class="legend-indicator"><span class="legend-dot"></span></span>
+                <span>Blocked</span>
+            </div>
+        </div>
+        <div class="projects-body">
+            <!-- NO RESULTS MESSAGE -->
+            <div class="no-results" id="no-results" style="display:none;">
+                No sections or items match your search.
+            </div>
 
-    <!-- SECTION CARDS -->
-    <div class="sections-grid" id="sections-grid">
+            <!-- SECTION CARDS -->
+            <div class="sections-grid" id="sections-grid">
+            </div>
+        </div>
     </div>
 
     <!-- PRIORITY SUMMARY -->
@@ -1265,7 +1746,7 @@ const velocity = {velocity_json};
 const completionsList = document.getElementById('completions-list');
 if (recentCompletions.length > 0) {{
     let html = '<ul class="priority-list">';
-    recentCompletions.slice(0, 10).forEach(c => {{
+    recentCompletions.forEach(c => {{
         html += `<li><strong>${{c.date}}</strong> - ${{c.text}} <span style="color:var(--text-muted);font-size:13px;">(Section ${{c.section_num}})</span></li>`;
     }});
     html += '</ul>';
@@ -1286,31 +1767,33 @@ sections.forEach((section, sectionIndex) => {{
     card.dataset.sectionIndex = sectionIndex;
 
     // Build badges HTML with click handlers for filtering
+    // Modern minimal design: indicator + count, label appears on hover
     const badgeOrder = [
-        [['✅'], 'complete', 'Complete', '✅'],
-        [['🔄'], 'in-progress', 'In Progress', '🔄'],
-        [['🔜'], 'planned', 'Planned', '🔜'],
-        [['💡'], 'idea', 'Ideas', '💡'],
-        [['⏸️', '🚫'], 'blocked', 'Blocked', '🚫'],
+        [['✅'], 'complete', 'Complete'],
+        [['🔄'], 'in-progress', 'In Progress'],
+        [['🔜'], 'planned', 'Planned'],
+        [['💡'], 'idea', 'Ideas'],
+        [['⏸️', '🚫'], 'blocked', 'Blocked'],
     ];
     let badgesHtml = '';
-    badgeOrder.forEach(([icons, cls, label, displayIcon]) => {{
+    badgeOrder.forEach(([icons, cls, label]) => {{
         let count = 0;
         icons.forEach(i => {{ count += (section.counts[i] || 0); }});
         if (count > 0) {{
             const iconsJson = JSON.stringify(icons).replace(/"/g, "'");
-            badgesHtml += `<span class="badge ${{cls}} clickable" data-icons="${{iconsJson}}" onclick="filterSectionItems(${{sectionIndex}}, ${{JSON.stringify(icons)}}, this, event)">${{displayIcon}} ${{count}} ${{label}}</span>`;
+            badgesHtml += `<span class="badge ${{cls}} clickable" data-icons="${{iconsJson}}" onclick="filterSectionItems(${{sectionIndex}}, ${{JSON.stringify(icons)}}, this, event)"><span class="indicator"></span>${{count}}<span class="label">${{label}}</span></span>`;
         }}
     }});
 
     // Build items HTML with data-status for filtering
+    // Use geometric status indicators instead of emojis
     let itemsHtml = '';
     section.items.forEach(item => {{
         const textClass = item.css_class === 'complete' ? 'item-text complete-text' : 'item-text';
         const detailSpan = item.details ? `<span class="item-detail"> - ${{item.details}}</span>` : '';
         itemsHtml += `
             <div class="item-row" data-status="${{item.status_icon}}">
-                <span class="item-status">${{item.status_icon}}</span>
+                <span class="item-status ${{item.css_class}}"><span class="status-dot"></span></span>
                 <span class="${{textClass}}">${{item.text}}${{detailSpan}}</span>
             </div>`;
     }});
@@ -1416,7 +1899,11 @@ function openDrilldown(filter) {{
                 <div style="background:var(--bg-dark,#26252d);border-radius:6px;height:8px;overflow:hidden;">
                     <div style="height:100%;border-radius:6px;width:${{pct}}%;background:linear-gradient(90deg,#127CA3,#46A1B1);transition:width 0.3s;"></div>
                 </div>
-                <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">✅ ${{complete}} complete · 🔄 ${{inProg}} in progress · ${{total}} total</div>
+                <div style="font-size:13px;color:var(--text-muted);margin-top:4px;display:flex;gap:12px;align-items:center;">
+                    <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block;"></span> ${{complete}} complete</span>
+                    <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:#127CA3;border-radius:50%;display:inline-block;"></span> ${{inProg}} in progress</span>
+                    <span>· ${{total}} total</span>
+                </div>
             </div>`;
         }});
         body.innerHTML = html;
@@ -1435,8 +1922,8 @@ function openDrilldown(filter) {{
                 <div class="modal-section-title">${{s.number}}. ${{s.title}} (${{matched.length}})</div>`;
             matched.forEach(item => {{
                 const detailSpan = item.details ? `<span class="item-detail">- ${{item.details}}</span>` : '';
-                html += `<div class="modal-item">
-                    <span class="item-icon">${{item.status_icon}}</span>
+                html += `<div class="modal-item ${{item.css_class}}">
+                    <span class="item-icon"><span class="status-dot"></span></span>
                     <span>${{item.text}}${{detailSpan}}</span>
                 </div>`;
             }});
