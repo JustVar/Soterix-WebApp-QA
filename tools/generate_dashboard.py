@@ -890,6 +890,22 @@ body {{
 .badge.planned {{ background: rgba(70,161,177,0.15); color: #6ec5d4; }}
 .badge.idea {{ background: rgba(173,155,104,0.2); color: #c9b87e; }}
 .badge.blocked {{ background: rgba(239,68,68,0.15); color: #f87171; }}
+.badge.clickable {{ cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }}
+.badge.clickable:hover {{ transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }}
+.badge.active {{ box-shadow: 0 0 0 2px var(--white); transform: scale(1.08); }}
+.clear-filter {{
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    margin-left: 4px;
+    transition: background 0.15s;
+}}
+.clear-filter:hover {{ background: rgba(255,255,255,0.2); color: var(--text-primary); }}
+.item-row.filtered-out {{ display: none; }}
 
 .chevron {{
     font-size: 22px;
@@ -1264,11 +1280,12 @@ if (recentCompletions.length > 0) {{
 // ===== RENDER SECTIONS =====
 const grid = document.getElementById('sections-grid');
 
-sections.forEach(section => {{
+sections.forEach((section, sectionIndex) => {{
     const card = document.createElement('div');
     card.className = 'section-card';
+    card.dataset.sectionIndex = sectionIndex;
 
-    // Build badges HTML
+    // Build badges HTML with click handlers for filtering
     const badgeOrder = [
         [['✅'], 'complete', 'Complete', '✅'],
         [['🔄'], 'in-progress', 'In Progress', '🔄'],
@@ -1281,17 +1298,18 @@ sections.forEach(section => {{
         let count = 0;
         icons.forEach(i => {{ count += (section.counts[i] || 0); }});
         if (count > 0) {{
-            badgesHtml += `<span class="badge ${{cls}}">${{displayIcon}} ${{count}} ${{label}}</span>`;
+            const iconsJson = JSON.stringify(icons).replace(/"/g, "'");
+            badgesHtml += `<span class="badge ${{cls}} clickable" data-icons="${{iconsJson}}" onclick="filterSectionItems(${{sectionIndex}}, ${{JSON.stringify(icons)}}, this, event)">${{displayIcon}} ${{count}} ${{label}}</span>`;
         }}
     }});
 
-    // Build items HTML
+    // Build items HTML with data-status for filtering
     let itemsHtml = '';
     section.items.forEach(item => {{
         const textClass = item.css_class === 'complete' ? 'item-text complete-text' : 'item-text';
         const detailSpan = item.details ? `<span class="item-detail"> - ${{item.details}}</span>` : '';
         itemsHtml += `
-            <div class="item-row">
+            <div class="item-row" data-status="${{item.status_icon}}">
                 <span class="item-status">${{item.status_icon}}</span>
                 <span class="${{textClass}}">${{item.text}}${{detailSpan}}</span>
             </div>`;
@@ -1441,6 +1459,82 @@ function closeDrilldown() {{
 document.addEventListener('keydown', e => {{
     if (e.key === 'Escape') closeDrilldown();
 }});
+
+// ===== SECTION ITEM FILTERING =====
+// Track active filters per section
+const sectionFilters = {{}};
+
+function filterSectionItems(sectionIndex, icons, badgeEl, event) {{
+    // Stop propagation so clicking badge doesn't toggle section open/close
+    event.stopPropagation();
+
+    const card = document.querySelector(`.section-card[data-section-index="${{sectionIndex}}"]`);
+    if (!card) return;
+
+    // Auto-expand section when filtering
+    card.classList.add('open');
+
+    const items = card.querySelectorAll('.item-row');
+    const badges = card.querySelectorAll('.badge.clickable');
+    const badgesContainer = card.querySelector('.section-badges');
+
+    // Check if this filter is already active (toggle off)
+    const filterKey = icons.join(',');
+    const isActive = sectionFilters[sectionIndex] === filterKey;
+
+    // Remove active class from all badges in this section
+    badges.forEach(b => b.classList.remove('active'));
+
+    // Remove existing clear button if any
+    const existingClear = badgesContainer.querySelector('.clear-filter');
+    if (existingClear) existingClear.remove();
+
+    if (isActive) {{
+        // Toggle off - show all items
+        sectionFilters[sectionIndex] = null;
+        items.forEach(item => item.classList.remove('filtered-out'));
+    }} else {{
+        // Apply filter - show only matching items
+        sectionFilters[sectionIndex] = filterKey;
+        badgeEl.classList.add('active');
+
+        items.forEach(item => {{
+            const status = item.dataset.status;
+            if (icons.includes(status)) {{
+                item.classList.remove('filtered-out');
+            }} else {{
+                item.classList.add('filtered-out');
+            }}
+        }});
+
+        // Add clear filter button
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-filter';
+        clearBtn.textContent = '✕ Clear';
+        clearBtn.onclick = (e) => {{
+            e.stopPropagation();
+            clearSectionFilter(sectionIndex);
+        }};
+        badgesContainer.appendChild(clearBtn);
+    }}
+}}
+
+function clearSectionFilter(sectionIndex) {{
+    const card = document.querySelector(`.section-card[data-section-index="${{sectionIndex}}"]`);
+    if (!card) return;
+
+    sectionFilters[sectionIndex] = null;
+
+    // Show all items
+    card.querySelectorAll('.item-row').forEach(item => item.classList.remove('filtered-out'));
+
+    // Remove active state from badges
+    card.querySelectorAll('.badge.clickable').forEach(b => b.classList.remove('active'));
+
+    // Remove clear button
+    const clearBtn = card.querySelector('.clear-filter');
+    if (clearBtn) clearBtn.remove();
+}}
 
 // ===== SEARCH FUNCTIONALITY =====
 const searchInput = document.getElementById('search-input');
