@@ -452,6 +452,7 @@ def generate_html(sections, metadata, priorities, timeline, logo_svg, completion
     cost_savings = calculate_cost_savings(total_complete, velocity)
     # Pre-format currency values for template
     cost_savings_formatted = f"${cost_savings['gross_savings']:,}"
+    net_savings_formatted = f"${cost_savings['net_savings']:,}"
     overall_pct = round((total_complete / total_items) * 100) if total_items else 0
 
     html = f"""<!DOCTYPE html>
@@ -947,6 +948,13 @@ body {{
     border-radius: 8px;
     padding: 14px 16px;
     backdrop-filter: blur(4px);
+    position: relative;
+    cursor: help;
+    transition: transform 0.15s, box-shadow 0.15s;
+}}
+.ai-highlight-card:hover {{
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }}
 .ai-highlight-card .ai-num {{
     font-size: 28px;
@@ -959,6 +967,45 @@ body {{
     letter-spacing: 1px;
     opacity: 0.85;
     margin-top: 4px;
+}}
+/* Tooltip for AI cards */
+.ai-highlight-card .tooltip {{
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a22;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: normal;
+    width: 220px;
+    text-align: left;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    border: 1px solid var(--border-subtle);
+    z-index: 100;
+    margin-bottom: 8px;
+    transition: opacity 0.2s, visibility 0.2s;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+}}
+.ai-highlight-card .tooltip::after {{
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1a1a22;
+}}
+.ai-highlight-card:hover .tooltip {{
+    visibility: visible;
+    opacity: 1;
 }}
 
 /* ===== PROJECTS SECTION ===== */
@@ -1709,18 +1756,22 @@ body {{
             <div class="ai-highlight-card">
                 <div class="ai-num">{total_complete}</div>
                 <div class="ai-label">Deliverables Completed</div>
+                <div class="tooltip">Roadmap items marked as complete. Includes documentation, test automation, integrations, and infrastructure tasks tracked in FUTURE_ROADMAP.md</div>
             </div>
             <div class="ai-highlight-card">
                 <div class="ai-num">{velocity.get('weekly_avg', 0)}</div>
                 <div class="ai-label">Items / Week (Velocity)</div>
+                <div class="tooltip">Average completion rate calculated from {velocity.get('total_with_dates', 0)} items with tracked dates over {cost_savings['weeks_tracked']} weeks ({velocity.get('date_range', 'N/A')})</div>
             </div>
             <div class="ai-highlight-card">
                 <div class="ai-num">{len(sections)}</div>
                 <div class="ai-label">Workstreams Active</div>
+                <div class="tooltip">Parallel workstreams being managed: Test Automation, QA Touch, CI/CD, Mobile, Hardware, Documentation, and more</div>
             </div>
             <div class="ai-highlight-card">
                 <div class="ai-num">3</div>
                 <div class="ai-label">Tooling Interfaces Used</div>
+                <div class="tooltip"><strong>Tooling Code (VS Code)</strong> - IDE integration for code editing<br><strong>Tooling Code (Terminal)</strong> - CLI for automation scripts<br><strong>Tooling.ai</strong> - Web app for research and planning</div>
             </div>
         </div>
         <!-- Cost Savings Row -->
@@ -1728,22 +1779,18 @@ body {{
             <div class="ai-highlight-card">
                 <div class="ai-num">{cost_savings['hours_saved']}</div>
                 <div class="ai-label">Hours Saved</div>
+                <div class="tooltip"><strong>Calculation:</strong><br>{total_complete} deliverables × {cost_savings['hours_per_task']} hrs/task = {cost_savings['hours_saved']} hours<br><br>Estimate assumes Tooling handles ~80% of work, human reviews and refines</div>
             </div>
             <div class="ai-highlight-card">
                 <div class="ai-num">{cost_savings_formatted}</div>
                 <div class="ai-label">Est. Cost Savings</div>
+                <div class="tooltip"><strong>Calculation:</strong><br>{cost_savings['hours_saved']} hrs × ${cost_savings['hourly_rate']}/hr = {cost_savings_formatted}<br><br><strong>Market rate breakdown:</strong><br>• Documentation: $75/hr<br>• Python dev: $100/hr<br>• Test automation: $125/hr<br>• DevOps: $125/hr<br>Blended avg: ${cost_savings['hourly_rate']}/hr</div>
             </div>
             <div class="ai-highlight-card">
                 <div class="ai-num">{cost_savings['roi_pct']}%</div>
                 <div class="ai-label">ROI vs Tooling Cost</div>
+                <div class="tooltip"><strong>Return on Investment:</strong><br>Net savings / Tooling cost × 100<br><br><strong>Tooling cost:</strong> ~${cost_savings['tooling_cost']} over {cost_savings['weeks_tracked']} weeks<br>(Pro subscription + API usage)<br><br><strong>Net savings:</strong> {net_savings_formatted}</div>
             </div>
-            <div class="ai-highlight-card">
-                <div class="ai-num">${cost_savings['hourly_rate']}/hr</div>
-                <div class="ai-label">Market Rate Used</div>
-            </div>
-        </div>
-        <div style="margin-top: 12px; font-size: 12px; opacity: 0.75; text-align: center;">
-            Based on {cost_savings['hours_per_task']} hours saved per task at contractor rates. Tooling cost: ~${cost_savings['tooling_cost']} over {cost_savings['weeks_tracked']} weeks.
         </div>
     </div>
 
