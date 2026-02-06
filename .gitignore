@@ -16,7 +16,8 @@ __pycache__/
 # Ignore logs and reports
 *.log
 *.html
-!docs/dashboard.html
+# Note: dashboard.html is generated locally via `python tools/generate_dashboard.py`
+# Future hosting options: SharePoint, Box, or manual HTML file sharing
 report/
 report.html
 
