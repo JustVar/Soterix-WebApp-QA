@@ -1,8 +1,8 @@
 {
   "version": 1,
   "project_key": "JlW1",
-  "total_playwright_tests": 309,
-  "total_mapped": 306,
+  "total_playwright_tests": 352,
+  "total_mapped": 349,
   "mappings": {
     "tests/api/smoke/test_camera_apis.py::test_get_camera_tree": {
       "case_key": "gQxmgr",
@@ -2144,6 +2144,307 @@
       "case_title": "Verify dragging saved view to tile adds to grid",
       "score": 1.0,
       "module": "My Views",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_page_loads[chromium]": {
+      "case_key": "Z8xWmk",
+      "case_title": "Verify general functionality behaves as expected - Audit Trail page loads completely without partial UI.",
+      "score": 1.0,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_breadcrumb[chromium]": {
+      "case_key": "dyp4EZ",
+      "case_title": "Verify general functionality behaves as expected - Breadcrumb displays General > Audit Trail correctly.",
+      "score": 1.0,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_column_headers[chromium]": {
+      "case_key": "wmjK8G",
+      "case_title": "Verify general functionality behaves as expected - Audit Trail table displays all expected columns correctly.",
+      "score": 0.5,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_records[chromium]": {
+      "case_key": "yaWXD9",
+      "case_title": "Verify general functionality behaves as expected - Audit Trail records are populated with valid data.",
+      "score": 0.75,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_date_info[chromium]": {
+      "case_key": "xm9jkm",
+      "case_title": "Verify audit trail entry is created for LPR record edit",
+      "score": 0.5,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_user_info[chromium]": {
+      "case_key": "vanXBn",
+      "case_title": "Verify general functionality behaves as expected - User is navigated to the Audit Trail page successfully.",
+      "score": 0.5,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_action_info[chromium]": {
+      "case_key": "xm9jkm",
+      "case_title": "Verify audit trail entry is created for LPR record edit",
+      "score": 0.5,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_pagination_visible[chromium]": {
+      "case_key": "8V1bJr",
+      "case_title": "Verify general functionality behaves as expected - Audit Trail pagination works correctly across multiple",
+      "score": 0.75,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_next_page[chromium]": {
+      "case_key": "vanXBn",
+      "case_title": "Verify general functionality behaves as expected - User is navigated to the Audit Trail page successfully.",
+      "score": 0.75,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_multiple_entries[chromium]": {
+      "case_key": "8V1bJr",
+      "case_title": "Verify general functionality behaves as expected - Audit Trail pagination works correctly across multiple",
+      "score": 0.6,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_back_to_general_from_audit_trail[chromium]": {
+      "case_key": "aj6724",
+      "case_title": "Verify general functionality behaves as expected - Audit Trail card is displayed correctly with View option",
+      "score": 0.6,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_row_hover[chromium]": {
+      "case_key": "kpZWE0",
+      "case_title": "Verify general functionality behaves as expected - Hover effect is displayed on audit record rows.",
+      "score": 0.62,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_after_refresh[chromium]": {
+      "case_key": "aj67L4",
+      "case_title": "Verify general functionality behaves as expected - Audit Trail table refreshes and displays all records.",
+      "score": 0.62,
+      "module": "Audit Trail",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_page_loads[chromium]": {
+      "case_key": "VKbeN9",
+      "case_title": "Verify general functionality behaves as expected - Event Wall page loads completely without broken UI.",
+      "score": 1.0,
+      "module": "Event Wall",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_has_configuration_area[chromium]": {
+      "case_key": "RgGBWd",
+      "case_title": "Verify general functionality behaves as expected - Event Wall configuration page opens successfully.",
+      "score": 0.6,
+      "module": "Event Wall",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_site_selector[chromium]": {
+      "case_key": "B86ENR",
+      "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
+      "score": 0.5,
+      "module": "Event Wall",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_site_dropdown_opens[chromium]": {
+      "case_key": "0rzlLl",
+      "case_title": "Verify Event Type dropdown opens when clicked",
+      "score": 0.6,
+      "module": "Category - Event",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_camera_checkboxes[chromium]": {
+      "case_key": "5BRDm7",
+      "case_title": "Verify selecting Camera Tamper filters Event Type correctly",
+      "score": 0.5,
+      "module": "Category - Event",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_toggle_checkbox[chromium]": {
+      "case_key": "B86ENR",
+      "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
+      "score": 0.5,
+      "module": "Event Wall",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_event_images[chromium]": {
+      "case_key": "gQxw5N",
+      "case_title": "Verify Event search result images are valid",
+      "score": 0.75,
+      "module": "Camera Search Filters",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_grid_layout[chromium]": {
+      "case_key": "xm9dgR",
+      "case_title": "Verify event cards are displayed in grid layout",
+      "score": 0.75,
+      "module": "Search Results",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_save_or_apply[chromium]": {
+      "case_key": "VKbeN2",
+      "case_title": "Verify general functionality behaves as expected - Event Wall configuration is saved successfully.",
+      "score": 0.62,
+      "module": "Event Wall",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_back_to_general_from_event_wall[chromium]": {
+      "case_key": "B86ENR",
+      "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
+      "score": 0.6,
+      "module": "Event Wall",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_after_refresh[chromium]": {
+      "case_key": "J8dzJp",
+      "case_title": "Verify Event duration persists after page refresh",
+      "score": 0.75,
+      "module": "Event - Execution & Results",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_scrollable[chromium]": {
+      "case_key": "B86ENR",
+      "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
+      "score": 0.67,
+      "module": "Event Wall",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_dashboard_landing_loads[chromium]": {
+      "case_key": "VKbewQ",
+      "case_title": "Verify Admin Dashboard landing page loads successfully after login",
+      "score": 1.0,
+      "module": "Dashboard Landing",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_all_insights_tab_visible[chromium]": {
+      "case_key": "RgGQ4a",
+      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
+      "score": 0.5,
+      "module": "Insights",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_section_visible[chromium]": {
+      "case_key": "mBdX60",
+      "case_title": "Verify Preset Dashboard section header is visible on Insights page",
+      "score": 1.0,
+      "module": "Preset Dashboard",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_cards_displayed[chromium]": {
+      "case_key": "gQxXRW",
+      "case_title": "Verify Preset Dashboard cards are displayed under Preset Dashboard section",
+      "score": 1.0,
+      "module": "Preset Dashboard Cards",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_view_all[chromium]": {
+      "case_key": "n8jQ76",
+      "case_title": "Verify View All link is visible in Preset Dashboard section",
+      "score": 1.0,
+      "module": "Preset Dashboard",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_preset_card_clickable[chromium]": {
+      "case_key": "Nj39xE",
+      "case_title": "Verify preset card star icon toggles favorite state",
+      "score": 0.67,
+      "module": "Presets",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_my_dashboard_section_visible[chromium]": {
+      "case_key": "K4n96b",
+      "case_title": "Verify My Dashboard section header is visible below Preset Dashboard section",
+      "score": 1.0,
+      "module": "My Dashboard",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_my_dashboard_view_all[chromium]": {
+      "case_key": "LD3X7P",
+      "case_title": "Verify View All link is visible in My Dashboard section",
+      "score": 1.0,
+      "module": "My Dashboard",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_create_new_button_visible[chromium]": {
+      "case_key": "XGLQrD",
+      "case_title": "Verify Create New button is visible on Insights page",
+      "score": 1.0,
+      "module": "Create New",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_opens_form[chromium]": {
+      "case_key": "LD3Xwx",
+      "case_title": "Verify clicking Create New on My Dashboards opens New Dashboard creation screen",
+      "score": 0.75,
+      "module": "Create Dashboard Entry",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_has_discard_and_save[chromium]": {
+      "case_key": "kpZX05",
+      "case_title": "Verify Discard and Save buttons are visible on New Dashboard screen",
+      "score": 0.6,
+      "module": "Create Dashboard Actions",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_name_field[chromium]": {
+      "case_key": "5BRM3m",
+      "case_title": "Verify Dashboard Name field accepts alphanumeric characters",
+      "score": 0.75,
+      "module": "Dashboard Name",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_save_disabled_without_name[chromium]": {
+      "case_key": "lR2l6J",
+      "case_title": "Verify Save button remains disabled when Sequence Name is empty",
+      "score": 0.75,
+      "module": "Camera Sequence",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_insights_page_scrollable[chromium]": {
+      "case_key": "dypXjd",
+      "case_title": "Verify Insights icon remains highlighted in left navigation on Widgets page",
+      "score": 0.67,
+      "module": "Left Navigation",
+      "auto_matched": true
+    },
+    "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_dashboard_page_after_refresh[chromium]": {
+      "case_key": "wmjK7z",
+      "case_title": "Verify dashboard retains user role filter after page refresh",
+      "score": 1.0,
+      "module": "Users Widget",
+      "auto_matched": true
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_content_area_visible[chromium]": {
+      "case_key": "B86DXR",
+      "case_title": "Verify Audit Trail content area is displayed with visible elements",
+      "score": 1.0,
+      "module": "Admin",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_has_rule_types[chromium]": {
+      "case_key": "8V1lRr",
+      "case_title": "Verify Event Wall shows rule type filters or labels",
+      "score": 1.0,
+      "module": "Admin",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_to_audit_trail_round_trip[chromium]": {
+      "case_key": "M73EL7",
+      "case_title": "Verify navigating from Event Wall to Audit Trail and back",
+      "score": 1.0,
+      "module": "Admin",
       "auto_matched": false
     }
   }
