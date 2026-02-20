@@ -235,3 +235,133 @@ class LoginPage:
                 continue
         return None
 
+    def has_captcha(self) -> bool:
+        """Return True if a CAPTCHA or reCAPTCHA element is visible."""
+        selectors = [
+            "iframe[title='reCAPTCHA']",
+            "[class*='captcha']",
+            "[class*='recaptcha']",
+            "[id*='captcha']",
+        ]
+        for s in selectors:
+            try:
+                loc = self.page.locator(s)
+                if loc.count() > 0 and loc.first.is_visible():
+                    return True
+            except Exception:
+                continue
+        return False
+
+    def has_lockout_message(self) -> bool:
+        """Return True if a rate-limit / lockout message is visible."""
+        lockout_terms = ["too many", "try again", "timeout", "wait", "locked"]
+        for term in lockout_terms:
+            try:
+                loc = self.page.locator(f"text=/{term}/i")
+                if loc.count() > 0 and loc.first.is_visible():
+                    return True
+            except Exception:
+                continue
+        return False
+
+    def find_password_reset_link(self) -> Optional[str]:
+        """Find a 'Forgot password' or 'Reset' link on the login page.
+
+        Returns the link text if found, None otherwise.
+        """
+        reset_selectors = [
+            "a:has-text('Forgot')",
+            "a:has-text('Reset')",
+            "span:has-text('Forgot')",
+            "button:has-text('Forgot')",
+            "p:has-text('Forgot')",
+            "a[href*='forgot']",
+            "a[href*='reset']",
+        ]
+        for s in reset_selectors:
+            try:
+                loc = self.page.locator(s)
+                if loc.count() > 0 and loc.first.is_visible():
+                    return loc.first.text_content().strip()
+            except Exception:
+                continue
+        return None
+
+    # ------------------------------------------------------------------
+    # Profile menu & logout
+    # ------------------------------------------------------------------
+
+    def open_profile_menu(self):
+        """Click the profile avatar to open the dropdown menu."""
+        avatar = self.page.locator('.MuiAvatar-root').first
+        avatar.wait_for(state="visible", timeout=15000)
+        avatar.click()
+        # Wait for the profile-specific menu (contains "Sign out")
+        self.page.locator('text=Sign out').wait_for(state="visible", timeout=5000)
+        return self
+
+    def is_profile_menu_open(self) -> bool:
+        """Return True when the profile dropdown menu is visible."""
+        try:
+            return self.page.locator('text=Sign out').is_visible()
+        except Exception:
+            return False
+
+    def get_profile_menu_items(self) -> List[str]:
+        """Return text content of all visible profile menu items.
+
+        Scoped to the popover containing 'Sign out' to avoid picking up
+        unrelated MUI menus (camera context menus, tile actions, etc.).
+        """
+        items: List[str] = []
+        # Find the popover that contains "Sign out" - that's the profile menu
+        popover_selectors = [
+            '.MuiPopover-paper:has-text("Sign out")',
+            '.MuiMenu-paper:has-text("Sign out")',
+        ]
+        for ps in popover_selectors:
+            try:
+                popover = self.page.locator(ps).first
+                if not popover.is_visible():
+                    continue
+                for child_sel in ['li', '[role="menuitem"]', 'p']:
+                    loc = popover.locator(child_sel)
+                    if loc.count() > 0:
+                        for i in range(loc.count()):
+                            txt = loc.nth(i).text_content()
+                            if txt and txt.strip():
+                                items.append(txt.strip())
+                        if items:
+                            return items
+            except Exception:
+                continue
+        return items
+
+    def click_sign_out(self):
+        """Click the 'Sign out' option in the profile menu."""
+        sign_out_selectors = [
+            'text=Sign out',
+            'p:has-text("Sign out")',
+            '[role="menuitem"]:has-text("Sign out")',
+            'li:has-text("Sign out")',
+        ]
+        for s in sign_out_selectors:
+            try:
+                loc = self.page.locator(s).first
+                if loc.is_visible(timeout=SHORT_WAIT):
+                    loc.click()
+                    return self
+            except Exception:
+                continue
+        raise Exception("Could not find 'Sign out' button in profile menu")
+
+    def logout(self):
+        """Perform full logout: open profile menu, click Sign out, wait for login page."""
+        self.open_profile_menu()
+        self.click_sign_out()
+        try:
+            self.page.wait_for_url('**/auth/login**', timeout=LOGIN_WAIT)
+        except Exception:
+            self.page.wait_for_timeout(3000)
+        return self
+
