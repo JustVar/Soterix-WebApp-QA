@@ -1,0 +1,422 @@
+{
+  "version": 1,
+  "project_key": "JlW1",
+  "total_playwright_tests": 59,
+  "total_mapped": 59,
+  "mappings": {
+    "tests/ui/search/test_search_deeper.py::TestSearchDeeperCategories::test_event_search_by_duration[Today]": {
+      "case_key": "mBdDrV",
+      "case_title": "Verify Event search with Today duration returns results",
+      "score": 1.0,
+      "module": "Camera Search Filters",
+      "auto_matched": false
+    },
+    "tests/ui/search/test_search_deeper.py::TestSearchDeeperCategories::test_event_search_by_duration[Last 7 Days]": {
+      "case_key": "n8jvrz",
+      "case_title": "Verify Event search with Last 7 Days duration returns results",
+      "score": 1.0,
+      "module": "Camera Search Filters",
+      "auto_matched": false
+    },
+    "tests/ui/search/test_search_deeper.py::TestSearchDeeperCategories::test_event_result_images_valid": {
+      "case_key": "gQxw5N",
+      "case_title": "Verify Event search result images are valid",
+      "score": 1.0,
+      "module": "Camera Search Filters",
+      "auto_matched": false
+    },
+    "tests/ui/search/test_search_deeper.py::TestSearchDeeperCategories::test_change_category_person_to_event": {
+      "case_key": "GdWPqy",
+      "case_title": "Verify changing category from Person to Event updates results",
+      "score": 1.0,
+      "module": "Camera Search Filters",
+      "auto_matched": false
+    },
+    "tests/ui/search/test_search_deeper.py::TestSearchDeeperCategories::test_change_duration_and_re_search": {
+      "case_key": "Ee6dkB",
+      "case_title": "Verify changing duration and re-searching updates results",
+      "score": 1.0,
+      "module": "Camera Search Filters",
+      "auto_matched": false
+    },
+    "tests/ui/search/test_search_deeper.py::TestSearchDeeperCategories::test_search_button_state_after_filters": {
+      "case_key": "lR28Qn",
+      "case_title": "Verify search button is enabled after selecting filters",
+      "score": 1.0,
+      "module": "Camera Search Filters",
+      "auto_matched": false
+    },
+    "tests/ui/search/test_search_deeper.py::TestSearchDeeperCategories::test_result_count_matches_visible_images": {
+      "case_key": "rGQP7W",
+      "case_title": "Verify result count matches number of visible images",
+      "score": 1.0,
+      "module": "Camera Search Filters",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_share_icon_visible_in_fullscreen": {
+      "case_key": "Nj3r6e",
+      "case_title": "Verify share icon is visible in fullscreen playback",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_settings_icon_visible_in_fullscreen": {
+      "case_key": "K4nmwJ",
+      "case_title": "Verify settings icon is visible in fullscreen playback",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_overlays_icon_visible_in_fullscreen": {
+      "case_key": "jPn2ad",
+      "case_title": "Verify overlays icon is visible in fullscreen playback",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_live_indicator_in_fullscreen": {
+      "case_key": "41VXLb",
+      "case_title": "Verify live indicator is displayed in fullscreen playback",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_control_container_visible": {
+      "case_key": "pDpdjG",
+      "case_title": "Verify control container bar is visible in fullscreen",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_volume_control_clickable": {
+      "case_key": "LD3g6e",
+      "case_title": "Verify volume control is clickable in fullscreen playback",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_exit_and_reenter_fullscreen": {
+      "case_key": "wmjg7G",
+      "case_title": "Verify exit and re-enter fullscreen works correctly",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_bookmarks_toggle_opens_panel": {
+      "case_key": "yaWrV9",
+      "case_title": "Verify bookmarks toggle opens bookmark panel in fullscreen",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_fullscreen_second_tile": {
+      "case_key": "0rzxZb",
+      "case_title": "Verify fullscreen works on second camera tile",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_timeline_elements_present": {
+      "case_key": "kpZQr0",
+      "case_title": "Verify timeline elements are present in fullscreen playback",
+      "score": 1.0,
+      "module": "Live Playback Controls",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_closes_on_reclick": {
+      "case_key": "11zJRB",
+      "case_title": "Verify notification panel closes when icon is clicked again",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_reopen_after_close": {
+      "case_key": "5BRzq9",
+      "case_title": "Verify notification panel reopens after being closed",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_header_icons_present": {
+      "case_key": "21z6dQ",
+      "case_title": "Verify header notification icons are present",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_bell_icon_visible": {
+      "case_key": "aj6nq4",
+      "case_title": "Verify notification bell icon is visible in header",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_mute_unmute_round_trip": {
+      "case_key": "QGjL9B",
+      "case_title": "Verify mute and unmute notification round-trip toggle works",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_has_content": {
+      "case_key": "WEnMLM",
+      "case_title": "Verify notification panel contains content when opened",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_after_page_navigation": {
+      "case_key": "B86D7R",
+      "case_title": "Verify notification panel persists after page navigation",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_survives_page_refresh": {
+      "case_key": "8V1l8r",
+      "case_title": "Verify notification panel survives page refresh",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_icon_not_affected_by_views_page": {
+      "case_key": "M73EP7",
+      "case_title": "Verify notification icon works correctly on Views page",
+      "score": 1.0,
+      "module": "Notification Panel",
+      "auto_matched": false
+    },
+    "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_site_dropdown_lists_sites": {
+      "case_key": "DrdZ7x",
+      "case_title": "Verify Maps site dropdown lists available sites",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false
+    },
+    "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_selected_site_text_updates": {
+      "case_key": "eJqj13",
+      "case_title": "Verify selected site text updates after site selection",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false
+    },
+    "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_map_cards_visible_after_site_selection": {
+      "case_key": "vanmRn",
+      "case_title": "Verify map cards are visible after site selection",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false
+    },
+    "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_multiple_map_cards": {
+      "case_key": "bj0Ga9",
+      "case_title": "Verify multiple map cards are displayed for a site",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false
+    },
+    "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_map_card_has_device_count": {
+      "case_key": "Z8xRpk",
+      "case_title": "Verify map card displays device count information",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false
+    },
+    "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_camera_icon_count_positive": {
+      "case_key": "RgGyEd",
+      "case_title": "Verify camera icons are present on opened map",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false
+    },
+    "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_online_camera_count": {
+      "case_key": "dypNzZ",
+      "case_title": "Verify online cameras are detected on map",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false
+    },
+    "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_maps_page_after_refresh": {
+      "case_key": "xm9Ex1",
+      "case_title": "Verify Maps page loads correctly after browser refresh",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_admin_sidebar_tabs_visible": {
+      "case_key": "VKbBPP",
+      "case_title": "Verify all admin sidebar tabs are visible",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_navigate_to_general": {
+      "case_key": "J8d37L",
+      "case_title": "Verify clicking General tab opens General section",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_general_section_has_rules_tab": {
+      "case_key": "Pgw4jm",
+      "case_title": "Verify General section contains Rules sub-tab",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_general_section_has_audit_trail": {
+      "case_key": "68lnEV",
+      "case_title": "Verify General section contains Audit Trail sub-tab",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_general_section_has_event_wall": {
+      "case_key": "7ErGBe",
+      "case_title": "Verify General section contains Event Wall sub-tab",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_switch_users_to_sites": {
+      "case_key": "9e1NMZ",
+      "case_title": "Verify switching from Users tab to Sites tab works",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_switch_sites_to_general": {
+      "case_key": "qzdVD4",
+      "case_title": "Verify switching from Sites tab to General tab works",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_round_trip_users_general_users": {
+      "case_key": "XGLep0",
+      "case_title": "Verify Users to General to Users round-trip navigation",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_open_audit_trail": {
+      "case_key": "3gj9EP",
+      "case_title": "Verify clicking Audit Trail opens audit log view",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_open_event_wall": {
+      "case_key": "zvnKW9",
+      "case_title": "Verify clicking Event Wall opens event wall view",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_admin_page_after_refresh": {
+      "case_key": "mBdD1V",
+      "case_title": "Verify Admin page loads correctly after browser refresh",
+      "score": 1.0,
+      "module": "General",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_site_dropdown_lists_available_sites": {
+      "case_key": "n8jvBz",
+      "case_title": "Verify Events site dropdown lists available sites",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_site_selection_shows_site_name": {
+      "case_key": "gQxw6N",
+      "case_title": "Verify site selection shows selected site name",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_rule_dropdown_lists_available_rules": {
+      "case_key": "GdWPmy",
+      "case_title": "Verify Events rule dropdown lists available rules",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_search_intrusion_detection": {
+      "case_key": "Ee6d7B",
+      "case_title": "Verify search with Intrusion Detection rule returns events",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_search_with_different_rule": {
+      "case_key": "lR28Gn",
+      "case_title": "Verify search with different rule type returns events",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_search_by_duration": {
+      "case_key": "rGQPeW",
+      "case_title": "Verify Events search by duration filter returns events",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_rule_and_duration_combined": {
+      "case_key": "Nj3rPe",
+      "case_title": "Verify combined rule and duration filter returns events",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_change_duration_and_re_search": {
+      "case_key": "K4nmWJ",
+      "case_title": "Verify changing duration and re-searching updates results",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_pin_multiple_events": {
+      "case_key": "jPn24d",
+      "case_title": "Verify pinning multiple events in Events results",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_unpin_event_via_second_pin": {
+      "case_key": "41VXwb",
+      "case_title": "Verify unpinning event by clicking pin again",
+      "score": 1.0,
+      "module": "Events Filter",
+      "auto_matched": false
+    },
+    "tests/ui/login/test_logout.py::test_relogin_after_logout": {
+      "case_key": "pDpdMG",
+      "case_title": "Verify re-login after logout works correctly",
+      "score": 1.0,
+      "module": "Logout",
+      "auto_matched": false
+    },
+    "tests/ui/login/test_logout.py::test_logout_from_different_pages[Views]": {
+      "case_key": "LD3g0e",
+      "case_title": "Verify logout works from Views page",
+      "score": 1.0,
+      "module": "Logout",
+      "auto_matched": false
+    },
+    "tests/ui/login/test_logout.py::test_logout_from_different_pages[Events]": {
+      "case_key": "wmjgdG",
+      "case_title": "Verify logout works from Events page",
+      "score": 1.0,
+      "module": "Logout",
+      "auto_matched": false
+    },
+    "tests/ui/login/test_logout.py::test_logout_from_different_pages[Search]": {
+      "case_key": "yaWrK9",
+      "case_title": "Verify logout works from Search page",
+      "score": 1.0,
+      "module": "Logout",
+      "auto_matched": false
+    }
+  },
+  "_note": "Rebuilt 02/20/2026 - original 205 auto-matched entries lost due to encoding corruption. Run qatouch_sync_check.py to regenerate auto-matched entries."
+}
