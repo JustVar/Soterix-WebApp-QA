@@ -268,6 +268,20 @@ def compute_delta(older: dict, newer: dict) -> dict:
     }
 
 
+def _enrich_modules_with_automation(
+    top_modules: list[dict], auto_by_module: dict[str, int]
+) -> list[dict]:
+    """Add automated count to each top module entry."""
+    enriched = []
+    for m in top_modules:
+        enriched.append({
+            'module': m['module'],
+            'count': m['count'],
+            'automated': auto_by_module.get(m['module'], 0),
+        })
+    return enriched
+
+
 # ---------------------------------------------------------------------------
 # Dashboard metrics JSON
 # ---------------------------------------------------------------------------
@@ -313,7 +327,9 @@ def generate_dashboard_json(snapshot: dict | None = None) -> dict:
             'tagged_pct': metrics['tags']['tag_coverage_pct'],
         },
         'by_type': metrics['by_type'],
-        'top_modules': metrics['top_modules'][:15],
+        'top_modules': _enrich_modules_with_automation(
+            metrics['top_modules'][:15], auto.get('by_module', {})
+        ),
         'history': history,
         'creation_dates': metrics['creation_dates'],
     }

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-20 21:23:33",
+  "generated": "2026-02-20 21:27:09",
   "snapshot_date": "2026-02-20",
   "total_cases": 2969,
   "total_modules": 404,
@@ -26,63 +26,78 @@
   "top_modules": [
     {
       "module": "Licenses",
-      "count": 187
+      "count": 187,
+      "automated": 0
     },
     {
       "module": "LPR",
-      "count": 75
+      "count": 75,
+      "automated": 0
     },
     {
       "module": "Event Wall",
-      "count": 58
+      "count": 58,
+      "automated": 11
     },
     {
       "module": "Search Landing Page",
-      "count": 53
+      "count": 53,
+      "automated": 6
     },
     {
       "module": "List",
-      "count": 51
+      "count": 51,
+      "automated": 0
     },
     {
       "module": "Media Listing & Actions",
-      "count": 49
+      "count": 49,
+      "automated": 4
     },
     {
       "module": "Category - Person",
-      "count": 49
+      "count": 49,
+      "automated": 0
     },
     {
       "module": "Audit Trail",
-      "count": 47
+      "count": 47,
+      "automated": 14
     },
     {
       "module": "System Logs",
-      "count": 37
+      "count": 37,
+      "automated": 0
     },
     {
       "module": "Map Editing",
-      "count": 32
+      "count": 32,
+      "automated": 0
     },
     {
       "module": "Multi-Factor Authentication",
-      "count": 32
+      "count": 32,
+      "automated": 0
     },
     {
       "module": "Categories",
-      "count": 31
+      "count": 31,
+      "automated": 0
     },
     {
       "module": "Channels",
-      "count": 29
+      "count": 29,
+      "automated": 5
     },
     {
       "module": "Vehicle - Execution & Results",
-      "count": 28
+      "count": 28,
+      "automated": 0
     },
     {
       "module": "Camera Sequence",
-      "count": 27
+      "count": 27,
+      "automated": 9
     }
   ],
   "history": [
