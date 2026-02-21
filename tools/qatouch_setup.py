@@ -64,12 +64,12 @@ def save_project_id_to_env(project_id: int, env_file: str = '.env') -> None:
 
 
 def main():
-    base_url = os.environ.get('QATOUCH_URL')
     api_key = os.environ.get('QATOUCH_API_KEY')
-    if not base_url or not api_key:
-        raise SystemExit('Please set QATOUCH_URL and QATOUCH_API_KEY in the environment')
+    domain = os.environ.get('QATOUCH_DOMAIN')
+    if not api_key or not domain:
+        raise SystemExit('Please set QATOUCH_API_KEY and QATOUCH_DOMAIN in the environment')
 
-    client = QATouchClient(base_url=base_url, api_key=api_key)
+    client = QATouchClient(api_key=api_key, domain=domain)
 
     print('Checking projects...')
     project = None

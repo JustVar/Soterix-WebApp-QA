@@ -1,0 +1,1556 @@
+{
+  "metadata": {
+    "project_key": "NC",
+    "discovered_at": "2026-02-07T14:59:24.539627",
+    "jira_url": "https://soterixsystems.atlassian.net"
+  },
+  "issue_types": {
+    "Bug": {
+      "issue_type": "Bug",
+      "issue_type_id": "10107",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuetype": {
+          "name": "Issue Type",
+          "required": true,
+          "type": "issuetype",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10107",
+              "name": "Bug"
+            }
+          ]
+        },
+        "parent": {
+          "name": "Parent",
+          "required": false,
+          "type": "issuelink",
+          "custom_type": null,
+          "has_default": false
+        },
+        "customfield_10140": {
+          "name": "Bug Overview",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "customfield_10141": {
+          "name": "Expected Behavior",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "project": {
+          "name": "Project",
+          "required": true,
+          "type": "project",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10066",
+              "name": "NexaiQ-Core"
+            }
+          ]
+        },
+        "customfield_10098": {
+          "name": "Environment Found",
+          "required": true,
+          "type": "option",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10039",
+              "value": "Dev"
+            },
+            {
+              "id": "10040",
+              "value": "QA"
+            },
+            {
+              "id": "10041",
+              "value": "Staging"
+            },
+            {
+              "id": "10042",
+              "value": "Production"
+            }
+          ]
+        },
+        "customfield_10142": {
+          "name": "Actual Behavior",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "customfield_10099": {
+          "name": "Severity",
+          "required": true,
+          "type": "option",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10043",
+              "value": "Critical"
+            },
+            {
+              "id": "10044",
+              "value": "High"
+            },
+            {
+              "id": "10045",
+              "value": "Medium"
+            },
+            {
+              "id": "10046",
+              "value": "Low"
+            }
+          ]
+        },
+        "customfield_10176": {
+          "name": "Release Blocker",
+          "required": false,
+          "type": "option",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+          "has_default": true,
+          "allowed_values": [
+            {
+              "id": "10196",
+              "value": "No"
+            },
+            {
+              "id": "10197",
+              "value": "Yes"
+            }
+          ]
+        },
+        "customfield_10135": {
+          "name": "Module",
+          "required": true,
+          "type": "option-with-child",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10080",
+              "value": "Views"
+            },
+            {
+              "id": "10094",
+              "value": "Events"
+            },
+            {
+              "id": "10098",
+              "value": "Maps"
+            },
+            {
+              "id": "10102",
+              "value": "Insights"
+            },
+            {
+              "id": "10109",
+              "value": "Media"
+            },
+            {
+              "id": "10116",
+              "value": "Search"
+            },
+            {
+              "id": "10123",
+              "value": "LPR"
+            },
+            {
+              "id": "10126",
+              "value": "Admin"
+            },
+            {
+              "id": "10141",
+              "value": "Partner Admin Tool"
+            },
+            {
+              "id": "10149",
+              "value": "Event Wall"
+            },
+            {
+              "id": "10154",
+              "value": "Other"
+            }
+          ]
+        },
+        "labels": {
+          "name": "Labels",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        },
+        "customfield_10138": {
+          "name": "Affected Build Number",
+          "required": true,
+          "type": "option",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10155",
+              "value": "1.4.10"
+            },
+            {
+              "id": "10156",
+              "value": "1.4.10h"
+            },
+            {
+              "id": "10157",
+              "value": "1.5"
+            },
+            {
+              "id": "10158",
+              "value": "1.5.1"
+            },
+            {
+              "id": "10159",
+              "value": "1.5.2"
+            },
+            {
+              "id": "10160",
+              "value": "1.5.3"
+            },
+            {
+              "id": "10161",
+              "value": "1.5.4"
+            },
+            {
+              "id": "10162",
+              "value": "1.5.5"
+            },
+            {
+              "id": "10163",
+              "value": "1.5.6"
+            }
+          ]
+        },
+        "customfield_10139": {
+          "name": "Steps to Reproduce",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+          "has_default": false
+        },
+        "attachment": {
+          "name": "Attachment",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuelinks": {
+          "name": "Linked Issues",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        }
+      }
+    },
+    "Story": {
+      "issue_type": "Story",
+      "issue_type_id": "10007",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuetype": {
+          "name": "Issue Type",
+          "required": true,
+          "type": "issuetype",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10007",
+              "name": "Story"
+            }
+          ]
+        },
+        "parent": {
+          "name": "Parent",
+          "required": false,
+          "type": "issuelink",
+          "custom_type": null,
+          "has_default": false
+        },
+        "description": {
+          "name": "Description",
+          "required": false,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "project": {
+          "name": "Project",
+          "required": true,
+          "type": "project",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10066",
+              "name": "NexaiQ-Core"
+            }
+          ]
+        },
+        "assignee": {
+          "name": "Assignee",
+          "required": false,
+          "type": "user",
+          "custom_type": null,
+          "has_default": false
+        },
+        "priority": {
+          "name": "Priority",
+          "required": false,
+          "type": "priority",
+          "custom_type": null,
+          "has_default": true,
+          "allowed_values": [
+            {
+              "id": "10000",
+              "name": "P0"
+            },
+            {
+              "id": "10001",
+              "name": "P1"
+            },
+            {
+              "id": "10002",
+              "name": "P2"
+            },
+            {
+              "id": "10003",
+              "name": "P3"
+            },
+            {
+              "id": "10004",
+              "name": "P4"
+            }
+          ]
+        },
+        "customfield_10135": {
+          "name": "Module",
+          "required": false,
+          "type": "option-with-child",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10080",
+              "value": "Views"
+            },
+            {
+              "id": "10094",
+              "value": "Events"
+            },
+            {
+              "id": "10098",
+              "value": "Maps"
+            },
+            {
+              "id": "10102",
+              "value": "Insights"
+            },
+            {
+              "id": "10109",
+              "value": "Media"
+            },
+            {
+              "id": "10116",
+              "value": "Search"
+            },
+            {
+              "id": "10123",
+              "value": "LPR"
+            },
+            {
+              "id": "10126",
+              "value": "Admin"
+            },
+            {
+              "id": "10141",
+              "value": "Partner Admin Tool"
+            },
+            {
+              "id": "10149",
+              "value": "Event Wall"
+            },
+            {
+              "id": "10154",
+              "value": "Other"
+            }
+          ]
+        },
+        "customfield_10136": {
+          "name": "PRD Link",
+          "required": false,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:url",
+          "has_default": false
+        },
+        "labels": {
+          "name": "Labels",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        }
+      }
+    },
+    "Task": {
+      "issue_type": "Task",
+      "issue_type_id": "10146",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "parent": {
+          "name": "Parent",
+          "required": false,
+          "type": "issuelink",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuetype": {
+          "name": "Issue Type",
+          "required": true,
+          "type": "issuetype",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10146",
+              "name": "Task"
+            }
+          ]
+        },
+        "duedate": {
+          "name": "Due date",
+          "required": false,
+          "type": "date",
+          "custom_type": null,
+          "has_default": false
+        },
+        "description": {
+          "name": "Description",
+          "required": false,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "project": {
+          "name": "Project",
+          "required": true,
+          "type": "project",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10066",
+              "name": "NexaiQ-Core"
+            }
+          ]
+        },
+        "issuelinks": {
+          "name": "Linked Issues",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        },
+        "customfield_10076": {
+          "name": "Comments",
+          "required": false,
+          "type": "number",
+          "custom_type": "jira.polaris:count-issue-comments",
+          "has_default": false
+        },
+        "assignee": {
+          "name": "Assignee",
+          "required": false,
+          "type": "user",
+          "custom_type": null,
+          "has_default": false
+        },
+        "priority": {
+          "name": "Priority",
+          "required": false,
+          "type": "priority",
+          "custom_type": null,
+          "has_default": true,
+          "allowed_values": [
+            {
+              "id": "10000",
+              "name": "P0"
+            },
+            {
+              "id": "10001",
+              "name": "P1"
+            },
+            {
+              "id": "10002",
+              "name": "P2"
+            },
+            {
+              "id": "10003",
+              "name": "P3"
+            },
+            {
+              "id": "10004",
+              "name": "P4"
+            }
+          ]
+        },
+        "labels": {
+          "name": "Labels",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        },
+        "timetracking": {
+          "name": "Time tracking",
+          "required": false,
+          "type": "timetracking",
+          "custom_type": null,
+          "has_default": false
+        }
+      }
+    },
+    "Hotfix": {
+      "issue_type": "Hotfix",
+      "issue_type_id": "10109",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuetype": {
+          "name": "Issue Type",
+          "required": true,
+          "type": "issuetype",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10109",
+              "name": "Hotfix"
+            }
+          ]
+        },
+        "parent": {
+          "name": "Parent",
+          "required": false,
+          "type": "issuelink",
+          "custom_type": null,
+          "has_default": false
+        },
+        "customfield_10139": {
+          "name": "Steps to Reproduce",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+          "has_default": false
+        },
+        "attachment": {
+          "name": "Attachment",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        },
+        "customfield_10140": {
+          "name": "Bug Overview",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "customfield_10141": {
+          "name": "Expected Behavior",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "project": {
+          "name": "Project",
+          "required": true,
+          "type": "project",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10066",
+              "name": "NexaiQ-Core"
+            }
+          ]
+        },
+        "customfield_10142": {
+          "name": "Actual Behavior",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "customfield_10243": {
+          "name": "Customer",
+          "required": false,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "customfield_10135": {
+          "name": "Module",
+          "required": true,
+          "type": "option-with-child",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10080",
+              "value": "Views"
+            },
+            {
+              "id": "10094",
+              "value": "Events"
+            },
+            {
+              "id": "10098",
+              "value": "Maps"
+            },
+            {
+              "id": "10102",
+              "value": "Insights"
+            },
+            {
+              "id": "10109",
+              "value": "Media"
+            },
+            {
+              "id": "10116",
+              "value": "Search"
+            },
+            {
+              "id": "10123",
+              "value": "LPR"
+            },
+            {
+              "id": "10126",
+              "value": "Admin"
+            },
+            {
+              "id": "10141",
+              "value": "Partner Admin Tool"
+            },
+            {
+              "id": "10149",
+              "value": "Event Wall"
+            },
+            {
+              "id": "10154",
+              "value": "Other"
+            }
+          ]
+        }
+      }
+    },
+    "Spike": {
+      "issue_type": "Spike",
+      "issue_type_id": "10110",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuetype": {
+          "name": "Issue Type",
+          "required": true,
+          "type": "issuetype",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10110",
+              "name": "Spike"
+            }
+          ]
+        },
+        "parent": {
+          "name": "Parent",
+          "required": false,
+          "type": "issuelink",
+          "custom_type": null,
+          "has_default": false
+        },
+        "customfield_10018": {
+          "name": "Parent Link",
+          "required": false,
+          "type": "any",
+          "custom_type": "com.atlassian.jpo:jpo-custom-field-parent",
+          "has_default": false
+        },
+        "description": {
+          "name": "Description",
+          "required": false,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "project": {
+          "name": "Project",
+          "required": true,
+          "type": "project",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10066",
+              "name": "NexaiQ-Core"
+            }
+          ]
+        },
+        "assignee": {
+          "name": "Assignee",
+          "required": false,
+          "type": "user",
+          "custom_type": null,
+          "has_default": false
+        },
+        "priority": {
+          "name": "Priority",
+          "required": false,
+          "type": "priority",
+          "custom_type": null,
+          "has_default": true,
+          "allowed_values": [
+            {
+              "id": "10000",
+              "name": "P0"
+            },
+            {
+              "id": "10001",
+              "name": "P1"
+            },
+            {
+              "id": "10002",
+              "name": "P2"
+            },
+            {
+              "id": "10003",
+              "name": "P3"
+            },
+            {
+              "id": "10004",
+              "name": "P4"
+            }
+          ]
+        },
+        "customfield_10135": {
+          "name": "Module",
+          "required": false,
+          "type": "option-with-child",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10080",
+              "value": "Views"
+            },
+            {
+              "id": "10094",
+              "value": "Events"
+            },
+            {
+              "id": "10098",
+              "value": "Maps"
+            },
+            {
+              "id": "10102",
+              "value": "Insights"
+            },
+            {
+              "id": "10109",
+              "value": "Media"
+            },
+            {
+              "id": "10116",
+              "value": "Search"
+            },
+            {
+              "id": "10123",
+              "value": "LPR"
+            },
+            {
+              "id": "10126",
+              "value": "Admin"
+            },
+            {
+              "id": "10141",
+              "value": "Partner Admin Tool"
+            },
+            {
+              "id": "10149",
+              "value": "Event Wall"
+            },
+            {
+              "id": "10154",
+              "value": "Other"
+            }
+          ]
+        },
+        "labels": {
+          "name": "Labels",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        }
+      }
+    },
+    "Epic": {
+      "issue_type": "Epic",
+      "issue_type_id": "10000",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuetype": {
+          "name": "Issue Type",
+          "required": true,
+          "type": "issuetype",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10000",
+              "name": "Epic"
+            }
+          ]
+        },
+        "description": {
+          "name": "Description",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "project": {
+          "name": "Project",
+          "required": true,
+          "type": "project",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10066",
+              "name": "NexaiQ-Core"
+            }
+          ]
+        },
+        "priority": {
+          "name": "Priority",
+          "required": false,
+          "type": "priority",
+          "custom_type": null,
+          "has_default": true,
+          "allowed_values": [
+            {
+              "id": "10000",
+              "name": "P0"
+            },
+            {
+              "id": "10001",
+              "name": "P1"
+            },
+            {
+              "id": "10002",
+              "name": "P2"
+            },
+            {
+              "id": "10003",
+              "name": "P3"
+            },
+            {
+              "id": "10004",
+              "name": "P4"
+            }
+          ]
+        },
+        "customfield_10136": {
+          "name": "PRD Link",
+          "required": false,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:url",
+          "has_default": false
+        },
+        "labels": {
+          "name": "Labels",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        }
+      }
+    },
+    "Sub-task": {
+      "issue_type": "Sub-task",
+      "issue_type_id": "10111",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuetype": {
+          "name": "Issue Type",
+          "required": true,
+          "type": "issuetype",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10111",
+              "name": "Sub-task"
+            }
+          ]
+        },
+        "parent": {
+          "name": "Parent",
+          "required": true,
+          "type": "issuelink",
+          "custom_type": null,
+          "has_default": false
+        },
+        "description": {
+          "name": "Description",
+          "required": false,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "project": {
+          "name": "Project",
+          "required": true,
+          "type": "project",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10066",
+              "name": "NexaiQ-Core"
+            }
+          ]
+        },
+        "assignee": {
+          "name": "Assignee",
+          "required": false,
+          "type": "user",
+          "custom_type": null,
+          "has_default": false
+        }
+      }
+    },
+    "Child Bug": {
+      "issue_type": "Child Bug",
+      "issue_type_id": "10113",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "required": true,
+          "type": "string",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuetype": {
+          "name": "Issue Type",
+          "required": true,
+          "type": "issuetype",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10113",
+              "name": "Child Bug"
+            }
+          ]
+        },
+        "parent": {
+          "name": "Parent",
+          "required": true,
+          "type": "issuelink",
+          "custom_type": null,
+          "has_default": false
+        },
+        "customfield_10140": {
+          "name": "Bug Overview",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "customfield_10141": {
+          "name": "Expected Behavior",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "project": {
+          "name": "Project",
+          "required": true,
+          "type": "project",
+          "custom_type": null,
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10066",
+              "name": "NexaiQ-Core"
+            }
+          ]
+        },
+        "customfield_10098": {
+          "name": "Environment Found",
+          "required": true,
+          "type": "option",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10039",
+              "value": "Dev"
+            },
+            {
+              "id": "10040",
+              "value": "QA"
+            },
+            {
+              "id": "10041",
+              "value": "Staging"
+            },
+            {
+              "id": "10042",
+              "value": "Production"
+            }
+          ]
+        },
+        "customfield_10142": {
+          "name": "Actual Behavior",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+          "has_default": false
+        },
+        "customfield_10099": {
+          "name": "Severity",
+          "required": true,
+          "type": "option",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10043",
+              "value": "Critical"
+            },
+            {
+              "id": "10044",
+              "value": "High"
+            },
+            {
+              "id": "10045",
+              "value": "Medium"
+            },
+            {
+              "id": "10046",
+              "value": "Low"
+            }
+          ]
+        },
+        "customfield_10176": {
+          "name": "Release Blocker",
+          "required": false,
+          "type": "option",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+          "has_default": true,
+          "allowed_values": [
+            {
+              "id": "10196",
+              "value": "No"
+            },
+            {
+              "id": "10197",
+              "value": "Yes"
+            }
+          ]
+        },
+        "customfield_10135": {
+          "name": "Module",
+          "required": true,
+          "type": "option-with-child",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10080",
+              "value": "Views"
+            },
+            {
+              "id": "10094",
+              "value": "Events"
+            },
+            {
+              "id": "10098",
+              "value": "Maps"
+            },
+            {
+              "id": "10102",
+              "value": "Insights"
+            },
+            {
+              "id": "10109",
+              "value": "Media"
+            },
+            {
+              "id": "10116",
+              "value": "Search"
+            },
+            {
+              "id": "10123",
+              "value": "LPR"
+            },
+            {
+              "id": "10126",
+              "value": "Admin"
+            },
+            {
+              "id": "10141",
+              "value": "Partner Admin Tool"
+            },
+            {
+              "id": "10149",
+              "value": "Event Wall"
+            },
+            {
+              "id": "10154",
+              "value": "Other"
+            }
+          ]
+        },
+        "labels": {
+          "name": "Labels",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        },
+        "customfield_10138": {
+          "name": "Affected Build Number",
+          "required": true,
+          "type": "option",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+          "has_default": false,
+          "allowed_values": [
+            {
+              "id": "10155",
+              "value": "1.4.10"
+            },
+            {
+              "id": "10156",
+              "value": "1.4.10h"
+            },
+            {
+              "id": "10157",
+              "value": "1.5"
+            },
+            {
+              "id": "10158",
+              "value": "1.5.1"
+            },
+            {
+              "id": "10159",
+              "value": "1.5.2"
+            },
+            {
+              "id": "10160",
+              "value": "1.5.3"
+            },
+            {
+              "id": "10161",
+              "value": "1.5.4"
+            },
+            {
+              "id": "10162",
+              "value": "1.5.5"
+            },
+            {
+              "id": "10163",
+              "value": "1.5.6"
+            }
+          ]
+        },
+        "customfield_10139": {
+          "name": "Steps to Reproduce",
+          "required": true,
+          "type": "string",
+          "custom_type": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+          "has_default": false
+        },
+        "attachment": {
+          "name": "Attachment",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        },
+        "issuelinks": {
+          "name": "Linked Issues",
+          "required": false,
+          "type": "array",
+          "custom_type": null,
+          "has_default": false
+        }
+      }
+    }
+  },
+  "field_index": {
+    "summary": {
+      "name": "Summary",
+      "used_by_types": [
+        "Bug",
+        "Story",
+        "Task",
+        "Hotfix",
+        "Spike",
+        "Epic",
+        "Sub-task",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Story",
+        "Task",
+        "Hotfix",
+        "Spike",
+        "Epic",
+        "Sub-task",
+        "Child Bug"
+      ]
+    },
+    "issuetype": {
+      "name": "Issue Type",
+      "used_by_types": [
+        "Bug",
+        "Story",
+        "Task",
+        "Hotfix",
+        "Spike",
+        "Epic",
+        "Sub-task",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Story",
+        "Task",
+        "Hotfix",
+        "Spike",
+        "Epic",
+        "Sub-task",
+        "Child Bug"
+      ]
+    },
+    "parent": {
+      "name": "Parent",
+      "used_by_types": [
+        "Bug",
+        "Story",
+        "Task",
+        "Hotfix",
+        "Spike",
+        "Sub-task",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Sub-task",
+        "Child Bug"
+      ]
+    },
+    "customfield_10140": {
+      "name": "Bug Overview",
+      "used_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ]
+    },
+    "customfield_10141": {
+      "name": "Expected Behavior",
+      "used_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ]
+    },
+    "project": {
+      "name": "Project",
+      "used_by_types": [
+        "Bug",
+        "Story",
+        "Task",
+        "Hotfix",
+        "Spike",
+        "Epic",
+        "Sub-task",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Story",
+        "Task",
+        "Hotfix",
+        "Spike",
+        "Epic",
+        "Sub-task",
+        "Child Bug"
+      ]
+    },
+    "customfield_10098": {
+      "name": "Environment Found",
+      "used_by_types": [
+        "Bug",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Child Bug"
+      ]
+    },
+    "customfield_10142": {
+      "name": "Actual Behavior",
+      "used_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ]
+    },
+    "customfield_10099": {
+      "name": "Severity",
+      "used_by_types": [
+        "Bug",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Child Bug"
+      ]
+    },
+    "customfield_10176": {
+      "name": "Release Blocker",
+      "used_by_types": [
+        "Bug",
+        "Child Bug"
+      ],
+      "required_by_types": []
+    },
+    "customfield_10135": {
+      "name": "Module",
+      "used_by_types": [
+        "Bug",
+        "Story",
+        "Hotfix",
+        "Spike",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ]
+    },
+    "labels": {
+      "name": "Labels",
+      "used_by_types": [
+        "Bug",
+        "Story",
+        "Task",
+        "Spike",
+        "Epic",
+        "Child Bug"
+      ],
+      "required_by_types": []
+    },
+    "customfield_10138": {
+      "name": "Affected Build Number",
+      "used_by_types": [
+        "Bug",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Child Bug"
+      ]
+    },
+    "customfield_10139": {
+      "name": "Steps to Reproduce",
+      "used_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ],
+      "required_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ]
+    },
+    "attachment": {
+      "name": "Attachment",
+      "used_by_types": [
+        "Bug",
+        "Hotfix",
+        "Child Bug"
+      ],
+      "required_by_types": []
+    },
+    "issuelinks": {
+      "name": "Linked Issues",
+      "used_by_types": [
+        "Bug",
+        "Task",
+        "Child Bug"
+      ],
+      "required_by_types": []
+    },
+    "description": {
+      "name": "Description",
+      "used_by_types": [
+        "Story",
+        "Task",
+        "Spike",
+        "Epic",
+        "Sub-task"
+      ],
+      "required_by_types": [
+        "Epic"
+      ]
+    },
+    "assignee": {
+      "name": "Assignee",
+      "used_by_types": [
+        "Story",
+        "Task",
+        "Spike",
+        "Sub-task"
+      ],
+      "required_by_types": []
+    },
+    "priority": {
+      "name": "Priority",
+      "used_by_types": [
+        "Story",
+        "Task",
+        "Spike",
+        "Epic"
+      ],
+      "required_by_types": []
+    },
+    "customfield_10136": {
+      "name": "PRD Link",
+      "used_by_types": [
+        "Story",
+        "Epic"
+      ],
+      "required_by_types": []
+    },
+    "duedate": {
+      "name": "Due date",
+      "used_by_types": [
+        "Task"
+      ],
+      "required_by_types": []
+    },
+    "customfield_10076": {
+      "name": "Comments",
+      "used_by_types": [
+        "Task"
+      ],
+      "required_by_types": []
+    },
+    "timetracking": {
+      "name": "Time tracking",
+      "used_by_types": [
+        "Task"
+      ],
+      "required_by_types": []
+    },
+    "customfield_10243": {
+      "name": "Customer",
+      "used_by_types": [
+        "Hotfix"
+      ],
+      "required_by_types": []
+    },
+    "customfield_10018": {
+      "name": "Parent Link",
+      "used_by_types": [
+        "Spike"
+      ],
+      "required_by_types": []
+    }
+  }
+}

@@ -75,9 +75,8 @@ RECAPTCHA_ENABLED=true   # Production only
 ```python
 # Backend pseudocode
 AUTOMATION_EMAILS = [
-    "automation@soterixsystems.com",
-    "automation-stage@soterixsystems.com",
-    "automation-prod@soterixsystems.com"
+    "test-auto-stage@soterixsystems.com",
+    "test-auto-prod@soterixsystems.com"
 ]
 
 def should_show_recaptcha(email):
@@ -144,121 +143,80 @@ Response: { "token": "JSESSIONID..." }
 
 ## Recommended Approach
 
-**For Stage and Pre-Prod:** Option 1 (Disable ReCAPTCHA)
-- Matches QA environment behavior
-- Zero ongoing maintenance
+**Chosen approach (02/18/2026):** Option 2 - Email Whitelist for all environments.
+
+**For Stage:** Whitelist `test-auto-stage@soterixsystems.com`
+- Surgical bypass - only automation account skips CAPTCHA
+- Maintains CAPTCHA for all human logins
 - Enables immediate overnight automation
 
-**For Production:** Option 2 (Email Whitelist) OR Option 4 (API Login)
-- Production should keep ReCAPTCHA for regular users
-- Single read-only automation account whitelisted
+**For Production:** Whitelist `test-auto-prod@soterixsystems.com`
+- Account will be restricted to Operator/read-only role
+- Smoke tests only, no write/delete operations
 - Limits blast radius if account is compromised
 
 ---
 
-## Email Template for Tech Team
+## Email Sent (02/18/2026)
 
-**Subject:** Request: Enable Unattended Automation Testing on Stage Environment
+**Subject:** Request: Whitelist Automation Accounts to Bypass ReCAPTCHA on Stage & Production
 
-**To:** [Tech Team / Engineering]
+**To:** DevOps/Platform Engineering Team
 
----
+**Status:** ✅ Sent 02/18/2026, awaiting response
 
-Hi Team,
+**Approach requested:** Email whitelist - skip ReCAPTCHA for dedicated automation accounts only.
 
-**TL;DR:** We need ReCAPTCHA bypassed on Stage (and future Pre-Prod) to enable overnight/CI automation runs.
-
-### Current Situation
-
-| Environment | ReCAPTCHA | Automation Status |
-|-------------|-----------|-------------------|
-| QA | Disabled | ✅ Fully automated |
-| Stage | Enabled | ⚠️ Requires manual CAPTCHA |
-| Production | Enabled | ⚠️ Requires manual CAPTCHA |
-
-Currently on Stage and Production, we must:
-1. Manually solve CAPTCHA before each test run
-2. Cannot schedule overnight runs
-3. Cannot integrate with CI/CD pipelines
-4. Session expires, requiring repeated manual intervention
-
-### Request
-
-**Stage & Pre-Prod:** Please disable ReCAPTCHA (matching QA configuration)
-
-This is standard practice for test environments and enables:
-- Overnight regression runs
-- CI/CD integration (run tests on every deploy)
-- Faster feedback loops for development
-
-**Production (Future):** When we're ready to test Production, we'd like to discuss:
-- Email whitelist for a single read-only automation account, OR
-- API-based authentication endpoint for automation
-
-### Proposed Automation Accounts
+**Accounts to whitelist:**
 
 | Environment | Account | Role |
 |-------------|---------|------|
-| Stage | automation-stage@soterixsystems.com | Admin |
-| Pre-Prod | automation-preprod@soterixsystems.com | Admin |
-| Production | automation-prod@soterixsystems.com | Operator (read-only) |
-
-### Timeline
-
-We'd like to enable overnight runs on Stage as soon as possible. Can we schedule a quick call to discuss implementation options?
-
-Thanks,
-[Your Name]
-QA Automation Team
+| Stage | test-auto-stage@soterixsystems.com | Admin |
+| Production | test-auto-prod@soterixsystems.com | Admin (restrict to Operator/read-only) |
 
 ---
 
 ## Automation Account Requirements
 
-### Stage Environment (Priority)
-| Email | Role | Purpose |
-|-------|------|---------|
-| automation-stage@soterixsystems.com | Admin | Full regression testing |
-| automation-stage-supervisor@soterixsystems.com | Supervisor | Permission boundary tests |
-| automation-stage-operator@soterixsystems.com | Operator | Basic user flow tests |
+### Existing Accounts (Created 02/05/2026)
+| Email | Environment | Role | Purpose |
+|-------|-------------|------|---------|
+| test-auto-qa@soterixsystems.com | QA | Admin | Full regression testing (✅ working) |
+| test-auto-stage@soterixsystems.com | Stage | Admin | Full regression testing (⏳ needs whitelist) |
+| test-auto-prod@soterixsystems.com | Production | Admin* | Smoke tests only (⏳ needs whitelist) |
 
-### Pre-Prod Environment (When Available)
-| Email | Role | Purpose |
-|-------|------|---------|
-| automation-preprod@soterixsystems.com | Admin | Pre-release validation |
-| automation-preprod-supervisor@soterixsystems.com | Supervisor | Permission tests |
-| automation-preprod-operator@soterixsystems.com | Operator | User flow tests |
+*Production account will be restricted to Operator/read-only role when bypass is enabled.
 
-### Production Environment (Future, Read-Only)
-| Email | Role | Purpose |
-|-------|------|---------|
-| automation-prod@soterixsystems.com | Operator | Smoke tests only, NO write operations |
+### Future Role-Based Accounts (Planned, not yet created)
+| Email | Environment | Role | Purpose |
+|-------|-------------|------|---------|
+| TBD-supervisor@soterixsystems.com | Stage | Supervisor | Permission boundary tests |
+| TBD-operator@soterixsystems.com | Stage | Operator | Basic user flow tests |
 
 ---
 
 ## Implementation Checklist
 
 ### Stage Environment
-- [ ] Request ReCAPTCHA disable (or whitelist)
-- [ ] Create automation-stage@soterixsystems.com (Admin)
-- [ ] Create automation-stage-supervisor@soterixsystems.com (Supervisor)
-- [ ] Create automation-stage-operator@soterixsystems.com (Operator)
-- [ ] Update config/env/stage.py with credentials
-- [ ] Verify unattended login works
+- [x] Create test-auto-stage@soterixsystems.com (Admin) - (02/05/2026)
+- [x] Configure config/env/stage.py with credentials
+- [x] Send email whitelist request to DevOps/Platform Engineering - (02/18/2026)
+- [ ] Receive confirmation that whitelist is applied
+- [ ] Verify unattended login works (no manual CAPTCHA solve)
 - [ ] Schedule first overnight run
 
 ### Pre-Prod Environment
 - [ ] Confirm Pre-Prod URL when available
-- [ ] Request ReCAPTCHA disable (match Stage)
-- [ ] Create automation accounts (3)
+- [ ] Request whitelist for Pre-Prod (match Stage)
 - [ ] Create config/env/preprod.py
 - [ ] Verify login and run smoke tests
 
 ### Production Environment
-- [ ] Discuss whitelist approach with tech team
-- [ ] Create automation-prod@soterixsystems.com (Operator ONLY)
-- [ ] Ensure account has NO write/delete permissions
-- [ ] Update config/env/prod.py
+- [x] Create test-auto-prod@soterixsystems.com (Admin) - (02/05/2026)
+- [x] Configure config/env/prod.py with credentials
+- [x] Send email whitelist request to DevOps/Platform Engineering - (02/18/2026)
+- [ ] Receive confirmation that whitelist is applied
+- [ ] Restrict account to Operator/read-only role
 - [ ] Verify with read-only smoke tests
 - [ ] Add safety flags to prevent destructive tests
 
@@ -300,13 +258,13 @@ If the tech team cannot bypass ReCAPTCHA:
 
 ## Next Steps
 
-1. [ ] Send email to tech team (use template above)
-2. [ ] Schedule follow-up call if needed
-3. [ ] Get confirmation on approach
-4. [ ] Receive/create automation accounts
-5. [ ] Update framework configuration
-6. [ ] Verify unattended runs work
-7. [ ] Set up scheduled overnight runs
+1. [x] Send email whitelist request to DevOps/Platform Engineering (02/18/2026)
+2. [ ] Wait for response (follow up after 3 business days if no reply)
+3. [ ] Get confirmation that whitelist is applied
+4. [ ] Verify unattended login on Stage (no manual CAPTCHA)
+5. [ ] Verify unattended login on Production (no manual CAPTCHA)
+6. [ ] Run first overnight regression on Stage
+7. [ ] Set up scheduled nightly runs
 
 ---
 

@@ -2,22 +2,27 @@
 Smart Jira Bug Creator
 
 Implements multi-gate validation to avoid filing bugs for flaky tests.
+By default, bugs that pass the confidence threshold are queued for manual
+QA review before being filed in Jira.
 
 Features:
 - Confidence scoring based on failure history and consecutive failures
 - Environment health checks (basic base_url probe)
-- Manual-review queue hooks for smoke tests
-- Stubs for Jira issue creation (replace with real API integration)
+- Manual QA approval gate (review queue with interactive CLI)
+- All 8 NC mandatory Bug fields auto-populated via config/jira_field_mapping.py
 
 Configuration constants:
 - CONFIDENCE_THRESHOLD: float (0-1)
 - MIN_CONSECUTIVE_FAILURES: int
 
-Usage (simple):
-  python -m tools.smart_jira_bug_creator --test <nodeid> --env qa
+Usage:
+  python -m tools.smart_jira_bug_creator --test <nodeid>               # Queue for review
+  python -m tools.smart_jira_bug_creator --test <nodeid> --auto-create # Bypass review (CI)
+  python -m tools.smart_jira_bug_creator --list                        # View pending bugs
+  python -m tools.smart_jira_bug_creator --review                      # Approve/reject bugs
 
 This module is intentionally conservative and contains no live Jira calls by default.
-Plug in Jira credentials and API calls in `JiraClient.create_issue()`.
+Set BUG_CREATION_ENABLED=true in .env to enable live Jira issue creation.
 """
 from __future__ import annotations
 
@@ -40,6 +45,11 @@ try:
     from jira import JIRA
 except Exception:
     JIRA = None
+
+try:
+    from config.jira_field_mapping import mapper as qa_touch_mapper
+except Exception:
+    qa_touch_mapper = None
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -140,8 +150,13 @@ class JiraClient:
         self.user = user or os.environ.get('JIRA_EMAIL')
         self.token = token or os.environ.get('JIRA_API_TOKEN')
 
-    def create_issue(self, summary: str, description: str, labels: List[str] = None, project_key: str = None, issue_type: str = 'Bug', attachments: List[str] = None, story_link: str = None) -> Dict[str, Any]:
+    def create_issue(self, summary: str, description: str, labels: List[str] = None, project_key: str = None, issue_type: str = 'Bug', attachments: List[str] = None, story_link: str = None, qa_touch_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create a Jira issue using `jira` library if available and BUG_CREATION_ENABLED true.
+
+        Args:
+            qa_touch_data: Optional dict with QA Touch test case data for auto-populating
+                NC mandatory Bug fields. Keys: module, steps, expected, actual,
+                environment, severity, build, title, test_case_id.
 
         Returns the issue dict on success.
         """
@@ -156,6 +171,12 @@ class JiraClient:
                 "labels": (labels or []) + (["automation-test-DELETE-ME"] if "[TEST]" in summary else []),
                 "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             }
+            if qa_touch_data and qa_touch_mapper:
+                fake["mapped_fields"] = qa_touch_mapper.map_bug_fields(**qa_touch_data)
+                unmapped = qa_touch_mapper.get_unmapped_required_fields("Bug", fake["mapped_fields"])
+                if unmapped:
+                    LOG.info("[JIRA] Unmapped required fields: %s", unmapped)
+                    fake["unmapped_required_fields"] = unmapped
             return fake
 
         # create real issue
@@ -169,6 +190,14 @@ class JiraClient:
         }
         if labels:
             fields['labels'] = labels
+
+        # Auto-populate NC mandatory Bug fields from QA Touch data
+        if qa_touch_data and qa_touch_mapper and issue_type == 'Bug':
+            mapped = qa_touch_mapper.map_bug_fields(**qa_touch_data)
+            fields.update(mapped)
+            unmapped = qa_touch_mapper.get_unmapped_required_fields("Bug", mapped)
+            if unmapped:
+                LOG.warning("[JIRA] These required fields were not auto-populated: %s", unmapped)
 
         issue = jira.create_issue(fields=fields)
         issue_key = issue.key
@@ -215,24 +244,338 @@ class JiraClient:
             return {'key': issue_key, 'self': getattr(issue, 'self', None)}
 
 
-def add_to_review_queue(nodeid: str, reason: str, queue_path: str = REVIEW_QUEUE) -> None:
+VALID_SEVERITIES = ["Critical", "High", "Medium", "Low"]
+
+# Map test directory keywords to Jira Module values
+_MODULE_MAP = {
+    "views": "Views",
+    "events": "Events",
+    "maps": "Maps",
+    "insights": "Insights",
+    "media": "Media",
+    "search": "Search",
+    "lpr": "LPR",
+    "admin": "Admin",
+    "partner_admin": "Partner Admin Tool",
+    "event_wall": "Event Wall",
+    "login": "Other",
+    "api": "Other",
+}
+
+
+def _infer_module_from_nodeid(nodeid: str) -> str:
+    """Best-effort module inference from pytest nodeid path components."""
+    nodeid_lower = nodeid.lower()
+    for keyword, module_name in _MODULE_MAP.items():
+        if keyword in nodeid_lower:
+            return module_name
+    return "Other"
+
+
+def _infer_environment(base_url: str) -> str:
+    """Infer Jira Environment Found value from base URL."""
+    if not base_url:
+        return "QA"
+    url_lower = base_url.lower()
+    if "staging" in url_lower or "stage" in url_lower:
+        return "Staging"
+    if "prod" in url_lower:
+        return "Production"
+    if "dev" in url_lower:
+        return "Dev"
+    return "QA"
+
+
+def _load_review_queue(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
+    """Load and return the review queue, or empty structure."""
+    if not os.path.exists(queue_path):
+        return {"metadata": {"next_id": 1}, "items": []}
+    try:
+        with open(queue_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        data.setdefault("metadata", {"next_id": 1})
+        data.setdefault("items", [])
+        return data
+    except Exception:
+        return {"metadata": {"next_id": 1}, "items": []}
+
+
+def _save_review_queue(queue: Dict[str, Any], queue_path: str = REVIEW_QUEUE) -> None:
+    """Persist the review queue to disk."""
     os.makedirs(os.path.dirname(queue_path), exist_ok=True)
-    queue = {"items": []}
-    if os.path.exists(queue_path):
-        try:
-            with open(queue_path, "r", encoding="utf-8") as f:
-                queue = json.load(f)
-        except Exception:
-            queue = {"items": []}
-    queue.setdefault("items", [])
-    queue["items"].append({"nodeid": nodeid, "reason": reason, "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
     with open(queue_path, "w", encoding="utf-8") as f:
         json.dump(queue, f, indent=2)
-    LOG.info("Added %s to manual review queue (%s)", nodeid, queue_path)
 
 
-def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool = False) -> Dict[str, Any]:
-    """Run gates and decide whether to open a Jira bug or queue for review.
+def _try_api_queue(payload: Dict[str, Any]) -> str | None:
+    """Try to submit an item via the QA Ops Hub API. Returns entry_id or None."""
+    api_url = os.environ.get("QA_OPS_API_URL", "").rstrip("/")
+    api_key = os.environ.get("QA_OPS_API_KEY", "")
+    if not api_url or not api_key or not requests:
+        return None
+    try:
+        resp = requests.post(
+            f"{api_url}/api/queue",
+            json=payload,
+            headers={"X-API-Key": api_key},
+            timeout=5,
+        )
+        if resp.status_code == 201:
+            entry_id = resp.json().get("entry_id")
+            LOG.info("Queued via API: %s", entry_id)
+            return entry_id
+        LOG.warning("API queue returned %d: %s", resp.status_code, resp.text[:200])
+    except Exception as exc:
+        LOG.warning("API queue unavailable, falling back to JSON: %s", exc)
+    return None
+
+
+def add_to_review_queue(nodeid: str, reason: str, queue_path: str = REVIEW_QUEUE,
+                        bug_data: Dict[str, Any] = None, score: float = None,
+                        consecutive: int = None, failure_rate: float = None) -> str:
+    """Add an item to the review queue with optional enriched bug data.
+
+    Tries the QA Ops Hub API first (if QA_OPS_API_URL and QA_OPS_API_KEY are set).
+    Falls back to local JSON file if the API is unreachable.
+
+    Returns the entry ID (e.g. 'RQ-0001').
+    """
+    # Build API payload
+    payload: Dict[str, Any] = {"nodeid": nodeid, "reason": reason}
+    if score is not None:
+        payload["confidence_score"] = score
+    if consecutive is not None:
+        payload["consecutive_failures"] = consecutive
+    if failure_rate is not None:
+        payload["failure_rate"] = failure_rate
+    if bug_data:
+        payload["bug_data"] = bug_data
+
+    # Try API first
+    api_entry_id = _try_api_queue(payload)
+    if api_entry_id:
+        return api_entry_id
+
+    # Fallback: write to local JSON
+    queue = _load_review_queue(queue_path)
+
+    next_id = queue["metadata"].get("next_id", 1)
+    entry_id = "RQ-%04d" % next_id
+    queue["metadata"]["next_id"] = next_id + 1
+
+    entry = {
+        "id": entry_id,
+        "nodeid": nodeid,
+        "reason": reason,
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "status": "pending",
+    }
+    if score is not None:
+        entry["confidence_score"] = score
+    if consecutive is not None:
+        entry["consecutive_failures"] = consecutive
+    if failure_rate is not None:
+        entry["failure_rate"] = failure_rate
+    if bug_data:
+        entry["bug_data"] = bug_data
+    entry["reviewed_by"] = None
+    entry["reviewed_at"] = None
+    entry["jira_key"] = None
+
+    queue["items"].append(entry)
+    _save_review_queue(queue, queue_path)
+    LOG.info("Added %s (%s) to review queue (JSON fallback: %s)", entry_id, nodeid, queue_path)
+    return entry_id
+
+
+def list_pending_bugs(queue_path: str = REVIEW_QUEUE) -> List[Dict[str, Any]]:
+    """Print and return pending review queue items."""
+    queue = _load_review_queue(queue_path)
+    pending = [item for item in queue.get("items", []) if item.get("status") == "pending"]
+
+    if not pending:
+        print("No pending bugs in the review queue.")
+        return []
+
+    print("")
+    print("=" * 78)
+    print("  PENDING BUG REVIEW QUEUE  (%d item%s)" % (len(pending), "s" if len(pending) != 1 else ""))
+    print("=" * 78)
+    print("")
+    for i, item in enumerate(pending, 1):
+        entry_id = item.get("id", "?")
+        nodeid = item.get("nodeid", "?")
+        ts = item.get("ts", "?")
+        score = item.get("confidence_score", "n/a")
+        consec = item.get("consecutive_failures", "n/a")
+        bug_data = item.get("bug_data") or {}
+        severity = bug_data.get("severity", "n/a")
+        module = bug_data.get("module", "n/a")
+        has_data = "Yes" if bug_data else "No"
+
+        print("  [%d] %s" % (i, entry_id))
+        print("      Test:       %s" % nodeid)
+        print("      Module:     %s" % module)
+        print("      Severity:   %s" % severity)
+        print("      Confidence: %s  |  Consecutive: %s" % (score, consec))
+        print("      Queued:     %s" % ts)
+        print("      Bug data:   %s" % has_data)
+        print("      " + "-" * 50)
+
+    print("")
+    return pending
+
+
+def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
+    """Interactive review of pending bugs. Returns summary dict."""
+    queue = _load_review_queue(queue_path)
+    pending = [item for item in queue.get("items", [])
+               if item.get("status") == "pending" and item.get("bug_data")]
+
+    if not pending:
+        print("No pending bugs with full data to review.")
+        smoke_only = [item for item in queue.get("items", [])
+                      if item.get("status") == "pending" and not item.get("bug_data")]
+        if smoke_only:
+            print("(%d smoke-test entries without bug data -- see --list or email report)" % len(smoke_only))
+        return {"approved": 0, "rejected": 0, "skipped": 0}
+
+    approved = 0
+    rejected = 0
+    skipped = 0
+    jira = JiraClient()
+
+    for idx, item in enumerate(pending):
+        entry_id = item.get("id", "?")
+        nodeid = item.get("nodeid", "?")
+        bug_data = item.get("bug_data", {})
+
+        print("")
+        print("=" * 78)
+        print("  REVIEW: %s  (%d of %d)" % (entry_id, idx + 1, len(pending)))
+        print("=" * 78)
+        print("")
+        print("  Test ID:      %s" % nodeid)
+        print("  Module:       %s" % bug_data.get("module", "n/a"))
+        print("  Summary:      %s" % bug_data.get("summary", "n/a"))
+        print("  Environment:  %s" % bug_data.get("environment", "n/a"))
+        print("  Severity:     %s" % bug_data.get("severity", "n/a"))
+        print("  Confidence:   %s" % item.get("confidence_score", "n/a"))
+        print("  Consecutive:  %s failures" % item.get("consecutive_failures", "n/a"))
+        print("  Failure Rate: %s" % item.get("failure_rate", "n/a"))
+        print("")
+        print("  Steps to Reproduce:")
+        for line in bug_data.get("steps", "n/a").split("\n"):
+            print("    %s" % line)
+        print("")
+        print("  Expected: %s" % bug_data.get("expected", "n/a"))
+        print("  Actual:   %s" % bug_data.get("actual", "n/a"))
+        print("")
+
+        print("  Actions: [a]pprove  [r]eject  [e]dit severity  [s]kip  [q]uit")
+        print("")
+
+        while True:
+            try:
+                choice = input("  > ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print("\n  Review session ended.")
+                _save_review_queue(queue, queue_path)
+                return {"approved": approved, "rejected": rejected, "skipped": skipped}
+
+            if choice in ("a", "approve"):
+                print("  Creating Jira bug...")
+                desc = (
+                    "Automated detection:\n"
+                    "nodeid: %s\n"
+                    "confidence: %s\n"
+                    "consecutive_failures: %s\n"
+                    "failure_rate: %s\n"
+                    % (nodeid, item.get("confidence_score", "n/a"),
+                       item.get("consecutive_failures", "n/a"),
+                       item.get("failure_rate", "n/a"))
+                )
+                try:
+                    issue = jira.create_issue(
+                        summary=bug_data.get("summary", nodeid),
+                        description=desc,
+                        labels=bug_data.get("labels", ["automation"]),
+                        qa_touch_data={
+                            "module": bug_data.get("module", "Other"),
+                            "steps": bug_data.get("steps", ""),
+                            "expected": bug_data.get("expected", ""),
+                            "actual": bug_data.get("actual", ""),
+                            "environment": bug_data.get("environment", "QA"),
+                            "severity": bug_data.get("severity", "Medium"),
+                            "build": bug_data.get("build", ""),
+                            "title": bug_data.get("summary", ""),
+                        }
+                    )
+                    issue_key = issue.get("key", "???")
+                    item["status"] = "approved"
+                    item["jira_key"] = issue_key
+                    item["reviewed_by"] = os.environ.get("USERNAME", os.environ.get("USER", "qa"))
+                    item["reviewed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                    _save_review_queue(queue, queue_path)
+                    print("  APPROVED -- Jira issue: %s" % issue_key)
+                    approved += 1
+                except Exception as e:
+                    print("  ERROR creating Jira issue: %s" % e)
+                    print("  Item remains pending. Try again later.")
+                break
+
+            elif choice in ("r", "reject"):
+                item["status"] = "rejected"
+                item["reviewed_by"] = os.environ.get("USERNAME", os.environ.get("USER", "qa"))
+                item["reviewed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                _save_review_queue(queue, queue_path)
+                print("  REJECTED -- removed from pending queue.")
+                rejected += 1
+                break
+
+            elif choice in ("e", "edit"):
+                print("  Current severity: %s" % bug_data.get("severity", "n/a"))
+                print("  Valid options: %s" % ", ".join(VALID_SEVERITIES))
+                try:
+                    new_sev = input("  New severity: ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    print("\n  Edit cancelled.")
+                    continue
+                if new_sev in VALID_SEVERITIES:
+                    bug_data["severity"] = new_sev
+                    _save_review_queue(queue, queue_path)
+                    print("  Severity updated to: %s" % new_sev)
+                    print("  Now choose: [a]pprove  [r]eject  [s]kip")
+                else:
+                    print("  Invalid severity. Must be one of: %s" % ", ".join(VALID_SEVERITIES))
+
+            elif choice in ("s", "skip"):
+                print("  SKIPPED -- remains pending.")
+                skipped += 1
+                break
+
+            elif choice in ("q", "quit"):
+                print("  Review session ended.")
+                _save_review_queue(queue, queue_path)
+                return {"approved": approved, "rejected": rejected, "skipped": skipped}
+
+            else:
+                print("  Unknown choice. Use: a, r, e, s, or q")
+
+    _save_review_queue(queue, queue_path)
+    print("")
+    print("=" * 78)
+    print("  Review complete: %d approved, %d rejected, %d skipped" % (approved, rejected, skipped))
+    print("=" * 78)
+    return {"approved": approved, "rejected": rejected, "skipped": skipped}
+
+
+def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool = False, auto_create: bool = False) -> Dict[str, Any]:
+    """Run gates and decide whether to queue a bug for review or create it directly.
+
+    By default (auto_create=False), bugs that pass the confidence threshold are
+    queued for manual QA review. Pass auto_create=True to bypass the queue
+    (for CI pipelines).
 
     Returns dict with keys: action: one of [no_action, queued, create_issue], details: {...}
     """
@@ -241,45 +584,86 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
 
     env_ok, env_msg = env_health_check(env_base_url) if env_base_url else (True, "no-check")
     score = compute_confidence(history, env_ok)
-    consecutive = consecutive_failures(history)
-    failure_rate = calc_failure_rate(history)
+    consec = consecutive_failures(history)
+    fail_rate = calc_failure_rate(history)
 
     details = {
         "nodeid": nodeid,
         "env_ok": env_ok,
         "env_msg": env_msg,
         "score": score,
-        "consecutive_failures": consecutive,
-        "failure_rate": failure_rate,
+        "consecutive_failures": consec,
+        "failure_rate": fail_rate,
         "history_len": len(history),
     }
 
     # Gate 1: environment health
     if not env_ok:
-        details["reason"] = f"Environment unhealthy: {env_msg}"
+        details["reason"] = "Environment unhealthy: %s" % env_msg
         return {"action": "no_action", "details": details}
 
     # Gate 2: smoke tests require manual review on first failure
     if is_smoke:
-        # If there were no prior failures, add to review queue instead of auto-bug.
         prior_fails = sum(1 for r in history if r.get("result") == "fail")
         if prior_fails == 0:
-            add_to_review_queue(nodeid, "First smoke test failure - manual review required")
+            add_to_review_queue(nodeid, "First smoke test failure -- manual review required")
             details["reason"] = "first_smoke_failure"
             return {"action": "queued", "details": details}
 
     # Gate 3: consecutive failures + confidence threshold
-    if consecutive >= MIN_CONSECUTIVE_FAILURES and score >= CONFIDENCE_THRESHOLD:
-        # Create issue (stub)
-        jira = JiraClient()
-        summary = f"[Auto] Flaky detection: {nodeid} failing in {env_base_url or 'env'}"
-        desc = (
-            f"Automated detection:\nnodeid: {nodeid}\nconfidence: {score}\nconsecutive_failures: {consecutive}\n"
-            f"failure_rate: {failure_rate}\nenv_check: {env_msg}\n"
-        )
-        issue = jira.create_issue(summary, desc, labels=["automation", "auto-detected"])
-        details["issue"] = issue
-        return {"action": "create_issue", "details": details}
+    if consec >= MIN_CONSECUTIVE_FAILURES and score >= CONFIDENCE_THRESHOLD:
+        module = _infer_module_from_nodeid(nodeid)
+        environment = _infer_environment(env_base_url)
+        summary = "[Auto] %s failing in %s" % (nodeid.split("::")[-1], env_base_url or "env")
+        bug_data = {
+            "summary": summary,
+            "module": module,
+            "steps": "1. Run test: %s\n2. Test fails consistently" % nodeid,
+            "expected": "Test should pass",
+            "actual": "Test has failed %d consecutive times (confidence: %s)" % (consec, score),
+            "environment": environment,
+            "severity": "Medium",
+            "build": "",
+            "labels": ["automation", "auto-detected"],
+            "env_base_url": env_base_url or "",
+        }
+
+        if auto_create:
+            # CI mode: create immediately, no review
+            jira = JiraClient()
+            desc = (
+                "Automated detection:\n"
+                "nodeid: %s\nconfidence: %s\n"
+                "consecutive_failures: %s\nfailure_rate: %s\n"
+                "env_check: %s\n"
+                % (nodeid, score, consec, fail_rate, env_msg)
+            )
+            issue = jira.create_issue(
+                summary, desc,
+                labels=bug_data["labels"],
+                qa_touch_data={
+                    "module": module,
+                    "steps": bug_data["steps"],
+                    "expected": bug_data["expected"],
+                    "actual": bug_data["actual"],
+                    "environment": environment,
+                    "severity": bug_data["severity"],
+                    "build": bug_data["build"],
+                    "title": summary,
+                }
+            )
+            details["issue"] = issue
+            return {"action": "create_issue", "details": details}
+        else:
+            # Default: queue for manual QA review
+            entry_id = add_to_review_queue(
+                nodeid, "Meets confidence threshold for bug creation",
+                bug_data=bug_data, score=score,
+                consecutive=consec, failure_rate=fail_rate,
+            )
+            details["reason"] = "queued_for_review"
+            details["entry_id"] = entry_id
+            return {"action": "queued", "details": details}
 
     # Default: do not file
     details["reason"] = "Insufficient evidence (confidence/consecutive)"
@@ -290,13 +674,34 @@ def main_cli():
     import argparse
 
     parser = argparse.ArgumentParser(description="Smart Jira Bug Creator")
-    parser.add_argument("--test", required=True, help="pytest nodeid of the failed test")
-    parser.add_argument("--env-base-url", required=False, help="Base URL of the environment to check")
-    parser.add_argument("--smoke", action="store_true", help="Mark this as a smoke test (requires manual review on first fail)")
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--test", help="pytest nodeid of the failed test")
+    group.add_argument("--review", action="store_true",
+                       help="Interactively review and approve/reject pending bugs")
+    group.add_argument("--list", action="store_true",
+                       help="List all pending bugs in the review queue")
+
+    parser.add_argument("--env-base-url", required=False,
+                        help="Base URL of the environment to check (used with --test)")
+    parser.add_argument("--smoke", action="store_true",
+                        help="Mark as smoke test (requires manual review on first fail)")
+    parser.add_argument("--auto-create", action="store_true",
+                        help="Bypass review queue and create bugs immediately (CI mode)")
+
     args = parser.parse_args()
 
-    result = multi_gate_validation(args.test, env_base_url=args.env_base_url, is_smoke=args.smoke)
-    print(json.dumps(result, indent=2))
+    if args.list:
+        list_pending_bugs()
+    elif args.review:
+        summary = review_pending_bugs()
+        print(json.dumps(summary, indent=2))
+    else:
+        result = multi_gate_validation(
+            args.test, env_base_url=args.env_base_url,
+            is_smoke=args.smoke, auto_create=args.auto_create,
+        )
+        print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":
