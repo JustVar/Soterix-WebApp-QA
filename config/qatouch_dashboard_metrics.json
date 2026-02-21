@@ -1,23 +1,23 @@
 {
-  "generated": "2026-02-20 21:51:04",
-  "snapshot_date": "2026-02-20",
-  "total_cases": 2969,
+  "generated": "2026-02-21 15:44:33",
+  "snapshot_date": "2026-02-21",
+  "total_cases": 3011,
   "total_modules": 404,
   "automation": {
     "playwright_tests": 352,
-    "mapped_to_qatouch": 349,
-    "coverage_pct": 11.8,
+    "mapped_to_qatouch": 391,
+    "coverage_pct": 13.0,
     "api_tests": 13,
-    "ui_tests": 336
+    "ui_tests": 378
   },
   "tags": {
     "smoke": 60,
     "sanity": 18,
-    "tagged_pct": 2.2
+    "tagged_pct": 2.1
   },
   "by_type": {
     "Functional": 2274,
-    "Acceptance": 602,
+    "Acceptance": 644,
     "Regression": 55,
     "Accessibility": 29,
     "Usability": 7,
@@ -26,8 +26,8 @@
   "top_modules": [
     {
       "module": "Licenses",
-      "count": 187,
-      "automated": 0
+      "count": 229,
+      "automated": 43
     },
     {
       "module": "LPR",
@@ -154,11 +154,24 @@
     {
       "date": "2026-02-20",
       "total_cases": 2969
+    },
+    {
+      "date": "2026-02-21",
+      "total_cases": 3011
     }
   ],
   "creation_dates": {
     "2026-02-10": 2874,
     "2026-02-19": 22,
-    "2026-02-20": 73
+    "2026-02-20": 73,
+    "2026-02-21": 42
+  },
+  "delta": {
+    "from_date": "2026-02-20",
+    "to_date": "2026-02-21",
+    "net_new": 42,
+    "added": 42,
+    "removed": 0,
+    "modified": 0
   }
 }
