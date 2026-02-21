@@ -16,8 +16,7 @@ __pycache__/
 # Ignore logs and reports
 *.log
 *.html
-# Note: dashboard.html is generated locally via `python tools/generate_dashboard.py`
-# Future hosting options: SharePoint, Box, or manual HTML file sharing
+# Dashboard generator moved to dashboards/soterix-internal-dashboards/ repo
 report/
 report.html
 
@@ -65,6 +64,20 @@ docs/templates/
 # Test data files (large, not automation code)
 tests/data/
 testcases_export.json
+
+# Generated tool output artifacts
+tools/.qatouch_auth_state.json
+tools/review_queue.json
+tools/*.csv
+tools/sanity_tagging_checklist.txt
+
+# Excel/CSV reference files (large binaries, not automation code)
+docs/*.xlsx
+docs/~$*
+docs/*.csv
+
+# Test run output
+full_suite_results.txt
 
 # Windows artifacts
 nul
