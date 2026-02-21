@@ -1,12 +1,14 @@
 {
-  "generated": "2026-02-20 21:08:35",
+  "generated": "2026-02-20 21:23:33",
   "snapshot_date": "2026-02-20",
   "total_cases": 2969,
   "total_modules": 404,
   "automation": {
     "playwright_tests": 352,
     "mapped_to_qatouch": 349,
-    "coverage_pct": 11.8
+    "coverage_pct": 11.8,
+    "api_tests": 13,
+    "ui_tests": 336
   },
   "tags": {
     "smoke": 60,

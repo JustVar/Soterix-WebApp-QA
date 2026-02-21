@@ -198,12 +198,18 @@ def _get_automation_metrics() -> dict:
     auto_matched = sum(1 for m in mappings.values() if m.get('auto_matched', True))
     manually_mapped = len(mappings) - auto_matched
 
+    # Count API vs UI tests
+    api_tests = sum(1 for k in mappings if 'tests/api/' in k)
+    ui_tests = sum(1 for k in mappings if 'tests/ui/' in k)
+
     return {
         'total_playwright_tests': total_tests,
         'mapped_to_qatouch': total_mapped,
         'unmapped_tests': total_tests - total_mapped,
         'auto_matched': auto_matched,
         'manually_mapped': manually_mapped,
+        'api_tests': api_tests,
+        'ui_tests': ui_tests,
         'by_module': dict(automated_by_module.most_common(25)),
     }
 
@@ -298,6 +304,8 @@ def generate_dashboard_json(snapshot: dict | None = None) -> dict:
             'playwright_tests': auto['total_playwright_tests'],
             'mapped_to_qatouch': auto['mapped_to_qatouch'],
             'coverage_pct': coverage_pct,
+            'api_tests': auto.get('api_tests', 0),
+            'ui_tests': auto.get('ui_tests', 0),
         },
         'tags': {
             'smoke': metrics['tags']['distribution'].get('smoke', 0),
