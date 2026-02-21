@@ -79,5 +79,8 @@ docs/*.csv
 # Test run output
 full_suite_results.txt
 
+# Legacy Selenium test suite (migration ~99% complete, kept as local reference)
+legacy-selenium-tests/
+
 # Windows artifacts
 nul
