@@ -1,0 +1,12 @@
+case_key,case_title,module,playwright_test,action
+LD3m4v,Verify closing event playback restores previous grid without losing cameras,Events Panel,test_close_event_player,Set Mode=Automation in QA Touch UI
+M73w4q,Verify selecting a channel adds it to the grid,Channels,test_channels_add_channel_via_checkbox,Set Mode=Automation in QA Touch UI
+LD3mye,Verify general functionality behaves as expected - Audit Trail table is displayed successfully with all expected columns.,Audit Trail,test_audit_trail_content_area_visible,Set Mode=Automation in QA Touch UI
+68leZv,Verify general functionality behaves as expected - User is navigated back to the General landing page from Event Wall.,Event Wall,test_event_wall_to_audit_trail_round_trip,Set Mode=Automation in QA Touch UI
+RgGBNa,Verify general functionality behaves as expected - Intrusion Detection rule is selectable successfully.,Event Wall,test_event_wall_has_rule_types,Set Mode=Automation in QA Touch UI
+kpZQ60,Verify closing system status tab returns to insights,Insights,test_close_system_status_tab,Set Mode=Automation in QA Touch UI
+11zJpB,Verify password too short shows validation error,Login Security,test_password_too_short,Set Mode=Automation in QA Touch UI
+5BRzE9,Verify core media tabs can be clicked without errors,Tabs,test_core_tabs_accessible,Set Mode=Automation in QA Touch UI
+21z6aQ,Verify switching from Folders to Shared with me and back works,Tabs,test_tab_round_trip_folders_to_shared,Set Mode=Automation in QA Touch UI
+QGjLnB,Verify adding saved view via checkbox adds to grid,My Views,test_my_views_add_saved_view_via_checkbox,Set Mode=Automation in QA Touch UI
+WEnMKM,Verify dragging saved view to tile adds to grid,My Views,test_my_views_drag_saved_view_to_tile,Set Mode=Automation in QA Touch UI

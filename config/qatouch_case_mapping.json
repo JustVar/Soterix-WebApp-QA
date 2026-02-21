@@ -2091,11 +2091,11 @@
       "auto_matched": true
     },
     "tests/ui/events/test_events_playback.py::TestEventsPlayback::test_close_event_player[chromium]": {
-      "case_key": "0rzxEb",
-      "case_title": "Verify closing event player returns to events list",
+      "case_key": "LD3m4v",
+      "case_title": "Verify closing event playback restores previous grid without losing cameras",
       "score": 1.0,
-      "module": "Events Filter",
-      "auto_matched": false
+      "module": "Events Panel",
+      "auto_matched": true
     },
     "tests/ui/insights/test_insights_navigation.py::TestInsightsNavigation::test_close_system_status_tab[chromium]": {
       "case_key": "kpZQ60",
@@ -2126,11 +2126,11 @@
       "auto_matched": false
     },
     "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_channels_add_channel_via_checkbox[chromium]": {
-      "case_key": "aj6np4",
-      "case_title": "Verify adding channel via checkbox adds to grid",
+      "case_key": "M73w4q",
+      "case_title": "Verify selecting a channel adds it to the grid",
       "score": 1.0,
       "module": "Channels",
-      "auto_matched": false
+      "auto_matched": true
     },
     "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_my_views_add_saved_view_via_checkbox[chromium]": {
       "case_key": "QGjLnB",
@@ -2427,25 +2427,25 @@
       "auto_matched": true
     },
     "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_content_area_visible[chromium]": {
-      "case_key": "B86DXR",
-      "case_title": "Verify Audit Trail content area is displayed with visible elements",
+      "case_key": "LD3mye",
+      "case_title": "Verify general functionality behaves as expected - Audit Trail table is displayed successfully with all expected columns.",
       "score": 1.0,
-      "module": "Admin",
-      "auto_matched": false
+      "module": "Audit Trail",
+      "auto_matched": true
     },
     "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_has_rule_types[chromium]": {
-      "case_key": "8V1lRr",
-      "case_title": "Verify Event Wall shows rule type filters or labels",
+      "case_key": "RgGBNa",
+      "case_title": "Verify general functionality behaves as expected - Intrusion Detection rule is selectable successfully.",
       "score": 1.0,
-      "module": "Admin",
-      "auto_matched": false
+      "module": "Event Wall",
+      "auto_matched": true
     },
     "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_to_audit_trail_round_trip[chromium]": {
-      "case_key": "M73EL7",
-      "case_title": "Verify navigating from Event Wall to Audit Trail and back",
+      "case_key": "68leZv",
+      "case_title": "Verify general functionality behaves as expected - User is navigated back to the General landing page from Event Wall.",
       "score": 1.0,
-      "module": "Admin",
-      "auto_matched": false
+      "module": "Event Wall",
+      "auto_matched": true
     }
   }
 }
