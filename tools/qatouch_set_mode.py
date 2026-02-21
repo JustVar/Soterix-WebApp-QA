@@ -146,7 +146,7 @@ def enter_project(page):
 
 def navigate_to_module(page, module_name: str) -> bool:
     """Filter the module tree and click the target module."""
-    filter_input = page.locator('input[placeholder="Type To Filter Module"]')
+    filter_input = page.locator('input[placeholder="Type To Filter Module"]').first
     if filter_input.count() == 0:
         print(f'    Module filter input not found')
         return False

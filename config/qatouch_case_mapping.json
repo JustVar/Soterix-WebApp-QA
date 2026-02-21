@@ -2,7 +2,7 @@
   "version": 1,
   "project_key": "JlW1",
   "total_playwright_tests": 352,
-  "total_mapped": 349,
+  "total_mapped": 391,
   "mappings": {
     "tests/api/smoke/test_camera_apis.py::test_get_camera_tree": {
       "case_key": "gQxmgr",
@@ -2446,6 +2446,300 @@
       "score": 1.0,
       "module": "Event Wall",
       "auto_matched": true
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_shows_site_grouping[chromium]": {
+      "case_key": "LD3gmJ",
+      "case_title": "Verify assigned tab shows site grouping",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_multiple_sites_displayed[chromium]": {
+      "case_key": "wmjgKb",
+      "case_title": "Verify multiple sites displayed",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_expand_site_shows_features[chromium]": {
+      "case_key": "yaWrXx",
+      "case_title": "Verify expand site shows features",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_collapse_site_hides_features[chromium]": {
+      "case_key": "0rzxll",
+      "case_title": "Verify collapse site hides features",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_site_enable_toggle_visible[chromium]": {
+      "case_key": "kpZQW9",
+      "case_title": "Verify site enable toggle visible",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_retains_state_after_navigation[chromium]": {
+      "case_key": "11zJl0",
+      "case_title": "Verify assigned tab retains state after navigation",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_refresh_behavior[chromium]": {
+      "case_key": "5BRzD7",
+      "case_title": "Verify assigned tab refresh behavior",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_consistent_layout_across_tabs[chromium]": {
+      "case_key": "21z6Bn",
+      "case_title": "Verify consistent layout across tabs",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_confirmation_dialogs_have_clear_messaging[chromium]": {
+      "case_key": "aj6n7a",
+      "case_title": "Verify confirmation dialogs have clear messaging",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_tooltip_text_for_icons[chromium]": {
+      "case_key": "QGjLwP",
+      "case_title": "Verify tooltip text for icons",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_search_with_valid_license_name[chromium]": {
+      "case_key": "WEnMv2",
+      "case_title": "Verify search with valid license name",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_search_with_partial_keyword[chromium]": {
+      "case_key": "B86DEN",
+      "case_title": "Verify search with partial keyword",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_search_with_license_key[chromium]": {
+      "case_key": "8V1lbJ",
+      "case_title": "Verify search with license key",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_invalid_search_shows_no_results[chromium]": {
+      "case_key": "M73Ezq",
+      "case_title": "Verify invalid search shows no results",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_device_list_loads[chromium]": {
+      "case_key": "DrdZzm",
+      "case_title": "Verify device list loads",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_device_list_has_three_dot_menu[chromium]": {
+      "case_key": "eJqjmr",
+      "case_title": "Verify device list has three dot menu",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_suspend_option_available[chromium]": {
+      "case_key": "vanmXl",
+      "case_title": "Verify suspend option available",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_unassign_option_available[chromium]": {
+      "case_key": "bj0G48",
+      "case_title": "Verify unassign option available",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_suspend_confirmation_popup[chromium]": {
+      "case_key": "Z8xRWP",
+      "case_title": "Verify suspend confirmation popup",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_unassign_confirmation_popup[chromium]": {
+      "case_key": "RgGyBl",
+      "case_title": "Verify unassign confirmation popup",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignModal::test_assign_button_visible[chromium]": {
+      "case_key": "dypN4W",
+      "case_title": "Verify assign button visible",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignModal::test_assign_modal_opens[chromium]": {
+      "case_key": "xm9EjW",
+      "case_title": "Verify assign modal opens",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignModal::test_assign_modal_close_via_cancel[chromium]": {
+      "case_key": "VKbBe9",
+      "case_title": "Verify assign modal close via cancel",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignModal::test_site_dropdown_in_modal[chromium]": {
+      "case_key": "B86DEG",
+      "case_title": "Verify site dropdown in modal",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_navigate_to_licenses[chromium]": {
+      "case_key": "8V1lbn",
+      "case_title": "Verify navigate to licenses",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_default_layout[chromium]": {
+      "case_key": "M73EzN",
+      "case_title": "Verify default layout",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_total_licenses_widget_visible[chromium]": {
+      "case_key": "DrdZz4",
+      "case_title": "Verify total licenses widget visible",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_license_counts_displayed[chromium]": {
+      "case_key": "eJqjmn",
+      "case_title": "Verify license counts displayed",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_counts_persist_after_refresh[chromium]": {
+      "case_key": "vanmXV",
+      "case_title": "Verify counts persist after refresh",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_is_default[chromium]": {
+      "case_key": "bj0G4q",
+      "case_title": "Verify available tab is default",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_switch_between_tabs[chromium]": {
+      "case_key": "Z8xRWR",
+      "case_title": "Verify switch between tabs",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_displays_feature_list[chromium]": {
+      "case_key": "RgGyrK",
+      "case_title": "Verify available tab displays feature list",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_columns[chromium]": {
+      "case_key": "dypNdB",
+      "case_title": "Verify available tab columns",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_retains_state_after_navigation[chromium]": {
+      "case_key": "xm9E4m",
+      "case_title": "Verify available tab retains state after navigation",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_search_bar_visible[chromium]": {
+      "case_key": "VKbBrV",
+      "case_title": "Verify search bar visible",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_license_module_accessible_after_refresh[chromium]": {
+      "case_key": "J8d3rn",
+      "case_title": "Verify license module accessible after refresh",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_admin_can_access_licenses[chromium]": {
+      "case_key": "Pgw4rw",
+      "case_title": "Verify admin can access licenses",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_license_page_no_duplicate_records[chromium]": {
+      "case_key": "68ln6w",
+      "case_title": "Verify license page no duplicate records",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_clear_search_restores_list[chromium]": {
+      "case_key": "7ErG7L",
+      "case_title": "Verify clear search restores list",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_empty_search_does_not_filter[chromium]": {
+      "case_key": "9e1N3r",
+      "case_title": "Verify empty search does not filter",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_search.py::TestLicenseExport::test_csv_download_option_available[chromium]": {
+      "case_key": "qzdV4P",
+      "case_title": "Verify csv download option available",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
+    },
+    "tests/ui/licenses/test_license_search.py::TestLicenseExport::test_csv_download_triggers_file[chromium]": {
+      "case_key": "XGLew7",
+      "case_title": "Verify csv download triggers file",
+      "score": 1.0,
+      "module": "Licenses",
+      "auto_matched": false
     }
   }
 }
