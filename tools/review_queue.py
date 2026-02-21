@@ -29,30 +29,63 @@ def load_queue(path: str = QUEUE_PATH) -> Dict[str, Any]:
 
 def generate_html_report(queue: Dict[str, Any]) -> str:
     items = queue.get("items", [])
+    pending = [it for it in items if it.get("status", "pending") == "pending"]
     html = [
         "<html><head><meta charset='utf-8'><title>Review Queue</title></head><body>",
-        f"<h1>Manual Review Queue - {datetime.utcnow().isoformat()}</h1>",
+        "<h1>Manual Review Queue &mdash; %s</h1>" % datetime.utcnow().isoformat(),
     ]
-    if not items:
+    if not pending:
         html.append("<p>No items pending review.</p>")
     else:
-        html.append("<table border='1' cellpadding='6'><tr><th>Test</th><th>Reason</th><th>Timestamp</th><th>Artifacts</th></tr>")
-        for it in items:
-            nodeid = it.get('nodeid')
-            reason = it.get('reason')
-            ts = it.get('ts')
+        html.append(
+            "<table border='1' cellpadding='6'>"
+            "<tr><th>ID</th><th>Test</th><th>Module</th><th>Severity</th>"
+            "<th>Confidence</th><th>Reason</th><th>Timestamp</th><th>Artifacts</th></tr>"
+        )
+        for it in pending:
+            entry_id = it.get('id', 'n/a')
+            nodeid = it.get('nodeid', '')
+            reason = it.get('reason', '')
+            ts = it.get('ts', '')
+            score = it.get('confidence_score', 'n/a')
+            bug_data = it.get('bug_data') or {}
+            module = bug_data.get('module', 'n/a')
+            severity = bug_data.get('severity', 'n/a')
             # artifact links (best-effort): look for logs/<nodeid>.png or .mp4
             safe_name = nodeid.replace('/', '_').replace(':', '_')
             imgs = []
-            img_path = os.path.join(ROOT, 'logs', f"{safe_name}.png")
-            vid_path = os.path.join(ROOT, 'logs', f"{safe_name}.mp4")
+            img_path = os.path.join(ROOT, 'logs', "%s.png" % safe_name)
+            vid_path = os.path.join(ROOT, 'logs', "%s.mp4" % safe_name)
             if os.path.exists(img_path):
-                imgs.append(f"<a href='file://{img_path}'>screenshot</a>")
+                imgs.append("<a href='file://%s'>screenshot</a>" % img_path)
             if os.path.exists(vid_path):
-                imgs.append(f"<a href='file://{vid_path}'>video</a>")
+                imgs.append("<a href='file://%s'>video</a>" % vid_path)
             artifacts = ', '.join(imgs) or 'n/a'
-            html.append(f"<tr><td>{nodeid}</td><td>{reason}</td><td>{ts}</td><td>{artifacts}</td></tr>")
+            html.append(
+                "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td>"
+                "<td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>"
+                % (entry_id, nodeid, module, severity, score, reason, ts, artifacts)
+            )
         html.append("</table>")
+
+    # Recently reviewed items
+    reviewed = [it for it in items if it.get("status") in ("approved", "rejected")]
+    if reviewed:
+        html.append("<h2>Recently Reviewed</h2>")
+        html.append(
+            "<table border='1' cellpadding='6'>"
+            "<tr><th>ID</th><th>Test</th><th>Decision</th>"
+            "<th>Jira Key</th><th>Reviewed By</th></tr>"
+        )
+        for it in reviewed[-20:]:
+            jira_key = it.get('jira_key') or 'n/a'
+            html.append(
+                "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>"
+                % (it.get('id', ''), it.get('nodeid', ''),
+                   it.get('status', ''), jira_key, it.get('reviewed_by', ''))
+            )
+        html.append("</table>")
+
     html.append("</body></html>")
     return '\n'.join(html)
 

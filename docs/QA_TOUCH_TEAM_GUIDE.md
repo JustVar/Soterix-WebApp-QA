@@ -32,14 +32,15 @@ QA Touch is the centralized test case management platform for Soterix Systems. A
 | Name | Role | Permissions |
 |------|------|-------------|
 | Justin Varughese | Manager (Admin) | Full access: create/delete test cases, create test runs, manage integrations |
-| QA Engineer B | Tester | Same as above |
-| QA Engineer A | Tester | Same as above |
-| Nik Purohit | Tester | View, create, edit, execute test cases. Cannot delete or create test runs |
+| QA Engineer B | Tester | Execute test cases, add comments, update results |
+| Nik Purohit | Tester | Execute test cases, add comments, update results |
+| QA Engineer A | Tester (pending invite) | Will be added when onboarded |
 
 **Key restrictions for Testers:**
 - Cannot delete test cases (use the DELETE-REQUEST tag process below)
 - Cannot create test runs (Manager creates these)
 - Cannot import data or manage integrations
+- **Any tester can execute tests in any run** regardless of assignee - assignee is ownership only
 
 ---
 
@@ -49,19 +50,17 @@ The modules mirror the NexaiQ web application:
 
 | Module | Sub-Modules | Test Cases |
 |--------|-------------|------------|
-| **Authentication** | Login, Logout | 25 |
-| **Global Features** | Chat, Notifications, Help Center, Profile, Audio | 39 |
-| **Views** | -- | 186 |
-| **Events** | -- | 0* |
-| **Maps** | -- | 16 |
-| **Insights** | -- | 36 |
-| **Media** | -- | 42 |
-| **Search** | -- | 167 |
-| **LPR** | -- | 141 |
-| **Admin** | Dashboard, Sites, Users, Maps, Integrations, Rules, General, LPR, Licenses | 876 |
-
-*The rest of the modules are in the process of being migrated.
-*Complete migration will take place when QA Team gives their updated spreadsheet
+| **Authentication** | Login (39), Logout (26) | 65 |
+| **Global Features** | Chat (58), Notifications (40), Audio (6) | 104 |
+| **Views** | Camera Grid, Devices Tab, Layouts, My Views, PTZ, etc. | 343 |
+| **Events** | Landing Page, Filters, Search Results, Pinned Clips, etc. | 182 |
+| **Maps** | Landing, Static Maps, Google Maps, Camera Preview, etc. | 80 |
+| **Insights** | Dashboards, Widgets, Graph Types, Reports, etc. | 302 |
+| **Media** | Listing, Vault, Filters, Bulk Actions, etc. | 114 |
+| **Search** | Categories (Event/Person/Vehicle), Zone/Line, Results | 286 |
+| **LPR** | Landing, Events Panel, Camera Search, Notifications, etc. | 153 |
+| **Admin** | Dashboard (80), Sites (118), Users (90), Maps (115), Integrations (46), Rules (188), General (200), LPR (200), Licenses (187) | 1,224 |
+| **TOTAL** | | **2,874** |
 
 ---
 
@@ -98,21 +97,24 @@ The modules mirror the NexaiQ web application:
 
 Test cases are organized into suites using **tags**:
 
-| Suite | Tag | Purpose | Size |
-|-------|-----|---------|------|
-| **Smoke** | `SMOKE` | Core functionality check after deployments | 50-75 tests |
-| **Regression** | `REGRESSION` | Feature validation before releases | 200-400 tests |
-| **Full** | (all test cases) | Complete inventory for major releases | 1,528+ tests |
-| **Automated** | `AUTOMATED` | Has a corresponding Playwright test (future) | TBD |
+| Suite | Tag | Purpose | Size | Gate |
+|-------|-----|---------|------|------|
+| **Smoke** | `SMOKE` | Core functionality check - run first after deployment | 60 tests | 100% pass required |
+| **Sanity** | `SANITY` | Broader validation - run after Smoke passes | ~221 tests | 95%+ pass required |
+| **Regression** | `REGRESSION` | Full feature validation before release sign-off | 500-700 tests | 90%+ pass required |
+| **Full** | (all test cases) | Complete inventory for major releases | 2,874 tests | - |
+| **Automated** | `AUTOMATED` | Has a corresponding Playwright test | 78 tests | - |
 
 ### How to Tag a Test Case
 
 1. Open the test case
-2. Click the **Tags** field
-3. Type the tag name (e.g., `SMOKE`) and press Enter
+2. Click the **New Tags** field (not the "Tags" field)
+3. Select the tag from the dropdown (e.g., `SMOKE`, `SANITY`)
 4. Click **Save**
 
-**Bulk tagging:** Select multiple test cases with checkboxes, click **Bulk Edit**, add the tag, and apply.
+**Important:** If the tag does not exist in the dropdown, click the **"Add New"** button next to the New Tags field to create it first. Simply typing a tag name will not create it - you must use "Add New".
+
+**Bulk tagging:** Select multiple test cases with checkboxes, click **Bulk Edit**, select the tag from the **New Tags** dropdown, and click **Save**. The "Others remain unchanged" option preserves existing tags.
 
 ---
 
@@ -268,65 +270,47 @@ Testers cannot delete test cases. To request deletion:
 ```
 
 Examples:
-- `Smoke - QA Env - v1.50 - 2026-02-03`
-- `Release v1.50 - Regression - 2026-02-03`
-- `Sprint 12 - New Features - 2026-02-03`
+- `Smoke - Stage - v1.6.0 - 2026-02-17`
+- `Sanity - Stage - v1.6.0 - 2026-02-17`
+- `Regression - Stage - v1.6.0 - 2026-02-17`
+
+### Execution Order
+
+1. **SMOKE first** (gate) - must be 100% pass before proceeding
+2. **SANITY second** - 95%+ pass to proceed
+3. **REGRESSION third** - 90%+ pass for release sign-off
 
 ---
 
 ## Import Status
 
-### Current State (as of 2026-02-02)
+### Current State (as of 2026-02-17)
 
 | Metric | Value |
 |--------|-------|
-| **Total test cases imported** | 1,528 |
-| **With full steps** | 428 |
-| **Title only (need steps)** | ~1,100 |
-| **Source** | Bugasura extraction + testcases_export.json |
-| **Import file** | `tests/data/qa_touch_import_v2.csv` |
+| **Total test cases** | 2,874 |
+| **Imported from spreadsheet (v4)** | 2,868 |
+| **Preserved (Audio)** | 6 |
+| **With full steps** | 2,868 (100% of imported) |
+| **Unique modules (incl. sub-modules)** | 468 |
+| **Parent modules** | 10 |
+| **Source** | Soterix_Testcases (1).xlsx |
+| **Import file** | `tests/data/qa_touch_import_v4.csv` |
 
-### Module Breakdown
+### Test Suites Status
 
-#### Full Steps Available (428 test cases)
+| Suite | Tagged | Target |
+|-------|--------|--------|
+| SMOKE | 60 | 60 (complete) |
+| SANITY | 0 | ~221 (tagging pending) |
+| REGRESSION | 0 | 500-700 (planned) |
+| AUTOMATED | 78 | ongoing |
 
-| Module | Count |
-|--------|-------|
-| Core Features > Views | 186 |
-| Core Features > Search | 167 |
-| Core Features > Media | 42 |
-| Core Features > Insights | 36 |
-| Core Features > LPR | 26 |
-| Core Features > Notifications | 21 |
-| Admin > Dashboard | 18 |
-| Core Features > Login | 17 |
-| Core Features > Maps | 16 |
-| Core Features > Chats | 12 |
-| Core Features > Logout | 8 |
-| Core Features > Audio | 6 |
+### Active Test Runs
 
-#### Title Only (1,100 test cases -- steps pending)
-
-| Module | Count |
-|--------|-------|
-| Admin > Rules | 204 |
-| Admin > General | 200 |
-| Admin > Licences | 187 |
-| Admin > LPR | 115 |
-| Admin > Maps | 100 |
-| Admin > Sites | 68 |
-| Admin > Users & Roles | 55 |
-| Admin > Integrations | 44 |
-| Core Features > Search | 49 |
-| Core Features > Media | 14 |
-| Admin > Dashboard | 1 |
-| Various other | 63 |
-
-### What Needs to Happen Next
-
-1. **Fill in missing steps** for ~1,100 "Title Only" test cases (waiting on incoming spreadsheet)
-2. **Tag test cases** for Smoke and Regression suites
-3. **Set up test execution plans** for upcoming releases
+| Run | Key | Release | Cases | Status |
+|-----|-----|---------|-------|--------|
+| Smoke - Stage - v1.6.0 - 2026-02-20 | vaKhn | v1.6.0 - Stage (Dmn7) | 60 | Open |
 
 ---
 

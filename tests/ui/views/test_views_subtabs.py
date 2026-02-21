@@ -28,12 +28,35 @@ class TestViewsSubtabs:
         """Setup runs once per test using cached session (no re-login)."""
         self.page = authenticated_page
         self.views = ViewsPage(self.page)
+        self._saved_view_names = []
 
         # Always click Views nav - fast if already there, navigates if not
         self.page.locator("text=Views").first.click(force=True)
 
         # Wait for page ready indicator
         self.views.add_tab_button.wait_for(state="visible", timeout=10000)
+        yield
+        # Cleanup: delete any saved views created during the test
+        for name in reversed(self._saved_view_names):
+            try:
+                self._delete_saved_view(name)
+            except Exception:
+                pass
+        # Cleanup: close extra tabs (only first tab should remain)
+        try:
+            tabs = self.page.locator("button.tabItem")
+            while tabs.count() > 1:
+                last_tab = tabs.last
+                last_tab.hover()
+                self.page.wait_for_timeout(150)
+                close_icon = last_tab.locator("img[src*='closeIcon']")
+                if close_icon.count() > 0:
+                    close_icon.click()
+                    self.page.wait_for_timeout(500)
+                else:
+                    break
+        except Exception:
+            pass
 
     # =========================================================================
     # DEVICES SUBTAB - Camera thumbnails from site tree
@@ -134,6 +157,7 @@ class TestViewsSubtabs:
         """
         import datetime
         view_name = f"SubtabTest_{datetime.datetime.now().strftime('%H%M%S')}"
+        self._saved_view_names.append(view_name)
 
         # Create a view to test with
         self._create_and_save_view(view_name)
@@ -168,9 +192,6 @@ class TestViewsSubtabs:
                      tab_with_div.count() > 0 or
                      tab_by_text.count() > 0)
 
-        # Cleanup first
-        self._delete_saved_view(view_name)
-
         assert tab_found, f"View '{view_name}' not opened as tab"
 
     @pytest.mark.ui
@@ -189,6 +210,7 @@ class TestViewsSubtabs:
         """
         import datetime
         view_name = f"DragViewTest_{datetime.datetime.now().strftime('%H%M%S')}"
+        self._saved_view_names.append(view_name)
 
         self._create_and_save_view(view_name)
 
@@ -211,7 +233,6 @@ class TestViewsSubtabs:
         try:
             self._visible_drag(saved_view, target_tile)
         except Exception as e:
-            self._delete_saved_view(view_name)
             pytest.skip(f"View drag not supported: {e}")
 
         new_tiles = self.views.get_available_tile_count()
@@ -221,9 +242,6 @@ class TestViewsSubtabs:
             self.page.locator(f"input.tabTitle[value='{view_name}']").count() > 0 or
             self.page.locator(f"button.tabItem:has-text('{view_name}')").count() > 0
         )
-
-        # Cleanup
-        self._delete_saved_view(view_name)
 
         # View drag may not work - skip if neither tile nor tab changed
         if new_tiles >= initial_tiles and not tab_found:

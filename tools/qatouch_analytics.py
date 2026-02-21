@@ -328,7 +328,7 @@ def generate_dashboard_json(snapshot: dict | None = None) -> dict:
         },
         'by_type': metrics['by_type'],
         'top_modules': _enrich_modules_with_automation(
-            metrics['top_modules'][:15], auto.get('by_module', {})
+            metrics['top_modules'][:25], auto.get('by_module', {})
         ),
         'history': history,
         'creation_dates': metrics['creation_dates'],

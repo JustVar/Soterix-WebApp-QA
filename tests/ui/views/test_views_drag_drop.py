@@ -11,8 +11,47 @@ class TestViewsDragDrop:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.views = ViewsPage(self.page)
+        self._saved_view_names = []
         self.views.navigate()
         self.views.wait_for_page_load()
+        yield
+        # Cleanup: delete any saved views created during the test
+        for name in reversed(self._saved_view_names):
+            try:
+                self._delete_saved_view_safe(name)
+            except Exception:
+                pass
+        # Cleanup: close extra tabs (only first tab should remain)
+        try:
+            tabs = self.page.locator("button.tabItem")
+            while tabs.count() > 1:
+                last_tab = tabs.last
+                last_tab.hover()
+                self.page.wait_for_timeout(150)
+                close_icon = last_tab.locator("img[src*='closeIcon']")
+                if close_icon.count() > 0:
+                    close_icon.click()
+                    self.page.wait_for_timeout(500)
+                else:
+                    break
+        except Exception:
+            pass
+
+    def _delete_saved_view_safe(self, view_name):
+        """Delete a saved view from the My Views panel."""
+        self.page.locator("img[src*='myviews']").click()
+        self.page.wait_for_timeout(500)
+        saved_view = self.page.locator(f"span[title='{view_name}']")
+        if saved_view.count() > 0:
+            saved_view.hover()
+            self.page.wait_for_timeout(150)
+            self.page.locator("img[src*='delete-icon']").click()
+            self.page.wait_for_timeout(250)
+            self.page.locator("button:has-text('Delete')").click()
+            self.page.locator("text=Successfully deleted").wait_for(
+                state="visible", timeout=60000
+            )
+            self.page.wait_for_timeout(500)
 
     @pytest.mark.ui
     @pytest.mark.dragdrop
@@ -92,6 +131,7 @@ class TestViewsDragDrop:
 
         # First create and save a view
         view_name = f"DragTest_{datetime.datetime.now().strftime('%H%M%S')}"
+        self._saved_view_names.append(view_name)
 
         self.views.add_new_tab()
         self.page.wait_for_timeout(500)
@@ -146,24 +186,6 @@ class TestViewsDragDrop:
         tab_exists = self.page.locator(f"button.tabItem:has(div[title='{view_name}'])").count() > 0
         video_elements = self.page.locator("video, canvas, [class*='video']")
 
-        # Cleanup: delete the saved view regardless of test outcome
-        try:
-            self.page.locator("img[src*='myviews']").click()
-            self.page.wait_for_timeout(500)
-            saved_view_cleanup = self.page.locator(f"span[title='{view_name}']")
-            if saved_view_cleanup.count() > 0:
-                saved_view_cleanup.hover()
-                self.page.wait_for_timeout(150)
-                delete_btn = self.page.locator("img[src*='delete-icon']")
-                delete_btn.click()
-                self.page.wait_for_timeout(250)
-                confirm_btn = self.page.locator("button:has-text('Delete')")
-                confirm_btn.click()
-                self.page.locator("text=Successfully deleted").wait_for(state="visible", timeout=60000)
-        except Exception:
-            pass  # Cleanup is best-effort
-
-        # Assert after cleanup
         assert (new_tile_count < initial_tile_count or
                 tab_exists or
                 video_elements.count() > 0), "Saved view drag-and-drop failed"

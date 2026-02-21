@@ -43,6 +43,9 @@ class ViewsPage:
         self.action_not_permitted_modal = page.locator("text=Action Not Permitted")
         self.modal_ok_button = page.locator("button:has-text('OK'), button:has-text('Ok')")
         
+        # Locators - Full Screen
+        self.fullscreen_buttons = page.locator("img[src*='media/Zoom.']")
+
         # Locators - Loading/Status
         self.loader = page.locator("[class*='CircularProgress']")
         self.streaming_failed = page.locator("text=failed to load")
@@ -541,3 +544,141 @@ class ViewsPage:
         self.page.wait_for_timeout(300)
         self.click_all_cameras()
         self.page.wait_for_timeout(500)
+
+    def add_bookmark_on_tile(self, tile_index: int = 0):
+        """Add a bookmark on a video tile while it is streaming.
+
+        Hovers the video tile to reveal the three-dot control, clicks it to
+        show the timeline, hovers the timeline, then clicks the bookmark icon.
+        """
+        video_tile = self.page.locator(
+            "[class*='video_container'][class*='new_video_player']"
+        ).nth(tile_index)
+
+        video_tile.hover()
+        self.page.wait_for_timeout(500)
+
+        # Click three-dot menu to reveal timeline controls
+        three_dots = video_tile.locator(".control-small-view")
+        three_dots.click()
+        self.page.wait_for_timeout(2000)
+
+        # Hover the timeline bar to reveal bookmark icon
+        timeline = video_tile.locator("#svg-line-2")
+        timeline.hover()
+        self.page.wait_for_timeout(500)
+
+        # Click the bookmark icon
+        bookmark_icon = video_tile.locator("img[src*='media/Bookmark']")
+        bookmark_icon.click()
+        self.page.wait_for_timeout(2000)
+
+    def share_live_view_on_tile(self, email: str, tile_index: int = 0):
+        """Share a live view from a video tile via email and copy link.
+
+        Hovers the video tile, opens three-dot menu, hovers timeline,
+        clicks share icon, fills email, clicks Share, then Copy.
+        Returns the copy button text (or empty string if not found).
+        """
+        video_tile = self.page.locator(
+            "[class*='video_container'][class*='new_video_player']"
+        ).nth(tile_index)
+
+        video_tile.hover()
+        self.page.wait_for_timeout(500)
+
+        # Click three-dot menu
+        three_dots = video_tile.locator(".control-small-view")
+        three_dots.click()
+        self.page.wait_for_timeout(2000)
+
+        # Hover timeline to reveal share icon
+        timeline = video_tile.locator("#svg-line-2")
+        timeline.hover()
+        self.page.wait_for_timeout(500)
+
+        # Click share icon
+        share_icon = video_tile.locator("img[src*='media/icon-share']")
+        share_icon.click()
+        self.page.wait_for_timeout(2000)
+
+        # Fill email in share dialog
+        share_container = self.page.locator(".share_live_main_container")
+        share_container.wait_for(state="visible", timeout=10000)
+        email_field = share_container.locator(".fileName_inputfield")
+        email_field.fill(email)
+
+        # Click Share button
+        share_button = self.page.locator("button:has(span:text-is('Share'))")
+        share_button.click()
+        self.page.wait_for_timeout(3000)
+
+        # Click Copy button for the link
+        copy_button = self.page.locator("span:text-is('Copy')")
+        try:
+            copy_button.wait_for(state="visible", timeout=10000)
+            copy_button.click()
+            self.page.wait_for_timeout(2000)
+        except Exception:
+            pass
+
+        # Close the share dialog
+        cancel_btn = share_container.locator(".cancel_button_share_live")
+        if cancel_btn.count() > 0 and cancel_btn.is_visible():
+            cancel_btn.click()
+
+    def toggle_favorite(self, camera_name: str):
+        """Toggle the favorite star on a camera in the left panel.
+
+        Finds the camera by name in the site tree and clicks its
+        favorite button.
+        """
+        fav_button = self.page.locator(
+            f"span[title='{camera_name}']/../..//button[.//img[@alt='favorite']]"
+        )
+        fav_button.wait_for(state="visible", timeout=10000)
+        fav_button.click()
+        self.page.wait_for_timeout(2000)
+
+    def is_camera_favorited(self, camera_name: str) -> bool:
+        """Return True if the camera has a filled favorite icon."""
+        filled_icon = self.page.locator(
+            f"span[title='{camera_name}']/..//..//img[contains(@src,'media/favoriteIconFilled')]"
+        )
+        return filled_icon.count() > 0
+
+    def open_favorites_panel(self):
+        """Open the favorites panel by clicking the favorites icon."""
+        fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
+        fav_icon.click()
+        self.page.wait_for_timeout(2000)
+
+    def close_favorites_panel(self):
+        """Close the favorites panel by clicking the favorites icon again."""
+        fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
+        fav_icon.click()
+        self.page.wait_for_timeout(1000)
+
+    def is_camera_in_favorites(self, camera_name: str) -> bool:
+        """Return True if the camera name appears in the currently open favorites panel."""
+        return self.page.locator(f"text={camera_name}").count() > 0
+
+    def enter_fullscreen_on_tile(self, tile_index: int = 0):
+        """Enter full screen mode on a specific video tile.
+
+        Hovers the video container to reveal controls, then clicks the zoom
+        button. The app renders two zoom icons per tile - the second one
+        triggers full screen mode.
+        """
+        video_tile = self.page.locator(
+            "[class*='video_container'][class*='new_video_player']"
+        ).nth(tile_index)
+
+        video_tile.hover()
+        self.page.wait_for_timeout(500)
+
+        zoom_buttons = video_tile.locator("img[src*='media/Zoom.']")
+        if zoom_buttons.count() > 1:
+            zoom_buttons.nth(1).click()
+        else:
+            zoom_buttons.first.click()

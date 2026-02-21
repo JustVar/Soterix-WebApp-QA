@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-20 21:27:09",
+  "generated": "2026-02-20 21:51:04",
   "snapshot_date": "2026-02-20",
   "total_cases": 2969,
   "total_modules": 404,
@@ -98,6 +98,56 @@
       "module": "Camera Sequence",
       "count": 27,
       "automated": 9
+    },
+    {
+      "module": "Search",
+      "count": 27,
+      "automated": 27
+    },
+    {
+      "module": "Zone - AND, Execution & Results",
+      "count": 25,
+      "automated": 0
+    },
+    {
+      "module": "Map Creation",
+      "count": 25,
+      "automated": 0
+    },
+    {
+      "module": "Person - Results & Execution",
+      "count": 24,
+      "automated": 0
+    },
+    {
+      "module": "Webhooks",
+      "count": 24,
+      "automated": 0
+    },
+    {
+      "module": "Export",
+      "count": 23,
+      "automated": 0
+    },
+    {
+      "module": "PTZ Tours",
+      "count": 21,
+      "automated": 0
+    },
+    {
+      "module": "Custom Date Picker",
+      "count": 21,
+      "automated": 0
+    },
+    {
+      "module": "Category - Event",
+      "count": 21,
+      "automated": 0
+    },
+    {
+      "module": "Event - Execution & Results",
+      "count": 21,
+      "automated": 0
     }
   ],
   "history": [

@@ -6,6 +6,9 @@ import pytest
 from typing import Dict
 from config.base_config import config  # dict resolved from ENV
 
+# Register QA Touch result reporter plugin
+pytest_plugins = ['plugins.qatouch_reporter']
+
 # Logging (env/tenant resolution)
 LOG_FILE = os.path.join("logs", "env_config.log")
 os.makedirs("logs", exist_ok=True)
