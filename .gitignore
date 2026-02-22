@@ -31,6 +31,7 @@ Thumbs.db
 *.png
 *.har
 logs/
+tools/debug_screenshots/
 
 # Playwright auth cache
 .playwright_auth.json
