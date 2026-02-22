@@ -283,6 +283,35 @@ def _enrich_modules_with_automation(
 
 
 # ---------------------------------------------------------------------------
+# Run-based tag counts (API NewTags field misses UI-set tags)
+# ---------------------------------------------------------------------------
+# Known run keys for tag-based runs
+_TAG_RUNS = {
+    'smoke': 'vaXdn',   # Smoke run
+    'sanity': 'zvXPw',  # Sanity run
+}
+
+
+def _get_run_tag_counts() -> dict[str, int]:
+    """Get case counts from named test runs as authoritative tag counts.
+
+    The QA Touch API's NewTags field does NOT reflect tags set via the
+    browser UI. Test run membership is always accurate, so we use run
+    case counts as the ground truth for smoke/sanity tagged counts.
+    """
+    try:
+        client = QATouchClient()
+        counts = {}
+        for tag, run_key in _TAG_RUNS.items():
+            results = client.get_all_test_run_results(PROJECT_KEY, run_key)
+            counts[tag] = len(results)
+        return counts
+    except Exception as e:
+        print(f'  Warning: could not fetch run counts: {e}')
+        return {}
+
+
+# ---------------------------------------------------------------------------
 # Dashboard metrics JSON
 # ---------------------------------------------------------------------------
 def generate_dashboard_json(snapshot: dict | None = None) -> dict:
@@ -309,6 +338,16 @@ def generate_dashboard_json(snapshot: dict | None = None) -> dict:
     total = metrics['total_cases']
     coverage_pct = round(auto['mapped_to_qatouch'] / total * 100, 1) if total else 0
 
+    # The QA Touch API's NewTags field does NOT reflect tags set via the UI.
+    # Use test run membership counts as authoritative source for smoke/sanity.
+    smoke_count = metrics['tags']['distribution'].get('smoke', 0)
+    sanity_count = metrics['tags']['distribution'].get('sanity', 0)
+    run_overrides = _get_run_tag_counts()
+    if run_overrides:
+        # Run counts are always >= API tag counts (UI-set tags invisible to API)
+        smoke_count = max(smoke_count, run_overrides.get('smoke', 0))
+        sanity_count = max(sanity_count, run_overrides.get('sanity', 0))
+
     dashboard = {
         'generated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'snapshot_date': metrics['snapshot_date'],
@@ -322,8 +361,8 @@ def generate_dashboard_json(snapshot: dict | None = None) -> dict:
             'ui_tests': auto.get('ui_tests', 0),
         },
         'tags': {
-            'smoke': metrics['tags']['distribution'].get('smoke', 0),
-            'sanity': metrics['tags']['distribution'].get('sanity', 0),
+            'smoke': smoke_count,
+            'sanity': sanity_count,
             'tagged_pct': metrics['tags']['tag_coverage_pct'],
         },
         'by_type': metrics['by_type'],

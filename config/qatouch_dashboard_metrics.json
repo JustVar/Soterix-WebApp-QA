@@ -1,8 +1,8 @@
 {
-  "generated": "2026-02-21 15:44:33",
+  "generated": "2026-02-21 22:16:53",
   "snapshot_date": "2026-02-21",
   "total_cases": 3011,
-  "total_modules": 404,
+  "total_modules": 470,
   "automation": {
     "playwright_tests": 352,
     "mapped_to_qatouch": 391,
@@ -12,7 +12,7 @@
   },
   "tags": {
     "smoke": 60,
-    "sanity": 18,
+    "sanity": 221,
     "tagged_pct": 2.1
   },
   "by_type": {
@@ -60,9 +60,9 @@
       "automated": 0
     },
     {
-      "module": "Audit Trail",
-      "count": 47,
-      "automated": 14
+      "module": "Audit Trail - Users",
+      "count": 45,
+      "automated": 0
     },
     {
       "module": "System Logs",
@@ -85,24 +85,9 @@
       "automated": 0
     },
     {
-      "module": "Channels",
-      "count": 29,
-      "automated": 5
-    },
-    {
       "module": "Vehicle - Execution & Results",
       "count": 28,
       "automated": 0
-    },
-    {
-      "module": "Camera Sequence",
-      "count": 27,
-      "automated": 9
-    },
-    {
-      "module": "Search",
-      "count": 27,
-      "automated": 27
     },
     {
       "module": "Zone - AND, Execution & Results",
@@ -115,6 +100,11 @@
       "automated": 0
     },
     {
+      "module": "Camera Sequence - Fullscreen",
+      "count": 24,
+      "automated": 0
+    },
+    {
       "module": "Person - Results & Execution",
       "count": 24,
       "automated": 0
@@ -122,11 +112,6 @@
     {
       "module": "Webhooks",
       "count": 24,
-      "automated": 0
-    },
-    {
-      "module": "Export",
-      "count": 23,
       "automated": 0
     },
     {
@@ -146,6 +131,21 @@
     },
     {
       "module": "Event - Execution & Results",
+      "count": 21,
+      "automated": 0
+    },
+    {
+      "module": "Maps Widget",
+      "count": 21,
+      "automated": 4
+    },
+    {
+      "module": "Users Widget",
+      "count": 21,
+      "automated": 0
+    },
+    {
+      "module": "Channels - Integrations",
       "count": 21,
       "automated": 0
     }
@@ -172,6 +172,6 @@
     "net_new": 42,
     "added": 42,
     "removed": 0,
-    "modified": 0
+    "modified": 456
   }
 }
