@@ -489,16 +489,27 @@ def cmd_scaffold(nodeid: str, module_name: str, title: str,
             module_name = candidates[0]['section_name']
             print(f'  Partial match: "{module_name}" [{section_key}]')
         elif candidates:
-            print(f'  Multiple matches for "{module_name}":')
+            print(f'  AMBIGUOUS: "{module_name}" matches {len(candidates)} modules:')
             for c in candidates:
                 print(f'    [{c["section_key"]}] {c["section_name"]}')
-            print('  Please use the exact module name.')
+            print('  Use the exact disambiguated name (e.g. "Search - Insights").')
             sys.exit(1)
         else:
             print(f'  Module "{module_name}" not found. Use "modules" command to list all.')
             sys.exit(1)
     else:
-        print(f'  Found: [{section_key}] {module_name}')
+        # Check for duplicate names - warn if other modules share this name
+        dupes = [m for m in modules
+                 if m.get('section_name', '').lower() == module_name.lower()
+                 and m.get('section_key') != section_key]
+        if dupes:
+            print(f'  WARNING: "{module_name}" has {len(dupes) + 1} modules with '
+                  f'the same name! Consider renaming to avoid confusion.')
+            print(f'  Target: [{section_key}] {module_name}')
+            for d in dupes:
+                print(f'  Duplicate: [{d["section_key"]}] {d["section_name"]}')
+        else:
+            print(f'  Found: [{section_key}] {module_name}')
 
     # Step 2: Check if case already exists (avoid duplicates)
     print(f'Checking for existing case with same title...')
@@ -561,16 +572,18 @@ def cmd_scaffold(nodeid: str, module_name: str, title: str,
 
 
 # Module resolution: test directory path -> best QA Touch module name
+# IMPORTANT: Use disambiguated names (not bare "Search", "Media", etc.)
+# to avoid creating duplicate modules. Check QA Touch UI if unsure.
 _DIR_TO_MODULE = {
     'login': 'Login UI',
     'views': 'Views',
-    'events': 'Search',
-    'search': 'Search',
+    'events': 'Events',
+    'search': 'Search',  # Will warn if ambiguous - specify manually
     'insights': 'Insights',
-    'media': 'Media',
+    'media': 'Media',  # Will warn if ambiguous - specify manually
     'admin': 'Admin',
     'notifications': 'Notifications',
-    'sequences': 'Camera Sequence',
+    'sequences': 'Camera Sequence - Fullscreen',
     'maps': 'Maps',
     'chats': 'Chat',
 }

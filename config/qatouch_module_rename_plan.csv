@@ -1,0 +1,115 @@
+module_key,old_name,new_name,feature_context,case_count,sample_title
+xwbb1,Accessibility,Accessibility - Insights,Insights,11,Verify tab key navigation moves focus through interactive el
+dMnWw,Accessibility,Accessibility - Playback,Playback,2,Verify disabled playback controls are visually indicated in 
+lxjBm,Accessibility,Accessibility - Media,Media,2,Verify keyboard navigation works for clip selection
+DgwDP,Accessibility,Accessibility - Login,Login,1,Verify logout is accessible via keyboard navigation
+2yRg4,Add to Vault,Add to Vault - Dialog,Vault,2,Verify Add to Vault option opens Add to Vault dialog
+zjRKp,Add to Vault,Add to Vault - Notification,Vault,1,Verify Add to Vault option adds notification event clip to V
+yEZ2z,Audit Trail,Audit Trail - Users,Users,45,Verify general functionality behaves as expected - Audit Tra
+vzekV,Audit Trail,Audit Trail - LPR,LPR,2,Verify audit trail entry is created for LPR record edit
+4yxE6,Bookmark,Bookmark - Creation,Bookmarks,3,Verify clicking Bookmark icon creates a bookmark for the cur
+mV4j9,Bookmark,Bookmark - Controls,Bookmarks,2,Verify Bookmark icon is visible in playback controls
+p6wqb,Bookmark Panel,Bookmark Panel - List,Bookmarks,4,Verify Bookmark panel opens only when user explicitly clicks
+nJp48,Bookmark Panel,Bookmark Panel - Side,Bookmarks,2,Verify Bookmark panel opens from side when clicked
+LWw7W,Bookmark Playback,Bookmark Playback - Bookmarks,Bookmarks,1,Verify clicking on a bookmark navigates playback to bookmark
+gvEGz,Bookmark Playback,Bookmark Playback - Media,Media,1,Verify clicking a bookmark loads clip in main view
+P1M8d,Camera List,Camera List - Site Detail,Camera,1,Verify camera list is visible on left panel in Site Detail p
+lxjmm,Camera List,Camera List - Scrolling,Camera,1,Verify camera list becomes scrollable when cameras exceed vi
+Wpdlx,Camera Search,Camera Search - Camera,Camera,6,Verify Search in Camera icon is visible in fullscreen contro
+zjRyM,Camera Search,Camera Search - Search,Search,6,Verify camera search field is visible in Locations & Cameras
+gvE9L,Camera Selection,Camera Selection - Thumbnails,Camera,3,Verify camera checkbox is visible for each camera thumbnail
+6yJQv,Camera Selection,Camera Selection - Details,Camera,2,Verify selecting a camera checkbox loads camera details on r
+Q4Dz6,Camera Sequence,Camera Sequence - Fullscreen,Camera,24,Verify Camera Sequence icon is visible in fullscreen control
+vzeDl,Camera Sequence,Camera Sequence - Live,Camera Sequence,3,Verify Camera Sequence icon is visible in live playback cont
+V4RvV,Channels,Channels - Integrations,Integrations,21,Verify Admin can access Integrations page
+4yx26,Channels,Channels - Views,Views,8,Verify Available Channels list is displayed when Channels ta
+0ybmN,Clip Actions,Clip Actions - State,Media,3,Verify action menu is disabled before selecting a clip
+dMnGM,Clip Actions,Clip Actions - Options,Media,3,Verify Export option is available from clip action menu
+q7yvm,Clip Actions,Clip Actions - Menu,Media,2,Verify three-dot menu is visible for a media clip
+yEZlN,Clip Selection,Clip Selection - Fullscreen,Media,6,Verify Select Clip From Timeline icon is visible in fullscre
+xwbvl,Clip Selection,Clip Selection - Timeline,Media,2,Verify Select Clip From Timeline highlights selected time ra
+GgK8y,Create Link,Create Link - Events,Events,7,Verify Create Link modal opens from unpinned event card
+3yd9E,Create Link,Create Link - Notifications,Notifications,2,Verify Create Link option opens Create Link dialog from noti
+xwbLl,Create Link,Create Link - Pinned,Media,2,Verify Create Link modal opens from pinned clips
+X4xqm,Create Link,Create Link - Sharable,Media,1,Verify Create Link option generates a sharable link for clip
+xwby5,Error Handling,Error Handling - Views,Views,2,Verify Views page does not display errors when no cameras ar
+yEZrz,Error Handling,Error Handling - Chat,Unknown,2,Verify error is shown when sending message during network lo
+Z4JRR,Error Handling,Error Handling - Login,Login,1,Verify login behavior during network interruption
+gvELN,Export,Export - Review Pinned,Media,10,Verify Export modal opens from Review Pinned Clips
+q7yVP,Export,Export - Notification Events,Media,5,Verify Export option is available for an event opened from n
+kdKJP,Export,Export - Clip Dialog,Media,4,Verify Export option opens Export dialog for selected clip
+dMnPM,Export,Export - Video Modal,Media,3,Verify Export modal opens when Export Videos is clicked
+nJpM7,Export,Export - Download,Media,1,Verify Export icon initiates clip download
+eDg43,Landing Page,Landing Page - Events,Events,2,Verify Events module opens when selected from left navigatio
+7yPbR,Landing Page,Landing Page - LPR,LPR,1,Verify LPR landing page displays default empty canvas state 
+8g6QJ,Landing Page,Landing Page - Admin,Admin,1,Verify Admin can access Sites module landing page
+2yR7Q,Left Navigation,Left Navigation - Insights,Insights,3,Verify Insights icon is highlighted as active when user is o
+3yd2m,Left Navigation,Left Navigation - Views,Views,1,Verify Views icon remains highlighted when Views module is a
+V4R9P,Locations & Cameras,Locations & Cameras - Events Page,Camera,9,Verify Locations & Cameras dropdown is visible and enabled o
+vzexn,Locations & Cameras,Locations & Cameras - Event Wall,Camera,8,Verify Locations & Cameras field is disabled until Site is s
+1yZ2K,Navigation,Navigation - Views,Views,1,Verify browser back and forward navigation does not break Vi
+P1MWV,Navigation,Navigation - LPR Access,LPR,1,Verify Admin user can access LPR module from left-side navig
+Z4JdR,Navigation,Navigation - LPR Back,LPR,1,Verify back button navigation from LPR list view
+eDgWm,Navigation,Navigation - Media,Media,1,Verify Media icon is highlighted in left navigation
+2yR24,Navigation Highlight,Navigation Highlight - Views,Views,1,Verify Views icon remains highlighted after browser refresh
+6yJva,Navigation Highlight,Navigation Highlight - LPR,LPR,1,Verify LPR icon is visually highlighted when LPR module is a
+4yxqb,Overlays,Overlays - Static Map,Maps,13,Verify overlay panel is visible on static map detail view
+BgGvx,Overlays,Overlays - Controls,Maps,6,Verify Overlays icon opens overlay options panel
+R4eed,Page Refresh,Page Refresh - Insights,Insights,8,Verify refreshing Insights page retains Insights module cont
+Z4JX6,Page Refresh,Page Refresh - Views,Views,2,Verify page refresh clears all cameras from grid
+9l7g4,Performance,Performance - Media,Media,1,Verify loading indicator is shown while media data is loadin
+eDgzn,Performance,Performance - LPR,LPR,1,Verify LPR list loads within acceptable time with large data
+DglM4,Permissions,Permissions - Maps,Maps,14,Viewing the Map landing page with existing map configuration
+4yxrw,Permissions,Permissions - Users,Users,3,Restricted user shows Not Allowed on menu
+8g6qn,Permissions,Permissions - LPR,LPR,2,Verify restricted user cannot view LPR Lists
+N4Bqz,Playback Controls,Playback Controls - Fullscreen,Fullscreen,2,Verify Pause button pauses video playback in fullscreen
+bBznM,Playback Controls,Playback Controls - Media,Media,1,Verify Bookmark Clip icon is visible on live playback contro
+dMnnZ,Re-login,Re-login - Login,Login,2,Verify Insights page loads correctly after logout and re-log
+dMnKM,Re-login,Re-login - Media,Media,1,Verify Media page loads correctly after logout and re-login
+9l7nZ,Reset Search,Reset Search - Filters,Search,2,Verify Reset Search clears all applied filters
+V4Rk2,Reset Search,Reset Search - Clips,Search,1,Verify Reset Search clears pinned clips
+nJpWz,Review Pinned Clips,Review Pinned Clips - Media,Media,15,Verify Review Pinned Clips button opens Review modal
+Z4JD5,Review Pinned Clips,Review Pinned Clips - Search,Search,1,Verify Review Pinned Clips button opens review modal
+aa3Xa,Scrolling,Scrolling - Dashboard,Dashboard,1,Verify Dashboard page supports vertical scrolling without UI
+dMnmW,Scrolling,Scrolling - Sites,Unknown,1,Verify scrolling on Sites page
+8g66r,Search,Search - Insights,Search,9,Verify Search input field is visible and enabled on Insights
+M4yQq,Search,Search - Sites,Search,8,Verify search by site name
+r9BZ6,Search,Search - Users,Search,5,Verify search user by name
+V4R72,Search,Search - Clips,Search,3,Verify search by clip name returns matching results
+7yPze,Search,Search - LPR,Search,2,Verify Search button is enabled after applying mandatory fil
+bBzGq,Security,Security - Injection,Login,2,Verify SQL injection attempt is blocked on login
+xwJnm,Security,Security - Token,Login,2,Verify logout invalidates authentication token immediately
+X4x8m,Session Handling,Session Handling - LPR,LPR,2,Verify LPR page remains accessible after browser refresh
+aa334,Session Handling,Session Handling - Dashboard,Dashboard,1,Verify closing browser without saving does not create dashbo
+M4y1N,Session Management,Session Management - LPR,LPR,2,Verify user is logged out from LPR after session timeout
+vzemV,Session Management,Session Management - Login,Login,2,Verify session timeout redirects user to Login page
+eDgjn,Session Security,Session Security - Access,Login,3,Verify unauthenticated user cannot access protected URL
+V47nV,Session Security,Session Security - Logout,Login,1,Verify browser back button does not restore session after lo
+X4xe7,Share,Share - Notifications,Notifications,2,Verify Share option is available for an event opened from no
+mV48y,Share,Share - Media,Unknown,1,Verify Share icon opens sharing options
+aa3Mv,Share Live View,Share Live View - Camera,Camera,8,Verify Share Live View icon is visible in fullscreen control
+Dgl4m,Share Live View,Share Live View - Playback,Playback,3,Verify Share Live View icon is visible on playback toolbar
+wEvGl,Snapshot,Snapshot - Fullscreen,Fullscreen,4,Verify Snapshot icon opens Save As dialog in fullscreen mode
+R4eba,Snapshot,Snapshot - Playback,Playback,3,Verify Take Snapshot icon is visible on playback controls
+3ydWP,Sorting,Sorting - Order,Unknown,5,Verify default sorting order is set to Latest
+JgpD2,Sorting,Sorting - Modified,Unknown,2,Verify sorting by Modified On in descending order
+8g6ln,Stability,Stability - Login,Login,1,Verify multiple failed login attempts do not crash UI
+8g6n7,Stability,Stability - Insights,Insights,1,Verify Insights page remains stable after multiple widget ac
+BgGBN,Stability,Stability - Admin Users,Admin Users,1,Verify roles page stability on rapid role switching
+r9Bb1,Stability,Stability - Media,Media,1,Verify Media page remains stable after multiple bulk actions
+R4eVa,State Persistence,State Persistence - Media,Media,1,Verify Media page retains state after browser refresh
+r9Br1,State Persistence,State Persistence - Camera,Camera,1,Verify Locations & Cameras panel state persists after browse
+BgGGR,Tabs,Tabs - Insights,Insights,9,Verify My Dashboards tab is selected by default when Insight
+vzex1,Tabs,Tabs - Media,Media,3,Verify All tab is selected by default on Media landing
+Z4JGR,Validation,Validation - Maps,Maps,18,Verifying error behavior when mandatory map fields are left 
+BgGDG,Validation,Validation - Login,Login,3,Verify login fails when both fields are empty
+4yxWX,Vault - Add Action,Vault - Add Action - Clips,Vault,3,Verify Add to Vault action is available for media clips
+yEZwL,Vault - Add Action,Vault - Add Action - Session,Vault,1,Verify Vault item actions remain accessible after long sessi
+KgLed,Vault - Navigation,Vault - Navigation - Vault,Vault,2,Verify Vault tab is visible in Media module
+kdKzZ,Vault - Navigation,Vault - Navigation - Media,Media,1,Verify Vault items are not auto-deleted when Media storage c
+jRNyE,Vault - Storage,Vault - Storage - Usage,Vault,2,Verify Vault displays storage usage bar
+0ybkw,Vault - Storage,Vault - Storage - UI,Vault,1,Verify Vault page UI alignment and scrolling behavior
+DglQm,View Toggle,View Toggle - Modules,Views,5,Verify switch to List view
+lxjWe,View Toggle,View Toggle - Users,Views,3,Verify default Grid view is displayed for Users
+kdKK0,Widget Search,Widget Search - Add Section,Insights,8,Verify Search Widgets field is visible in Add a widget secti
+0ybVw,Widget Search,Widget Search - Panel,Insights,3,Verify widget search field is visible inside Widgets panel
