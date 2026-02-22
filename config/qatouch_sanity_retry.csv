@@ -1,0 +1,17 @@
+case_key,case_title,module
+0rzlLl,Verify Event Type dropdown opens when clicked,Category - Event
+kpZWL9,Verify ALL option is selected by default in Event Type dropdown,Category - Event
+eJqmLp,Verify Bookmark Clip icon is visible on live playback controls,Playback Controls - Media
+5BRDLz,Open Add Plate modal,Add License Plate
+21zBjr,Auto-populate detected plate number,Add License Plate
+eJqmRp,Verify LPR event notification is displayed when a valid LPR event occurs,Notifications
+bj04vQ,Verify clicking LPR notification opens video preview within notification panel,Notifications
+21zBaM,Verify Storage option,Storage
+xm9jxL,Verify Storage page opens successfully for a site,Storage
+VKbePN,Verify More Options (...) menu is visible on Site card in Grid view,Site Actions (More Options Menu)
+B86E7y,Verify More Options (...) menu is visible on Site row in List view,Site Actions (More Options Menu)
+8V1b8k,Verify clicking on More Options (...) opens the actions menu,Site Actions (More Options Menu)
+M73zw1,"Editing an existing map configuration - Maps tab is visually highlighted indicating active",Map Editing
+eJqmmQ,"Verifying error behavior when mandatory map fields are left empty - The system displays a clear indication that no maps match",Validation - Maps
+aj67av,Verify camera selection for Intrusion Detection,Intrusion Detection
+RgGBWd,"Verify general functionality behaves as expected - Event Wall configuration page opens successfully.",Event Wall
