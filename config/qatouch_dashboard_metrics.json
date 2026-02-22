@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-21 22:16:53",
+  "generated": "2026-02-21 22:21:07",
   "snapshot_date": "2026-02-21",
   "total_cases": 3011,
   "total_modules": 470,
@@ -47,7 +47,7 @@
     {
       "module": "List",
       "count": 51,
-      "automated": 0
+      "automated": 1
     },
     {
       "module": "Media Listing & Actions",
@@ -57,12 +57,12 @@
     {
       "module": "Category - Person",
       "count": 49,
-      "automated": 0
+      "automated": 2
     },
     {
       "module": "Audit Trail - Users",
       "count": 45,
-      "automated": 0
+      "automated": 12
     },
     {
       "module": "System Logs",
@@ -72,7 +72,7 @@
     {
       "module": "Map Editing",
       "count": 32,
-      "automated": 0
+      "automated": 1
     },
     {
       "module": "Multi-Factor Authentication",
@@ -82,32 +82,32 @@
     {
       "module": "Categories",
       "count": 31,
-      "automated": 0
+      "automated": 1
     },
     {
       "module": "Vehicle - Execution & Results",
       "count": 28,
-      "automated": 0
+      "automated": 1
     },
     {
       "module": "Zone - AND, Execution & Results",
       "count": 25,
-      "automated": 0
+      "automated": 1
     },
     {
       "module": "Map Creation",
       "count": 25,
-      "automated": 0
+      "automated": 1
     },
     {
       "module": "Camera Sequence - Fullscreen",
       "count": 24,
-      "automated": 0
+      "automated": 9
     },
     {
       "module": "Person - Results & Execution",
       "count": 24,
-      "automated": 0
+      "automated": 1
     },
     {
       "module": "Webhooks",
@@ -127,12 +127,12 @@
     {
       "module": "Category - Event",
       "count": 21,
-      "automated": 0
+      "automated": 3
     },
     {
       "module": "Event - Execution & Results",
       "count": 21,
-      "automated": 0
+      "automated": 1
     },
     {
       "module": "Maps Widget",
@@ -142,12 +142,12 @@
     {
       "module": "Users Widget",
       "count": 21,
-      "automated": 0
+      "automated": 2
     },
     {
       "module": "Channels - Integrations",
       "count": 21,
-      "automated": 0
+      "automated": 2
     }
   ],
   "history": [
