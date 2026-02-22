@@ -256,16 +256,20 @@ def navigate_to_module(page, module_name: str, match_index: int = 0) -> bool:
         return False
 
     # Build filter candidates: try raw name first (preserves & - etc.),
-    # then cleaned version, then just the first word as last resort.
+    # then without parenthetical suffix, then cleaned version, then first word.
     raw_trimmed = module_name.strip()
     clean = re.sub(r'[^A-Za-z0-9 ]', ' ', module_name).strip()
     clean = ' '.join(clean.split())  # collapse multiple spaces
     words = clean.split()
     filter_candidates = [raw_trimmed]
+    # Strip parenthetical suffix: "Site Actions (More Options Menu)" -> "Site Actions"
+    paren_stripped = re.sub(r'\s*\(.*\)\s*$', '', raw_trimmed).strip()
+    if paren_stripped and paren_stripped != raw_trimmed:
+        filter_candidates.append(paren_stripped)
     cleaned_short = ' '.join(words[:3]) if len(words) > 3 else clean
-    if cleaned_short != raw_trimmed:
+    if cleaned_short != raw_trimmed and cleaned_short not in filter_candidates:
         filter_candidates.append(cleaned_short)
-    if words and words[0] != raw_trimmed and words[0] != cleaned_short:
+    if words and words[0] not in filter_candidates:
         filter_candidates.append(words[0])
 
     found = None
@@ -336,10 +340,13 @@ def count_module_matches(page, module_name: str) -> int:
     clean = ' '.join(clean.split())
     words = clean.split()
     filter_candidates = [raw_trimmed]
+    paren_stripped = re.sub(r'\s*\(.*\)\s*$', '', raw_trimmed).strip()
+    if paren_stripped and paren_stripped != raw_trimmed:
+        filter_candidates.append(paren_stripped)
     cleaned_short = ' '.join(words[:3]) if len(words) > 3 else clean
-    if cleaned_short != raw_trimmed:
+    if cleaned_short != raw_trimmed and cleaned_short not in filter_candidates:
         filter_candidates.append(cleaned_short)
-    if words and words[0] != raw_trimmed and words[0] != cleaned_short:
+    if words and words[0] not in filter_candidates:
         filter_candidates.append(words[0])
 
     for filter_text in filter_candidates:
@@ -373,15 +380,18 @@ def count_module_matches(page, module_name: str) -> int:
 # ---------------------------------------------------------------------------
 def _search_cases_in_dom(page, title):
     """Search currently-loaded .cl-container elements for a case title.
-    Returns {found: true/false}."""
+    Returns {found: true/false}.
+    Uses first 40 chars for fuzzy matching - QA Touch may truncate long titles."""
     return page.evaluate('''(title) => {
         var containers = document.querySelectorAll('.cl-container');
-        var target = title.length > 60 ? title.substring(0, 60) : title;
+        // Use first 40 chars as fuzzy prefix - handles DOM truncation of long titles
+        var prefix = title.length > 40 ? title.substring(0, 40) : title;
         for (var i = 0; i < containers.length; i++) {
             var ps = containers[i].querySelectorAll('p');
             for (var j = 0; j < ps.length; j++) {
                 var text = ps[j].textContent.trim();
-                if (text === title || (target.length >= 20 && text.indexOf(target) >= 0)) {
+                if (text === title || text.indexOf(prefix) >= 0 ||
+                    (prefix.length >= 15 && title.indexOf(text.substring(0, 40)) >= 0)) {
                     ps[j].scrollIntoView({block: 'center'});
                     return {found: true};
                 }
@@ -395,12 +405,13 @@ def _get_case_coords(page, title):
     """Get fresh click coordinates for a case already scrolled into view."""
     return page.evaluate('''(title) => {
         var containers = document.querySelectorAll('.cl-container');
-        var target = title.length > 60 ? title.substring(0, 60) : title;
+        var prefix = title.length > 40 ? title.substring(0, 40) : title;
         for (var i = 0; i < containers.length; i++) {
             var ps = containers[i].querySelectorAll('p');
             for (var j = 0; j < ps.length; j++) {
                 var text = ps[j].textContent.trim();
-                if (text === title || (target.length >= 20 && text.indexOf(target) >= 0)) {
+                if (text === title || text.indexOf(prefix) >= 0 ||
+                    (prefix.length >= 15 && title.indexOf(text.substring(0, 40)) >= 0)) {
                     var r = ps[j].getBoundingClientRect();
                     return {x: Math.round(r.x + 30), y: Math.round(r.y + r.height / 2)};
                 }
@@ -1095,11 +1106,19 @@ def add_tag(page, tag_name: str) -> bool:
         print(f'    Tag "{tag_name}" already present')
         return True
 
-    # Open the New Tags vue-select
+    # Open the New Tags vue-select (retry once - DOM may still be rendering)
     if not _find_new_tags_vselect(page):
-        print(f'    New Tags vue-select not found')
-        shot(page, 'new_tags_not_found')
-        return False
+        time.sleep(3)
+        # Scroll down to ensure New Tags section is loaded
+        page.evaluate('''() => {
+            var form = document.querySelector('.modal-body, .edit-form, [class*="edit"]');
+            if (form) form.scrollTop = form.scrollHeight;
+        }''')
+        time.sleep(1)
+        if not _find_new_tags_vselect(page):
+            print(f'    New Tags vue-select not found')
+            shot(page, 'new_tags_not_found')
+            return False
 
     time.sleep(0.5)
 
@@ -1180,18 +1199,32 @@ def process_case(page, context, case, operations, rate_limiter, report):
 
     rate_limiter.wait()
 
-    # Find and click case
-    if not find_and_click_case(page, title):
-        report.add(key, 'not_found', f'Case not found in list')
-        return False
+    # Find and click case (with retry on detail page failure)
+    detail_ok = False
+    for attempt in range(2):
+        if not find_and_click_case(page, title):
+            report.add(key, 'not_found', f'Case not found in list')
+            return False
 
-    # Verify we're on detail page
-    try:
-        if not page.locator('button:has-text("Edit")').first.is_visible(timeout=5000):
-            raise Exception('Edit not visible')
-    except Exception:
-        print(f'    Not on case detail page')
-        shot(page, 'not_detail', key)
+        # Verify we're on detail page
+        try:
+            if page.locator('button:has-text("Edit")').first.is_visible(timeout=5000):
+                detail_ok = True
+                break
+        except Exception:
+            pass
+
+        if attempt == 0:
+            print(f'    Detail page not loaded, retrying...')
+            page.keyboard.press('Escape')
+            time.sleep(2)
+        else:
+            print(f'    Not on case detail page')
+            shot(page, 'not_detail', key)
+            report.add(key, 'no_detail', 'Edit button not visible after click')
+            return False
+
+    if not detail_ok:
         report.add(key, 'no_detail', 'Edit button not visible after click')
         return False
 
