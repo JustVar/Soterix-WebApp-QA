@@ -146,8 +146,9 @@ def analyze_snapshot(snapshot: dict) -> dict:
     for c in cases:
         by_creator[c.get('created by', 'Unknown')] += 1
 
-    # Automation coverage from Playwright mapping
-    automation = _get_automation_metrics()
+    # Automation coverage from Playwright mapping (pass snapshot cases
+    # so we can resolve stale mapping module names to current QA Touch names)
+    automation = _get_automation_metrics(cases)
 
     # Top modules (sorted by count)
     top_modules = [
@@ -174,8 +175,14 @@ def analyze_snapshot(snapshot: dict) -> dict:
     }
 
 
-def _get_automation_metrics() -> dict:
-    """Extract automation coverage metrics from the Playwright mapping file."""
+def _get_automation_metrics(snapshot_cases: list[dict] | None = None) -> dict:
+    """Extract automation coverage metrics from the Playwright mapping file.
+
+    If snapshot_cases is provided, resolves each mapped case_key to its
+    current QA Touch module name (from the snapshot) instead of relying on
+    the mapping file's module field, which can become stale when QA Touch
+    modules are renamed or subdivided.
+    """
     if not MAPPING_PATH.exists():
         return {
             'total_playwright_tests': 0,
@@ -188,10 +195,20 @@ def _get_automation_metrics() -> dict:
     total_mapped = mapping.get('total_mapped', 0)
     mappings = mapping.get('mappings', {})
 
-    # Count by module
+    # Build case_key -> current module lookup from snapshot
+    case_to_module = {}
+    if snapshot_cases:
+        for c in snapshot_cases:
+            ck = c.get('case_key', '')
+            if ck:
+                case_to_module[ck] = c.get('module name', 'Unknown')
+
+    # Count by module - prefer snapshot's current module name over mapping's
     automated_by_module = Counter()
     for nodeid, info in mappings.items():
-        mod = info.get('module', 'Unknown')
+        case_key = info.get('case_key', '')
+        # Use snapshot module if available, fall back to mapping module
+        mod = case_to_module.get(case_key, info.get('module', 'Unknown'))
         automated_by_module[mod] += 1
 
     # Count auto_matched vs manually created
@@ -210,7 +227,7 @@ def _get_automation_metrics() -> dict:
         'manually_mapped': manually_mapped,
         'api_tests': api_tests,
         'ui_tests': ui_tests,
-        'by_module': dict(automated_by_module.most_common(25)),
+        'by_module': dict(automated_by_module.most_common()),
     }
 
 
