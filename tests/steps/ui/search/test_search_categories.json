@@ -1,0 +1,358 @@
+{
+  "test_file": "tests/ui/search/test_search_categories.py",
+  "class": "TestSearchCategories",
+  "tests": {
+    "test_person_search": {
+      "title": "Verify Person search with Male description returns results",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - LPR",
+          "expected": "Search - LPR page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Search button on the page",
+          "expected": "Search button is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Search button",
+          "expected": "Search button enabled"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: after applying mandatory filters",
+          "expected": "Precondition is met (after applying mandatory filters)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Search button"
+        }
+      ],
+      "case_key": "dypXRb"
+    },
+    "test_person_search_results_valid": {
+      "title": "Verify Person search results contain valid images",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - Clips",
+          "expected": "Search - Clips page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: with invalid input shows no results state",
+          "expected": "Precondition is met (with invalid input shows no results state)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "Pgw96K"
+    },
+    "test_person_search_play_result": {
+      "title": "Verify playing a Person search result clip works",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Person - Results & Execution",
+          "expected": "Person - Results & Execution page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for user",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "kpZWpZ"
+    },
+    "test_vehicle_search": {
+      "title": "Verify Vehicle search returns results",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - LPR",
+          "expected": "Search - LPR page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Search button on the page",
+          "expected": "Search button is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Search button",
+          "expected": "Search button enabled"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: after applying mandatory filters",
+          "expected": "Precondition is met (after applying mandatory filters)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Search button"
+        }
+      ],
+      "case_key": "dypXRb"
+    },
+    "test_vehicle_search_play_result": {
+      "title": "Verify playing a Vehicle search result clip works",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Vehicle - Execution & Results",
+          "expected": "Vehicle - Execution & Results page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Vehicle search results display camera name",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "gQxmzz"
+    },
+    "test_event_search": {
+      "title": "Verify Event category search returns results",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - LPR",
+          "expected": "Search - LPR page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Search button on the page",
+          "expected": "Search button is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Search button",
+          "expected": "Search button enabled"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: after applying mandatory filters",
+          "expected": "Precondition is met (after applying mandatory filters)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Search button"
+        }
+      ],
+      "case_key": "dypXRb"
+    },
+    "test_event_search_play_result": {
+      "title": "Verify playing an Event search result clip works",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Search Filters",
+          "expected": "Camera Search Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Event search result images",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "gQxw5N"
+    }
+  }
+}

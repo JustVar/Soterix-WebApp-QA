@@ -1,0 +1,42 @@
+{
+  "test_file": "tests/ui/views/test_views_share.py",
+  "class": null,
+  "tests": {
+    "test_share_live_view": {
+      "title": "Verify sharing a live view via email and copying the share link",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Navigate to the Views page and wait for it to load",
+          "expected": "Views page loads with tile grid visible"
+        },
+        {
+          "n": 2,
+          "action": "Ensure at least one camera is streaming in a tile (expand Driver Site and add camera if needed)",
+          "expected": "Video tile is visible with live stream"
+        },
+        {
+          "n": 3,
+          "action": "Hover the tile, open three-dot menu, and click the share icon",
+          "expected": "Share dialog opens"
+        },
+        {
+          "n": 4,
+          "action": "Enter email address and click Share",
+          "expected": "Share is sent successfully"
+        },
+        {
+          "n": 5,
+          "action": "Click Copy to copy the share link",
+          "expected": "Share link is copied to clipboard"
+        },
+        {
+          "n": 6,
+          "action": "Close the share dialog",
+          "expected": "Share dialog closes and tile is still visible"
+        }
+      ],
+      "case_key": "dypXbB"
+    }
+  }
+}

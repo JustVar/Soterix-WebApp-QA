@@ -1,0 +1,646 @@
+{
+  "test_file": "tests/ui/insights/test_insights_dashboard.py",
+  "class": "TestInsightsDashboard",
+  "tests": {
+    "test_dashboard_landing_loads": {
+      "title": "Verify the Insights dashboard landing page loads successfully.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Dashboard Landing",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Dashboard Landing page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: after login",
+          "expected": "Precondition is met (after login)"
+        },
+        {
+          "n": 8,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "VKbewQ"
+    },
+    "test_all_insights_tab_visible": {
+      "title": "Verify the All Insights tab is visible on the dashboard.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights",
+          "expected": "Insights page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Insights widget list should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Insights widget list on the page",
+          "expected": "Insights widget list is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when Insights tab is selected",
+          "expected": "Precondition is met (when Insights tab is selected)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Insights widget list displayed",
+          "expected": "Insights widget list displayed"
+        }
+      ],
+      "case_key": "RgGQ4a"
+    },
+    "test_preset_dashboard_section_visible": {
+      "title": "Verify Preset Dashboard section header is visible.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Preset Dashboard",
+          "expected": "Preset Dashboard page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Preset Dashboard section header should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Preset Dashboard section header on the page",
+          "expected": "Preset Dashboard section header is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on Insights page",
+          "expected": "Precondition is met (on Insights page)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Preset Dashboard section header visible",
+          "expected": "Preset Dashboard section header visible"
+        }
+      ],
+      "case_key": "mBdX60"
+    },
+    "test_preset_dashboard_cards_displayed": {
+      "title": "Verify Preset Dashboard cards are displayed.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Preset Dashboard Cards",
+          "expected": "Preset Dashboard Cards page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Preset Dashboard cards should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Preset Dashboard cards on the page",
+          "expected": "Preset Dashboard cards is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify Preset Dashboard cards displayed under Preset Dashboard section",
+          "expected": "Preset Dashboard cards displayed under Preset Dashboard section"
+        }
+      ],
+      "case_key": "gQxXRW"
+    },
+    "test_preset_dashboard_view_all": {
+      "title": "Verify View All link is visible in Preset Dashboard section.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Preset Dashboard",
+          "expected": "Preset Dashboard page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where View All link should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate View All link on the page",
+          "expected": "View All link is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify View All link visible in Preset Dashboard section",
+          "expected": "View All link visible in Preset Dashboard section"
+        }
+      ],
+      "case_key": "n8jQ76"
+    },
+    "test_preset_card_clickable": {
+      "title": "Verify clicking a Preset Dashboard card triggers navigation.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Presets",
+          "expected": "Presets page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for preset card star icon toggles favorite state",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify preset card star icon toggles favorite state is displayed and functions correctly",
+          "expected": "Preset card star icon toggles favorite state is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "Nj39xE"
+    },
+    "test_my_dashboard_section_visible": {
+      "title": "Verify My Dashboard section header is visible.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > My Dashboard",
+          "expected": "My Dashboard page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where My Dashboard section header should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate My Dashboard section header on the page",
+          "expected": "My Dashboard section header is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify My Dashboard section header visible below Preset Dashboard section",
+          "expected": "My Dashboard section header visible below Preset Dashboard section"
+        }
+      ],
+      "case_key": "K4n96b"
+    },
+    "test_my_dashboard_view_all": {
+      "title": "Verify View All link is visible in My Dashboard section.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > My Dashboard",
+          "expected": "My Dashboard page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where View All link should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate View All link on the page",
+          "expected": "View All link is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify View All link visible in My Dashboard section",
+          "expected": "View All link visible in My Dashboard section"
+        }
+      ],
+      "case_key": "LD3X7P"
+    },
+    "test_create_new_button_visible": {
+      "title": "Verify Create New button is visible on the dashboard page.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Create New",
+          "expected": "Create New page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Create New button should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Create New button on the page",
+          "expected": "Create New button is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on Insights page",
+          "expected": "Precondition is met (on Insights page)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Create New button visible",
+          "expected": "Create New button visible"
+        }
+      ],
+      "case_key": "XGLQrD"
+    },
+    "test_create_dashboard_opens_form": {
+      "title": "Verify clicking Create New opens the dashboard creation screen.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Create Dashboard Entry",
+          "expected": "Create Dashboard Entry page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for clicking Create New",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created clicking Create New appears in the list or view",
+          "expected": "The new clicking Create New is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Set up precondition: on My Dashboards opens New Dashboard creation screen",
+          "expected": "Precondition is met (on My Dashboards opens New Dashboard creation screen)"
+        },
+        {
+          "n": 12,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new clicking Create New exists"
+        }
+      ],
+      "case_key": "LD3Xwx"
+    },
+    "test_create_dashboard_has_discard_and_save": {
+      "title": "Verify Discard and Save buttons are visible on creation screen.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Create Dashboard Actions",
+          "expected": "Create Dashboard Actions page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Discard and Save buttons should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Discard and Save buttons on the page",
+          "expected": "Discard and Save buttons is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on New Dashboard screen",
+          "expected": "Precondition is met (on New Dashboard screen)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Discard and Save buttons visible",
+          "expected": "Discard and Save buttons visible"
+        }
+      ],
+      "case_key": "kpZX05"
+    },
+    "test_create_dashboard_name_field": {
+      "title": "Verify Dashboard Name field is present and editable.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Dashboard Name",
+          "expected": "Dashboard Name page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for Dashboard Name field accepts alphanumeric characters",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify Dashboard Name field accepts alphanumeric characters is displayed and functions correctly",
+          "expected": "Dashboard name field accepts alphanumeric characters is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "5BRM3m"
+    },
+    "test_save_disabled_without_name": {
+      "title": "Verify Save button is disabled when no dashboard name is entered.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Sequence - Fullscreen",
+          "expected": "Camera Sequence - Fullscreen page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Save button remains disabled on the page",
+          "expected": "Save button remains disabled is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Save button remains disabled",
+          "expected": "Save button remains disabled is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when Sequence Name is empty",
+          "expected": "Precondition is met (when Sequence Name is empty)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Save button remains disabled"
+        }
+      ],
+      "case_key": "lR2l6J"
+    },
+    "test_insights_page_scrollable": {
+      "title": "Verify Insights dashboard page is scrollable.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Left Navigation - Insights",
+          "expected": "Left Navigation - Insights page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Insights icon remains highlighted in left navigation on the page",
+          "expected": "Insights icon remains highlighted in left navigation is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Insights icon remains highlighted in left navigation",
+          "expected": "Insights icon remains highlighted in left navigation is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on Widgets page",
+          "expected": "Precondition is met (on Widgets page)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Insights icon remains highlighted in left navigation"
+        }
+      ],
+      "case_key": "dypXjd"
+    },
+    "test_dashboard_page_after_refresh": {
+      "title": "Verify Insights dashboard page loads correctly after refresh.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Users Widget",
+          "expected": "Users Widget page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for dashboard retains user role filter",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: after page refresh",
+          "expected": "Precondition is met (after page refresh)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "wmjK7z"
+    }
+  }
+}

@@ -1,0 +1,690 @@
+{
+  "test_file": "tests/ui/admin/test_admin_audit_trail.py",
+  "class": "TestAdminAuditTrail",
+  "tests": {
+    "test_audit_trail_page_loads": {
+      "title": "Verify Audit Trail page loads with visible content",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Audit Trail - Users page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: without partial UI",
+          "expected": "Precondition is met (without partial UI)"
+        },
+        {
+          "n": 8,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "Z8xWmk"
+    },
+    "test_audit_trail_breadcrumb": {
+      "title": "Verify breadcrumb displays navigation path including Audit Trail",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate Breadcrumb displays General > Audit Trail correctly on the page",
+          "expected": "Breadcrumb displays General > Audit Trail correctly is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify Breadcrumb displays General > Audit Trail correctly is displayed as expected",
+          "expected": "Breadcrumb displays General > Audit Trail correctly is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "dyp4EZ"
+    },
+    "test_audit_trail_content_area_visible": {
+      "title": "Verify the Audit Trail content area is displayed",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Audit Trail table should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Audit Trail table on the page",
+          "expected": "Audit Trail table is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: with audit",
+          "expected": "Precondition is met (with audit)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Audit Trail table displayed successfully",
+          "expected": "Audit Trail table displayed successfully"
+        }
+      ],
+      "case_key": "LD3mye"
+    },
+    "test_audit_trail_has_column_headers": {
+      "title": "Verify the Audit Trail has column headers or labels",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate Audit Trail table displays all expected columns correctly on the page",
+          "expected": "Audit Trail table displays all expected columns correctly is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify Audit Trail table displays all expected columns correctly is displayed as expected",
+          "expected": "Audit Trail table displays all expected columns correctly is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "wmjK8G"
+    },
+    "test_audit_trail_has_records": {
+      "title": "Verify the Audit Trail has at least one record",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate Audit Trail records on the page",
+          "expected": "Audit Trail records is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify Audit Trail records populated",
+          "expected": "Audit Trail records populated"
+        },
+        {
+          "n": 8,
+          "action": "Set up precondition: with valid data",
+          "expected": "Precondition is met (with valid data)"
+        },
+        {
+          "n": 9,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "yaWXD9"
+    },
+    "test_audit_trail_record_has_date_info": {
+      "title": "Verify audit records contain date/time information",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - LPR",
+          "expected": "Audit Trail - LPR page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for audit trail entry",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created audit trail entry appears in the list or view",
+          "expected": "The new audit trail entry is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Set up precondition: for LPR record edit",
+          "expected": "Precondition is met (for LPR record edit)"
+        },
+        {
+          "n": 12,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new audit trail entry exists"
+        }
+      ],
+      "case_key": "xm9jkm"
+    },
+    "test_audit_trail_record_has_user_info": {
+      "title": "Verify audit records contain user information",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Audit Trail - Users page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "vanXBn"
+    },
+    "test_audit_trail_record_has_action_info": {
+      "title": "Verify audit records contain action/event type information",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - LPR",
+          "expected": "Audit Trail - LPR page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for audit trail entry",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created audit trail entry appears in the list or view",
+          "expected": "The new audit trail entry is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Set up precondition: for LPR record edit",
+          "expected": "Precondition is met (for LPR record edit)"
+        },
+        {
+          "n": 12,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new audit trail entry exists"
+        }
+      ],
+      "case_key": "xm9jkm"
+    },
+    "test_audit_trail_pagination_visible": {
+      "title": "Verify pagination controls are visible on the Audit Trail page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Audit Trail pagination works correctly across multiple",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "8V1bJr"
+    },
+    "test_audit_trail_next_page": {
+      "title": "Verify clicking Next page loads more records",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Audit Trail - Users page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "vanXBn"
+    },
+    "test_audit_trail_has_multiple_entries": {
+      "title": "Verify Audit Trail displays multiple content entries",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Audit Trail pagination works correctly across multiple",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "8V1bJr"
+    },
+    "test_back_to_general_from_audit_trail": {
+      "title": "Verify navigating back from Audit Trail to General section works",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Audit Trail card should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Audit Trail card on the page",
+          "expected": "Audit Trail card is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: with View option",
+          "expected": "Precondition is met (with View option)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Audit Trail card displayed correctly",
+          "expected": "Audit Trail card displayed correctly"
+        }
+      ],
+      "case_key": "aj6724"
+    },
+    "test_audit_trail_row_hover": {
+      "title": "Verify audit trail content shows hover state",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Hover effect should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Hover effect on the page",
+          "expected": "Hover effect is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on audit record rows",
+          "expected": "Precondition is met (on audit record rows)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Hover effect displayed",
+          "expected": "Hover effect displayed"
+        }
+      ],
+      "case_key": "kpZWE0"
+    },
+    "test_audit_trail_after_refresh": {
+      "title": "Verify Admin page loads correctly after browser refresh",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Audit Trail - Users",
+          "expected": "Audit Trail - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate Audit Trail table refreshes and displays all records on the page",
+          "expected": "Audit Trail table refreshes and displays all records is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify Audit Trail table refreshes and displays all records is displayed as expected",
+          "expected": "Audit Trail table refreshes and displays all records is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "aj67L4"
+    }
+  }
+}

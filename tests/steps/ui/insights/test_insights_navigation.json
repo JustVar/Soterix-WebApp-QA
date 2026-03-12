@@ -1,0 +1,288 @@
+{
+  "test_file": "tests/ui/insights/test_insights_navigation.py",
+  "class": "TestInsightsNavigation",
+  "tests": {
+    "test_navigate_to_insights": {
+      "title": "Verify navigation to the Insights page via the sidebar.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights",
+          "expected": "Insights page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Insights widget list should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Insights widget list on the page",
+          "expected": "Insights widget list is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when Insights tab is selected",
+          "expected": "Precondition is met (when Insights tab is selected)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Insights widget list displayed",
+          "expected": "Insights widget list displayed"
+        }
+      ],
+      "case_key": "RgGQ4a"
+    },
+    "test_system_status_link_visible": {
+      "title": "Verify the System Status link is visible on the Insights page.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Media > Clip Actions - Options",
+          "expected": "Clip Actions - Options page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Share Link option should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Share Link option on the page",
+          "expected": "Share Link option is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify Share Link option visible in clip action menu",
+          "expected": "Share Link option visible in clip action menu"
+        }
+      ],
+      "case_key": "xm9jVZ"
+    },
+    "test_open_system_status_dashboard": {
+      "title": "Verify the System Status dashboard opens and loads for a site.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Create New Widget",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Create New Widget page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "lR2lDP"
+    },
+    "test_close_system_status_tab": {
+      "title": "Verify the System Status tab can be closed.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open the System Status dashboard for Driver Site",
+          "expected": "System Status dashboard is loaded"
+        },
+        {
+          "n": 2,
+          "action": "Close the System Status tab",
+          "expected": "Tab is closed"
+        },
+        {
+          "n": 3,
+          "action": "Verify the System Status link reappears on the landing page",
+          "expected": "System Status link is visible again (returned to landing)"
+        }
+      ],
+      "case_key": "kpZQ60"
+    },
+    "test_switch_to_widgets_tab": {
+      "title": "Verify switching from Dashboard to Widgets tab.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Page Refresh - Insights",
+          "expected": "Page Refresh - Insights page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for Widgets page retains Widgets tab",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify Widgets page retains Widgets tab is displayed and functions correctly",
+          "expected": "Widgets page retains widgets tab is displayed as expected (after browser refresh)"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: after browser refresh",
+          "expected": "Precondition is met (after browser refresh)"
+        },
+        {
+          "n": 8,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "9e1b7W"
+    },
+    "test_create_widget_button_visible": {
+      "title": "Verify the 'Create New Widget' button is visible in Widgets tab.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Create New Widget",
+          "expected": "Create New Widget page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Create New button should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Create New button on the page",
+          "expected": "Create New button is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on Widgets page",
+          "expected": "Precondition is met (on Widgets page)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Create New button visible",
+          "expected": "Create New button visible"
+        }
+      ],
+      "case_key": "gQxXLl"
+    },
+    "test_widget_search_input_visible": {
+      "title": "Verify the widget search input is visible in Widgets tab.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights",
+          "expected": "Insights page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Search Insights filters widget list",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "Pgw91d"
+    }
+  }
+}

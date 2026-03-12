@@ -1,0 +1,673 @@
+{
+  "test_file": "tests/ui/licenses/test_license_assignment.py",
+  "class": "TestLicenseAssignedTab",
+  "tests": {
+    "test_assigned_tab_shows_site_grouping": {
+      "title": "Verify Assigned Licenses tab displays site-wise grouping.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate assigned tab shows site grouping on the page",
+          "expected": "assigned tab shows site grouping is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify assigned tab shows site grouping is displayed as expected",
+          "expected": "assigned tab shows site grouping is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "LD3gmJ"
+    },
+    "test_multiple_sites_displayed": {
+      "title": "Verify multiple sites are displayed correctly if available.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where multiple sites displayed should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate multiple sites displayed on the page",
+          "expected": "multiple sites displayed is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify multiple sites displayed is displayed as expected",
+          "expected": "multiple sites displayed is displayed as expected"
+        }
+      ],
+      "case_key": "wmjgKb"
+    },
+    "test_expand_site_shows_features": {
+      "title": "Verify expanding a site reveals feature-level licenses.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate expand site shows features on the page",
+          "expected": "expand site shows features is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify expand site shows features is displayed as expected",
+          "expected": "expand site shows features is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "yaWrXx"
+    },
+    "test_collapse_site_hides_features": {
+      "title": "Verify collapsing a site hides feature-level details.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for collapse site hides features",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify collapse site hides features is displayed and functions correctly",
+          "expected": "Collapse site hides features is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "0rzxll"
+    },
+    "test_site_enable_toggle_visible": {
+      "title": "Verify site enable toggle switch is available.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where site enable toggle visible should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate site enable toggle visible on the page",
+          "expected": "site enable toggle visible is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify site enable toggle visible is displayed as expected",
+          "expected": "site enable toggle visible is displayed as expected"
+        }
+      ],
+      "case_key": "kpZQW9"
+    },
+    "test_assigned_tab_retains_state_after_navigation": {
+      "title": "Verify Assigned Licenses tab retains state after navigation.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for assigned tab retains state",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify assigned tab retains state is displayed and functions correctly",
+          "expected": "Assigned tab retains state is displayed as expected (after navigation)"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: after navigation",
+          "expected": "Precondition is met (after navigation)"
+        },
+        {
+          "n": 8,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "11zJl0"
+    },
+    "test_assigned_tab_refresh_behavior": {
+      "title": "Verify Assigned Licenses tab refresh reloads data correctly.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for assigned tab refresh behavior",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify assigned tab refresh behavior is displayed and functions correctly",
+          "expected": "Assigned tab refresh behavior is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "5BRzD7"
+    },
+    "test_device_list_loads": {
+      "title": "Verify navigation to device list from feature license works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads with license list"
+        },
+        {
+          "n": 3,
+          "action": "Select a feature license that has associated devices",
+          "expected": "License details or device assignment view opens"
+        },
+        {
+          "n": 4,
+          "action": "Verify the device list loads for the selected license",
+          "expected": "Device list populates with devices assigned to this license"
+        },
+        {
+          "n": 5,
+          "action": "Verify device entries show expected information",
+          "expected": "Each device shows name, status, and relevant details"
+        }
+      ],
+      "case_key": "DrdZzm"
+    },
+    "test_device_list_has_three_dot_menu": {
+      "title": "Verify three-dot menu is available for each device.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate device list on the page",
+          "expected": "device list is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify device list three dot menu",
+          "expected": "device list three dot menu"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "eJqjmr"
+    },
+    "test_suspend_option_available": {
+      "title": "Verify Suspend License option is available in device menu.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where suspend option available should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate suspend option available on the page",
+          "expected": "suspend option available is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify suspend option available is displayed as expected",
+          "expected": "suspend option available is displayed as expected"
+        }
+      ],
+      "case_key": "vanmXl"
+    },
+    "test_unassign_option_available": {
+      "title": "Verify Unassign License option is available in device menu.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where unassign option available should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate unassign option available on the page",
+          "expected": "unassign option available is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify unassign option available is displayed as expected",
+          "expected": "unassign option available is displayed as expected"
+        }
+      ],
+      "case_key": "bj0G48"
+    },
+    "test_suspend_confirmation_popup": {
+      "title": "Verify Suspend License shows a confirmation popup.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for suspend confirmation popup",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify suspend confirmation popup is displayed and functions correctly",
+          "expected": "Suspend confirmation popup is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "Z8xRWP"
+    },
+    "test_unassign_confirmation_popup": {
+      "title": "Verify Unassign License shows a confirmation popup.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for unassign confirmation popup",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify unassign confirmation popup is displayed and functions correctly",
+          "expected": "Unassign confirmation popup is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "RgGyBl"
+    },
+    "test_assign_button_visible": {
+      "title": "Verify Assign New License button is visible.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where assign button visible should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate assign button visible on the page",
+          "expected": "assign button visible is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify assign button visible is displayed as expected",
+          "expected": "assign button visible is displayed as expected"
+        }
+      ],
+      "case_key": "dypN4W"
+    },
+    "test_assign_modal_opens": {
+      "title": "Verify Assign New License modal opens on button click.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads"
+        },
+        {
+          "n": 3,
+          "action": "Locate the Assign New License button",
+          "expected": "Assign button is visible on the Licenses page"
+        },
+        {
+          "n": 4,
+          "action": "Click the Assign New License button",
+          "expected": "Assign modal dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify the modal contains license assignment fields",
+          "expected": "Modal shows license type, device selection, and confirmation controls"
+        },
+        {
+          "n": 6,
+          "action": "Close the modal without assigning",
+          "expected": "Modal closes and Licenses page remains unchanged"
+        }
+      ],
+      "case_key": "xm9EjW"
+    },
+    "test_assign_modal_close_via_cancel": {
+      "title": "Verify Assign New License modal closes using Cancel.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for assign modal close via cancel",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify assign modal close via cancel is displayed and functions correctly",
+          "expected": "Assign modal close via cancel is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "VKbBe9"
+    },
+    "test_site_dropdown_in_modal": {
+      "title": "Verify site dropdown lists available sites in assign modal.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for site dropdown in modal",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify site dropdown in modal is displayed and functions correctly",
+          "expected": "Site dropdown in modal is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "B86DEG"
+    }
+  }
+}

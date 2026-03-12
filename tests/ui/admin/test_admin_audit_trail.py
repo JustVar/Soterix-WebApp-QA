@@ -13,8 +13,10 @@ class TestAdminAuditTrail:
     """Deeper tests for Admin > General > Audit Trail."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page):
+    def setup(self, authenticated_page, step_capture):
         self.page = authenticated_page
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
         self.admin = AdminPage(self.page)
         self.admin.navigate_to_admin()
 
@@ -40,7 +42,10 @@ class TestAdminAuditTrail:
     @pytest.mark.admin_audit_trail
     def test_audit_trail_page_loads(self):
         """Verify Audit Trail page loads with visible content."""
+        self.step_capture.mark(1, "Navigate to Admin section via sidebar")
+        self.step_capture.mark(2, "Click General tab, then click Audit Trail sub-tab")
         assert "admin" in self.page.url.lower()
+        self.step_capture.mark(3, "Verify URL contains 'admin'")
 
         # Should have at least a table or some content area
         has_content = (
@@ -50,18 +55,21 @@ class TestAdminAuditTrail:
             or self.page.locator("div.MuiBox-root").count() > 5
         )
         assert has_content, "Audit Trail page should have visible content"
+        self.step_capture.mark(4, "Check for table or content area elements")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_breadcrumb(self):
         """Verify breadcrumb displays navigation path including Audit Trail."""
+        self.step_capture.mark(1, "Navigate to Admin > General > Audit Trail")
         breadcrumb = self.page.locator(
             "nav[aria-label='breadcrumb'], "
             "[class*='breadcrumb'], "
             "p:has-text('Audit Trail')"
         )
         expect(breadcrumb.first).to_be_visible(timeout=10000)
+        self.step_capture.mark(2, "Locate breadcrumb navigation element")
 
     @pytest.mark.ui
     @pytest.mark.admin

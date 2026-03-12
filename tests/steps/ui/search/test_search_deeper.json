@@ -1,0 +1,649 @@
+{
+  "test_file": "tests/ui/search/test_search_deeper.py",
+  "class": "TestSearchDeeper",
+  "tests": {
+    "test_category_dropdown_lists_categories": {
+      "title": "Verify category dropdown contains Person, Vehicle, and Event.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Search Filters",
+          "expected": "Camera Search Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where category dropdown lists all available categories should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate category dropdown lists all available categories on the page",
+          "expected": "category dropdown lists all available categories is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify category dropdown lists all available categories is displayed as expected",
+          "expected": "category dropdown lists all available categories is displayed as expected"
+        }
+      ],
+      "case_key": "Z8xR7k"
+    },
+    "test_duration_dropdown_lists_options": {
+      "title": "Verify duration dropdown has multiple time range options.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Duration",
+          "expected": "Duration page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate Duration dropdown lists preset duration options on the page",
+          "expected": "Duration dropdown lists preset duration options is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify Duration dropdown lists preset duration options is displayed as expected",
+          "expected": "Duration dropdown lists preset duration options is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "dypXGR"
+    },
+    "test_description_panel_shown_for_person": {
+      "title": "Verify the Description filter appears after selecting Person.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Search Filters",
+          "expected": "Camera Search Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where description panel should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate description panel on the page",
+          "expected": "description panel is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: for Person category",
+          "expected": "Precondition is met (for Person category)"
+        },
+        {
+          "n": 7,
+          "action": "Verify description panel shown",
+          "expected": "description panel shown"
+        }
+      ],
+      "case_key": "dypNqZ"
+    },
+    "test_event_category_no_gender_options": {
+      "title": "Verify Event category does not show gender selection options.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Search Filters",
+          "expected": "Camera Search Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Event category",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "xm9E11"
+    },
+    "test_person_female_search": {
+      "title": "Verify Person search with Female description completes.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Search Filters",
+          "expected": "Camera Search Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: with Person Female filter returns results",
+          "expected": "Precondition is met (with Person Female filter returns results)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "VKbB1P"
+    },
+    "test_person_search_multiple_results": {
+      "title": "Verify a broad Person search returns multiple results.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - LPR",
+          "expected": "Search - LPR page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for clicking Search",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: without required filters does not trigger results",
+          "expected": "Precondition is met (without required filters does not trigger results)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "xm9dNR"
+    },
+    "test_person_result_images_have_src": {
+      "title": "Verify Person search result images have valid src attributes.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Search Filters",
+          "expected": "Camera Search Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Person search result images have valid src attributes",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "Pgw47m"
+    },
+    "test_event_search_by_duration": {
+      "title": "Verify Event search with different durations completes (parametrized: Today, Last 7 Days).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - Clips",
+          "expected": "Search - Clips page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search by clip name returns matching results",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "J8d9R1"
+    },
+    "test_event_result_images_valid": {
+      "title": "Verify Event search result images are visible.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Search Filters",
+          "expected": "Camera Search Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Event search result images",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "gQxw5N"
+    },
+    "test_change_category_person_to_event": {
+      "title": "Verify switching from Person to Event and re-searching works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Category - Event",
+          "expected": "Category - Event page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for Person and Vehicle specific Description fields",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Person and vehicle specific description fields hidden",
+          "expected": "Person and vehicle specific description fields hidden (for Event category)"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: for Event category",
+          "expected": "Precondition is met (for Event category)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "wmjKMb"
+    },
+    "test_change_duration_and_re_search": {
+      "title": "Verify changing duration between searches works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search Landing Page",
+          "expected": "Search Landing Page page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify the Reset Search clears Duration selection to be deleted from the list",
+          "expected": "Reset Search clears Duration selection is visible and identifiable in the list"
+        },
+        {
+          "n": 4,
+          "action": "Note the current count of items in the list",
+          "expected": "Current item count is recorded for later comparison"
+        },
+        {
+          "n": 5,
+          "action": "Click the delete button or action for the target Reset Search clears Duration selection",
+          "expected": "A confirmation dialog or prompt appears"
+        },
+        {
+          "n": 6,
+          "action": "Verify the confirmation dialog displays the correct item being deleted",
+          "expected": "Dialog shows the name or identifier of the Reset Search clears Duration selection"
+        },
+        {
+          "n": 7,
+          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
+          "expected": "Deletion is processed and a success message appears"
+        },
+        {
+          "n": 8,
+          "action": "Verify the Reset Search clears Duration selection no longer appears in the list",
+          "expected": "Reset Search clears Duration selection is removed from the list view"
+        },
+        {
+          "n": 9,
+          "action": "Verify the item count decreased by one",
+          "expected": "List count reflects the removal"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and confirm the deletion persisted",
+          "expected": "The deleted Reset Search clears Duration selection does not reappear after refresh"
+        }
+      ],
+      "case_key": "Z8xWjk"
+    },
+    "test_search_button_state_after_filters": {
+      "title": "Verify search button is clickable after setting all filters.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - LPR",
+          "expected": "Search - LPR page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Search button on the page",
+          "expected": "Search button is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Search button",
+          "expected": "Search button enabled"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: after applying mandatory filters",
+          "expected": "Precondition is met (after applying mandatory filters)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Search button"
+        }
+      ],
+      "case_key": "dypXRb"
+    },
+    "test_result_count_matches_visible_images": {
+      "title": "Verify get_result_count() matches visible result images.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Search Filters",
+          "expected": "Camera Search Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where result count matches number of visible images should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate result count matches number of visible images on the page",
+          "expected": "result count matches number of visible images is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify result count matches number of visible images is displayed as expected",
+          "expected": "result count matches number of visible images is displayed as expected"
+        }
+      ],
+      "case_key": "rGQP7W"
+    }
+  }
+}

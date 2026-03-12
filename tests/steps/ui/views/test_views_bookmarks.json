@@ -1,0 +1,349 @@
+{
+  "test_file": "tests/ui/views/test_views_bookmarks.py",
+  "class": "TestViewsBookmarks",
+  "tests": {
+    "test_open_bookmarks_panel": {
+      "title": "Verify bookmarks panel opens when clicking the dots icon.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views and enter fullscreen mode on a camera view",
+          "expected": "Camera view is displayed in fullscreen"
+        },
+        {
+          "n": 3,
+          "action": "Locate the bookmarks toggle or dots icon in the fullscreen overlay",
+          "expected": "Bookmarks toggle control is visible in fullscreen"
+        },
+        {
+          "n": 4,
+          "action": "Click the bookmarks toggle",
+          "expected": "Bookmark panel opens within the fullscreen view"
+        },
+        {
+          "n": 5,
+          "action": "Verify the bookmark panel displays saved bookmarks",
+          "expected": "Bookmarks list is visible and populated (or shows empty state)"
+        },
+        {
+          "n": 6,
+          "action": "Toggle the bookmarks panel closed",
+          "expected": "Bookmark panel closes, returning to the fullscreen camera view"
+        }
+      ],
+      "case_key": "yaWrV9"
+    },
+    "test_close_bookmarks_panel": {
+      "title": "Verify bookmarks panel closes when clicking the dots icon again.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views and enter fullscreen mode on a camera view",
+          "expected": "Camera view is displayed in fullscreen"
+        },
+        {
+          "n": 3,
+          "action": "Locate the bookmarks toggle or dots icon in the fullscreen overlay",
+          "expected": "Bookmarks toggle control is visible in fullscreen"
+        },
+        {
+          "n": 4,
+          "action": "Click the bookmarks toggle",
+          "expected": "Bookmark panel opens within the fullscreen view"
+        },
+        {
+          "n": 5,
+          "action": "Verify the bookmark panel displays saved bookmarks",
+          "expected": "Bookmarks list is visible and populated (or shows empty state)"
+        },
+        {
+          "n": 6,
+          "action": "Toggle the bookmarks panel closed",
+          "expected": "Bookmark panel closes, returning to the fullscreen camera view"
+        }
+      ],
+      "case_key": "yaWrV9"
+    },
+    "test_play_bookmark": {
+      "title": "Verify clicking a bookmark plays it.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Playback Controls - Media",
+          "expected": "Playback Controls - Media page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Bookmark Clip icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Bookmark Clip icon on the page",
+          "expected": "Bookmark Clip icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on live playback controls",
+          "expected": "Precondition is met (on live playback controls)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Bookmark Clip icon visible",
+          "expected": "Bookmark Clip icon visible"
+        }
+      ],
+      "case_key": "eJqmLp"
+    },
+    "test_bookmark_options_menu": {
+      "title": "Verify the 3-dot options menu shows 4 options.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Bookmark - Creation",
+          "expected": "Bookmark - Creation page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for adding a bookmark",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created adding a bookmark appears in the list or view",
+          "expected": "The new adding a bookmark is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Set up precondition: on a video tile via three-dot menu",
+          "expected": "Precondition is met (on a video tile via three-dot menu)"
+        },
+        {
+          "n": 12,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new adding a bookmark exists"
+        }
+      ],
+      "case_key": "rGQZz1"
+    },
+    "test_export_bookmark": {
+      "title": "Verify a bookmark can be exported (export dialog completes).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views and enter fullscreen mode on a camera view",
+          "expected": "Camera view is displayed in fullscreen"
+        },
+        {
+          "n": 3,
+          "action": "Locate the bookmarks toggle or dots icon in the fullscreen overlay",
+          "expected": "Bookmarks toggle control is visible in fullscreen"
+        },
+        {
+          "n": 4,
+          "action": "Click the bookmarks toggle",
+          "expected": "Bookmark panel opens within the fullscreen view"
+        },
+        {
+          "n": 5,
+          "action": "Verify the bookmark panel displays saved bookmarks",
+          "expected": "Bookmarks list is visible and populated (or shows empty state)"
+        },
+        {
+          "n": 6,
+          "action": "Toggle the bookmarks panel closed",
+          "expected": "Bookmark panel closes, returning to the fullscreen camera view"
+        }
+      ],
+      "case_key": "yaWrV9"
+    },
+    "test_share_bookmark": {
+      "title": "Verify a bookmark can be shared (share dialog shows success).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where share icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate share icon on the page",
+          "expected": "share icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify share icon visible in fullscreen playback",
+          "expected": "share icon visible in fullscreen playback"
+        }
+      ],
+      "case_key": "Nj3r6e"
+    },
+    "test_rename_bookmark": {
+      "title": "Verify a bookmark can be renamed and the new name appears.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views and enter fullscreen mode on a camera view",
+          "expected": "Camera view is displayed in fullscreen"
+        },
+        {
+          "n": 3,
+          "action": "Locate the bookmarks toggle or dots icon in the fullscreen overlay",
+          "expected": "Bookmarks toggle control is visible in fullscreen"
+        },
+        {
+          "n": 4,
+          "action": "Click the bookmarks toggle",
+          "expected": "Bookmark panel opens within the fullscreen view"
+        },
+        {
+          "n": 5,
+          "action": "Verify the bookmark panel displays saved bookmarks",
+          "expected": "Bookmarks list is visible and populated (or shows empty state)"
+        },
+        {
+          "n": 6,
+          "action": "Toggle the bookmarks panel closed",
+          "expected": "Bookmark panel closes, returning to the fullscreen camera view"
+        }
+      ],
+      "case_key": "yaWrV9"
+    },
+    "test_delete_bookmark": {
+      "title": "Verify a bookmark can be deleted with confirmation.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Channels - Integrations",
+          "expected": "Channels - Integrations page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify the delete confirmation popup to be deleted from the list",
+          "expected": "delete confirmation popup is visible and identifiable in the list"
+        },
+        {
+          "n": 4,
+          "action": "Note the current count of items in the list",
+          "expected": "Current item count is recorded for later comparison"
+        },
+        {
+          "n": 5,
+          "action": "Click the delete button or action for the target delete confirmation popup",
+          "expected": "A confirmation dialog or prompt appears"
+        },
+        {
+          "n": 6,
+          "action": "Verify the confirmation dialog displays the correct item being deleted",
+          "expected": "Dialog shows the name or identifier of the delete confirmation popup"
+        },
+        {
+          "n": 7,
+          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
+          "expected": "Deletion is processed and a success message appears"
+        },
+        {
+          "n": 8,
+          "action": "Verify the delete confirmation popup no longer appears in the list",
+          "expected": "delete confirmation popup is removed from the list view"
+        },
+        {
+          "n": 9,
+          "action": "Verify the item count decreased by one",
+          "expected": "List count reflects the removal"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and confirm the deletion persisted",
+          "expected": "The deleted delete confirmation popup does not reappear after refresh"
+        }
+      ],
+      "case_key": "yaWX0K"
+    }
+  }
+}

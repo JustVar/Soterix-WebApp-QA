@@ -1,0 +1,236 @@
+{
+  "test_file": "tests/ui/events/test_events_playback.py",
+  "class": "TestEventsPlayback",
+  "tests": {
+    "test_play_event_inline": {
+      "title": "Verify clicking Play Video loads the inline event player.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search Results",
+          "expected": "Search Results page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for hovering",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify hovering is displayed and functions correctly",
+          "expected": "Hovering is displayed as expected (on event card reveals Play Video icon)"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: on event card reveals Play Video icon",
+          "expected": "Precondition is met (on event card reveals Play Video icon)"
+        },
+        {
+          "n": 8,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "8V1v5k"
+    },
+    "test_player_controls_visible": {
+      "title": "Verify all player controls are visible after playing an event.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Playback Controls - Media",
+          "expected": "Playback Controls - Media page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Bookmark Clip icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Bookmark Clip icon on the page",
+          "expected": "Bookmark Clip icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on live playback controls",
+          "expected": "Precondition is met (on live playback controls)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Bookmark Clip icon visible",
+          "expected": "Bookmark Clip icon visible"
+        }
+      ],
+      "case_key": "eJqmLp"
+    },
+    "test_event_action_toolbar": {
+      "title": "Verify event action toolbar buttons are visible after playing.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events > Event Wall",
+          "expected": "Event Wall page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Hover effects should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Hover effects on the page",
+          "expected": "Hover effects is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on Event Wall action",
+          "expected": "Precondition is met (on Event Wall action)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Hover effects displayed correctly",
+          "expected": "Hover effects displayed correctly"
+        }
+      ],
+      "case_key": "PgwlNd"
+    },
+    "test_close_event_player": {
+      "title": "Verify closing the player returns to event search results.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events Panel",
+          "expected": "Events Panel page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Note the current state of closing event playback restores previous grid before making changes",
+          "expected": "Initial state is observed and recorded"
+        },
+        {
+          "n": 4,
+          "action": "Perform the action that changes closing event playback restores previous grid",
+          "expected": "Action is completed and change is reflected in the UI"
+        },
+        {
+          "n": 5,
+          "action": "Verify the change is displayed correctly before leaving the page",
+          "expected": "Updated state is visible on the current page"
+        },
+        {
+          "n": 6,
+          "action": "Refresh the page (F5 or browser reload)",
+          "expected": "Page reloads completely"
+        },
+        {
+          "n": 7,
+          "action": "Verify closing event playback restores previous grid retained the changes after refresh",
+          "expected": "The change persisted through the page refresh"
+        },
+        {
+          "n": 8,
+          "action": "Navigate away to a different page",
+          "expected": "Different page loads successfully"
+        },
+        {
+          "n": 9,
+          "action": "Navigate back to Events Panel page",
+          "expected": "Events Panel page loads"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: without losing cameras",
+          "expected": "Precondition is met (without losing cameras)"
+        },
+        {
+          "n": 11,
+          "action": "Verify closing event playback restores previous grid still reflects the saved changes",
+          "expected": "Changes persist after navigating away and back"
+        }
+      ],
+      "case_key": "LD3m4v"
+    },
+    "test_export_event": {
+      "title": "Verify export dialog flow completes (progress bar appears and finishes).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events > Export - Notification Events",
+          "expected": "Export - Notification Events page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Export option should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Export option on the page",
+          "expected": "Export option is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: for an event opened from notification panel",
+          "expected": "Precondition is met (for an event opened from notification panel)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Export option available",
+          "expected": "Export option available"
+        }
+      ],
+      "case_key": "B86Epy"
+    }
+  }
+}

@@ -1,0 +1,333 @@
+{
+  "test_file": "tests/ui/views/test_views_drag_drop.py",
+  "class": "TestViewsDragDrop",
+  "tests": {
+    "test_drag_camera_to_tile": {
+      "title": "Verify a camera thumbnail can be dragged to an empty tile.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Empty Grid State",
+          "expected": "Empty Grid State page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate empty grid tile displays Drag & Drop Camera here text on the page",
+          "expected": "empty grid tile displays Drag & Drop Camera here text is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify empty grid tile displays Drag & Drop Camera here text is displayed as expected",
+          "expected": "empty grid tile displays Drag & Drop Camera here text is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "3gjBw9"
+    },
+    "test_drag_camera_by_name_to_tile": {
+      "title": "Verify a specific camera can be dragged to a tile by name.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Empty Grid State",
+          "expected": "Empty Grid State page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate empty grid tile displays Drag & Drop Camera here text on the page",
+          "expected": "empty grid tile displays Drag & Drop Camera here text is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify empty grid tile displays Drag & Drop Camera here text is displayed as expected",
+          "expected": "empty grid tile displays Drag & Drop Camera here text is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "3gjBw9"
+    },
+    "test_drag_saved_view_to_tile": {
+      "title": "Verify a saved view can be dragged from My Views to an empty tile.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Empty Grid State",
+          "expected": "Empty Grid State page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate empty grid tile displays Drag & Drop Camera here text on the page",
+          "expected": "empty grid tile displays Drag & Drop Camera here text is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify empty grid tile displays Drag & Drop Camera here text is displayed as expected",
+          "expected": "empty grid tile displays Drag & Drop Camera here text is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "3gjBw9"
+    },
+    "test_drag_location_to_tile": {
+      "title": "Verify a location/site can be dragged to an empty tile (shows all cameras).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Empty Grid State",
+          "expected": "Empty Grid State page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate empty grid tile displays Drag & Drop Camera here text on the page",
+          "expected": "empty grid tile displays Drag & Drop Camera here text is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify empty grid tile displays Drag & Drop Camera here text is displayed as expected",
+          "expected": "empty grid tile displays Drag & Drop Camera here text is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "3gjBw9"
+    },
+    "test_drag_map_to_tile": {
+      "title": "Verify a map can be dragged to an empty tile.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Maps",
+          "expected": "Maps page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for selecting a map adds it to an empty grid tile",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created selecting a map adds it to an empty grid tile appears in the list or view",
+          "expected": "The new selecting a map adds it to an empty grid tile is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new selecting a map adds it to an empty grid tile exists"
+        }
+      ],
+      "case_key": "B869gN"
+    },
+    "test_add_channel_to_tile": {
+      "title": "Verify a channel can be added to a tile via checkbox or drag.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Channels - Views",
+          "expected": "Channels - Views page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate channel tile displays channel name or logo on the page",
+          "expected": "channel tile displays channel name or logo is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify channel tile displays channel name or logo is displayed as expected",
+          "expected": "channel tile displays channel name or logo is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "0rzJpl"
+    },
+    "test_multiple_cameras_to_multiple_tiles": {
+      "title": "Verify multiple cameras can be added to multiple tiles.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Grid",
+          "expected": "Camera Grid page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where multiple camera tiles should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate multiple camera tiles on the page",
+          "expected": "multiple camera tiles is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify multiple camera tiles displayed simultaneously in the grid",
+          "expected": "multiple camera tiles displayed simultaneously in the grid"
+        }
+      ],
+      "case_key": "xm9d6l"
+    }
+  }
+}

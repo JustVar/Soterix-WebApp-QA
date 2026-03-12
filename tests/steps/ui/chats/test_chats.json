@@ -1,0 +1,307 @@
+{
+  "test_file": "tests/ui/chats/test_chats.py",
+  "class": "TestChats",
+  "tests": {
+    "test_open_chat_panel": {
+      "title": "Verify the chat panel opens when clicking the chat icon.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Chat > Chat Access",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Chat Access panel loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: when clicking Chat icon",
+          "expected": "Precondition is met (when clicking Chat icon)"
+        },
+        {
+          "n": 8,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "mBdpnd"
+    },
+    "test_create_group": {
+      "title": "Verify a new chat group can be created.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Chat > Group UI",
+          "expected": "Chat Group UI loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for Create Group button visibility",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created Create Group button visibility appears in the list or view",
+          "expected": "The new Create Group button visibility is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new Create Group button visibility exists"
+        }
+      ],
+      "case_key": "Ee61zV"
+    },
+    "test_search_and_send_group_message": {
+      "title": "Verify a message can be sent in a group chat.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > My Views",
+          "expected": "My Views page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Search Views shows no matches message",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: for invalid input",
+          "expected": "Precondition is met (for invalid input)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "RgGQ4l"
+    },
+    "test_send_individual_message": {
+      "title": "Verify a message can be sent to an individual user.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Chat > One-to-One Chat",
+          "expected": "One-to-One Chat panel loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for Send text message in one-to-one chat",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify Send text message in one-to-one chat is displayed and functions correctly",
+          "expected": "Send text message in one-to-one chat is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "0rzlkn"
+    },
+    "test_edit_group_name": {
+      "title": "Verify a group name can be edited.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Edit User",
+          "expected": "Edit User page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify an existing Update first name in Edit User dialog to edit from the list",
+          "expected": "At least one Update first name in Edit User dialog is visible in the list"
+        },
+        {
+          "n": 4,
+          "action": "Click on the Update first name in Edit User dialog or its edit button to open the edit form",
+          "expected": "Edit form or dialog opens with pre-populated data"
+        },
+        {
+          "n": 5,
+          "action": "Verify the existing data is correctly pre-filled in the form",
+          "expected": "All fields show the current values of the Update first name in Edit User dialog"
+        },
+        {
+          "n": 6,
+          "action": "Modify the target field(s) with new valid data",
+          "expected": "The field(s) accept the new input"
+        },
+        {
+          "n": 7,
+          "action": "Verify the changes are reflected in the form before saving",
+          "expected": "Updated values are displayed in the form fields"
+        },
+        {
+          "n": 8,
+          "action": "Click the Save/Update button",
+          "expected": "Changes are saved and a success message or indicator appears"
+        },
+        {
+          "n": 9,
+          "action": "Verify the updated Update first name in Edit User dialog reflects the new values in the list or detail view",
+          "expected": "The modified data is displayed correctly"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and verify the changes persisted",
+          "expected": "Updated values remain after page refresh"
+        }
+      ],
+      "case_key": "RgGBkz"
+    },
+    "test_delete_group": {
+      "title": "Verify a group can be deleted with confirmation.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Media > Group Delete",
+          "expected": "Media Group Delete dialog loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Delete Group option should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Delete Group option on the page",
+          "expected": "Delete Group option is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: for group creator",
+          "expected": "Precondition is met (for group creator)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Delete Group option visible",
+          "expected": "Delete Group option visible"
+        }
+      ],
+      "case_key": "bj04VD"
+    }
+  }
+}

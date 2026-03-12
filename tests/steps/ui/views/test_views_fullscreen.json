@@ -1,0 +1,191 @@
+{
+  "test_file": "tests/ui/views/test_views_fullscreen.py",
+  "class": "TestViewsFullscreen",
+  "tests": {
+    "test_enter_fullscreen": {
+      "title": "Verify clicking zoom icon enters full screen and video streams.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for exit and re-enter fullscreen works correctly",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify exit and re-enter fullscreen works correctly is displayed and functions correctly",
+          "expected": "Exit and re-enter fullscreen works correctly is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "wmjg7G"
+    },
+    "test_exit_fullscreen": {
+      "title": "Verify exiting full screen returns to the views grid.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for exit and re-enter fullscreen works correctly",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify exit and re-enter fullscreen works correctly is displayed and functions correctly",
+          "expected": "Exit and re-enter fullscreen works correctly is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "wmjg7G"
+    },
+    "test_fullscreen_pause_play": {
+      "title": "Verify timeline controls are present in full screen.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Playback Controls - Fullscreen",
+          "expected": "Playback Controls - Fullscreen page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for Pause button pauses video playback in fullscreen",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify Pause button pauses video playback in fullscreen is displayed and functions correctly",
+          "expected": "Pause button pauses video playback in fullscreen is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "J8d92n"
+    },
+    "test_fullscreen_controls_visible": {
+      "title": "Verify player controls are visible in full screen.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Clip Selection - Fullscreen",
+          "expected": "Clip Selection - Fullscreen page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Select Clip From Timeline icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Select Clip From Timeline icon on the page",
+          "expected": "Select Clip From Timeline icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify Select Clip From Timeline icon visible in fullscreen controls",
+          "expected": "Select Clip From Timeline icon visible in fullscreen controls"
+        }
+      ],
+      "case_key": "LD3XyZ"
+    },
+    "test_fullscreen_video_streaming": {
+      "title": "Verify video is actively streaming (no loader, no error state).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback State",
+          "expected": "Live Playback State page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Live indicator should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Live indicator on the page",
+          "expected": "Live indicator is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when camera video is streaming in real-time",
+          "expected": "Precondition is met (when camera video is streaming in real-time)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Live indicator displayed",
+          "expected": "Live indicator displayed"
+        }
+      ],
+      "case_key": "wmjRNb"
+    }
+  }
+}

@@ -27,8 +27,10 @@ class TestSearchCategories:
     """Tests for category-specific Global Search flows."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page):
+    def setup(self, authenticated_page, step_capture):
         self.page = authenticated_page
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
         self.search = SearchPage(self.page)
 
     # --- Person Search (from test_person_global_search) ---
@@ -43,15 +45,21 @@ class TestSearchCategories:
         """
         self.search.navigate()
         self.search.wait_for_page_load()
+        self.step_capture.mark(1, "Navigate to Global Search page")
 
         self.search.select_category("Person")
+        self.step_capture.mark(2, "Select Category = 'Person' from the category dropdown")
         self.search.select_description_gender("Male")
+        self.step_capture.mark(3, "Select Description = 'Male' from the gender dropdown")
         self.search.select_locations_cameras(SITE_NAME)
+        self.step_capture.mark(4, "Select Location = 'Driver Site' and cameras")
         self.search.select_duration_by_index(5)
+        self.step_capture.mark(5, "Select duration filter (index 5)")
         self.search.execute_search(timeout=60000)
 
         count = self.search.get_result_count()
         assert count > 0, "Expected at least one Person search result"
+        self.step_capture.mark(6, "Click Search button and wait for results")
 
     @pytest.mark.ui
     @pytest.mark.search

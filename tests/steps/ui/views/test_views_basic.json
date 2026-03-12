@@ -1,0 +1,297 @@
+{
+  "test_file": "tests/ui/views/test_views_basic.py",
+  "class": "TestViewsBasic",
+  "tests": {
+    "test_rename_does_not_affect_sequence": {
+      "title": "Verify renaming a tab doesn't break the sequential naming for new tabs",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights",
+          "expected": "Insights page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify the removing one Insights widget to be deleted from the list",
+          "expected": "removing one Insights widget is visible and identifiable in the list"
+        },
+        {
+          "n": 4,
+          "action": "Note the current count of items in the list",
+          "expected": "Current item count is recorded for later comparison"
+        },
+        {
+          "n": 5,
+          "action": "Click the delete button or action for the target removing one Insights widget",
+          "expected": "A confirmation dialog or prompt appears"
+        },
+        {
+          "n": 6,
+          "action": "Verify the confirmation dialog displays the correct item being deleted",
+          "expected": "Dialog shows the name or identifier of the removing one Insights widget"
+        },
+        {
+          "n": 7,
+          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
+          "expected": "Deletion is processed and a success message appears"
+        },
+        {
+          "n": 8,
+          "action": "Verify the removing one Insights widget no longer appears in the list",
+          "expected": "removing one Insights widget is removed from the list view"
+        },
+        {
+          "n": 9,
+          "action": "Verify the item count decreased by one",
+          "expected": "List count reflects the removal"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and confirm the deletion persisted",
+          "expected": "The deleted removing one Insights widget does not reappear after refresh"
+        }
+      ],
+      "case_key": "pDp8l3"
+    },
+    "test_save_empty_view_shows_error": {
+      "title": "Verify saving an empty view shows an error or is prevented",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Categories",
+          "expected": "Search Categories page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Locate the form, input, or control where validation applies",
+          "expected": "The target input or form is visible"
+        },
+        {
+          "n": 4,
+          "action": "Enter invalid data or trigger the error condition for system shows validation error",
+          "expected": "The invalid input is accepted into the field"
+        },
+        {
+          "n": 5,
+          "action": "Attempt to submit or trigger the validation",
+          "expected": "Validation fires on submit or field blur"
+        },
+        {
+          "n": 6,
+          "action": "Verify an error message is displayed near the field or at the top of the form",
+          "expected": "A clear, descriptive error message appears"
+        },
+        {
+          "n": 7,
+          "action": "Verify the error message text is correct and helpful",
+          "expected": "Error message accurately describes the validation failure"
+        },
+        {
+          "n": 8,
+          "action": "Verify the form did not submit or the action was blocked",
+          "expected": "No data was saved; the user remains on the form"
+        },
+        {
+          "n": 9,
+          "action": "Correct the invalid input with valid data",
+          "expected": "The error message disappears when valid data is entered"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: when category name is left empty",
+          "expected": "Precondition is met (when category name is left empty)"
+        },
+        {
+          "n": 11,
+          "action": "Submit with the corrected data and verify success",
+          "expected": "Form submits successfully after correction"
+        }
+      ],
+      "case_key": "yaWXBx"
+    },
+    "test_save_view": {
+      "title": "Verify a view can be saved with content using checkbox selection",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Navigate to Views page",
+          "expected": "Views page loads with camera grid"
+        },
+        {
+          "n": 2,
+          "action": "Add a new tab and rename it with a unique timestamp name",
+          "expected": "New tab is created and renamed"
+        },
+        {
+          "n": 3,
+          "action": "Expand 'Driver Site' in the camera tree and show cameras",
+          "expected": "Camera list for Driver Site is visible"
+        },
+        {
+          "n": 4,
+          "action": "Select the first available camera via checkbox",
+          "expected": "Camera is added to the view (thumbnail appears)"
+        },
+        {
+          "n": 5,
+          "action": "Click Save View button",
+          "expected": "'View saved successfully' message appears"
+        },
+        {
+          "n": 6,
+          "action": "Clean up: close the tab and delete the saved view from My Views",
+          "expected": "'Successfully deleted' message appears"
+        }
+      ],
+      "case_key": "8V1b0g"
+    },
+    "test_open_my_views": {
+      "title": "Verify My Views panel opens and shows saved views",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > My Views",
+          "expected": "My Views page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate My Views tab on the page",
+          "expected": "My Views tab is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of My Views tab",
+          "expected": "My Views tab highlighted"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when selected",
+          "expected": "Precondition is met (when selected)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to My Views tab"
+        }
+      ],
+      "case_key": "vanZz1"
+    },
+    "test_open_saved_view": {
+      "title": "Verify a saved view can be reopened from My Views after page refresh",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > View Tabs",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "View Tabs page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "8V1vGJ"
+    },
+    "test_delete_saved_view": {
+      "title": "Verify a saved view can be deleted",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Accessibility - Insights",
+          "expected": "Accessibility - Insights page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify an existing View, Edit, Delete, Report options to edit from the list",
+          "expected": "At least one View, Edit, Delete, Report options is visible in the list"
+        },
+        {
+          "n": 4,
+          "action": "Click on the View, Edit, Delete, Report options or its edit button to open the edit form",
+          "expected": "Edit form or dialog opens with pre-populated data"
+        },
+        {
+          "n": 5,
+          "action": "Verify the existing data is correctly pre-filled in the form",
+          "expected": "All fields show the current values of the View, Edit, Delete, Report options"
+        },
+        {
+          "n": 6,
+          "action": "Modify the target field(s) with new valid data",
+          "expected": "The field(s) accept the new input"
+        },
+        {
+          "n": 7,
+          "action": "Verify the changes are reflected in the form before saving",
+          "expected": "Updated values are displayed in the form fields"
+        },
+        {
+          "n": 8,
+          "action": "Click the Save/Update button",
+          "expected": "Changes are saved and a success message or indicator appears"
+        },
+        {
+          "n": 9,
+          "action": "Verify the updated View, Edit, Delete, Report options reflects the new values in the list or detail view",
+          "expected": "The modified data is displayed correctly"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and verify the changes persisted",
+          "expected": "Updated values remain after page refresh"
+        }
+      ],
+      "case_key": "WEnQRx"
+    }
+  }
+}
