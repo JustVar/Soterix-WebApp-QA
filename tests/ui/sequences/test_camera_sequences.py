@@ -22,8 +22,10 @@ class TestCameraSequences:
     """Tests for camera sequence CRUD and views integration."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page):
+    def setup(self, authenticated_page, step_capture):
         self.page = authenticated_page
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
         self.views = ViewsPage(self.page)
         self.seq = SequencePage(self.page)
         # Navigate to Views first so left panel is ready
@@ -35,11 +37,14 @@ class TestCameraSequences:
     @pytest.mark.sequences
     def test_navigate_to_camera_sequence_page(self):
         """Verify navigating to the camera sequence page via sidebar icon."""
+        self.step_capture.mark(1, "Navigate to Views page first (to initialize left panel)")
         self.seq.navigate()
+        self.step_capture.mark(2, "Click the camera sequence icon in the sidebar")
 
         # Verify we're on the sequence page by checking for search input
         expect_search = self.page.locator("input[placeholder='Search']").first
         expect_search.wait_for(state="visible", timeout=10000)
+        self.step_capture.mark(3, "Verify search input is visible on the sequence page")
 
     @pytest.mark.ui
     @pytest.mark.sequences

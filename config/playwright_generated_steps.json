@@ -1,0 +1,3438 @@
+{
+  "source": "playwright_code",
+  "generated_at": "2026-03-06T13:41:30.071022",
+  "cases": {
+    "gQxw5N": {
+      "title": "Verify Event search result images are valid",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify Event Wall displays event images or thumbnails.",
+          "expected": "Test passes successfully",
+          "n": 2
+        }
+      ]
+    },
+    "VKbBPP": {
+      "title": "Verify all admin sidebar tabs are visible",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify all main admin sidebar tabs are visible.",
+          "expected": "Test passes successfully",
+          "n": 2
+        }
+      ]
+    },
+    "Pgw4jm": {
+      "title": "Verify General section contains Rules sub-tab",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Click on general tab",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "68lnEV": {
+      "title": "Verify General section contains Audit Trail sub-tab",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Click on general tab",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "7ErGBe": {
+      "title": "Verify General section contains Event Wall sub-tab",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Click on general tab",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "9e1NMZ": {
+      "title": "Verify switching from Users tab to Sites tab works",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Users",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Navigate to Sites",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "qzdVD4": {
+      "title": "Verify switching from Sites tab to General tab works",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Sites",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Click on general tab",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "XGLep0": {
+      "title": "Verify Users to General to Users round-trip navigation",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Users",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Click on general tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Navigate to Users",
+          "expected": "",
+          "n": 4
+        }
+      ]
+    },
+    "3gj9EP": {
+      "title": "Verify clicking Audit Trail opens audit log view",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Click on general tab",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Click on page",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify audit Trail page should have visible content",
+          "expected": "Audit Trail page should have visible content",
+          "n": 4
+        }
+      ]
+    },
+    "mBdD1V": {
+      "title": "Verify Admin page loads correctly after browser refresh",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Refresh the page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "21zEKm": {
+      "title": "Verify full Entry-Exit rule creation wizard with canvas zone drawing",
+      "module": "Add New Rule",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Navigate to Rules",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Click add new rule",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Complete rule wizard",
+          "expected": "",
+          "n": 5
+        }
+      ]
+    },
+    "DrdZ7x": {
+      "title": "Verify Maps site dropdown lists available sites",
+      "module": "Maps",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Navigate to Sites",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify no version info found on Sites page",
+          "expected": "No version info found on Sites page",
+          "n": 4
+        }
+      ]
+    },
+    "gQxkdL": {
+      "title": "Verify deleting a camera group with Yes confirmation",
+      "module": "Sites",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Navigate to Sites",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Click site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Expand camera groups",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Edit camera group",
+          "expected": "",
+          "n": 6
+        }
+      ]
+    },
+    "xm9E11": {
+      "title": "Verify Event category does not show gender filter options",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Navigate to Users",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify: Expected role '' not found in",
+          "expected": "Expected role '' not found in",
+          "n": 4
+        },
+        {
+          "action": "Press Escape key",
+          "expected": "",
+          "n": 5
+        }
+      ]
+    },
+    "WEnMLM": {
+      "title": "Verify notification panel contains content when opened",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Open chat panel",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "8V1l8r": {
+      "title": "Verify notification panel survives page refresh",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Refresh the page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Open chat panel",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "GdWPmy": {
+      "title": "Verify Events rule dropdown lists available rules",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select site",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify: Expected multiple rule types",
+          "expected": "Expected multiple rule types",
+          "n": 3
+        }
+      ]
+    },
+    "Ee6d7B": {
+      "title": "Verify search with Intrusion Detection rule returns events",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select site",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select rule: 'Intrusion Detection'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Select duration: 'Last 7'",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Search events",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Verify: Expected results for Intrusion Detection + Last 7 Days",
+          "expected": "Expected results for Intrusion Detection + Last 7 Days",
+          "n": 6
+        }
+      ]
+    },
+    "lR28Gn": {
+      "title": "Verify search with different rule type returns events",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select site",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select rule",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Select duration: 'Last 7'",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify: Expected '' in combobox, got ''",
+          "expected": "Expected '' in combobox, got ''",
+          "n": 5
+        }
+      ]
+    },
+    "Nj3rPe": {
+      "title": "Verify combined rule and duration filter returns events",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select site",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select rule: 'Intrusion Detection'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Select duration: 'Last 7'",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Search events",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Verify: Expected results for Intrusion Detection + Last 7 Days",
+          "expected": "Expected results for Intrusion Detection + Last 7 Days",
+          "n": 6
+        }
+      ]
+    },
+    "68lnPV": {
+      "title": "Verify Events search results have thumbnail images",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select site",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select duration: 'Last 7'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Search events",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify event  thumbnail should have a src attribute",
+          "expected": "Event  thumbnail should have a src attribute",
+          "n": 5
+        }
+      ]
+    },
+    "LD3gmJ": {
+      "title": "Verify assigned tab shows site grouping",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify neither site grouping nor empty state found",
+          "expected": "Neither site grouping nor empty state found",
+          "n": 4
+        }
+      ]
+    },
+    "wmjgKb": {
+      "title": "Verify multiple sites displayed",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify site grouping structure not found",
+          "expected": "Site grouping structure not found",
+          "n": 4
+        }
+      ]
+    },
+    "yaWrXx": {
+      "title": "Verify expand site shows features",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify no feature rows shown after site expansion",
+          "expected": "No feature rows shown after site expansion",
+          "n": 5
+        }
+      ]
+    },
+    "0rzxll": {
+      "title": "Verify collapse site hides features",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Collapse site",
+          "expected": "",
+          "n": 5
+        }
+      ]
+    },
+    "kpZQW9": {
+      "title": "Verify site enable toggle visible",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "11zJl0": {
+      "title": "Verify assigned tab retains state after navigation",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Click on link to dashboard",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 6
+        }
+      ]
+    },
+    "5BRzD7": {
+      "title": "Verify assigned tab refresh behavior",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Refresh the page",
+          "expected": "",
+          "n": 4
+        }
+      ]
+    },
+    "DrdZzm": {
+      "title": "Verify device list loads",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Click on first",
+          "expected": "",
+          "n": 5
+        }
+      ]
+    },
+    "eJqjmr": {
+      "title": "Verify device list has three dot menu",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Click on first",
+          "expected": "",
+          "n": 5
+        }
+      ]
+    },
+    "vanmXl": {
+      "title": "Verify suspend option available",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Click on first",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Open device menu",
+          "expected": "",
+          "n": 6
+        },
+        {
+          "action": "Press Escape key",
+          "expected": "",
+          "n": 7
+        }
+      ]
+    },
+    "bj0G48": {
+      "title": "Verify unassign option available",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Click on first",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Open device menu",
+          "expected": "",
+          "n": 6
+        },
+        {
+          "action": "Press Escape key",
+          "expected": "",
+          "n": 7
+        }
+      ]
+    },
+    "Z8xRWP": {
+      "title": "Verify suspend confirmation popup",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Click on first",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Suspend device",
+          "expected": "",
+          "n": 6
+        },
+        {
+          "action": "Cancel action",
+          "expected": "",
+          "n": 7
+        }
+      ]
+    },
+    "RgGyBl": {
+      "title": "Verify unassign confirmation popup",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Click on first",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Open device menu",
+          "expected": "",
+          "n": 6
+        },
+        {
+          "action": "Click on unassign option",
+          "expected": "",
+          "n": 7
+        },
+        {
+          "action": "Cancel action",
+          "expected": "",
+          "n": 8
+        }
+      ]
+    },
+    "dypN4W": {
+      "title": "Verify assign button visible",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "xm9EjW": {
+      "title": "Verify assign modal opens",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Open assign modal",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Close assign modal",
+          "expected": "",
+          "n": 4
+        }
+      ]
+    },
+    "VKbBe9": {
+      "title": "Verify assign modal close via cancel",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Open assign modal",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Close assign modal",
+          "expected": "",
+          "n": 4
+        }
+      ]
+    },
+    "B86DEG": {
+      "title": "Verify site dropdown in modal",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Open assign modal",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Close assign modal",
+          "expected": "",
+          "n": 4
+        }
+      ]
+    },
+    "8V1lbn": {
+      "title": "Verify navigate to licenses",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "M73EzN": {
+      "title": "Verify default layout",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "DrdZz4": {
+      "title": "Verify total licenses widget visible",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "eJqjmn": {
+      "title": "Verify license counts displayed",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "For each item ('Active', 'Available', 'Suspended'...):",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "vanmXV": {
+      "title": "Verify counts persist after refresh",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Refresh the page",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "bj0G4q": {
+      "title": "Verify available tab is default",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "Z8xRWR": {
+      "title": "Verify switch between tabs",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Switch to Available Tab",
+          "expected": "",
+          "n": 4
+        }
+      ]
+    },
+    "RgGyrK": {
+      "title": "Verify available tab displays feature list",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Available Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify no license features displayed in Available tab",
+          "expected": "No license features displayed in Available tab",
+          "n": 4
+        }
+      ]
+    },
+    "dypNdB": {
+      "title": "Verify available tab columns",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Available Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify no column headers found",
+          "expected": "No column headers found",
+          "n": 4
+        }
+      ]
+    },
+    "xm9E4m": {
+      "title": "Verify available tab retains state after navigation",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Available Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Click on link to dashboard",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 5
+        }
+      ]
+    },
+    "VKbBrV": {
+      "title": "Verify search bar visible",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "J8d3rn": {
+      "title": "Verify license module accessible after refresh",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Refresh the page",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "Pgw4rw": {
+      "title": "Verify admin can access licenses",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "68ln6w": {
+      "title": "Verify license page no duplicate records",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "21z6Bn": {
+      "title": "Verify consistent layout across tabs",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "aj6n7a": {
+      "title": "Verify confirmation dialogs have clear messaging",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Switch to Assigned Tab",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Expand site",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Click on first",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Open device menu",
+          "expected": "",
+          "n": 6
+        },
+        {
+          "action": "Click on Suspend / Suspend",
+          "expected": "",
+          "n": 7
+        },
+        {
+          "action": "Verify confirmation dialog should have clear messaging",
+          "expected": "Confirmation dialog should have clear messaging",
+          "n": 8
+        },
+        {
+          "action": "Cancel action",
+          "expected": "",
+          "n": 9
+        }
+      ]
+    },
+    "QGjLwP": {
+      "title": "Verify tooltip text for icons",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify no icons with tooltip/alt text found",
+          "expected": "No icons with tooltip/alt text found",
+          "n": 3
+        }
+      ]
+    },
+    "WEnMv2": {
+      "title": "Verify search with valid license name",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Search for 'Channel'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify search returned no results for 'Channel'",
+          "expected": "Search returned no results for 'Channel'",
+          "n": 4
+        }
+      ]
+    },
+    "B86DEN": {
+      "title": "Verify search with partial keyword",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Search for 'Chan'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify partial keyword search returned no results",
+          "expected": "Partial keyword search returned no results",
+          "n": 4
+        }
+      ]
+    },
+    "8V1lbJ": {
+      "title": "Verify search with license key",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Search for 'LIC'",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "M73Ezq": {
+      "title": "Verify invalid search shows no results",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Search for 'ZZZZNONEXISTENT999'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify invalid search should show empty state or zero data rows",
+          "expected": "Invalid search should show empty state or zero data rows",
+          "n": 4
+        }
+      ]
+    },
+    "7ErG7L": {
+      "title": "Verify clear search restores list",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Search for 'Channel'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Clear the search field",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify clearing search did not restore the full list",
+          "expected": "Clearing search did not restore the full list",
+          "n": 5
+        }
+      ]
+    },
+    "9e1N3r": {
+      "title": "Verify empty search does not filter",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Perform a search",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify empty search should not change the displayed data",
+          "expected": "Empty search should not change the displayed data",
+          "n": 4
+        }
+      ]
+    },
+    "qzdV4P": {
+      "title": "Verify csv download option available",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "XGLew7": {
+      "title": "Verify csv download triggers file",
+      "module": "Licenses",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Licenses page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Initiate file download",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Click on CSV / Export / Download",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify: Expected CSV file",
+          "expected": "Expected CSV file",
+          "n": 5
+        }
+      ]
+    },
+    "Ee6DBy": {
+      "title": "Verify brute force protection with multiple failed login attempts",
+      "module": "Login Security",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Enter valid credentials and log in",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "lR2W6m": {
+      "title": "Verify password reset link exists on login page",
+      "module": "Login Security",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the target URL",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify reset link text '' does not contain expected keywords",
+          "expected": "Reset link text '' does not contain expected keywords",
+          "n": 3
+        }
+      ]
+    },
+    "7ErGae": {
+      "title": "Verify profile menu opens from header",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Open profile menu",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify profile menu should be visible after clicking avatar",
+          "expected": "Profile menu should be visible after clicking avatar",
+          "n": 3
+        }
+      ]
+    },
+    "9e1NEZ": {
+      "title": "Verify profile menu contains Sign Out option",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Open profile menu",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify: Expected 'Sign out' option in profile menu",
+          "expected": "Expected 'Sign out' option in profile menu",
+          "n": 3
+        }
+      ]
+    },
+    "XGLe70": {
+      "title": "Verify login form is visible after logout",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Open profile menu and click Sign Out",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "3gj93P": {
+      "title": "Verify cannot access app pages after logout",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Open profile menu and click Sign Out",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Navigate to the target URL",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify should be redirected to login after logout",
+          "expected": "Should be redirected to login after logout",
+          "n": 4
+        }
+      ]
+    },
+    "eJqj13": {
+      "title": "Verify selected site text updates after site selection",
+      "module": "Maps",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Maps page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select site: 'Driver Site'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify: Expected at least one map card after selecting site",
+          "expected": "Expected at least one map card after selecting site",
+          "n": 4
+        }
+      ]
+    },
+    "vanmRn": {
+      "title": "Verify map cards are visible after site selection",
+      "module": "Maps",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Maps page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select site: 'Driver Site'",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "dypNzZ": {
+      "title": "Verify online cameras are detected on map",
+      "module": "Maps",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Maps page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select site: 'Driver Site'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Open map",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify: Expected camera icons on opened map",
+          "expected": "Expected camera icons on opened map",
+          "n": 5
+        }
+      ]
+    },
+    "bj0Ga9": {
+      "title": "Verify multiple map cards are displayed for a site",
+      "module": "Maps",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select site",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify: Expected multiple map cards",
+          "expected": "Expected multiple map cards",
+          "n": 3
+        }
+      ]
+    },
+    "Z8xRpk": {
+      "title": "Verify map card displays device count information",
+      "module": "Maps",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select site",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify: Expected device count elements on map cards",
+          "expected": "Expected device count elements on map cards",
+          "n": 3
+        }
+      ]
+    },
+    "xm9Ex1": {
+      "title": "Verify Maps page loads correctly after browser refresh",
+      "module": "Maps",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Refresh the page",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "Nj3r6e": {
+      "title": "Verify share icon is visible in fullscreen playback",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Media page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select date filter: 'Last 30 Days'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Click tab",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Share folder",
+          "expected": "",
+          "n": 5
+        }
+      ]
+    },
+    "21z6dQ": {
+      "title": "Verify header notification icons are present",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify: Expected at least 2 header icons (notification + profile)",
+          "expected": "Expected at least 2 header icons (notification + profile)",
+          "n": 2
+        }
+      ]
+    },
+    "aj6nq4": {
+      "title": "Verify notification bell icon is visible in header",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify the notification bell icon is always visible in the header.",
+          "expected": "Test passes successfully",
+          "n": 2
+        }
+      ]
+    },
+    "QGjL9B": {
+      "title": "Verify mute and unmute notification round-trip toggle works",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Click on first",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify: Expected mute state to return to  after round-trip toggle",
+          "expected": "Expected mute state to return to  after round-trip toggle",
+          "n": 3
+        }
+      ]
+    },
+    "B86D7R": {
+      "title": "Verify notification panel persists after page navigation",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Click on link to search",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "M73EP7": {
+      "title": "Verify notification icon works correctly on Views page",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Click on Views",
+          "expected": "",
+          "n": 2
+        }
+      ]
+    },
+    "5BRNpj": {
+      "title": "Verify playing a search result from in-camera forensic search",
+      "module": "Search in Camera",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Open search",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select category",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Select description gender: 'Male'",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Select duration",
+          "expected": "",
+          "n": 5
+        }
+      ]
+    },
+    "Z8xR7k": {
+      "title": "Verify category dropdown lists all available categories",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify: Expected at least 3 categories",
+          "expected": "Expected at least 3 categories",
+          "n": 2
+        },
+        {
+          "action": "Verify: Expected '' in categories",
+          "expected": "Expected '' in categories",
+          "n": 3
+        }
+      ]
+    },
+    "dypNqZ": {
+      "title": "Verify description panel is shown for Person category",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select category: 'Person'",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify description panel should be visible for Person category",
+          "expected": "Description panel should be visible for Person category",
+          "n": 3
+        }
+      ]
+    },
+    "VKbB1P": {
+      "title": "Verify search with Person Female filter returns results",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select category: 'Person'",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select description gender: 'Female'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Select locations cameras",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Select duration by index",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Verify elements are present",
+          "expected": "Expected elements found",
+          "n": 6
+        }
+      ]
+    },
+    "Pgw47m": {
+      "title": "Verify Person search result images have valid src attributes",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select category: 'Person'",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select description gender: 'Male'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Select locations cameras",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Select duration by index",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Execute search",
+          "expected": "",
+          "n": 6
+        }
+      ]
+    },
+    "rGQP7W": {
+      "title": "Verify result count matches number of visible images",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Select category: 'Person'",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select description gender: 'Male'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Select locations cameras",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Select duration by index",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Execute search",
+          "expected": "",
+          "n": 6
+        },
+        {
+          "action": "Verify: Expected at least one visible result image",
+          "expected": "Expected at least one visible result image",
+          "n": 7
+        },
+        {
+          "action": "Verify result count () doesn't match visible images ()",
+          "expected": "Result count () doesn't match visible images ()",
+          "n": 8
+        }
+      ]
+    },
+    "jPnWJE": {
+      "title": "Verify navigating to camera sequence page via sidebar icon",
+      "module": "Camera Sequence - Fullscreen",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Mark",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Navigate to the Camera Sequences page",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Mark",
+          "expected": "",
+          "n": 4
+        }
+      ]
+    },
+    "41VrRX": {
+      "title": "Verify searching for a camera on the sequence page",
+      "module": "Camera Sequence - Fullscreen",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Camera Sequences page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Search camera for 'Hanwha'",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify search input should contain 'Hanwha', got ''",
+          "expected": "Search input should contain 'Hanwha', got ''",
+          "n": 4
+        }
+      ]
+    },
+    "pDpvBJ": {
+      "title": "Verify selecting all cameras via Select All checkbox for sequencing",
+      "module": "Camera Sequence - Fullscreen",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Camera Sequences page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select first camera",
+          "expected": "",
+          "n": 3
+        }
+      ]
+    },
+    "wmjJZm": {
+      "title": "Verify adding a created sequence to the views panel",
+      "module": "Camera Sequence - Fullscreen",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Camera Sequences page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Select first camera",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Create sequence",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Navigate to the Camera Sequences page",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Wait for page load",
+          "expected": "",
+          "n": 6
+        },
+        {
+          "action": "Verify sequence was added to views",
+          "expected": "Sequence was added to views",
+          "n": 7
+        }
+      ]
+    },
+    "rGQZz1": {
+      "title": "Verify adding a bookmark on a video tile via three-dot menu",
+      "module": "Bookmark - Creation",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to the Views - Bookmarks page",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Expand site and show cameras",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Open bookmarks panel",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify bookmark was not created - no bookmarks found in panel",
+          "expected": "Bookmark was not created - no bookmarks found in panel",
+          "n": 5
+        }
+      ]
+    },
+    "yaWrV9": {
+      "title": "Verify bookmarks toggle opens bookmark panel in fullscreen",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Open bookmarks panel",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify bookmarks panel should be visible after clicking dots icon",
+          "expected": "Bookmarks panel should be visible after clicking dots icon",
+          "n": 3
+        }
+      ]
+    },
+    "Nj3JdQ": {
+      "title": "Verify adding and removing a camera from favorites panel",
+      "module": "Camera Favorite",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Expand site and show cameras",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Toggle favorite",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Open favorites panel",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify camera '' should appear in favorites after adding",
+          "expected": "Camera '' should appear in favorites after adding",
+          "n": 5
+        },
+        {
+          "action": "Close favorites panel",
+          "expected": "",
+          "n": 6
+        },
+        {
+          "action": "Toggle favorite",
+          "expected": "",
+          "n": 7
+        },
+        {
+          "action": "Open favorites panel",
+          "expected": "",
+          "n": 8
+        },
+        {
+          "action": "Verify camera '' should not appear in favorites after removing",
+          "expected": "Camera '' should not appear in favorites after removing",
+          "n": 9
+        },
+        {
+          "action": "Close favorites panel",
+          "expected": "",
+          "n": 10
+        }
+      ]
+    },
+    "wmjg7G": {
+      "title": "Verify exit and re-enter fullscreen works correctly",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Enter fullscreen on tile",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify video should be streaming in full screen",
+          "expected": "Video should be streaming in full screen",
+          "n": 3
+        }
+      ]
+    },
+    "K4nmwJ": {
+      "title": "Verify settings icon is visible in fullscreen playback",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify the settings icon is visible in fullscreen player.",
+          "expected": "Test passes successfully",
+          "n": 2
+        }
+      ]
+    },
+    "jPn2ad": {
+      "title": "Verify overlays icon is visible in fullscreen playback",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify the overlays icon is visible in fullscreen player.",
+          "expected": "Test passes successfully",
+          "n": 2
+        }
+      ]
+    },
+    "41VXLb": {
+      "title": "Verify live indicator is displayed in fullscreen playback",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify: Expected live mode indicator for a live camera stream",
+          "expected": "Expected live mode indicator for a live camera stream",
+          "n": 2
+        }
+      ]
+    },
+    "pDpdjG": {
+      "title": "Verify control container bar is visible in fullscreen",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify the main control container is rendered in fullscreen.",
+          "expected": "Test passes successfully",
+          "n": 2
+        }
+      ]
+    },
+    "LD3g6e": {
+      "title": "Verify volume control is clickable in fullscreen playback",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Click on volume control",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Verify volume icon should still be present after click",
+          "expected": "Volume icon should still be present after click",
+          "n": 3
+        }
+      ]
+    },
+    "0rzxZb": {
+      "title": "Verify fullscreen works on second camera tile",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Expand site and show cameras",
+          "expected": "",
+          "n": 2
+        },
+        {
+          "action": "Hover over cameraThumbnailWrapper",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Click on sidebar custom checkbox",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Enter fullscreen on tile",
+          "expected": "",
+          "n": 5
+        },
+        {
+          "action": "Verify second camera should stream in fullscreen",
+          "expected": "Second camera should stream in fullscreen",
+          "n": 6
+        }
+      ]
+    },
+    "kpZQr0": {
+      "title": "Verify timeline elements are present in fullscreen playback",
+      "module": "Live Playback Controls",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify: Expected at least one pause icon variant (live or archive mode)",
+          "expected": "Expected at least one pause icon variant (live or archive mode)",
+          "n": 2
+        }
+      ]
+    },
+    "GdWvMK": {
+      "title": "Verify searching for cameras within a site detail view",
+      "module": "Sites",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin from the left sidebar",
+          "expected": "Admin section loads",
+          "n": 2
+        },
+        {
+          "action": "Click on Sites tab",
+          "expected": "Sites list is displayed",
+          "n": 3
+        },
+        {
+          "action": "Click on a site to open site detail",
+          "expected": "Site detail page loads",
+          "n": 4
+        },
+        {
+          "action": "Verify searching for cameras within a site detail view",
+          "expected": "searching for cameras within a site detail view",
+          "n": 5
+        }
+      ]
+    },
+    "K4ndbd": {
+      "title": "Verify sharing a live camera view via email and copy link",
+      "module": "Share Live View - Camera",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Views from the left sidebar",
+          "expected": "Views page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera tile",
+          "expected": "Camera stream is displayed",
+          "n": 3
+        },
+        {
+          "action": "Verify sharing a live camera view via email and copy link",
+          "expected": "sharing a live camera view via email and copy link",
+          "n": 4
+        }
+      ]
+    },
+    "LD3x9E": {
+      "title": "Verify creating a new camera sequence with a timestamped name",
+      "module": "Camera Sequence Save",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Camera Sequences from the left sidebar",
+          "expected": "Sequences page loads",
+          "n": 2
+        },
+        {
+          "action": "Verify creating a new camera sequence with a timestamped name",
+          "expected": "creating a new camera sequence with a timestamped name",
+          "n": 3
+        }
+      ]
+    },
+    "yaW6dL": {
+      "title": "Verify editing a sequence timing and name",
+      "module": "Camera Sequence Timing",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Camera Sequences from the left sidebar",
+          "expected": "Sequences page loads",
+          "n": 2
+        },
+        {
+          "action": "Verify editing a sequence timing and name",
+          "expected": "editing a sequence timing and name",
+          "n": 3
+        }
+      ]
+    },
+    "0rzgKw": {
+      "title": "Verify creating sequence with offline camera refrain and reverse play options",
+      "module": "Camera Sequence Options",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Camera Sequences from the left sidebar",
+          "expected": "Sequences page loads",
+          "n": 2
+        },
+        {
+          "action": "Verify creating sequence with offline camera refrain and reverse play options",
+          "expected": "creating sequence with offline camera refrain and reverse play options",
+          "n": 3
+        }
+      ]
+    },
+    "kpZBmZ": {
+      "title": "Verify in-camera search with Person Male Today filters returns results",
+      "module": "Search in Camera",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Views from the left sidebar",
+          "expected": "Views page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera and open in-camera search",
+          "expected": "In-camera search panel opens",
+          "n": 3
+        },
+        {
+          "action": "in-camera search with Person Male Today filters",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify in-camera search with Person Male Today filters returns results",
+          "expected": "results",
+          "n": 5
+        }
+      ]
+    },
+    "aj64Ve": {
+      "title": "Verify full Heat Map rule creation wizard with MuiSwitch toggle",
+      "module": "Add New Rule",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin from the left sidebar",
+          "expected": "Admin section loads",
+          "n": 2
+        },
+        {
+          "action": "Click on General tab",
+          "expected": "General section is displayed",
+          "n": 3
+        },
+        {
+          "action": "Click on Rules sub-tab",
+          "expected": "Rules list is displayed",
+          "n": 4
+        },
+        {
+          "action": "Verify full Heat Map rule creation wizard with MuiSwitch toggle",
+          "expected": "full Heat Map rule creation wizard with MuiSwitch toggle",
+          "n": 5
+        }
+      ]
+    },
+    "QGj7m9": {
+      "title": "Verify full Loitering rule creation wizard with MuiSwitch toggle",
+      "module": "Add New Rule",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin from the left sidebar",
+          "expected": "Admin section loads",
+          "n": 2
+        },
+        {
+          "action": "Click on General tab",
+          "expected": "General section is displayed",
+          "n": 3
+        },
+        {
+          "action": "Click on Rules sub-tab",
+          "expected": "Rules list is displayed",
+          "n": 4
+        },
+        {
+          "action": "Verify full Loitering rule creation wizard with MuiSwitch toggle",
+          "expected": "full Loitering rule creation wizard with MuiSwitch toggle",
+          "n": 5
+        }
+      ]
+    },
+    "WEnm8K": {
+      "title": "Verify full Occupancy rule creation wizard with MuiSwitch toggle",
+      "module": "Add New Rule",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin from the left sidebar",
+          "expected": "Admin section loads",
+          "n": 2
+        },
+        {
+          "action": "Click on General tab",
+          "expected": "General section is displayed",
+          "n": 3
+        },
+        {
+          "action": "Click on Rules sub-tab",
+          "expected": "Rules list is displayed",
+          "n": 4
+        },
+        {
+          "action": "Verify full Occupancy rule creation wizard with MuiSwitch toggle",
+          "expected": "full Occupancy rule creation wizard with MuiSwitch toggle",
+          "n": 5
+        }
+      ]
+    },
+    "B86BbX": {
+      "title": "Verify full Intrusion Detection rule creation wizard with MuiSwitch toggle",
+      "module": "Add New Rule",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin from the left sidebar",
+          "expected": "Admin section loads",
+          "n": 2
+        },
+        {
+          "action": "Click on General tab",
+          "expected": "General section is displayed",
+          "n": 3
+        },
+        {
+          "action": "Click on Rules sub-tab",
+          "expected": "Rules list is displayed",
+          "n": 4
+        },
+        {
+          "action": "Verify full Intrusion Detection rule creation wizard with MuiSwitch toggle",
+          "expected": "full Intrusion Detection rule creation wizard with MuiSwitch toggle",
+          "n": 5
+        }
+      ]
+    },
+    "8V14w7": {
+      "title": "Verify full Line Crossing rule creation wizard with canvas zone drawing",
+      "module": "Add New Rule",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin from the left sidebar",
+          "expected": "Admin section loads",
+          "n": 2
+        },
+        {
+          "action": "Click on General tab",
+          "expected": "General section is displayed",
+          "n": 3
+        },
+        {
+          "action": "Click on Rules sub-tab",
+          "expected": "Rules list is displayed",
+          "n": 4
+        },
+        {
+          "action": "Verify full Line Crossing rule creation wizard with canvas zone drawing",
+          "expected": "full Line Crossing rule creation wizard with canvas zone drawing",
+          "n": 5
+        }
+      ]
+    },
+    "RgGyjd": {
+      "title": "Verify duration dropdown lists all available options",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Search from the left sidebar",
+          "expected": "Search page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera with search capability",
+          "expected": "Camera search view loads",
+          "n": 3
+        },
+        {
+          "action": "Open duration dropdown",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify all available options are listed",
+          "expected": "all available options",
+          "n": 5
+        }
+      ]
+    },
+    "J8d3mL": {
+      "title": "Verify Person search returns multiple results",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Search from the left sidebar",
+          "expected": "Search page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera with search capability",
+          "expected": "Camera search view loads",
+          "n": 3
+        },
+        {
+          "action": "Person search",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify Person search returns multiple results",
+          "expected": "multiple results",
+          "n": 5
+        }
+      ]
+    },
+    "qzdVj4": {
+      "title": "Verify logout redirects to login page",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify logout redirects to login page",
+          "expected": "logout redirects to login page",
+          "n": 2
+        }
+      ]
+    },
+    "zvnKQ9": {
+      "title": "Verify browser back button after logout stays on login",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify browser back button after logout stays on login",
+          "expected": "browser back button after logout stays on login",
+          "n": 2
+        }
+      ]
+    },
+    "mBdDrV": {
+      "title": "Verify Event search with Today duration returns results",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Search from the left sidebar",
+          "expected": "Search page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera with search capability",
+          "expected": "Camera search view loads",
+          "n": 3
+        },
+        {
+          "action": "Event search with Today duration",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify Event search with Today duration returns results",
+          "expected": "results",
+          "n": 5
+        }
+      ]
+    },
+    "n8jvrz": {
+      "title": "Verify Event search with Last 7 Days duration returns results",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Search from the left sidebar",
+          "expected": "Search page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera with search capability",
+          "expected": "Camera search view loads",
+          "n": 3
+        },
+        {
+          "action": "Event search with Last 7 Days duration",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify Event search with Last 7 Days duration returns results",
+          "expected": "results",
+          "n": 5
+        }
+      ]
+    },
+    "GdWPqy": {
+      "title": "Verify changing category from Person to Event updates results",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Search from the left sidebar",
+          "expected": "Search page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera with search capability",
+          "expected": "Camera search view loads",
+          "n": 3
+        },
+        {
+          "action": "changing category from Person to Event",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify results are updated",
+          "expected": "results",
+          "n": 5
+        }
+      ]
+    },
+    "Ee6dkB": {
+      "title": "Verify changing duration and re-searching updates results",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Search from the left sidebar",
+          "expected": "Search page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera with search capability",
+          "expected": "Camera search view loads",
+          "n": 3
+        },
+        {
+          "action": "changing duration and re-searching",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify results are updated",
+          "expected": "results",
+          "n": 5
+        }
+      ]
+    },
+    "lR28Qn": {
+      "title": "Verify search button is enabled after selecting filters",
+      "module": "Camera Search Filters",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Search from the left sidebar",
+          "expected": "Search page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a camera with search capability",
+          "expected": "Camera search view loads",
+          "n": 3
+        },
+        {
+          "action": "Verify search button is enabled after selecting filters",
+          "expected": "search button is enabled after selecting filters",
+          "n": 4
+        }
+      ]
+    },
+    "11zJRB": {
+      "title": "Verify notification panel closes when icon is clicked again",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify notification panel closes when icon is clicked again",
+          "expected": "notification panel closes when icon is clicked again",
+          "n": 2
+        }
+      ]
+    },
+    "5BRzq9": {
+      "title": "Verify notification panel reopens after being closed",
+      "module": "Notification Panel",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify notification panel reopens after being closed",
+          "expected": "notification panel reopens after being closed",
+          "n": 2
+        }
+      ]
+    },
+    "RgGyEd": {
+      "title": "Verify camera icons are present on opened map",
+      "module": "Maps",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Maps from the left sidebar",
+          "expected": "Maps page loads",
+          "n": 2
+        },
+        {
+          "action": "Select a site from the dropdown",
+          "expected": "Site maps are displayed",
+          "n": 3
+        },
+        {
+          "action": "Verify camera icons are present on opened map",
+          "expected": "camera icons are present on opened map",
+          "n": 4
+        }
+      ]
+    },
+    "J8d37L": {
+      "title": "Verify clicking General tab opens General section",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin from the left sidebar",
+          "expected": "Admin section loads",
+          "n": 2
+        },
+        {
+          "action": "Click on General tab",
+          "expected": "General section is displayed",
+          "n": 3
+        },
+        {
+          "action": "Click on clicking General tab",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify General section is displayed",
+          "expected": "General section",
+          "n": 5
+        }
+      ]
+    },
+    "zvnKW9": {
+      "title": "Verify clicking Event Wall opens event wall view",
+      "module": "General",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Admin from the left sidebar",
+          "expected": "Admin section loads",
+          "n": 2
+        },
+        {
+          "action": "Click on General tab",
+          "expected": "General section is displayed",
+          "n": 3
+        },
+        {
+          "action": "Click on clicking Event Wall",
+          "expected": "",
+          "n": 4
+        },
+        {
+          "action": "Verify event wall view is displayed",
+          "expected": "event wall view",
+          "n": 5
+        }
+      ]
+    },
+    "n8jvBz": {
+      "title": "Verify Events site dropdown lists available sites",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Events from the left sidebar",
+          "expected": "Events page loads",
+          "n": 2
+        },
+        {
+          "action": "Open Events site dropdown",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify available sites are listed",
+          "expected": "available sites",
+          "n": 4
+        }
+      ]
+    },
+    "gQxw6N": {
+      "title": "Verify site selection shows selected site name",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Events from the left sidebar",
+          "expected": "Events page loads",
+          "n": 2
+        },
+        {
+          "action": "site selection",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify site selection shows selected site name",
+          "expected": "selected site name",
+          "n": 4
+        }
+      ]
+    },
+    "rGQPeW": {
+      "title": "Verify Events search by duration filter returns events",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Events from the left sidebar",
+          "expected": "Events page loads",
+          "n": 2
+        },
+        {
+          "action": "Events search by duration filter",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify Events search by duration filter returns events",
+          "expected": "events",
+          "n": 4
+        }
+      ]
+    },
+    "K4nmWJ": {
+      "title": "Verify changing duration and re-searching updates results",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Events from the left sidebar",
+          "expected": "Events page loads",
+          "n": 2
+        },
+        {
+          "action": "changing duration and re-searching",
+          "expected": "",
+          "n": 3
+        },
+        {
+          "action": "Verify results are updated",
+          "expected": "results",
+          "n": 4
+        }
+      ]
+    },
+    "jPn24d": {
+      "title": "Verify pinning multiple events in Events results",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Events from the left sidebar",
+          "expected": "Events page loads",
+          "n": 2
+        },
+        {
+          "action": "Verify pinning multiple events in Events results",
+          "expected": "pinning multiple events in Events results",
+          "n": 3
+        }
+      ]
+    },
+    "41VXwb": {
+      "title": "Verify unpinning event by clicking pin again",
+      "module": "Events Filter",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Navigate to Events from the left sidebar",
+          "expected": "Events page loads",
+          "n": 2
+        },
+        {
+          "action": "Verify unpinning event by clicking pin again",
+          "expected": "unpinning event by clicking pin again",
+          "n": 3
+        }
+      ]
+    },
+    "pDpdMG": {
+      "title": "Verify re-login after logout works correctly",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify re-login after logout works correctly",
+          "expected": "re-login after logout works correctly",
+          "n": 2
+        }
+      ]
+    },
+    "LD3g0e": {
+      "title": "Verify logout works from Views page",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify logout works from Views page",
+          "expected": "logout works from Views page",
+          "n": 2
+        }
+      ]
+    },
+    "wmjgdG": {
+      "title": "Verify logout works from Events page",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify logout works from Events page",
+          "expected": "logout works from Events page",
+          "n": 2
+        }
+      ]
+    },
+    "yaWrK9": {
+      "title": "Verify logout works from Search page",
+      "module": "Logout",
+      "steps": [
+        {
+          "action": "Log in to the Soterix application with valid credentials",
+          "expected": "Dashboard loads successfully",
+          "n": 1
+        },
+        {
+          "action": "Verify logout works from Search page",
+          "expected": "logout works from Search page",
+          "n": 2
+        }
+      ]
+    }
+  }
+}

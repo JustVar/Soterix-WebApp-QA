@@ -1,0 +1,67 @@
+{
+  "test_file": "tests/ui/views/test_views_favorites.py",
+  "class": "TestViewsFavorites",
+  "tests": {
+    "test_add_remove_favorites": {
+      "title": "Verify adding a camera to favorites, seeing it in the panel, and removing it.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Favorite",
+          "expected": "Camera Favorite page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for adding and removing a camera from favorites panel",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created adding and removing a camera from favorites panel appears in the list or view",
+          "expected": "The new adding and removing a camera from favorites panel is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new adding and removing a camera from favorites panel exists"
+        }
+      ],
+      "case_key": "Nj3JdQ"
+    }
+  }
+}

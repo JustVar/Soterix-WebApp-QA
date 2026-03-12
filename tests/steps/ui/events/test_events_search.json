@@ -1,0 +1,446 @@
+{
+  "test_file": "tests/ui/events/test_events_search.py",
+  "class": "TestEventsSearch",
+  "tests": {
+    "test_navigate_to_events": {
+      "title": "Verify clicking Events nav link loads the events page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Overlays - Controls",
+          "expected": "Overlays - Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate enabling Events overlay displays event indicators on the page",
+          "expected": "enabling Events overlay displays event indicators is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify enabling Events overlay displays event indicators is displayed as expected",
+          "expected": "enabling Events overlay displays event indicators is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "8V1vJn"
+    },
+    "test_select_site": {
+      "title": "Verify site dropdown opens and a site can be selected",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Search - Sites",
+          "expected": "Search - Sites page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search by site name",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "0rzlE9"
+    },
+    "test_select_camera": {
+      "title": "Verify camera dropdown opens and lists cameras",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Devices Tab",
+          "expected": "Devices Tab page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Select Location & Cameras section header should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Select Location & Cameras section header on the page",
+          "expected": "Select Location & Cameras section header is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify Select Location & Cameras section header visible",
+          "expected": "Select Location & Cameras section header visible"
+        }
+      ],
+      "case_key": "M73wak"
+    },
+    "test_select_duration": {
+      "title": "Verify duration filter can be changed from default",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search Landing Page",
+          "expected": "Search Landing Page page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Duration filter should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Duration filter on the page",
+          "expected": "Duration filter is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: with Select placeholder",
+          "expected": "Precondition is met (with Select placeholder)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Duration filter displayed",
+          "expected": "Duration filter displayed"
+        }
+      ],
+      "case_key": "gQxXwN"
+    },
+    "test_select_rule": {
+      "title": "Verify rule type filter opens and a rule can be selected",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Rules > Add New Rule",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Add New Rule page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "pDpmba"
+    },
+    "test_search_events": {
+      "title": "Verify search returns event results after selecting filters",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - LPR",
+          "expected": "Search - LPR page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Search button on the page",
+          "expected": "Search button is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Search button",
+          "expected": "Search button enabled"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: after applying mandatory filters",
+          "expected": "Precondition is met (after applying mandatory filters)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Search button"
+        }
+      ],
+      "case_key": "dypXRb"
+    },
+    "test_event_snapshots_valid": {
+      "title": "Verify event thumbnails have real images, not placeholders",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > More Filters",
+          "expected": "More Filters page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for selecting 'Valid Event' acknowledgement status applies the filter",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "vanZlz"
+    },
+    "test_pin_event": {
+      "title": "Verify pinning an event updates the pinned clips counter",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search Results",
+          "expected": "Search Results page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for hovering",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify hovering is displayed and functions correctly",
+          "expected": "Hovering is displayed as expected (on event card reveals Pin icon)"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: on event card reveals Pin icon",
+          "expected": "Precondition is met (on event card reveals Pin icon)"
+        },
+        {
+          "n": 8,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "M73wxx"
+    },
+    "test_review_pinned_clips_button": {
+      "title": "Verify 'Review Pinned Clips' button appears after pinning",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events > Pinned Clips Panel",
+          "expected": "Pinned Clips Panel page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Review Pinned Clips button on the page",
+          "expected": "Review Pinned Clips button is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Review Pinned Clips button",
+          "expected": "Review Pinned Clips button disabled"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when no clips are pinned",
+          "expected": "Precondition is met (when no clips are pinned)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Review Pinned Clips button"
+        }
+      ],
+      "case_key": "lR2lkQ"
+    },
+    "test_search_with_specific_camera": {
+      "title": "Verify search filters results by a single camera channel",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Devices Tab",
+          "expected": "Devices Tab page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Search Camera input field should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Search Camera input field on the page",
+          "expected": "Search Camera input field is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify Search Camera input field displayed",
+          "expected": "Search Camera input field displayed"
+        }
+      ],
+      "case_key": "Drd9a9"
+    }
+  }
+}

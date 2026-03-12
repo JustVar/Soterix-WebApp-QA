@@ -1,0 +1,206 @@
+{
+  "test_file": "tests/ui/login/test_login_security.py",
+  "class": null,
+  "tests": {
+    "test_sql_injection_attempt": {
+      "title": "Verify login rejects SQL injection payload",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Login page > Security - Injection",
+          "expected": "Security - Injection page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Locate the form, input, or control where validation applies",
+          "expected": "The target input or form is visible"
+        },
+        {
+          "n": 4,
+          "action": "Enter invalid data or trigger the error condition for SQL injection attempt",
+          "expected": "The invalid input is accepted into the field"
+        },
+        {
+          "n": 5,
+          "action": "Attempt to submit or trigger the validation",
+          "expected": "Validation fires on submit or field blur"
+        },
+        {
+          "n": 6,
+          "action": "Verify an error message is displayed near the field or at the top of the form",
+          "expected": "A clear, descriptive error message appears"
+        },
+        {
+          "n": 7,
+          "action": "Verify the error message text is correct and helpful",
+          "expected": "Error message accurately describes the validation failure"
+        },
+        {
+          "n": 8,
+          "action": "Verify the form did not submit or the action was blocked",
+          "expected": "No data was saved; the user remains on the form"
+        },
+        {
+          "n": 9,
+          "action": "Correct the invalid input with valid data",
+          "expected": "The error message disappears when valid data is entered"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: on login",
+          "expected": "Precondition is met (on login)"
+        },
+        {
+          "n": 11,
+          "action": "Submit with the corrected data and verify success",
+          "expected": "Form submits successfully after correction"
+        }
+      ],
+      "case_key": "yaWXMk"
+    },
+    "test_xss_attempt": {
+      "title": "Verify login rejects XSS script payload",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open the application login page",
+          "expected": "Login page loads with username and password fields"
+        },
+        {
+          "n": 2,
+          "action": "Log in with the required user role/credentials",
+          "expected": "User is authenticated and redirected to the default page"
+        },
+        {
+          "n": 3,
+          "action": "Navigate to Admin > Licenses",
+          "expected": "Licenses page loads (or access denied, depending on the test)"
+        },
+        {
+          "n": 4,
+          "action": "Verify the access behavior matches the expected permission level",
+          "expected": "User can access or is correctly blocked from the feature"
+        },
+        {
+          "n": 5,
+          "action": "Verify non-Admin license access attempt is logged",
+          "expected": "Non-admin license access attempt logged"
+        },
+        {
+          "n": 6,
+          "action": "Verify no unauthorized data or controls are exposed",
+          "expected": "Only permitted content is visible to the current user role"
+        },
+        {
+          "n": 7,
+          "action": "Log out and verify the session ends cleanly",
+          "expected": "User is redirected to the login page after logout"
+        }
+      ],
+      "case_key": "dyp4nK"
+    },
+    "test_password_too_short": {
+      "title": "Verify login rejects short password",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Navigate to the login page",
+          "expected": "Login page is displayed"
+        },
+        {
+          "n": 2,
+          "action": "Enter a valid email with a 3-character password and submit",
+          "expected": "Login fails with error or validation message"
+        }
+      ],
+      "case_key": "11zJpB"
+    },
+    "test_brute_force_protection": {
+      "title": "Verify brute force protection activates after repeated failures",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Login page > Login Security",
+          "expected": "Login Security page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for brute force protection",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify brute force protection is displayed and functions correctly",
+          "expected": "Brute force protection is displayed as expected (with multiple failed login attempts)"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: with multiple failed login attempts",
+          "expected": "Precondition is met (with multiple failed login attempts)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "Ee6DBy"
+    },
+    "test_password_reset_link_exists": {
+      "title": "Verify password reset link is present on login page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Login page > Login Security",
+          "expected": "Login Security page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where password reset link exists should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate password reset link exists on the page",
+          "expected": "password reset link exists is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on login page",
+          "expected": "Precondition is met (on login page)"
+        },
+        {
+          "n": 7,
+          "action": "Verify password reset link exists is displayed as expected",
+          "expected": "password reset link exists is displayed as expected"
+        }
+      ],
+      "case_key": "lR2W6m"
+    }
+  }
+}

@@ -1,0 +1,333 @@
+{
+  "test_file": "tests/ui/sequences/test_camera_sequences.py",
+  "class": "TestCameraSequences",
+  "tests": {
+    "test_navigate_to_camera_sequence_page": {
+      "title": "Verify navigating to the camera sequence page via sidebar icon",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Sequence - Fullscreen",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Camera Sequence - Fullscreen page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "jPnWJE"
+    },
+    "test_search_camera_in_sequence": {
+      "title": "Verify searching for a camera on the sequence page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Sequence - Fullscreen",
+          "expected": "Camera Sequence - Fullscreen page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for searching",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: for a camera on the sequence page",
+          "expected": "Precondition is met (for a camera on the sequence page)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "41VrRX"
+    },
+    "test_select_all_cameras_for_sequencing": {
+      "title": "Verify selecting cameras via checkbox for sequencing",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Sequence - Fullscreen",
+          "expected": "Camera Sequence - Fullscreen page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for selecting all cameras via Select All checkbox",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify selecting all cameras via Select All checkbox is displayed and functions correctly",
+          "expected": "Selecting all cameras via select all checkbox is displayed as expected (for sequencing)"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: for sequencing",
+          "expected": "Precondition is met (for sequencing)"
+        },
+        {
+          "n": 8,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "pDpvBJ"
+    },
+    "test_create_camera_sequence": {
+      "title": "Verify creating a new camera sequence with a timestamped name",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Sequence - Fullscreen",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Camera Sequence - Fullscreen page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "qzdM3P"
+    },
+    "test_add_created_sequence_to_views": {
+      "title": "Verify adding a created sequence to the views panel",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Sequence - Fullscreen",
+          "expected": "Camera Sequence - Fullscreen page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for adding a created sequence to the views panel",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created adding a created sequence to the views panel appears in the list or view",
+          "expected": "The new adding a created sequence to the views panel is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new adding a created sequence to the views panel exists"
+        }
+      ],
+      "case_key": "wmjJZm"
+    },
+    "test_edit_sequence": {
+      "title": "Verify editing a sequence's timing and name",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Create a camera sequence",
+          "expected": "Sequence exists"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views and open sequences panel",
+          "expected": "Sequences panel is visible with created sequence"
+        },
+        {
+          "n": 3,
+          "action": "Open edit dialog on the last sequence",
+          "expected": "Edit dialog opens with sequence details"
+        },
+        {
+          "n": 4,
+          "action": "Change timing from '5 Sec' to '10 Seconds'",
+          "expected": "Timing value is updated"
+        },
+        {
+          "n": 5,
+          "action": "Update the sequence name to a new value",
+          "expected": "Name field is updated"
+        },
+        {
+          "n": 6,
+          "action": "Click Update to save changes",
+          "expected": "Sequence is saved with new timing and name"
+        }
+      ],
+      "case_key": "XGLQ37"
+    },
+    "test_create_sequence_with_advanced_options": {
+      "title": "Verify creating a sequence with offline camera refrain and reverse play options",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Sequence - Fullscreen",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Camera Sequence - Fullscreen page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "qzdM3P"
+    }
+  }
+}

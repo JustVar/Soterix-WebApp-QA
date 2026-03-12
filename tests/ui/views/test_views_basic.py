@@ -8,8 +8,10 @@ class TestViewsBasic:
     """Basic Views functionality tests."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page):
+    def setup(self, authenticated_page, step_capture):
         self.page = authenticated_page
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
         self.views = ViewsPage(self.page)
         self._saved_view_names = []
         self.views.navigate()
@@ -57,10 +59,12 @@ class TestViewsBasic:
     @pytest.mark.sanity
     def test_rename_does_not_affect_sequence(self):
         """Verify renaming a tab doesn't break the sequential naming for new tabs."""
+        self.step_capture.mark(1, "Navigate to Views page and wait for page load")
         # Hover over the first tab to reveal edit button
         first_tab = self.page.locator("button.tabItem").first
         first_tab.hover()
         self.page.wait_for_timeout(150)
+        self.step_capture.mark(2, "Hover over the first tab to reveal edit button")
 
         # Click the edit button
         edit_button = first_tab.locator("img[src*='editIcon']")
@@ -72,15 +76,18 @@ class TestViewsBasic:
         tab_input.fill("Custom Name")
         tab_input.press("Enter")
         self.page.wait_for_timeout(250)
+        self.step_capture.mark(3, "Click edit button, clear tab name, and type 'Custom Name'")
 
         # Add a new tab
         self.views.add_new_tab()
         self.page.wait_for_timeout(500)
+        self.step_capture.mark(4, "Add a new tab using the add tab button")
 
         # Verify new tab is named "View 2"
         new_tab_input = self.page.locator("input.tabTitle").nth(1)
         new_tab_value = new_tab_input.get_attribute("value")
         assert new_tab_value == "View 2", f"Expected 'View 2', got '{new_tab_value}'"
+        self.step_capture.mark(5, "Verify the new tab is named 'View 2'")
 
     @pytest.mark.ui
     @pytest.mark.sanity

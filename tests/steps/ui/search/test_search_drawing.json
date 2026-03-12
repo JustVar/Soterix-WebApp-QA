@@ -1,0 +1,332 @@
+{
+  "test_file": "tests/ui/search/test_search_drawing.py",
+  "class": "TestSearchDrawing",
+  "tests": {
+    "test_zone_search_draw_zone": {
+      "title": "Verify a zone can be drawn on the canvas.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Zone - Setup & Drawing",
+          "expected": "Zone - Setup & Drawing page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify the Reset Search clears Zone category selection to be deleted from the list",
+          "expected": "Reset Search clears Zone category selection is visible and identifiable in the list"
+        },
+        {
+          "n": 4,
+          "action": "Note the current count of items in the list",
+          "expected": "Current item count is recorded for later comparison"
+        },
+        {
+          "n": 5,
+          "action": "Click the delete button or action for the target Reset Search clears Zone category selection",
+          "expected": "A confirmation dialog or prompt appears"
+        },
+        {
+          "n": 6,
+          "action": "Verify the confirmation dialog displays the correct item being deleted",
+          "expected": "Dialog shows the name or identifier of the Reset Search clears Zone category selection"
+        },
+        {
+          "n": 7,
+          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
+          "expected": "Deletion is processed and a success message appears"
+        },
+        {
+          "n": 8,
+          "action": "Verify the Reset Search clears Zone category selection no longer appears in the list",
+          "expected": "Reset Search clears Zone category selection is removed from the list view"
+        },
+        {
+          "n": 9,
+          "action": "Verify the item count decreased by one",
+          "expected": "List count reflects the removal"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and confirm the deletion persisted",
+          "expected": "The deleted Reset Search clears Zone category selection does not reappear after refresh"
+        }
+      ],
+      "case_key": "LD3mGJ"
+    },
+    "test_zone_search_returns_results": {
+      "title": "Verify Zone search returns results after drawing and searching.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - Clips",
+          "expected": "Search - Clips page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search by clip name returns matching results",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "J8d9R1"
+    },
+    "test_zone_search_play_result": {
+      "title": "Verify playing a Zone search result clip works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Zone - AND, Execution & Results",
+          "expected": "Zone - AND, Execution & Results page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where empty state message should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate empty state message on the page",
+          "expected": "empty state message is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when Zone search returns no results",
+          "expected": "Precondition is met (when Zone search returns no results)"
+        },
+        {
+          "n": 7,
+          "action": "Verify empty state message shown",
+          "expected": "empty state message shown"
+        }
+      ],
+      "case_key": "dyp4pB"
+    },
+    "test_line_search_draw_line": {
+      "title": "Verify a line can be drawn on the canvas.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Line - Setup & Drawing",
+          "expected": "Line - Setup & Drawing page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify the Reset Search clears Line category selection to be deleted from the list",
+          "expected": "Reset Search clears Line category selection is visible and identifiable in the list"
+        },
+        {
+          "n": 4,
+          "action": "Note the current count of items in the list",
+          "expected": "Current item count is recorded for later comparison"
+        },
+        {
+          "n": 5,
+          "action": "Click the delete button or action for the target Reset Search clears Line category selection",
+          "expected": "A confirmation dialog or prompt appears"
+        },
+        {
+          "n": 6,
+          "action": "Verify the confirmation dialog displays the correct item being deleted",
+          "expected": "Dialog shows the name or identifier of the Reset Search clears Line category selection"
+        },
+        {
+          "n": 7,
+          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
+          "expected": "Deletion is processed and a success message appears"
+        },
+        {
+          "n": 8,
+          "action": "Verify the Reset Search clears Line category selection no longer appears in the list",
+          "expected": "Reset Search clears Line category selection is removed from the list view"
+        },
+        {
+          "n": 9,
+          "action": "Verify the item count decreased by one",
+          "expected": "List count reflects the removal"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and confirm the deletion persisted",
+          "expected": "The deleted Reset Search clears Line category selection does not reappear after refresh"
+        }
+      ],
+      "case_key": "mBdpdb"
+    },
+    "test_line_search_returns_results": {
+      "title": "Verify Line search returns results after drawing and searching.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - Clips",
+          "expected": "Search - Clips page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search by clip name returns matching results",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "J8d9R1"
+    },
+    "test_line_search_play_result": {
+      "title": "Verify playing a Line search result clip works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search > Line",
+          "expected": "Line page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search returns results only",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: when an object crosses Line direction configured for Line_1",
+          "expected": "Precondition is met (when an object crosses Line direction configured for Line_1)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "wmjKjZ"
+    }
+  }
+}

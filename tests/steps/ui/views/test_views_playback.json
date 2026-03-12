@@ -1,0 +1,371 @@
+{
+  "test_file": "tests/ui/views/test_views_playback.py",
+  "class": "TestViewsPlayback",
+  "tests": {
+    "test_share_icon_visible_in_fullscreen": {
+      "title": "Verify the share icon is visible in fullscreen player.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where share icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate share icon on the page",
+          "expected": "share icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify share icon visible in fullscreen playback",
+          "expected": "share icon visible in fullscreen playback"
+        }
+      ],
+      "case_key": "Nj3r6e"
+    },
+    "test_settings_icon_visible_in_fullscreen": {
+      "title": "Verify the settings icon is visible in fullscreen player.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where settings icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate settings icon on the page",
+          "expected": "settings icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify settings icon visible in fullscreen playback",
+          "expected": "settings icon visible in fullscreen playback"
+        }
+      ],
+      "case_key": "K4nmwJ"
+    },
+    "test_overlays_icon_visible_in_fullscreen": {
+      "title": "Verify the overlays icon is visible in fullscreen player.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where overlays icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate overlays icon on the page",
+          "expected": "overlays icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify overlays icon visible in fullscreen playback",
+          "expected": "overlays icon visible in fullscreen playback"
+        }
+      ],
+      "case_key": "jPn2ad"
+    },
+    "test_live_indicator_in_fullscreen": {
+      "title": "Verify the live indicator is shown for a live camera stream.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where live indicator should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate live indicator on the page",
+          "expected": "live indicator is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify live indicator displayed in fullscreen playback",
+          "expected": "live indicator displayed in fullscreen playback"
+        }
+      ],
+      "case_key": "41VXLb"
+    },
+    "test_control_container_visible": {
+      "title": "Verify the main control container is rendered in fullscreen.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where control container bar should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate control container bar on the page",
+          "expected": "control container bar is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify control container bar visible in fullscreen",
+          "expected": "control container bar visible in fullscreen"
+        }
+      ],
+      "case_key": "pDpdjG"
+    },
+    "test_volume_control_clickable": {
+      "title": "Verify clicking volume control doesn't crash (mute toggle).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate volume control on the page",
+          "expected": "volume control is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of volume control",
+          "expected": "volume control clickable in fullscreen playback"
+        },
+        {
+          "n": 6,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to volume control"
+        }
+      ],
+      "case_key": "LD3g6e"
+    },
+    "test_exit_and_reenter_fullscreen": {
+      "title": "Verify exiting fullscreen and re-entering works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for exit and re-enter fullscreen works correctly",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify exit and re-enter fullscreen works correctly is displayed and functions correctly",
+          "expected": "Exit and re-enter fullscreen works correctly is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "wmjg7G"
+    },
+    "test_bookmarks_toggle_opens_panel": {
+      "title": "Verify the bookmarks dots icon opens/closes the panel.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views and enter fullscreen mode on a camera view",
+          "expected": "Camera view is displayed in fullscreen"
+        },
+        {
+          "n": 3,
+          "action": "Locate the bookmarks toggle or dots icon in the fullscreen overlay",
+          "expected": "Bookmarks toggle control is visible in fullscreen"
+        },
+        {
+          "n": 4,
+          "action": "Click the bookmarks toggle",
+          "expected": "Bookmark panel opens within the fullscreen view"
+        },
+        {
+          "n": 5,
+          "action": "Verify the bookmark panel displays saved bookmarks",
+          "expected": "Bookmarks list is visible and populated (or shows empty state)"
+        },
+        {
+          "n": 6,
+          "action": "Toggle the bookmarks panel closed",
+          "expected": "Bookmark panel closes, returning to the fullscreen camera view"
+        }
+      ],
+      "case_key": "yaWrV9"
+    },
+    "test_fullscreen_second_tile": {
+      "title": "Verify fullscreen works on a second camera tile.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for fullscreen works",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify fullscreen works is displayed and functions correctly",
+          "expected": "Fullscreen works is displayed as expected (on second camera tile)"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on second camera tile",
+          "expected": "Precondition is met (on second camera tile)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "0rzxZb"
+    },
+    "test_timeline_elements_present": {
+      "title": "Verify timeline-related elements exist in fullscreen.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Live Playback Controls",
+          "expected": "Live Playback Controls page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where timeline elements should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate timeline elements on the page",
+          "expected": "timeline elements is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify timeline elements present in fullscreen playback",
+          "expected": "timeline elements present in fullscreen playback"
+        }
+      ],
+      "case_key": "kpZQr0"
+    }
+  }
+}

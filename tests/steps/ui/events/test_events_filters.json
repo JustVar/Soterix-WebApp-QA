@@ -1,0 +1,577 @@
+{
+  "test_file": "tests/ui/events/test_events_filters.py",
+  "class": "TestEventsFilters",
+  "tests": {
+    "test_site_dropdown_lists_available_sites": {
+      "title": "Verify site dropdown shows at least one selectable site.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Maps",
+          "expected": "Maps page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Maps site dropdown lists available sites should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Maps site dropdown lists available sites on the page",
+          "expected": "Maps site dropdown lists available sites is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify Maps site dropdown lists available sites is displayed as expected",
+          "expected": "Maps site dropdown lists available sites is displayed as expected"
+        }
+      ],
+      "case_key": "DrdZ7x"
+    },
+    "test_site_selection_shows_site_name": {
+      "title": "Verify selecting a site shows its name in the filter bar.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Search - Sites",
+          "expected": "Search - Sites page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search by site name",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "0rzlE9"
+    },
+    "test_rule_dropdown_lists_available_rules": {
+      "title": "Verify rule dropdown shows multiple rule type options.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events Filter",
+          "expected": "Events Filter page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Events rule dropdown lists available rules should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Events rule dropdown lists available rules on the page",
+          "expected": "Events rule dropdown lists available rules is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify Events rule dropdown lists available rules is displayed as expected",
+          "expected": "Events rule dropdown lists available rules is displayed as expected"
+        }
+      ],
+      "case_key": "GdWPmy"
+    },
+    "test_search_intrusion_detection": {
+      "title": "Verify searching with Intrusion Detection rule returns results.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events Filter",
+          "expected": "Events Filter page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: with Intrusion Detection rule returns events",
+          "expected": "Precondition is met (with Intrusion Detection rule returns events)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "Ee6d7B"
+    },
+    "test_search_with_different_rule": {
+      "title": "Verify searching with a non-default rule type completes.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events Filter",
+          "expected": "Events Filter page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: with different rule type returns events",
+          "expected": "Precondition is met (with different rule type returns events)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "lR28Gn"
+    },
+    "test_search_by_duration": {
+      "title": "Verify searching with different duration options works (parametrized: Last 1, Last 3, Last 7).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - Clips",
+          "expected": "Search - Clips page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search by clip name returns matching results",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "J8d9R1"
+    },
+    "test_rule_and_duration_combined": {
+      "title": "Verify combining a specific rule and duration filters together.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events Filter",
+          "expected": "Events Filter page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for combined rule and duration filter returns events",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "Nj3rPe"
+    },
+    "test_change_duration_and_re_search": {
+      "title": "Verify changing duration between searches works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search Landing Page",
+          "expected": "Search Landing Page page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify the Reset Search clears Duration selection to be deleted from the list",
+          "expected": "Reset Search clears Duration selection is visible and identifiable in the list"
+        },
+        {
+          "n": 4,
+          "action": "Note the current count of items in the list",
+          "expected": "Current item count is recorded for later comparison"
+        },
+        {
+          "n": 5,
+          "action": "Click the delete button or action for the target Reset Search clears Duration selection",
+          "expected": "A confirmation dialog or prompt appears"
+        },
+        {
+          "n": 6,
+          "action": "Verify the confirmation dialog displays the correct item being deleted",
+          "expected": "Dialog shows the name or identifier of the Reset Search clears Duration selection"
+        },
+        {
+          "n": 7,
+          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
+          "expected": "Deletion is processed and a success message appears"
+        },
+        {
+          "n": 8,
+          "action": "Verify the Reset Search clears Duration selection no longer appears in the list",
+          "expected": "Reset Search clears Duration selection is removed from the list view"
+        },
+        {
+          "n": 9,
+          "action": "Verify the item count decreased by one",
+          "expected": "List count reflects the removal"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and confirm the deletion persisted",
+          "expected": "The deleted Reset Search clears Duration selection does not reappear after refresh"
+        }
+      ],
+      "case_key": "Z8xWjk"
+    },
+    "test_pin_multiple_events": {
+      "title": "Verify pinning multiple events increments the counter.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search Results",
+          "expected": "Search Results page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify an existing pinning multiple events updates pinned count correctly to edit from the list",
+          "expected": "At least one pinning multiple events updates pinned count correctly is visible in the list"
+        },
+        {
+          "n": 4,
+          "action": "Click on the pinning multiple events updates pinned count correctly or its edit button to open the edit form",
+          "expected": "Edit form or dialog opens with pre-populated data"
+        },
+        {
+          "n": 5,
+          "action": "Verify the existing data is correctly pre-filled in the form",
+          "expected": "All fields show the current values of the pinning multiple events updates pinned count correctly"
+        },
+        {
+          "n": 6,
+          "action": "Modify the target field(s) with new valid data",
+          "expected": "The field(s) accept the new input"
+        },
+        {
+          "n": 7,
+          "action": "Verify the changes are reflected in the form before saving",
+          "expected": "Updated values are displayed in the form fields"
+        },
+        {
+          "n": 8,
+          "action": "Click the Save/Update button",
+          "expected": "Changes are saved and a success message or indicator appears"
+        },
+        {
+          "n": 9,
+          "action": "Verify the updated pinning multiple events updates pinned count correctly reflects the new values in the list or detail view",
+          "expected": "The modified data is displayed correctly"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and verify the changes persisted",
+          "expected": "Updated values remain after page refresh"
+        }
+      ],
+      "case_key": "vanZWy"
+    },
+    "test_unpin_event_via_second_pin": {
+      "title": "Verify pinning multiple events shows correct counter (pin 3 events).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events > Pin/Unpin",
+          "expected": "Pin/Unpin page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Unpin icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Unpin icon on the page",
+          "expected": "Unpin icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on pinned event card",
+          "expected": "Precondition is met (on pinned event card)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Unpin icon visible",
+          "expected": "Unpin icon visible"
+        }
+      ],
+      "case_key": "n8jQk3"
+    },
+    "test_event_results_have_thumbnails": {
+      "title": "Verify event results display thumbnail images.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events Filter",
+          "expected": "Events Filter page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Events search results have thumbnail images",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "68lnPV"
+    }
+  }
+}

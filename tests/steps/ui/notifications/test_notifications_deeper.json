@@ -1,0 +1,400 @@
+{
+  "test_file": "tests/ui/notifications/test_notifications_deeper.py",
+  "class": "TestNotificationsDeeper",
+  "tests": {
+    "test_notification_panel_closes_on_reclick": {
+      "title": "Verify clicking the bell icon again closes the notification panel.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Trigger an LPR event or ensure an LPR notification exists",
+          "expected": "An LPR notification appears in the notification area"
+        },
+        {
+          "n": 3,
+          "action": "Click the notification bell icon to open the notification panel",
+          "expected": "Notification panel opens showing recent notifications"
+        },
+        {
+          "n": 4,
+          "action": "Locate and click the LPR notification entry",
+          "expected": "The LPR notification is selected"
+        },
+        {
+          "n": 5,
+          "action": "Verify a video preview loads within the notification panel",
+          "expected": "Video preview displays the LPR event footage inline"
+        },
+        {
+          "n": 6,
+          "action": "Verify the video preview shows the correct LPR event details",
+          "expected": "License plate data and timestamp match the notification"
+        },
+        {
+          "n": 7,
+          "action": "Close the notification panel",
+          "expected": "Panel closes cleanly, returning to the previous view"
+        }
+      ],
+      "case_key": "bj04vQ"
+    },
+    "test_notification_panel_reopen_after_close": {
+      "title": "Verify notification panel can be reopened after closing.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Notifications header area > Notification Ordering",
+          "expected": "Notification Ordering page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for notification order remains correct",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify notification order remains correct is displayed and functions correctly",
+          "expected": "Notification order remains correct is displayed as expected (after panel close and reopen)"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: after panel close and reopen",
+          "expected": "Precondition is met (after panel close and reopen)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "9e1ZRv"
+    },
+    "test_header_icons_present": {
+      "title": "Verify the header right group has expected notification icons.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Notifications header area > Notification Panel",
+          "expected": "Notification Panel page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where header notification icons should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate header notification icons on the page",
+          "expected": "header notification icons is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify header notification icons present",
+          "expected": "header notification icons present"
+        }
+      ],
+      "case_key": "21z6dQ"
+    },
+    "test_notification_bell_icon_visible": {
+      "title": "Verify the notification bell icon is always visible in the header.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Notifications header area > Notification Panel",
+          "expected": "Notification Panel page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where notification bell icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate notification bell icon on the page",
+          "expected": "notification bell icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify notification bell icon visible in header",
+          "expected": "notification bell icon visible in header"
+        }
+      ],
+      "case_key": "aj6nq4"
+    },
+    "test_mute_unmute_round_trip": {
+      "title": "Verify muting then unmuting notifications works as a toggle.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Notifications header area > Notification Panel",
+          "expected": "Notification Panel page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for mute and unmute notification round-trip toggle works",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify mute and unmute notification round-trip toggle works is displayed and functions correctly",
+          "expected": "Mute and unmute notification round-trip toggle works is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "QGjL9B"
+    },
+    "test_notification_panel_has_content": {
+      "title": "Verify notification panel shows text content (not empty).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Trigger an LPR event or ensure an LPR notification exists",
+          "expected": "An LPR notification appears in the notification area"
+        },
+        {
+          "n": 3,
+          "action": "Click the notification bell icon to open the notification panel",
+          "expected": "Notification panel opens showing recent notifications"
+        },
+        {
+          "n": 4,
+          "action": "Locate and click the LPR notification entry",
+          "expected": "The LPR notification is selected"
+        },
+        {
+          "n": 5,
+          "action": "Verify a video preview loads within the notification panel",
+          "expected": "Video preview displays the LPR event footage inline"
+        },
+        {
+          "n": 6,
+          "action": "Verify the video preview shows the correct LPR event details",
+          "expected": "License plate data and timestamp match the notification"
+        },
+        {
+          "n": 7,
+          "action": "Close the notification panel",
+          "expected": "Panel closes cleanly, returning to the previous view"
+        }
+      ],
+      "case_key": "bj04vQ"
+    },
+    "test_notification_panel_after_page_navigation": {
+      "title": "Verify notification panel works after navigating to a different page.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Notifications header area > Notification Panel",
+          "expected": "Notification Panel page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Note the current state of notification panel persists before making changes",
+          "expected": "Initial state is observed and recorded"
+        },
+        {
+          "n": 4,
+          "action": "Perform the action that changes notification panel persists",
+          "expected": "Action is completed and change is reflected in the UI"
+        },
+        {
+          "n": 5,
+          "action": "Verify the change is displayed correctly before leaving the page",
+          "expected": "Updated state is visible on the current page"
+        },
+        {
+          "n": 6,
+          "action": "Refresh the page (F5 or browser reload)",
+          "expected": "Page reloads completely"
+        },
+        {
+          "n": 7,
+          "action": "Verify notification panel persists retained the changes after refresh",
+          "expected": "The change persisted through the page refresh"
+        },
+        {
+          "n": 8,
+          "action": "Navigate away to a different page",
+          "expected": "Different page loads successfully"
+        },
+        {
+          "n": 9,
+          "action": "Navigate back to Notification Panel page",
+          "expected": "Notification Panel page loads"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: after page navigation",
+          "expected": "Precondition is met (after page navigation)"
+        },
+        {
+          "n": 11,
+          "action": "Verify notification panel persists still reflects the saved changes",
+          "expected": "Changes persist after navigating away and back"
+        }
+      ],
+      "case_key": "B86D7R"
+    },
+    "test_notification_panel_survives_page_refresh": {
+      "title": "Verify notification icon is present after page refresh.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Notifications header area > Notification Panel",
+          "expected": "Notification Panel page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Note the current state of notification panel survives page refresh before making changes",
+          "expected": "Initial state is observed and recorded"
+        },
+        {
+          "n": 4,
+          "action": "Perform the action that changes notification panel survives page refresh",
+          "expected": "Action is completed and change is reflected in the UI"
+        },
+        {
+          "n": 5,
+          "action": "Verify the change is displayed correctly before leaving the page",
+          "expected": "Updated state is visible on the current page"
+        },
+        {
+          "n": 6,
+          "action": "Refresh the page (F5 or browser reload)",
+          "expected": "Page reloads completely"
+        },
+        {
+          "n": 7,
+          "action": "Verify notification panel survives page refresh retained the changes after refresh",
+          "expected": "The change persisted through the page refresh"
+        },
+        {
+          "n": 8,
+          "action": "Navigate away to a different page",
+          "expected": "Different page loads successfully"
+        },
+        {
+          "n": 9,
+          "action": "Navigate back to Notification Panel page",
+          "expected": "Notification Panel page loads"
+        },
+        {
+          "n": 10,
+          "action": "Verify notification panel survives page refresh still reflects the saved changes",
+          "expected": "Changes persist after navigating away and back"
+        }
+      ],
+      "case_key": "8V1l8r"
+    },
+    "test_notification_icon_not_affected_by_views_page": {
+      "title": "Verify notification icons remain functional on the Views page.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Notifications header area > Notification Panel",
+          "expected": "Notification Panel page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for notification icon works correctly",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify notification icon works correctly is displayed and functions correctly",
+          "expected": "Notification icon works correctly is displayed as expected (on Views page)"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on Views page",
+          "expected": "Precondition is met (on Views page)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "M73EP7"
+    }
+  }
+}

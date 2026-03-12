@@ -1,0 +1,266 @@
+{
+  "test_file": "tests/ui/login/test_login_invalid.py",
+  "class": null,
+  "tests": {
+    "test_empty_fields": {
+      "title": "Verify login fails with empty username and password",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Insights > Dashboard > Save Action",
+          "expected": "Dashboard Save Action loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Save & Preview button on the page",
+          "expected": "Save & Preview button is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Save & Preview button",
+          "expected": "Save & Preview button disabled"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when mandatory fields are empty",
+          "expected": "Precondition is met (when mandatory fields are empty)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Save & Preview button"
+        }
+      ],
+      "case_key": "RgGQLR"
+    },
+    "test_empty_username": {
+      "title": "Verify login fails with empty username",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Camera Grid",
+          "expected": "Camera Grid page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate the relevant UI area for empty camera grid state",
+          "expected": "The target section or element is visible"
+        },
+        {
+          "n": 5,
+          "action": "Verify empty camera grid state is displayed and functions correctly",
+          "expected": "Empty camera grid state is displayed as expected (when no cameras are selected)"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: when no cameras are selected",
+          "expected": "Precondition is met (when no cameras are selected)"
+        },
+        {
+          "n": 7,
+          "action": "Verify no errors or unexpected behavior occurred",
+          "expected": "Page remains stable with no console errors"
+        }
+      ],
+      "case_key": "wmjREm"
+    },
+    "test_empty_password": {
+      "title": "Verify login fails with empty password",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Login page > Validation - Login",
+          "expected": "Validation - Login page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Locate the form, input, or control where validation applies",
+          "expected": "The target input or form is visible"
+        },
+        {
+          "n": 4,
+          "action": "Enter invalid data or trigger the error condition for login fails",
+          "expected": "The invalid input is accepted into the field"
+        },
+        {
+          "n": 5,
+          "action": "Attempt to submit or trigger the validation",
+          "expected": "Validation fires on submit or field blur"
+        },
+        {
+          "n": 6,
+          "action": "Verify an error message is displayed near the field or at the top of the form",
+          "expected": "A clear, descriptive error message appears"
+        },
+        {
+          "n": 7,
+          "action": "Verify the error message text is correct and helpful",
+          "expected": "Error message accurately describes the validation failure"
+        },
+        {
+          "n": 8,
+          "action": "Verify the form did not submit or the action was blocked",
+          "expected": "No data was saved; the user remains on the form"
+        },
+        {
+          "n": 9,
+          "action": "Correct the invalid input with valid data",
+          "expected": "The error message disappears when valid data is entered"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: when password field is empty",
+          "expected": "Precondition is met (when password field is empty)"
+        },
+        {
+          "n": 11,
+          "action": "Submit with the corrected data and verify success",
+          "expected": "Form submits successfully after correction"
+        }
+      ],
+      "case_key": "68leQP"
+    },
+    "test_wrong_credentials": {
+      "title": "Verify login fails with incorrect credentials",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Storage",
+          "expected": "Storage page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Locate the form, input, or control where validation applies",
+          "expected": "The target input or form is visible"
+        },
+        {
+          "n": 4,
+          "action": "Enter invalid data or trigger the error condition for error handling",
+          "expected": "The invalid input is accepted into the field"
+        },
+        {
+          "n": 5,
+          "action": "Attempt to submit or trigger the validation",
+          "expected": "Validation fires on submit or field blur"
+        },
+        {
+          "n": 6,
+          "action": "Verify an error message is displayed near the field or at the top of the form",
+          "expected": "A clear, descriptive error message appears"
+        },
+        {
+          "n": 7,
+          "action": "Verify the error message text is correct and helpful",
+          "expected": "Error message accurately describes the validation failure"
+        },
+        {
+          "n": 8,
+          "action": "Verify the form did not submit or the action was blocked",
+          "expected": "No data was saved; the user remains on the form"
+        },
+        {
+          "n": 9,
+          "action": "Correct the invalid input with valid data",
+          "expected": "The error message disappears when valid data is entered"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: when credentials are incorrect",
+          "expected": "Precondition is met (when credentials are incorrect)"
+        },
+        {
+          "n": 11,
+          "action": "Submit with the corrected data and verify success",
+          "expected": "Form submits successfully after correction"
+        }
+      ],
+      "case_key": "gQxma3"
+    },
+    "test_invalid_email_format": {
+      "title": "Verify login fails with malformed email format",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Share Live View Modal",
+          "expected": "Share Live View Modal page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Locate the form, input, or control where validation applies",
+          "expected": "The target input or form is visible"
+        },
+        {
+          "n": 4,
+          "action": "Enter invalid data or trigger the error condition for invalid email format shows validation error",
+          "expected": "The invalid input is accepted into the field"
+        },
+        {
+          "n": 5,
+          "action": "Attempt to submit or trigger the validation",
+          "expected": "Validation fires on submit or field blur"
+        },
+        {
+          "n": 6,
+          "action": "Verify an error message is displayed near the field or at the top of the form",
+          "expected": "A clear, descriptive error message appears"
+        },
+        {
+          "n": 7,
+          "action": "Verify the error message text is correct and helpful",
+          "expected": "Error message accurately describes the validation failure"
+        },
+        {
+          "n": 8,
+          "action": "Verify the form did not submit or the action was blocked",
+          "expected": "No data was saved; the user remains on the form"
+        },
+        {
+          "n": 9,
+          "action": "Correct the invalid input with valid data",
+          "expected": "The error message disappears when valid data is entered"
+        },
+        {
+          "n": 10,
+          "action": "Submit with the corrected data and verify success",
+          "expected": "Form submits successfully after correction"
+        }
+      ],
+      "case_key": "41VM9q"
+    }
+  }
+}

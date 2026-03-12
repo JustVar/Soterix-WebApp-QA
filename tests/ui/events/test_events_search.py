@@ -16,8 +16,10 @@ class TestEventsSearch:
     """Tests for Events page search and pin functionality."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page):
+    def setup(self, authenticated_page, step_capture):
         self.page = authenticated_page
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
         self.events = EventsPage(self.page)
 
     @pytest.mark.ui
@@ -26,7 +28,9 @@ class TestEventsSearch:
     def test_navigate_to_events(self):
         """Verify clicking Events nav link loads the events page."""
         self.events.navigate()
+        self.step_capture.mark(1, "Click the Events link in the sidebar navigation")
         expect(self.events.events_container).to_be_visible(timeout=60000)
+        self.step_capture.mark(2, "Verify events container is visible")
 
     @pytest.mark.ui
     @pytest.mark.events
@@ -35,12 +39,15 @@ class TestEventsSearch:
         """Verify site dropdown opens and a site can be selected."""
         self.events.navigate()
         self.events.wait_for_page_load()
+        self.step_capture.mark(1, "Navigate to Events page and wait for load")
 
         self.events.select_site(SITE_NAME)
+        self.step_capture.mark(2, "Open the site dropdown and select 'Driver Site'")
 
         # After selecting, the dropdown should close and site name visible
         site_label = self.page.get_by_text(SITE_NAME, exact=False).first
         expect(site_label).to_be_visible(timeout=5000)
+        self.step_capture.mark(3, "Verify 'Driver Site' text is visible on the page")
 
     @pytest.mark.ui
     @pytest.mark.events

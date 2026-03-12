@@ -1,0 +1,384 @@
+{
+  "test_file": "tests/ui/admin/test_admin_rules.py",
+  "class": "TestAdminRules",
+  "tests": {
+    "test_navigate_to_rules": {
+      "title": "Verify navigating to Admin > General > Rules loads the rules list.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Configuration and Settings",
+          "expected": "Browser navigates to the target URL"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully load",
+          "expected": "Configuration and Settings page loads successfully without errors"
+        },
+        {
+          "n": 4,
+          "action": "Verify the page title or header is correct",
+          "expected": "Page heading or title matches the expected page name"
+        },
+        {
+          "n": 5,
+          "action": "Verify the left navigation highlights the correct menu item",
+          "expected": "The corresponding sidebar item is highlighted/active"
+        },
+        {
+          "n": 6,
+          "action": "Verify main page content and controls are displayed",
+          "expected": "Key UI elements (buttons, tables, panels) are present"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: for a site on the Admin - Sites page",
+          "expected": "Precondition is met (for a site on the Admin - Sites page)"
+        },
+        {
+          "n": 8,
+          "action": "Verify the page URL matches the expected route",
+          "expected": "URL path corresponds to the expected page"
+        }
+      ],
+      "case_key": "rGQDWk"
+    },
+    "test_add_new_rule_wizard_opens": {
+      "title": "Verify clicking Add New Rule opens the wizard with rule type options.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Channels - Integrations",
+          "expected": "Channels - Integrations page loads"
+        },
+        {
+          "n": 3,
+          "action": "Locate the Add New Channel button",
+          "expected": "Add New Channel button is visible on the page"
+        },
+        {
+          "n": 4,
+          "action": "Click the Add New Channel button",
+          "expected": "Add New Channel dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify the dialog contains the expected fields (channel name, type, etc.)",
+          "expected": "Dialog displays all required input fields"
+        },
+        {
+          "n": 6,
+          "action": "Verify the dialog can be closed via Cancel or X button",
+          "expected": "Dialog closes without creating a channel"
+        }
+      ],
+      "case_key": "lR21wR"
+    },
+    "test_select_rule_type": {
+      "title": "Verify selecting a rule type in the wizard advances to next step (parametrized: Entry-Exit, Heat Map, Loitering, Occupancy, Intrusion Detection, Line Crossing).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Empty State",
+          "expected": "Views Empty State page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where empty state message should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate empty state message on the page",
+          "expected": "empty state message is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify empty state message displayed before selecting rule type",
+          "expected": "empty state message displayed before selecting rule type"
+        }
+      ],
+      "case_key": "Drd95P"
+    },
+    "test_search_rule": {
+      "title": "Verify searching for a rule by name filters the results.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > All Rules Filter",
+          "expected": "All Rules Filter page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate Reset Search clears selected rule and resets to All Rules on the page",
+          "expected": "Reset Search clears selected rule and resets to All Rules is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of Reset Search clears selected rule and resets to All Rules",
+          "expected": "Reset Search clears selected rule and resets to All Rules is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to Reset Search clears selected rule and resets to All Rules"
+        }
+      ],
+      "case_key": "VKbQJQ"
+    },
+    "test_edit_rule_notification": {
+      "title": "Verify editing a rule's notification settings (popUp + push).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Rules",
+          "expected": "Rules page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify an existing Edit existing rule to edit from the list",
+          "expected": "At least one Edit existing rule is visible in the list"
+        },
+        {
+          "n": 4,
+          "action": "Click on the Edit existing rule or its edit button to open the edit form",
+          "expected": "Edit form or dialog opens with pre-populated data"
+        },
+        {
+          "n": 5,
+          "action": "Verify the existing data is correctly pre-filled in the form",
+          "expected": "All fields show the current values of the Edit existing rule"
+        },
+        {
+          "n": 6,
+          "action": "Modify the target field(s) with new valid data",
+          "expected": "The field(s) accept the new input"
+        },
+        {
+          "n": 7,
+          "action": "Verify the changes are reflected in the form before saving",
+          "expected": "Updated values are displayed in the form fields"
+        },
+        {
+          "n": 8,
+          "action": "Click the Save/Update button",
+          "expected": "Changes are saved and a success message or indicator appears"
+        },
+        {
+          "n": 9,
+          "action": "Verify the updated Edit existing rule reflects the new values in the list or detail view",
+          "expected": "The modified data is displayed correctly"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and verify the changes persisted",
+          "expected": "Updated values remain after page refresh"
+        }
+      ],
+      "case_key": "dyp4aR"
+    },
+    "test_delete_rule": {
+      "title": "Verify deleting the last rule with confirmation dialog.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Rules - Delete",
+          "expected": "Rules - Delete page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify the Delete rule confirmation dialog to be deleted from the list",
+          "expected": "Delete rule confirmation dialog is visible and identifiable in the list"
+        },
+        {
+          "n": 4,
+          "action": "Note the current count of items in the list",
+          "expected": "Current item count is recorded for later comparison"
+        },
+        {
+          "n": 5,
+          "action": "Click the delete button or action for the target Delete rule confirmation dialog",
+          "expected": "A confirmation dialog or prompt appears"
+        },
+        {
+          "n": 6,
+          "action": "Verify the confirmation dialog displays the correct item being deleted",
+          "expected": "Dialog shows the name or identifier of the Delete rule confirmation dialog"
+        },
+        {
+          "n": 7,
+          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
+          "expected": "Deletion is processed and a success message appears"
+        },
+        {
+          "n": 8,
+          "action": "Verify the Delete rule confirmation dialog no longer appears in the list",
+          "expected": "Delete rule confirmation dialog is removed from the list view"
+        },
+        {
+          "n": 9,
+          "action": "Verify the item count decreased by one",
+          "expected": "List count reflects the removal"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and confirm the deletion persisted",
+          "expected": "The deleted Delete rule confirmation dialog does not reappear after refresh"
+        }
+      ],
+      "case_key": "lR21MR"
+    },
+    "test_mute_rule_notification": {
+      "title": "Verify muting a rule's notification via the mute icon.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Rules - Notifications",
+          "expected": "Rules - Notifications page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate Mute rule notifications from list on the page",
+          "expected": "Mute rule notifications from list is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify Mute rule notifications from list is displayed as expected",
+          "expected": "Mute rule notifications from list is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "mBdpwM"
+    },
+    "test_create_rule_full_wizard": {
+      "title": "Verify completing the full rule creation wizard for each rule type (parametrized: Entry-Exit, Heat Map, Loitering, Occupancy, Intrusion Detection, Line Crossing).",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Rules > Add New Rule",
+          "expected": "Add New Rule page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the page displays any existing items",
+          "expected": "Page content loads (list, table, or empty state)"
+        },
+        {
+          "n": 4,
+          "action": "Click the create/add button for full Entry-Exit rule creation wizard",
+          "expected": "Creation form or dialog opens"
+        },
+        {
+          "n": 5,
+          "action": "Verify all required form fields are present and empty/default",
+          "expected": "Form fields are displayed with correct labels and placeholders"
+        },
+        {
+          "n": 6,
+          "action": "Fill in all required fields with valid test data",
+          "expected": "All fields accept the input without errors"
+        },
+        {
+          "n": 7,
+          "action": "Fill in any optional fields if applicable",
+          "expected": "Optional fields accept input"
+        },
+        {
+          "n": 8,
+          "action": "Review the filled form for correctness",
+          "expected": "All entered data is displayed correctly in the form"
+        },
+        {
+          "n": 9,
+          "action": "Click the Save/Submit/Create button",
+          "expected": "Form is submitted and a success message or indicator appears"
+        },
+        {
+          "n": 10,
+          "action": "Verify the newly created full Entry-Exit rule creation wizard appears in the list or view",
+          "expected": "The new full Entry-Exit rule creation wizard is visible with the correct data"
+        },
+        {
+          "n": 11,
+          "action": "Set up precondition: with canvas zone drawing",
+          "expected": "Precondition is met (with canvas zone drawing)"
+        },
+        {
+          "n": 12,
+          "action": "Verify no duplicate entries were created",
+          "expected": "Only one instance of the new full Entry-Exit rule creation wizard exists"
+        }
+      ],
+      "case_key": "21zEKm"
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "test_file": "tests/ui/login/test_login_valid.py",
+  "class": null,
+  "tests": {
+    "test_valid_credentials": {
+      "title": "Verify login with valid credentials succeeds",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open the application login page",
+          "expected": "Login page loads with username and password fields"
+        },
+        {
+          "n": 2,
+          "action": "Log in with the required user role/credentials",
+          "expected": "User is authenticated and redirected to the default page"
+        },
+        {
+          "n": 3,
+          "action": "Navigate to Login page > Authentication",
+          "expected": "Authentication page loads (or access denied, depending on the test)"
+        },
+        {
+          "n": 4,
+          "action": "Verify the access behavior matches the expected permission level",
+          "expected": "User can access or is correctly blocked from the feature"
+        },
+        {
+          "n": 5,
+          "action": "Verify login with valid credentials and captcha checked",
+          "expected": "Login is displayed as expected (with valid credentials and captcha checked)"
+        },
+        {
+          "n": 6,
+          "action": "Verify no unauthorized data or controls are exposed",
+          "expected": "Only permitted content is visible to the current user role"
+        },
+        {
+          "n": 7,
+          "action": "Set up precondition: with valid credentials and captcha checked",
+          "expected": "Precondition is met (with valid credentials and captcha checked)"
+        },
+        {
+          "n": 8,
+          "action": "Log out and verify the session ends cleanly",
+          "expected": "User is redirected to the login page after logout"
+        }
+      ],
+      "case_key": "RgGBDz"
+    },
+    "test_logout": {
+      "title": "Verify basic logout smoke test",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Login page > Accessibility - Login",
+          "expected": "Accessibility - Login page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where logout should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate logout on the page",
+          "expected": "logout is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify logout accessible via keyboard navigation",
+          "expected": "logout accessible via keyboard navigation"
+        }
+      ],
+      "case_key": "bj04pP"
+    }
+  }
+}

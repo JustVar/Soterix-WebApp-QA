@@ -1,0 +1,640 @@
+{
+  "test_file": "tests/ui/media/test_media_deeper.py",
+  "class": "TestMediaDeeper",
+  "tests": {
+    "test_date_filter_dropdown_opens": {
+      "title": "Verify the date filter dropdown can be opened.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > All Rules Dropdown",
+          "expected": "All Rules Dropdown page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter on the page",
+          "expected": "selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter",
+          "expected": "selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter"
+        }
+      ],
+      "case_key": "M73wDl"
+    },
+    "test_date_filter_has_options": {
+      "title": "Verify the date filter dropdown has multiple filter options.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events > Date Filter",
+          "expected": "Events Date Filter controls loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for default date filter",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "bj0X3V"
+    },
+    "test_date_filter_today": {
+      "title": "Verify selecting 'Today' date filter works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Events > Date Filter",
+          "expected": "Events Date Filter controls loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for default date filter",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "bj0X3V"
+    },
+    "test_date_filter_last_7_days": {
+      "title": "Verify selecting 'Last 7 Days' date filter works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Media Listing & Actions",
+          "expected": "Media Listing & Actions page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for Last 7 Days date filter",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "zvnVa9"
+    },
+    "test_grid_view_toggle_visible": {
+      "title": "Verify the grid view toggle button is visible.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views",
+          "expected": "Views Landing page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where grid view icon should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate grid view icon on the page",
+          "expected": "grid view icon is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Verify grid view icon visible and enabled by default",
+          "expected": "grid view icon visible and enabled by default"
+        }
+      ],
+      "case_key": "Ee69PV"
+    },
+    "test_view_toggle_area_present": {
+      "title": "Verify at least one view toggle button (grid or list) is present.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > Grid/List Toggle",
+          "expected": "Grid/List Toggle page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded"
+        },
+        {
+          "n": 4,
+          "action": "Locate only one view toggle remains active at a time on the page",
+          "expected": "only one view toggle remains active at a time is visible"
+        },
+        {
+          "n": 5,
+          "action": "Inspect the current state of only one view toggle remains active at a time",
+          "expected": "only one view toggle remains active at a time is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify no console errors or unexpected behavior",
+          "expected": "No errors in the browser console related to only one view toggle remains active at a time"
+        }
+      ],
+      "case_key": "aj6ydD"
+    },
+    "test_grid_view_switch_round_trip": {
+      "title": "Verify grid view can be activated and page remains valid.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Views > View Toggle - Modules",
+          "expected": "View Toggle - Modules page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All interactive elements are loaded and ready"
+        },
+        {
+          "n": 4,
+          "action": "Locate the target UI element for switch to Grid view",
+          "expected": "The element is visible and interactive"
+        },
+        {
+          "n": 5,
+          "action": "Verify switch to Grid view is displayed and functions correctly",
+          "expected": "Switch to grid view is displayed as expected"
+        },
+        {
+          "n": 6,
+          "action": "Verify the UI responded correctly to the interaction",
+          "expected": "Visual feedback confirms the action was processed"
+        },
+        {
+          "n": 7,
+          "action": "Verify no unintended side effects occurred",
+          "expected": "Other page elements remain in their expected state"
+        }
+      ],
+      "case_key": "11zlpR"
+    },
+    "test_tab_round_trip_all_to_clips": {
+      "title": "Verify switching from All to Clips and back works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Media Listing & Actions",
+          "expected": "Media Listing & Actions page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
+          "expected": "All data sections have loaded completely"
+        },
+        {
+          "n": 4,
+          "action": "Locate All tab displays clips, folders, and vault items on the page",
+          "expected": "All tab displays clips, folders, and vault items is visible in the expected location"
+        },
+        {
+          "n": 5,
+          "action": "Verify the data values are populated and not empty or showing placeholders",
+          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
+        },
+        {
+          "n": 6,
+          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
+          "expected": "Data is formatted according to the expected display format"
+        },
+        {
+          "n": 7,
+          "action": "Verify All tab displays clips, folders, and vault items is displayed as expected",
+          "expected": "All tab displays clips, folders, and vault items is displayed as expected"
+        },
+        {
+          "n": 8,
+          "action": "Refresh the page and verify the data displays consistently",
+          "expected": "Same data appears after page refresh"
+        }
+      ],
+      "case_key": "dypXww"
+    },
+    "test_tab_round_trip_folders_to_shared": {
+      "title": "Verify switching from Folders to Shared with me and back works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Navigate to Media and select 'Last 30 Days' filter",
+          "expected": "Filter applied"
+        },
+        {
+          "n": 2,
+          "action": "Click the Folders tab",
+          "expected": "Folders tab is selected"
+        },
+        {
+          "n": 3,
+          "action": "Click the 'Shared with me' tab",
+          "expected": "Shared with me tab is selected"
+        },
+        {
+          "n": 4,
+          "action": "Click the Folders tab again",
+          "expected": "Folders tab is re-selected"
+        },
+        {
+          "n": 5,
+          "action": "Verify page remains valid",
+          "expected": "URL still contains 'media'"
+        }
+      ],
+      "case_key": "21z6aQ"
+    },
+    "test_core_tabs_accessible": {
+      "title": "Verify the core media tabs can be clicked without errors.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Navigate to Media and select 'Last 30 Days' filter",
+          "expected": "Filter applied"
+        },
+        {
+          "n": 2,
+          "action": "Click each core tab: All, My Media, Shared with me, Clips, Folders",
+          "expected": "Each tab loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify page remains valid after cycling all tabs",
+          "expected": "URL still contains 'media'"
+        }
+      ],
+      "case_key": "5BRzE9"
+    },
+    "test_search_input_visible": {
+      "title": "Verify the search input is visible on the Media page.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - Insights",
+          "expected": "Search - Insights page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Wait for the page to fully render",
+          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
+        },
+        {
+          "n": 4,
+          "action": "Scroll to the area where Search input field should appear",
+          "expected": "The relevant section of the page is in view"
+        },
+        {
+          "n": 5,
+          "action": "Locate Search input field on the page",
+          "expected": "Search input field is visible on the page"
+        },
+        {
+          "n": 6,
+          "action": "Set up precondition: on Insights page",
+          "expected": "Precondition is met (on Insights page)"
+        },
+        {
+          "n": 7,
+          "action": "Verify Search input field visible and enabled",
+          "expected": "Search input field visible and enabled"
+        }
+      ],
+      "case_key": "dypXvp"
+    },
+    "test_search_no_results": {
+      "title": "Verify searching for nonexistent text shows empty or no results.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Search - Clips",
+          "expected": "Search - Clips page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Verify the initial unfiltered list or data set is displayed",
+          "expected": "All items are shown before applying any search or filter"
+        },
+        {
+          "n": 4,
+          "action": "Note the total count of items before filtering",
+          "expected": "Initial item count is recorded"
+        },
+        {
+          "n": 5,
+          "action": "Locate the search input field or filter controls",
+          "expected": "Search/filter UI is visible and accessible"
+        },
+        {
+          "n": 6,
+          "action": "Enter the search criteria or select the filter option for search",
+          "expected": "Search/filter input accepts the value"
+        },
+        {
+          "n": 7,
+          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
+          "expected": "The list updates to show filtered results"
+        },
+        {
+          "n": 8,
+          "action": "Verify the results match the search/filter criteria",
+          "expected": "All displayed items match the applied criteria"
+        },
+        {
+          "n": 9,
+          "action": "Verify the result count updated to reflect the filtered set",
+          "expected": "Item count is less than or equal to the original count"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: with invalid input shows no results state",
+          "expected": "Precondition is met (with invalid input shows no results state)"
+        },
+        {
+          "n": 11,
+          "action": "Clear the search/filter and verify all items return",
+          "expected": "Clearing the filter restores the full unfiltered list"
+        }
+      ],
+      "case_key": "Pgw96K"
+    },
+    "test_search_clear_and_retry": {
+      "title": "Verify clearing search and searching again works.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Admin > Search - Users",
+          "expected": "Search - Users page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Identify the Clear search input and restore role list to be deleted from the list",
+          "expected": "Clear search input and restore role list is visible and identifiable in the list"
+        },
+        {
+          "n": 4,
+          "action": "Note the current count of items in the list",
+          "expected": "Current item count is recorded for later comparison"
+        },
+        {
+          "n": 5,
+          "action": "Click the delete button or action for the target Clear search input and restore role list",
+          "expected": "A confirmation dialog or prompt appears"
+        },
+        {
+          "n": 6,
+          "action": "Verify the confirmation dialog displays the correct item being deleted",
+          "expected": "Dialog shows the name or identifier of the Clear search input and restore role list"
+        },
+        {
+          "n": 7,
+          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
+          "expected": "Deletion is processed and a success message appears"
+        },
+        {
+          "n": 8,
+          "action": "Verify the Clear search input and restore role list no longer appears in the list",
+          "expected": "Clear search input and restore role list is removed from the list view"
+        },
+        {
+          "n": 9,
+          "action": "Verify the item count decreased by one",
+          "expected": "List count reflects the removal"
+        },
+        {
+          "n": 10,
+          "action": "Refresh the page and confirm the deletion persisted",
+          "expected": "The deleted Clear search input and restore role list does not reappear after refresh"
+        }
+      ],
+      "case_key": "WEnvWV"
+    },
+    "test_media_page_after_refresh": {
+      "title": "Verify the Media page loads correctly after a browser refresh.",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in to the application with valid credentials",
+          "expected": "User is logged in and default page loads"
+        },
+        {
+          "n": 2,
+          "action": "Navigate to Media > State Persistence - Media",
+          "expected": "State Persistence - Media page loads without errors"
+        },
+        {
+          "n": 3,
+          "action": "Note the current state of Media page retains state before making changes",
+          "expected": "Initial state is observed and recorded"
+        },
+        {
+          "n": 4,
+          "action": "Perform the action that changes Media page retains state",
+          "expected": "Action is completed and change is reflected in the UI"
+        },
+        {
+          "n": 5,
+          "action": "Verify the change is displayed correctly before leaving the page",
+          "expected": "Updated state is visible on the current page"
+        },
+        {
+          "n": 6,
+          "action": "Refresh the page (F5 or browser reload)",
+          "expected": "Page reloads completely"
+        },
+        {
+          "n": 7,
+          "action": "Verify Media page retains state retained the changes after refresh",
+          "expected": "The change persisted through the page refresh"
+        },
+        {
+          "n": 8,
+          "action": "Navigate away to a different page",
+          "expected": "Different page loads successfully"
+        },
+        {
+          "n": 9,
+          "action": "Navigate back to State Persistence - Media page",
+          "expected": "State Persistence - Media page loads"
+        },
+        {
+          "n": 10,
+          "action": "Set up precondition: after browser refresh",
+          "expected": "Precondition is met (after browser refresh)"
+        },
+        {
+          "n": 11,
+          "action": "Verify Media page retains state still reflects the saved changes",
+          "expected": "Changes persist after navigating away and back"
+        }
+      ],
+      "case_key": "Z8xQV6"
+    }
+  }
+}
