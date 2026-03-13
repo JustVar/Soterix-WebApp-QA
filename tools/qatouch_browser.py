@@ -1939,8 +1939,45 @@ def add_tag(page, tag_name: str) -> bool:
     }''')
 
     if add_new:
-        time.sleep(1)
-        print(f'    Tag "{tag_name}" created via Add New')
+        time.sleep(1.5)
+        # "Add New" opens a modal dialog with Label, Key, Status fields.
+        # Fill Label and Key, then click the modal's Save button.
+        modal_handled = page.evaluate('''(tagName) => {
+            // Fill Label field
+            var inputs = document.querySelectorAll('input');
+            var labelInput = null, keyInput = null;
+            for (var inp of inputs) {
+                var ph = (inp.placeholder || '').toLowerCase();
+                if (ph === 'enter label') labelInput = inp;
+                else if (ph === 'enter key') keyInput = inp;
+            }
+            if (!labelInput || !keyInput) return 'modal_inputs_not_found';
+
+            labelInput.focus();
+            labelInput.value = tagName.toUpperCase();
+            labelInput.dispatchEvent(new Event('input', {bubbles: true}));
+            labelInput.dispatchEvent(new Event('change', {bubbles: true}));
+
+            keyInput.focus();
+            keyInput.value = tagName.toLowerCase();
+            keyInput.dispatchEvent(new Event('input', {bubbles: true}));
+            keyInput.dispatchEvent(new Event('change', {bubbles: true}));
+
+            // Click the modal Save button (not the main form's save-continue-btn)
+            var btns = document.querySelectorAll('button');
+            for (var b of btns) {
+                if (b.textContent.trim() === 'Save' && !b.classList.contains('save-continue-btn') && b.offsetHeight > 0) {
+                    var rect = b.getBoundingClientRect();
+                    if (rect.top > 200 && rect.top < 600) {
+                        b.click();
+                        return 'modal_saved';
+                    }
+                }
+            }
+            return 'modal_save_not_found';
+        }''', tag_name)
+        time.sleep(1.5)
+        print(f'    Tag "{tag_name}" created via Add New ({modal_handled})')
         return True
 
     print(f'    Could not add tag "{tag_name}"')

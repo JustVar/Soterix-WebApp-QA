@@ -1,0 +1,6662 @@
+{
+  "generated": "2026-03-13T10:14:51.755619",
+  "environment": "stage",
+  "url": "https://staging.example.invalid",
+  "source": "auto-generated from QA Touch snapshot (3,011 cases) + Playwright POMs (15 files)",
+  "note": "Validate against live Stage environment; add any missing features",
+  "total_features": 470,
+  "areas": [
+    {
+      "product_area": "Views",
+      "nav_path": "/views",
+      "description": "Live camera monitoring, grid layouts, saved views, playback, PTZ, bookmarks, sequences, sharing",
+      "case_count": 565,
+      "module_count": 139,
+      "features": [
+        {
+          "name": "Accessibility - Playback",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Archive Controls",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Archive Indicator",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Archive Playback",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "pause",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Archive Playback Controls",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "pause",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Archive Playback State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "verify"
+          ]
+        },
+        {
+          "name": "Audio",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "navigate",
+            "verify"
+          ]
+        },
+        {
+          "name": "Audio Control",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "mute",
+            "verify"
+          ]
+        },
+        {
+          "name": "Audio-Video Synchronization",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "drop",
+            "mute",
+            "pause",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Bookmark - Controls",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Bookmark - Creation",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Bookmark Clip",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "verify"
+          ]
+        },
+        {
+          "name": "Bookmark Panel - List",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "open",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Bookmark Panel - Side",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Bookmark Playback - Bookmarks",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "navigate",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Bookmark Playback - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "verify"
+          ]
+        },
+        {
+          "name": "Bottom Toolbar",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Browser Navigation",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Audio Source Integ...",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Canvas",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "drop",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Details",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Drag & Drop",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "drop",
+            "pin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Duplication",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Favorite",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Fullscreen",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "fullscreen",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Grid",
+          "type": "module",
+          "case_count": 14,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "refresh",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Interaction & Preview",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "pin",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera List - Scrolling",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Preview",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Preview - Fullscreen",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Preview - Loading",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "pin",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Preview - Navigation",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "fullscreen",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Replacement",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Scheduling",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "edit",
+            "toggle"
+          ]
+        },
+        {
+          "name": "Camera Search - Camera",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drop",
+            "filter",
+            "fullscreen",
+            "open",
+            "play",
+            "refresh",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Search - Event",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Search - Line",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Search - Person",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Search - Search",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "filter",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Search - Vehicle",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Search - Zone",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Search Duration",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Search Filters",
+          "type": "module",
+          "case_count": 15,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "filter",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Selection - Details",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Selection - Thumbnails",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Sequence - Fullscreen",
+          "type": "module",
+          "case_count": 24,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "create",
+            "delete",
+            "drop",
+            "edit",
+            "fullscreen",
+            "open",
+            "play",
+            "remove",
+            "reset",
+            "save",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Sequence - Live",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "open",
+            "play",
+            "remove",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Sequence Modal",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "create",
+            "edit",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Sequence Options",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Sequence Save",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "play",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Sequence Timing",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "edit",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Sorting",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Status",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Cameras Without Audio Sup...",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Canvas Stability",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Clip Selection - Fullscreen",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drag",
+            "fullscreen",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Dashboard Preview",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Default Landing",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Devices Tab",
+          "type": "module",
+          "case_count": 16,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "expand",
+            "play",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Drag Control",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "drag",
+            "verify"
+          ]
+        },
+        {
+          "name": "Empty Grid State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "drop",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Empty State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Error Handling - Views",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Playback Controls",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "share",
+            "verify"
+          ]
+        },
+        {
+          "name": "Expanded View",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "expand",
+            "verify"
+          ]
+        },
+        {
+          "name": "Export - Review Pinned",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "drop",
+            "export",
+            "open",
+            "pin",
+            "play",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Export - Video Modal",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "edit",
+            "export",
+            "open",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Fullscreen Controls",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "fullscreen",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Fullscreen Entry",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "expand",
+            "fullscreen",
+            "verify"
+          ]
+        },
+        {
+          "name": "Fullscreen Exit",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "fullscreen",
+            "verify"
+          ]
+        },
+        {
+          "name": "Fullscreen Playback",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "fullscreen",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Google Maps View",
+          "type": "module",
+          "case_count": 12,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drag",
+            "pin",
+            "play",
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Grid",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "drop",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Grid Constraint",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "verify"
+          ]
+        },
+        {
+          "name": "Grid Layout",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Grid Reset",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Grid State Change",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "verify"
+          ]
+        },
+        {
+          "name": "Grid Tiles",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Grid/List Toggle",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "filter",
+            "open",
+            "play",
+            "refresh",
+            "search",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Header",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "verify"
+          ]
+        },
+        {
+          "name": "Header Icons",
+          "type": "module",
+          "case_count": 16,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "refresh",
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Header Utilities",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Hover Controls",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Landing",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Landing & Navigation",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "play",
+            "refresh",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Layout Stability",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Layouts",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "play",
+            "remove",
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Left Navigation - Views",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Live Playback Controls",
+          "type": "module",
+          "case_count": 13,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "fullscreen",
+            "open",
+            "pause",
+            "play",
+            "share",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Live Playback State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Live Transition",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Locations & Cameras - Event Wall",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "play",
+            "save",
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Locations & Cameras - Events Page",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "drop",
+            "expand",
+            "play",
+            "refresh",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Locations & Cameras Panel",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "expand",
+            "verify"
+          ]
+        },
+        {
+          "name": "Locations Tree",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "expand",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "My Views",
+          "type": "module",
+          "case_count": 12,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "refresh",
+            "reset",
+            "scroll",
+            "search",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Navigation - Views",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Navigation Entry",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Navigation Highlight - Views",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Navigation Menu",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Offline Camera",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Overlays - Controls",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "play",
+            "remove",
+            "verify"
+          ]
+        },
+        {
+          "name": "Overlays - Static Map",
+          "type": "module",
+          "case_count": 13,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "PTZ Controls",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "fullscreen",
+            "open",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "PTZ Digital Controls",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "reset",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "PTZ Presets",
+          "type": "module",
+          "case_count": 13,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "open",
+            "play",
+            "reset",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "PTZ Tours",
+          "type": "module",
+          "case_count": 21,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "fullscreen",
+            "open",
+            "play",
+            "save",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "PTZ Tours & Presets",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Page Header",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Page Refresh - Views",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "refresh",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Playback Auto-Timeout",
+          "type": "module",
+          "case_count": 21,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drop",
+            "expand",
+            "open",
+            "play",
+            "refresh",
+            "remove",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Playback Continuity",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "fullscreen",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Playback Controls - Fullscreen",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "fullscreen",
+            "pause",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Playback Controls - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Playback Speed",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Playback Stability",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Preview",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Remove Video",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "remove",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Reset View",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "remove",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Review Pinned Clips - Media",
+          "type": "module",
+          "case_count": 15,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "export",
+            "open",
+            "pin",
+            "play",
+            "scroll",
+            "select",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Review Pinned Clips - Search",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "pin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search in Camera",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "filter",
+            "open",
+            "play",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Share Live View - Camera",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "drop",
+            "fullscreen",
+            "open",
+            "play",
+            "share",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Share Live View - Playback",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "play",
+            "share",
+            "verify"
+          ]
+        },
+        {
+          "name": "Share Live View Modal",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "drop",
+            "play",
+            "share",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Snapshot - Fullscreen",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "fullscreen",
+            "open",
+            "play",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Snapshot - Playback",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "play",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "State Persistence - Camera",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Static Map Detail View",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Video Metadata",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Video Playback",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "View Header",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "View Layout",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "View Mode",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "View Tabs",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "pin",
+            "verify"
+          ]
+        },
+        {
+          "name": "View Toggle - Modules",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Cards Layout",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Preview",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "ViewsPage",
+          "methods": 42,
+          "locators": 23
+        }
+      ]
+    },
+    {
+      "product_area": "Search",
+      "nav_path": "/search",
+      "description": "Global search, forensic search, category filters (person/vehicle/event), zone/line drawing, date/time pickers",
+      "case_count": 476,
+      "module_count": 42,
+      "features": [
+        {
+          "name": "Categories",
+          "type": "module",
+          "case_count": 31,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "edit",
+            "open",
+            "refresh",
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Category",
+          "type": "module",
+          "case_count": 7,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "reset",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Category - Event",
+          "type": "module",
+          "case_count": 21,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drop",
+            "filter",
+            "open",
+            "play",
+            "remove",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Category - Person",
+          "type": "module",
+          "case_count": 49,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "collapse",
+            "expand",
+            "filter",
+            "play",
+            "refresh",
+            "remove",
+            "reset",
+            "scroll",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Category - Vehicle",
+          "type": "module",
+          "case_count": 19,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "edit",
+            "remove",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Category-Description Dependency",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Category-List Association",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "drop",
+            "edit",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Clip Selection - Timeline",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Custom Date Picker",
+          "type": "module",
+          "case_count": 21,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "create",
+            "filter",
+            "open",
+            "play",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Date & Time Search",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "open",
+            "play",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Date Picker",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "navigate",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Date Search",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "fullscreen",
+            "open",
+            "play",
+            "reset",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Description",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Duration",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "reset",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Line",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Line - Setup & Drawing",
+          "type": "module",
+          "case_count": 15,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "drop",
+            "edit",
+            "open",
+            "reset",
+            "save",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Line Crossing",
+          "type": "module",
+          "case_count": 13,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "edit",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "More Filters",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "filter",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Person - Results & Execution",
+          "type": "module",
+          "case_count": 24,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drop",
+            "filter",
+            "open",
+            "pin",
+            "play",
+            "refresh",
+            "remove",
+            "search",
+            "select",
+            "sort",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Person Filters",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Person Slip & Fall",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "edit",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Reset Search - Clips",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "pin",
+            "reset",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Reset Search - Filters",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "reset",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search & Filter",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search & Reset",
+          "type": "module",
+          "case_count": 15,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "filter",
+            "open",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search - Clips",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search - Insights",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search - LPR",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "filter",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search Landing Page",
+          "type": "module",
+          "case_count": 53,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drop",
+            "edit",
+            "filter",
+            "navigate",
+            "open",
+            "pin",
+            "play",
+            "refresh",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search Results",
+          "type": "module",
+          "case_count": 15,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "pin",
+            "play",
+            "remove",
+            "scroll",
+            "search",
+            "select",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Shared Search",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Time Picker",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Time Range Filter",
+          "type": "module",
+          "case_count": 18,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "drop",
+            "filter",
+            "open",
+            "refresh",
+            "reset",
+            "scroll",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Timeline Validation",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drag",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vehicle - Execution & Results",
+          "type": "module",
+          "case_count": 28,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drop",
+            "filter",
+            "open",
+            "pin",
+            "play",
+            "refresh",
+            "remove",
+            "search",
+            "select",
+            "sort",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vehicle Filters",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Search - Add Section",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "filter",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Search - Panel",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widgets Search",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "filter",
+            "pin",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Zone - AND, Execution & Results",
+          "type": "module",
+          "case_count": 25,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "delete",
+            "drop",
+            "filter",
+            "open",
+            "pin",
+            "play",
+            "refresh",
+            "remove",
+            "reset",
+            "search",
+            "select",
+            "sort",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Zone - Setup & Drawing",
+          "type": "module",
+          "case_count": 19,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "drop",
+            "filter",
+            "open",
+            "play",
+            "remove",
+            "reset",
+            "save",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Zone Drawing",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "InCameraSearchPage",
+          "methods": 8,
+          "locators": 10
+        },
+        {
+          "class": "SearchPage",
+          "methods": 22,
+          "locators": 13
+        }
+      ]
+    },
+    {
+      "product_area": "Events",
+      "nav_path": "/events",
+      "description": "Event wall, AI detection events, filtering, pinning, export, acknowledgement",
+      "case_count": 240,
+      "module_count": 32,
+      "features": [
+        {
+          "name": "Acknowledgement Status",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "play",
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Aggression Detection",
+          "type": "module",
+          "case_count": 12,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "drop",
+            "filter",
+            "save",
+            "search",
+            "select"
+          ]
+        },
+        {
+          "name": "Create Link - Events",
+          "type": "module",
+          "case_count": 7,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "create",
+            "drop",
+            "open",
+            "pin",
+            "play",
+            "toggle",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Date Filter",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Entry-Exit",
+          "type": "module",
+          "case_count": 15,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "drop",
+            "save",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event - Execution & Results",
+          "type": "module",
+          "case_count": 21,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "filter",
+            "open",
+            "pin",
+            "play",
+            "refresh",
+            "remove",
+            "search",
+            "select",
+            "sort",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Card Data",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Card UI",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Create Link",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Export",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "export",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Interaction",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Timestamp",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Vault",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Event Wall",
+          "type": "module",
+          "case_count": 58,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "edit",
+            "navigate",
+            "open",
+            "play",
+            "save",
+            "scroll",
+            "select",
+            "sort",
+            "verify"
+          ]
+        },
+        {
+          "name": "Events Empty State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Events Filter",
+          "type": "module",
+          "case_count": 12,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drop",
+            "filter",
+            "pin",
+            "search",
+            "select",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Events Panel",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Events Panel Scroll",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Events Panel Visibility",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Export - Notification Events",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "export",
+            "open",
+            "play",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Filters",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "filter",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Fire-Smoke Detection",
+          "type": "module",
+          "case_count": 17,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Intrusion Detection",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Landing Page - Events",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Landing Page Controls",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "verify"
+          ]
+        },
+        {
+          "name": "Loitering",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "edit",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Occupancy",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "edit",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Pin/Unpin",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "pin",
+            "refresh",
+            "remove",
+            "search",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Pinned Clips",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "pin",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Pinned Clips Panel",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "pin",
+            "play",
+            "scroll",
+            "search",
+            "sort",
+            "unpin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Pinned Clips Selection",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "pin",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Workplace Safety",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "edit",
+            "save",
+            "select",
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "EventsPage",
+          "methods": 22,
+          "locators": 26
+        }
+      ]
+    },
+    {
+      "product_area": "Admin",
+      "nav_path": "/admin",
+      "description": "Users, roles, permissions, rules, sites, general settings, audit trail, licenses, channels, webhooks, storage",
+      "case_count": 865,
+      "module_count": 99,
+      "features": [
+        {
+          "name": "Access Control",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Add License Plate",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "open",
+            "save",
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Add New Rule",
+          "type": "module",
+          "case_count": 18,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "open",
+            "scroll",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Add New User",
+          "type": "module",
+          "case_count": 7,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "create",
+            "open",
+            "save"
+          ]
+        },
+        {
+          "name": "Add User via Upload",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "select",
+            "upload",
+            "verify"
+          ]
+        },
+        {
+          "name": "All Rules Dropdown",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "filter",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "All Rules Filter",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "collapse",
+            "drop",
+            "expand",
+            "play",
+            "refresh",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Audio Settings",
+          "type": "module",
+          "case_count": 13,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "mute",
+            "play",
+            "refresh",
+            "reset",
+            "save",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Audit Trail - LPR",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "edit",
+            "verify"
+          ]
+        },
+        {
+          "name": "Audit Trail - Users",
+          "type": "module",
+          "case_count": 45,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "download",
+            "drop",
+            "filter",
+            "navigate",
+            "play",
+            "refresh",
+            "reset",
+            "scroll",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera Audio Source Integration",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": []
+        },
+        {
+          "name": "Camera Image Settings",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Camera List - Site Detail",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Channels - Integrations",
+          "type": "module",
+          "case_count": 21,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "open",
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Channels - Views",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "play",
+            "remove",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Chat Access",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Chat List Ordering",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Chat UI",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Concurrency",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "verify"
+          ]
+        },
+        {
+          "name": "Configuration and Settings",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "filter",
+            "navigate",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Delete User",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "open"
+          ]
+        },
+        {
+          "name": "Deployment",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Edit User",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "edit",
+            "open"
+          ]
+        },
+        {
+          "name": "Error Handling - Chat",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "General",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "General Landing",
+          "type": "module",
+          "case_count": 18,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "navigate",
+            "play",
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Global Access",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Global Actions",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Group Chat",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "remove",
+            "search",
+            "select"
+          ]
+        },
+        {
+          "name": "Group Permissions",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "verify"
+          ]
+        },
+        {
+          "name": "Group UI",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "verify"
+          ]
+        },
+        {
+          "name": "Image Parameters",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "open",
+            "reset",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Landing Page - Admin",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "License Plate - Add",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "License Plate Recognition",
+          "type": "module",
+          "case_count": 20,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Licenses",
+          "type": "module",
+          "case_count": 229,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "assign",
+            "close",
+            "collapse",
+            "download",
+            "drop",
+            "expand",
+            "export",
+            "filter",
+            "navigate",
+            "open",
+            "pin",
+            "play",
+            "refresh",
+            "remove",
+            "scroll",
+            "search",
+            "select",
+            "sort",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "List - License Plate Records",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Map Configuration",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "save"
+          ]
+        },
+        {
+          "name": "Messaging",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "More Options",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "One-to-One Chat",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "open",
+            "play",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Permission Hierarchy",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Permissions - LPR",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "verify"
+          ]
+        },
+        {
+          "name": "Permissions - Maps",
+          "type": "module",
+          "case_count": 14,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "edit",
+            "open",
+            "play",
+            "refresh",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Permissions - Users",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "edit",
+            "open"
+          ]
+        },
+        {
+          "name": "Permissions Panel",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Reboot",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Role Assignment",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "assign"
+          ]
+        },
+        {
+          "name": "Role Assignment Impact",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "assign",
+            "remove",
+            "verify"
+          ]
+        },
+        {
+          "name": "Role Card",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Role Dropdown",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "verify"
+          ]
+        },
+        {
+          "name": "Role Filter",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "filter",
+            "open",
+            "reset",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Role Permissions Management",
+          "type": "module",
+          "case_count": 15,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "edit",
+            "verify"
+          ]
+        },
+        {
+          "name": "Role Selection",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Role Switching",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "save"
+          ]
+        },
+        {
+          "name": "Roles - Cancel Behavior",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles - Concurrency",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles - Dependency",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles - Error Handling",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles - Persistence",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles - Refresh Handling",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles - Save Behavior",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles - UI State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "reset",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles - Validation",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Roles Tab Navigation",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": []
+        },
+        {
+          "name": "Rollback",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Rules",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "edit",
+            "remove",
+            "scroll",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Rules - Delete",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete"
+          ]
+        },
+        {
+          "name": "Rules - Edit",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "open",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Rules - Notifications",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "mute",
+            "unmute"
+          ]
+        },
+        {
+          "name": "Rules Module",
+          "type": "module",
+          "case_count": 12,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "mute",
+            "refresh",
+            "save",
+            "search",
+            "sort",
+            "verify"
+          ]
+        },
+        {
+          "name": "Rules Widget",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Scrolling - Sites",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search - Sites",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Search - Users",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Select Site Dropdown",
+          "type": "module",
+          "case_count": 12,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "drop",
+            "expand",
+            "refresh",
+            "reset",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Settings",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "fullscreen",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Site Actions (More Options Menu)",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "open",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Site Details",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Site Name",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "refresh",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Sites",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "drop",
+            "reset",
+            "save",
+            "scroll",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Sites - Rollback",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Sites - Streaming",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "play",
+            "reset",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Sites Navigation",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Sites Widget",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "play",
+            "refresh",
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Stability - Admin Users",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Storage",
+          "type": "module",
+          "case_count": 16,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "drop",
+            "open",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "System Logs",
+          "type": "module",
+          "case_count": 37,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "download",
+            "navigate",
+            "open",
+            "play",
+            "scroll",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Tooltip",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Tooltips",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "User List Refresh",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Users Interaction",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Users Landing Page",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Users Widget",
+          "type": "module",
+          "case_count": 21,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "filter",
+            "play",
+            "refresh",
+            "reset",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Users/Roles Toggle",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Storage - UI",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Storage - Usage",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "View Toggle - Users",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Webhooks",
+          "type": "module",
+          "case_count": 24,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "edit",
+            "open",
+            "refresh",
+            "reset",
+            "save",
+            "search",
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "AdminPage",
+          "methods": 48,
+          "locators": 47
+        },
+        {
+          "class": "LicensePage",
+          "methods": 29,
+          "locators": 31
+        }
+      ]
+    },
+    {
+      "product_area": "Insights",
+      "nav_path": "/insights",
+      "description": "Dashboards, widgets, analytics, reports, preset and custom dashboards",
+      "case_count": 216,
+      "module_count": 47,
+      "features": [
+        {
+          "name": "Accessibility - Insights",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "edit",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Create Dashboard Actions",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Create Dashboard Entry",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Create New",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "verify"
+          ]
+        },
+        {
+          "name": "Create New Widget",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "open",
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Create Widget Entry",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "create",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Cross Widget Interaction",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "refresh",
+            "reset",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Dashboard Landing",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Dashboard Name",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "save",
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Dashlets",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "collapse",
+            "expand",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Discard",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Discard Action",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "refresh",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Full Width Widgets",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "collapse",
+            "expand",
+            "verify"
+          ]
+        },
+        {
+          "name": "Graph Type",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "drop",
+            "play",
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Half Width Widgets",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "collapse",
+            "expand",
+            "verify"
+          ]
+        },
+        {
+          "name": "Insights",
+          "type": "module",
+          "case_count": 12,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "play",
+            "remove",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Left Navigation - Insights",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "My Dashboard",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "reset",
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "My Dashboard Cards",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "My Dashboards",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "My Widgets",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "edit",
+            "expand",
+            "open",
+            "refresh",
+            "remove",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Page Refresh - Insights",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Preset Dashboard",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Preset Dashboard Cards",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Preset Widgets",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "expand",
+            "open",
+            "play",
+            "reset",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Presets",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "reset",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Report",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "download",
+            "edit",
+            "filter",
+            "open",
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Save Action",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Scrolling - Dashboard",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Session Handling - Dashboard",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "verify"
+          ]
+        },
+        {
+          "name": "Stability - Insights",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Tabs - Insights",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Card",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Card Menu",
+          "type": "module",
+          "case_count": 13,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "navigate",
+            "open",
+            "refresh",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Cards",
+          "type": "module",
+          "case_count": 7,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "play",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Data",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Name",
+          "type": "module",
+          "case_count": 9,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Persistence",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Placement",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Removal",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "remove",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Sections",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "expand",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Selection",
+          "type": "module",
+          "case_count": 7,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "remove",
+            "save",
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Selection Panel",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widget Size",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widgets Landing",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widgets List",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Widgets Panel",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "drop",
+            "expand",
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "InsightsPage",
+          "methods": 9,
+          "locators": 22
+        }
+      ]
+    },
+    {
+      "product_area": "Media",
+      "nav_path": "/media",
+      "description": "Media vault, clip management, folders, export, sharing, bulk actions",
+      "case_count": 136,
+      "module_count": 39,
+      "features": [
+        {
+          "name": "Accessibility - Media",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Actions",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Add to Vault - Dialog",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Add to Vault - Notification",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Bulk Actions",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Clip Actions - Menu",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Clip Actions - Options",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "export",
+            "share",
+            "verify"
+          ]
+        },
+        {
+          "name": "Clip Actions - State",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "export",
+            "play",
+            "select",
+            "share",
+            "verify"
+          ]
+        },
+        {
+          "name": "Create Link - Notifications",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "drop",
+            "open",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Create Link - Pinned",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "open",
+            "pin",
+            "verify"
+          ]
+        },
+        {
+          "name": "Create Link - Sharable",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "verify"
+          ]
+        },
+        {
+          "name": "Delete",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "remove",
+            "verify"
+          ]
+        },
+        {
+          "name": "Export - Clip Dialog",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "export",
+            "open",
+            "play",
+            "save",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Export - Download",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "download",
+            "export",
+            "verify"
+          ]
+        },
+        {
+          "name": "Group Clips",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "open",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Group Delete",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "delete",
+            "refresh",
+            "remove",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Media Listing & Actions",
+          "type": "module",
+          "case_count": 49,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "drop",
+            "export",
+            "filter",
+            "open",
+            "play",
+            "refresh",
+            "reset",
+            "search",
+            "select",
+            "share",
+            "sort",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Move to Folder",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Navigation - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Performance - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Re-login - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Rename",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Selection",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Share - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "share",
+            "verify"
+          ]
+        },
+        {
+          "name": "Share Link",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "open",
+            "select",
+            "share",
+            "verify"
+          ]
+        },
+        {
+          "name": "Sorting - Modified",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "sort",
+            "verify"
+          ]
+        },
+        {
+          "name": "Sorting - Order",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "pin",
+            "select",
+            "sort",
+            "verify"
+          ]
+        },
+        {
+          "name": "Stability - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "State Persistence - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Tabs - Media",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Thumbnail",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Add Action - Clips",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Add Action - Session",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Empty State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Folder Actions",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Navigation - Media",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Navigation - Vault",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Vault - Retention",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "delete",
+            "remove",
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "MediaPage",
+          "methods": 20,
+          "locators": 36
+        }
+      ]
+    },
+    {
+      "product_area": "Maps",
+      "nav_path": "/maps",
+      "description": "Site maps, camera overlays, heat maps, static maps, map CRUD",
+      "case_count": 157,
+      "module_count": 11,
+      "features": [
+        {
+          "name": "Heat-map",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "edit",
+            "filter"
+          ]
+        },
+        {
+          "name": "Map Creation",
+          "type": "module",
+          "case_count": 25,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "delete",
+            "edit",
+            "open",
+            "play",
+            "save",
+            "search",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Map Deletion",
+          "type": "module",
+          "case_count": 12,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "create",
+            "delete",
+            "navigate",
+            "play",
+            "refresh",
+            "remove",
+            "save",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Map Editing",
+          "type": "module",
+          "case_count": 32,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "drop",
+            "edit",
+            "open",
+            "play",
+            "refresh",
+            "remove",
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "Map List",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": []
+        },
+        {
+          "name": "Map Navigation",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "edit",
+            "play",
+            "select"
+          ]
+        },
+        {
+          "name": "Maps",
+          "type": "module",
+          "case_count": 16,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "filter",
+            "open",
+            "play",
+            "refresh",
+            "remove",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Maps Carousel",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Maps Widget",
+          "type": "module",
+          "case_count": 21,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "filter",
+            "navigate",
+            "open",
+            "play",
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Static Maps",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "drop",
+            "filter",
+            "play",
+            "search",
+            "select",
+            "verify"
+          ]
+        },
+        {
+          "name": "Validation - Maps",
+          "type": "module",
+          "case_count": 18,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "create",
+            "edit",
+            "navigate",
+            "open",
+            "play",
+            "remove",
+            "save",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "MapsPage",
+          "methods": 10,
+          "locators": 10
+        }
+      ]
+    },
+    {
+      "product_area": "Login & Auth",
+      "nav_path": "/auth/login",
+      "description": "Login, logout, MFA, session management, password reset, security",
+      "case_count": 114,
+      "module_count": 24,
+      "features": [
+        {
+          "name": "Accessibility - Login",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Authentication",
+          "type": "module",
+          "case_count": 5,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Error Handling - Login",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "type": "module",
+          "case_count": 7,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Login Security",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Login UI",
+          "type": "module",
+          "case_count": 6,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Logout",
+          "type": "module",
+          "case_count": 18,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "search",
+            "verify"
+          ]
+        },
+        {
+          "name": "Logout - Session",
+          "type": "module",
+          "case_count": 8,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Multi-Factor Authentication",
+          "type": "module",
+          "case_count": 32,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "navigate",
+            "play",
+            "refresh",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Multi-Session Handling",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Password Reset",
+          "type": "module",
+          "case_count": 7,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Re-login - Login",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Re-login Behavior",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "pause",
+            "play",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "Security - Injection",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Security - Token",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Session Handling - LPR",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Session Management - LPR",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "verify"
+          ]
+        },
+        {
+          "name": "Session Management - Login",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "create",
+            "verify"
+          ]
+        },
+        {
+          "name": "Session Security - Access",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Session Security - Logout",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Session Stability",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Session Timeout",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Stability - Login",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Validation - Login",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "LoginPage",
+          "methods": 16,
+          "locators": 0
+        }
+      ]
+    },
+    {
+      "product_area": "LPR",
+      "nav_path": "/admin/lpr",
+      "description": "License Plate Recognition management, lists, permissions",
+      "case_count": 133,
+      "module_count": 8,
+      "features": [
+        {
+          "name": "LPR",
+          "type": "module",
+          "case_count": 75,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "delete",
+            "edit",
+            "navigate",
+            "play",
+            "refresh",
+            "save",
+            "scroll",
+            "select",
+            "sort",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "LPR Landing Page",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Landing Page - LPR",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "List",
+          "type": "module",
+          "case_count": 51,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "assign",
+            "create",
+            "delete",
+            "edit",
+            "filter",
+            "open",
+            "play",
+            "refresh",
+            "remove",
+            "save",
+            "scroll",
+            "search",
+            "select",
+            "toggle",
+            "verify"
+          ]
+        },
+        {
+          "name": "Navigation - LPR Access",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Navigation - LPR Back",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Navigation Highlight - LPR",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Performance - LPR",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": []
+    },
+    {
+      "product_area": "Notifications",
+      "nav_path": "Global (bell icon)",
+      "description": "Notification panel, mute controls, popup alerts, read/unread state",
+      "case_count": 43,
+      "module_count": 9,
+      "features": [
+        {
+          "name": "Mute / Unmute",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "mute",
+            "play",
+            "refresh",
+            "unmute",
+            "verify"
+          ]
+        },
+        {
+          "name": "Mute and Volume Control",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "mute",
+            "play"
+          ]
+        },
+        {
+          "name": "Notification Icon",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Notification Ordering",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "close",
+            "open",
+            "verify"
+          ]
+        },
+        {
+          "name": "Notification Panel",
+          "type": "module",
+          "case_count": 18,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "close",
+            "mute",
+            "open",
+            "play",
+            "refresh",
+            "scroll",
+            "toggle",
+            "unmute",
+            "verify"
+          ]
+        },
+        {
+          "name": "Notifications",
+          "type": "module",
+          "case_count": 7,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "open",
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Popup Notification",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "mute",
+            "open",
+            "play",
+            "unmute",
+            "verify"
+          ]
+        },
+        {
+          "name": "Read / Unread State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Share - Notifications",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "open",
+            "select",
+            "share",
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": []
+    },
+    {
+      "product_area": "Cross-Cutting / Other",
+      "nav_path": "Multiple",
+      "description": "Chats, UI consistency, accessibility, tooltips, error handling",
+      "case_count": 66,
+      "module_count": 20,
+      "features": [
+        {
+          "name": "Edge Case Handling",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "verify"
+          ]
+        },
+        {
+          "name": "Error Handling & Message",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": []
+        },
+        {
+          "name": "Overall UI",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "edit",
+            "play",
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Page Rendering",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Page Scrolling",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "Persistence",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "refresh",
+            "verify"
+          ]
+        },
+        {
+          "name": "Save Validation",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "save",
+            "verify"
+          ]
+        },
+        {
+          "name": "System Stability",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "Tooltips & UI Highlights",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "play",
+            "refresh",
+            "reset",
+            "verify"
+          ]
+        },
+        {
+          "name": "UI",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "UI & Accessibility",
+          "type": "module",
+          "case_count": 3,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "UI Consistency",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "UI Feedback",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "UI Interaction",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "verify"
+          ]
+        },
+        {
+          "name": "UI Resilience",
+          "type": "module",
+          "case_count": 11,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "scroll",
+            "verify"
+          ]
+        },
+        {
+          "name": "UI Stability",
+          "type": "module",
+          "case_count": 2,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "UI State",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "UX",
+          "type": "module",
+          "case_count": 1,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "verify"
+          ]
+        },
+        {
+          "name": "UX & Usability",
+          "type": "module",
+          "case_count": 4,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "verify"
+          ]
+        },
+        {
+          "name": "Utilities",
+          "type": "module",
+          "case_count": 10,
+          "priorities": [
+            "Critical"
+          ],
+          "interactions": [
+            "click",
+            "play",
+            "refresh",
+            "verify"
+          ]
+        }
+      ],
+      "page_objects": [
+        {
+          "class": "CameraPage",
+          "methods": 3,
+          "locators": 0
+        },
+        {
+          "class": "ChatPage",
+          "methods": 9,
+          "locators": 10
+        },
+        {
+          "class": "DashboardPage",
+          "methods": 2,
+          "locators": 0
+        },
+        {
+          "class": "FullScreenPage",
+          "methods": 15,
+          "locators": 32
+        },
+        {
+          "class": "SequencePage",
+          "methods": 14,
+          "locators": 14
+        }
+      ]
+    }
+  ]
+}
