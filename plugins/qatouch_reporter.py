@@ -142,6 +142,14 @@ class QATouchReporter:
             variants.append(base)
         return variants
 
+    @staticmethod
+    def _get_marker_case_key(item: Any) -> str | None:
+        """Read case_key from @pytest.mark.qatouch("KEY") marker on the test item."""
+        marker = item.get_closest_marker('qatouch')
+        if marker and marker.args:
+            return marker.args[0]
+        return None
+
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item: Any, call: Any):
         outcome = yield
@@ -151,18 +159,27 @@ class QATouchReporter:
         if report.when != 'call':
             # Handle skips in setup phase
             if report.when == 'setup' and report.skipped:
-                self._record_result(item.nodeid, 'skipped')
+                self._record_result(item, item.nodeid, 'skipped')
             return
 
-        self._record_result(item.nodeid, report.outcome)
+        self._record_result(item, item.nodeid, report.outcome)
 
-    def _record_result(self, nodeid: str, outcome: str) -> None:
-        """Map a pytest outcome to a QA Touch result."""
-        case_key = None
-        for variant in self._nodeid_variants(nodeid):
-            if variant in self.mapping:
-                case_key = self.mapping[variant]
-                break
+    def _record_result(self, item: Any, nodeid: str, outcome: str) -> None:
+        """Map a pytest outcome to a QA Touch result.
+
+        Resolution order:
+          1. @pytest.mark.qatouch("KEY") marker on the test (authoritative)
+          2. JSON mapping file fallback (legacy, for unmarked tests)
+        """
+        # Primary: read from marker
+        case_key = self._get_marker_case_key(item) if item else None
+
+        # Fallback: JSON mapping
+        if not case_key:
+            for variant in self._nodeid_variants(nodeid):
+                if variant in self.mapping:
+                    case_key = self.mapping[variant]
+                    break
 
         if not case_key:
             self.stats['unmapped'] += 1

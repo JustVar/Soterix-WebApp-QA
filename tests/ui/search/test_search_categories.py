@@ -37,6 +37,7 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
+    @pytest.mark.qatouch("dypXRb")
     def test_person_search(self):
         """Verify Person search with Male description returns results.
 
@@ -63,6 +64,7 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
+    @pytest.mark.qatouch("Pgw96K")
     def test_person_search_results_valid(self):
         """Verify Person search results contain valid images."""
         self.search.navigate()
@@ -80,6 +82,7 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
+    @pytest.mark.qatouch("kpZWpZ")
     def test_person_search_play_result(self):
         """Verify playing a Person search result clip works."""
         self.search.navigate()
@@ -105,6 +108,7 @@ class TestSearchCategories:
         reason="Driver Site has no vehicle detections; needs different "
         "account/site with vehicle data"
     )
+    @pytest.mark.qatouch("dypXRb")
     def test_vehicle_search(self):
         """Verify Vehicle search returns results.
 
@@ -127,6 +131,7 @@ class TestSearchCategories:
         reason="Driver Site has no vehicle detections; needs different "
         "account/site with vehicle data"
     )
+    @pytest.mark.qatouch("gQxmzz")
     def test_vehicle_search_play_result(self):
         """Verify playing a Vehicle search result clip works."""
         self.search.navigate()
@@ -147,6 +152,7 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
+    @pytest.mark.qatouch("dypXRb")
     def test_event_search(self):
         """Verify Event category search returns results."""
         self.search.navigate()
@@ -163,6 +169,7 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
+    @pytest.mark.qatouch("gQxw5N")
     def test_event_search_play_result(self):
         """Verify playing an Event search result clip works."""
         self.search.navigate()

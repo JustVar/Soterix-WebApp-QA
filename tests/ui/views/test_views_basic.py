@@ -57,6 +57,7 @@ class TestViewsBasic:
 
     @pytest.mark.ui
     @pytest.mark.sanity
+    @pytest.mark.qatouch("pDp8l3")
     def test_rename_does_not_affect_sequence(self):
         """Verify renaming a tab doesn't break the sequential naming for new tabs."""
         self.step_capture.mark(1, "Navigate to Views page and wait for page load")
@@ -91,6 +92,7 @@ class TestViewsBasic:
 
     @pytest.mark.ui
     @pytest.mark.sanity
+    @pytest.mark.qatouch("yaWXBx")
     def test_save_empty_view_shows_error(self):
         """Verify saving an empty view shows an error or is prevented."""
         # Add a new tab (it will be empty)
@@ -134,6 +136,7 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
+    @pytest.mark.qatouch("8V1b0g")
     def test_save_view(self):
         """Verify a view can be saved with content using checkbox selection."""
         import datetime
@@ -199,6 +202,7 @@ class TestViewsBasic:
 
     @pytest.mark.ui
     @pytest.mark.views_myviews
+    @pytest.mark.qatouch("vanZz1")
     def test_open_my_views(self):
         """Verify My Views panel opens and shows saved views."""
         # Click My Views button
@@ -213,6 +217,7 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
+    @pytest.mark.qatouch("8V1vGJ")
     def test_open_saved_view(self):
         """Verify a saved view can be reopened from My Views after page refresh."""
         import datetime
@@ -288,6 +293,7 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
+    @pytest.mark.qatouch("WEnQRx")
     def test_delete_saved_view(self):
         """Verify a saved view can be deleted."""
         import datetime

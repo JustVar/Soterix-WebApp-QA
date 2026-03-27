@@ -35,6 +35,7 @@ class TestCameraSequences:
 
     @pytest.mark.ui
     @pytest.mark.sequences
+    @pytest.mark.qatouch("jPnWJE")
     def test_navigate_to_camera_sequence_page(self):
         """Verify navigating to the camera sequence page via sidebar icon."""
         self.step_capture.mark(1, "Navigate to Views page first (to initialize left panel)")
@@ -48,6 +49,7 @@ class TestCameraSequences:
 
     @pytest.mark.ui
     @pytest.mark.sequences
+    @pytest.mark.qatouch("41VrRX")
     def test_search_camera_in_sequence(self):
         """Verify searching for a camera on the sequence page."""
         self.seq.navigate()
@@ -63,6 +65,7 @@ class TestCameraSequences:
 
     @pytest.mark.ui
     @pytest.mark.sequences
+    @pytest.mark.qatouch("pDpvBJ")
     def test_select_all_cameras_for_sequencing(self):
         """Verify selecting all cameras via the Select All checkbox."""
         self.seq.navigate()
@@ -74,6 +77,7 @@ class TestCameraSequences:
 
     @pytest.mark.ui
     @pytest.mark.sequences
+    @pytest.mark.qatouch("qzdM3P")
     def test_create_camera_sequence(self):
         """Verify creating a new camera sequence with a timestamped name."""
         self.seq.navigate()
@@ -89,6 +93,7 @@ class TestCameraSequences:
 
     @pytest.mark.ui
     @pytest.mark.sequences
+    @pytest.mark.qatouch("wmjJZm")
     def test_add_created_sequence_to_views(self):
         """Verify adding a created sequence to the views panel."""
         # First create a sequence
@@ -108,6 +113,7 @@ class TestCameraSequences:
 
     @pytest.mark.ui
     @pytest.mark.sequences
+    @pytest.mark.qatouch("XGLQ37")
     def test_edit_sequence(self):
         """Verify editing a sequence's timing and name."""
         # Create a sequence first
@@ -138,6 +144,7 @@ class TestCameraSequences:
 
     @pytest.mark.ui
     @pytest.mark.sequences
+    @pytest.mark.qatouch("qzdM3P")
     def test_create_sequence_with_advanced_options(self):
         """Verify creating a sequence with offline camera refrain and reverse play options."""
         self.seq.navigate()

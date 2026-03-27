@@ -40,6 +40,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("Z8xWmk")
     def test_audit_trail_page_loads(self):
         """Verify Audit Trail page loads with visible content."""
         self.step_capture.mark(1, "Navigate to Admin section via sidebar")
@@ -60,6 +61,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("dyp4EZ")
     def test_audit_trail_breadcrumb(self):
         """Verify breadcrumb displays navigation path including Audit Trail."""
         self.step_capture.mark(1, "Navigate to Admin > General > Audit Trail")
@@ -74,6 +76,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("LD3mye")
     def test_audit_trail_content_area_visible(self):
         """Verify the Audit Trail content area is displayed."""
         # Audit Trail may use div-based layout instead of HTML tables
@@ -96,6 +99,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("wmjK8G")
     def test_audit_trail_has_column_headers(self):
         """Verify the Audit Trail has column headers or labels."""
         headers = self.page.locator(
@@ -122,6 +126,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("yaWXD9")
     def test_audit_trail_has_records(self):
         """Verify the Audit Trail has at least one record."""
         # Try standard table rows first
@@ -149,6 +154,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("xm9jkm")
     def test_audit_trail_record_has_date_info(self):
         """Verify audit records contain date/time information."""
         # Try table cells first, then any text-bearing elements
@@ -176,6 +182,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("vanXBn")
     def test_audit_trail_record_has_user_info(self):
         """Verify audit records contain user information."""
         cells = self.page.locator("tbody td, [role='cell']")
@@ -198,6 +205,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("xm9jkm")
     def test_audit_trail_record_has_action_info(self):
         """Verify audit records contain action/event type information."""
         cells = self.page.locator("tbody td, [role='cell']")
@@ -227,6 +235,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("8V1bJr")
     def test_audit_trail_pagination_visible(self):
         """Verify pagination controls are visible on the Audit Trail page."""
         pagination = self.page.locator(
@@ -256,6 +265,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("vanXBn")
     def test_audit_trail_next_page(self):
         """Verify clicking Next page loads more records."""
         next_btn = self.page.locator(
@@ -280,6 +290,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("8V1bJr")
     def test_audit_trail_has_multiple_entries(self):
         """Verify Audit Trail displays multiple content entries."""
         rows = self.page.locator("tbody tr")
@@ -304,6 +315,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("aj6724")
     def test_back_to_general_from_audit_trail(self):
         """Verify navigating back from Audit Trail to General section works."""
         # Try breadcrumb back navigation
@@ -328,6 +340,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("kpZWE0")
     def test_audit_trail_row_hover(self):
         """Verify audit trail content shows hover state."""
         rows = self.page.locator("tbody tr")
@@ -347,6 +360,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.qatouch("aj67L4")
     def test_audit_trail_after_refresh(self):
         """Verify Admin page loads correctly after browser refresh."""
         self.page.reload()

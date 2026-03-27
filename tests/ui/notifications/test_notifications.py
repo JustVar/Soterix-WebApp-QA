@@ -7,11 +7,14 @@ class TestNotifications:
     """Tests for notification panel and admin notification settings."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page):
+    def setup(self, authenticated_page, step_capture):
         self.page = authenticated_page
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
 
     @pytest.mark.ui
     @pytest.mark.notifications
+    @pytest.mark.qatouch("bj04vQ")
     def test_open_notification_panel(self):
         """Verify clicking the notification bell opens the notification panel."""
         # Find notification icons in header-right-group
@@ -22,17 +25,21 @@ class TestNotifications:
         assert icon_count >= 2, (
             f"Expected at least 2 header icons (notifications), found {icon_count}"
         )
+        self.step_capture.mark(1, "Verify header notification icons are present")
 
         # Click the notification icon (second icon in the group)
         header_icons.nth(1).click()
         self.page.wait_for_timeout(1000)
+        self.step_capture.mark(2, "Click the notification bell icon")
 
         # Verify notification panel opened - look for mute button as indicator
         mute_button = self.page.locator("img[src*='media/MuteNotification']")
         expect(mute_button).to_be_visible(timeout=5000)
+        self.step_capture.mark(3, "Verify the notification panel opens with the mute button visible")
 
     @pytest.mark.ui
     @pytest.mark.notifications
+    @pytest.mark.qatouch("RgGBZ1")
     def test_mute_notifications(self):
         """Verify notifications can be muted via the mute button."""
         # Open notification panel
@@ -40,6 +47,7 @@ class TestNotifications:
         header_icons.first.wait_for(state="visible", timeout=10000)
         header_icons.nth(1).click()
         self.page.wait_for_timeout(1000)
+        self.step_capture.mark(1, "Open the notification panel")
 
         # Click the mute notification button
         mute_button = self.page.locator("img[src*='media/MuteNotification']")
@@ -53,6 +61,7 @@ class TestNotifications:
 
         mute_button.click()
         self.page.wait_for_timeout(1000)
+        self.step_capture.mark(2, "Click the mute notification button")
 
         # Mute action completed without error (button click succeeded)
         # The panel may close or icon may toggle after mute - re-open and verify
@@ -67,27 +76,32 @@ class TestNotifications:
             pass
         else:
             expect(mute_or_unmute.first).to_be_visible(timeout=5000)
+        self.step_capture.mark(3, "Verify mute or unmute button is present after toggling")
 
     @pytest.mark.ui
     @pytest.mark.notifications
+    @pytest.mark.qatouch("mBdpwM")
     def test_admin_mute_rule_notification(self):
         """Verify a rule notification can be muted from Admin > General > Rules."""
         # Navigate to Admin
         admin_link = self.page.locator("a[href*='admin']")
         admin_link.click()
         self.page.wait_for_timeout(3000)
+        self.step_capture.mark(1, "Navigate to the Admin page")
 
         # Click General in the admin sidebar
         general_tab = self.page.locator("p:text-is('General')")
         general_tab.wait_for(state="visible", timeout=10000)
         general_tab.click()
         self.page.wait_for_timeout(2000)
+        self.step_capture.mark(2, "Click the General tab in the admin sidebar")
 
         # Click Rules
         rules_tab = self.page.locator("p:text-is('Rules')")
         rules_tab.wait_for(state="visible", timeout=10000)
         rules_tab.click()
         self.page.wait_for_timeout(3000)
+        self.step_capture.mark(3, "Click the Rules sub-tab")
 
         # Find mute notification icons on rules
         mute_icons = self.page.locator("img[aria-label='Mute Notification']")
@@ -100,9 +114,11 @@ class TestNotifications:
         # Click the last mute icon (same as Selenium test)
         mute_icons.last.click()
         self.page.wait_for_timeout(2000)
+        self.step_capture.mark(4, "Click the mute icon on the last rule")
 
         # Verify click succeeded - icon should still be present or toggled
         remaining_mute = self.page.locator(
             "img[aria-label='Mute Notification'], img[aria-label='Unmute Notification']"
         )
         assert remaining_mute.count() > 0, "Mute action failed - no mute/unmute icons found"
+        self.step_capture.mark(5, "Verify the mute or unmute icon is present after clicking")

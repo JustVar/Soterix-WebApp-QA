@@ -9,8 +9,10 @@ class TestViewsFullscreen:
     """Tests for entering/exiting full screen mode and basic player controls."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page):
+    def setup(self, authenticated_page, step_capture):
         self.page = authenticated_page
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
         self.views = ViewsPage(self.page)
         self.views.navigate()
         self.views.wait_for_page_load()
@@ -29,34 +31,43 @@ class TestViewsFullscreen:
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
+    @pytest.mark.qatouch("wmjg7G")
     def test_enter_fullscreen(self):
         """Verify clicking zoom icon enters full screen and video streams."""
         self.views.enter_fullscreen_on_tile(0)
         self.page.wait_for_timeout(1000)
+        self.step_capture.mark(1, "Click zoom icon on tile to enter full screen")
 
         fs = FullScreenPage(self.page)
         fs.wait_for_stream_loaded(timeout=120000)
+        self.step_capture.mark(2, "Wait for video stream to load in full screen")
 
         assert fs.is_streaming(), "Video should be streaming in full screen"
+        self.step_capture.mark(3, "Verify video is actively streaming in full screen")
 
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
+    @pytest.mark.qatouch("wmjg7G")
     def test_exit_fullscreen(self):
         """Verify exiting full screen returns to the views grid."""
         self.views.enter_fullscreen_on_tile(0)
         fs = FullScreenPage(self.page)
         fs.wait_for_stream_loaded(timeout=120000)
+        self.step_capture.mark(1, "Enter full screen and wait for stream to load")
 
         fs.exit_fullscreen()
         self.page.wait_for_timeout(1000)
+        self.step_capture.mark(2, "Click exit full screen button")
 
         # Verify we're back on the views grid
         self.views.add_tab_button.wait_for(state="visible", timeout=10000)
+        self.step_capture.mark(3, "Verify views grid is visible after exiting full screen")
 
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
+    @pytest.mark.qatouch("J8d92n")
     def test_fullscreen_pause_play(self):
         """Verify timeline controls are present in full screen.
 
@@ -67,6 +78,7 @@ class TestViewsFullscreen:
         self.views.enter_fullscreen_on_tile(0)
         fs = FullScreenPage(self.page)
         fs.wait_for_stream_loaded(timeout=120000)
+        self.step_capture.mark(1, "Enter full screen and wait for stream to load")
 
         if fs.is_live_mode():
             # In live mode, timeline controls show as disabled icons
@@ -74,31 +86,37 @@ class TestViewsFullscreen:
         else:
             # In archive mode, play/pause icons are active
             expect(fs.play_icon).to_be_visible(timeout=5000)
+        self.step_capture.mark(2, "Verify timeline pause/play controls are visible")
 
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
+    @pytest.mark.qatouch("LD3XyZ")
     def test_fullscreen_controls_visible(self):
         """Verify player controls are visible in full screen."""
         self.views.enter_fullscreen_on_tile(0)
         fs = FullScreenPage(self.page)
         fs.wait_for_stream_loaded(timeout=120000)
+        self.step_capture.mark(1, "Enter full screen and wait for stream to load")
 
         # Control bar elements that are always visible
         expect(fs.exit_fullscreen_button).to_be_visible(timeout=5000)
         expect(fs.bookmarks_toggle).to_be_visible(timeout=5000)
         expect(fs.bottom_controls).to_be_visible(timeout=5000)
         expect(fs.volume_control).to_be_visible(timeout=5000)
+        self.step_capture.mark(2, "Verify exit button, bookmarks toggle, bottom controls, and volume control are visible")
 
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
     @pytest.mark.livestream
+    @pytest.mark.qatouch("wmjRNb")
     def test_fullscreen_video_streaming(self):
         """Verify video is actively streaming (no loader, no error state)."""
         self.views.enter_fullscreen_on_tile(0)
         fs = FullScreenPage(self.page)
         fs.wait_for_stream_loaded(timeout=120000)
+        self.step_capture.mark(1, "Enter full screen and wait for stream to load")
 
         if not fs.is_streaming():
             # Retry: stream may need extra time to stabilize
@@ -108,5 +126,7 @@ class TestViewsFullscreen:
                     "Stream not active after extended wait - "
                     "may be a transient camera/network issue"
                 )
+        self.step_capture.mark(2, "Verify video is actively streaming with no errors")
 
         assert fs.streaming_failed.count() == 0, "No streaming failure messages expected"
+        self.step_capture.mark(3, "Verify no streaming failure messages are displayed")

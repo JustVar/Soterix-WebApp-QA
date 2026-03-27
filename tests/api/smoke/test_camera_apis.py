@@ -3,6 +3,7 @@ import pytest
 
 @pytest.mark.api
 @pytest.mark.smoke
+@pytest.mark.qatouch("gQxmgr")
 def test_get_camera_tree(camera_api, test_site_id):
     tree = camera_api.get_camera_tree(test_site_id)
     assert camera_api.validate_camera_tree(tree)
@@ -10,6 +11,7 @@ def test_get_camera_tree(camera_api, test_site_id):
 
 @pytest.mark.api
 @pytest.mark.smoke
+@pytest.mark.qatouch("gQxmgr")
 def test_get_camera_snapshot(camera_api, test_site_id, test_channel_ids):
     # QA environment: use channel list from API and call the snapshot endpoint
     # Snapshot endpoint returns JSON: {"status":2000,"code":200,"result":{"content":[-1,-40,...]}}

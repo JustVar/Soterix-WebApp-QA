@@ -13,8 +13,10 @@ class TestAdminEventWall:
     """Deeper tests for Admin > General > Event Wall."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page):
+    def setup(self, authenticated_page, step_capture):
         self.page = authenticated_page
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
         self.admin = AdminPage(self.page)
         self.admin.navigate_to_admin()
 
@@ -38,9 +40,11 @@ class TestAdminEventWall:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("VKbeN9")
     def test_event_wall_page_loads(self):
         """Verify Event Wall page loads with visible content."""
         assert "admin" in self.page.url.lower()
+        self.step_capture.mark(1, "Verify the page URL contains 'admin'")
 
         # Should have a configuration area or event display
         has_content = (
@@ -49,10 +53,12 @@ class TestAdminEventWall:
             or self.page.locator("img").count() > 2
         )
         assert has_content, "Event Wall page should have visible content"
+        self.step_capture.mark(2, "Verify Event Wall page displays visible content")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("RgGBWd")
     def test_event_wall_has_configuration_area(self):
         """Verify Event Wall has a configuration or settings area."""
         config_elements = self.page.locator(
@@ -64,10 +70,12 @@ class TestAdminEventWall:
         assert config_elements.count() > 0, (
             "Expected configuration elements on Event Wall page"
         )
+        self.step_capture.mark(1, "Verify Event Wall has configuration elements such as selects, checkboxes, or buttons")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("B86ENR")
     def test_event_wall_site_selector(self):
         """Verify Event Wall has a site selection dropdown."""
         dropdown = self.page.locator(
@@ -78,10 +86,12 @@ class TestAdminEventWall:
             pytest.skip("No site selector dropdown found on Event Wall")
 
         expect(dropdown.first).to_be_visible(timeout=10000)
+        self.step_capture.mark(1, "Verify Event Wall has a visible site selection dropdown")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("0rzlLl")
     def test_event_wall_site_dropdown_opens(self):
         """Verify the site dropdown can be opened on Event Wall."""
         dropdown = self.page.locator(
@@ -92,6 +102,7 @@ class TestAdminEventWall:
 
         dropdown.click()
         self.page.wait_for_timeout(1000)
+        self.step_capture.mark(1, "Click the site dropdown to open it")
 
         # Should show options
         options = self.page.locator(
@@ -101,10 +112,12 @@ class TestAdminEventWall:
         self.page.keyboard.press("Escape")
 
         assert has_options, "Dropdown should show options when opened"
+        self.step_capture.mark(2, "Verify dropdown shows options and close it")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("RgGBNa")
     def test_event_wall_has_rule_types(self):
         """Verify Event Wall shows rule type filters or labels."""
         rule_keywords = [
@@ -117,9 +130,11 @@ class TestAdminEventWall:
             if locator.count() > 0:
                 found_rule = True
                 break
+        self.step_capture.mark(1, "Search for rule type labels on the Event Wall page")
 
         if found_rule:
             assert found_rule
+            self.step_capture.mark(2, "Verify rule type labels are visible on Event Wall")
             return
 
         # Check for checkbox or toggle elements that might be rule selectors
@@ -129,6 +144,7 @@ class TestAdminEventWall:
         )
         if toggles.count() > 0:
             assert toggles.count() > 0
+            self.step_capture.mark(2, "Verify rule type toggle elements are present on Event Wall")
             return
 
         # Event Wall config may not display rule types directly
@@ -137,6 +153,7 @@ class TestAdminEventWall:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("5BRDm7")
     def test_event_wall_camera_checkboxes(self):
         """Verify Event Wall has camera selection checkboxes."""
         checkboxes = self.page.locator(
@@ -147,10 +164,12 @@ class TestAdminEventWall:
             pytest.skip("No checkboxes found on Event Wall")
 
         assert checkboxes.count() > 0, "Expected camera selection checkboxes"
+        self.step_capture.mark(1, "Verify Event Wall has camera selection checkboxes")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("B86ENR")
     def test_event_wall_toggle_checkbox(self):
         """Verify a checkbox on Event Wall can be toggled."""
         checkboxes = self.page.locator(
@@ -165,13 +184,16 @@ class TestAdminEventWall:
 
         checkboxes.first.click(force=True)
         self.page.wait_for_timeout(1000)
+        self.step_capture.mark(1, "Toggle the first checkbox on the Event Wall page")
 
         # Page should remain valid
         assert "admin" in self.page.url.lower()
+        self.step_capture.mark(2, "Verify the page remains on the admin URL after toggling")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("gQxw5N")
     def test_event_wall_event_images(self):
         """Verify Event Wall displays event images or thumbnails."""
         images = self.page.locator(
@@ -179,9 +201,12 @@ class TestAdminEventWall:
             "img[src*='event'], img[src*='thumb'], "
             "img:not([src*='icon']):not([src*='logo'])"
         )
+        self.step_capture.mark(1, "Check for event images or thumbnails on Event Wall")
+
         # Event wall may or may not have images depending on events
         if images.count() > 0:
             expect(images.first).to_be_visible(timeout=10000)
+            self.step_capture.mark(2, "Verify event thumbnail images are visible")
         else:
             # No event images - check for empty state text
             has_empty_state = (
@@ -191,10 +216,12 @@ class TestAdminEventWall:
             )
             # Either images or empty state should exist - page is still valid
             assert "admin" in self.page.url.lower()
+            self.step_capture.mark(2, "Verify page is valid with empty state or images")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("xm9dgR")
     def test_event_wall_grid_layout(self):
         """Verify Event Wall uses a grid or card-based layout for events."""
         grid_elements = self.page.locator(
@@ -208,10 +235,12 @@ class TestAdminEventWall:
             or self.page.locator("div.MuiBox-root").count() > 5
         )
         assert has_layout, "Expected grid or card-based layout"
+        self.step_capture.mark(1, "Verify Event Wall uses a grid or card-based layout")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("VKbeN2")
     def test_event_wall_save_or_apply(self):
         """Verify Event Wall has a save or apply button for configuration."""
         save_btn = self.page.locator(
@@ -224,12 +253,14 @@ class TestAdminEventWall:
             pytest.skip("No save/apply button found on Event Wall")
 
         expect(save_btn.first).to_be_visible(timeout=10000)
+        self.step_capture.mark(1, "Verify Event Wall has a visible Save or Apply button")
 
     # --- Navigation ---
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("B86ENR")
     def test_back_to_general_from_event_wall(self):
         """Verify navigating back from Event Wall to General section works."""
         general_link = self.page.locator(
@@ -242,15 +273,18 @@ class TestAdminEventWall:
             general_link.first.click()
         else:
             self.admin.general_tab.click()
+        self.step_capture.mark(1, "Click the General link to navigate back from Event Wall")
 
         self.page.wait_for_timeout(2000)
 
         rules_tab = self.page.locator("p:text-is('Rules')")
         expect(rules_tab).to_be_visible(timeout=10000)
+        self.step_capture.mark(2, "Verify the Rules sub-tab is visible in the General section")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("68leZv")
     def test_event_wall_to_audit_trail_round_trip(self):
         """Verify navigating from Event Wall to Audit Trail and back."""
         # Go to Audit Trail
@@ -266,6 +300,7 @@ class TestAdminEventWall:
 
         audit.click()
         self.page.wait_for_timeout(2000)
+        self.step_capture.mark(1, "Navigate from Event Wall to Audit Trail")
 
         # Go back to Event Wall - use .first to avoid strict mode
         self.page.locator("p:text-is('General')").first.click()
@@ -273,30 +308,39 @@ class TestAdminEventWall:
         event_wall = self.page.get_by_text("Event Wall", exact=False).first
         event_wall.click()
         self.page.wait_for_timeout(2000)
+        self.step_capture.mark(2, "Navigate back to Event Wall via General tab")
 
         assert "admin" in self.page.url.lower()
+        self.step_capture.mark(3, "Verify the page URL still contains 'admin' after round-trip")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("J8dzJp")
     def test_event_wall_after_refresh(self):
         """Verify Event Wall page loads correctly after browser refresh."""
         self.page.reload()
         self.page.wait_for_timeout(3000)
+        self.step_capture.mark(1, "Refresh the Event Wall page in the browser")
 
         assert "admin" in self.page.url.lower()
+        self.step_capture.mark(2, "Verify the page URL still contains 'admin' after refresh")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
+    @pytest.mark.qatouch("B86ENR")
     def test_event_wall_scrollable(self):
         """Verify Event Wall content area is scrollable when content overflows."""
         # Scroll down to verify the page scrolls
         self.page.evaluate("window.scrollBy(0, 300)")
         self.page.wait_for_timeout(500)
+        self.step_capture.mark(1, "Scroll down 300 pixels on the Event Wall page")
 
         # Scroll back up
         self.page.evaluate("window.scrollTo(0, 0)")
         self.page.wait_for_timeout(500)
+        self.step_capture.mark(2, "Scroll back to the top of the page")
 
         assert "admin" in self.page.url.lower()
+        self.step_capture.mark(3, "Verify the page URL still contains 'admin' after scrolling")
