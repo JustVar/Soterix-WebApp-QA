@@ -65,7 +65,11 @@ QATOUCH_DOMAIN = os.environ.get("QATOUCH_DOMAIN", "soterixsystems")
 QATOUCH_CASE_URL_TMPL = f"https://{QATOUCH_DOMAIN}.qatouch.com/index.php/cases/view/{{key}}"
 
 CONFIDENCE_THRESHOLD = 0.7
-MIN_CONSECUTIVE_FAILURES = 2
+# A single failure is enough to qualify for auto-creation when the operator has
+# explicitly opted into that mode (auto_create=True). Soterix's release flow
+# runs each suite once per env, so requiring "consecutive" failures inside a
+# single release pass means bugs never fire - the env progression IS the retry.
+MIN_CONSECUTIVE_FAILURES = 1
 
 
 def _lookup_qatouch_case(nodeid: str) -> str | None:
@@ -619,13 +623,27 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
 
 
 def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool = False, auto_create: bool = False) -> Dict[str, Any]:
-    """Run gates and decide whether to queue a bug for review or create it directly.
+    """Decide whether a failed test becomes a review-queue entry or a real bug.
 
-    By default (auto_create=False), bugs that pass the confidence threshold are
-    queued for manual QA review. Pass auto_create=True to bypass the queue
-    (for CI pipelines).
+    Operational model assumed: each suite (smoke / sanity / regression) runs
+    once per release per environment. There is no in-release retry, so every
+    failure observed is a discrete event worth a human looking at. Therefore:
 
-    Returns dict with keys: action: one of [no_action, queued, create_issue], details: {...}
+      - auto_create=False (default): every failure -> review queue. QA approves
+        the real ones via `--review` CLI or the QA Ops Hub web queue, and only
+        those become Jira bugs.
+      - auto_create=True: failures that ALSO meet the confidence + consecutive
+        gates are filed directly without a review hop. Failures below threshold
+        still drop into the review queue rather than being lost.
+      - In either mode, if the env-health check fails, we skip - a dead env
+        produces false-positive floods.
+
+    The `is_smoke` parameter is retained for caller compatibility but no longer
+    drives behavior; the single-run-per-release model treats all suites the
+    same. The auto-create gate (confidence/consecutive) still uses history so
+    a test that has failed across multiple releases trips a higher-signal path.
+
+    Returns: {action: no_action | queued | create_issue, details: {...}}
     """
     db = load_flaky_db()
     history = get_history(nodeid, db)
@@ -645,80 +663,70 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
         "history_len": len(history),
     }
 
-    # Gate 1: environment health
+    # Gate 1: environment health - if env is down, suppress to avoid bug floods.
     if not env_ok:
         details["reason"] = "Environment unhealthy: %s" % env_msg
         return {"action": "no_action", "details": details}
 
-    # Gate 2: smoke tests require manual review on first failure
-    if is_smoke:
-        prior_fails = sum(1 for r in history if r.get("result") == "fail")
-        if prior_fails == 0:
-            add_to_review_queue(nodeid, "First smoke test failure -- manual review required")
-            details["reason"] = "first_smoke_failure"
-            return {"action": "queued", "details": details}
+    # Build the bug payload once - both review-queue and auto-create paths use it.
+    module = _infer_module_from_nodeid(nodeid)
+    environment = _infer_environment(env_base_url)
+    summary = "[Auto] %s failing in %s" % (nodeid.split("::")[-1], environment)
+    bug_data = {
+        "summary": summary,
+        "module": module,
+        "steps": "1. Run test: %s\n2. Test fails" % nodeid,
+        "expected": "Test should pass",
+        "actual": "Confidence %s | consecutive failures %s | failure rate %s" % (
+            score, consec, fail_rate),
+        "environment": environment,
+        "severity": "Medium",
+        "build": "",
+        "labels": ["automation", "auto-detected"],
+        "env_base_url": env_base_url or "",
+    }
 
-    # Gate 3: consecutive failures + confidence threshold
-    if consec >= MIN_CONSECUTIVE_FAILURES and score >= CONFIDENCE_THRESHOLD:
-        module = _infer_module_from_nodeid(nodeid)
-        environment = _infer_environment(env_base_url)
-        summary = "[Auto] %s failing in %s" % (nodeid.split("::")[-1], env_base_url or "env")
-        bug_data = {
-            "summary": summary,
-            "module": module,
-            "steps": "1. Run test: %s\n2. Test fails consistently" % nodeid,
-            "expected": "Test should pass",
-            "actual": "Test has failed %d consecutive times (confidence: %s)" % (consec, score),
-            "environment": environment,
-            "severity": "Medium",
-            "build": "",
-            "labels": ["automation", "auto-detected"],
-            "env_base_url": env_base_url or "",
-        }
+    # Auto-create path: bypass review only when the failure pattern is unambiguous.
+    if auto_create and consec >= MIN_CONSECUTIVE_FAILURES and score >= CONFIDENCE_THRESHOLD:
+        jira = JiraClient()
+        desc = (
+            "Automated detection:\n"
+            "nodeid: %s\nconfidence: %s\n"
+            "consecutive_failures: %s\nfailure_rate: %s\n"
+            "env_check: %s\n"
+            % (nodeid, score, consec, fail_rate, env_msg)
+        )
+        case_key = _lookup_qatouch_case(nodeid)
+        issue = jira.create_issue(
+            summary, desc,
+            labels=bug_data["labels"],
+            qatouch_case_key=case_key,
+            qa_touch_data={
+                "module": module,
+                "steps": bug_data["steps"],
+                "expected": bug_data["expected"],
+                "actual": bug_data["actual"],
+                "environment": environment,
+                "severity": bug_data["severity"],
+                "build": bug_data["build"],
+                "title": summary,
+                "test_case_id": case_key or "",
+            }
+        )
+        details["issue"] = issue
+        details["reason"] = "auto_created (high-confidence pattern)"
+        return {"action": "create_issue", "details": details}
 
-        if auto_create:
-            # CI mode: create immediately, no review
-            jira = JiraClient()
-            desc = (
-                "Automated detection:\n"
-                "nodeid: %s\nconfidence: %s\n"
-                "consecutive_failures: %s\nfailure_rate: %s\n"
-                "env_check: %s\n"
-                % (nodeid, score, consec, fail_rate, env_msg)
-            )
-            case_key = _lookup_qatouch_case(nodeid)
-            issue = jira.create_issue(
-                summary, desc,
-                labels=bug_data["labels"],
-                qatouch_case_key=case_key,
-                qa_touch_data={
-                    "module": module,
-                    "steps": bug_data["steps"],
-                    "expected": bug_data["expected"],
-                    "actual": bug_data["actual"],
-                    "environment": environment,
-                    "severity": bug_data["severity"],
-                    "build": bug_data["build"],
-                    "title": summary,
-                    "test_case_id": case_key or "",
-                }
-            )
-            details["issue"] = issue
-            return {"action": "create_issue", "details": details}
-        else:
-            # Default: queue for manual QA review
-            entry_id = add_to_review_queue(
-                nodeid, "Meets confidence threshold for bug creation",
-                bug_data=bug_data, score=score,
-                consecutive=consec, failure_rate=fail_rate,
-            )
-            details["reason"] = "queued_for_review"
-            details["entry_id"] = entry_id
-            return {"action": "queued", "details": details}
-
-    # Default: do not file
-    details["reason"] = "Insufficient evidence (confidence/consecutive)"
-    return {"action": "no_action", "details": details}
+    # Default path: queue every failure for human disposition.
+    entry_id = add_to_review_queue(
+        nodeid,
+        "Test failure -- manual review required",
+        bug_data=bug_data, score=score,
+        consecutive=consec, failure_rate=fail_rate,
+    )
+    details["reason"] = "queued_for_review"
+    details["entry_id"] = entry_id
+    return {"action": "queued", "details": details}
 
 
 def main_cli():
