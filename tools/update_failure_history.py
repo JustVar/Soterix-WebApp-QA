@@ -36,20 +36,53 @@ def save_db(db: Dict[str, Any], path: str = FLAKY_DB) -> None:
         json.dump(db, f, indent=2, sort_keys=True)
 
 
+def _junit_to_pytest_nodeid(classname: str, name: str, file: str | None) -> str:
+    """Reconstruct pytest-style nodeid from junit attributes.
+
+    pytest nodeid:  tests/ui/login/test_login.py::TestLogin::test_valid[chromium]
+    junit classname: tests.ui.login.test_login.TestLogin  (or .test_login for funcs)
+    junit file:      tests/ui/login/test_login.py  (present in modern pytest)
+
+    Mismatch matters here - `flaky_tests.json` keys must match the pytest format
+    used by `config/qatouch_case_mapping.json` so the bug creator's case-key lookup
+    works downstream.
+    """
+    if file:
+        file_dotted = file.replace('\\', '/').rstrip('/').removesuffix('.py').replace('/', '.')
+        if classname == file_dotted:
+            return f"{file}::{name}"
+        if classname.startswith(file_dotted + '.'):
+            class_segment = classname[len(file_dotted) + 1:]
+            return f"{file}::{class_segment}::{name}"
+        # classname doesn't align with file - fall through to file-only nodeid
+        return f"{file}::{name}"
+    if not classname:
+        return name
+    # No file attribute (older pytest or non-standard junit): best-effort
+    parts = classname.split('.')
+    if not parts:
+        return f"::{name}"
+    file_guess = '/'.join(parts) + '.py'
+    return f"{file_guess}::{name}"
+
+
 def parse_junit(path: str) -> Dict[str, Dict[str, Any]]:
     """Return mapping nodeid -> result dict {result, ts, env}
 
-    nodeid chosen as: classname + '::' + name if classname present else file + '::' + name
+    Emits pytest-style nodeids so keys match `qatouch_case_mapping.json`.
     """
     tree = ET.parse(path)
     root = tree.getroot()
     results: Dict[str, Dict[str, Any]] = {}
     for testcase in root.findall('.//testcase'):
-        classname = testcase.get('classname') or testcase.get('file') or ''
+        classname = testcase.get('classname') or ''
         name = testcase.get('name') or 'unknown'
-        nodeid = f"{classname}::{name}" if classname else name
+        file = testcase.get('file')
+        nodeid = _junit_to_pytest_nodeid(classname, name, file)
         status = 'pass'
         if testcase.find('failure') is not None:
+            status = 'fail'
+        elif testcase.find('error') is not None:
             status = 'fail'
         elif testcase.find('skipped') is not None:
             status = 'skip'

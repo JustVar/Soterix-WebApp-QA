@@ -100,6 +100,14 @@ def _format_duration(seconds: float) -> str:
     return f'{seconds:.1f}s'
 
 
+_OUTCOME_RANK = {'passed': 0, 'skipped': 1, 'failed': 2}
+
+
+def _worse_outcome(new: str, existing: str | None) -> bool:
+    """Return True if `new` outcome should overwrite `existing` (worse wins)."""
+    return _OUTCOME_RANK.get(new, -1) > _OUTCOME_RANK.get(existing or '', -1)
+
+
 class QATouchReporter:
     def __init__(self, run_key: str):
         self.run_key = run_key
@@ -245,6 +253,16 @@ class QATouchReporter:
                     case_key = self.mapping[variant]
                     break
 
+        # Always record the per-nodeid outcome - the post-run bug filer keys off
+        # nodeid (not case_key), and unmapped failures still deserve a bug.
+        existing_nodeid = self.nodeid_outcomes.get(nodeid)
+        if existing_nodeid is None or _worse_outcome(outcome, existing_nodeid.get('outcome')):
+            self.nodeid_outcomes[nodeid] = {
+                'outcome': outcome,
+                'duration': float(duration) if duration is not None else None,
+                'case_key': case_key,
+            }
+
         if not case_key:
             self.stats['unmapped'] += 1
             return
@@ -325,8 +343,44 @@ class QATouchReporter:
         except Exception as save_err:
             log.error(f'QA Touch: Failed to save results for retry: {save_err}')
 
+    def _write_run_results(self) -> None:
+        """Dump per-nodeid outcomes to last_run_results.json for run_suite.py.
+
+        Written at session-finish regardless of upload success so the post-run
+        bug filer can run even when QA Touch upload had errors. Includes both
+        mapped and unmapped tests (unmapped tests will have case_key=None).
+        """
+        try:
+            FAILURE_LOG_DIR.mkdir(parents=True, exist_ok=True)
+            records = [
+                {
+                    'nodeid': nodeid,
+                    'outcome': rec.get('outcome'),
+                    'duration': rec.get('duration'),
+                    'case_key': rec.get('case_key'),
+                }
+                for nodeid, rec in self.nodeid_outcomes.items()
+            ]
+            payload = {
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'run_key': self.run_key,
+                'project_key': self.project_key,
+                'env': os.environ.get('ENV', 'unknown'),
+                'results': records,
+            }
+            with open(RUN_RESULTS_PATH, 'w') as f:
+                json.dump(payload, f, indent=2)
+            log.info(f'QA Touch: Wrote {len(records)} per-nodeid records to '
+                     f'{RUN_RESULTS_PATH}')
+        except Exception as e:
+            log.warning(f'QA Touch: Failed to write run results JSON: {e}')
+
     def pytest_sessionfinish(self, session: Any, exitstatus: int) -> None:
         """Upload collected results to QA Touch."""
+        # Write per-nodeid results JSON for the post-run bug filer first - this
+        # path must run even if there are no mapped uploads.
+        self._write_run_results()
+
         if not self.results:
             log.info('QA Touch: No mapped results to upload.')
             return
