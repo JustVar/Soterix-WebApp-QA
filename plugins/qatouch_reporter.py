@@ -115,6 +115,7 @@ class QATouchReporter:
         self.results: dict[str, int] = {}  # case_key -> status code
         self.durations: dict[str, float] = {}  # case_key -> duration in seconds
         self.screenshots: dict[str, bytes] = {}  # case_key -> PNG bytes (failures only)
+        self.nodeid_outcomes: dict[str, dict] = {}  # nodeid -> {outcome, duration, case_key}
         self.mapping = self._load_mapping()
         self.case_to_run_key: dict[str, str] = {}  # case_key -> run_key (for API-created runs)
         self.use_playwright_endpoint = os.environ.get(
