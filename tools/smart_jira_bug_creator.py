@@ -11,10 +11,6 @@ Features:
 - Manual QA approval gate (review queue with interactive CLI)
 - All 8 NC mandatory Bug fields auto-populated via config/jira_field_mapping.py
 
-Configuration constants:
-- CONFIDENCE_THRESHOLD: float (0-1)
-- MIN_CONSECUTIVE_FAILURES: int
-
 Usage:
   python -m tools.smart_jira_bug_creator --test <nodeid>               # Queue for review
   python -m tools.smart_jira_bug_creator --test <nodeid> --auto-create # Bypass review (CI)
@@ -64,12 +60,10 @@ CASE_MAPPING = os.path.join(ROOT, "config", "qatouch_case_mapping.json")
 QATOUCH_DOMAIN = os.environ.get("QATOUCH_DOMAIN", "soterixsystems")
 QATOUCH_CASE_URL_TMPL = f"https://{QATOUCH_DOMAIN}.qatouch.com/index.php/cases/view/{{key}}"
 
-CONFIDENCE_THRESHOLD = 0.7
-# A single failure is enough to qualify for auto-creation when the operator has
-# explicitly opted into that mode (auto_create=True). Soterix's release flow
-# runs each suite once per env, so requiring "consecutive" failures inside a
-# single release pass means bugs never fire - the env progression IS the retry.
-MIN_CONSECUTIVE_FAILURES = 1
+# Confidence + consecutive-failure constants removed: with the review queue
+# disabled, every failure becomes a bug after the env-health gate, so threshold
+# tuning is no longer load-bearing. compute_confidence() and
+# consecutive_failures() are still computed for the Jira description body.
 
 
 def _lookup_qatouch_case(nodeid: str) -> str | None:
@@ -622,26 +616,27 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
     return {"approved": approved, "rejected": rejected, "skipped": skipped}
 
 
-def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool = False, auto_create: bool = False) -> Dict[str, Any]:
-    """Decide whether a failed test becomes a review-queue entry or a real bug.
+def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool = False, auto_create: bool = True) -> Dict[str, Any]:
+    """Turn a failed test into a Jira bug directly. Review queue is disabled.
 
-    Operational model assumed: each suite (smoke / sanity / regression) runs
-    once per release per environment. There is no in-release retry, so every
-    failure observed is a discrete event worth a human looking at. Therefore:
+    Operational model: each suite (smoke / sanity / regression) runs once per
+    release per environment. Every failure observed is a real signal worth a
+    Jira bug - no human disposition step. The only gate is env health: if the
+    target environment is unreachable, we suppress to avoid bug floods.
 
-      - auto_create=False (default): every failure -> review queue. QA approves
-        the real ones via `--review` CLI or the QA Ops Hub web queue, and only
-        those become Jira bugs.
-      - auto_create=True: failures that ALSO meet the confidence + consecutive
-        gates are filed directly without a review hop. Failures below threshold
-        still drop into the review queue rather than being lost.
-      - In either mode, if the env-health check fails, we skip - a dead env
-        produces false-positive floods.
+    Behavior:
+      - auto_create=True (default): every failure -> Jira bug directly, with
+        RTM linkage back to the QA Touch case (label + remote link + case_key
+        on Bug Overview). The whole step is still gated by BUG_CREATION_ENABLED
+        in `.env`, so it is dry-run until explicitly enabled.
+      - auto_create=False: fall back to the review queue. Vestigial - kept so
+        operators can re-enable a human-review step later without code changes.
 
-    The `is_smoke` parameter is retained for caller compatibility but no longer
-    drives behavior; the single-run-per-release model treats all suites the
-    same. The auto-create gate (confidence/consecutive) still uses history so
-    a test that has failed across multiple releases trips a higher-signal path.
+    Parameters `is_smoke` and `auto_create=False` are retained for caller
+    backward compatibility but no longer steer the primary flow. The
+    confidence/consecutive history gate that previously gated auto-create is
+    gone: the single-run-per-release model has no within-release retry, so
+    requiring "consecutive" failures meant bugs effectively never fired.
 
     Returns: {action: no_action | queued | create_issue, details: {...}}
     """
@@ -668,7 +663,7 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
         details["reason"] = "Environment unhealthy: %s" % env_msg
         return {"action": "no_action", "details": details}
 
-    # Build the bug payload once - both review-queue and auto-create paths use it.
+    # Build the bug payload (shared by both create + vestigial-queue paths).
     module = _infer_module_from_nodeid(nodeid)
     environment = _infer_environment(env_base_url)
     summary = "[Auto] %s failing in %s" % (nodeid.split("::")[-1], environment)
@@ -686,8 +681,8 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
         "env_base_url": env_base_url or "",
     }
 
-    # Auto-create path: bypass review only when the failure pattern is unambiguous.
-    if auto_create and consec >= MIN_CONSECUTIVE_FAILURES and score >= CONFIDENCE_THRESHOLD:
+    # Primary path: every failure becomes a Jira bug. Review queue disabled.
+    if auto_create:
         jira = JiraClient()
         desc = (
             "Automated detection:\n"
@@ -714,10 +709,11 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
             }
         )
         details["issue"] = issue
-        details["reason"] = "auto_created (high-confidence pattern)"
+        details["reason"] = "auto_created"
         return {"action": "create_issue", "details": details}
 
-    # Default path: queue every failure for human disposition.
+    # Vestigial path: review queue (auto_create=False). Kept so operators can
+    # re-enable a human-review step later by passing auto_create=False.
     entry_id = add_to_review_queue(
         nodeid,
         "Test failure -- manual review required",

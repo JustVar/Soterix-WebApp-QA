@@ -6,12 +6,14 @@ Result: every execution lands in its own QA Touch run record, history is
 preserved, and operators never need to know what the template keys are.
 
 After pytest exits, this wrapper also:
-  1. Updates `flaky_tests.json` from the run's junit XML so the consecutive-
-     failure / failure-rate history stays current.
-  2. Walks the junit XML for failures and feeds each through the bug creator's
-     multi-gate validation. By default failures that pass the gates land in the
-     review queue; `--auto-create-bugs` files them directly. The whole step is
-     gated by `BUG_CREATION_ENABLED=true` in `.env`, so it is dry-run by default.
+  1. Updates `flaky_tests.json` from the per-nodeid records the reporter dumps
+     to `logs/last_run_results.json` so failure-rate / last-failure history
+     stays current for downstream tooling.
+  2. Walks failed nodeids and files a Jira bug for each via
+     `smart_jira_bug_creator.multi_gate_validation()`. The review queue is
+     disabled - failures go straight to Jira, with RTM linkage back to the
+     QA Touch case. Whole step gated by `BUG_CREATION_ENABLED=true` in `.env`
+     (dry-run until explicitly enabled).
 
 Usage:
   python tools/run_suite.py smoke
@@ -25,8 +27,6 @@ Flags:
   --run-key <KEY>          Skip clone and reuse this existing run key
   --dry-run                Print the pytest command without cloning or executing
   --no-bug-filing          Skip the post-run history-update + bug-filer step
-  --auto-create-bugs       Bypass the review queue and file bugs immediately
-                           (only effective if BUG_CREATION_ENABLED=true)
 
 Templates resolved from env vars (with built-in fallbacks):
   QATOUCH_SMOKE_TEMPLATE_KEY  (default: vaXdn)
@@ -134,12 +134,13 @@ def _resolve_env_base_url(env_name: str) -> str | None:
             os.environ['ENV'] = prev_env
 
 
-def _post_run_bug_filing(suite: str, env_name: str, auto_create: bool) -> None:
-    """Read last_run_results.json, update flaky history, file bugs for failures.
+def _post_run_bug_filing(suite: str, env_name: str) -> None:
+    """Read last_run_results.json, update flaky history, file Jira bugs for failures.
 
-    Failures pass through the bug creator's multi-gate validation: env-health
-    check + N consecutive failures + confidence threshold. The whole step is
-    additionally gated by BUG_CREATION_ENABLED in .env (dry-run by default).
+    Every failure becomes a bug directly (review queue disabled). The only
+    suppression is the env-health gate in the bug creator - a dead env skips
+    filing to avoid floods. Whole step is gated by BUG_CREATION_ENABLED in
+    .env (dry-run until explicitly enabled).
     """
     if not RUN_RESULTS_PATH.exists():
         print(f'[post-run] No {RUN_RESULTS_PATH.name} found - skipping bug filing.')
@@ -184,20 +185,19 @@ def _post_run_bug_filing(suite: str, env_name: str, auto_create: bool) -> None:
         return
 
     base_url = _resolve_env_base_url(env_name)
-    is_smoke = (suite == 'smoke')
     bug_enabled = os.environ.get('BUG_CREATION_ENABLED', 'false').lower() in ('1', 'true', 'yes')
     print(f'[post-run] Processing {len(failed_nodeids)} failure(s) through bug filer '
-          f'(BUG_CREATION_ENABLED={bug_enabled}, auto_create={auto_create}).')
+          f'(BUG_CREATION_ENABLED={bug_enabled}).')
 
     from tools.smart_jira_bug_creator import multi_gate_validation
     actions: dict[str, int] = {}
     for nodeid in failed_nodeids:
         try:
+            # auto_create=True (default) -> direct Jira bug creation; review
+            # queue is intentionally disabled.
             result = multi_gate_validation(
                 nodeid,
                 env_base_url=base_url,
-                is_smoke=is_smoke,
-                auto_create=auto_create,
             )
         except Exception as e:
             print(f'[post-run]   {nodeid}: bug filer error: {e}', file=sys.stderr)
@@ -231,9 +231,6 @@ def main() -> int:
                         help='Print the pytest command without cloning or executing.')
     parser.add_argument('--no-bug-filing', action='store_true',
                         help='Skip the post-run history-update and bug-filer step.')
-    parser.add_argument('--auto-create-bugs', action='store_true',
-                        help='Bypass the review queue and file bugs immediately '
-                             '(only effective when BUG_CREATION_ENABLED=true).')
 
     # parse_known_args puts unrecognized flags into `pytest_extra` so we can
     # forward arbitrary pytest args (-k, --headed, etc.) without an explicit `--`.
@@ -284,7 +281,7 @@ def main() -> int:
 
     if not args.no_bug_filing:
         print()
-        _post_run_bug_filing(args.suite, args.env, auto_create=args.auto_create_bugs)
+        _post_run_bug_filing(args.suite, args.env)
 
     return completed.returncode
 
