@@ -123,16 +123,24 @@ def analyze_snapshot(snapshot: dict) -> dict:
         by_priority[c.get('Priority', 'Unknown')] += 1
 
     # Tag analysis
+    # QA Touch API changed the tag field: legacy snapshots use 'NewTags' as a
+    # comma-separated string; current API returns 'Tags' as a list. Handle both
+    # so this works against historical snapshots and live pulls.
     tag_counter = Counter()
     tagged_count = 0
     for c in cases:
-        tags_raw = c.get('NewTags', '')
-        if tags_raw and str(tags_raw).strip():
+        raw = c.get('Tags')
+        if raw is None:
+            raw = c.get('NewTags', '')
+        if isinstance(raw, list):
+            pieces = [str(x) for x in raw]
+        else:
+            pieces = str(raw).split(',') if raw else []
+        case_tags = [p.strip() for p in pieces if p and p.strip()]
+        if case_tags:
             tagged_count += 1
-            for t in str(tags_raw).split(','):
-                t = t.strip()
-                if t:
-                    tag_counter[t] += 1
+            for t in case_tags:
+                tag_counter[t] += 1
 
     # Created date distribution
     by_date = Counter()

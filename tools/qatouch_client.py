@@ -572,3 +572,53 @@ class QATouchClient:
                 f'update_test_run_results API error: {data.get("error_msg", data)}'
             )
         return data
+
+    def update_playwright_results(
+        self,
+        project_key: str,
+        test_run_key: str,
+        results: List[Dict[str, Any]],
+        chunk_size: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """Bulk-update Playwright run results with rich payload (duration + screenshots).
+
+        Uses QA Touch's Playwright-specific bulk endpoint added in the JIRA App /
+        Playwright 2.0 update - supports per-result `execution_time`, `comments`,
+        `description`, and `attachments` (PNG screenshots, base64-encoded).
+
+        Args:
+            project_key: e.g. "JlW1"
+            test_run_key: e.g. "vaXdn"
+            results: list of dicts with required keys "case" (str) and "status" (int),
+                     and optional "execution_time" (str like "1.2s"), "comments" (str),
+                     "description" (str), "attachments" (list of {name, contentType, content})
+            chunk_size: max results per request (vendor reporter uses 5)
+
+        Returns:
+            List of per-chunk response dicts.
+
+        Uses: POST /api/v1/testRunResults/playwright/status/multiple
+        """
+        url = self._url('/api/v1/testRunResults/playwright/status/multiple')
+        responses: List[Dict[str, Any]] = []
+        for i in range(0, len(results), chunk_size):
+            chunk = results[i:i + chunk_size]
+            payload = {
+                'project': project_key,
+                'test_run': test_run_key,
+                'result': _json.dumps(chunk),
+            }
+            resp = self.session.post(url, json=payload, timeout=self.timeout)
+            if resp.status_code not in (200, 201):
+                raise QATouchError(
+                    f'update_playwright_results chunk {i // chunk_size + 1} failed: '
+                    f'{resp.status_code} {resp.text}'
+                )
+            data = resp.json()
+            if not data.get('success', True):
+                raise QATouchError(
+                    f'update_playwright_results chunk {i // chunk_size + 1} API error: '
+                    f'{data.get("error_msg", data)}'
+                )
+            responses.append(data)
+        return responses

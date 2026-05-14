@@ -57,9 +57,31 @@ logging.basicConfig(level=logging.INFO)
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 FLAKY_DB = os.path.join(ROOT, "flaky_tests.json")
 REVIEW_QUEUE = os.path.join(ROOT, "tools", "review_queue.json")
+CASE_MAPPING = os.path.join(ROOT, "config", "qatouch_case_mapping.json")
+
+# QA Touch case URL - fed into Jira "remote link" so QA Touch's JIRA App 2.0
+# RTM panel can resolve the linkage back to the originating test case.
+QATOUCH_DOMAIN = os.environ.get("QATOUCH_DOMAIN", "soterixsystems")
+QATOUCH_CASE_URL_TMPL = f"https://{QATOUCH_DOMAIN}.qatouch.com/index.php/cases/view/{{key}}"
 
 CONFIDENCE_THRESHOLD = 0.7
 MIN_CONSECUTIVE_FAILURES = 2
+
+
+def _lookup_qatouch_case(nodeid: str) -> str | None:
+    """Resolve a pytest nodeid to its QA Touch case_key via the mapping file.
+    Returns None if the file is missing or the nodeid is unmapped."""
+    if not nodeid or not os.path.exists(CASE_MAPPING):
+        return None
+    try:
+        with open(CASE_MAPPING, "r", encoding="utf-8") as f:
+            mappings = json.load(f).get("mappings", {})
+    except Exception:
+        return None
+    entry = mappings.get(nodeid)
+    if not entry and "[" in nodeid:
+        entry = mappings.get(nodeid.split("[", 1)[0])
+    return entry.get("case_key") if entry else None
 
 
 def load_flaky_db(path: str = FLAKY_DB) -> Dict[str, Any]:
@@ -150,16 +172,25 @@ class JiraClient:
         self.user = user or os.environ.get('JIRA_EMAIL')
         self.token = token or os.environ.get('JIRA_API_TOKEN')
 
-    def create_issue(self, summary: str, description: str, labels: List[str] = None, project_key: str = None, issue_type: str = 'Bug', attachments: List[str] = None, story_link: str = None, qa_touch_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    def create_issue(self, summary: str, description: str, labels: List[str] = None, project_key: str = None, issue_type: str = 'Bug', attachments: List[str] = None, story_link: str = None, qa_touch_data: Dict[str, Any] = None, qatouch_case_key: str = None) -> Dict[str, Any]:
         """Create a Jira issue using `jira` library if available and BUG_CREATION_ENABLED true.
 
         Args:
             qa_touch_data: Optional dict with QA Touch test case data for auto-populating
                 NC mandatory Bug fields. Keys: module, steps, expected, actual,
                 environment, severity, build, title, test_case_id.
+            qatouch_case_key: Optional QA Touch case key for RTM linkage. When set,
+                a `qatouch-<key>` label is added and (real path only) a remote link to
+                the QA Touch case is attached after creation - covers both label-scan
+                and remote-link-scan strategies in QA Touch's JIRA App 2.0.
 
         Returns the issue dict on success.
         """
+        # Build the final labels list (defensive copy + RTM linkage label)
+        final_labels = list(labels) if labels else []
+        if qatouch_case_key and f"qatouch-{qatouch_case_key}" not in final_labels:
+            final_labels.append(f"qatouch-{qatouch_case_key}")
+
         enabled = os.environ.get('BUG_CREATION_ENABLED', 'false').lower() in ('1', 'true', 'yes')
         project_key = project_key or os.environ.get('JIRA_PROJECT_KEY')
         if not enabled or JIRA is None:
@@ -168,9 +199,12 @@ class JiraClient:
                 "key": "AUTO-0001",
                 "summary": summary,
                 "description": description,
-                "labels": (labels or []) + (["automation-test-DELETE-ME"] if "[TEST]" in summary else []),
+                "labels": final_labels + (["automation-test-DELETE-ME"] if "[TEST]" in summary else []),
                 "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             }
+            if qatouch_case_key:
+                fake["qatouch_case_key"] = qatouch_case_key
+                fake["qatouch_remote_link"] = QATOUCH_CASE_URL_TMPL.format(key=qatouch_case_key)
             if qa_touch_data and qa_touch_mapper:
                 fake["mapped_fields"] = qa_touch_mapper.map_bug_fields(**qa_touch_data)
                 unmapped = qa_touch_mapper.get_unmapped_required_fields("Bug", fake["mapped_fields"])
@@ -188,8 +222,8 @@ class JiraClient:
             'description': description,
             'issuetype': {'name': issue_type},
         }
-        if labels:
-            fields['labels'] = labels
+        if final_labels:
+            fields['labels'] = final_labels
 
         # Auto-populate NC mandatory Bug fields from QA Touch data
         if qa_touch_data and qa_touch_mapper and issue_type == 'Bug':
@@ -201,6 +235,17 @@ class JiraClient:
 
         issue = jira.create_issue(fields=fields)
         issue_key = issue.key
+
+        # RTM linkage: attach a remote link back to the QA Touch case so
+        # QA Touch's JIRA App 2.0 panel can resolve the case ↔ bug relationship.
+        if qatouch_case_key:
+            try:
+                jira.add_remote_link(issue, {
+                    "url": QATOUCH_CASE_URL_TMPL.format(key=qatouch_case_key),
+                    "title": f"QA Touch case {qatouch_case_key}",
+                })
+            except Exception as e:
+                LOG.warning('Failed to add QA Touch remote link to %s: %s', issue_key, e)
 
         # Attach files if present
         if attachments:
@@ -495,11 +540,13 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
                        item.get("consecutive_failures", "n/a"),
                        item.get("failure_rate", "n/a"))
                 )
+                case_key = _lookup_qatouch_case(nodeid)
                 try:
                     issue = jira.create_issue(
                         summary=bug_data.get("summary", nodeid),
                         description=desc,
                         labels=bug_data.get("labels", ["automation"]),
+                        qatouch_case_key=case_key,
                         qa_touch_data={
                             "module": bug_data.get("module", "Other"),
                             "steps": bug_data.get("steps", ""),
@@ -509,6 +556,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
                             "severity": bug_data.get("severity", "Medium"),
                             "build": bug_data.get("build", ""),
                             "title": bug_data.get("summary", ""),
+                            "test_case_id": case_key or "",
                         }
                     )
                     issue_key = issue.get("key", "???")
@@ -638,9 +686,11 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
                 "env_check: %s\n"
                 % (nodeid, score, consec, fail_rate, env_msg)
             )
+            case_key = _lookup_qatouch_case(nodeid)
             issue = jira.create_issue(
                 summary, desc,
                 labels=bug_data["labels"],
+                qatouch_case_key=case_key,
                 qa_touch_data={
                     "module": module,
                     "steps": bug_data["steps"],
@@ -650,6 +700,7 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
                     "severity": bug_data["severity"],
                     "build": bug_data["build"],
                     "title": summary,
+                    "test_case_id": case_key or "",
                 }
             )
             details["issue"] = issue

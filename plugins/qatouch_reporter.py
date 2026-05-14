@@ -23,6 +23,7 @@ Status codes: passed=1, blocked/skipped=3, failed=5
 """
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import os
@@ -86,15 +87,37 @@ def pytest_configure(config: Any) -> None:
     config.pluginmanager.register(config._qatouch_reporter, 'qatouch_reporter')
 
 
+def _format_duration(seconds: float) -> str:
+    """Format pytest duration for QA Touch's `execution_time` field.
+
+    Matches the format the vendor playwright-qatouch-reporter emits (e.g. "1.2s",
+    "450ms") so values are comparable in the QA Touch UI.
+    """
+    if seconds is None or seconds < 0:
+        return ''
+    if seconds < 1.0:
+        return f'{int(round(seconds * 1000))}ms'
+    return f'{seconds:.1f}s'
+
+
 class QATouchReporter:
     def __init__(self, run_key: str):
         self.run_key = run_key
         self.project_key = os.environ.get('QATOUCH_PROJECT_ID', 'JlW1')
         self.results: dict[str, int] = {}  # case_key -> status code
+        self.durations: dict[str, float] = {}  # case_key -> duration in seconds
+        self.screenshots: dict[str, bytes] = {}  # case_key -> PNG bytes (failures only)
         self.mapping = self._load_mapping()
         self.case_to_run_key: dict[str, str] = {}  # case_key -> run_key (for API-created runs)
+        self.use_playwright_endpoint = os.environ.get(
+            'QATOUCH_USE_PLAYWRIGHT_ENDPOINT', '').lower() in ('1', 'true', 'yes')
+        # Failure-screenshot capture is enabled by default for the playwright
+        # endpoint, since legacy uploads ignore attachments anyway.
+        self.capture_screenshots = self.use_playwright_endpoint and (
+            os.environ.get('QATOUCH_CAPTURE_SCREENSHOTS', '1').lower()
+            not in ('0', 'false', 'no'))
         self.stats = {'mapped': 0, 'unmapped': 0, 'uploaded': 0, 'errors': 0,
-                      'retries': 0, 'saved_for_retry': 0}
+                      'retries': 0, 'saved_for_retry': 0, 'screenshots': 0}
 
     def _load_mapping(self) -> dict[str, str]:
         """Load nodeid -> case_key mapping from JSON file."""
@@ -150,6 +173,43 @@ class QATouchReporter:
             return marker.args[0]
         return None
 
+    @staticmethod
+    def _resolve_page(item: Any):
+        """Find the Playwright Page object on a test item.
+
+        Tries (1) class-based tests' self.page, (2) fixture funcargs `page` and
+        `authenticated_page`. Returns None if no live page is available - the
+        screenshot step is best-effort and never raises.
+        """
+        instance = getattr(item, 'instance', None)
+        if instance is not None:
+            page = getattr(instance, 'page', None)
+            if page is not None:
+                return page
+        funcargs = getattr(item, 'funcargs', {}) or {}
+        return funcargs.get('page') or funcargs.get('authenticated_page')
+
+    def _maybe_capture_screenshot(self, item: Any, report: Any) -> None:
+        """Capture a PNG screenshot on test failure for QA Touch upload.
+
+        Runs inside the makereport hookwrapper while fixtures are still alive.
+        Stores raw bytes on the item; _record_result moves it to self.screenshots
+        once the case_key is resolved.
+        """
+        if not self.capture_screenshots:
+            return
+        if report.outcome != 'failed':
+            return
+        page = self._resolve_page(item)
+        if page is None:
+            return
+        try:
+            # Viewport-only (not full_page) keeps payload size reasonable.
+            png = page.screenshot()
+            setattr(item, '_qatouch_screenshot', png)
+        except Exception as e:
+            log.debug(f'QA Touch: failed to capture screenshot for {item.nodeid}: {e}')
+
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item: Any, call: Any):
         outcome = yield
@@ -159,12 +219,16 @@ class QATouchReporter:
         if report.when != 'call':
             # Handle skips in setup phase
             if report.when == 'setup' and report.skipped:
-                self._record_result(item, item.nodeid, 'skipped')
+                self._record_result(item, item.nodeid, 'skipped',
+                                    duration=getattr(report, 'duration', None))
             return
 
-        self._record_result(item, item.nodeid, report.outcome)
+        self._maybe_capture_screenshot(item, report)
+        self._record_result(item, item.nodeid, report.outcome,
+                            duration=getattr(report, 'duration', None))
 
-    def _record_result(self, item: Any, nodeid: str, outcome: str) -> None:
+    def _record_result(self, item: Any, nodeid: str, outcome: str,
+                       duration: float | None = None) -> None:
         """Map a pytest outcome to a QA Touch result.
 
         Resolution order:
@@ -196,19 +260,21 @@ class QATouchReporter:
             status = max(existing, status)
 
         self.results[case_key] = status
+        if duration is not None:
+            # Keep the latest duration (most recent run wins on reruns)
+            self.durations[case_key] = float(duration)
+        screenshot = getattr(item, '_qatouch_screenshot', None) if item else None
+        if screenshot:
+            self.screenshots[case_key] = screenshot
+            self.stats['screenshots'] += 1
         self.stats['mapped'] += 1
 
-    def _upload_with_retry(self, client, results_payload: list, comment: str) -> bool:
-        """Upload results with retry logic. Returns True on success."""
+    def _upload_with_retry(self, upload_fn) -> bool:
+        """Run an upload callable with retry logic. Returns True on success."""
         last_error = None
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                client.update_test_run_results(
-                    project_key=self.project_key,
-                    test_run_key=self.run_key,
-                    results=results_payload,
-                    comment=comment,
-                )
+                upload_fn()
                 if attempt > 1:
                     log.info(f'QA Touch: Upload succeeded on attempt {attempt}')
                     self.stats['retries'] += attempt - 1
@@ -289,7 +355,22 @@ class QATouchReporter:
                 if mapped_run_key:
                     upload_key = mapped_run_key
                     translated += 1
-            results_payload.append({'case': upload_key, 'status': status})
+            entry = {'case': upload_key, 'status': status}
+            if self.use_playwright_endpoint:
+                duration = self.durations.get(case_key)
+                entry['execution_time'] = _format_duration(duration) if duration is not None else ''
+                entry['comments'] = ''
+                entry['description'] = ''
+                attachments = []
+                png = self.screenshots.get(case_key)
+                if png:
+                    attachments.append({
+                        'name': f'{case_key}-failure.png',
+                        'contentType': 'image/png',
+                        'content': base64.b64encode(png).decode('ascii'),
+                    })
+                entry['attachments'] = attachments
+            results_payload.append(entry)
 
         if translated > 0:
             log.info(f'QA Touch: Translated {translated} case_keys to run_keys (API-created run)')
@@ -297,10 +378,28 @@ class QATouchReporter:
         timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
         comment = f'Automated upload from Playwright run at {timestamp}'
 
-        log.info(f'QA Touch: Uploading {len(results_payload)} results to run {self.run_key}...')
+        endpoint_label = 'playwright' if self.use_playwright_endpoint else 'legacy'
+        log.info(f'QA Touch: Uploading {len(results_payload)} results to run '
+                 f'{self.run_key} via {endpoint_label} endpoint...')
 
-        # Upload with retry
-        success = self._upload_with_retry(client, results_payload, comment)
+        # Pick the right uploader based on the opt-in env var
+        if self.use_playwright_endpoint:
+            def _do_upload():
+                client.update_playwright_results(
+                    project_key=self.project_key,
+                    test_run_key=self.run_key,
+                    results=results_payload,
+                )
+        else:
+            def _do_upload():
+                client.update_test_run_results(
+                    project_key=self.project_key,
+                    test_run_key=self.run_key,
+                    results=results_payload,
+                    comment=comment,
+                )
+
+        success = self._upload_with_retry(_do_upload)
 
         if success:
             self.stats['uploaded'] = len(results_payload)
@@ -317,9 +416,14 @@ class QATouchReporter:
         terminalreporter.write_sep('=', 'QA Touch Result Upload')
         terminalreporter.write_line(f'  Run key:    {self.run_key}')
         terminalreporter.write_line(f'  Project:    {self.project_key}')
+        terminalreporter.write_line(
+            f'  Endpoint:   {"playwright (rich)" if self.use_playwright_endpoint else "legacy (status-only)"}')
         terminalreporter.write_line(f'  Mapped:     {self.stats["mapped"]} results')
         terminalreporter.write_line(f'  Unmapped:   {self.stats["unmapped"]} tests (no case mapping)')
         terminalreporter.write_line(f'  Uploaded:   {self.stats["uploaded"]} results')
+        if self.stats.get('screenshots'):
+            terminalreporter.write_line(
+                f'  Screenshots: {self.stats["screenshots"]} captured on failure')
         if self.stats['retries']:
             terminalreporter.write_line(f'  Retries:    {self.stats["retries"]}')
         if self.stats['errors']:
