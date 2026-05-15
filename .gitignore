@@ -40,10 +40,12 @@ tools/debug_screenshots/
 nodeids
 .pytest_cache/
 
-# Tooling Code settings and prompts (local only)
-.notes/
-STARTUP_PROMPT.md
-docs/STARTUP_PROMPT.md
+# Agent settings and startup prompts (local only)
+.agent/
+.agents/
+.codex/
+AGENT_STARTUP_PROMPT.md
+docs/AGENT_STARTUP_PROMPT.md
 
 # Bugasura extraction artifacts (local only)
 BUGASURA_EXTRACTION_GUIDE.md

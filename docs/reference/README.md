@@ -41,6 +41,6 @@ When PM provides updated documentation, replace the relevant file and update thi
 
 ## Note on Word Documents
 
-Tooling Code cannot read .docx files directly. For content analysis:
-- Upload docs to Tooling Project for AI analysis
-- Or convert to markdown for version-controlled content
+`.docx` files cannot be analyzed inline by most automation tools. For content analysis:
+- Convert to markdown for version-controlled content
+- Or extract text via `python-docx` / `pandoc` before processing
