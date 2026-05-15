@@ -191,4 +191,4 @@ Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`, `pytest -m "r
 - `docs/MAINTENANCE_REMINDERS.md` - OAuth expirations, recurring tasks
 - `docs/SESSION_CACHING_IMPLEMENTATION.md` - auth state cache details
 - `docs/VERIFICATION_WORKFLOW.md` - QA review flow for verification mode
-- `IMPLEMENTATION_ROADMAP.md` - historical roadmap; live tracking lives in the workspace `FUTURE_ROADMAP.md`
+- Workspace-level roadmap: `dashboards/soterix-internal-dashboards/docs/FUTURE_ROADMAP.md` (single source of truth across all Soterix projects)
