@@ -177,6 +177,27 @@ Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`, `pytest -m "r
 - First run logs in via UI and saves browser storage state; subsequent runs reload + validate it; re-login fires only if the cached state expired.
 - API auth: `AuthHelper.login()` prefers OAuth bearer tokens with UI fallback. Tokens are reused across the entire pytest session.
 
+## Linting
+
+Configured via [`pyproject.toml`](pyproject.toml). Ruff is the only linter - it covers what flake8 / isort / pyupgrade / pep8 do separately, plus pytest-style checks via the `PT` rule family. Pre-tuned with per-file ignores so tests, plugins, and CLI tools don't trigger false positives for their normal idioms.
+
+```powershell
+# Check the whole repo
+python -m ruff check .
+
+# Auto-fix safe issues
+python -m ruff check --fix .
+
+# Format
+python -m ruff format .
+
+# Focus on a single area
+python -m ruff check tests/ui/login
+python -m ruff check plugins/
+```
+
+The Playwright/pytest-aware rule set is the headline difference from a generic ruff config: `PT` enforces fixture conventions (`@pytest.fixture` not `@pytest.fixture()`, parametrize value style, etc.), `BLE` flags blind `except Exception` in test code where it usually hides real problems, and `T20` catches leftover `print()` statements in test bodies. Tools and discovery scripts keep their `print()` usage by per-file-ignore. New code should aim for zero new lints; existing remaining issues are tracked for incremental cleanup.
+
 ## CI Notes
 
 - `python -m playwright install chromium` must run in CI before pytest.

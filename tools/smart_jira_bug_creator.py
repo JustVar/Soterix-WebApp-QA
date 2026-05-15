@@ -23,10 +23,10 @@ Set BUG_CREATION_ENABLED=true in .env to enable live Jira issue creation.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
-import logging
-from typing import Dict, Any, List, Tuple
+from typing import Any
 
 try:
     import requests
@@ -72,7 +72,7 @@ def _lookup_qatouch_case(nodeid: str) -> str | None:
     if not nodeid or not os.path.exists(CASE_MAPPING):
         return None
     try:
-        with open(CASE_MAPPING, "r", encoding="utf-8") as f:
+        with open(CASE_MAPPING, encoding="utf-8") as f:
             mappings = json.load(f).get("mappings", {})
     except Exception:
         return None
@@ -82,31 +82,31 @@ def _lookup_qatouch_case(nodeid: str) -> str | None:
     return entry.get("case_key") if entry else None
 
 
-def load_flaky_db(path: str = FLAKY_DB) -> Dict[str, Any]:
+def load_flaky_db(path: str = FLAKY_DB) -> dict[str, Any]:
     if not os.path.exists(path):
         return {"metadata": {}, "tests": {}}
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_flaky_db(db: Dict[str, Any], path: str = FLAKY_DB) -> None:
+def save_flaky_db(db: dict[str, Any], path: str = FLAKY_DB) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(db, f, indent=2, sort_keys=True)
 
 
-def get_history(nodeid: str, db: Dict[str, Any]) -> List[Dict[str, Any]]:
+def get_history(nodeid: str, db: dict[str, Any]) -> list[dict[str, Any]]:
     entry = db.get("tests", {}).get(nodeid, {})
     return entry.get("last_runs", [])
 
 
-def calc_failure_rate(history: List[Dict[str, Any]]) -> float:
+def calc_failure_rate(history: list[dict[str, Any]]) -> float:
     if not history:
         return 0.0
     fails = sum(1 for r in history if r.get("result") == "fail")
     return fails / len(history)
 
 
-def consecutive_failures(history: List[Dict[str, Any]]) -> int:
+def consecutive_failures(history: list[dict[str, Any]]) -> int:
     count = 0
     for r in reversed(history):
         if r.get("result") == "fail":
@@ -116,7 +116,7 @@ def consecutive_failures(history: List[Dict[str, Any]]) -> int:
     return count
 
 
-def env_health_check(base_url: str, timeout: int = 5) -> Tuple[bool, str]:
+def env_health_check(base_url: str, timeout: int = 5) -> tuple[bool, str]:
     """Simple environment health check: probe base_url root.
 
     Returns (healthy: bool, message: str)
@@ -129,17 +129,16 @@ def env_health_check(base_url: str, timeout: int = 5) -> Tuple[bool, str]:
             if resp.status_code >= 200 and resp.status_code < 500:
                 return True, f"status:{resp.status_code}"
             return False, f"status:{resp.status_code}"
-        else:
-            # fallback: attempt a minimal urllib request
-            from urllib.request import urlopen
+        # fallback: attempt a minimal urllib request
+        from urllib.request import urlopen
 
-            with urlopen(base_url, timeout=timeout) as r:
-                return True, f"status:ok"
+        with urlopen(base_url, timeout=timeout) as r:
+            return True, "status:ok"
     except Exception as e:
         return False, str(e)
 
 
-def compute_confidence(history: List[Dict[str, Any]], env_ok: bool) -> float:
+def compute_confidence(history: list[dict[str, Any]], env_ok: bool) -> float:
     """Heuristic score between 0..1 indicating likelihood of real bug.
 
     Combines failure rate and consecutive failures. If environment is unhealthy,
@@ -170,7 +169,7 @@ class JiraClient:
         self.user = user or os.environ.get('JIRA_EMAIL')
         self.token = token or os.environ.get('JIRA_API_TOKEN')
 
-    def create_issue(self, summary: str, description: str, labels: List[str] = None, project_key: str = None, issue_type: str = 'Bug', attachments: List[str] = None, story_link: str = None, qa_touch_data: Dict[str, Any] = None, qatouch_case_key: str = None) -> Dict[str, Any]:
+    def create_issue(self, summary: str, description: str, labels: list[str] = None, project_key: str = None, issue_type: str = 'Bug', attachments: list[str] = None, story_link: str = None, qa_touch_data: dict[str, Any] = None, qatouch_case_key: str = None) -> dict[str, Any]:
         """Create a Jira issue using `jira` library if available and BUG_CREATION_ENABLED true.
 
         Args:
@@ -329,12 +328,12 @@ def _infer_environment(base_url: str) -> str:
     return "QA"
 
 
-def _load_review_queue(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
+def _load_review_queue(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
     """Load and return the review queue, or empty structure."""
     if not os.path.exists(queue_path):
         return {"metadata": {"next_id": 1}, "items": []}
     try:
-        with open(queue_path, "r", encoding="utf-8") as f:
+        with open(queue_path, encoding="utf-8") as f:
             data = json.load(f)
         data.setdefault("metadata", {"next_id": 1})
         data.setdefault("items", [])
@@ -343,14 +342,14 @@ def _load_review_queue(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
         return {"metadata": {"next_id": 1}, "items": []}
 
 
-def _save_review_queue(queue: Dict[str, Any], queue_path: str = REVIEW_QUEUE) -> None:
+def _save_review_queue(queue: dict[str, Any], queue_path: str = REVIEW_QUEUE) -> None:
     """Persist the review queue to disk."""
     os.makedirs(os.path.dirname(queue_path), exist_ok=True)
     with open(queue_path, "w", encoding="utf-8") as f:
         json.dump(queue, f, indent=2)
 
 
-def _try_api_queue(payload: Dict[str, Any]) -> str | None:
+def _try_api_queue(payload: dict[str, Any]) -> str | None:
     """Try to submit an item via the QA Ops Hub API. Returns entry_id or None."""
     api_url = os.environ.get("QA_OPS_API_URL", "").rstrip("/")
     api_key = os.environ.get("QA_OPS_API_KEY", "")
@@ -374,7 +373,7 @@ def _try_api_queue(payload: Dict[str, Any]) -> str | None:
 
 
 def add_to_review_queue(nodeid: str, reason: str, queue_path: str = REVIEW_QUEUE,
-                        bug_data: Dict[str, Any] = None, score: float = None,
+                        bug_data: dict[str, Any] = None, score: float = None,
                         consecutive: int = None, failure_rate: float = None) -> str:
     """Add an item to the review queue with optional enriched bug data.
 
@@ -384,7 +383,7 @@ def add_to_review_queue(nodeid: str, reason: str, queue_path: str = REVIEW_QUEUE
     Returns the entry ID (e.g. 'RQ-0001').
     """
     # Build API payload
-    payload: Dict[str, Any] = {"nodeid": nodeid, "reason": reason}
+    payload: dict[str, Any] = {"nodeid": nodeid, "reason": reason}
     if score is not None:
         payload["confidence_score"] = score
     if consecutive is not None:
@@ -431,7 +430,7 @@ def add_to_review_queue(nodeid: str, reason: str, queue_path: str = REVIEW_QUEUE
     return entry_id
 
 
-def list_pending_bugs(queue_path: str = REVIEW_QUEUE) -> List[Dict[str, Any]]:
+def list_pending_bugs(queue_path: str = REVIEW_QUEUE) -> list[dict[str, Any]]:
     """Print and return pending review queue items."""
     queue = _load_review_queue(queue_path)
     pending = [item for item in queue.get("items", []) if item.get("status") == "pending"]
@@ -469,7 +468,7 @@ def list_pending_bugs(queue_path: str = REVIEW_QUEUE) -> List[Dict[str, Any]]:
     return pending
 
 
-def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
+def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
     """Interactive review of pending bugs. Returns summary dict."""
     queue = _load_review_queue(queue_path)
     pending = [item for item in queue.get("items", [])
@@ -570,7 +569,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
                     print("  Item remains pending. Try again later.")
                 break
 
-            elif choice in ("r", "reject"):
+            if choice in ("r", "reject"):
                 item["status"] = "rejected"
                 item["reviewed_by"] = os.environ.get("USERNAME", os.environ.get("USER", "qa"))
                 item["reviewed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -579,7 +578,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
                 rejected += 1
                 break
 
-            elif choice in ("e", "edit"):
+            if choice in ("e", "edit"):
                 print("  Current severity: %s" % bug_data.get("severity", "n/a"))
                 print("  Valid options: %s" % ", ".join(VALID_SEVERITIES))
                 try:
@@ -616,7 +615,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> Dict[str, Any]:
     return {"approved": approved, "rejected": rejected, "skipped": skipped}
 
 
-def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool = False, auto_create: bool = True) -> Dict[str, Any]:
+def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool = False, auto_create: bool = True) -> dict[str, Any]:
     """Turn a failed test into a Jira bug directly. Review queue is disabled.
 
     Operational model: each suite (smoke / sanity / regression) runs once per

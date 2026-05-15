@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """One-time script to build feature_inventory.json from existing data sources."""
 import json
-import sys
 import re
-from pathlib import Path
+import sys
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")

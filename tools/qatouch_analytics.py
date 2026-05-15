@@ -12,14 +12,11 @@ Usage:
 """
 from __future__ import annotations
 
-import csv
 import functools
 import json
-import os
 import sys
-import time
-from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 _print = print
@@ -33,6 +30,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / '.env')
 
 from tools.qatouch_client import QATouchClient
@@ -489,23 +487,23 @@ def _print_summary(metrics: dict):
     print(f'{"=" * 60}')
     print(f'\n  Total Test Cases:        {total:,}')
     print(f'  Total Modules:           {metrics["total_modules"]}')
-    print(f'\n  --- Automation Coverage ---')
+    print('\n  --- Automation Coverage ---')
     print(f'  Playwright Tests:        {auto["total_playwright_tests"]}')
     print(f'  Mapped to QA Touch:      {auto["mapped_to_qatouch"]}')
     print(f'  Automation Coverage:     {coverage_pct}% ({auto["mapped_to_qatouch"]}/{total})')
-    print(f'\n  --- Test Types ---')
+    print('\n  --- Test Types ---')
     for t, cnt in metrics['by_type'].items():
         print(f'    {cnt:>5}  {t}')
-    print(f'\n  --- Tags ---')
+    print('\n  --- Tags ---')
     print(f'  Tagged:                  {metrics["tags"]["tagged_cases"]} ({metrics["tags"]["tag_coverage_pct"]}%)')
     print(f'  Untagged:                {metrics["tags"]["untagged_cases"]}')
     for tag, cnt in list(metrics['tags']['distribution'].items())[:10]:
         print(f'    {cnt:>5}  {tag}')
-    print(f'\n  --- Top 15 Modules ---')
+    print('\n  --- Top 15 Modules ---')
     for m in metrics['top_modules'][:15]:
         bar = '#' * min(m['count'], 50)
         print(f'    {m["count"]:>4}  {m["module"][:40]:<40}  {bar}')
-    print(f'\n  --- Creation Timeline ---')
+    print('\n  --- Creation Timeline ---')
     for d, cnt in sorted(metrics['creation_dates'].items()):
         print(f'    {d}  +{cnt} cases')
 
@@ -517,7 +515,7 @@ def _print_delta(delta: dict):
     print(f'  Removed:    {delta["removed"]}')
     print(f'  Modified:   {delta["modified"]}')
     if delta.get('added_by_module'):
-        print(f'  Added by module:')
+        print('  Added by module:')
         for mod, cnt in delta['added_by_module'].items():
             print(f'    +{cnt}  {mod}')
 

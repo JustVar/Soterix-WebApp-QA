@@ -11,8 +11,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import datetime, timezone
-from typing import Dict, Any
+from datetime import UTC, datetime
+from typing import Any
 
 try:
     # lxml is preferred but fallback to builtin xml.etree
@@ -24,14 +24,14 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 FLAKY_DB = os.path.join(ROOT, "flaky_tests.json")
 
 
-def load_db(path: str = FLAKY_DB) -> Dict[str, Any]:
+def load_db(path: str = FLAKY_DB) -> dict[str, Any]:
     if not os.path.exists(path):
         return {"metadata": {"history_keep": 10}, "tests": {}}
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_db(db: Dict[str, Any], path: str = FLAKY_DB) -> None:
+def save_db(db: dict[str, Any], path: str = FLAKY_DB) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(db, f, indent=2, sort_keys=True)
 
@@ -66,32 +66,30 @@ def _junit_to_pytest_nodeid(classname: str, name: str, file: str | None) -> str:
     return f"{file_guess}::{name}"
 
 
-def parse_junit(path: str) -> Dict[str, Dict[str, Any]]:
+def parse_junit(path: str) -> dict[str, dict[str, Any]]:
     """Return mapping nodeid -> result dict {result, ts, env}
 
     Emits pytest-style nodeids so keys match `qatouch_case_mapping.json`.
     """
     tree = ET.parse(path)
     root = tree.getroot()
-    results: Dict[str, Dict[str, Any]] = {}
+    results: dict[str, dict[str, Any]] = {}
     for testcase in root.findall('.//testcase'):
         classname = testcase.get('classname') or ''
         name = testcase.get('name') or 'unknown'
         file = testcase.get('file')
         nodeid = _junit_to_pytest_nodeid(classname, name, file)
         status = 'pass'
-        if testcase.find('failure') is not None:
-            status = 'fail'
-        elif testcase.find('error') is not None:
+        if testcase.find('failure') is not None or testcase.find('error') is not None:
             status = 'fail'
         elif testcase.find('skipped') is not None:
             status = 'skip'
-        ts = datetime.now(timezone.utc).isoformat()
+        ts = datetime.now(UTC).isoformat()
         results[nodeid] = {"result": status, "ts": ts, "env": os.environ.get('ENV', 'unknown')}
     return results
 
 
-def update_history(db: Dict[str, Any], results: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def update_history(db: dict[str, Any], results: dict[str, dict[str, Any]]) -> dict[str, Any]:
     metadata = db.setdefault('metadata', {})
     history_keep = int(metadata.get('history_keep', 10))
     tests = db.setdefault('tests', {})

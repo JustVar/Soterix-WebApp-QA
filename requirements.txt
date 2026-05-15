@@ -13,3 +13,6 @@ jsonschema
 lxml
 msal
 msgraph-core
+
+# Linting / formatting
+ruff>=0.15

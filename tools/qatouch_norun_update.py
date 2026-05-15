@@ -50,6 +50,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / ".env")
 
 from playwright.sync_api import sync_playwright
@@ -251,7 +252,7 @@ def mark_case_norun(page, case_key: str, reason: str) -> tuple[bool, str]:
     already_tagged = tag_id in current_newtags
     already_precond = is_norun_precondition(current_precondition)
     if already_tagged and already_precond:
-        return True, f"Already marked NO_RUN"
+        return True, "Already marked NO_RUN"
 
     # Build updates
     updates = {}
@@ -268,8 +269,7 @@ def mark_case_norun(page, case_key: str, reason: str) -> tuple[bool, str]:
         if not already_precond:
             parts.append("precondition set")
         return True, f"Marked NO_RUN ({', '.join(parts)})"
-    else:
-        return False, f"HTTP {result.get('status', '?')}: {result.get('body', result.get('error', '?'))[:200]}"
+    return False, f"HTTP {result.get('status', '?')}: {result.get('body', result.get('error', '?'))[:200]}"
 
 
 def unmark_case_norun(page, case_key: str) -> tuple[bool, str]:
@@ -304,8 +304,7 @@ def unmark_case_norun(page, case_key: str) -> tuple[bool, str]:
         if has_precond:
             parts.append("precondition restored")
         return True, f"Unmarked ({', '.join(parts)})"
-    else:
-        return False, f"HTTP {result.get('status', '?')}: {result.get('body', result.get('error', '?'))[:200]}"
+    return False, f"HTTP {result.get('status', '?')}: {result.get('body', result.get('error', '?'))[:200]}"
 
 
 # ── Commands ─────────────────────────────────────────────────────────
@@ -369,7 +368,7 @@ def cmd_discover_tag(page, args):
     TAG_IDS = tag_ids
 
     print(f"  Config updated: {TAG_IDS_FILE.name}")
-    print(f"\n  Next: python tools/qatouch_norun_update.py test")
+    print("\n  Next: python tools/qatouch_norun_update.py test")
 
 
 def cmd_test(page, args):
@@ -409,7 +408,7 @@ def cmd_test(page, args):
 
     # Revert
     time.sleep(1)
-    print(f"\n  Reverting to original state...")
+    print("\n  Reverting to original state...")
     result = update_case(page, test_key, data2 or data, {
         "newtags": original_newtags,
         "precondition": original_precondition,
@@ -451,7 +450,7 @@ def cmd_mark(page, args):
         for c in cases:
             module = c.get("module name", c.get("module", ""))
             print(f"    {c['case_key']}: [{module}] {c['case_title'][:70]}")
-        print(f"\n  Dry run - no changes made. Remove --dry-run to apply.")
+        print("\n  Dry run - no changes made. Remove --dry-run to apply.")
         return
 
     updated = 0
@@ -482,7 +481,7 @@ def cmd_mark(page, args):
             if failed <= 5:
                 print(f"  FAIL {c['case_key']}: {msg}")
             elif failed == 6:
-                print(f"  (suppressing further failure messages)")
+                print("  (suppressing further failure messages)")
             if consecutive_errors >= 10:
                 print("  ABORTING: 10 consecutive errors - session likely dead")
                 break
@@ -534,7 +533,7 @@ def cmd_unmark(page, args):
     if args.dry_run:
         for key in keys:
             print(f"    {key}")
-        print(f"\n  Dry run - no changes made. Remove --dry-run to apply.")
+        print("\n  Dry run - no changes made. Remove --dry-run to apply.")
         return
 
     updated = 0
@@ -620,7 +619,7 @@ def cmd_count(page, args):
     print(f"  NO_RUN:         {norun}")
 
     if by_module:
-        print(f"\n  NO_RUN by module:")
+        print("\n  NO_RUN by module:")
         for module in sorted(by_module, key=lambda m: by_module[m], reverse=True):
             print(f"    {module:<40} {by_module[module]:>4}")
 
@@ -741,7 +740,7 @@ Examples:
         return
 
     print(f"\n{'=' * 60}")
-    print(f"  QA TOUCH NO_RUN UPDATE")
+    print("  QA TOUCH NO_RUN UPDATE")
     print(f"{'=' * 60}")
     print("Starting browser for QA Touch API access...")
 

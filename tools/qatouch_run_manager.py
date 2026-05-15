@@ -29,16 +29,17 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / '.env')
 
-from tools.qatouch_client import QATouchClient, PYTEST_TO_QATOUCH
+from tools.qatouch_client import PYTEST_TO_QATOUCH, QATouchClient
 
 PROJECT_KEY = os.environ.get('QATOUCH_PROJECT_ID', 'JlW1')
 MAPPING_PATH = ROOT / 'config' / 'qatouch_case_mapping.json'
@@ -81,7 +82,7 @@ def cmd_list():
         print(f'No test runs found for project {PROJECT_KEY}.')
         print()
         print('Create one:')
-        print(f'  python tools/qatouch_run_manager.py create "Run Name" <USER_KEY> <MILESTONE_KEY>')
+        print('  python tools/qatouch_run_manager.py create "Run Name" <USER_KEY> <MILESTONE_KEY>')
         return
 
     print(f'Test runs for project {PROJECT_KEY}:')
@@ -197,7 +198,7 @@ def cmd_release(version: str, env: str, user_key: str, milestone_key: str = None
     All runs are linked to the milestone and assigned to the specified user.
     """
     client = QATouchClient()
-    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    today = datetime.now(UTC).strftime('%Y-%m-%d')
     release_name = f'{version} - {env}'
 
     print(f'=== Release Suite: {release_name} ===')
@@ -218,7 +219,7 @@ def cmd_release(version: str, env: str, user_key: str, milestone_key: str = None
             print(f'  Milestone created: {milestone_key}')
         else:
             print(f'  WARNING: Could not extract milestone key from: {result}')
-            print(f'  Continuing with response...')
+            print('  Continuing with response...')
             milestone_key = None
 
     if not milestone_key:
@@ -244,7 +245,7 @@ def cmd_release(version: str, env: str, user_key: str, milestone_key: str = None
         print(f'  Smoke run created: {run_key}')
     except Exception as e:
         print(f'  WARNING: Smoke run failed: {e}')
-        print(f'  (Are cases tagged with "smoke" in QA Touch?)')
+        print('  (Are cases tagged with "smoke" in QA Touch?)')
 
     # Step 3: Create Sanity run (by tag)
     sanity_name = f'Sanity - {env} - {version} - {today}'
@@ -262,7 +263,7 @@ def cmd_release(version: str, env: str, user_key: str, milestone_key: str = None
         print(f'  Sanity run created: {run_key}')
     except Exception as e:
         print(f'  WARNING: Sanity run failed: {e}')
-        print(f'  (Are cases tagged with "sanity" in QA Touch?)')
+        print('  (Are cases tagged with "sanity" in QA Touch?)')
 
     # Step 4: Create Regression run (all cases)
     regression_name = f'Regression - {env} - {version} - {today}'
@@ -282,7 +283,7 @@ def cmd_release(version: str, env: str, user_key: str, milestone_key: str = None
 
     # Summary
     print()
-    print(f'=== Release Suite Summary ===')
+    print('=== Release Suite Summary ===')
     print(f'  Release:    {release_name}')
     print(f'  Milestone:  {milestone_key}')
     print(f'  Assigned:   {user_key}')
@@ -398,7 +399,7 @@ def cmd_upload(run_key: str, report_path: str):
 
     # Upload
     client = QATouchClient()
-    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+    timestamp = datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')
     comment = f'Uploaded from pytest report at {timestamp}'
 
     print(f'\nUploading {len(payload)} results to run {run_key}...')
@@ -409,7 +410,7 @@ def cmd_upload(run_key: str, report_path: str):
             results=payload,
             comment=comment,
         )
-        print(f'Upload successful!')
+        print('Upload successful!')
         passed = sum(1 for r in payload if r['status'] == 1)
         failed = sum(1 for r in payload if r['status'] == 5)
         blocked = sum(1 for r in payload if r['status'] == 3)
@@ -427,7 +428,7 @@ def cmd_dry_run(report_path: str):
 
     qt_results, unmapped = map_results(report_results, mapping)
 
-    print(f'\n=== Dry Run Preview ===')
+    print('\n=== Dry Run Preview ===')
     print(f'Would upload {len(qt_results)} results:')
     for r in sorted(qt_results, key=lambda x: x['case']):
         status_name = {1: 'PASSED', 3: 'BLOCKED', 5: 'FAILED'}.get(r['status'], '?')
@@ -512,15 +513,15 @@ def cmd_scaffold(nodeid: str, module_name: str, title: str,
             print(f'  Found: [{section_key}] {module_name}')
 
     # Step 2: Check if case already exists (avoid duplicates)
-    print(f'Checking for existing case with same title...')
+    print('Checking for existing case with same title...')
     existing = client.find_case_by_title(PROJECT_KEY, title, section_key=section_key)
     if existing:
         case_key = existing['case_key']
         print(f'  Case already exists: [{case_key}] "{title[:60]}"')
-        print(f'  Skipping creation, adding mapping only.')
+        print('  Skipping creation, adding mapping only.')
     else:
         # Step 3: Create the case
-        print(f'Creating test case in QA Touch...')
+        print('Creating test case in QA Touch...')
         result = client.create_test_case(
             project_key=PROJECT_KEY,
             section_key=section_key,
@@ -528,21 +529,21 @@ def cmd_scaffold(nodeid: str, module_name: str, title: str,
             description=description,
             precondition=precondition,
         )
-        print(f'  Created! Finding case_key...')
+        print('  Created! Finding case_key...')
 
         # Step 4: Find the case_key
         case = client.find_case_by_title(PROJECT_KEY, title, section_key=section_key)
         if not case:
             print(f'  WARNING: Could not find case_key for "{title[:60]}"')
-            print(f'  Case was created but mapping was NOT added.')
-            print(f'  Run "modules" and check QA Touch UI, then add mapping manually.')
+            print('  Case was created but mapping was NOT added.')
+            print('  Run "modules" and check QA Touch UI, then add mapping manually.')
             sys.exit(1)
 
         case_key = case['case_key']
         print(f'  Found: [{case_key}]')
 
     # Step 5: Add to mapping
-    print(f'Adding to mapping...')
+    print('Adding to mapping...')
     with open(MAPPING_PATH) as f:
         mapping_data = json.load(f)
 
@@ -565,10 +566,10 @@ def cmd_scaffold(nodeid: str, module_name: str, title: str,
 
     print(f'  Mapping added: {nodeid} -> [{case_key}]')
     print()
-    print(f'Done! Next steps (QA Touch UI):')
-    print(f'  1. Set Mode = Automation')
-    print(f'  2. Add tags (SMOKE, SANITY, etc.) as appropriate')
-    print(f'  3. Set correct Priority if needed (defaults to Critical)')
+    print('Done! Next steps (QA Touch UI):')
+    print('  1. Set Mode = Automation')
+    print('  2. Add tags (SMOKE, SANITY, etc.) as appropriate')
+    print('  3. Set correct Priority if needed (defaults to Critical)')
 
 
 # Module resolution: test directory path -> best QA Touch module name
@@ -621,7 +622,6 @@ def cmd_scaffold_new(dry_run: bool = False, delay: float = 2.0):
     """
     import subprocess
     import time
-    import re
 
     # Step 1: Collect all tests
     print('Collecting Playwright tests...')
@@ -658,7 +658,7 @@ def cmd_scaffold_new(dry_run: bool = False, delay: float = 2.0):
         print(f'      Title: {title}')
 
     if dry_run:
-        print(f'\nDry run - no cases created. Remove --dry-run to scaffold.')
+        print('\nDry run - no cases created. Remove --dry-run to scaffold.')
         return
 
     # Step 4: Scaffold each one
@@ -673,7 +673,7 @@ def cmd_scaffold_new(dry_run: bool = False, delay: float = 2.0):
             cmd_scaffold(nodeid, module, title)
             created += 1
         except SystemExit:
-            print(f'  FAILED - could not resolve module or create case')
+            print('  FAILED - could not resolve module or create case')
             failed.append(nodeid)
         except Exception as e:
             print(f'  ERROR: {e}')
@@ -686,14 +686,14 @@ def cmd_scaffold_new(dry_run: bool = False, delay: float = 2.0):
     print(f'\n{"="*60}')
     print(f'Scaffold complete: {created} created, {len(failed)} failed')
     if failed:
-        print(f'\nFailed tests (scaffold manually):')
+        print('\nFailed tests (scaffold manually):')
         for t in failed:
             module = _guess_module(t)
             title = _title_from_nodeid(t)
             print(f'  python tools/qatouch_run_manager.py scaffold '
                   f'"{t}" "{module}" "{title}"')
 
-    print(f'\nNext steps (QA Touch UI):')
+    print('\nNext steps (QA Touch UI):')
     print(f'  Set Mode=Automation + Tags on all {created} new cases')
 
 

@@ -28,7 +28,7 @@ import json
 import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -215,7 +215,7 @@ class QATouchReporter:
         try:
             # Viewport-only (not full_page) keeps payload size reasonable.
             png = page.screenshot()
-            setattr(item, '_qatouch_screenshot', png)
+            item._qatouch_screenshot = png
         except Exception as e:
             log.debug(f'QA Touch: failed to capture screenshot for {item.nodeid}: {e}')
 
@@ -325,7 +325,7 @@ class QATouchReporter:
                     existing = []
 
             failure_entry = {
-                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'timestamp': datetime.now(UTC).isoformat(),
                 'project_key': self.project_key,
                 'run_key': self.run_key,
                 'result_count': len(results_payload),
@@ -363,7 +363,7 @@ class QATouchReporter:
                 for nodeid, rec in self.nodeid_outcomes.items()
             ]
             payload = {
-                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'timestamp': datetime.now(UTC).isoformat(),
                 'run_key': self.run_key,
                 'project_key': self.project_key,
                 'env': os.environ.get('ENV', 'unknown'),
@@ -430,7 +430,7 @@ class QATouchReporter:
         if translated > 0:
             log.info(f'QA Touch: Translated {translated} case_keys to run_keys (API-created run)')
 
-        timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+        timestamp = datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')
         comment = f'Automated upload from Playwright run at {timestamp}'
 
         endpoint_label = 'playwright' if self.use_playwright_endpoint else 'legacy'

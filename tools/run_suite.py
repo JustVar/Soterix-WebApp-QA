@@ -39,13 +39,14 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / '.env')
 
 from tools.qatouch_client import QATouchClient
@@ -77,7 +78,7 @@ def _resolve_template_key(suite: str) -> str:
 
 
 def _build_run_name(suite: str, env: str) -> str:
-    stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%MZ')
+    stamp = datetime.now(UTC).strftime('%Y-%m-%dT%H:%MZ')
     return f'{suite.capitalize()} - {env} - {stamp}'
 
 
@@ -161,7 +162,7 @@ def _post_run_bug_filing(suite: str, env_name: str) -> None:
     # 1. Update flaky_tests.json so the bug creator's confidence/consecutive
     #    gates see the latest run in history.
     from tools.update_failure_history import load_db, save_db, update_history
-    ts = datetime.now(timezone.utc).isoformat()
+    ts = datetime.now(UTC).isoformat()
     history_input = {}
     for rec in records:
         nodeid = rec.get('nodeid')
