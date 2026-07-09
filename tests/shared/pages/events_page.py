@@ -121,22 +121,31 @@ class EventsPage:
 
         MUI Select renders options in a portal as li[role='option'] inside
         a ul[role='listbox']. The invisible backdrop blocks other elements.
-        Pass None to select the first available site.
+        Pass None to select the first available site using keyboard navigation.
         """
         self.site_dropdown.click()
+        self.page.wait_for_timeout(1000)
 
         # Wait for the MUI Menu listbox to appear
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=20000)
+        self.page.wait_for_timeout(1500)
 
         if site_name:
+            # Find the option by name
             option = listbox.locator(
                 f"li[role='option']:has-text('{site_name}')"
             ).first
+            option.focus()
+            self.page.wait_for_timeout(500)
+            option.evaluate("el => el.click()")  # Use JS click instead
         else:
-            option = listbox.locator("li[role='option']").first
-        option.click()
-        self.page.wait_for_timeout(1000)
+            # Use keyboard to navigate to first option
+            self.page.keyboard.press("Home")
+            self.page.wait_for_timeout(500)
+            self.page.keyboard.press("Enter")
+
+        self.page.wait_for_timeout(2000)
 
     def select_camera(self, site_name: str, camera_name: str,
                       location_name: str = None):
