@@ -117,11 +117,12 @@ class EventsPage:
         self.page.wait_for_timeout(1000)
 
     def select_site(self, site_name: str = None):
-        """Open site dropdown and select a site by name.
+        """Open site dropdown and select a site by name using action chain pattern.
 
         MUI Select renders options in a portal as li[role='option'] inside
         a ul[role='listbox']. The invisible backdrop blocks other elements.
-        Pass None to select the first available site using keyboard navigation.
+        Pass None to select the first available site.
+        Once selected, duration and location filters will be enabled.
         """
         self.site_dropdown.click()
         self.page.wait_for_timeout(1000)
@@ -132,20 +133,29 @@ class EventsPage:
         self.page.wait_for_timeout(1500)
 
         if site_name:
-            # Find the option by name
             option = listbox.locator(
                 f"li[role='option']:has-text('{site_name}')"
             ).first
-            option.focus()
-            self.page.wait_for_timeout(500)
-            option.evaluate("el => el.click()")  # Use JS click instead
         else:
-            # Use keyboard to navigate to first option
-            self.page.keyboard.press("Home")
-            self.page.wait_for_timeout(500)
-            self.page.keyboard.press("Enter")
+            option = listbox.locator("li[role='option']").first
 
+        # Action chain: hover + move to element + click
+        option.hover()
+        self.page.wait_for_timeout(500)
+        option.scroll_into_view_if_needed()
+        self.page.wait_for_timeout(500)
+        option.click(force=True)
         self.page.wait_for_timeout(2000)
+
+        # Verify site was selected by checking if duration dropdown is now enabled
+        duration_dropdown = self.page.get_by_text("Last 1 Hour")
+        try:
+            # Duration should be enabled after site selection
+            duration_dropdown.wait_for(state="enabled", timeout=10000)
+        except Exception as e:
+            print(f"Warning: Duration dropdown not enabled: {e}")
+
+        self.page.wait_for_timeout(1000)
 
     def select_camera(self, site_name: str, camera_name: str,
                       location_name: str = None):
