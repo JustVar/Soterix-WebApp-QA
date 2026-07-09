@@ -1,0 +1,94 @@
+[tool.ruff]
+# Project-wide line length. Long enough to keep test descriptions readable
+# but short enough to avoid the unreadable 200-char one-liners.
+line-length = 100
+target-version = "py311"
+
+# Skip generated / archived / vendor content.
+exclude = [
+    "legacy",
+    "legacy-selenium-tests",
+    "venv",
+    ".venv",
+    "build",
+    "dist",
+    "config/audit_reports",
+    "config/qatouch_snapshots",
+    "docs/archive",
+    "verification_output",
+    "logs",
+]
+
+[tool.ruff.lint]
+# Curated rule set - leans Playwright/pytest-aware while staying pragmatic.
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes (undefined names, unused imports)
+    "I",      # isort (import ordering)
+    "B",      # flake8-bugbear (likely bugs)
+    "UP",     # pyupgrade (modern syntax)
+    "SIM",    # flake8-simplify
+    "RUF",    # Ruff-specific
+    "PT",     # flake8-pytest-style (fixture / parametrize / mark conventions)
+    "T20",    # flake8-print (catches stray print() in test/library code)
+    "BLE",    # flake8-blind-except (no `except Exception` / bare except)
+    "ARG",    # flake8-unused-arguments
+    "RET",    # flake8-return (return-statement consistency)
+    "LOG",    # flake8-logging-format
+    "ASYNC",  # flake8-async (catches Playwright async/sync confusion)
+]
+
+ignore = [
+    "E501",    # line-too-long - let formatter handle wrapping, don't error on it
+    "B008",    # function call in default arg - pytest fixtures legitimately do this
+    "SIM108",  # ternary over if/else - readability call, often hurts test clarity
+    "PT011",   # pytest.raises(Exception) too broad - sometimes intentional in negative tests
+    "PT006",   # parametrize argnames style - tuple vs list, low value
+    "RUF012",  # mutable class attrs need ClassVar - noisy for POMs that define `page.locator(...)` at class level
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files use plenty of patterns that look bad in production code but are
+# idiomatic in pytest + Playwright suites.
+"tests/**/*.py" = [
+    "F401",   # unused import (conftest / fixtures discovered by attribute)
+    "F841",   # assigned but never used (debugging artifacts in test bodies)
+    "ARG001", # unused fixture (pytest discovers via parameter name)
+    "ARG002", # unused method argument (self in test methods, fixtures on class tests)
+    "ARG005", # unused lambda argument (common in helper inline lambdas)
+    "B011",   # do not assert False - test code uses this for "must not reach here"
+    "PT004",  # fixture does not return value - applies to autouse fixtures
+    "PT005",  # fixture returns value but underscore-prefixed - naming convention only
+    "PT012",  # pytest.raises() block too broad - fine in tests
+    "T201",   # print() statements - useful when debugging a single test
+]
+"conftest.py" = [
+    "F401",   # conftest re-exports fixtures by import
+    "F811",   # redefinition for fixture overrides
+]
+"tools/**/*.py" = [
+    "T201",   # CLI tools legitimately use print() for output
+    "BLE001", # tools may catch broad Exception when reporting to operator
+]
+"plugins/**/*.py" = [
+    "ARG002", # pytest plugin hooks have many unused-arg signatures
+]
+"**/discover_*.py" = [
+    "T201",   # discovery scripts print findings
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tests", "tools", "plugins", "config"]
+combine-as-imports = true
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false        # `@pytest.fixture` not `@pytest.fixture()`
+mark-parentheses = false           # `@pytest.mark.smoke` not `@pytest.mark.smoke()`
+parametrize-names-type = "tuple"   # `("a", "b")` not `["a", "b"]`
+parametrize-values-type = "list"
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+docstring-code-format = false
