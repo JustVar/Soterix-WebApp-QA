@@ -8,7 +8,7 @@ from playwright.sync_api import expect
 from tests.shared.pages.events_page import EventsPage
 
 
-SITE_NAME = "Driver Site"
+
 
 
 class TestEventsFilters:
@@ -37,7 +37,7 @@ class TestEventsFilters:
     @pytest.mark.events_filters
     def test_site_selection_shows_site_name(self):
         """Verify selecting a site shows its name in the filter bar."""
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
 
         site_label = self.page.get_by_text(SITE_NAME, exact=False).first
         expect(site_label).to_be_visible(timeout=5000)
@@ -52,7 +52,7 @@ class TestEventsFilters:
 
         Rules may only populate after a site is selected.
         """
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.page.wait_for_timeout(2000)
 
         rules = self.events.get_rule_options()
@@ -63,7 +63,7 @@ class TestEventsFilters:
     @pytest.mark.events_filters
     def test_search_intrusion_detection(self):
         """Verify searching with Intrusion Detection rule returns results."""
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.events.select_rule("Intrusion Detection")
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
@@ -81,7 +81,7 @@ class TestEventsFilters:
         Intrusion Detection. Soft assertion since some rules may have
         no events in the time range.
         """
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.page.wait_for_timeout(2000)
 
         rules = self.events.get_rule_options()
@@ -113,7 +113,7 @@ class TestEventsFilters:
     ])
     def test_search_by_duration(self, duration_text, label_check):
         """Verify searching with different duration options works."""
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.events.select_duration(duration_text)
 
         # Verify duration label is visible
@@ -133,7 +133,7 @@ class TestEventsFilters:
     @pytest.mark.events_filters
     def test_rule_and_duration_combined(self):
         """Verify combining a specific rule and duration filters together."""
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.events.select_rule("Intrusion Detection")
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
@@ -146,7 +146,7 @@ class TestEventsFilters:
     @pytest.mark.events_filters
     def test_change_duration_and_re_search(self):
         """Verify changing duration between searches works."""
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
         assert self.events.get_event_count() > 0, "Expected results for Last 7"
@@ -164,7 +164,7 @@ class TestEventsFilters:
     @pytest.mark.events_filters
     def test_pin_multiple_events(self):
         """Verify pinning multiple events increments the counter."""
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
 
@@ -190,7 +190,7 @@ class TestEventsFilters:
         Note: Unpinning requires re-hovering an already-pinned event which
         has different hover state. This test verifies the counter tracks correctly.
         """
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
 
@@ -212,7 +212,7 @@ class TestEventsFilters:
     @pytest.mark.events_filters
     def test_event_results_have_thumbnails(self):
         """Verify event results display thumbnail images."""
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
 

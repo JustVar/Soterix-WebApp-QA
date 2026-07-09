@@ -23,8 +23,8 @@ class TestAdminUsers:
                 self.page.wait_for_timeout(2000)
                 if self.admin.options_icon.count() > 0:
                     self.admin.delete_user()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete user '{search_text}': {e}")
 
     @pytest.mark.ui
     @pytest.mark.admin

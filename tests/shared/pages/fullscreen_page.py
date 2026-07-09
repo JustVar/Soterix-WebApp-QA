@@ -114,9 +114,15 @@ class FullScreenPage:
         return self.bookmark_items.count() > 0
 
     def play_bookmark(self, index: int = 0):
-        """Click a bookmark to play it."""
+        """Click a bookmark to navigate to its snapshot position.
+
+        Flow: Click bookmark -> Navigate to timestamp -> Wait for stream to load
+        """
         self.bookmark_items.nth(index).click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1500)
+
+        # Wait for the stream to load at the bookmark's position
+        self.wait_for_stream_loaded(timeout=30000)
 
     def open_bookmark_options(self, index: int = 0):
         """Open the 3-dot options menu on a specific bookmark."""
@@ -188,5 +194,6 @@ class FullScreenPage:
 
     def verify_bookmark_deleted(self, bookmark_name: str, timeout: int = 10000):
         """Verify a bookmark with the given name is no longer visible."""
-        deleted_element = self.page.locator(f"text={bookmark_name}")
+        # Target the bookmark item container to avoid strict mode violations
+        deleted_element = self.bookmark_items.filter(has_text=bookmark_name)
         deleted_element.wait_for(state="hidden", timeout=timeout)

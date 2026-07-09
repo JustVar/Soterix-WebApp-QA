@@ -48,6 +48,15 @@ def pytest_addoption(parser: Any) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+def step_capture():
+    """Fallback no-op step_capture fixture when --verify-mode is not active.
+
+    Overridden by VerificationCollector.step_capture when --verify-mode is on.
+    """
+    return StepCapture(active=False)
+
+
 def pytest_configure(config: Any) -> None:
     enabled = config.getoption('--verify-mode', default=False)
     if not enabled:

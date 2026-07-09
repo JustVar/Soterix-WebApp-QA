@@ -30,7 +30,7 @@ def test_add_bookmark(authenticated_page):
         "[class*='video_container'][class*='new_video_player']"
     )
     if video_tiles.count() == 0:
-        views.expand_site_and_show_cameras("Driver Site")
+        views.expand_site_and_show_cameras(None)
         page.wait_for_timeout(500)
         views.add_first_camera_via_checkbox()
         page.wait_for_timeout(3000)
@@ -111,11 +111,15 @@ class TestViewsBookmarks:
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
     def test_play_bookmark(self):
-        """Verify clicking a bookmark plays it."""
+        """Verify clicking a bookmark navigates to that snapshot position."""
         self._ensure_bookmarks_panel_open()
 
+        # Click the bookmark to navigate to its position
         self.fs.play_bookmark(0)
-        expect(self.fs.play_button).to_be_visible(timeout=60000)
+
+        # Verify the stream loaded and we're in archive mode (stream is available)
+        assert self.fs.is_streaming(), "Stream should be available after clicking bookmark"
+        assert not self.fs.is_live_mode(), "Should be in archive mode after clicking bookmark"
 
     @pytest.mark.ui
     @pytest.mark.bookmark

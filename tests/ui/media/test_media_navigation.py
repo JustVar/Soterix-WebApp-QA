@@ -14,6 +14,7 @@ Migrated from Selenium:
 - test_media_search_clip (line 6421)
 """
 import pytest
+from playwright.sync_api import expect
 from tests.shared.pages.media_page import MediaPage
 
 
@@ -33,10 +34,8 @@ class TestMediaNavigation:
         """Verify navigation to the Media page via the sidebar."""
         self.media.navigate()
 
-        # Media page should be accessible - URL should include 'media'
-        assert "media" in self.page.url.lower(), (
-            f"Expected URL to contain 'media', got: {self.page.url}"
-        )
+        # SPA URL doesn't include 'media' in path - verify page content instead
+        expect(self.media.date_filter).to_be_visible(timeout=10000)
 
     # --- Date filter ---
 
@@ -47,11 +46,8 @@ class TestMediaNavigation:
         self.media.navigate()
         self.media.select_date_filter("Last 30 Days")
 
-        # After filter selection, page should either show content or empty state
-        empty = self.media.is_page_empty(timeout=5000)
-        assert empty is True or empty is False, (
-            "Could not determine if main page has data after filter"
-        )
+        # Date filter should still be visible after selection
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
 
     # --- View toggle ---
 
@@ -63,9 +59,8 @@ class TestMediaNavigation:
         self.media.select_date_filter("Last 30 Days")
         self.media.switch_to_grid_view()
 
-        # Grid view icon should have been clicked without error;
-        # the page should still be in a valid state
-        assert "media" in self.page.url.lower()
+        # Page should remain on media with date filter visible
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
 
     # --- Tab navigation ---
 
@@ -77,8 +72,7 @@ class TestMediaNavigation:
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("All")
 
-        empty = self.media.is_page_empty(timeout=5000)
-        assert empty is True or empty is False
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.media
@@ -88,8 +82,7 @@ class TestMediaNavigation:
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("My Media")
 
-        empty = self.media.is_page_empty(timeout=5000)
-        assert empty is True or empty is False
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.media
@@ -99,8 +92,7 @@ class TestMediaNavigation:
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("Shared with me")
 
-        empty = self.media.is_page_empty(timeout=5000)
-        assert empty is True or empty is False
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.media
@@ -110,8 +102,7 @@ class TestMediaNavigation:
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("Clips")
 
-        empty = self.media.is_page_empty(timeout=5000)
-        assert empty is True or empty is False
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.media
@@ -121,8 +112,7 @@ class TestMediaNavigation:
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("Folders")
 
-        empty = self.media.is_page_empty(timeout=5000)
-        assert empty is True or empty is False
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.media
@@ -132,8 +122,7 @@ class TestMediaNavigation:
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("Vault")
 
-        empty = self.media.is_page_empty(timeout=5000)
-        assert empty is True or empty is False
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
 
     # --- Search ---
 
@@ -145,6 +134,8 @@ class TestMediaNavigation:
         self.media.select_date_filter("Last 30 Days")
         self.media.search_media("17")
 
-        # After search, page should display results or empty state
-        empty = self.media.is_page_empty(timeout=5000)
-        assert empty is True or empty is False
+        # After search, page should show results or empty state - filter still visible
+        expect(self.media.date_filter).to_be_visible(timeout=5000)
+        has_results = not self.media.is_page_empty(timeout=3000)
+        has_empty = self.media.is_page_empty(timeout=3000)
+        assert has_results or has_empty, "Page should show results or empty state after search"

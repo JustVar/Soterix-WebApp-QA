@@ -57,8 +57,8 @@ class TestInsightsWidgetCreate:
         for name in reversed(self._created_widgets):
             try:
                 self.insights.delete_widget(name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete widget '{name}': {e}")
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -93,8 +93,8 @@ class TestInsightsWidgetOperations:
         for name in reversed(self._created_widgets):
             try:
                 self.insights.delete_widget(name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete widget '{name}': {e}")
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -111,7 +111,7 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         self._created_widgets.append(widget_name)
-        self.page.wait_for_timeout(5000)
+        self.page.wait_for_timeout(2000)
 
         self.insights.view_widget(widget_name)
 
@@ -130,7 +130,7 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         self._created_widgets.append(widget_name)
-        self.page.wait_for_timeout(5000)
+        self.page.wait_for_timeout(2000)
 
         self.insights.download_report(widget_name)
 
@@ -149,7 +149,7 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         # Not added to _created_widgets - deletion is this test's purpose
-        self.page.wait_for_timeout(5000)
+        self.page.wait_for_timeout(2000)
 
         deleted = self.insights.delete_widget(widget_name)
         assert deleted, f"Widget '{widget_name}' should be deleted"

@@ -323,11 +323,6 @@ def test_site_id(user_api, camera_api, login_data):
     - If none found, probe a small range of site ids with `camera_api.get_camera_tree`
       and return the first site id that succeeds.
     """
-    # Prefer known QA site for QA environment to speed up tests
-    import os as _os
-    if _os.environ.get("ENV", "").lower() == "qa":
-        return 110
-
     sites = site_helper.get_available_sites(user_api)
     if sites:
         first = sites[0]

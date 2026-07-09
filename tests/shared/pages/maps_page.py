@@ -81,11 +81,13 @@ class MapsPage:
         options = self.dropdown_options.locator("p, div, span")
         texts = []
         for i in range(options.count()):
-            text = options.nth(i).inner_text().strip()
+            # inner_text() may include count badges after a newline (e.g. "Site Name\n0")
+            text = options.nth(i).inner_text().strip().split('\n')[0].strip()
             if text and text not in texts:
                 texts.append(text)
 
-        self.page.keyboard.press("Escape")
+        # Close by toggling the dropdown (Escape may navigate away in some SPAs)
+        self.site_dropdown.click()
         self.page.wait_for_timeout(500)
         return texts
 

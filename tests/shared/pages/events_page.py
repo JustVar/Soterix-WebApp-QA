@@ -116,11 +116,12 @@ class EventsPage:
         option.click()
         self.page.wait_for_timeout(1000)
 
-    def select_site(self, site_name: str):
+    def select_site(self, site_name: str = None):
         """Open site dropdown and select a site by name.
 
         MUI Select renders options in a portal as li[role='option'] inside
         a ul[role='listbox']. The invisible backdrop blocks other elements.
+        Pass None to select the first available site.
         """
         self.site_dropdown.click()
 
@@ -128,10 +129,12 @@ class EventsPage:
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=20000)
 
-        # Click the matching option inside the listbox
-        option = listbox.locator(
-            f"li[role='option']:has-text('{site_name}')"
-        ).first
+        if site_name:
+            option = listbox.locator(
+                f"li[role='option']:has-text('{site_name}')"
+            ).first
+        else:
+            option = listbox.locator("li[role='option']").first
         option.click()
         self.page.wait_for_timeout(1000)
 

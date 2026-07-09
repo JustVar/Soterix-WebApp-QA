@@ -33,8 +33,8 @@ class TestChats:
                         if confirm.count() > 0:
                             confirm.click()
                             self.page.wait_for_timeout(2000)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete group '{group_name}': {e}")
 
     @pytest.mark.ui
     @pytest.mark.chats

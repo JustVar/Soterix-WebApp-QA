@@ -40,8 +40,8 @@ class TestViewsSubtabs:
         for name in reversed(self._saved_view_names):
             try:
                 self._delete_saved_view(name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete view '{name}': {e}")
         # Cleanup: close extra tabs (only first tab should remain)
         try:
             tabs = self.page.locator("button.tabItem")
@@ -55,8 +55,8 @@ class TestViewsSubtabs:
                     self.page.wait_for_timeout(500)
                 else:
                     break
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Cleanup: failed to close extra tabs: {e}")
 
     # =========================================================================
     # DEVICES SUBTAB - Camera thumbnails from site tree
@@ -81,7 +81,7 @@ class TestViewsSubtabs:
         assert initial_tiles > 0, "No empty tiles available"
 
         # Devices is default tab - expand site and show cameras
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(400)
 
         # Find camera thumbnail and add via checkbox
@@ -118,7 +118,7 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles available"
 
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(400)
 
         camera = self.page.locator(".cameraThumbnailWrapper").first
@@ -273,7 +273,8 @@ class TestViewsSubtabs:
         self.page.wait_for_timeout(500)
 
         # Click site to reveal maps
-        site = self.page.locator("p:text('Driver Site'), span:text('Driver Site')").first
+        # Expand the first available site to show maps
+        self.views.click_site(None)
         site.wait_for(state="visible", timeout=10000)
         site.click()
         self.page.wait_for_timeout(500)
@@ -299,7 +300,7 @@ class TestViewsSubtabs:
             if loader.count() > 0:
                 loader.wait_for(state="hidden", timeout=60000)
         except Exception:
-            pass
+            pass  # Loader may not appear for cached maps
 
         new_tiles = self.views.get_available_tile_count()
         map_content = self.page.locator("[class*='leaflet'], iframe, [class*='map-container']")
@@ -325,7 +326,8 @@ class TestViewsSubtabs:
         self.views.open_maps()
         self.page.wait_for_timeout(500)
 
-        site = self.page.locator("p:text('Driver Site'), span:text('Driver Site')").first
+        # Expand the first available site to show maps
+        self.views.click_site(None)
         site.click()
         self.page.wait_for_timeout(500)
 
@@ -600,7 +602,7 @@ class TestViewsSubtabs:
         self.page.wait_for_timeout(250)
 
         # Add a camera
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(500)
         self.views.add_first_camera_via_checkbox()
         self.page.wait_for_timeout(500)
@@ -654,8 +656,8 @@ class TestViewsSubtabs:
                 self.page.locator("text=Successfully deleted").wait_for(
                     state="visible", timeout=60000
                 )
-        except Exception:
-            pass  # Cleanup is best-effort
+        except Exception as e:
+            print(f"Cleanup: failed to delete view '{view_name}': {e}")
 
     def _visible_drag(self, source, target):
         """Helper: Perform a visible drag operation with highlights.
@@ -671,14 +673,14 @@ class TestViewsSubtabs:
         try:
             source.evaluate("el => { el.style.outline = '4px solid red'; el.style.outlineOffset = '2px'; }")
         except Exception:
-            pass
+            pass  # Visual highlight is non-essential
         self.page.wait_for_timeout(400)
 
         # Highlight target (green border - where we're dropping)
         try:
             target.evaluate("el => { el.style.outline = '4px solid lime'; el.style.outlineOffset = '2px'; }")
         except Exception:
-            pass
+            pass  # Visual highlight is non-essential
         self.page.wait_for_timeout(400)
 
         # Perform the drag
@@ -689,8 +691,8 @@ class TestViewsSubtabs:
         try:
             source.evaluate("el => { el.style.outline = ''; el.style.outlineOffset = ''; }")
         except Exception:
-            pass
+            pass  # Element may have been detached after drag
         try:
             target.evaluate("el => { el.style.outline = ''; el.style.outlineOffset = ''; }")
         except Exception:
-            pass
+            pass  # Element may have been detached after drag

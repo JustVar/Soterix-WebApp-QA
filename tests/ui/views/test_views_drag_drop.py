@@ -19,8 +19,8 @@ class TestViewsDragDrop:
         for name in reversed(self._saved_view_names):
             try:
                 self._delete_saved_view_safe(name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete view '{name}': {e}")
         # Cleanup: close extra tabs (only first tab should remain)
         try:
             tabs = self.page.locator("button.tabItem")
@@ -34,8 +34,8 @@ class TestViewsDragDrop:
                     self.page.wait_for_timeout(500)
                 else:
                     break
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Cleanup: failed to close extra tabs: {e}")
 
     def _delete_saved_view_safe(self, view_name):
         """Delete a saved view from the My Views panel."""
@@ -59,7 +59,7 @@ class TestViewsDragDrop:
     def test_drag_camera_to_tile(self):
         """Verify a camera thumbnail can be dragged to an empty tile."""
         # Expand Driver Site and show cameras
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(1000)
 
         # Count available tiles before drag
@@ -93,7 +93,7 @@ class TestViewsDragDrop:
     def test_drag_camera_by_name_to_tile(self):
         """Verify a specific camera can be dragged to a tile by name."""
         # Expand Driver Site and show cameras
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(1000)
 
         # Get available cameras
@@ -149,7 +149,7 @@ class TestViewsDragDrop:
         self.page.wait_for_timeout(250)
 
         # Add a camera to the view
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(500)
         self.views.add_first_camera_via_checkbox()
         self.page.wait_for_timeout(500)
@@ -200,7 +200,7 @@ class TestViewsDragDrop:
 
         # Find and drag a location (Driver Site) to a tile
         try:
-            self.views.drag_location_to_tile("Driver Site", tile_index=0)
+            self.views.drag_location_to_tile(None, tile_index=0)
             self.page.wait_for_timeout(2000)
         except Exception as e:
             pytest.skip(f"Location drag not supported or failed: {e}")
@@ -232,9 +232,9 @@ class TestViewsDragDrop:
             self.page.wait_for_timeout(1500)
 
             # Step 2: Click on site to expand maps (e.g., "Driver Site")
-            site_element = self.page.locator("p:text('Driver Site'), span:text('Driver Site')").first
-            site_element.wait_for(state="visible", timeout=10000)
-            site_element.click()
+            # Expand the first available site to show maps
+            self.views.click_site(None)
+            self.page.wait_for_timeout(500)
             self.page.wait_for_timeout(1500)
 
             # Step 3: Find map thumbnails (same class as cameras)
@@ -267,7 +267,7 @@ class TestViewsDragDrop:
                 if loader.count() > 0 and loader.first.is_visible():
                     loader.wait_for(state="hidden", timeout=60000)
             except Exception:
-                pass
+                pass  # Loader may not appear for cached maps
 
             # Verify: tile count should decrease or map content visible
             new_tile_count = self.views.get_available_tile_count()
@@ -358,7 +358,7 @@ class TestViewsDragDrop:
     def test_multiple_cameras_to_multiple_tiles(self):
         """Verify multiple cameras can be added to multiple tiles."""
         # Expand site and show cameras
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(1000)
 
         # Get available cameras and tiles

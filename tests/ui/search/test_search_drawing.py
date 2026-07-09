@@ -12,7 +12,7 @@ from playwright.sync_api import expect
 from tests.shared.pages.search_page import SearchPage
 
 
-SITE_NAME = "Driver Site"
+
 CAMERA_NAME = "Hanwha_6"
 
 

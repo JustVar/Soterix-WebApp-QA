@@ -8,7 +8,7 @@ from playwright.sync_api import expect
 from tests.shared.pages.search_page import SearchPage
 
 
-SITE_NAME = "Driver Site"
+
 
 
 class TestSearchFilters:
@@ -81,7 +81,7 @@ class TestSearchFilters:
         self.search.navigate()
         self.search.wait_for_page_load()
 
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
 
         # The search button should be accessible after filter setup
         expect(self.search.search_button).to_be_visible(timeout=5000)

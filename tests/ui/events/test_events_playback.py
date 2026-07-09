@@ -11,7 +11,7 @@ from tests.shared.pages.events_page import EventsPage
 
 
 # Site name used across event tests
-SITE_NAME = "Driver Site"
+
 
 
 class TestEventsPlayback:
@@ -30,7 +30,7 @@ class TestEventsPlayback:
         # Navigate and search (default = all cameras)
         self.events.navigate()
         self.events.wait_for_page_load()
-        self.events.select_site(SITE_NAME)
+        self.events.select_site(None)
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
 

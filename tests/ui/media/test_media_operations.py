@@ -36,8 +36,8 @@ class TestMediaClipOperations:
         for action in reversed(self._cleanup_actions):
             try:
                 action()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: action failed: {e}")
 
     def _navigate_to_clips(self):
         """Navigate to Media page and switch to Clips tab."""
@@ -66,14 +66,8 @@ class TestMediaClipOperations:
         self.media.select_clip_by_index(1)
         self.media.group_clips()
 
-        def _cleanup_folder():
-            self.media.navigate()
-            self.media.select_date_filter("Last 30 Days")
-            self.media.click_tab("Folders")
-            if not self.media.is_page_empty(timeout=5000):
-                self.media.delete_item()
-
-        self._cleanup_actions.append(_cleanup_folder)
+        # Folder cleanup is intentionally deferred to test_clip_move_to_folder
+        # so the folder is available for the move operation.
         self.media.click_tab("Clips")
 
     # --- Clip rename ---
@@ -112,9 +106,8 @@ class TestMediaClipOperations:
     def test_clip_move_to_folder(self):
         """Verify a clip can be moved to an existing folder.
 
-        Requires at least one folder to exist (created by clip grouping
-        or another operation). Skips if no folders are available.
-        Cleanup: N/A -- no move-back method available in page object.
+        Uses the folder created by test_clip_grouping (no cleanup there).
+        Cleans up the folder after the move.
         """
         self._navigate_to_clips()
         self._skip_if_empty()
@@ -123,6 +116,15 @@ class TestMediaClipOperations:
         moved = self.media.move_clip_to_folder()
         if not moved:
             pytest.skip("No folders available to move clip into")
+
+        def _cleanup_folder():
+            self.media.navigate()
+            self.media.select_date_filter("Last 30 Days")
+            self.media.click_tab("Folders")
+            if not self.media.is_page_empty(timeout=5000):
+                self.media.delete_item()
+
+        self._cleanup_actions.append(_cleanup_folder)
 
     # --- Clip create link ---
 
@@ -177,8 +179,8 @@ class TestMediaFolderOperations:
         for action in reversed(self._cleanup_actions):
             try:
                 action()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: action failed: {e}")
 
     def _navigate_to_folders(self):
         """Navigate to Media page and switch to Folders tab."""

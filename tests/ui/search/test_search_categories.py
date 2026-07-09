@@ -20,7 +20,7 @@ from playwright.sync_api import expect
 from tests.shared.pages.search_page import SearchPage
 
 
-SITE_NAME = "Driver Site"
+
 
 
 class TestSearchCategories:
@@ -51,7 +51,7 @@ class TestSearchCategories:
         self.step_capture.mark(2, "Select Category = 'Person' from the category dropdown")
         self.search.select_description_gender("Male")
         self.step_capture.mark(3, "Select Description = 'Male' from the gender dropdown")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.step_capture.mark(4, "Select Location = 'Driver Site' and cameras")
         self.search.select_duration_by_index(5)
         self.step_capture.mark(5, "Select duration filter (index 5)")
@@ -70,7 +70,7 @@ class TestSearchCategories:
 
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -87,7 +87,7 @@ class TestSearchCategories:
 
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -114,7 +114,7 @@ class TestSearchCategories:
         self.search.wait_for_page_load()
 
         self.search.select_category("Vehicle")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -133,7 +133,7 @@ class TestSearchCategories:
         self.search.wait_for_page_load()
 
         self.search.select_category("Vehicle")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -153,7 +153,7 @@ class TestSearchCategories:
         self.search.wait_for_page_load()
 
         self.search.select_category("Event")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -169,7 +169,7 @@ class TestSearchCategories:
         self.search.wait_for_page_load()
 
         self.search.select_category("Event")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 

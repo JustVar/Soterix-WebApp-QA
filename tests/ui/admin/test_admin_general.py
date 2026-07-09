@@ -9,7 +9,7 @@ from playwright.sync_api import expect
 from tests.shared.pages.admin_page import AdminPage
 
 
-SITE_NAME = "Driver Site"
+
 
 
 class TestAdminGeneral:

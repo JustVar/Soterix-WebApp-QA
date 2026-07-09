@@ -2,7 +2,7 @@
 import pytest
 from tests.shared.pages.views_page import ViewsPage
 
-SITE_NAME = "Driver Site"
+SITE_NAME = None
 
 
 @pytest.mark.ui

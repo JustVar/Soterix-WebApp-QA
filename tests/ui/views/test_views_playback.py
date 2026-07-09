@@ -10,7 +10,7 @@ from tests.shared.pages.views_page import ViewsPage
 from tests.shared.pages.fullscreen_page import FullScreenPage
 
 
-SITE_NAME = "Driver Site"
+SITE_NAME = None
 
 
 class TestViewsPlayback:

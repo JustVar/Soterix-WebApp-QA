@@ -9,7 +9,7 @@ from playwright.sync_api import expect
 from tests.shared.pages.search_page import SearchPage
 
 
-SITE_NAME = "Driver Site"
+
 
 
 class TestSearchDeeper:
@@ -98,7 +98,7 @@ class TestSearchDeeper:
         """
         self.search.select_category("Person")
         self.search.select_description_gender("Female")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
 
         has_results = self.search.execute_search_safe(timeout=60000)
@@ -117,7 +117,7 @@ class TestSearchDeeper:
         """Verify a broad Person search returns multiple results."""
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -131,7 +131,7 @@ class TestSearchDeeper:
         """Verify Person search result images have valid src attributes."""
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -152,7 +152,7 @@ class TestSearchDeeper:
     def test_event_search_by_duration(self, duration_text):
         """Verify Event search with different durations completes."""
         self.search.select_category("Event")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration(duration_text)
 
         has_results = self.search.execute_search_safe(timeout=60000)
@@ -167,7 +167,7 @@ class TestSearchDeeper:
     def test_event_result_images_valid(self):
         """Verify Event search result images are visible."""
         self.search.select_category("Event")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -186,7 +186,7 @@ class TestSearchDeeper:
         # First search: Person
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -208,7 +208,7 @@ class TestSearchDeeper:
         """Verify changing duration between searches works."""
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration("Last 7 Days")
         self.search.execute_search(timeout=60000)
         assert self.search.get_result_count() > 0, "Expected results for Last 7 Days"
@@ -228,7 +228,7 @@ class TestSearchDeeper:
         """Verify search button is clickable after setting all filters."""
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
 
         expect(self.search.search_button).to_be_visible(timeout=5000)
@@ -240,7 +240,7 @@ class TestSearchDeeper:
         """Verify get_result_count() matches visible result images."""
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 

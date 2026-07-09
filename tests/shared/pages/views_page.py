@@ -124,13 +124,47 @@ class ViewsPage:
         # Wait briefly for the tile/UI to update
         self.page.wait_for_timeout(500)
 
-    def add_first_camera_via_checkbox(self):
-        """Select the first camera by revealing its checkbox and clicking it.
+    def add_first_camera_via_checkbox(self, camera_name: str = None):
+        """Select a camera by revealing its checkbox and clicking it.
 
-        This is a convenience wrapper when the specific camera name is not needed.
+        Args:
+            camera_name: Specific camera name to select. If None, uses configured test_camera_name or first camera.
         """
-        # Find the first camera thumbnail
-        camera = self.page.locator(".cameraThumbnailWrapper").first
+        # Use configured camera name if not specified
+        if camera_name is None:
+            from config.base_config import config
+            camera_name = config.get("test_camera_name")
+
+        # Find camera thumbnail
+        camera_count = self.page.locator(".cameraThumbnailWrapper").count()
+        print(f"DEBUG add_first_camera_via_checkbox: Found {camera_count} camera(s), looking for: {camera_name}")
+
+        if camera_count == 0:
+            raise RuntimeError("No cameras found in sidebar. User may not have access to any sites.")
+
+        # Try to find camera by name if specified
+        camera = None
+        available_cameras = []
+        if camera_name:
+            # Search for camera with matching text
+            cameras = self.page.locator(".cameraThumbnailWrapper")
+            for i in range(camera_count):
+                cam = cameras.nth(i)
+                cam_text = cam.inner_text().strip()
+                available_cameras.append(cam_text)
+                if camera_name.lower() in cam_text.lower():
+                    camera = cam
+                    print(f"DEBUG add_first_camera_via_checkbox: Found camera by name: {camera_name}")
+                    break
+
+        # Print available cameras for debugging
+        if available_cameras:
+            print(f"DEBUG add_first_camera_via_checkbox: Available cameras: {available_cameras}")
+
+        # Fallback to first camera if not found by name
+        if camera is None:
+            print(f"DEBUG add_first_camera_via_checkbox: Camera '{camera_name}' not found, using first camera")
+            camera = self.page.locator(".cameraThumbnailWrapper").first
 
         # Hover to reveal the checkbox
         camera.hover()
@@ -511,18 +545,68 @@ class ViewsPage:
         """Click on a site in the left panel to expand it.
 
         Args:
-            site_name: Specific site name, or None to click the first site.
+            site_name: Specific site name, or None to click the first available site.
         """
         if site_name:
             site = self.page.locator(f"text={site_name}").first
+            site.click()
         else:
-            # Click the first site - look for element with camera count badge (icon + number)
-            # Sites show as: [icon] Site Name [camera icon] [count]
-            site = self.page.locator(r"text=/.*Site.*\d+/" ).first
-            if site.count() == 0:
-                # Fallback: any clickable element containing "Site"
-                site = self.page.locator("text=Site").first
-        site.click()
+            # Check if "All Cameras" is already visible - site already expanded
+            if self.page.locator("text=All Cameras").count() > 0:
+                return "all_cameras_already_visible"
+
+            # Use JS to click the first site-like element in the panel.
+            # Sites may be in p/span/div elements, tree nodes, or MUI menu items
+            known_labels = {
+                'Devices', 'My Views', 'Insights', 'Maps', 'All Cameras',
+                'Favorites', 'Search', 'Events', 'Sequences', 'Admin',
+                'Views', 'Chats', 'Dashboard', 'Notifications', 'Settings',
+                'Logout', 'Profile', 'Help', 'Channels', 'Licenses',
+                'Login', 'Media', 'Reports', 'Select Location & Cameras',
+                'More Layouts', 'Layouts', 'Layout',
+            }
+            result = self.page.evaluate("""(knownLabels) => {
+                const exclude = new Set(knownLabels);
+
+                // Try multiple selector patterns to find site elements
+                const selectorPatterns = [
+                    // MUI TreeItem nodes (within tree)
+                    '[role="treeitem"]',
+                    // MUI Menu items
+                    '[role="menuitem"]',
+                    // MUI ListItem
+                    '[role="option"]',
+                    // Standard panel/sidebar p/span/div
+                    '.cameraPanel p', '.leftPanel p', '.sidebarPanel p',
+                    '[class*="camera"] p', '[class*="panel"] p',
+                    '[class*="device"] p', '[class*="sidebar"] p',
+                    // Fallback to all clickable-looking elements
+                    'p', 'span', 'div[role="button"]',
+                ];
+
+                const found = [];
+                for (const selector of selectorPatterns) {
+                    const els = document.querySelectorAll(selector);
+                    if (els.length === 0) continue;
+
+                    for (const el of els) {
+                        const text = (el.innerText || el.textContent || '').trim();
+                        if (text.length >= 2 && text.length <= 100 && el.offsetWidth > 0 && el.offsetHeight > 0) {
+                            if (!found.includes(text)) {
+                                found.push(text);
+                            }
+                            if (!exclude.has(text)) {
+                                el.click();
+                                return {clicked: text, candidates: found.slice(0, 15)};
+                            }
+                        }
+                    }
+                }
+                return {clicked: null, candidates: found.slice(0, 15)};
+            }""", list(known_labels))
+            print(f"DEBUG click_site JS result: {result}")
+            self.page.wait_for_timeout(500)
+            return result
 
     def click_all_cameras(self):
         """Click on 'All Cameras' to show all camera thumbnails."""
@@ -533,45 +617,101 @@ class ViewsPage:
     def expand_site_and_show_cameras(self, site_name: str = None):
         """Expand a site and click All Cameras to show thumbnails.
 
-        Idempotent: skips clicks if cameras are already visible to avoid
-        redundant UI interactions between tests.
+        Flow: Devices tab -> site node -> All Cameras -> thumbnails appear.
+        Idempotent: skips if camera thumbnails are already visible.
+
+        Args:
+            site_name: Specific site name to expand. If None, uses config test_site_name.
         """
-        # Check if cameras are already visible - skip if so
         if self.camera_thumbnails.count() > 0:
+            print(f"DEBUG expand_site_and_show_cameras: Cameras already visible, skipping")
             return  # Already expanded, nothing to do
 
+        # Use configured site name if not specified
+        if site_name is None:
+            from config.base_config import config
+            site_name = config.get("test_site_name")
+            print(f"DEBUG expand_site_and_show_cameras: Using configured site_name={site_name}")
+
+        print(f"DEBUG expand_site_and_show_cameras: Starting site expansion (site_name={site_name})")
+
+        # Step 1: activate Devices panel
+        if self.devices_subtab.count() > 0:
+            self.devices_subtab.click()
+            self.page.wait_for_timeout(1000)
+            print(f"DEBUG expand_site_and_show_cameras: Clicked devices subtab")
+        elif self.devices_tab.count() > 0:
+            self.devices_tab.first.click()
+            self.page.wait_for_timeout(1000)
+            print(f"DEBUG expand_site_and_show_cameras: Clicked devices tab")
+
+        # Step 2: "Select Location & Cameras" is a placeholder button that opens
+        # the site picker - click it first to reveal the site tree
+        select_loc = self.page.locator("text=Select Location & Cameras")
+        if select_loc.count() > 0 and select_loc.first.is_visible():
+            select_loc.first.click()
+            self.page.wait_for_timeout(1500)
+            print(f"DEBUG expand_site_and_show_cameras: Clicked 'Select Location & Cameras'")
+
+        # Step 3: click the first actual site in the now-visible tree
+        print(f"DEBUG expand_site_and_show_cameras: Calling click_site({site_name})")
         self.click_site(site_name)
-        self.page.wait_for_timeout(300)
-        self.click_all_cameras()
+        self.page.wait_for_timeout(1500)
+
+        # Step 4: click "All Cameras" if it appears
+        all_cameras = self.page.locator("text=All Cameras")
+        if all_cameras.count() > 0 and all_cameras.first.is_visible():
+            print(f"DEBUG expand_site_and_show_cameras: Clicking 'All Cameras'")
+            self.click_all_cameras()
+        else:
+            print(f"DEBUG expand_site_and_show_cameras: 'All Cameras' not visible (count={all_cameras.count()})")
+
+        camera_count = self.camera_thumbnails.count()
+        print(f"DEBUG expand_site_and_show_cameras: Final result - {camera_count} cameras visible")
+
         self.page.wait_for_timeout(500)
 
     def add_bookmark_on_tile(self, tile_index: int = 0):
-        """Add a bookmark on a video tile while it is streaming.
+        """Add a bookmark on a video tile in fullscreen mode.
 
-        Hovers the video tile to reveal the three-dot control, clicks it to
-        show the timeline, hovers the timeline, then clicks the bookmark icon.
+        Flow:
+        1. Enter fullscreen on the tile
+        2. Wait for stream to load
+        3. Hover the timeline to reveal bookmark icon
+        4. Click the bookmark icon
         """
-        video_tile = self.page.locator(
-            "[class*='video_container'][class*='new_video_player']"
-        ).nth(tile_index)
+        # Enter fullscreen first (timeline is always available in fullscreen)
+        print(f"DEBUG add_bookmark_on_tile: Entering fullscreen...")
+        self.enter_fullscreen_on_tile(tile_index)
+        self.page.wait_for_timeout(1000)
 
-        video_tile.hover()
-        self.page.wait_for_timeout(500)
+        # Import FullScreenPage for fullscreen operations
+        from tests.shared.pages.fullscreen_page import FullScreenPage
+        fs = FullScreenPage(self.page)
 
-        # Click three-dot menu to reveal timeline controls
-        three_dots = video_tile.locator(".control-small-view")
-        three_dots.click()
-        self.page.wait_for_timeout(2000)
+        # Wait for stream to load
+        print(f"DEBUG add_bookmark_on_tile: Waiting for stream to load in fullscreen...")
+        fs.wait_for_stream_loaded(timeout=30000)
+        print(f"DEBUG add_bookmark_on_tile: Stream loaded!")
 
-        # Hover the timeline bar to reveal bookmark icon
-        timeline = video_tile.locator("#svg-line-2")
+        # In fullscreen, timeline is always available - hover it to reveal bookmark icon
+        print(f"DEBUG add_bookmark_on_tile: Hovering timeline in fullscreen...")
+        timeline = fs.video_container.locator("[class*='timeline'], svg").first
         timeline.hover()
         self.page.wait_for_timeout(500)
 
         # Click the bookmark icon
-        bookmark_icon = video_tile.locator("img[src*='media/Bookmark']")
+        print(f"DEBUG add_bookmark_on_tile: Clicking bookmark icon...")
+        bookmark_icon = fs.video_container.locator("img[src*='Bookmark']")
         bookmark_icon.click()
         self.page.wait_for_timeout(2000)
+        print(f"DEBUG add_bookmark_on_tile: Bookmark added!")
+
+        # Exit fullscreen
+        print(f"DEBUG add_bookmark_on_tile: Exiting fullscreen...")
+        fs.exit_fullscreen()
+        self.page.wait_for_timeout(1000)
+        print(f"DEBUG add_bookmark_on_tile: Done!")
 
     def share_live_view_on_tile(self, email: str, tile_index: int = 0):
         """Share a live view from a video tile via email and copy link.

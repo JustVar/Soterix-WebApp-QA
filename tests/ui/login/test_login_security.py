@@ -8,8 +8,8 @@ def test_sql_injection_attempt(page, base_url):
     lp = LoginPage(page, base_url)
     payload = "' OR 1=1 --"
     lp.login(payload, payload)
-    assert not lp.is_logged_in()
-    assert lp.get_error_message() or True
+    assert not lp.is_logged_in(), "SQL injection payload should not grant access"
+    assert lp.get_error_message(), "Expected error message after SQL injection attempt"
 
 
 @pytest.mark.ui
@@ -17,16 +17,19 @@ def test_xss_attempt(page, base_url):
     lp = LoginPage(page, base_url)
     payload = "<script>alert('XSS')</script>"
     lp.login(payload, "password123")
-    assert not lp.is_logged_in()
-    assert lp.get_error_message() or True
+    assert not lp.is_logged_in(), "XSS payload should not grant access"
+    assert lp.get_error_message(), "Expected error message after XSS attempt"
 
 
 @pytest.mark.ui
 def test_password_too_short(page, base_url):
     lp = LoginPage(page, base_url)
     lp.login("user@example.com", "123")
-    assert not lp.is_logged_in()
-    assert lp.get_error_message() or True
+    assert not lp.is_logged_in(), "Short password should not grant access"
+    # App may not show an explicit error for short passwords - just blocks login
+    assert lp.get_error_message() or lp.is_login_page(), (
+        "Expected error message or to remain on login page for short password"
+    )
 
 
 @pytest.mark.ui
@@ -49,12 +52,15 @@ def test_brute_force_protection(page, base_url):
             protection_detected = True
             break
 
-    # Informational - log result but don't fail if no protection detected
+    # At minimum, the app should still be functional after repeated failures
+    assert lp.get_error_message() or not lp.is_logged_in(), (
+        "After 5 failed attempts, expected error message or login to remain blocked"
+    )
+    # Log whether brute force protection was detected (informational)
     if protection_detected:
-        pass  # Brute force protection detected
+        print("Brute force protection detected (CAPTCHA or lockout)")
     else:
-        # Not a hard failure - some environments don't enforce this
-        pass
+        print("WARNING: No brute force protection detected after 5 failed attempts")
 
 
 @pytest.mark.ui

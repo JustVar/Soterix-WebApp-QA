@@ -20,7 +20,7 @@ class TestViewsFullscreen:
             "[class*='video_container'][class*='new_video_player']"
         )
         if video_tiles.count() == 0:
-            self.views.expand_site_and_show_cameras("Driver Site")
+            self.views.expand_site_and_show_cameras(None)
             self.page.wait_for_timeout(500)
             self.views.add_first_camera_via_checkbox()
             self.page.wait_for_timeout(2000)
