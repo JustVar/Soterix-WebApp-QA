@@ -21,6 +21,7 @@ class TestEventsFilters:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.events = EventsPage(self.page)
+        self.page.reload()
         self.events.navigate()
         self.events.wait_for_page_load()
         yield
@@ -174,6 +175,7 @@ class TestEventsFilters:
     def test_pin_multiple_events(self):
         """Verify pinning multiple events increments the counter."""
         self.events.select_site(None)
+        self.events.select_rule("Intrusion Detection")
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
 
@@ -200,6 +202,7 @@ class TestEventsFilters:
         has different hover state. This test verifies the counter tracks correctly.
         """
         self.events.select_site(None)
+        self.events.select_rule("Intrusion Detection")
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
 
@@ -222,6 +225,7 @@ class TestEventsFilters:
     def test_event_results_have_thumbnails(self):
         """Verify event results display thumbnail images."""
         self.events.select_site(None)
+        self.events.select_rule("Intrusion Detection")
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
 

@@ -117,12 +117,11 @@ class EventsPage:
         self.page.wait_for_timeout(1000)
 
     def select_site(self, site_name: str = None):
-        """Open site dropdown and select a site by name using action chain pattern.
+        """Open site dropdown and select a site by name.
 
-        MUI Select renders options in a portal as li[role='option'] inside
-        a ul[role='listbox']. The invisible backdrop blocks other elements.
-        Pass None to select the first available site.
-        Once selected, duration and location filters will be enabled.
+        MUI Select renders options as li[role='option'] MuiMenuItem elements.
+        Each option has a data-value attribute with the site ID.
+        Pass None to select the first available site (Newtown ActionArea).
         """
         self.site_dropdown.click()
         self.page.wait_for_timeout(1000)
@@ -130,32 +129,26 @@ class EventsPage:
         # Wait for the MUI Menu listbox to appear
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=20000)
-        self.page.wait_for_timeout(1500)
+        self.page.wait_for_timeout(1000)
 
+        # Select option by name or first available (skip "All Sites")
         if site_name:
             option = listbox.locator(
-                f"li[role='option']:has-text('{site_name}')"
+                f"li[role='option']:has(span:has-text('{site_name}'))"
             ).first
         else:
-            option = listbox.locator("li[role='option']").first
+            # Skip first option "All Sites", select second option (Newtown ActionArea)
+            option = listbox.locator("li[role='option']").nth(1)
 
-        # Action chain: hover + move to element + click
-        option.hover()
-        self.page.wait_for_timeout(500)
-        option.scroll_into_view_if_needed()
-        self.page.wait_for_timeout(500)
-        option.click(force=True)
+        # Click the MuiMenuItem (li element) to trigger selection
+        option.click()
+
+        # Wait for dropdown to close (listbox should disappear)
+        # This ensures the state change propagates to the backend
+        listbox.wait_for(state="hidden", timeout=20000)
+
+        # Wait for state to propagate before proceeding
         self.page.wait_for_timeout(2000)
-
-        # Verify site was selected by checking if duration dropdown is now enabled
-        duration_dropdown = self.page.get_by_text("Last 1 Hour")
-        try:
-            # Duration should be enabled after site selection
-            duration_dropdown.wait_for(state="enabled", timeout=10000)
-        except Exception as e:
-            print(f"Warning: Duration dropdown not enabled: {e}")
-
-        self.page.wait_for_timeout(1000)
 
     def select_camera(self, site_name: str, camera_name: str,
                       location_name: str = None):
@@ -329,6 +322,16 @@ class EventsPage:
     def search_events(self, timeout: int = 60000):
         """Click the search button and wait for event results to load."""
         self.search_button.click()
+        self.page.wait_for_timeout(500)
+
+        # Wait for loader to disappear (API call completes)
+        try:
+            if self.loader.count() > 0:
+                self.loader.first.wait_for(state="hidden", timeout=timeout)
+        except Exception:
+            pass
+
+        # Wait for results to appear
         self.event_results.first.wait_for(state="visible", timeout=timeout)
         self.page.wait_for_timeout(2000)
 
@@ -402,7 +405,9 @@ class EventsPage:
         self.page.wait_for_timeout(500)
 
         # Pin icon appears on hover within the overlay
-        pin = self.page.locator("img[src*='roundPinIcon']").first
+        # Find pin icon within the hovered event's container, not globally
+        event_container = event_img.locator("xpath=ancestor::div[1]")
+        pin = event_container.locator("img[src*='roundPinIcon']")
         pin.wait_for(state="visible", timeout=5000)
         pin.click()
         self.page.wait_for_timeout(500)
