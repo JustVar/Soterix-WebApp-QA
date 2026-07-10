@@ -4,6 +4,8 @@ import importlib
 import logging
 import pytest
 from typing import Dict
+from pathlib import Path
+from datetime import datetime
 from config.base_config import config  # dict resolved from ENV
 
 # Register plugins
@@ -374,3 +376,39 @@ def test_channel_ids(discovery_helper, test_site_id):
 
     # fallback
     return [1]
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Send test report via email after session finishes (if configured)."""
+    # Only send if email is configured and report was generated
+    if not os.environ.get("SEND_TEST_REPORT"):
+        return
+
+    try:
+        from tools.email_client import GraphEmailClient
+        report_path = Path("report.html")
+        if not report_path.exists():
+            return
+
+        recipient = os.environ.get("REPORT_RECIPIENT", "person@example.com")
+        with open(report_path, 'r') as f:
+            html = f.read()
+
+        body = f"""
+        <h2>Test Run Report</h2>
+        <p><strong>Status:</strong> {'PASSED' if exitstatus == 0 else 'FAILED'}</p>
+        <p><strong>Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <hr>
+        {html}
+        """
+
+        client = GraphEmailClient()
+        client.send_email(
+            to=recipient,
+            subject=f"Test Report - {exitstatus == 0 and 'PASSED' or 'FAILED'}",
+            body_html=body,
+            attachments=[str(report_path)]
+        )
+        print(f"\n✅ Test report sent to {recipient}")
+    except Exception as e:
+        print(f"\n⚠️  Failed to send test report: {e}")
