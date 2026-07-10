@@ -409,6 +409,6 @@ def pytest_sessionfinish(session, exitstatus):
             body_html=body,
             attachments=[str(report_path)]
         )
-        print(f"\n✅ Test report sent to {recipient}")
+        print("\n[SUCCESS] Test report sent to " + recipient)
     except Exception as e:
-        print(f"\n⚠️  Failed to send test report: {e}")
+        print("\n[WARNING] Failed to send test report: " + str(e))

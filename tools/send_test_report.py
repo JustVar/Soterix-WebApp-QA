@@ -28,7 +28,7 @@ def send_report(report_file: str = DEFAULT_REPORT, recipient: str = DEFAULT_RECI
     report_path = ROOT / report_file
 
     if not report_path.exists():
-        print(f"❌ Report file not found: {report_path}")
+        print("[ERROR] Report file not found: " + str(report_path))
         return False
 
     # Read the HTML report
@@ -59,12 +59,12 @@ def send_report(report_file: str = DEFAULT_REPORT, recipient: str = DEFAULT_RECI
             body_html=email_body,
             attachments=[str(report_path)]
         )
-        print(f"✅ Email sent successfully to {recipient}")
-        print(f"   Report: {report_file}")
-        print(f"   Status: {status}")
+        print("[SUCCESS] Email sent to " + recipient)
+        print("   Report: " + report_file)
+        print("   Status: " + str(status))
         return True
     except Exception as e:
-        print(f"❌ Failed to send email: {e}")
+        print("[ERROR] Failed to send email: " + str(e))
         return False
 
 
