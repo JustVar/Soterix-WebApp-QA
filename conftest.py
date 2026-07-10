@@ -386,7 +386,7 @@ def pytest_sessionfinish(session, exitstatus):
 
     try:
         from tools.email_client import GraphEmailClient
-        report_path = Path("report.html")
+        report_path = Path("reports/report.html")
         if not report_path.exists():
             return
 

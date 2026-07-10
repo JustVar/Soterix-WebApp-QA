@@ -4,8 +4,8 @@ Usage:
   python tools/send_test_report.py [report_file] [recipient_email]
 
 Examples:
-  python tools/send_test_report.py report.html person@example.com
-  python tools/send_test_report.py report.html  # Uses default recipient
+  python tools/send_test_report.py reports/report.html person@example.com
+  python tools/send_test_report.py reports/report.html  # Uses default recipient
 """
 import sys
 import os
@@ -14,7 +14,7 @@ from datetime import datetime
 from email_client import GraphEmailClient
 
 DEFAULT_RECIPIENT = "person@example.com"
-DEFAULT_REPORT = "report.html"
+DEFAULT_REPORT = "reports/report.html"
 ROOT = Path(__file__).resolve().parent.parent
 
 

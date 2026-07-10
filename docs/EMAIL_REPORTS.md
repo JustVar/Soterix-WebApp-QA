@@ -39,21 +39,22 @@ The report will be generated as `report.html` and automatically emailed to the r
 Generate a report first, then send it:
 
 ```bash
-# Run tests (generates report.html)
+# Run tests (generates reports/report.html)
 pytest tests/ui/events/test_events_filters.py
 
 # Send the report manually
-python tools/send_test_report.py report.html person@example.com
+python tools/send_test_report.py reports/report.html person@example.com
 ```
 
 ### Option 3: Send Custom Report
 
 ```bash
-python tools/send_test_report.py path/to/custom_report.html person@example.com
+python tools/send_test_report.py reports/custom_report.html person@example.com
 ```
 
 ## Report Format
 
+- **Location**: `reports/report.html`
 - **Type**: HTML (self-contained, embeds all styles/images)
 - **Includes**: Test results, pass/fail counts, execution time
 - **Attachment**: HTML report file is also attached to email
@@ -80,7 +81,7 @@ Make sure all required env vars are set in `.env`:
 
 Check that:
 1. `SEND_TEST_REPORT=1` is set
-2. `report.html` was generated
+2. `reports/report.html` was generated
 3. Azure credentials are valid
 4. Email address is correct
 
@@ -88,7 +89,8 @@ Check that:
 
 Run tests first to generate the report:
 ```bash
-pytest tests/ui/events/ --html=report.html --self-contained-html
+pytest tests/ui/events/
+# Report auto-generated to reports/report.html
 ```
 
 ## Example: Nightly Test Report

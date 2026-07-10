@@ -85,3 +85,4 @@ legacy-selenium-tests/
 
 # Windows artifacts
 nul
+reports/
