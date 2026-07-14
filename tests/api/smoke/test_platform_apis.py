@@ -1,3 +1,10 @@
+"""
+QA-API-PLT-01 - Platform APIs smoke (session, dashboard, widgets, camera tree)
+Spec: qa/Automation_QA.xlsx › Test Mapping › row "QA-API-PLT-01"
+Section: I. API
+Owner: JV
+Deployment: After FT
+"""
 import time
 import json
 

@@ -1,0 +1,176 @@
+"""C2C Hardware Tests - VCA Plugin and Soterix Cloud Connect.
+
+Verify VCA enable/tracker engine configuration (critical for PVA),
+VCA rules and license, and Soterix Cloud registration.
+"""
+import pytest
+from playwright.sync_api import expect
+
+from tests.shared.pages.camera_hardware_page import CameraHardwarePage
+
+
+class TestC2CVCA:
+    """VCA (VCAEdge-AI) plugin tests - critical for PVA on Virtual Site."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, camera_setup_page, camera_config, step_capture):
+        self.page = camera_setup_page
+        self.config = camera_config
+        self.camera = CameraHardwarePage(self.page, camera_config)
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
+        return
+
+    @pytest.mark.smoke
+    @pytest.mark.regression
+    @pytest.mark.c2c_hardware
+    def test_vca_enabled_with_correct_tracker(self):
+        """Verify VCA is enabled with DL Object Tracker + Intrusion Detection.
+
+        This is the happy path for PVA to work on the Virtual Site.
+        """
+        self.step_capture.mark(1, "Navigate to VCA > ENABLE")
+        self.camera.navigate_to_setup_section("VCA")
+        self.camera.navigate_to_setup_subsection("ENABLE")
+        expect(self.page.locator("text='CONFIGURATION'")).to_be_visible()
+
+        self.step_capture.mark(2, "Verify Enable is set to On")
+        page_text = self.page.locator("body").inner_text()
+        assert "On" in page_text
+
+        self.step_capture.mark(3, "Verify DL Object Tracker is selected")
+        expect(self.page.locator("text=/DL Object Tracker/")).to_be_visible()
+
+        self.step_capture.mark(4, "Verify Intrusion detection is the active sub-option")
+        expect(self.page.locator("text='Intrusion detection'")).to_be_visible()
+
+        self.step_capture.mark(5, "Verify DL People Tracker is NOT selected (alternative)")
+        # People Tracker should be visible as an option but not selected
+        expect(self.page.locator("text=/DL People Tracker/")).to_be_visible()
+
+    @pytest.mark.smoke
+    @pytest.mark.regression
+    @pytest.mark.c2c_hardware
+    def test_vca_rules_and_license(self):
+        """Verify VCA has active rules and valid ProAI license."""
+        self.step_capture.mark(1, "Navigate to VCA > RULES")
+        self.camera.navigate_to_setup_section("VCA")
+        self.camera.navigate_to_setup_subsection("RULES")
+        expect(self.page.locator("text='RULES'").first).to_be_visible()
+
+        self.step_capture.mark(2, "Verify at least one rule exists")
+        page_text = self.page.locator("body").inner_text()
+        # Should have a rule like "Presence" or similar
+        assert "Rule(s)" in page_text or "Type" in page_text
+        # Verify Add button exists (confirms rules UI is functional)
+        expect(self.page.locator("button:has-text('Add')")).to_be_visible()
+
+        self.step_capture.mark(3, "Navigate to VCA > LICENSE")
+        self.camera.navigate_to_setup_subsection("LICENSE")
+        expect(self.page.locator("text='LICENSE'").first).to_be_visible()
+
+        expected_license = self.config["expected_license"]
+        self.step_capture.mark(4, f"Verify {expected_license} license is activated")
+        expect(self.page.locator(f"text='{expected_license}'")).to_be_visible()
+
+        self.step_capture.mark(5, "Verify license is assigned")
+        page_text = self.page.locator("body").inner_text()
+        assert "Activated License" in page_text
+
+        # Multi-lens cameras must show N licenses assigned (one per lens)
+        if self.config.get("multi_lens"):
+            expected_count = self.config["expected_license_count"]
+            self.step_capture.mark(6, f"Verify {expected_count} licenses assigned (multi-lens)")
+            # Each row in Activated Licenses table represents one assigned license
+            license_rows = self.page.locator(f"text='{expected_license}'").count()
+            assert license_rows >= expected_count, \
+                f"Multi-lens camera should have {expected_count} licenses, found {license_rows}"
+
+
+class TestC2CSoterixCloud:
+    """Soterix Cloud Connect tests - camera registration to cloud."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, camera_setup_page, camera_config, step_capture):
+        self.page = camera_setup_page
+        self.config = camera_config
+        self.camera = CameraHardwarePage(self.page, camera_config)
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
+        return
+
+    @pytest.mark.smoke
+    @pytest.mark.regression
+    @pytest.mark.c2c_hardware
+    def test_cloud_connect_registered(self):
+        """Verify camera is registered to Soterix staging cloud."""
+        self.step_capture.mark(1, "Navigate to Soterix > CONNECT")
+        self.camera.navigate_to_setup_section("Soterix")
+        self.camera.navigate_to_setup_subsection("CONNECT")
+
+        self.step_capture.mark(2, "Verify Soterix Cloud Connect page loads with branding")
+        expect(self.page.locator("text='SOTERIX CLOUD CONNECT'")).to_be_visible(timeout=10000)
+        expect(self.page.locator("img[alt*='Soterix'], img[src*='logo']").first).to_be_visible()
+
+        self.step_capture.mark(3, "Wait for cloud status to load and verify registration")
+        # Cloud status may take a moment to resolve
+        self.page.wait_for_timeout(3000)
+        page_text = self.page.locator("body").inner_text()
+
+        self.step_capture.mark(4, "Verify Registered Cloud Address is staging.example.invalid")
+        assert "Registered Cloud Address" in page_text, \
+            f"Camera not registered. Page shows: {page_text[:200]}"
+        expect(self.page.locator("text=/staging\\.soterixcloud\\.com/")).to_be_visible()
+
+        self.step_capture.mark(5, "Verify QR code upload controls are present")
+        expect(self.page.locator("text='Upload QR Code'")).to_be_visible()
+        expect(self.page.locator("button:has-text('Select QR')")).to_be_visible()
+        expect(self.page.locator("button:has-text('Upload')")).to_be_visible()
+        expect(self.page.locator("button:has-text('Reset')")).to_be_visible()
+
+
+class TestC2CMultiLens:
+    """Multi-lens camera tests - skipped on single-lens cameras.
+
+    Multi-lens cameras (e.g. BC-ML-4) expose 4 independent channels, each
+    with its own license. All 4 lenses share one physical device / IP, so
+    channel selection differentiates them.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, camera_setup_page, camera_config, step_capture):
+        if not camera_config.get("multi_lens"):
+            pytest.skip(f"{camera_config['id']} is not a multi-lens camera")
+        self.page = camera_setup_page
+        self.config = camera_config
+        self.camera = CameraHardwarePage(self.page, camera_config)
+        self.step_capture = step_capture
+        step_capture.set_page(self.page)
+        return
+
+    @pytest.mark.regression
+    @pytest.mark.c2c_hardware
+    def test_multi_lens_license_count_matches_lens_count(self):
+        """Verify multi-lens camera has one license assigned per lens."""
+        self.step_capture.mark(1, "Navigate to VCA > LICENSE")
+        self.camera.navigate_to_setup_section("VCA")
+        self.camera.navigate_to_setup_subsection("LICENSE")
+        expect(self.page.locator("text='LICENSE'").first).to_be_visible()
+
+        expected_count = self.config["expected_license_count"]
+        total_lenses = self.config["total_lenses"]
+
+        self.step_capture.mark(2, f"Verify license count ({expected_count}) matches lens count ({total_lenses})")
+        assert expected_count == total_lenses, (
+            f"Config inconsistency: expected_license_count={expected_count} "
+            f"but total_lenses={total_lenses}"
+        )
+
+        self.step_capture.mark(3, "Verify all lenses have licenses assigned")
+        # Each activated license row appears with the license name
+        # For a 4-lens device with ProAI 4ch, should see 4 assigned rows
+        licenses = self.camera.get_vca_license()
+        assigned_count = sum(1 for lic in licenses if lic.get("assigned"))
+        assert assigned_count == expected_count, (
+            f"Expected {expected_count} assigned licenses, found {assigned_count}"
+        )

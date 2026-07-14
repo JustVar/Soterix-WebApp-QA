@@ -40,6 +40,10 @@ ROOT = Path(__file__).resolve().parent.parent
 MAPPING_PATH = ROOT / 'config' / 'qatouch_case_mapping.json'
 FAILURE_LOG_DIR = ROOT / 'logs'
 FAILURE_LOG_PATH = FAILURE_LOG_DIR / 'upload_failures.json'
+# Per-nodeid run results dumped at session-finish; consumed by the downstream
+# Jira bug filer (tools/run_suite.py and friends). Lives under logs/ alongside
+# the upload-failure log so both are gitignored together.
+RUN_RESULTS_PATH = FAILURE_LOG_DIR / 'last_run_results.json'
 
 # Retry configuration
 MAX_RETRIES = 3
@@ -70,6 +74,13 @@ def pytest_addoption(parser: Any) -> None:
         default=None,
         help='QA Touch test run key (e.g. "d6pw"). Also: QATOUCH_RUN_KEY env var.',
     )
+    group.addoption(
+        '--qatouch-mode',
+        default=None,
+        choices=['api', 'api'],
+        help='Upload path. "api" uses tools/qatouch_client (default), "api" uses '
+             'the API server (update_test_run_results_by_code). Also: QATOUCH_USE_MCP=1.',
+    )
 
 
 def pytest_configure(config: Any) -> None:
@@ -83,7 +94,13 @@ def pytest_configure(config: Any) -> None:
                      'Use --qatouch-run <key> or QATOUCH_RUN_KEY env var.')
         return
 
-    config._qatouch_reporter = QATouchReporter(run_key)
+    # Resolve upload mode: CLI flag wins, then env var, default 'api'.
+    mode = config.getoption('--qatouch-mode', default=None)
+    if not mode:
+        mode = 'api' if os.environ.get(
+            'QATOUCH_USE_API', '').lower() in ('1', 'true', 'yes') else 'api'
+
+    config._qatouch_reporter = QATouchReporter(run_key, mode=mode)
     config.pluginmanager.register(config._qatouch_reporter, 'qatouch_reporter')
 
 
@@ -108,11 +125,17 @@ def _worse_outcome(new: str, existing: str | None) -> bool:
     return _OUTCOME_RANK.get(new, -1) > _OUTCOME_RANK.get(existing or '', -1)
 
 
+DEFAULT_PROJECT_KEY = 'JlW1'
+
+
 class QATouchReporter:
-    def __init__(self, run_key: str):
+    def __init__(self, run_key: str, mode: str = 'api'):
         self.run_key = run_key
-        self.project_key = os.environ.get('QATOUCH_PROJECT_ID', 'JlW1')
+        self.mode = mode  # 'api' or 'api'
+        self.project_key = os.environ.get('QATOUCH_PROJECT_ID', DEFAULT_PROJECT_KEY)
         self.results: dict[str, int] = {}  # case_key -> status code
+        # case_key -> project_key resolved at record time (per-test marker override)
+        self.case_projects: dict[str, str] = {}
         self.durations: dict[str, float] = {}  # case_key -> duration in seconds
         self.screenshots: dict[str, bytes] = {}  # case_key -> PNG bytes (failures only)
         self.nodeid_outcomes: dict[str, dict] = {}  # nodeid -> {outcome, duration, case_key}
@@ -127,6 +150,8 @@ class QATouchReporter:
             not in ('0', 'false', 'no'))
         self.stats = {'mapped': 0, 'unmapped': 0, 'uploaded': 0, 'errors': 0,
                       'retries': 0, 'saved_for_retry': 0, 'screenshots': 0}
+        # Set by pytest_sessionfinish once an upload is attempted.
+        self._upload_path_used: str = '(none)'
 
     def _load_mapping(self) -> dict[str, str]:
         """Load nodeid -> case_key mapping from JSON file."""
@@ -181,6 +206,30 @@ class QATouchReporter:
         if marker and marker.args:
             return marker.args[0]
         return None
+
+    @staticmethod
+    def _get_marker_project_key(item: Any) -> str | None:
+        """Read project_key from @pytest.mark.qatouch_project("PKEY") on the test item.
+
+        Per-test marker is authoritative; falls back to the reporter's default
+        (env QATOUCH_PROJECT_ID or DEFAULT_PROJECT_KEY) when absent.
+        """
+        if item is None:
+            return None
+        marker = item.get_closest_marker('qatouch_project')
+        if marker and marker.args:
+            return marker.args[0]
+        return None
+
+    def _resolve_project_key(self, item: Any) -> str:
+        """Resolve project key for a given test item.
+
+        Order: per-test marker > env QATOUCH_PROJECT_ID > DEFAULT_PROJECT_KEY.
+        self.project_key already encodes env-vs-default, so we only check marker
+        and fall back to self.project_key.
+        """
+        marker_project = self._get_marker_project_key(item)
+        return marker_project or self.project_key
 
     @staticmethod
     def _resolve_page(item: Any):
@@ -279,6 +328,10 @@ class QATouchReporter:
             status = max(existing, status)
 
         self.results[case_key] = status
+        # Record per-test project resolution. If the same case_key is recorded
+        # under two different projects (rerun with a different marker), keep the
+        # last one - markers should be stable per case_key in practice.
+        self.case_projects[case_key] = self._resolve_project_key(item)
         if duration is not None:
             # Keep the latest duration (most recent run wins on reruns)
             self.durations[case_key] = float(duration)
@@ -376,34 +429,24 @@ class QATouchReporter:
         except Exception as e:
             log.warning(f'QA Touch: Failed to write run results JSON: {e}')
 
-    def pytest_sessionfinish(self, session: Any, exitstatus: int) -> None:
-        """Upload collected results to QA Touch."""
-        # Write per-nodeid results JSON for the post-run bug filer first - this
-        # path must run even if there are no mapped uploads.
-        self._write_run_results()
+    def _group_results_by_project(self) -> dict[str, list[str]]:
+        """Group recorded case_keys by their resolved project_key.
 
-        if not self.results:
-            log.info('QA Touch: No mapped results to upload.')
-            return
+        Cases with no recorded project (legacy path / no marker) fall under
+        self.project_key. Returns {project_key: [case_key, ...]}.
+        """
+        groups: dict[str, list[str]] = {}
+        for case_key in self.results:
+            pk = self.case_projects.get(case_key, self.project_key)
+            groups.setdefault(pk, []).append(case_key)
+        return groups
 
-        try:
-            from tools.qatouch_client import QATouchClient
-            client = QATouchClient()
-        except Exception as e:
-            log.error(f'QA Touch: Failed to initialize client: {e}')
-            self.stats['errors'] += 1
-            return
-
-        # Build run_key mapping for API-created runs
-        try:
-            self._build_run_key_mapping(client)
-        except Exception as e:
-            log.warning(f'QA Touch: run_key mapping failed (non-fatal): {e}')
-
-        # Build the results payload
+    def _build_payload(self, case_keys: list[str]) -> list[dict]:
+        """Build the results payload for a subset of case_keys."""
         results_payload = []
         translated = 0
-        for case_key, status in self.results.items():
+        for case_key in case_keys:
+            status = self.results[case_key]
             upload_key = case_key
             if self.case_to_run_key:
                 mapped_run_key = self.case_to_run_key.get(case_key)
@@ -428,14 +471,128 @@ class QATouchReporter:
             results_payload.append(entry)
 
         if translated > 0:
-            log.info(f'QA Touch: Translated {translated} case_keys to run_keys (API-created run)')
+            log.info(
+                f'QA Touch: Translated {translated} case_keys to run_keys '
+                '(API-created run)')
+        return results_payload
+
+    def _upload_via_api(self, project_key: str, results_payload: list[dict],
+                       comment: str) -> bool:
+        """Upload via the codebase's API server (update_test_run_results_by_code).
+
+        The API function isn't directly importable from the plugin process, so
+        we invoke it through the qatouch API transport exposed by
+        tools/qatouch_bridge if present, otherwise we fall back to the
+        public-API client. This keeps the API path opt-in without hard-failing
+        when the API bridge isn't wired locally.
+        """
+        try:
+            from tools import qatouch_bridge  # type: ignore
+        except Exception as e:
+            log.error(
+                'QA Touch: API mode requested but tools/qatouch_bridge.py '
+                f'is not available ({e}). Falling back to API path.')
+            return False
+
+        def _do_upload():
+            qatouch_bridge.update_test_run_results_by_code(
+                projectKey=project_key,
+                testRunKey=self.run_key,
+                results=results_payload,
+                comments=comment,
+            )
+
+        return self._upload_with_retry(_do_upload)
+
+    def pytest_sessionfinish(self, session: Any, exitstatus: int) -> None:
+        """Upload collected results to QA Touch."""
+        # Write per-nodeid results JSON for the post-run bug filer first - this
+        # path must run even if there are no mapped uploads.
+        self._write_run_results()
+
+        if not self.results:
+            log.info('QA Touch: No mapped results to upload.')
+            return
+
+        # Group cases by their resolved project key. Any project_key != the
+        # reporter's default needs its own run_key - we don't have one, so we
+        # log clearly and skip those uploads.
+        project_groups = self._group_results_by_project()
+        cross_project = [pk for pk in project_groups if pk != self.project_key]
+        if cross_project:
+            log.error(
+                f'QA Touch: Cases target non-default projects {cross_project} '
+                f'but no per-project run key is configured. Default project: '
+                f'{self.project_key}, run: {self.run_key}. Skipping those cases.')
+            for pk in cross_project:
+                self.stats['errors'] += 1
+                skipped = project_groups.pop(pk)
+                log.error(
+                    f'QA Touch: Skipped {len(skipped)} case(s) for project '
+                    f'{pk}: {skipped}')
+
+        # Now only self.project_key remains in groups (or empty).
+        case_keys = project_groups.get(self.project_key, [])
+        if not case_keys:
+            log.info('QA Touch: No uploadable mapped results after project filtering.')
+            return
 
         timestamp = datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')
         comment = f'Automated upload from Playwright run at {timestamp}'
 
+        # API path: doesn't need the qatouch_client at all, and no run_key
+        # mapping (API uses case codes directly per the verified signature).
+        if self.mode == 'api':
+            results_payload = []
+            for case_key in case_keys:
+                status_code = self.results[case_key]
+                # Map our internal status int back to the API enum string.
+                status_str = {
+                    STATUS_PASSED: 'passed',
+                    STATUS_FAILED: 'failed',
+                    STATUS_BLOCKED: 'blocked',
+                }.get(status_code, 'untested')
+                results_payload.append({'case': case_key, 'status': status_str})
+
+            log.info(
+                f'QA Touch: Uploading {len(results_payload)} results to run '
+                f'{self.run_key} via API endpoint...')
+            success = self._upload_via_api(
+                self.project_key, results_payload, comment)
+            self._upload_path_used = 'api'
+            if success:
+                self.stats['uploaded'] = len(results_payload)
+                log.info(
+                    f'QA Touch: Successfully uploaded {len(results_payload)} '
+                    'results via API.')
+            else:
+                self.stats['errors'] += 1
+                self._save_failed_results(
+                    results_payload, comment,
+                    f'API upload failed after {MAX_RETRIES} attempts')
+            return
+
+        # API path (default, unchanged behaviour).
+        try:
+            from tools.qatouch_client import QATouchClient
+            client = QATouchClient()
+        except Exception as e:
+            log.error(f'QA Touch: Failed to initialize client: {e}')
+            self.stats['errors'] += 1
+            return
+
+        # Build run_key mapping for API-created runs
+        try:
+            self._build_run_key_mapping(client)
+        except Exception as e:
+            log.warning(f'QA Touch: run_key mapping failed (non-fatal): {e}')
+
+        results_payload = self._build_payload(case_keys)
+
         endpoint_label = 'playwright' if self.use_playwright_endpoint else 'legacy'
         log.info(f'QA Touch: Uploading {len(results_payload)} results to run '
                  f'{self.run_key} via {endpoint_label} endpoint...')
+        self._upload_path_used = endpoint_label
 
         # Pick the right uploader based on the opt-in env var
         if self.use_playwright_endpoint:
@@ -471,6 +628,9 @@ class QATouchReporter:
         terminalreporter.write_sep('=', 'QA Touch Result Upload')
         terminalreporter.write_line(f'  Run key:    {self.run_key}')
         terminalreporter.write_line(f'  Project:    {self.project_key}')
+        terminalreporter.write_line(f'  Mode:       {self.mode}')
+        path_used = getattr(self, '_upload_path_used', '(none)')
+        terminalreporter.write_line(f'  Upload path: {path_used}')
         terminalreporter.write_line(
             f'  Endpoint:   {"playwright (rich)" if self.use_playwright_endpoint else "legacy (status-only)"}')
         terminalreporter.write_line(f'  Mapped:     {self.stats["mapped"]} results')

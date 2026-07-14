@@ -345,6 +345,14 @@ def main():
         elif args.command == "update":
             cmd_update(page, dry_run=args.dry_run)
 
+        # Re-save storage state - login() saves it BEFORE the test mutates,
+        # but Laravel rotates the XSRF-TOKEN after any /v1/case/update call.
+        # Saving again at the end captures the rotated XSRF so headless
+        # urllib callers (backfill_qa_touch_metadata.py,
+        # run_partner_admin_backfill.py) see a current token.
+        ctx.storage_state(path=AUTH_STATE_FILE)
+        print(f"  Saved fresh storage state -> {AUTH_STATE_FILE}")
+
         browser.close()
 
 

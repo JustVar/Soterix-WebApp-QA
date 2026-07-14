@@ -1,3 +1,10 @@
+"""
+QA-API-CAM-01 - Camera APIs smoke (channel tree, snapshot)
+Spec: qa/Automation_QA.xlsx › Test Mapping › row "QA-API-CAM-01"
+Section: I. API
+Owner: JV
+Deployment: After FT
+"""
 import pytest
 
 
