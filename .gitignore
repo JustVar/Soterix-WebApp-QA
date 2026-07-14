@@ -87,3 +87,13 @@ legacy-selenium-tests/
 
 # Windows artifacts
 nul
+
+# Local credentials and per-machine state (never commit)
+tools/.qatouch_creds.json
+tools/.partner_admin_backfill.json
+tools/archive/.ota_*.json
+.notes/
+config/verification_status.json
+
+# Point-in-time UI audit snapshots (kept in backups, not in git)
+config/audit_reports/
