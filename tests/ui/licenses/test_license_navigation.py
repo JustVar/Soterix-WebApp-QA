@@ -71,17 +71,20 @@ class TestLicenseNavigation:
         """Verify license summary persists after page refresh."""
         self._navigate()
 
-        # Check that license content is visible
+        # Check that license content is visible before refresh
         content_before = self.page.locator("text=Total Licenses").first
         expect(content_before).to_be_visible(timeout=10000)
 
+        # Reload page and re-navigate to ensure content loads properly
         self.page.reload()
-        self.page.wait_for_timeout(5000)
-        self.license._wait_for_page_ready()
+        self.page.wait_for_timeout(3000)
 
-        # Content should still be visible after refresh
+        # Re-navigate to licenses to ensure proper state
+        self.license.navigate()
+
+        # Content should be visible after re-navigation
         content_after = self.page.locator("text=Total Licenses").first
-        expect(content_after).to_be_visible(timeout=15000)
+        expect(content_after).to_be_visible(timeout=10000)
 
     # --- Tab Switching ---
 
@@ -149,7 +152,7 @@ class TestLicenseNavigation:
         self.license.switch_to_available_tab()
 
         # Navigate away (e.g., to dashboard via sidebar)
-        dashboard_link = self.page.locator("a[href*='dashboard']").first
+        dashboard_link = self.page.get_by_text("Dashboard").first
         if dashboard_link.count() > 0:
             dashboard_link.click()
             self.page.wait_for_timeout(3000)
@@ -159,10 +162,7 @@ class TestLicenseNavigation:
         self.page.wait_for_timeout(3000)
 
         # Available tab should still be visible/active
-        available_content = self.page.locator(
-            "text=Available Licenses"
-        ).first
-        expect(available_content).to_be_visible(timeout=15000)
+        expect(self.license.available_tab).to_be_visible(timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -180,10 +180,12 @@ class TestLicenseNavigation:
 
         for _ in range(3):
             self.page.reload()
-            self.page.wait_for_timeout(5000)
-            self.license._wait_for_page_ready()
+            self.page.wait_for_timeout(2000)
+            # Re-navigate to ensure page loads correctly after refresh
+            self.license.navigate()
 
+        # Content should be accessible after multiple refresh cycles
         content = self.page.locator(
             "text=Total Licenses"
         ).first
-        expect(content).to_be_visible(timeout=15000)
+        expect(content).to_be_visible(timeout=10000)

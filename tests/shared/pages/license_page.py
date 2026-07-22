@@ -48,9 +48,8 @@ class LicensePage:
 
         # CSV export
         self.csv_download_button = page.locator(
-            "button:has-text('CSV'), button:has-text('Export'), "
-            "button:has-text('Download'), img[src*='download'], "
-            "img[src*='export'], img[alt*='Download'], img[alt*='Export']"
+            "img[src*='downloadLicense'], img[src*='download'], img[alt='Download'], "
+            "button:has-text('CSV'), button:has-text('Export'), button:has-text('Download')"
         ).first
 
         # Assigned Licenses - site expansion (MUI Table structure)
@@ -103,8 +102,8 @@ class LicensePage:
 
         # Assign New License modal
         self.assign_button = page.locator(
-            "button:has-text('Assign New License'), "
-            "button:has-text('Assign'), button.add-btn"
+            "button.add-btn, button:has-text('Assign New License'), "
+            "button:has-text('Assign License'), button:has-text('Assign')"
         ).first
         self.assign_modal = page.locator(
             "div[class*='modal'], div[role='dialog']"
@@ -131,41 +130,66 @@ class LicensePage:
 
     def navigate(self):
         """Navigate to Licenses page via Admin menu > Licenses."""
+        # Wait for any overlays to clear
+        self.page.wait_for_timeout(1000)
+
         # Click Admin menu first
         admin_link = self.page.locator("a[href*='admin']").first
         if not admin_link.is_visible():
             admin_link = self.page.get_by_text("Admin").first
-        admin_link.click()
-        self.page.wait_for_timeout(1500)
+        admin_link.wait_for(state="visible", timeout=10000)
+        admin_link.click(force=True)
+        self.page.wait_for_timeout(2000)
 
         # Then click Licenses submenu
         license_link = self.page.locator("a[href*='license']").first
         if not license_link.is_visible():
             license_link = self.page.get_by_text("License").first
-        license_link.click()
+        license_link.wait_for(state="visible", timeout=10000)
+        license_link.click(force=True)
         self.page.wait_for_timeout(3000)
         self._wait_for_page_ready()
 
     def _wait_for_page_ready(self):
-        """Wait for loaders to hide."""
-        if self.loader.count() > 0 and self.loader.first.is_visible():
+        """Wait for loaders to hide and content to appear."""
+        # Wait for any loaders to disappear
+        loaders_hidden = False
+        if self.loader.count() > 0:
             try:
                 self.loader.first.wait_for(state="hidden", timeout=30000)
+                loaders_hidden = True
             except Exception:
                 pass
-        self.page.wait_for_timeout(1000)
+
+        # If we waited for loaders, add extra time for content to render
+        if loaders_hidden:
+            self.page.wait_for_timeout(2000)
+
+        # Wait for main content to be visible
+        content_found = False
+        try:
+            self.total_licenses_widget.wait_for(state="visible", timeout=20000)
+            content_found = True
+        except Exception:
+            pass
+
+        # Extra wait if content took time to appear
+        if content_found:
+            self.page.wait_for_timeout(1000)
 
     # ----- Tab switching -----
 
     def switch_to_available_tab(self):
         """Click the Available Licenses tab."""
-        self.available_tab.click()
+        self.available_tab.wait_for(state="visible", timeout=10000)
+        self.available_tab.click(force=True)
         self.page.wait_for_timeout(2000)
         self._wait_for_page_ready()
 
     def switch_to_assigned_tab(self):
         """Click the Assigned Licenses tab."""
-        self.assigned_tab.click()
+        self.assigned_tab.wait_for(state="visible", timeout=10000)
+        self.assigned_tab.click(force=True)
         self.page.wait_for_timeout(2000)
         self._wait_for_page_ready()
 
@@ -205,8 +229,12 @@ class LicensePage:
 
     def download_csv(self) -> str:
         """Click the CSV download button and return the downloaded file path."""
-        with self.page.expect_download() as download_info:
-            self.csv_download_button.click()
+        self.csv_download_button.wait_for(state="visible", timeout=10000)
+        # Hover to activate the element
+        self.csv_download_button.hover()
+        self.page.wait_for_timeout(500)
+        with self.page.expect_download(timeout=15000) as download_info:
+            self.csv_download_button.click(force=True)
         download = download_info.value
         path = download.path()
         return str(path) if path else ""
@@ -288,8 +316,9 @@ class LicensePage:
 
     def open_assign_modal(self):
         """Click the Assign New License button."""
-        self.assign_button.click()
-        self.page.wait_for_timeout(2000)
+        self.assign_button.wait_for(state="visible", timeout=10000)
+        self.assign_button.click(force=True)
+        self.page.wait_for_timeout(3000)
 
     def close_assign_modal(self):
         """Close the assign modal."""
