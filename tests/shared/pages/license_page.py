@@ -133,8 +133,19 @@ class LicensePage:
     # ----- Navigation -----
 
     def navigate(self):
-        """Navigate to Licenses page via sidebar link."""
-        self.license_nav_link.first.click()
+        """Navigate to Licenses page via Admin menu > Licenses."""
+        # Click Admin menu first
+        admin_link = self.page.locator("a[href*='admin']").first
+        if not admin_link.is_visible():
+            admin_link = self.page.get_by_text("Admin").first
+        admin_link.click()
+        self.page.wait_for_timeout(1500)
+
+        # Then click Licenses submenu
+        license_link = self.page.locator("a[href*='license']").first
+        if not license_link.is_visible():
+            license_link = self.page.get_by_text("License").first
+        license_link.click()
         self.page.wait_for_timeout(3000)
         self._wait_for_page_ready()
 

@@ -27,8 +27,10 @@ class TestLicenseNavigation:
         self._navigate()
 
         # Page should have license-related content visible
+        # Look for "Available Licenses" tab or heading
         content = self.page.locator(
-            "text=Licenses, text=Available, text=Assigned"
+            "button:has-text('Available'), h1:has-text('License'), "
+            "p:has-text('Available Licenses')"
         ).first
         expect(content).to_be_visible(timeout=15000)
 
