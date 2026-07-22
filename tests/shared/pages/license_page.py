@@ -53,14 +53,11 @@ class LicensePage:
             "img[src*='export'], img[alt*='Download'], img[alt*='Export']"
         ).first
 
-        # Assigned Licenses - site expansion
-        self.site_rows = page.locator(
-            "div[class*='site-row'], tr[class*='site'], "
-            "div[class*='expandable'], div[class*='accordion']"
-        )
+        # Assigned Licenses - site expansion (MUI Table structure)
+        self.site_rows = page.locator("tr.MuiTableRow-root")
         self.site_expand_icons = page.locator(
-            "img[src*='expand'], img[src*='arrow'], "
-            "svg[class*='expand'], button[class*='expand']"
+            "svg[data-testid='ExpandMoreIcon'], "
+            "svg[class*='MuiSvgIcon-root']:has(path[d*='16.59'])"
         )
         self.site_toggle_switches = page.locator(".MuiSwitch-root")
 

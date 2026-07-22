@@ -60,14 +60,12 @@ class TestLicenseAssignedTab:
 
         expand_icons = self.license.site_expand_icons
         if expand_icons.count() > 0:
+            initial_rows = self.page.locator("tr.MuiTableRow-root").count()
             self.license.expand_site(0)
-            # After expanding, nested content should appear
+            # After expanding, more rows should appear (nested feature rows)
             self.page.wait_for_timeout(2000)
-            nested = self.page.locator(
-                "div[class*='feature'], div[class*='nested'], "
-                "div[class*='sub-row'], tr[class*='child']"
-            )
-            assert nested.count() > 0, "No feature rows shown after site expansion"
+            expanded_rows = self.page.locator("tr.MuiTableRow-root").count()
+            assert expanded_rows > initial_rows, "No additional rows shown after site expansion"
         else:
             pytest.skip("No expandable sites available")
 
