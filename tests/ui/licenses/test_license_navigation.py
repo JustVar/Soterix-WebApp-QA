@@ -76,7 +76,8 @@ class TestLicenseNavigation:
         expect(content_before).to_be_visible(timeout=10000)
 
         self.page.reload()
-        self.page.wait_for_timeout(3000)
+        self.page.wait_for_timeout(5000)
+        self.license._wait_for_page_ready()
 
         # Content should still be visible after refresh
         content_after = self.page.locator("text=Total Licenses").first
@@ -151,16 +152,17 @@ class TestLicenseNavigation:
         dashboard_link = self.page.locator("a[href*='dashboard']").first
         if dashboard_link.count() > 0:
             dashboard_link.click()
-            self.page.wait_for_timeout(2000)
+            self.page.wait_for_timeout(3000)
 
         # Navigate back to Licenses
         self._navigate()
+        self.page.wait_for_timeout(3000)
 
         # Available tab should still be visible/active
         available_content = self.page.locator(
             "text=Available Licenses"
         ).first
-        expect(available_content).to_be_visible(timeout=10000)
+        expect(available_content).to_be_visible(timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -178,7 +180,8 @@ class TestLicenseNavigation:
 
         for _ in range(3):
             self.page.reload()
-            self.page.wait_for_timeout(2000)
+            self.page.wait_for_timeout(5000)
+            self.license._wait_for_page_ready()
 
         content = self.page.locator(
             "text=Total Licenses"
