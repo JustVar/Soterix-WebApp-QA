@@ -42,7 +42,7 @@ class TestLicenseNavigation:
 
         # Summary widget area should be visible
         summary = self.page.locator(
-            "text=Total Licenses, text=Active, text=Available, text=Suspended"
+            "text=Total Licenses"
         ).first
         expect(summary).to_be_visible(timeout=10000)
 
@@ -71,14 +71,16 @@ class TestLicenseNavigation:
         """Verify license summary persists after page refresh."""
         self._navigate()
 
-        # Note a visible label before refresh
-        active_el = self.page.locator("text=Active").first
-        expect(active_el).to_be_visible(timeout=10000)
+        # Check that license content is visible
+        content_before = self.page.locator("text=Total Licenses").first
+        expect(content_before).to_be_visible(timeout=10000)
 
         self.page.reload()
         self.page.wait_for_timeout(3000)
 
-        expect(active_el).to_be_visible(timeout=15000)
+        # Content should still be visible after refresh
+        content_after = self.page.locator("text=Total Licenses").first
+        expect(content_after).to_be_visible(timeout=15000)
 
     # --- Tab Switching ---
 
@@ -90,7 +92,7 @@ class TestLicenseNavigation:
 
         # The available tab or its content should be active/visible
         available_content = self.page.locator(
-            "text=Available Licenses, text=License Item, text=License Key"
+            "text=Available Licenses"
         ).first
         expect(available_content).to_be_visible(timeout=10000)
 
@@ -103,14 +105,14 @@ class TestLicenseNavigation:
         # Switch to Assigned tab
         self.license.switch_to_assigned_tab()
         assigned_content = self.page.locator(
-            "text=Assigned Licenses, text=Site, text=Assigned"
+            "text=Assigned Licenses"
         ).first
         expect(assigned_content).to_be_visible(timeout=10000)
 
         # Switch back to Available tab
         self.license.switch_to_available_tab()
         available_content = self.page.locator(
-            "text=Available Licenses, text=License Item, text=License Key"
+            "text=Available Licenses"
         ).first
         expect(available_content).to_be_visible(timeout=10000)
 
@@ -156,7 +158,7 @@ class TestLicenseNavigation:
 
         # Available tab should still be visible/active
         available_content = self.page.locator(
-            "text=Available Licenses, text=License Item"
+            "text=Available Licenses"
         ).first
         expect(available_content).to_be_visible(timeout=10000)
 
@@ -179,6 +181,6 @@ class TestLicenseNavigation:
             self.page.wait_for_timeout(2000)
 
         content = self.page.locator(
-            "text=Licenses, text=Available, text=Assigned"
+            "text=Total Licenses"
         ).first
         expect(content).to_be_visible(timeout=15000)
