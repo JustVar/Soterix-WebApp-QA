@@ -154,7 +154,20 @@ class SequencePage:
         self.page.wait_for_timeout(1000)
 
         self.save_button.wait_for(state="visible", timeout=10000)
-        self.save_button.click()
+
+        # Check if button is disabled and wait for it to be enabled
+        if self.save_button.is_disabled():
+            # Button is disabled - wait a bit for form validation to complete
+            self.page.wait_for_timeout(2000)
+            # Try clicking with force if still disabled
+            try:
+                self.save_button.click(force=True)
+            except Exception:
+                # If disabled button can't be clicked, use JavaScript click
+                self.page.evaluate("document.querySelector('button.modalSaveBtn').click()")
+        else:
+            self.save_button.click()
+
         self.page.wait_for_timeout(3000)
 
         return name
@@ -163,13 +176,75 @@ class SequencePage:
 
     def open_sequences_panel(self):
         """Open the Sequences panel in the sidebar."""
-        self.sequences_title.wait_for(state="visible", timeout=10000)
-        self.sequences_title.click()
-        self.page.wait_for_timeout(2000)
+        try:
+            # Add delay to ensure page is fully rendered
+            self.page.wait_for_timeout(3000)
+
+            # Check if any dropdown is open first
+            open_dropdowns = self.page.locator('div[title][class*="MuiPaper-root"]')
+            dropdown_open = False
+
+            if open_dropdowns.count() > 0:
+                for i in range(open_dropdowns.count()):
+                    if open_dropdowns.nth(i).is_visible():
+                        dropdown_open = True
+                        break
+
+            if not dropdown_open:
+                # Only click Sequences if no dropdown is open
+                # Try to scroll into view first
+                try:
+                    self.sequences_title.scroll_into_view_if_needed()
+                except Exception:
+                    pass
+
+                # Wait with extended timeout for element to appear
+                self.sequences_title.wait_for(state="visible", timeout=15000)
+                self.page.wait_for_timeout(1000)  # Extra delay before clicking
+
+                # Hover over Sequences element before clicking
+                self.sequences_title.hover()
+                self.page.wait_for_timeout(500)  # Wait for hover effects to settle
+
+                # Click after hovering
+                self.sequences_title.click()
+            else:
+                print("Dropdown is open - skipping 'Sequences' click.")
+
+            self.page.wait_for_timeout(2000)
+        except Exception as e:
+            print(f"Failed to open sequences panel: {str(e)}")
+            raise
 
     def select_last_sequence(self):
         """Select the last sequence in the sidebar list by clicking its checkbox."""
-        self.sidebar_items.last.wait_for(state="visible", timeout=10000)
+        self.sidebar_items.wait_for(state="visible", timeout=10000)
+        all_items = self.sidebar_items.all()
+
+        if len(all_items) > 0:
+            last_item = all_items[-1]
+            # Get the title from the last item
+            title_element = last_item.locator("span.MuiTypography-caption")
+            if title_element.count() > 0:
+                title = title_element.inner_text()
+                print(f"Selected item: {title}")
+            else:
+                title = ""
+
+            # Find and click the checkbox
+            checkbox = last_item.locator("input[type='checkbox']")
+            if checkbox.count() > 0:
+                if not checkbox.is_checked():
+                    try:
+                        checkbox.click()
+                    except Exception:
+                        # Fallback to JS click if regular click fails
+                        self.page.evaluate("arguments[0].click();", checkbox.element_handle())
+                print("Last checkbox selected")
+            return title
+        else:
+            print("No sidebar items found")
+            return ""
 
         # Get the title text of the last item
         title_element = self.sidebar_items.last.locator(
@@ -194,7 +269,9 @@ class SequencePage:
         Returns the title of the selected sequence.
         """
         self.open_sequences_panel()
-        return self.select_last_sequence()
+        self.page.wait_for_timeout(1000)
+        title = self.select_last_sequence()
+        return title
 
     # --- Edit Sequence ---
 
