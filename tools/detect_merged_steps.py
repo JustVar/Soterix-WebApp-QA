@@ -34,9 +34,9 @@ use different auth:
 
   REST GET /api/v1/getAllTestCases/{projectKey}?page=N
       headers: api-token + domain
-      Loaded from env (QATOUCH_API_TOKEN + QATOUCH_DOMAIN) or
-      ~/.tooling.json mcpServers.qatouch.env (same shape as
-      tools/migrate_pp_cases_phase_a.py:load_rest_creds).
+      Loaded from the environment / .env (QATOUCH_API_TOKEN +
+      QATOUCH_DOMAIN), same as
+      tools/migrate_pp_cases_phase_a.py:load_rest_creds.
 
   Internal POST /v1/case/edit/p/{projectKey}/cid/{caseKey}
       headers: X-XSRF-TOKEN + Cookie
@@ -125,8 +125,6 @@ REPO = Path(__file__).resolve().parent.parent
 TOOLS_DIR = REPO / "tools"
 DEFAULT_CREDS_FILE = TOOLS_DIR / ".qatouch_creds.json"
 DEFAULT_LOG_DIR = REPO / "logs"
-TOOLING_CONFIG = Path.home() / ".tooling.json"
-
 REST_BASE = "https://api.qatouch.com"
 
 # Canonical merged-step signature - same regex shape and threshold as the
@@ -176,27 +174,20 @@ class AuthCreds:
 
 
 def load_rest_creds() -> tuple[str, str]:
-    """Load REST api-token + domain from env or ~/.tooling.json.
+    """Load REST api-token + domain from the environment / .env.
 
-    Mirrors tools/migrate_pp_cases_phase_a.py:load_rest_creds so we get the
-    same fallback chain everywhere.
+    Mirrors tools/migrate_pp_cases_phase_a.py:load_rest_creds so credential
+    resolution works the same way everywhere.
     """
     token = os.environ.get("QATOUCH_API_TOKEN") or os.environ.get("QATOUCH_API_KEY")
     domain = os.environ.get("QATOUCH_DOMAIN")
-    if token and domain:
-        return token, domain
-    if TOOLING_CONFIG.exists():
-        try:
-            cfg = json.loads(TOOLING_CONFIG.read_text(encoding="utf-8"))
-            env = cfg.get("mcpServers", {}).get("qatouch", {}).get("env", {}) or {}
-            token = token or env.get("QATOUCH_API_TOKEN")
-            domain = domain or env.get("QATOUCH_DOMAIN")
-        except Exception as e:
-            print(f"  WARN: could not read {TOOLING_CONFIG}: {e}", file=sys.stderr)
     if not token or not domain:
         print(
-            "Missing QA Touch REST credentials. Set QATOUCH_API_TOKEN + "
-            "QATOUCH_DOMAIN (env or ~/.tooling.json mcpServers.qatouch.env).",
+            "Missing QA Touch REST credentials.\n"
+            "Set both of these in your .env at the repo root (or export them):\n"
+            "    QATOUCH_API_TOKEN=<your REST api-token>\n"
+            "    QATOUCH_DOMAIN=soterixsystems\n"
+            "See .env.template for the full list.",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -589,8 +580,7 @@ def main() -> int:
         if not ok:
             print(f"  Pre-flight FAILED (REST):     {msg}", file=sys.stderr)
             print(
-                "  Check QATOUCH_API_TOKEN + QATOUCH_DOMAIN in env or "
-                "~/.tooling.json mcpServers.qatouch.env.",
+                "  Check QATOUCH_API_TOKEN + QATOUCH_DOMAIN in your .env.",
                 file=sys.stderr,
             )
             return 2

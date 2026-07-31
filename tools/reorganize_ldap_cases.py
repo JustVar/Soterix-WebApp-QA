@@ -59,7 +59,7 @@ re-derives from the CSV at runtime and warns if the live set differs.
 
 ENDPOINTS
 ---------
-Public REST (uses api-token + domain headers from ~/.tooling.json):
+Public REST (uses api-token + domain headers from the environment / .env):
     GET  /api/v1/getAllModules/{projectKey}?page=N
     POST /api/v1/module?projectKey=...&moduleName=...[&<parent-param>=vKv0n]
     GET  /api/v1/getAllTestCases/{projectKey}?page=N
@@ -77,8 +77,8 @@ on a post-save side effect). We tolerate it exactly as backfill_qa_touch_metadat
 
 AUTH PREREQS
 ------------
-1. ~/.tooling.json must hold QATOUCH_API_TOKEN + QATOUCH_DOMAIN under
-   mcpServers.qatouch.env (same source used by migrate_pp_cases_phase_a.py).
+1. QATOUCH_API_TOKEN + QATOUCH_DOMAIN must be set in your .env at the repo root
+   (same source used by migrate_pp_cases_phase_a.py).
 2. tools/.qatouch_creds.json must exist and be fresh - refresh via:
        python tools/qa_touch_auth_helper.py --verify
 
@@ -99,7 +99,7 @@ Flags:
     --auth-state-file PATH  Override creds JSON (default tools/.qatouch_creds.json).
     --rate-ms N           Inter-call delay in ms (default 1000).
     --log-dir PATH        Where to write the run log (default logs/).
-    --rest-domain DOMAIN  Override short REST domain (default from ~/.tooling.json).
+    --rest-domain DOMAIN  Override short REST domain (default from QATOUCH_DOMAIN).
     --skip-probe          Skip the probe step and create modules at root level
                           (DANGEROUS - only after manual confirmation).
 
@@ -116,6 +116,7 @@ import argparse
 import csv
 import functools
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -168,7 +169,6 @@ EXPECTED_LEAF_MODULES = {
     "Test Authentication",
 }
 
-TOOLING_CONFIG = Path.home() / ".tooling.json"
 REST_BASE = "https://api.qatouch.com"
 
 
@@ -197,15 +197,12 @@ class AuthCreds:
 
 
 def load_rest_token() -> tuple[str, str] | None:
-    """Read public REST api-token + short domain from ~/.tooling.json."""
-    if not TOOLING_CONFIG.exists():
+    """Read public REST api-token + short domain from the environment / .env."""
+    token = os.environ.get("QATOUCH_API_TOKEN") or os.environ.get("QATOUCH_API_KEY")
+    domain = os.environ.get("QATOUCH_DOMAIN")
+    if not token or not domain:
         return None
-    try:
-        cfg = json.loads(TOOLING_CONFIG.read_text(encoding="utf-8"))
-        env = cfg["mcpServers"]["qatouch"]["env"]
-        return env["QATOUCH_API_TOKEN"], env["QATOUCH_DOMAIN"]
-    except (KeyError, json.JSONDecodeError):
-        return None
+    return token, domain
 
 
 # ---------------------------------------------------------------------------
@@ -635,8 +632,8 @@ def main() -> int:
     # --- REST creds
     rest_creds = load_rest_token()
     if not rest_creds:
-        print("  Could not read QATOUCH_API_TOKEN/QATOUCH_DOMAIN from "
-              "~/.tooling.json", file=sys.stderr)
+        print("  Missing QATOUCH_API_TOKEN / QATOUCH_DOMAIN. Set them in your "
+              ".env at the repo root (see .env.template).", file=sys.stderr)
         return 2
     token, domain_short = rest_creds
     if args.rest_domain:

@@ -3,6 +3,8 @@
 Models the Chat panel accessed via the header bar icon, including
 group creation, search, messaging, editing, and deletion.
 """
+import re
+
 from playwright.sync_api import Page, expect
 
 
@@ -37,8 +39,8 @@ class ChatPage:
         self.delete_icon = page.locator("img[alt='Delete icon']")
         self.update_button = page.locator("button:has-text('Update')")
         self.delete_confirm = page.locator(
-            "div.MuiBox-root:has-text('Delete')"
-        )
+            "div.MuiBox-root"
+        ).filter(has_text=re.compile(r"^Delete$"))
 
     # --- Panel management ---
 
@@ -130,17 +132,22 @@ class ChatPage:
         """
         self.edit_icon.wait_for(state="visible", timeout=10000)
         self.edit_icon.click()
+        self.update_button.wait_for(state="visible", timeout=10000)
         self.page.wait_for_timeout(2000)
 
-        # Find the input with the current group name and update it
-        name_input = self.page.locator(f"input[value='{old_name}']")
-        name_input.wait_for(state="visible", timeout=5000)
-        name_input.clear()
-        name_input.fill(new_name)
+        # Locate the group name input by its value attribute (same as original Selenium test)
+        # Locate by value attribute (as in original Selenium test)
+        # fill() clears and replaces atomically - no need for two-step clear+fill
+        input_field = self.page.locator(f"//input[@value='{old_name}']")
+        input_field.wait_for(state="visible", timeout=5000)
+        input_field.fill(new_name)
         self.page.wait_for_timeout(1000)
 
-        self.update_button.click()
-        self.page.wait_for_timeout(3000)
+        # Exact text match for Update button
+        update_btn = self.page.locator("//button[text()='Update']")
+        update_btn.wait_for(state="visible", timeout=5000)
+        update_btn.click()
+        self.page.wait_for_timeout(5000)
 
     def delete_group(self):
         """Delete the currently open group."""

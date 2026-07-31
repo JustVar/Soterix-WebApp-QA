@@ -4,6 +4,8 @@ import importlib
 import logging
 import pytest
 from typing import Dict
+from pathlib import Path
+from datetime import datetime
 from config.base_config import config  # dict resolved from ENV
 
 # Register plugins
@@ -323,11 +325,6 @@ def test_site_id(user_api, camera_api, login_data):
     - If none found, probe a small range of site ids with `camera_api.get_camera_tree`
       and return the first site id that succeeds.
     """
-    # Prefer known QA site for QA environment to speed up tests
-    import os as _os
-    if _os.environ.get("ENV", "").lower() == "qa":
-        return 110
-
     sites = site_helper.get_available_sites(user_api)
     if sites:
         first = sites[0]
@@ -379,3 +376,49 @@ def test_channel_ids(discovery_helper, test_site_id):
 
     # fallback
     return [1]
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Email the HTML report after the session finishes, when opted in.
+
+    Opt-in via SEND_TEST_REPORT=1. The recipient must be set explicitly in
+    REPORT_RECIPIENT - there is deliberately no default address so a report
+    can never be mailed to someone unexpected.
+    """
+    if not os.environ.get("SEND_TEST_REPORT"):
+        return
+
+    recipient = os.environ.get("REPORT_RECIPIENT")
+    if not recipient:
+        print("\n[WARNING] SEND_TEST_REPORT is set but REPORT_RECIPIENT is empty - "
+              "no report sent. Set REPORT_RECIPIENT in .env.")
+        return
+
+    try:
+        from tools.email_client import GraphEmailClient
+        report_path = Path("reports/report.html")
+        if not report_path.exists():
+            print(f"\n[WARNING] No report at {report_path} - nothing to send.")
+            return
+
+        html = report_path.read_text(encoding="utf-8", errors="replace")
+        status = "PASSED" if exitstatus == 0 else "FAILED"
+
+        body = f"""
+        <h2>Test Run Report</h2>
+        <p><strong>Status:</strong> {status}</p>
+        <p><strong>Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <hr>
+        {html}
+        """
+
+        client = GraphEmailClient()
+        client.send_email(
+            to=recipient,
+            subject=f"Test Report - {status}",
+            body_html=body,
+            attachments=[str(report_path)],
+        )
+        print(f"\n[SUCCESS] Test report sent to {recipient}")
+    except Exception as e:
+        print(f"\n[WARNING] Failed to send test report: {e}")

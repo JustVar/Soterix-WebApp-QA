@@ -41,6 +41,6 @@ When PM provides updated documentation, replace the relevant file and update thi
 
 ## Note on Word Documents
 
-`.docx` files cannot be analyzed inline by most automation tools. For content analysis:
-- Convert to markdown for version-controlled content
-- Or extract text via `python-docx` / `pandoc` before processing
+`.docx` is a zipped binary format, so it does not diff or grep like text. For
+content that needs to be searched, reviewed, or version-controlled, convert it
+to markdown and commit that alongside the original.

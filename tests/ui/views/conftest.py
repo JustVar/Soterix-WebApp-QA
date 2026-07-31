@@ -31,7 +31,7 @@ def fullscreen_page(authenticated_page):
     # Check if a camera is already in a tile
     video_tiles = page.locator("[class*='video_container'][class*='new_video_player']")
     if video_tiles.count() == 0:
-        views.expand_site_and_show_cameras("Driver Site")
+        views.expand_site_and_show_cameras(None)
         page.wait_for_timeout(500)
         views.add_first_camera_via_checkbox()
         page.wait_for_timeout(2000)

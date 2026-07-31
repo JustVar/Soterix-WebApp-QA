@@ -2,17 +2,15 @@
 import pytest
 from tests.shared.pages.views_page import ViewsPage
 
-SITE_NAME = "Driver Site"
+SITE_NAME = None
 
 
 class TestViewsFavorites:
     """Tests for camera favorites functionality."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page, step_capture):
+    def setup(self, authenticated_page):
         self.page = authenticated_page
-        self.step_capture = step_capture
-        step_capture.set_page(self.page)
         self.views = ViewsPage(self.page)
         self.views.navigate()
         self.views.wait_for_page_load()
@@ -35,7 +33,6 @@ class TestViewsFavorites:
 
     @pytest.mark.ui
     @pytest.mark.favorites
-    @pytest.mark.qatouch("Nj3JdQ")
     def test_add_remove_favorites(self):
         """Verify adding a camera to favorites, seeing it in the panel, and removing it.
 
@@ -49,7 +46,6 @@ class TestViewsFavorites:
         7. Close favorites panel
         """
         self._expand_site()
-        self.step_capture.mark(1, "Expand site tree to reveal cameras")
 
         # Get a camera name from the thumbnails to use for favorite toggle
         camera_name = self._get_first_camera_name()
@@ -57,25 +53,21 @@ class TestViewsFavorites:
         # Add to favorites
         self.views.toggle_favorite(camera_name)
         self.page.wait_for_timeout(2000)
-        self.step_capture.mark(2, "Click favorite star on a camera to add it")
 
         # Open favorites and verify camera appears
         self.views.open_favorites_panel()
         assert self.views.is_camera_in_favorites(camera_name), (
             f"Camera '{camera_name}' should appear in favorites after adding"
         )
-        self.step_capture.mark(3, "Open favorites panel and verify camera appears")
         self.views.close_favorites_panel()
 
         # Remove from favorites
         self.views.toggle_favorite(camera_name)
         self.page.wait_for_timeout(2000)
-        self.step_capture.mark(4, "Click favorite star again to remove camera")
 
         # Open favorites and verify camera is gone
         self.views.open_favorites_panel()
         assert not self.views.is_camera_in_favorites(camera_name), (
             f"Camera '{camera_name}' should not appear in favorites after removing"
         )
-        self.step_capture.mark(5, "Open favorites panel and verify camera is removed")
         self.views.close_favorites_panel()

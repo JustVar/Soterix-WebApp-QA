@@ -93,6 +93,7 @@ import csv
 import functools
 import json
 import re
+import os
 import sys
 import time
 import urllib.error
@@ -121,7 +122,6 @@ DEFAULT_TITLE_COL = "Test Case Title"
 # build_ota_update_payloads_v2.py uses, since title->case_key resolution does
 # not depend on the user's browser session.
 # ---------------------------------------------------------------------------
-TOOLING_CONFIG = Path.home() / ".tooling.json"
 REST_BASE = "https://api.qatouch.com/api/v1"
 
 # ---------------------------------------------------------------------------
@@ -176,19 +176,16 @@ class AuthCreds:
 
 
 def load_rest_token() -> tuple[str, str] | None:
-    """Best-effort load of the public REST api-token + domain from .tooling.json.
+    """Best-effort load of the public REST api-token + domain from the environment.
 
     Returns (api_token, domain_short) or None if not configured. The domain
     is the short form (e.g. "soterixsystems"), not the full host.
     """
-    if not TOOLING_CONFIG.exists():
+    token = os.environ.get("QATOUCH_API_TOKEN") or os.environ.get("QATOUCH_API_KEY")
+    domain = os.environ.get("QATOUCH_DOMAIN")
+    if not token or not domain:
         return None
-    try:
-        cfg = json.loads(TOOLING_CONFIG.read_text(encoding="utf-8"))
-        env = cfg["mcpServers"]["qatouch"]["env"]
-        return env["QATOUCH_API_TOKEN"], env["QATOUCH_DOMAIN"]
-    except (KeyError, json.JSONDecodeError):
-        return None
+    return token, domain
 
 
 def http_request(
@@ -618,7 +615,7 @@ def main() -> int:
     ap.add_argument(
         "--rest-domain",
         default=None,
-        help="Override short REST domain (default: read from ~/.tooling.json)",
+        help="Override short REST domain (default: QATOUCH_DOMAIN from .env)",
     )
     args = ap.parse_args()
 
@@ -648,20 +645,18 @@ def main() -> int:
         return 2
 
     # --- Fetch live cases for the project (public REST)
-    rest_creds = (
-        (args.rest_domain and ("", args.rest_domain))
-        if False
-        else load_rest_token()
-    )
+    rest_creds = load_rest_token()
     if not rest_creds:
         print(
-            "  Could not read public REST api-token from ~/.tooling.json - "
-            "set --rest-domain and ensure QATOUCH_API_TOKEN is in the env "
-            "or update the script to accept it via flag.",
+            "  Missing public REST credentials. Set QATOUCH_API_TOKEN and "
+            "QATOUCH_DOMAIN in your .env at the repo root (see .env.template).",
             file=sys.stderr,
         )
         return 2
     token, domain_short = rest_creds
+    # --rest-domain overrides the domain from the environment.
+    if args.rest_domain:
+        domain_short = args.rest_domain
     if args.rest_domain:
         domain_short = args.rest_domain
 

@@ -40,13 +40,6 @@ tools/debug_screenshots/
 nodeids
 .pytest_cache/
 
-# Agent settings and startup prompts (local only)
-.agent/
-.agents/
-.codex/
-AGENT_STARTUP_PROMPT.md
-docs/AGENT_STARTUP_PROMPT.md
-
 # Bugasura extraction artifacts (local only)
 BUGASURA_EXTRACTION_GUIDE.md
 BUGASURA_STARTUP_PROMPT.md
@@ -88,12 +81,23 @@ legacy-selenium-tests/
 # Windows artifacts
 nul
 
+# Generated test reports
+reports/
+
 # Local credentials and per-machine state (never commit)
 tools/.qatouch_creds.json
 tools/.partner_admin_backfill.json
 tools/archive/.ota_*.json
-.notes/
 config/verification_status.json
 
 # Point-in-time UI audit snapshots (kept in backups, not in git)
 config/audit_reports/
+
+# Per-developer AI/agent tool configs and prompts (never committed).
+# Shared engineering conventions belong in AGENTS.md, which IS tracked.
+.notes/
+.cursor/
+.github/copilot-instructions.md
+NOTES.md
+STARTUP_PROMPT.md
+docs/STARTUP_PROMPT.md

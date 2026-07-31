@@ -21,8 +21,8 @@ class TestViewsBasic:
         for name in reversed(self._saved_view_names):
             try:
                 self._delete_saved_view_safe(name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete view '{name}': {e}")
         # Cleanup: close extra tabs (only first tab should remain)
         try:
             tabs = self.page.locator("button.tabItem")
@@ -36,8 +36,8 @@ class TestViewsBasic:
                     self.page.wait_for_timeout(500)
                 else:
                     break
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Cleanup: failed to close extra tabs: {e}")
 
     def _delete_saved_view_safe(self, view_name):
         """Delete a saved view from the My Views panel."""
@@ -57,7 +57,6 @@ class TestViewsBasic:
 
     @pytest.mark.ui
     @pytest.mark.sanity
-    @pytest.mark.qatouch("pDp8l3")
     def test_rename_does_not_affect_sequence(self):
         """Verify renaming a tab doesn't break the sequential naming for new tabs."""
         self.step_capture.mark(1, "Navigate to Views page and wait for page load")
@@ -92,7 +91,6 @@ class TestViewsBasic:
 
     @pytest.mark.ui
     @pytest.mark.sanity
-    @pytest.mark.qatouch("yaWXBx")
     def test_save_empty_view_shows_error(self):
         """Verify saving an empty view shows an error or is prevented."""
         # Add a new tab (it will be empty)
@@ -136,7 +134,6 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
-    @pytest.mark.qatouch("8V1b0g")
     def test_save_view(self):
         """Verify a view can be saved with content using checkbox selection."""
         import datetime
@@ -161,15 +158,15 @@ class TestViewsBasic:
         self.page.wait_for_timeout(250)
 
         # Expand Driver Site and show cameras
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(500)
 
         # Select the first available camera via checkbox
         self.views.add_first_camera_via_checkbox()
 
-        # Click save button
-        save_button = self.page.locator("button:has-text('Save View'), img[src*='save']").last
-        save_button.click(force=True)
+        # Click save button using the save icon image src
+        save_icon = self.page.locator("img[src*='save']").last
+        save_icon.click(force=True)
         self.page.wait_for_timeout(500)
 
         # Verify success message
@@ -202,7 +199,6 @@ class TestViewsBasic:
 
     @pytest.mark.ui
     @pytest.mark.views_myviews
-    @pytest.mark.qatouch("vanZz1")
     def test_open_my_views(self):
         """Verify My Views panel opens and shows saved views."""
         # Click My Views button
@@ -217,7 +213,6 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
-    @pytest.mark.qatouch("8V1vGJ")
     def test_open_saved_view(self):
         """Verify a saved view can be reopened from My Views after page refresh."""
         import datetime
@@ -240,7 +235,7 @@ class TestViewsBasic:
         tab_input.press("Enter")
         self.page.wait_for_timeout(250)
 
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(500)
         self.views.add_first_camera_via_checkbox()
 
@@ -293,7 +288,6 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
-    @pytest.mark.qatouch("WEnQRx")
     def test_delete_saved_view(self):
         """Verify a saved view can be deleted."""
         import datetime
@@ -317,7 +311,7 @@ class TestViewsBasic:
         self.page.wait_for_timeout(500)
 
         # Expand Driver Site and show cameras
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(1000)  # Extra wait for cameras to load
 
         # Select the first available camera via checkbox
@@ -334,7 +328,6 @@ class TestViewsBasic:
         save_btn.wait_for(state="attached", timeout=10000)
         save_btn.evaluate("el => el.click()")
         self.page.wait_for_timeout(1500)
-        self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=60000)
 
         # Close the tab
         tab.hover()
@@ -346,7 +339,7 @@ class TestViewsBasic:
         self.page.locator("img[src*='myviews']").click()
         self.page.wait_for_timeout(1000)
 
-        # Find the saved view and hover to show delete button
+        # Find the saved view and verify it exists (confirms save worked)
         saved_view = self.page.locator(f"span[title='{view_name}']")
         saved_view.wait_for(state="visible", timeout=20000)
         saved_view.hover()

@@ -6,7 +6,7 @@ End-to-end test suite for **NexaiQ-Core** (Soterix's cloud video platform), with
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
 - **Test management:** QA Touch (project key `JlW1`)
 - **Bug tracking:** Jira (project key `NC`)
-- **~502 tests** across UI and API, with `legacy/` and `legacy-selenium-tests/` excluded from CI
+- **642 tests collected** across 69 files (UI + API), with `legacy/` and `legacy-selenium-tests/` excluded from collection
 
 ## Quick Setup
 
@@ -97,7 +97,7 @@ pytest --headed --slowmo 300 --verify-mode --step-review -k "test_export_clip"
 
 ```
 conftest.py                # Root fixtures (browser, auth, env, API clients)
-pytest.ini                 # 51 markers; norecursedirs excludes legacy
+pytest.ini                 # 62 markers; norecursedirs excludes legacy
 .env / .env.template       # Per-user secrets (gitignored) / template
 config/
 ├── base_config.py         # ENV resolution + APP_TYPE
@@ -106,13 +106,13 @@ config/
 ├── jira_field_mapping.py  # QA Touch -> Jira Bug field mapping
 └── qatouch_snapshots/     # Historical case snapshots
 tests/
-├── ui/                    # 43 test files organized by module
-│   ├── admin/   chats/   c2c/   events/   insights/   licenses/
-│   ├── login/   maps/    media/  notifications/   search/
-│   ├── sequences/   views/
-├── api/smoke/             # 5 files, ~16 API smoke tests
+├── ui/                    # 58 test files organized by module
+│   ├── admin/ (incl. LPR)   chats/   c2c/   events/   insights/
+│   ├── licenses/   login/   maps/    media/   notifications/
+│   ├── search/   sequences/   views/
+├── api/smoke/             # 11 files, 47 API smoke tests
 ├── shared/
-│   ├── pages/             # 15 Page Object Models
+│   ├── pages/             # 17 Page Object Models
 │   ├── api_clients/       # 9 API client helpers (extend BaseAPIClient)
 │   ├── helpers/           # Role helper
 │   └── schemas/           # JSON schemas for API response validation
@@ -121,12 +121,13 @@ tests/
 plugins/
 ├── qatouch_reporter.py    # --qatouch-upload --qatouch-run <KEY>
 └── verification_runner.py # --verify-mode + --step-review
-tools/                     # 30+ utility scripts
+tools/                     # ~80 utility scripts
 ├── run_suite.py           # PREFERRED ENTRY: clone + pytest + bug filing
 ├── qatouch_*.py           # QA Touch CRUD, scaffolding, audits, analytics
 ├── smart_jira_bug_creator.py  # Auto-file Jira bugs on failure with RTM linkage
 ├── update_failure_history.py  # JUnit XML -> flaky_tests.json (used in CI paths)
 ├── discover_*.py          # API / camera / Jira discovery scripts
+├── send_test_report.py    # Email the HTML report (see docs/EMAIL_REPORTS.md)
 └── email_client.py        # Azure OAuth email sender
 docs/                      # Setup guides, integration plans, maintenance reminders
 ```
@@ -135,7 +136,8 @@ docs/                      # Setup guides, integration plans, maintenance remind
 
 ## QA Touch Integration
 
-- **Case mapping:** every pytest test maps to a QA Touch case via either `config/qatouch_case_mapping.json` (nodeid -> case_key) or the `@pytest.mark.qatouch("KEY")` marker on the test itself. Mappings are kept current via `tools/qatouch_mapper.py` and `tools/qatouch_sync_check.py`.
+- **Case mapping:** a pytest test is linked to a QA Touch case through `config/qatouch_case_mapping.json` (nodeid -> case_key). The reporter also honours a `@pytest.mark.qatouch("KEY")` marker on a test, but **the shared test files deliberately carry no markers** - QA Touch reporting is not part of the team's automation flow, so the mapping is kept out of the test code entirely. Keep new mappings in the JSON file. Mappings are checked with `tools/qatouch_mapper.py` and `tools/qatouch_sync_check.py`.
+- **Unmapped tests still run.** A test with no mapping executes normally; only its result upload is skipped (it lands in the reporter's `unmapped` count). Mapping affects reporting, never pass/fail.
 - **Run cloning:** `tools/run_suite.py` clones the per-suite template run on every invocation, so smoke run #1 and smoke run #2 land in distinct QA Touch run records and history is queryable.
 - **Result upload:** the `qatouch_reporter` pytest plugin batches all results into a single API call at session-end. Two endpoints supported:
   - **Legacy (default):** `PATCH /api/v1/testRunResults/status/multiple` - status only.
@@ -154,20 +156,20 @@ docs/                      # Setup guides, integration plans, maintenance remind
 
 ## Step Capture & Verification
 
-Every test wires up the `step_capture` fixture to mark logical steps (one `.mark(n, "description")` call after each action). Two consumers:
+Tests may opt into the `step_capture` fixture to mark logical steps (one `.mark(n, "description")` call after each action). Roughly 20 test files currently use it; it is optional, and a test without it runs normally. Two consumers:
 
 1. **JSON sidecars** under `tests/steps/` define the step text + expected outcomes per test.
-2. **`--verify-mode`** captures per-step screenshots into `verification_output/screenshots/` for asynchronous QA review.
+2. **`--verify-mode`** captures per-step screenshots into `verification_output/screenshots/` for asynchronous QA review - only for tests that request the fixture.
 
 Convention details + examples in `AGENTS.md` under "Step Capture Convention".
 
-## Markers (51 defined in `pytest.ini`)
+## Markers (62 defined in `pytest.ini`)
 
 - **Type:** `smoke`, `sanity`, `regression`, `api`, `ui`
 - **Environment:** `env_qa`, `env_stage`, `env_preprod`, `env_prod`
 - **Feature:** `admin`, `views_devices`, `events`, `search`, `media`, `maps`, `chats`, `licenses`, `insights`, `notifications`, `sequences`, etc.
 - **Meta:** `slow` (>30s), `flaky` (intermittent), `wip` (skip in CI)
-- **Mapping:** `qatouch(case_key)` - maps a test to a QA Touch case directly without touching the JSON mapping file
+- **Mapping:** `qatouch(case_key)` / `qatouch_project(project_key)` - recognised by the reporter but intentionally unused in the shared test files; keep mappings in `config/qatouch_case_mapping.json` instead
 
 Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`, `pytest -m "regression and env_stage"`.
 
@@ -209,7 +211,11 @@ The Playwright/pytest-aware rule set is the headline difference from a generic r
 
 - `AGENTS.md` - engineering conventions, page-object patterns, step-capture rules, marker definitions
 - `docs/CREDENTIALS_SETUP.md` - credential configuration walkthrough
-- `docs/MAINTENANCE_REMINDERS.md` - OAuth expirations, recurring tasks
+- `MAINTENANCE_REMINDERS.md` - OAuth expirations, recurring tasks
 - `docs/SESSION_CACHING_IMPLEMENTATION.md` - auth state cache details
 - `docs/VERIFICATION_WORKFLOW.md` - QA review flow for verification mode
+- `docs/EMAIL_REPORTS.md` - emailing the HTML run report via Microsoft Graph
+- `docs/API_ENDPOINTS.md` - REST endpoint catalog + coverage status
+- `docs/BRUNO_GUIDE.md` - interactive API exploration with Bruno
+- `docs/automation-mapping.md` - QA Automation Doc # ↔ test mapping
 - Workspace-level roadmap: `dashboards/soterix-internal-dashboards/docs/FUTURE_ROADMAP.md` (single source of truth across all Soterix projects)

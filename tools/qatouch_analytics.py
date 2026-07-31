@@ -12,11 +12,14 @@ Usage:
 """
 from __future__ import annotations
 
+import csv
 import functools
 import json
+import os
 import sys
-from collections import Counter
-from datetime import datetime
+import time
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
 from pathlib import Path
 
 _print = print
@@ -30,7 +33,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
-
 load_dotenv(ROOT / '.env')
 
 from tools.qatouch_client import QATouchClient
@@ -121,24 +123,16 @@ def analyze_snapshot(snapshot: dict) -> dict:
         by_priority[c.get('Priority', 'Unknown')] += 1
 
     # Tag analysis
-    # QA Touch API changed the tag field: legacy snapshots use 'NewTags' as a
-    # comma-separated string; current API returns 'Tags' as a list. Handle both
-    # so this works against historical snapshots and live pulls.
     tag_counter = Counter()
     tagged_count = 0
     for c in cases:
-        raw = c.get('Tags')
-        if raw is None:
-            raw = c.get('NewTags', '')
-        if isinstance(raw, list):
-            pieces = [str(x) for x in raw]
-        else:
-            pieces = str(raw).split(',') if raw else []
-        case_tags = [p.strip() for p in pieces if p and p.strip()]
-        if case_tags:
+        tags_raw = c.get('NewTags', '')
+        if tags_raw and str(tags_raw).strip():
             tagged_count += 1
-            for t in case_tags:
-                tag_counter[t] += 1
+            for t in str(tags_raw).split(','):
+                t = t.strip()
+                if t:
+                    tag_counter[t] += 1
 
     # Created date distribution
     by_date = Counter()
@@ -487,23 +481,23 @@ def _print_summary(metrics: dict):
     print(f'{"=" * 60}')
     print(f'\n  Total Test Cases:        {total:,}')
     print(f'  Total Modules:           {metrics["total_modules"]}')
-    print('\n  --- Automation Coverage ---')
+    print(f'\n  --- Automation Coverage ---')
     print(f'  Playwright Tests:        {auto["total_playwright_tests"]}')
     print(f'  Mapped to QA Touch:      {auto["mapped_to_qatouch"]}')
     print(f'  Automation Coverage:     {coverage_pct}% ({auto["mapped_to_qatouch"]}/{total})')
-    print('\n  --- Test Types ---')
+    print(f'\n  --- Test Types ---')
     for t, cnt in metrics['by_type'].items():
         print(f'    {cnt:>5}  {t}')
-    print('\n  --- Tags ---')
+    print(f'\n  --- Tags ---')
     print(f'  Tagged:                  {metrics["tags"]["tagged_cases"]} ({metrics["tags"]["tag_coverage_pct"]}%)')
     print(f'  Untagged:                {metrics["tags"]["untagged_cases"]}')
     for tag, cnt in list(metrics['tags']['distribution'].items())[:10]:
         print(f'    {cnt:>5}  {tag}')
-    print('\n  --- Top 15 Modules ---')
+    print(f'\n  --- Top 15 Modules ---')
     for m in metrics['top_modules'][:15]:
         bar = '#' * min(m['count'], 50)
         print(f'    {m["count"]:>4}  {m["module"][:40]:<40}  {bar}')
-    print('\n  --- Creation Timeline ---')
+    print(f'\n  --- Creation Timeline ---')
     for d, cnt in sorted(metrics['creation_dates'].items()):
         print(f'    {d}  +{cnt} cases')
 
@@ -515,7 +509,7 @@ def _print_delta(delta: dict):
     print(f'  Removed:    {delta["removed"]}')
     print(f'  Modified:   {delta["modified"]}')
     if delta.get('added_by_module'):
-        print('  Added by module:')
+        print(f'  Added by module:')
         for mod, cnt in delta['added_by_module'].items():
             print(f'    +{cnt}  {mod}')
 

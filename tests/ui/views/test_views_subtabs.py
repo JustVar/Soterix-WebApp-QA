@@ -24,11 +24,9 @@ class TestViewsSubtabs:
     """Tests for each Views left panel subtab."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page, step_capture):
+    def setup(self, authenticated_page):
         """Setup runs once per test using cached session (no re-login)."""
         self.page = authenticated_page
-        self.step_capture = step_capture
-        step_capture.set_page(self.page)
         self.views = ViewsPage(self.page)
         self._saved_view_names = []
 
@@ -42,8 +40,8 @@ class TestViewsSubtabs:
         for name in reversed(self._saved_view_names):
             try:
                 self._delete_saved_view(name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete view '{name}': {e}")
         # Cleanup: close extra tabs (only first tab should remain)
         try:
             tabs = self.page.locator("button.tabItem")
@@ -57,8 +55,8 @@ class TestViewsSubtabs:
                     self.page.wait_for_timeout(500)
                 else:
                     break
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Cleanup: failed to close extra tabs: {e}")
 
     # =========================================================================
     # DEVICES SUBTAB - Camera thumbnails from site tree
@@ -68,7 +66,6 @@ class TestViewsSubtabs:
     @pytest.mark.subtabs
     @pytest.mark.views_devices
     @pytest.mark.checkbox
-    @pytest.mark.qatouch("pDpvBJ")
     def test_devices_add_camera_via_checkbox(self):
         """DEVICES: Add camera to tile using checkbox selection.
 
@@ -83,34 +80,32 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles available"
 
-        self.views.expand_site_and_show_cameras("Driver Site")
+        # Devices is default tab - expand site and show cameras
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(400)
-        self.step_capture.mark(1, "Expand Driver Site and show camera thumbnails")
 
+        # Find camera thumbnail and add via checkbox
         camera = self.page.locator(".cameraThumbnailWrapper").first
         camera.wait_for(state="visible", timeout=10000)
         camera.hover()
         self.page.wait_for_timeout(300)
-        self.step_capture.mark(2, "Hover over first camera thumbnail to reveal checkbox")
 
         checkbox = camera.locator(".sidebar-custom-checkbox")
         assert checkbox.count() > 0, "Checkbox not visible on hover"
         checkbox.click()
         self.page.wait_for_timeout(800)
-        self.step_capture.mark(3, "Click checkbox to add camera to tile")
 
+        # Verify: tile filled
         new_tiles = self.views.get_available_tile_count()
         video_elements = self.page.locator("video, canvas, [class*='video']")
 
         assert (new_tiles < initial_tiles or video_elements.count() > 0), \
             f"Camera not added. Tiles: {initial_tiles} -> {new_tiles}"
-        self.step_capture.mark(4, "Verify camera stream appears in the tile")
 
     @pytest.mark.ui
     @pytest.mark.subtabs
     @pytest.mark.views_devices
     @pytest.mark.dragdrop
-    @pytest.mark.qatouch("3gjBw9")
     def test_devices_drag_camera_to_tile(self):
         """DEVICES: Drag camera thumbnail directly to empty tile.
 
@@ -123,27 +118,24 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles available"
 
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(400)
-        self.step_capture.mark(1, "Expand Driver Site and show camera thumbnails")
 
         camera = self.page.locator(".cameraThumbnailWrapper").first
         camera.wait_for(state="visible", timeout=10000)
 
         target_tile = self.views.drag_drop_tiles.first
         target_tile.wait_for(state="visible", timeout=10000)
-        self.step_capture.mark(2, "Locate camera thumbnail and target empty tile")
 
-        self.views.visible_drag(camera, target_tile)
+        # Perform visible drag using explicit mouse movements
+        self._visible_drag(camera, target_tile)
         self.page.wait_for_timeout(800)
-        self.step_capture.mark(3, "Drag camera thumbnail to empty tile")
 
         new_tiles = self.views.get_available_tile_count()
         video_elements = self.page.locator("video, canvas, [class*='video']")
 
         assert (new_tiles < initial_tiles or video_elements.count() > 0), \
             f"Drag failed. Tiles: {initial_tiles} -> {new_tiles}"
-        self.step_capture.mark(4, "Verify camera stream appears in the tile")
 
     # =========================================================================
     # MY VIEWS SUBTAB - Saved views
@@ -167,27 +159,31 @@ class TestViewsSubtabs:
         view_name = f"SubtabTest_{datetime.datetime.now().strftime('%H%M%S')}"
         self._saved_view_names.append(view_name)
 
+        # Create a view to test with
         self._create_and_save_view(view_name)
-        self.step_capture.mark(1, "Create a new tab with a camera and save the view")
 
+        # Refresh page (required for My Views to properly list the new view)
         self.page.reload()
         self.page.wait_for_timeout(500)
 
+        # Open My Views subtab
         self.views.open_my_views()
         self.page.wait_for_timeout(500)
-        self.step_capture.mark(2, "Reload page and open My Views subtab")
 
+        # Find and add saved view via checkbox
         saved_view = self.page.locator(f"span[title='{view_name}']").first
         saved_view.wait_for(state="visible", timeout=20000)
 
+        # JS hover to reveal checkbox (React requires this)
         self._js_hover_on_view(view_name)
         self.page.wait_for_timeout(300)
 
         checkbox = self.page.locator(".sidebar-custom-checkbox").first
         checkbox.click()
         self.page.wait_for_timeout(800)
-        self.step_capture.mark(3, "Hover saved view to reveal checkbox and click it")
 
+        # Verify: tab opened OR tile count decreased
+        # Tab selector varies - check for tab with view name in input or div
         tab_with_input = self.page.locator(f"input.tabTitle[value='{view_name}']")
         tab_with_div = self.page.locator(f"button.tabItem:has(div[title='{view_name}'])")
         tab_by_text = self.page.locator(f"button.tabItem:has-text('{view_name}')")
@@ -197,7 +193,6 @@ class TestViewsSubtabs:
                      tab_by_text.count() > 0)
 
         assert tab_found, f"View '{view_name}' not opened as tab"
-        self.step_capture.mark(4, "Verify saved view opens as a new tab")
 
     @pytest.mark.ui
     @pytest.mark.subtabs
@@ -218,38 +213,39 @@ class TestViewsSubtabs:
         self._saved_view_names.append(view_name)
 
         self._create_and_save_view(view_name)
-        self.step_capture.mark(1, "Create and save a test view with a camera")
 
+        # Refresh page (required for My Views to properly list the new view)
         self.page.reload()
         self.page.wait_for_timeout(500)
 
         initial_tiles = self.views.get_available_tile_count()
 
+        # Open My Views subtab
         self.views.open_my_views()
         self.page.wait_for_timeout(400)
 
         saved_view = self.page.locator(f"span[title='{view_name}']").first
         saved_view.wait_for(state="visible", timeout=20000)
-        self.step_capture.mark(2, "Reload page and open My Views subtab")
 
         target_tile = self.views.drag_drop_tiles.first
 
+        # Attempt drag with visible highlight - views may open as tabs rather than filling tiles
         try:
-            self.views.visible_drag(saved_view, target_tile)
+            self._visible_drag(saved_view, target_tile)
         except Exception as e:
             pytest.skip(f"View drag not supported: {e}")
-        self.step_capture.mark(3, "Drag the saved view to the first empty tile")
 
         new_tiles = self.views.get_available_tile_count()
 
+        # Check various tab selectors
         tab_found = (
             self.page.locator(f"input.tabTitle[value='{view_name}']").count() > 0 or
             self.page.locator(f"button.tabItem:has-text('{view_name}')").count() > 0
         )
 
+        # View drag may not work - skip if neither tile nor tab changed
         if new_tiles >= initial_tiles and not tab_found:
             pytest.skip("View drag-to-tile not supported - use checkbox method instead")
-        self.step_capture.mark(4, "Verify tile was filled or new tab was created")
 
     # =========================================================================
     # MAPS SUBTAB - Map thumbnails under sites
@@ -259,7 +255,6 @@ class TestViewsSubtabs:
     @pytest.mark.subtabs
     @pytest.mark.views_maps
     @pytest.mark.checkbox
-    @pytest.mark.qatouch("21zBxL")
     def test_maps_add_map_via_checkbox(self):
         """MAPS: Add map to tile using checkbox.
 
@@ -273,51 +268,50 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles"
 
+        # Open Maps panel
         self.views.open_maps()
         self.page.wait_for_timeout(500)
-        self.step_capture.mark(1, "Open the Maps panel")
 
-        site = self.page.locator("p:text('Driver Site'), span:text('Driver Site')").first
+        # Click site to reveal maps
+        # Expand the first available site to show maps
+        self.views.click_site(None)
         site.wait_for(state="visible", timeout=10000)
         site.click()
         self.page.wait_for_timeout(500)
-        self.step_capture.mark(2, "Expand Driver Site to reveal map thumbnails")
 
+        # Find map thumbnail (same class as cameras)
         map_thumb = self.page.locator(".cameraThumbnailWrapper").first
         if map_thumb.count() == 0:
             pytest.skip("No maps available under Driver Site")
 
         map_thumb.hover()
         self.page.wait_for_timeout(300)
-        self.step_capture.mark(3, "Hover over map thumbnail to reveal checkbox")
 
         checkbox = map_thumb.locator(".sidebar-custom-checkbox")
         if checkbox.count() > 0:
             checkbox.click()
-            self.page.wait_for_timeout(2500)
+            self.page.wait_for_timeout(2500)  # Longer wait for visual verification
         else:
             pytest.skip("No checkbox on map thumbnail")
 
+        # Wait for map to load
         try:
             loader = self.page.locator("[class*='CircularProgress']")
             if loader.count() > 0:
                 loader.wait_for(state="hidden", timeout=60000)
         except Exception:
-            pass
-        self.step_capture.mark(4, "Click checkbox to add map to tile")
+            pass  # Loader may not appear for cached maps
 
         new_tiles = self.views.get_available_tile_count()
         map_content = self.page.locator("[class*='leaflet'], iframe, [class*='map-container']")
 
         assert (new_tiles < initial_tiles or map_content.count() > 0), \
             f"Map not added. Tiles: {initial_tiles} -> {new_tiles}"
-        self.step_capture.mark(5, "Verify map content loads in the tile")
 
     @pytest.mark.ui
     @pytest.mark.subtabs
     @pytest.mark.views_maps
     @pytest.mark.dragdrop
-    @pytest.mark.qatouch("B869gN")
     def test_maps_drag_map_to_tile(self):
         """MAPS: Drag map thumbnail directly to tile.
 
@@ -332,28 +326,26 @@ class TestViewsSubtabs:
         self.views.open_maps()
         self.page.wait_for_timeout(500)
 
-        site = self.page.locator("p:text('Driver Site'), span:text('Driver Site')").first
+        # Expand the first available site to show maps
+        self.views.click_site(None)
         site.click()
         self.page.wait_for_timeout(500)
-        self.step_capture.mark(1, "Open Maps panel and expand Driver Site")
 
         map_thumb = self.page.locator(".cameraThumbnailWrapper").first
         if map_thumb.count() == 0:
             pytest.skip("No maps available")
 
         target_tile = self.views.drag_drop_tiles.first
-        self.step_capture.mark(2, "Locate map thumbnail and target empty tile")
 
-        self.views.visible_drag(map_thumb, target_tile)
+        # Visible drag with animation
+        self._visible_drag(map_thumb, target_tile)
         self.page.wait_for_timeout(1500)
-        self.step_capture.mark(3, "Drag map thumbnail to empty tile")
 
         new_tiles = self.views.get_available_tile_count()
         map_content = self.page.locator("[class*='leaflet'], iframe")
 
         assert (new_tiles < initial_tiles or map_content.count() > 0), \
             "Map drag failed"
-        self.step_capture.mark(4, "Verify map content loads in the tile")
 
     # =========================================================================
     # CHANNELS SUBTAB - Channel thumbnails
@@ -363,7 +355,6 @@ class TestViewsSubtabs:
     @pytest.mark.subtabs
     @pytest.mark.views_channels
     @pytest.mark.checkbox
-    @pytest.mark.qatouch("M73w4q")
     def test_channels_add_channel_via_checkbox(self):
         """CHANNELS: Add channel to tile using checkbox.
 
@@ -375,38 +366,35 @@ class TestViewsSubtabs:
         """
         initial_tiles = self.views.get_available_tile_count()
 
+        # Click Channels subtab (in .viewTabs, not left nav)
         self.views.open_channels()
         self.page.wait_for_timeout(500)
-        self.step_capture.mark(1, "Open the Channels subtab")
 
+        # Find channel thumbnail
         channel = self.page.locator(".cameraThumbnailWrapper").first
         if channel.count() == 0:
             pytest.skip("No channels available")
 
         channel.hover()
         self.page.wait_for_timeout(300)
-        self.step_capture.mark(2, "Hover over channel thumbnail to reveal checkbox")
 
         checkbox = channel.locator(".sidebar-custom-checkbox")
         if checkbox.count() > 0:
             checkbox.click()
-            self.page.wait_for_timeout(2500)
+            self.page.wait_for_timeout(2500)  # Longer wait for visual verification
         else:
             pytest.skip("No checkbox on channel")
-        self.step_capture.mark(3, "Click checkbox to add channel to tile")
 
         new_tiles = self.views.get_available_tile_count()
         video_elements = self.page.locator("video, canvas")
 
         assert (new_tiles < initial_tiles or video_elements.count() > 0), \
             "Channel not added via checkbox"
-        self.step_capture.mark(4, "Verify channel stream appears in the tile")
 
     @pytest.mark.ui
     @pytest.mark.subtabs
     @pytest.mark.views_channels
     @pytest.mark.dragdrop
-    @pytest.mark.qatouch("zvnVlw")
     def test_channels_drag_channel_to_tile(self):
         """CHANNELS: Drag channel thumbnail to tile.
 
@@ -418,27 +406,25 @@ class TestViewsSubtabs:
         """
         initial_tiles = self.views.get_available_tile_count()
 
+        # Click Channels subtab (in .viewTabs, not left nav)
         self.views.open_channels()
         self.page.wait_for_timeout(500)
-        self.step_capture.mark(1, "Open the Channels subtab")
 
         channel = self.page.locator(".cameraThumbnailWrapper").first
         if channel.count() == 0:
             pytest.skip("No channels available")
 
         target_tile = self.views.drag_drop_tiles.first
-        self.step_capture.mark(2, "Locate channel thumbnail and target empty tile")
 
-        self.views.visible_drag(channel, target_tile)
+        # Visible drag with animation
+        self._visible_drag(channel, target_tile)
         self.page.wait_for_timeout(800)
-        self.step_capture.mark(3, "Drag channel thumbnail to empty tile")
 
         new_tiles = self.views.get_available_tile_count()
         video_elements = self.page.locator("video, canvas")
 
         assert (new_tiles < initial_tiles or video_elements.count() > 0), \
             "Channel drag failed"
-        self.step_capture.mark(4, "Verify channel stream appears in the tile")
 
     # =========================================================================
     # INSIGHTS SUBTAB - Analytics/Insight widget thumbnails
@@ -448,7 +434,6 @@ class TestViewsSubtabs:
     @pytest.mark.subtabs
     @pytest.mark.views_insights
     @pytest.mark.checkbox
-    @pytest.mark.qatouch("xm9dwl")
     def test_insights_add_via_checkbox(self):
         """INSIGHTS: Add insight widget to tile using checkbox.
 
@@ -465,20 +450,26 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles available"
 
+        # Click Insights subtab (top bar within Views, not left nav)
         self.views.open_insights()
         self.page.wait_for_timeout(800)
-        self.step_capture.mark(1, "Open the Insights subtab")
 
+        # Find insight widget thumbnails - they use the same wrapper as cameras
+        # but with insight/chart images. Look for cameraThumbnailWrapper first.
         widget_card = None
 
+        # Primary: cameraThumbnailWrapper is used for insight widget thumbnails
         camera_wrappers = self.page.locator(".cameraThumbnailWrapper")
         if camera_wrappers.count() > 0:
             widget_card = camera_wrappers.first
         else:
+            # Fallback: look for thumbnail images in the insights panel
+            # Insights panel shows widget previews with chart images
             thumbnail_images = self.page.locator(".viewTabPanel img, .sidebar-content img").filter(
-                has_not=self.page.locator("input")
+                has_not=self.page.locator("input")  # Exclude search box area
             )
             if thumbnail_images.count() > 0:
+                # Get the parent container of the image
                 widget_card = thumbnail_images.first.locator("..")
 
         if widget_card is None:
@@ -486,21 +477,23 @@ class TestViewsSubtabs:
 
         widget_card.hover()
         self.page.wait_for_timeout(300)
-        self.step_capture.mark(2, "Locate insight widget card and hover to reveal checkbox")
 
+        # Try checkbox first, then direct click
         checkbox = widget_card.locator(".sidebar-custom-checkbox")
         if checkbox.count() == 0:
             checkbox = self.page.locator(".sidebar-custom-checkbox").first
 
         if checkbox.count() > 0:
             checkbox.click()
-            self.page.wait_for_timeout(2500)
+            self.page.wait_for_timeout(2500)  # Longer wait for visual verification
         else:
+            # Direct click on widget card to add it
             widget_card.click()
-            self.page.wait_for_timeout(2500)
-        self.step_capture.mark(3, "Click checkbox or widget card to add insight to tile")
+            self.page.wait_for_timeout(2500)  # Longer wait for visual verification
 
+        # Verify: tile filled with insight chart/widget content
         new_tiles = self.views.get_available_tile_count()
+        # Insight widgets show charts - look for canvas, svg, chart elements
         insight_content = self.page.locator(
             "canvas, svg, [class*='chart'], [class*='graph'], "
             "[class*='widget'], [class*='insight'], iframe"
@@ -508,13 +501,11 @@ class TestViewsSubtabs:
 
         assert (new_tiles < initial_tiles or insight_content.count() > 0), \
             f"Insight widget not added. Tiles: {initial_tiles} -> {new_tiles}"
-        self.step_capture.mark(4, "Verify insight chart content appears in the tile")
 
     @pytest.mark.ui
     @pytest.mark.subtabs
     @pytest.mark.views_insights
     @pytest.mark.dragdrop
-    @pytest.mark.qatouch("dypXMM")
     def test_insights_drag_to_tile(self):
         """INSIGHTS: Drag insight widget card to tile.
 
@@ -528,6 +519,7 @@ class TestViewsSubtabs:
 
         Success: Tile filled with chart/insight content
         """
+        # Ensure we have empty tiles by adding a new tab if needed
         initial_tiles = self.views.get_available_tile_count()
         if initial_tiles == 0:
             self.views.add_new_tab()
@@ -536,16 +528,19 @@ class TestViewsSubtabs:
 
         assert initial_tiles > 0, "No empty tiles available even after adding new tab"
 
+        # Click Insights subtab (top bar within Views, not left nav)
         self.views.open_insights()
         self.page.wait_for_timeout(800)
-        self.step_capture.mark(1, "Open the Insights subtab")
 
+        # Find insight widget thumbnails (same approach as checkbox test)
         widget_card = None
 
+        # Primary: cameraThumbnailWrapper is used for insight widget thumbnails
         camera_wrappers = self.page.locator(".cameraThumbnailWrapper")
         if camera_wrappers.count() > 0:
             widget_card = camera_wrappers.first
         else:
+            # Fallback: look for thumbnail images in the insights panel
             thumbnail_images = self.page.locator(".viewTabPanel img, .sidebar-content img").filter(
                 has_not=self.page.locator("input")
             )
@@ -554,10 +549,11 @@ class TestViewsSubtabs:
 
         if widget_card is None:
             pytest.skip("No insight widgets available - widgets are user-created")
-        self.step_capture.mark(2, "Locate insight widget card")
 
+        # Check if drag tiles are visible
         target_tiles = self.views.drag_drop_tiles
         if target_tiles.count() == 0:
+            # Try alternate tile selector
             alt_tiles = self.page.locator("text=Drag & Drop")
             if alt_tiles.count() == 0:
                 pytest.skip("No drag-drop tiles visible - use checkbox method")
@@ -569,19 +565,20 @@ class TestViewsSubtabs:
         except Exception:
             pytest.skip("Drag-drop tiles not visible - use checkbox method")
 
-        self.views.visible_drag(widget_card, target_tile)
+        # Visible drag with animation (red source, green target)
+        self._visible_drag(widget_card, target_tile)
         self.page.wait_for_timeout(800)
-        self.step_capture.mark(3, "Drag insight widget to empty tile")
 
+        # Verify: tile filled with chart/insight content
         new_tiles = self.views.get_available_tile_count()
         insight_content = self.page.locator(
             "canvas, svg, [class*='chart'], [class*='graph'], "
             "[class*='widget'], [class*='insight'], iframe"
         )
 
+        # If no change, drag may not be supported for this widget type
         if new_tiles >= initial_tiles and insight_content.count() == 0:
             pytest.skip("Insight widget drag-to-tile not supported - use checkbox method")
-        self.step_capture.mark(4, "Verify insight chart content appears in the tile")
 
     # =========================================================================
     # HELPER METHODS
@@ -605,7 +602,7 @@ class TestViewsSubtabs:
         self.page.wait_for_timeout(250)
 
         # Add a camera
-        self.views.expand_site_and_show_cameras("Driver Site")
+        self.views.expand_site_and_show_cameras(None)
         self.page.wait_for_timeout(500)
         self.views.add_first_camera_via_checkbox()
         self.page.wait_for_timeout(500)
@@ -659,6 +656,43 @@ class TestViewsSubtabs:
                 self.page.locator("text=Successfully deleted").wait_for(
                     state="visible", timeout=60000
                 )
-        except Exception:
-            pass  # Cleanup is best-effort
+        except Exception as e:
+            print(f"Cleanup: failed to delete view '{view_name}': {e}")
 
+    def _visible_drag(self, source, target):
+        """Helper: Perform a visible drag operation with highlights.
+
+        Adds visual highlights around source (red) and target (green)
+        elements, then performs the drag.
+
+        Args:
+            source: Source locator to drag from
+            target: Target locator to drag to
+        """
+        # Highlight source (red border - what we're dragging)
+        try:
+            source.evaluate("el => { el.style.outline = '4px solid red'; el.style.outlineOffset = '2px'; }")
+        except Exception:
+            pass  # Visual highlight is non-essential
+        self.page.wait_for_timeout(400)
+
+        # Highlight target (green border - where we're dropping)
+        try:
+            target.evaluate("el => { el.style.outline = '4px solid lime'; el.style.outlineOffset = '2px'; }")
+        except Exception:
+            pass  # Visual highlight is non-essential
+        self.page.wait_for_timeout(400)
+
+        # Perform the drag
+        source.drag_to(target)
+        self.page.wait_for_timeout(300)
+
+        # Remove highlights
+        try:
+            source.evaluate("el => { el.style.outline = ''; el.style.outlineOffset = ''; }")
+        except Exception:
+            pass  # Element may have been detached after drag
+        try:
+            target.evaluate("el => { el.style.outline = ''; el.style.outlineOffset = ''; }")
+        except Exception:
+            pass  # Element may have been detached after drag

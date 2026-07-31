@@ -25,7 +25,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("8V1vJn")
     def test_navigate_to_events(self):
         """Verify clicking Events nav link loads the events page."""
         self.events.navigate()
@@ -36,7 +35,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("0rzlE9")
     def test_select_site(self):
         """Verify site dropdown opens and a site can be selected."""
         self.events.navigate()
@@ -54,7 +52,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("M73wak")
     def test_select_camera(self):
         """Verify camera dropdown opens and lists cameras.
 
@@ -78,7 +75,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("gQxXwN")
     def test_select_duration(self):
         """Verify duration filter can be changed from default.
 
@@ -98,7 +94,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("pDpmba")
     def test_select_rule(self):
         """Verify rule type filter opens and a rule can be selected.
 
@@ -119,7 +114,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("dypXRb")
     def test_search_events(self):
         """Verify search returns event results after selecting filters.
 
@@ -139,7 +133,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("vanZlz")
     def test_event_snapshots_valid(self):
         """Verify event thumbnails have real images, not placeholders."""
         self.events.navigate()
@@ -157,7 +150,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("M73wxx")
     def test_pin_event(self):
         """Verify pinning an event updates the pinned clips counter."""
         self.events.navigate()
@@ -177,7 +169,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("lR2lkQ")
     def test_review_pinned_clips_button(self):
         """Verify 'Review Pinned Clips' button appears after pinning."""
         self.events.navigate()
@@ -194,7 +185,6 @@ class TestEventsSearch:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
-    @pytest.mark.qatouch("Drd9a9")
     def test_search_with_specific_camera(self):
         """Verify search filters results by a single camera channel.
 

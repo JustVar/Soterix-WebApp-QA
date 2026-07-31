@@ -10,7 +10,6 @@ import pytest
 
 @pytest.mark.api
 @pytest.mark.smoke
-@pytest.mark.qatouch("eJqmm8")
 def test_get_user_session(user_api):
     """GET current user session and validate response shape."""
     s = user_api.get_user_session()
@@ -19,7 +18,6 @@ def test_get_user_session(user_api):
 
 @pytest.mark.api
 @pytest.mark.smoke
-@pytest.mark.qatouch("yaWXVn")
 def test_get_user_roles(user_api):
     """GET user roles and assert returned shape is list or dict."""
     roles = user_api.get_user_roles()

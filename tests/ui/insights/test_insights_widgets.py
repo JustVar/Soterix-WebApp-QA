@@ -49,25 +49,22 @@ class TestInsightsWidgetCreate:
     """Tests for widget creation across graph types and categories."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page, step_capture):
+    def setup(self, authenticated_page):
         self.page = authenticated_page
-        self.step_capture = step_capture
-        step_capture.set_page(self.page)
         self.insights = InsightsPage(self.page)
         self._created_widgets = []
         yield
         for name in reversed(self._created_widgets):
             try:
                 self.insights.delete_widget(name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete widget '{name}': {e}")
 
     @pytest.mark.ui
     @pytest.mark.insights
     @pytest.mark.parametrize(
         "graph_name,category_name", WIDGET_PARAMS, ids=WIDGET_IDS
     )
-    @pytest.mark.qatouch("RgGQ4a")
     def test_widget_create(self, graph_name, category_name):
         """Verify a widget can be created with the given graph and category."""
         widget_name = self.insights.create_widget(
@@ -76,10 +73,7 @@ class TestInsightsWidgetCreate:
             site_name=SITE_NAME,
         )
         self._created_widgets.append(widget_name)
-        self.step_capture.mark(1, f"Create a {graph_name} widget with {category_name} category")
-
         assert widget_name, "Widget name should be returned after creation"
-        self.step_capture.mark(2, "Verify widget name is returned after creation")
 
 
 class TestInsightsWidgetOperations:
@@ -91,18 +85,16 @@ class TestInsightsWidgetOperations:
     """
 
     @pytest.fixture(autouse=True)
-    def setup(self, authenticated_page, step_capture):
+    def setup(self, authenticated_page):
         self.page = authenticated_page
-        self.step_capture = step_capture
-        step_capture.set_page(self.page)
         self.insights = InsightsPage(self.page)
         self._created_widgets = []
         yield
         for name in reversed(self._created_widgets):
             try:
                 self.insights.delete_widget(name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Cleanup: failed to delete widget '{name}': {e}")
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -111,7 +103,6 @@ class TestInsightsWidgetOperations:
         [("Line", "Person"), ("Bar", "Person"), ("Pie", "Person")],
         ids=["Line_Person", "Bar_Person", "Pie_Person"],
     )
-    @pytest.mark.qatouch("RgGQ4a")
     def test_widget_view(self, graph_name, category_name):
         """Verify a widget can be viewed after creation."""
         widget_name = self.insights.create_widget(
@@ -120,11 +111,9 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         self._created_widgets.append(widget_name)
-        self.page.wait_for_timeout(5000)
-        self.step_capture.mark(1, f"Create a {graph_name} widget with {category_name} category")
+        self.page.wait_for_timeout(2000)
 
         self.insights.view_widget(widget_name)
-        self.step_capture.mark(2, "View the created widget")
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -133,7 +122,6 @@ class TestInsightsWidgetOperations:
         [("Line", "Person"), ("Bar", "Event")],
         ids=["Line_Person", "Bar_Event"],
     )
-    @pytest.mark.qatouch("RgGQ4a")
     def test_widget_report(self, graph_name, category_name):
         """Verify a widget report can be downloaded."""
         widget_name = self.insights.create_widget(
@@ -142,11 +130,9 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         self._created_widgets.append(widget_name)
-        self.page.wait_for_timeout(5000)
-        self.step_capture.mark(1, f"Create a {graph_name} widget with {category_name} category")
+        self.page.wait_for_timeout(2000)
 
         self.insights.download_report(widget_name)
-        self.step_capture.mark(2, "Download the widget report")
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -155,7 +141,6 @@ class TestInsightsWidgetOperations:
         [("Line", "Person"), ("Pie", "Vehicle"), ("Heat", "Person")],
         ids=["Line_Person", "Pie_Vehicle", "Heat_Person"],
     )
-    @pytest.mark.qatouch("RgGQ4a")
     def test_widget_delete(self, graph_name, category_name):
         """Verify a widget can be deleted and no longer appears in search."""
         widget_name = self.insights.create_widget(
@@ -164,11 +149,7 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         # Not added to _created_widgets - deletion is this test's purpose
-        self.page.wait_for_timeout(5000)
-        self.step_capture.mark(1, f"Create a {graph_name} widget with {category_name} category")
+        self.page.wait_for_timeout(2000)
 
         deleted = self.insights.delete_widget(widget_name)
-        self.step_capture.mark(2, "Delete the widget")
-
         assert deleted, f"Widget '{widget_name}' should be deleted"
-        self.step_capture.mark(3, "Verify the widget was deleted successfully")

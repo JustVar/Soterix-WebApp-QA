@@ -25,7 +25,8 @@ Step splitting strategy:
     from the step text (action-result heuristic). The API schema rejects empty
     expectedResults, so this is mandatory.
 
-Reads QA Touch token + domain from ~/.tooling.json (the live API config).
+Reads QA Touch token + domain from the environment / .env
+(QATOUCH_API_TOKEN + QATOUCH_DOMAIN).
 
 Usage:
     python tools/build_ota_update_payloads.py
@@ -36,6 +37,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import sys
 import urllib.error
@@ -45,14 +47,20 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 CSV_PATH = REPO / "tests" / "data" / "c2c_ota_test_cases.csv"
 OUT_PATH = REPO / "tools" / ".ota_update_payloads.json"
-TOOLING_CONFIG = Path(r"C:\Users\JustinVarughese\.tooling.json")
 PROJECT_KEY = "60W5"
 
 
 def load_qatouch_creds() -> tuple[str, str]:
-    cfg = json.loads(TOOLING_CONFIG.read_text(encoding="utf-8"))
-    env = cfg["mcpServers"]["qatouch"]["env"]
-    return env["QATOUCH_API_TOKEN"], env["QATOUCH_DOMAIN"]
+    """Read the QA Touch REST api-token + short domain from the environment / .env."""
+    token = os.environ.get("QATOUCH_API_TOKEN") or os.environ.get("QATOUCH_API_KEY")
+    domain = os.environ.get("QATOUCH_DOMAIN")
+    if not token or not domain:
+        raise SystemExit(
+            "Missing QA Touch REST credentials.\n"
+            "Set QATOUCH_API_TOKEN + QATOUCH_DOMAIN in your .env at the repo "
+            "root (see .env.template)."
+        )
+    return token, domain
 
 
 def rest_get(path: str, token: str, domain: str) -> dict:

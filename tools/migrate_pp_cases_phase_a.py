@@ -102,29 +102,22 @@ DEFAULT_AUTH_STATE = ROOT / "tools" / ".qatouch_auth_state.json"
 LOG_DIR = ROOT / "logs"
 LOG_PATH = LOG_DIR / "pp_migration_phase_a_log.json"
 
-TOOLING_CONFIG = Path.home() / ".tooling.json"
+MISSING_CREDS_MSG = (
+    "Missing QA Touch REST credentials.\n"
+    "Set both of these in your .env at the repo root (or export them):\n"
+    "    QATOUCH_API_TOKEN=<your REST api-token>\n"
+    "    QATOUCH_DOMAIN=soterixsystems\n"
+    "See .env.template for the full list."
+)
 
 
 # ── REST helpers (api-token + domain headers) ────────────────────────────────
 def load_rest_creds() -> tuple[str, str]:
-    """Load QATOUCH_API_TOKEN + QATOUCH_DOMAIN from env or ~/.tooling.json."""
+    """Load QATOUCH_API_TOKEN + QATOUCH_DOMAIN from the environment / .env."""
     token = os.environ.get("QATOUCH_API_TOKEN") or os.environ.get("QATOUCH_API_KEY")
     domain = os.environ.get("QATOUCH_DOMAIN")
-    if token and domain:
-        return token, domain
-    if TOOLING_CONFIG.exists():
-        try:
-            cfg = json.loads(TOOLING_CONFIG.read_text(encoding="utf-8"))
-            env = cfg.get("mcpServers", {}).get("qatouch", {}).get("env", {}) or {}
-            token = token or env.get("QATOUCH_API_TOKEN")
-            domain = domain or env.get("QATOUCH_DOMAIN")
-        except Exception as e:
-            print(f"  WARN: could not read {TOOLING_CONFIG}: {e}")
     if not token or not domain:
-        raise SystemExit(
-            "Missing QA Touch credentials. Set QATOUCH_API_TOKEN + QATOUCH_DOMAIN "
-            "(env or ~/.tooling.json mcpServers.qatouch.env)."
-        )
+        raise SystemExit(MISSING_CREDS_MSG)
     return token, domain
 
 

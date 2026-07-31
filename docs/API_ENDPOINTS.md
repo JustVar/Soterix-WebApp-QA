@@ -154,7 +154,7 @@ Endpoint pattern: `firestore.googleapis.com/.../Listen/channel?...`
 2. Capture network traffic. Three ways:
    - **Quick & local:** open Chrome DevTools -> Network -> filter `v-apiserver` -> click through the feature -> Save as HAR.
    - **Interactive exploration:** use Bruno to poke an endpoint and refine the request shape before promoting it to a smoke test. See [BRUNO_GUIDE.md](./BRUNO_GUIDE.md).
-   - **Programmatic:** use `chrome-devtools` API from Tooling Code; patch `window.fetch` to log REST calls, then click through.
+   - **Programmatic:** in the DevTools console, patch `window.fetch` to log every REST call, then click through the feature and read the log.
 3. Diff against this catalog. Add new rows under the right section with status `❌` and a one-line "Where surfaced" note.
 4. When a smoke test lands, flip status to ✅ and link the test file/function.
 5. Bump the "Last updated" date.

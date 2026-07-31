@@ -13,6 +13,7 @@ jsonschema
 lxml
 msal
 msgraph-core
+PyYAML
 
 # Linting / formatting
 ruff>=0.15

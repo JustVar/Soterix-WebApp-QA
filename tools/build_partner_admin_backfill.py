@@ -16,12 +16,12 @@ Output: tools/.partner_admin_backfill.json
 from __future__ import annotations
 import csv
 import json
+import os
 import sys
 import urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-TOOLING_CFG = Path(r'C:/Users/JustinVarughese/.tooling.json')
 OUT_PATH = REPO / 'tools' / '.partner_admin_backfill.json'
 
 # enc_id mappings (verified workspace-wide from OTA backfill)
@@ -49,9 +49,16 @@ TAG_ENC = {
 
 
 def load_creds():
-    cfg = json.loads(TOOLING_CFG.read_text(encoding='utf-8'))
-    env = cfg['mcpServers']['qatouch']['env']
-    return env['QATOUCH_API_TOKEN'], env['QATOUCH_DOMAIN']
+    """Read the QA Touch REST api-token + short domain from the environment / .env."""
+    token = os.environ.get('QATOUCH_API_TOKEN') or os.environ.get('QATOUCH_API_KEY')
+    domain = os.environ.get('QATOUCH_DOMAIN')
+    if not token or not domain:
+        raise SystemExit(
+            'Missing QA Touch REST credentials.\n'
+            'Set QATOUCH_API_TOKEN + QATOUCH_DOMAIN in your .env at the repo '
+            'root (see .env.template).'
+        )
+    return token, domain
 
 
 def fetch_cases(project_key, tok, dom):

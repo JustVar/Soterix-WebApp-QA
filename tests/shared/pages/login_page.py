@@ -208,11 +208,29 @@ class LoginPage:
 
     def is_login_page(self) -> bool:
         """Return True when the current page appears to be the login page."""
+        # Give the page a moment to settle after redirect
+        try:
+            self.page.wait_for_load_state('domcontentloaded', timeout=5000)
+        except Exception:
+            pass
         url = (self.page.url or "").lower()
         if "login" in url or "auth" in url:
             return True
+        # Check for login form elements with multiple selector strategies
+        login_input_selectors = [
+            'input[name="email"]',
+            'input[type="email"]',
+            'input[placeholder*="mail"]',
+            'input[placeholder*="user"]',
+        ]
+        password_selectors = [
+            'input[name="password"]',
+            'input[type="password"]',
+        ]
         try:
-            if self.page.locator('input[name="email"]').count() and self.page.locator('input[name="password"]').count():
+            has_login = any(self.page.locator(s).count() > 0 for s in login_input_selectors)
+            has_password = any(self.page.locator(s).count() > 0 for s in password_selectors)
+            if has_login and has_password:
                 return True
         except Exception:
             pass
@@ -362,6 +380,12 @@ class LoginPage:
         try:
             self.page.wait_for_url('**/auth/login**', timeout=LOGIN_WAIT)
         except Exception:
-            self.page.wait_for_timeout(3000)
+            # Some app versions redirect to root or a different auth URL
+            self.page.wait_for_timeout(5000)
+            # Verify we're actually logged out by checking for login form
+            if not self.is_login_page():
+                # Try navigating to login page directly
+                self.page.goto(f"{self.base_url}/auth/login", wait_until="domcontentloaded")
+                self.page.wait_for_timeout(2000)
         return self
 

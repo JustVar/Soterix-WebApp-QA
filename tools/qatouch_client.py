@@ -39,15 +39,14 @@ from __future__ import annotations
 import json as _json
 import os
 import sys
-
 # Ensure repo root is on sys.path when run as a script
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from typing import Any
-
 import requests
+from typing import Optional, Dict, Any, List
+
 
 # QA Touch status codes for test run results
 STATUS_PASSED = 1
@@ -72,8 +71,8 @@ class QATouchClient:
     # Headers: api-token (API key) + domain (subdomain, e.g. 'soterixsystems')
     API_BASE = 'https://api.qatouch.com'
 
-    def __init__(self, api_key: str | None = None, domain: str | None = None,
-                 base_url: str | None = None, timeout: int = 30):
+    def __init__(self, api_key: Optional[str] = None, domain: Optional[str] = None,
+                 base_url: Optional[str] = None, timeout: int = 30):
         self.api_key = api_key or os.environ.get('QATOUCH_API_KEY')
         self.domain = domain or os.environ.get('QATOUCH_DOMAIN')
         # Legacy: accept base_url for backward compatibility but prefer API_BASE
@@ -97,14 +96,14 @@ class QATouchClient:
     #  Projects
     # ------------------------------------------------------------------ #
 
-    def list_projects(self) -> list[dict[str, Any]]:
+    def list_projects(self) -> List[Dict[str, Any]]:
         url = self._url('/api/v1/getAllProjects')
         resp = self.session.get(url, timeout=self.timeout)
         if resp.status_code != 200:
             raise QATouchError(f'list_projects failed: {resp.status_code} {resp.text}')
         return resp.json()
 
-    def create_project(self, name: str, code: str, description: str = '') -> dict[str, Any]:
+    def create_project(self, name: str, code: str, description: str = '') -> Dict[str, Any]:
         url = self._url('/api/v1/projects')
         payload = {'name': name, 'code': code, 'description': description}
         resp = self.session.post(url, json=payload, timeout=self.timeout)
@@ -116,7 +115,7 @@ class QATouchClient:
     #  Modules
     # ------------------------------------------------------------------ #
 
-    def create_module(self, project_id: int, name: str, parent_id: int | None = None) -> dict[str, Any]:
+    def create_module(self, project_id: int, name: str, parent_id: Optional[int] = None) -> Dict[str, Any]:
         url = self._url('/api/v1/modules')
         payload = {'project_id': project_id, 'name': name}
         if parent_id:
@@ -126,7 +125,7 @@ class QATouchClient:
             raise QATouchError(f'create_module failed: {resp.status_code} {resp.text}')
         return resp.json()
 
-    def list_modules(self, project_key: str, page: int = 1) -> dict[str, Any]:
+    def list_modules(self, project_key: str, page: int = 1) -> Dict[str, Any]:
         """Return one page (20 items) of modules.
 
         Each module has: section_name, section_key.
@@ -137,9 +136,9 @@ class QATouchClient:
             raise QATouchError(f'list_modules failed: {resp.status_code} {resp.text}')
         return resp.json()
 
-    def list_all_modules(self, project_key: str) -> list[dict[str, Any]]:
+    def list_all_modules(self, project_key: str) -> List[Dict[str, Any]]:
         """Paginate through ALL modules in the project."""
-        all_modules: list[dict[str, Any]] = []
+        all_modules: List[Dict[str, Any]] = []
         page = 1
         while True:
             data = self.list_modules(project_key, page=page)
@@ -161,7 +160,7 @@ class QATouchClient:
         title: str,
         description: str = '',
         precondition: str = '',
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Create a new test case in QA Touch.
 
         Args:
@@ -201,8 +200,8 @@ class QATouchClient:
         self,
         project_key: str,
         title: str,
-        section_key: str | None = None,
-    ) -> dict[str, Any] | None:
+        section_key: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """Find a test case by exact title match. Returns the case dict or None.
 
         Searches from the last page backwards (newest cases first) for efficiency
@@ -225,7 +224,7 @@ class QATouchClient:
                     return case
         return None
 
-    def list_test_cases(self, project_key: str, page: int = 1) -> dict[str, Any]:
+    def list_test_cases(self, project_key: str, page: int = 1) -> Dict[str, Any]:
         """Return one page (50 items) of test cases.
 
         Response: {"link": ..., "meta": {"total": N, ...}, "data": [...]}
@@ -238,9 +237,9 @@ class QATouchClient:
             raise QATouchError(f'list_test_cases failed: {resp.status_code} {resp.text}')
         return resp.json()
 
-    def list_all_test_cases(self, project_key: str) -> list[dict[str, Any]]:
+    def list_all_test_cases(self, project_key: str) -> List[Dict[str, Any]]:
         """Paginate through ALL test cases in the project. Returns flat list."""
-        all_cases: list[dict[str, Any]] = []
+        all_cases: List[Dict[str, Any]] = []
         page = 1
         while True:
             data = self.list_test_cases(project_key, page=page)
@@ -255,7 +254,7 @@ class QATouchClient:
     #  Users
     # ------------------------------------------------------------------ #
 
-    def list_available_users(self, project_key: str) -> list[dict[str, Any]]:
+    def list_available_users(self, project_key: str) -> List[Dict[str, Any]]:
         """List users available for test run assignment in a project.
 
         Returns list of: {"user_key": "d6JZ", "name": "...", "email": "..."}
@@ -272,7 +271,7 @@ class QATouchClient:
     #  Test Runs - read
     # ------------------------------------------------------------------ #
 
-    def list_test_runs(self, project_key: str) -> list[dict[str, Any]]:
+    def list_test_runs(self, project_key: str) -> List[Dict[str, Any]]:
         """List all test runs for a project. Returns list (may be empty).
 
         Each run has: testrun_key, Name, Description, Version, Type,
@@ -289,7 +288,7 @@ class QATouchClient:
         return data.get('data', data if isinstance(data, list) else [])
 
     def get_test_run_results(self, project_key: str, run_key: str,
-                             page: int = 1) -> dict[str, Any]:
+                             page: int = 1) -> Dict[str, Any]:
         """Get test case results for a specific test run (100/page).
 
         Each result has: run_key, case_id, title, status, Created Date,
@@ -303,9 +302,9 @@ class QATouchClient:
         return resp.json()
 
     def get_all_test_run_results(self, project_key: str,
-                                 run_key: str) -> list[dict[str, Any]]:
+                                 run_key: str) -> List[Dict[str, Any]]:
         """Paginate through ALL results for a test run. Returns flat list."""
-        all_results: list[dict[str, Any]] = []
+        all_results: List[Dict[str, Any]] = []
         page = 1
         while True:
             data = self.get_test_run_results(project_key, run_key, page=page)
@@ -324,7 +323,7 @@ class QATouchClient:
         self,
         project_key: str,
         name: str,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Create a new milestone (release) in QA Touch.
 
         Args:
@@ -357,7 +356,7 @@ class QATouchClient:
         name: str,
         assign_to: str,
         milestone_key: str,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Create a test run with ALL test cases in the project.
 
         WARNING: Slow for large projects (2,800+ cases can take >60s).
@@ -392,8 +391,8 @@ class QATouchClient:
         name: str,
         assign_to: str,
         milestone_key: str,
-        case_ids: list[str],
-    ) -> dict[str, Any]:
+        case_ids: List[str],
+    ) -> Dict[str, Any]:
         """Create a test run with specific test cases.
 
         Args:
@@ -429,7 +428,7 @@ class QATouchClient:
         assign_to: str,
         milestone_key: str,
         tag: str,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Create a test run with all cases matching a tag.
 
         Args:
@@ -465,9 +464,9 @@ class QATouchClient:
         name: str,
         assign_to: str,
         milestone_key: str,
-        module_keys: list[str],
-        mode: str | None = None,
-    ) -> dict[str, Any]:
+        module_keys: List[str],
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Create a test run with all cases from specific modules.
 
         Args:
@@ -506,7 +505,7 @@ class QATouchClient:
         project_key: str,
         source_run_key: str,
         new_name: str,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Clone an existing test run. All cases in the new run start as Untested.
 
         Args:
@@ -539,9 +538,9 @@ class QATouchClient:
         self,
         project_key: str,
         test_run_key: str,
-        results: list[dict[str, Any]],
+        results: List[Dict[str, Any]],
         comment: str = '',
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Bulk-update test run results.
 
         Args:
@@ -573,53 +572,3 @@ class QATouchClient:
                 f'update_test_run_results API error: {data.get("error_msg", data)}'
             )
         return data
-
-    def update_playwright_results(
-        self,
-        project_key: str,
-        test_run_key: str,
-        results: list[dict[str, Any]],
-        chunk_size: int = 5,
-    ) -> list[dict[str, Any]]:
-        """Bulk-update Playwright run results with rich payload (duration + screenshots).
-
-        Uses QA Touch's Playwright-specific bulk endpoint added in the JIRA App /
-        Playwright 2.0 update - supports per-result `execution_time`, `comments`,
-        `description`, and `attachments` (PNG screenshots, base64-encoded).
-
-        Args:
-            project_key: e.g. "JlW1"
-            test_run_key: e.g. "vaXdn"
-            results: list of dicts with required keys "case" (str) and "status" (int),
-                     and optional "execution_time" (str like "1.2s"), "comments" (str),
-                     "description" (str), "attachments" (list of {name, contentType, content})
-            chunk_size: max results per request (vendor reporter uses 5)
-
-        Returns:
-            List of per-chunk response dicts.
-
-        Uses: POST /api/v1/testRunResults/playwright/status/multiple
-        """
-        url = self._url('/api/v1/testRunResults/playwright/status/multiple')
-        responses: list[dict[str, Any]] = []
-        for i in range(0, len(results), chunk_size):
-            chunk = results[i:i + chunk_size]
-            payload = {
-                'project': project_key,
-                'test_run': test_run_key,
-                'result': _json.dumps(chunk),
-            }
-            resp = self.session.post(url, json=payload, timeout=self.timeout)
-            if resp.status_code not in (200, 201):
-                raise QATouchError(
-                    f'update_playwright_results chunk {i // chunk_size + 1} failed: '
-                    f'{resp.status_code} {resp.text}'
-                )
-            data = resp.json()
-            if not data.get('success', True):
-                raise QATouchError(
-                    f'update_playwright_results chunk {i // chunk_size + 1} API error: '
-                    f'{data.get("error_msg", data)}'
-                )
-            responses.append(data)
-        return responses

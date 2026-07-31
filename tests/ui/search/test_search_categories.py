@@ -20,7 +20,7 @@ from playwright.sync_api import expect
 from tests.shared.pages.search_page import SearchPage
 
 
-SITE_NAME = "Driver Site"
+
 
 
 class TestSearchCategories:
@@ -37,7 +37,6 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.qatouch("dypXRb")
     def test_person_search(self):
         """Verify Person search with Male description returns results.
 
@@ -52,7 +51,7 @@ class TestSearchCategories:
         self.step_capture.mark(2, "Select Category = 'Person' from the category dropdown")
         self.search.select_description_gender("Male")
         self.step_capture.mark(3, "Select Description = 'Male' from the gender dropdown")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.step_capture.mark(4, "Select Location = 'Driver Site' and cameras")
         self.search.select_duration_by_index(5)
         self.step_capture.mark(5, "Select duration filter (index 5)")
@@ -64,7 +63,6 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.qatouch("Pgw96K")
     def test_person_search_results_valid(self):
         """Verify Person search results contain valid images."""
         self.search.navigate()
@@ -72,7 +70,7 @@ class TestSearchCategories:
 
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -82,7 +80,6 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
-    @pytest.mark.qatouch("kpZWpZ")
     def test_person_search_play_result(self):
         """Verify playing a Person search result clip works."""
         self.search.navigate()
@@ -90,7 +87,7 @@ class TestSearchCategories:
 
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -108,7 +105,6 @@ class TestSearchCategories:
         reason="Driver Site has no vehicle detections; needs different "
         "account/site with vehicle data"
     )
-    @pytest.mark.qatouch("dypXRb")
     def test_vehicle_search(self):
         """Verify Vehicle search returns results.
 
@@ -118,7 +114,7 @@ class TestSearchCategories:
         self.search.wait_for_page_load()
 
         self.search.select_category("Vehicle")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -131,14 +127,13 @@ class TestSearchCategories:
         reason="Driver Site has no vehicle detections; needs different "
         "account/site with vehicle data"
     )
-    @pytest.mark.qatouch("gQxmzz")
     def test_vehicle_search_play_result(self):
         """Verify playing a Vehicle search result clip works."""
         self.search.navigate()
         self.search.wait_for_page_load()
 
         self.search.select_category("Vehicle")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -152,14 +147,13 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.qatouch("dypXRb")
     def test_event_search(self):
         """Verify Event category search returns results."""
         self.search.navigate()
         self.search.wait_for_page_load()
 
         self.search.select_category("Event")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
@@ -169,14 +163,13 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
-    @pytest.mark.qatouch("gQxw5N")
     def test_event_search_play_result(self):
         """Verify playing an Event search result clip works."""
         self.search.navigate()
         self.search.wait_for_page_load()
 
         self.search.select_category("Event")
-        self.search.select_locations_cameras(SITE_NAME)
+        self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 

@@ -183,7 +183,7 @@ class SearchPage:
         gender_option.click()
         self.page.wait_for_timeout(500)
 
-    def select_locations_cameras(self, site_name: str):
+    def select_locations_cameras(self, site_name: str = None):
         """Open the Locations & Cameras dropdown, expand site, and select
         all cameras via the 'All Cameras' checkbox.
 
@@ -193,26 +193,42 @@ class SearchPage:
 
         Uses JS to click the site node within the dropdown panel to avoid
         accidentally clicking notification toasts that also contain the
-        site name text.
+        site name text. Pass None to select the first available site.
         """
         dropdown = self._get_dropdown_by_text("Locations")
         assert dropdown is not None, "Locations & Cameras dropdown not found"
         dropdown.click()
         self.page.wait_for_timeout(1000)
 
-        # Click the site name within the dropdown panel (not notification)
-        self.page.evaluate("""(siteName) => {
-            const panel = document.querySelector('.scrollBarCustom') ||
-                          document.querySelector('[class*="drop-down"]');
-            if (!panel) return;
-            const texts = panel.querySelectorAll('p, span');
-            for (const t of texts) {
-                if (t.textContent.includes(siteName) && t.offsetWidth > 0) {
-                    t.click();
-                    return;
+        if site_name:
+            # Click the specific site name within the dropdown panel
+            self.page.evaluate("""(siteName) => {
+                const panel = document.querySelector('.scrollBarCustom') ||
+                              document.querySelector('[class*="drop-down"]');
+                if (!panel) return;
+                const texts = panel.querySelectorAll('p, span');
+                for (const t of texts) {
+                    if (t.textContent.includes(siteName) && t.offsetWidth > 0) {
+                        t.click();
+                        return;
+                    }
                 }
-            }
-        }""", site_name)
+            }""", site_name)
+        else:
+            # Click the first available site in the panel
+            self.page.evaluate("""() => {
+                const panel = document.querySelector('.scrollBarCustom') ||
+                              document.querySelector('[class*="drop-down"]');
+                if (!panel) return;
+                const texts = panel.querySelectorAll('p, span');
+                for (const t of texts) {
+                    const text = t.textContent.trim();
+                    if (text && t.offsetWidth > 0) {
+                        t.click();
+                        return;
+                    }
+                }
+            }""")
         self.page.wait_for_timeout(1000)
 
         # Click 'All Cameras' checkbox via JS (zero-dimension workaround)

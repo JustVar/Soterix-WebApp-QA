@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """One-time script to build feature_inventory.json from existing data sources."""
 import json
-import re
 import sys
+import re
+from pathlib import Path
 from collections import defaultdict
 from datetime import datetime
-from pathlib import Path
 
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -61,19 +61,6 @@ area_data = defaultdict(lambda: {
     "case_count": 0,
 })
 
-def _extract_tags(case: dict) -> str:
-    """Return tags as comma-separated string. Handles both legacy 'NewTags'
-    (string) and current API 'Tags' (list) shapes."""
-    raw = case.get("Tags")
-    if raw is None:
-        raw = case.get("NewTags", "")
-    if isinstance(raw, list):
-        parts = [str(x).strip() for x in raw]
-    else:
-        parts = [p.strip() for p in str(raw).split(",")]
-    return ", ".join(p for p in parts if p)
-
-
 for c in snap["cases"]:
     mod = c.get("module name", "Unknown")
     area = mod_areas.get(mod, "other")
@@ -82,7 +69,7 @@ for c in snap["cases"]:
         "key": c.get("case_key", ""),
         "priority": c.get("Priority", ""),
         "type": c.get("Type", ""),
-        "tags": _extract_tags(c),
+        "tags": c.get("NewTags", ""),
     })
     area_data[area]["modules"][mod]["priorities"].add(c.get("Priority", ""))
     area_data[area]["modules"][mod]["types"].add(c.get("Type", ""))

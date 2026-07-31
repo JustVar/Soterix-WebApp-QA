@@ -16,7 +16,6 @@ from tests.shared.api_clients.base_api_client import BaseAPIClient
 
 @pytest.mark.api
 @pytest.mark.smoke
-@pytest.mark.qatouch("WEnvKQ")
 def test_get_site_status(api_base_url, api_auth_token, discovered_site_id):
     """GET /REST/dashboard/site/{siteId}/status - verify site status fields."""
     client = BaseAPIClient(api_base_url, api_auth_token)
@@ -41,7 +40,6 @@ def test_get_site_status(api_base_url, api_auth_token, discovered_site_id):
 
 @pytest.mark.api
 @pytest.mark.smoke
-@pytest.mark.qatouch("gQxmgr")
 def test_get_camera_tree(api_base_url, api_auth_token, discovered_site_id):
     """GET /REST/site/{siteId}/location/tree - verify location/camera structure."""
     client = BaseAPIClient(api_base_url, api_auth_token)
@@ -62,7 +60,6 @@ def test_get_camera_tree(api_base_url, api_auth_token, discovered_site_id):
 
 @pytest.mark.api
 @pytest.mark.smoke
-@pytest.mark.qatouch("gQxmgr")
 def test_get_camera_snap(api_base_url, api_auth_token, discovered_site_id):
     """GET /REST/site/{siteId}/channel/{channelId}/snap - ensure snapshot is returned."""
     client = BaseAPIClient(api_base_url, api_auth_token)
@@ -110,7 +107,6 @@ def test_get_camera_snap(api_base_url, api_auth_token, discovered_site_id):
 
 @pytest.mark.api
 @pytest.mark.smoke
-@pytest.mark.qatouch("dypXjd")
 def test_get_widgets(api_base_url, api_auth_token, discovered_enterprise_id):
     """GET /REST/dashboard/sharedwidgets/{customerId}/data - verify widget payload structure."""
     client = BaseAPIClient(api_base_url, api_auth_token)
@@ -132,7 +128,6 @@ def test_get_widgets(api_base_url, api_auth_token, discovered_enterprise_id):
 
 @pytest.mark.api
 @pytest.mark.smoke
-@pytest.mark.qatouch("68leMa")
 def test_search_person(api_base_url, api_auth_token, discovered_site_id):
     """POST /REST/site/search - search for PERSON category in last hour."""
     client = BaseAPIClient(api_base_url, api_auth_token)

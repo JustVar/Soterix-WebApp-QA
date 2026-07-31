@@ -21,9 +21,9 @@ existing ``split_merged_steps.py`` can consume either file.
 
 Auth
 ----
-REST only: api-token + domain headers, loaded from env
-(``QATOUCH_API_TOKEN`` / ``QATOUCH_API_KEY`` + ``QATOUCH_DOMAIN``) or
-``~/.tooling.json``. The internal ``/v1/*`` path is not used.
+REST only: api-token + domain headers, loaded from the environment / ``.env``
+(``QATOUCH_API_TOKEN`` / ``QATOUCH_API_KEY`` + ``QATOUCH_DOMAIN``).
+The internal ``/v1/*`` path is not used.
 
 Usage
 -----
@@ -80,34 +80,14 @@ DEFAULT_LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 def load_rest_creds() -> Tuple[Optional[str], str]:
     """Load REST api-token + domain (short form, e.g. 'soterixsystems').
 
-    Reads env first, then ~/.tooling.json. Same precedence as the existing
-    tools so a working detect_merged_steps.py environment continues to work.
+    Reads the environment / .env. Same precedence as the other QA Touch tools,
+    so one populated .env makes all of them work.
     """
     token = (
         os.environ.get("QATOUCH_API_TOKEN")
         or os.environ.get("QATOUCH_API_KEY")
     )
     domain = os.environ.get("QATOUCH_DOMAIN") or DEFAULT_REST_DOMAIN_SHORT
-    if token:
-        return token, domain
-
-    tooling_json = Path.home() / ".tooling.json"
-    if tooling_json.exists():
-        try:
-            env = json.loads(tooling_json.read_text(encoding="utf-8"))
-            # The user's ~/.tooling.json may have either a flat env dict or
-            # an mcpServers.qatouch.env shape. Try both.
-            if isinstance(env, dict):
-                token = env.get("QATOUCH_API_TOKEN") or env.get("QATOUCH_API_KEY")
-                domain = env.get("QATOUCH_DOMAIN") or domain
-                if not token:
-                    api = env.get("mcpServers") or {}
-                    qt = (api.get("qatouch") or {}).get("env") or {}
-                    token = qt.get("QATOUCH_API_TOKEN") or qt.get("QATOUCH_API_KEY")
-                    domain = qt.get("QATOUCH_DOMAIN") or domain
-        except (OSError, json.JSONDecodeError):
-            pass
-
     return token, domain
 
 
@@ -198,8 +178,8 @@ def main() -> int:
     token, domain_short = load_rest_creds()
     if not token:
         print(
-            "ERROR: missing REST api-token. Set QATOUCH_API_TOKEN in env, or"
-            " populate ~/.tooling.json.",
+            "ERROR: missing REST api-token. Set QATOUCH_API_TOKEN in your .env"
+            " at the repo root (see .env.template).",
             file=sys.stderr,
         )
         return 2

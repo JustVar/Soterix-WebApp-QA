@@ -51,7 +51,7 @@ class MediaPage:
             "li[role='menuitem']:has-text('Delete')"
         )
         self.menu_create_link = page.locator(
-            "li:has-text('Create Link')"
+            "li[role='menuitem']:has-text('Create Link')"
         )
         self.menu_move_to_folder = page.locator("p:has-text('Move to folder')")
 
@@ -81,7 +81,7 @@ class MediaPage:
         ).first
 
         # Share dialog
-        self.share_icon = page.locator("img[alt='Image 1']").first
+        self.share_icon = page.locator("img[alt='Share']").first
         self.email_input = page.locator(
             "input[placeholder='Add Email ID']"
         )
@@ -89,9 +89,7 @@ class MediaPage:
         self.share_success = page.locator(".successfull-container")
 
         # Export
-        self.download_icon = page.locator(
-            "img[alt='Image 1'][src*='icon-download']"
-        ).first
+        self.download_icon = page.locator("img[alt='Export']").first
         self.export_span = page.locator("span:has-text('Export')").first
 
         # Create link dialog
@@ -99,7 +97,7 @@ class MediaPage:
 
         # Rename input
         self.rename_input = page.locator(
-            "input[class*='rename'], input[type='text']"
+            "input[class*='rename'], input.MuiInputBase-input"
         ).first
 
         # Search
@@ -114,7 +112,14 @@ class MediaPage:
 
     def navigate(self):
         """Navigate to the Media page via the nav link."""
-        self.media_nav_link.click()
+        # Wait for any MUI overlay to clear before clicking (e.g. after page reload)
+        try:
+            self.page.locator(".MuiBox-root").filter(
+                has_text=""
+            ).first.wait_for(state="hidden", timeout=3000)
+        except Exception:
+            pass
+        self.media_nav_link.click(force=True)
         self.page.wait_for_timeout(3000)
         self._wait_for_page_ready()
 
@@ -337,6 +342,9 @@ class MediaPage:
 
     def add_to_vault(self):
         """Click the 'Add to Vault' icon on the first visible item."""
+        # Hover the first media item to reveal action icons
+        self.media_items.hover()
+        self.page.wait_for_timeout(500)
         self.add_to_vault_icon.wait_for(state="visible", timeout=10000)
         self.add_to_vault_icon.click()
         self.page.wait_for_timeout(2000)
@@ -359,6 +367,8 @@ class MediaPage:
 
     def share_folder(self, email: str = "test@example.com"):
         """Share a folder via the share icon and email dialog."""
+        self.media_items.hover()
+        self.page.wait_for_timeout(500)
         self.share_icon.click()
         self.page.wait_for_timeout(1000)
 
@@ -373,6 +383,8 @@ class MediaPage:
 
     def export_folder(self):
         """Export a folder via the download icon."""
+        self.media_items.hover()
+        self.page.wait_for_timeout(500)
         self.download_icon.click()
         self.page.wait_for_timeout(1000)
 
