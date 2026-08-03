@@ -1,12 +1,24 @@
 # Playwright Soterix QA
 
-End-to-end test suite for **NexaiQ-Core** (Soterix's cloud video platform), with built-in result reporting to QA Touch and auto-bug filing into Jira.
+End-to-end test suite for **NexaiQ-Core** (Soterix's cloud video platform).
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **Test management:** QA Touch (project key `JlW1`)
-- **Bug tracking:** Jira (project key `NC`)
 - **642 tests collected** across 69 files (UI + API), with `legacy/` and `legacy-selenium-tests/` excluded from collection
+
+## How we run today
+
+**Run the tests, read the report, report results manually.** That's the current process.
+
+```powershell
+pytest -m smoke                 # or any subset - see Running Tests below
+```
+
+QA Touch result upload and automatic Jira bug filing are **built but not in active use.**
+They are opt-in, off by default, and still being fine-tuned - treat them as
+work-in-progress rather than part of the workflow. Nothing in the default test run
+touches QA Touch or Jira. See [Optional integrations](#optional-integrations-work-in-progress)
+if you're working on them.
 
 ## Quick Setup
 
@@ -20,68 +32,44 @@ pip install -r requirements.txt
 python -m playwright install chromium
 ```
 
-Copy the env template and fill in secrets:
+Copy the env template and fill in the automation credentials:
 
 ```powershell
 copy .env.template .env
-# edit .env: set AUTO_USER, AUTO_PASSWORD, QATOUCH_API_KEY, JIRA_API_TOKEN, etc.
+# edit .env: set AUTO_USER and AUTO_PASSWORD - that's all you need to run tests
 ```
 
 ## Environment Config
 
 | Var | Required | Purpose |
 |---|---|---|
+Only these are needed to run tests:
+
+| Var | Required | Purpose |
+|---|---|---|
 | `ENV` | yes | `qa` \| `stage` \| `prod` - selects `config/env/{name}.py` |
 | `APP_TYPE` | no | `customer` (default) \| `partner` - appends `_pat` to module path |
 | `AUTO_USER` / `AUTO_PASSWORD` | yes | Automation credentials |
-| `QATOUCH_API_KEY` / `QATOUCH_DOMAIN` | yes | QA Touch API auth |
-| `QATOUCH_PROJECT_ID` | no | Defaults to `JlW1` (NexaiQ-Core) |
-| `QATOUCH_SMOKE_TEMPLATE_KEY` / `QATOUCH_SANITY_TEMPLATE_KEY` | no | Templates cloned per execution (defaults: `vaXdn` / `zvXPw`) |
-| `QATOUCH_USE_PLAYWRIGHT_ENDPOINT` | no | `1` to send results with `execution_time` + failure screenshots via the new Playwright endpoint |
-| `QATOUCH_CAPTURE_SCREENSHOTS` | no | `0` to disable failure-screenshot capture (only relevant when Playwright endpoint is on) |
-| `JIRA_URL` / `JIRA_EMAIL` / `JIRA_API_TOKEN` | yes (for bug filing) | Jira basic auth |
-| `JIRA_PROJECT_KEY` | yes (for bug filing) | Defaults to `NC` |
-| `BUG_CREATION_ENABLED` | no | `true` to file real bugs. Default `false` keeps the bug filer in dry-run |
+
+The QA Touch and Jira variables (`QATOUCH_*`, `JIRA_*`, `BUG_CREATION_ENABLED`) are only
+read by the optional integrations and can be left unset - see
+[Optional integrations](#optional-integrations-work-in-progress).
 
 See `.env.template` for the complete list with examples.
 
 ## Running Tests
-
-### Preferred entry point - full pipeline
-
-```powershell
-# Clone the smoke template run in QA Touch, execute pytest, upload results, file Jira bugs on failure
-python tools/run_suite.py smoke
-
-# Sanity, targeting stage
-python tools/run_suite.py sanity --env stage
-
-# Pass extra pytest args through
-python tools/run_suite.py smoke -k test_login --headed
-
-# Dry-run (skip clone + skip pytest, just print what would happen)
-python tools/run_suite.py smoke --dry-run
-
-# Skip the post-run bug-filing step
-python tools/run_suite.py smoke --no-bug-filing
-```
-
-What this does on every invocation:
-1. Clones the QA Touch template run (`vaXdn` for smoke, `zvXPw` for sanity) into a **fresh run key** so historical results are preserved.
-2. Runs `pytest -m <suite> --qatouch-upload --qatouch-run <new_key>`.
-3. The reporter plugin uploads pass/fail to QA Touch and writes per-nodeid outcomes to `logs/last_run_results.json`.
-4. Post-run, `run_suite.py` updates `flaky_tests.json` and feeds failed nodeids to `smart_jira_bug_creator.multi_gate_validation()`. The only gate is env health; every other failure becomes a Jira bug directly with QA Touch RTM linkage (label + remote link to the case).
-5. Whole bug-filing step is gated by `BUG_CREATION_ENABLED=true`. Until that's set, the filer dry-runs and returns fake `AUTO-XXXX` issue dicts so you can inspect the payload.
-
-### Raw pytest (no orchestration)
 
 ```powershell
 pytest tests/api/smoke/ -v                 # API smoke tests
 pytest -m smoke                            # by marker
 pytest -m "admin and not slow"             # combined markers
 pytest tests/ui/login/test_login_valid.py -v --headed
-pytest --qatouch-upload --qatouch-run vaXdn   # upload to an existing run
 ```
+
+An HTML report is written to `reports/report.html` on every run (configured in
+`pytest.ini`). Open it, review pass/fail, and report results manually.
+
+To email that report to someone, see `docs/EMAIL_REPORTS.md`.
 
 ### Verification mode (QA reviewer flow)
 
@@ -122,9 +110,9 @@ plugins/
 ├── qatouch_reporter.py    # --qatouch-upload --qatouch-run <KEY>
 └── verification_runner.py # --verify-mode + --step-review
 tools/                     # ~80 utility scripts
-├── run_suite.py           # PREFERRED ENTRY: clone + pytest + bug filing
-├── qatouch_*.py           # QA Touch CRUD, scaffolding, audits, analytics
-├── smart_jira_bug_creator.py  # Auto-file Jira bugs on failure with RTM linkage
+├── run_suite.py           # WIP orchestration: clone + pytest + bug filing
+├── qatouch_*.py           # WIP: QA Touch CRUD, scaffolding, audits, analytics
+├── smart_jira_bug_creator.py  # WIP: auto-file Jira bugs on failure
 ├── update_failure_history.py  # JUnit XML -> flaky_tests.json (used in CI paths)
 ├── discover_*.py          # API / camera / Jira discovery scripts
 ├── send_test_report.py    # Email the HTML report (see docs/EMAIL_REPORTS.md)
@@ -134,25 +122,47 @@ docs/                      # Setup guides, integration plans, maintenance remind
 
 `legacy/` and `legacy-selenium-tests/` exist for reference but are excluded from test collection via `pytest.ini`'s `norecursedirs`.
 
-## QA Touch Integration
+## Optional integrations (work in progress)
 
-- **Case mapping:** a pytest test is linked to a QA Touch case through `config/qatouch_case_mapping.json` (nodeid -> case_key). The reporter also honours a `@pytest.mark.qatouch("KEY")` marker on a test, but **the shared test files deliberately carry no markers** - QA Touch reporting is not part of the team's automation flow, so the mapping is kept out of the test code entirely. Keep new mappings in the JSON file. Mappings are checked with `tools/qatouch_mapper.py` and `tools/qatouch_sync_check.py`.
-- **Unmapped tests still run.** A test with no mapping executes normally; only its result upload is skipped (it lands in the reporter's `unmapped` count). Mapping affects reporting, never pass/fail.
-- **Run cloning:** `tools/run_suite.py` clones the per-suite template run on every invocation, so smoke run #1 and smoke run #2 land in distinct QA Touch run records and history is queryable.
-- **Result upload:** the `qatouch_reporter` pytest plugin batches all results into a single API call at session-end. Two endpoints supported:
-  - **Legacy (default):** `PATCH /api/v1/testRunResults/status/multiple` - status only.
-  - **Playwright (opt-in via `QATOUCH_USE_PLAYWRIGHT_ENDPOINT=1`):** `POST /api/v1/testRunResults/playwright/status/multiple` - adds `execution_time` per test and base64-encoded failure screenshots captured live from the Playwright page object.
-- **Retry:** 3 attempts with exponential backoff (2s, 4s, 8s). On final failure, results are saved to `logs/upload_failures.json` for manual retry via `tools/retry_uploads.py`.
-- **Scaffolding new cases:** `python tools/qatouch_run_manager.py scaffold <NODEID> <MODULE> <TITLE>` or batch via `scaffold-new --dry-run` to scaffold all unmapped tests at once.
+> **Not part of the current workflow.** Everything below is built but still being fine-tuned.
+> None of it runs unless you explicitly opt in - a plain `pytest` run never contacts QA
+> Touch or Jira. Results are reported manually today.
 
-## Jira Integration
+### QA Touch result upload - WIP
 
-- **Auto-bug filing:** Playwright failure -> run_suite.py post-run step -> `smart_jira_bug_creator.multi_gate_validation()` -> Jira bug. The bug includes:
-  - QA Touch RTM linkage: a `qatouch-<CASE_KEY>` label, a remote link to the QA Touch case URL, and the case key prefixed onto the Bug Overview field. This populates QA Touch's RTM panel when JIRA App 2.0 is enabled on the case.
-  - All 8 NC mandatory Bug fields auto-populated from QA Touch test case data (module, steps, expected, actual, environment, severity, build, title) via `config/jira_field_mapping.py`.
-- **Single gate:** env-health probe. If `base_url` is unreachable, no bugs file (suppress infrastructure-broken floods). Every other failure becomes a bug directly.
-- **Dry-run safety:** `BUG_CREATION_ENABLED=false` (default) returns fake `AUTO-XXXX` issue dicts without touching Jira. Flip to `true` in `.env` when you're ready to file real bugs.
-- **Review queue dormant:** the `tools/review_queue.json` + `--review` / `--list` CLI commands still exist but are unreachable from the default flow. Pass `auto_create=False` to `multi_gate_validation` to reinstate the human-disposition gate.
+Opt in with `pytest --qatouch-upload --qatouch-run <KEY>`, or run the orchestrated
+pipeline with `python tools/run_suite.py smoke` (clones the per-suite template into a
+fresh run key so history is preserved; `--dry-run` prints what would happen).
+
+- **Case mapping** lives in `config/qatouch_case_mapping.json` (nodeid -> case_key). The
+  reporter also honours a `@pytest.mark.qatouch("KEY")` marker, but **the test files
+  deliberately carry none** - the whole QA team runs these scripts and QA Touch reporting
+  is not part of their flow, so mapping is kept out of test code entirely. Add new
+  mappings to the JSON, never to a test. Checked with `tools/qatouch_mapper.py` and
+  `tools/qatouch_sync_check.py`.
+- **Mapping coverage is currently minimal**, and affects reporting only. An unmapped test
+  runs and passes/fails exactly as normal; only its upload is skipped.
+- **Two endpoints:** legacy `PATCH .../status/multiple` (status only, default), or the
+  Playwright endpoint via `QATOUCH_USE_PLAYWRIGHT_ENDPOINT=1` (adds per-test
+  `execution_time` and failure screenshots).
+- **Retry:** 3 attempts with exponential backoff. On final failure results land in
+  `logs/upload_failures.json` for retry via `tools/retry_uploads.py`.
+
+### Automatic Jira bug filing - WIP, off by default
+
+Gated by `BUG_CREATION_ENABLED`, which defaults to `false`. In that state the filer
+dry-runs and returns fake `AUTO-XXXX` issue dicts so payloads can be inspected without
+touching Jira. Do not flip it to `true` until the flow has been validated end to end.
+
+- Failures flow from `run_suite.py` into `smart_jira_bug_creator.multi_gate_validation()`.
+- Bugs carry QA Touch RTM linkage (a `qatouch-<CASE_KEY>` label + remote link) and the 8
+  mandatory NC Bug fields via `config/jira_field_mapping.py`.
+- Only suppression is an env-health probe: if `base_url` is unreachable the run is treated
+  as infrastructure-broken and nothing is filed.
+- `--no-bug-filing` skips the step entirely.
+- The review queue (`tools/review_queue.json`, `--review` / `--list`) still exists but is
+  unreachable from the default flow; pass `auto_create=False` to reinstate the
+  human-disposition gate.
 
 ## Step Capture & Verification
 
@@ -203,8 +213,8 @@ The Playwright/pytest-aware rule set is the headline difference from a generic r
 ## CI Notes
 
 - `python -m playwright install chromium` must run in CI before pytest.
-- All secrets (`AUTO_USER`, `AUTO_PASSWORD`, `QATOUCH_API_KEY`, `JIRA_API_TOKEN`) come from CI secrets, not `.env`.
-- Leave `BUG_CREATION_ENABLED` unset in CI until you've validated the bug filer end-to-end with one real failure.
+- Secrets (`AUTO_USER`, `AUTO_PASSWORD`) come from CI secrets, not `.env`.
+- Leave `BUG_CREATION_ENABLED` unset in CI - the bug filer is still WIP and must not file real bugs from an automated run.
 - Lab servers handle the actual smoke/sanity execution; CI is for syntax + smoke validation, not full runs.
 
 ## More Documentation
