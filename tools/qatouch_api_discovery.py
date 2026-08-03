@@ -72,7 +72,9 @@ def main():
         # ---- BATCH PROBE: All endpoint patterns ----
         print('\n  Running batch probe of all endpoint patterns...')
 
-        result = page.evaluate('''async (args) => {
+        # Raw string: the JS below contains regex literals like /\//g, which
+        # Python would otherwise read as invalid escape sequences.
+        result = page.evaluate(r'''async (args) => {
             const [baseUrl, pid, cid, runKey] = args;
 
             // Get XSRF token

@@ -5,6 +5,8 @@ Supports creating, searching, selecting, editing, and adding sequences
 to the views panel.
 """
 import datetime
+
+import pytest
 from playwright.sync_api import Page
 
 

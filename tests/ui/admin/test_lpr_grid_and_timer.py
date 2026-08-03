@@ -193,29 +193,28 @@ class TestLprTimer:
         timer_btn = self.page.locator("button:has(img[src*='timer'])").first
         if timer_btn.count() == 0:
             timer_btn = self.page.locator("button[class*='timer']").first
+        if timer_btn.count() == 0:
+            pytest.skip("No timer control on the LPR page - nothing to cancel")
 
-        if timer_btn.count() > 0:
-            try:
-                timer_btn.click()
-                self.page.wait_for_timeout(500)
+        timer_btn.click()
+        self.page.wait_for_timeout(500)
 
-                self.step_capture.mark(3, "Click Cancel button")
-                cancel_btn = self.page.locator("div:has-text('Cancel'), button:has-text('Cancel')").first
-                if cancel_btn.count() > 0:
-                    cancel_btn.click()
-                    self.page.wait_for_timeout(1000)
-                    print("[STEP 3] Clicked Cancel")
+        self.step_capture.mark(3, "Click Cancel button")
+        cancel_btn = self.page.locator("div:has-text('Cancel'), button:has-text('Cancel')").first
+        if cancel_btn.count() == 0:
+            pytest.skip("Timer popup exposes no Cancel control")
 
-                    self.step_capture.mark(4, "Verify popup closed")
-                    popup = self.page.locator("p:has-text('Set Timeout Duration')").all()
-                    visible_popups = [p for p in popup if p.is_visible()]
-                    assert len(visible_popups) == 0, "Popup still visible after Cancel"
-                    print("[STEP 4] Popup closed successfully")
-            except Exception as e:
-                print(f"[INFO] Cancel button test error: {e}")
+        cancel_btn.click()
+        self.page.wait_for_timeout(1000)
+
+        # This is the actual check the test exists for, so it is deliberately
+        # left un-caught - a popup that stays open after Cancel must fail.
+        self.step_capture.mark(4, "Verify popup closed")
+        popup = self.page.locator("p:has-text('Set Timeout Duration')").all()
+        visible_popups = [p for p in popup if p.is_visible()]
+        assert len(visible_popups) == 0, "Popup still visible after Cancel"
 
         self.step_capture.mark(5, "Cancel button test completed")
-        print("[PASS] Timer cancel button test passed")
 
     @pytest.mark.ui
     @pytest.mark.admin

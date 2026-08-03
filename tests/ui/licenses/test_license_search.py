@@ -1,6 +1,7 @@
 """License Search, Filter, and CSV Export tests - search functionality,
 filtering behavior, and CSV download verification."""
 import pytest
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import expect
 from tests.shared.pages.license_page import LicensePage
 
@@ -164,19 +165,22 @@ class TestLicenseExport:
         download_elem.hover()
         self.page.wait_for_timeout(500)
 
-        # Try to trigger download and capture it
-        download_triggered = False
+        # Trigger the download and capture it.
+        #
+        # Playwright cannot always observe the download event depending on how
+        # the browser handles the response, so failing to *capture* one is
+        # tolerated. But if a download IS captured, its filename must be a CSV -
+        # that assertion has to be able to fail, so it lives outside the try.
+        download = None
         try:
             with self.page.expect_download(timeout=15000) as download_info:
                 download_elem.click(force=True)
             download = download_info.value
-            assert download.suggested_filename.endswith(".csv"), \
-                f"Expected CSV file, got: {download.suggested_filename}"
-            download_triggered = True
-        except Exception:
-            pass
+        except PlaywrightTimeoutError:
+            pytest.skip(
+                "Download event was not captured within 15s - the export may "
+                "still work, but this run cannot verify it."
+            )
 
-        if not download_triggered:
-            # If download event capture fails but element is clickable, that's acceptable
-            # The download functionality works, Playwright just can't capture it
-            pass
+        assert download.suggested_filename.endswith(".csv"), \
+            f"Expected a .csv export, got: {download.suggested_filename}"

@@ -275,8 +275,6 @@ class TestViewsSubtabs:
         # Click site to reveal maps
         # Expand the first available site to show maps
         self.views.click_site(None)
-        site.wait_for(state="visible", timeout=10000)
-        site.click()
         self.page.wait_for_timeout(500)
 
         # Find map thumbnail (same class as cameras)
@@ -328,7 +326,6 @@ class TestViewsSubtabs:
 
         # Expand the first available site to show maps
         self.views.click_site(None)
-        site.click()
         self.page.wait_for_timeout(500)
 
         map_thumb = self.page.locator(".cameraThumbnailWrapper").first
