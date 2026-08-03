@@ -42,6 +42,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from dotenv import load_dotenv
+
 load_dotenv()
 from tools.qatouch_client import QATouchClient
 
@@ -112,7 +113,7 @@ class RunReport:
 
     def print_summary(self):
         print(f'\n{"=" * 60}')
-        print(f'  RESULTS')
+        print('  RESULTS')
         print(f'  Success: {self.success_count}')
         print(f'  Skipped: {self.skip_count}')
         print(f'  Failed:  {self.fail_count}')
@@ -324,7 +325,7 @@ def navigate_to_module(page, module_name: str, match_index: int = 0) -> bool:
     try:
         filt.wait_for(state='visible', timeout=5000)
     except Exception:
-        print(f'    Module filter not found')
+        print('    Module filter not found')
         return False
 
     # Build filter candidates: try raw name first (preserves & - etc.),
@@ -413,7 +414,7 @@ def navigate_to_module_by_key(page, module_name: str, module_key: str) -> bool:
     try:
         filt.wait_for(state='visible', timeout=5000)
     except Exception:
-        print(f'    Module filter not found')
+        print('    Module filter not found')
         return False
 
     filt.fill('')
@@ -888,7 +889,7 @@ def find_and_click_case(page, title):
     # First try coordinate click (works reliably for most cases)
     coords = _get_case_coords(page, title)
     if not coords:
-        print(f'    Could not get coordinates for case')
+        print('    Could not get coordinates for case')
         return False
 
     page.mouse.click(coords['x'], coords['y'])
@@ -978,7 +979,7 @@ def _sync_case_in_new_tab(context, page, case_key, steps,
     Enters project, navigates to the correct module (by key if ambiguous), finds case, writes steps.
     """
     if not case_title or not module_name:
-        print(f'    [new-tab] Missing case_title or module_name')
+        print('    [new-tab] Missing case_title or module_name')
         return 'fail'
 
     print(f'    [new-tab] Opening {case_key} in new tab...')
@@ -994,7 +995,7 @@ def _sync_case_in_new_tab(context, page, case_key, steps,
         try:
             proj.wait_for(state='visible', timeout=8000)
         except Exception:
-            print(f'    [new-tab] Project not visible')
+            print('    [new-tab] Project not visible')
             new_page.close()
             return 'fail'
 
@@ -1016,18 +1017,18 @@ def _sync_case_in_new_tab(context, page, case_key, steps,
 
         # Find and click the case by title
         if not find_and_click_case(new_page, case_title):
-            print(f'    [new-tab] Case not found in module list')
+            print('    [new-tab] Case not found in module list')
             new_page.close()
             return 'fail'
 
         # Case detail drawer should be open - look for Edit button
         edit_btn = new_page.locator('button:has-text("Edit")')
         if edit_btn.count() == 0 or not edit_btn.first.is_visible(timeout=8000):
-            print(f'    [new-tab] Edit button not visible after clicking case')
+            print('    [new-tab] Edit button not visible after clicking case')
             new_page.close()
             return 'fail'
 
-        print(f'    [new-tab] Case loaded, opening edit form...')
+        print('    [new-tab] Case loaded, opening edit form...')
 
         # Click Edit
         edit_btn.first.click()
@@ -1041,11 +1042,11 @@ def _sync_case_in_new_tab(context, page, case_key, steps,
                 print('      Switched template to Test Case')
                 time.sleep(2)
                 if not click_form_tab(new_page, 'Steps'):
-                    print(f'    [new-tab] Steps tab not found')
+                    print('    [new-tab] Steps tab not found')
                     new_page.close()
                     return 'fail'
             else:
-                print(f'    [new-tab] Steps tab not found')
+                print('    [new-tab] Steps tab not found')
                 new_page.close()
                 return 'fail'
 
@@ -1892,7 +1893,7 @@ def add_tag(page, tag_name: str) -> bool:
         }''')
         time.sleep(1)
         if not _find_new_tags_vselect(page):
-            print(f'    New Tags vue-select not found')
+            print('    New Tags vue-select not found')
             shot(page, 'new_tags_not_found')
             return False
 
@@ -2016,7 +2017,7 @@ def process_case(page, context, case, operations, rate_limiter, report):
     detail_ok = False
     for attempt in range(2):
         if not find_and_click_case(page, title):
-            report.add(key, 'not_found', f'Case not found in list')
+            report.add(key, 'not_found', 'Case not found in list')
             return False
 
         # Verify we're on detail page
@@ -2028,11 +2029,11 @@ def process_case(page, context, case, operations, rate_limiter, report):
             pass
 
         if attempt == 0:
-            print(f'    Detail page not loaded, retrying...')
+            print('    Detail page not loaded, retrying...')
             page.keyboard.press('Escape')
             time.sleep(2)
         else:
-            print(f'    Not on case detail page')
+            print('    Not on case detail page')
             shot(page, 'not_detail', key)
             report.add(key, 'no_detail', 'Edit button not visible after click')
             return False
@@ -2069,14 +2070,12 @@ def process_case(page, context, case, operations, rate_limiter, report):
         if save_and_close(page):
             report.add(key, 'success')
             return True
-        else:
-            report.add(key, 'save_fail', 'Save button not found')
-            return False
-    else:
-        # Still save partial changes
-        save_and_close(page)
-        report.add(key, 'partial', 'Some operations failed')
+        report.add(key, 'save_fail', 'Save button not found')
         return False
+    # Still save partial changes
+    save_and_close(page)
+    report.add(key, 'partial', 'Some operations failed')
+    return False
 
 
 def run_batch(page, context, cases, operations, rate_limiter, report):
@@ -2102,7 +2101,7 @@ def run_batch(page, context, cases, operations, rate_limiter, report):
         num_matches = count_module_matches(page, module)
 
         if not navigate_to_module(page, module, match_index=0):
-            print(f'    SKIP - could not navigate')
+            print('    SKIP - could not navigate')
             for c in module_cases:
                 report.add(c['case_key'], 'nav_fail', f'Module not found: {module}')
             continue
@@ -2339,7 +2338,7 @@ def rename_single_module(page, old_name, new_name, match_index=0):
 
     # 1. Click the module in the tree to select it
     if not navigate_to_module(page, old_name, match_index=match_index):
-        print(f'      Module not found in tree')
+        print('      Module not found in tree')
         return 'not_found'
 
     time.sleep(2)
@@ -2498,7 +2497,7 @@ def cmd_rename_modules(csv_file=None, dry_run=False, limit=None):
         total = min(total, limit)
 
     print(f'\n{"=" * 60}')
-    print(f'  QA Touch Module Rename')
+    print('  QA Touch Module Rename')
     print(f'  Total: {total} modules across {len(groups)} name groups')
     print(f'{"=" * 60}')
 
@@ -2571,7 +2570,7 @@ def cmd_rename_modules(csv_file=None, dry_run=False, limit=None):
                               f'skipping {len(remaining)} remaining')
                         for e in remaining:
                             report.add(e['module_key'], 'not_found',
-                                       f'Module not found/identified')
+                                       'Module not found/identified')
                         break
 
                     print(f'\n    [{entry["module_key"]}] '
@@ -3430,7 +3429,7 @@ def cmd_audit_steps(sample_size=30, csv_file=None):
 
                 # Refresh page every 15 cases
                 if i > 0 and i % 15 == 0:
-                    print(f'    [Refreshing page]')
+                    print('    [Refreshing page]')
                     page.reload()
                     time.sleep(5)
                     enter_project(page, context)
@@ -3447,7 +3446,7 @@ def cmd_audit_steps(sample_size=30, csv_file=None):
 
                 # Find and click case
                 if not find_and_click_case(page, title):
-                    print(f'    Case not found')
+                    print('    Case not found')
                     results.append({
                         'case_key': ck, 'module': module,
                         'title': title[:80], 'issue': 'case_not_found',
@@ -3466,7 +3465,7 @@ def cmd_audit_steps(sample_size=30, csv_file=None):
 
                 # Click Steps tab
                 if not click_form_tab(page, 'Steps'):
-                    print(f'    Steps tab not found')
+                    print('    Steps tab not found')
                     # Close form
                     page.keyboard.press('Escape')
                     time.sleep(1)
@@ -3586,9 +3585,9 @@ def cmd_check_duplicates():
             count = m.get('case_count', '?')
             print(f'    [{key}] {count} cases')
 
-    print(f'\n  Fix: Rename duplicates using rename-modules command.')
+    print('\n  Fix: Rename duplicates using rename-modules command.')
     print(f'  Convention: "{"{Category}"} - {"{Feature Context}"}"')
-    print(f'  Example: "Search - Insights", "Search - LPR"')
+    print('  Example: "Search - Insights", "Search - LPR"')
 
 
 # ---------------------------------------------------------------------------
@@ -3613,7 +3612,7 @@ def _find_case_exhaustive(page, title, module):
     # Wait for case list to fully load
     container_count = _wait_for_case_list(page, timeout=10)
     if container_count == 0:
-        print(f'      [exhaustive] No .cl-container elements after 10s wait')
+        print('      [exhaustive] No .cl-container elements after 10s wait')
         return False
 
     # Try immediate DOM search
@@ -3730,8 +3729,8 @@ def cmd_sync_unfound(case_keys=None, limit=None, dry_run=False):
     aggressive scrolling, per-page maximization). Falls back to full page
     reload + re-enter project if the first search attempt fails.
     """
-    from pathlib import Path
     import glob as g2
+    from pathlib import Path
 
     root = Path(__file__).resolve().parent.parent
     manual_root = root / 'tests' / 'steps' / 'manual'
@@ -3823,7 +3822,7 @@ def cmd_sync_unfound(case_keys=None, limit=None, dry_run=False):
     # Preview
     print(f'\n{"=" * 60}')
     print(f'  QA Touch sync-unfound - {len(sync_plan)} cases')
-    print(f'  Strategy: per-module grouping, enhanced search, reload-on-failure')
+    print('  Strategy: per-module grouping, enhanced search, reload-on-failure')
     print(f'{"=" * 60}')
     for item in sync_plan[:20]:
         print(f'  [{item["case_key"]}] ({item["module"]}) {item["case_title"][:50]}')
@@ -3939,7 +3938,7 @@ def cmd_sync_unfound(case_keys=None, limit=None, dry_run=False):
                             working_idx = match_idx
                             navigated = True
                             break
-                        elif num_matches > 1:
+                        if num_matches > 1:
                             print(f'    Match #{match_idx + 1}: 0 cases, trying next...')
 
                 if not navigated:

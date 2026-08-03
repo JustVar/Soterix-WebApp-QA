@@ -16,9 +16,7 @@ in the QA Touch UI for bulk-tagging.
 from __future__ import annotations
 
 import csv
-import json
 import os
-import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -27,6 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / '.env')
 
 from tools.qatouch_client import QATouchClient
@@ -477,7 +476,7 @@ def print_suite(name: str, cases: list[dict]):
             print(f'    {c["case_key"]:>10s}  {c["title"][:70]}')
 
     # Print just the case codes for easy searching
-    print(f'\n--- Case codes for bulk search (comma-separated) ---')
+    print('\n--- Case codes for bulk search (comma-separated) ---')
     all_codes = [c['case_key'] for c in cases]
     # Print in groups of 10 for readability
     for i in range(0, len(all_codes), 10):
@@ -509,18 +508,18 @@ def main():
 
     if cmd == 'smoke':
         print_suite('SMOKE', smoke_cases)
-        print(f'\n  TAGGING INSTRUCTIONS:')
-        print(f'  1. In QA Touch, go to Test Cases > Test Case Search Page')
-        print(f'  2. Search by Case Id for each code above')
-        print(f'  3. Select the cases, click Bulk Edit (or open individually)')
-        print(f'  4. Add tag: SMOKE')
-        print(f'  5. Save')
-        print(f'\n  TIP: Work module-by-module. Click a module in the left tree,')
-        print(f'       then select the matching cases in the right panel.')
+        print('\n  TAGGING INSTRUCTIONS:')
+        print('  1. In QA Touch, go to Test Cases > Test Case Search Page')
+        print('  2. Search by Case Id for each code above')
+        print('  3. Select the cases, click Bulk Edit (or open individually)')
+        print('  4. Add tag: SMOKE')
+        print('  5. Save')
+        print('\n  TIP: Work module-by-module. Click a module in the left tree,')
+        print('       then select the matching cases in the right panel.')
 
     elif cmd == 'sanity':
         print_suite('SANITY', sanity_cases)
-        print(f'\n  TAGGING INSTRUCTIONS: Same as SMOKE but use tag: SANITY')
+        print('\n  TAGGING INSTRUCTIONS: Same as SMOKE but use tag: SANITY')
 
     elif cmd == 'all':
         print_suite('SMOKE', smoke_cases)

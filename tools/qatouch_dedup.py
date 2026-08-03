@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / '.env')
 
 from tools.qatouch_client import QATouchClient
@@ -142,7 +143,7 @@ def cmd_scan():
     scaffolded_keys = {e['case_key'] for e in scaffolded.values()}
 
     # Fetch all test cases from QA Touch
-    print(f"\nFetching all test cases from QA Touch...")
+    print("\nFetching all test cases from QA Touch...")
     all_cases = client.list_all_test_cases(PROJECT_KEY)
     print(f"  Found {len(all_cases)} total cases")
 
@@ -156,7 +157,7 @@ def cmd_scan():
     case_by_key = {c['case_key']: c for c in all_cases if 'case_key' in c}
 
     print(f"\n{'=' * 70}")
-    print(f"MATCH REPORT")
+    print("MATCH REPORT")
     print(f"{'=' * 70}")
 
     for nodeid, entry in scaffolded.items():
@@ -182,7 +183,7 @@ def cmd_scan():
             broader_matches = find_best_matches(stub_title, all_cases, scaffolded_keys, top_n=3)
             if broader_matches and broader_matches[0][0] > (matches[0][0] if matches else 0):
                 matches = broader_matches
-                print(f"  (Searched across all modules)")
+                print("  (Searched across all modules)")
 
         if matches:
             for i, (score, case) in enumerate(matches):
@@ -191,10 +192,10 @@ def cmd_scan():
                       f"\"{case['case_title'][:80]}\""
                       f" ({case.get('module', '?')}){marker}")
         else:
-            print(f"  No matches found")
+            print("  No matches found")
 
     print(f"\n{'=' * 70}")
-    print(f"SUMMARY")
+    print("SUMMARY")
     print(f"{'=' * 70}")
     print(f"  Scaffolded stubs: {len(scaffolded)}")
 
@@ -213,7 +214,7 @@ def cmd_scan():
 
     print(f"  Likely duplicates (score >= 0.35): {good_matches}")
     print(f"  Possibly unique (score < 0.35): {len(scaffolded) - good_matches}")
-    print(f"\nRun 'python tools/qatouch_dedup.py fix' to remap and generate cleanup files.")
+    print("\nRun 'python tools/qatouch_dedup.py fix' to remap and generate cleanup files.")
 
 
 def cmd_fix(threshold: float = 0.35):
@@ -332,7 +333,7 @@ def cmd_fix(threshold: float = 0.35):
 
     # Print summary
     print(f"\n{'=' * 70}")
-    print(f"RESULTS")
+    print("RESULTS")
     print(f"{'=' * 70}")
     print(f"  Remapped to existing cases: {len(remapped)}")
     for nodeid, old_key, new_key, new_title, score in remapped:
@@ -347,12 +348,12 @@ def cmd_fix(threshold: float = 0.35):
             print(f"    {short_nid}: [{key}] \"{title[:70]}\"")
 
     print(f"\n  Mapping updated: {MAPPING_PATH.name}")
-    print(f"\n--- NEXT STEPS (in QA Touch UI) ---")
+    print("\n--- NEXT STEPS (in QA Touch UI) ---")
     if stubs_to_delete:
         print(f"  1. Delete {len(stubs_to_delete)} stub cases (see qatouch_stubs_to_delete.csv)")
         print(f"     Case keys: {', '.join(stubs_to_delete)}")
     print(f"  2. Set Mode=Automation on {len(cases_to_set_automation)} cases (see qatouch_set_automation_mode.csv)")
-    print(f"     Quickest way: filter by case key in QA Touch, click case, Edit, change Mode dropdown")
+    print("     Quickest way: filter by case key in QA Touch, click case, Edit, change Mode dropdown")
 
 
 def cmd_audit(low_threshold: float = 0.45):
@@ -379,7 +380,7 @@ def cmd_audit(low_threshold: float = 0.45):
     print(f"Low-quality matches (score < {low_threshold}): {len(low_quality)}")
 
     if low_quality:
-        print(f"\n--- LOW QUALITY MATCHES ---")
+        print("\n--- LOW QUALITY MATCHES ---")
         for nodeid, entry in low_quality:
             short_nid = nodeid.split('::')[-1].replace('[chromium]', '')
             print(f"\n  {short_nid} (score={entry.get('score', '?')})")

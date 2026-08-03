@@ -53,7 +53,7 @@ def print_site_info(info):
     print("-" * 70)
     for ch in info["channels"]:
         snap = "YES" if ch["has_snapshot"] else "NO"
-        print(f"{ch['id']:<6} {str(ch.get('name') or '')[:40]:<40} {str(ch.get('model') or ''):<15} {snap}")
+        print(f"{ch['id']:<6} {str(ch.get('name') or '')[:40]:<40} {ch.get('model') or ''!s:<15} {snap}")
 
 
 if __name__ == "__main__":

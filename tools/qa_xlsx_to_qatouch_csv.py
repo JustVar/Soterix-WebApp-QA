@@ -89,7 +89,6 @@ import re
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
 
 try:
     import openpyxl
@@ -145,7 +144,7 @@ CANONICAL_COLUMNS = [
 # Plural-tolerant for "Expected Result(s)" / "Precondition(s)".
 # --------------------------------------------------------------------------- #
 
-ALIASES: Dict[str, List[str]] = {
+ALIASES: dict[str, list[str]] = {
     "title":           ["title", "test case title", "scenario", "summary", "case title"],
     "case_type":       ["case_type", "type", "testing type", "test type", "category"],
     "priority":        ["priority", "priorities"],
@@ -259,7 +258,7 @@ class HeaderMap:
     """
     sheet: str
     header_row: int
-    fields: Dict[str, int]  # logical_field -> 1-based col index
+    fields: dict[str, int]  # logical_field -> 1-based col index
 
     def has(self, logical: str) -> bool:
         return logical in self.fields
@@ -281,9 +280,9 @@ class Warning:
 @dataclass
 class ConvertResult:
     rows_written: int = 0
-    sheets_processed: List[str] = field(default_factory=list)
-    sheets_skipped: List[str] = field(default_factory=list)
-    warnings: List[Warning] = field(default_factory=list)
+    sheets_processed: list[str] = field(default_factory=list)
+    sheets_skipped: list[str] = field(default_factory=list)
+    warnings: list[Warning] = field(default_factory=list)
     sheet_row_counts: Counter = field(default_factory=Counter)
     rows_received_both_expected: int = 0
     rows_used_sheet_name_for_type: int = 0
@@ -315,7 +314,7 @@ def header_key(s: str) -> str:
     return re.sub(r"\s+", " ", sanitize(s)).lower()
 
 
-def detect_header_row(ws, max_scan: int = 5) -> Tuple[Optional[int], Dict[str, int]]:
+def detect_header_row(ws, max_scan: int = 5) -> tuple[int | None, dict[str, int]]:
     """Scan rows 1..max_scan; return (1-based row, logical->col map) for the
     first row where >=3 of the REQUIRED logical fields resolve via aliases.
 
@@ -323,11 +322,11 @@ def detect_header_row(ws, max_scan: int = 5) -> Tuple[Optional[int], Dict[str, i
     AND against QA accidentally inserting a title row above the headers.
     """
     best_row = None
-    best_map: Dict[str, int] = {}
+    best_map: dict[str, int] = {}
     best_score = 0
 
     # Build reverse alias map: header-key -> logical-field
-    reverse: Dict[str, str] = {}
+    reverse: dict[str, str] = {}
     for logical, aliases in ALIASES.items():
         for a in aliases:
             reverse[header_key(a)] = logical
@@ -336,7 +335,7 @@ def detect_header_row(ws, max_scan: int = 5) -> Tuple[Optional[int], Dict[str, i
         col_count = ws.max_column or 0
         if col_count == 0:
             continue
-        seen: Dict[str, int] = {}
+        seen: dict[str, int] = {}
         for c in range(1, col_count + 1):
             raw = ws.cell(row=r, column=c).value
             if raw is None:
@@ -360,7 +359,7 @@ def detect_header_row(ws, max_scan: int = 5) -> Tuple[Optional[int], Dict[str, i
     return None, {}
 
 
-def maybe_swap_type_severity(case_type: str, severity: str) -> Tuple[str, str, bool]:
+def maybe_swap_type_severity(case_type: str, severity: str) -> tuple[str, str, bool]:
     """LDAP rows-73..82 column-shift defense: if `case_type` cell holds a
     Severity token AND `severity` cell holds a Testing-Type token, swap them.
     """
@@ -371,7 +370,7 @@ def maybe_swap_type_severity(case_type: str, severity: str) -> Tuple[str, str, b
     return case_type, severity, False
 
 
-def normalize_case_type(raw: str, sheet_name: str) -> Tuple[str, bool]:
+def normalize_case_type(raw: str, sheet_name: str) -> tuple[str, bool]:
     """Return (canonical lowercase type, used_sheet_fallback)."""
     if raw:
         key = raw.strip().lower()
@@ -415,7 +414,7 @@ def normalize_mode(raw: str) -> str:
     return MODE_NORMALIZE.get(k, "manual")
 
 
-def normalize_tags(raw: str) -> Tuple[str, List[str]]:
+def normalize_tags(raw: str) -> tuple[str, list[str]]:
     """Return (pipe-delimited known tags, dropped-tag list).
 
     The four canonical tags must already exist in the QA Touch per-project tag
@@ -425,8 +424,8 @@ def normalize_tags(raw: str) -> Tuple[str, List[str]]:
     if not raw:
         return "", []
     parts = re.split(r"[|,]", raw)
-    kept: List[str] = []
-    dropped: List[str] = []
+    kept: list[str] = []
+    dropped: list[str] = []
     for p in parts:
         t = p.strip().lower()
         if not t:
@@ -449,7 +448,7 @@ def html_escape_unsafe(text: str) -> str:
     return text.replace("<", "&lt;").replace(">", "&gt;")
 
 
-def parse_steps(raw: str) -> List[str]:
+def parse_steps(raw: str) -> list[str]:
     """Split a free-form Steps cell into individual step texts.
 
     Strips leading `N. ` or `Step N:` numbering. Tolerates either LF, CRLF, or
@@ -469,7 +468,7 @@ def parse_steps(raw: str) -> List[str]:
         else:
             lines = [raw]
 
-    out: List[str] = []
+    out: list[str] = []
     for line in lines:
         s = line.strip()
         if not s:
@@ -481,7 +480,7 @@ def parse_steps(raw: str) -> List[str]:
     return out
 
 
-def merge_expected(expected: str, acceptance: str) -> Tuple[str, bool]:
+def merge_expected(expected: str, acceptance: str) -> tuple[str, bool]:
     """Merge "Expected Result" + "Acceptance Criteria" per design requirement #1.
 
     Returns (merged_text, both_were_present).
@@ -522,8 +521,8 @@ class CanonicalRecord:
     # provided (so the LAST step carries the assertion - matches
     # Format A's padding semantics so the two formats represent the
     # same case data identically modulo row layout).
-    steps_list: List[str] = field(default_factory=list)
-    expected_list: List[str] = field(default_factory=list)
+    steps_list: list[str] = field(default_factory=list)
+    expected_list: list[str] = field(default_factory=list)
 
 
 def build_record(
@@ -536,7 +535,7 @@ def build_record(
     index_in_sheet: int,
     created_by: str,
     result: ConvertResult,
-) -> Optional[CanonicalRecord]:
+) -> CanonicalRecord | None:
     """Return a CanonicalRecord for one row, or None if the row is unusable
     (empty title or empty steps after parsing)."""
 
@@ -689,7 +688,7 @@ def process_sheet(
     reference_prefix: str,
     created_by: str,
     result: ConvertResult,
-) -> List[CanonicalRecord]:
+) -> list[CanonicalRecord]:
     header_row, field_map = detect_header_row(ws, max_scan=8)
     if header_row is None:
         # FAIL LOUD per design - record what we saw so QA can fix the sheet.
@@ -747,7 +746,7 @@ def process_sheet(
     # continuation rows.
     case_header_rows = _coalesce_continuation_rows(ws, hmap)
 
-    records: List[CanonicalRecord] = []
+    records: list[CanonicalRecord] = []
     for index_in_sheet, header_row_idx in enumerate(case_header_rows, start=1):
         rec = build_record(
             ws, header_row_idx, hmap, sheet_name,
@@ -764,7 +763,7 @@ def process_sheet(
     return records
 
 
-def _coalesce_continuation_rows(ws, hmap: HeaderMap) -> List[int]:
+def _coalesce_continuation_rows(ws, hmap: HeaderMap) -> list[int]:
     """Walk the data rows of a sheet, detect continuation rows belonging
     to the most-recent case, and mutate the case-header row's `steps`
     and `expected_result` cells in-memory to include the merged text.
@@ -811,10 +810,10 @@ def _coalesce_continuation_rows(ws, hmap: HeaderMap) -> List[int]:
                 return v
         return ""
 
-    case_header_rows: List[int] = []
-    current_header: Optional[int] = None
-    current_steps: List[str] = []
-    current_expecteds: List[str] = []
+    case_header_rows: list[int] = []
+    current_header: int | None = None
+    current_steps: list[str] = []
+    current_expecteds: list[str] = []
 
     def _flush_into_header():
         if current_header is None or not current_steps:
@@ -866,9 +865,9 @@ def _coalesce_continuation_rows(ws, hmap: HeaderMap) -> List[int]:
 def convert(
     xlsx_path: str,
     out_path: str,
-    sheet_filter: Optional[str],
+    sheet_filter: str | None,
     module_prefix: str,
-    reference_prefix_override: Optional[str],
+    reference_prefix_override: str | None,
     created_by: str,
     dry_run: bool,
     output_format: str = "merged-steps",
@@ -876,7 +875,7 @@ def convert(
     result = ConvertResult()
     wb = openpyxl.load_workbook(xlsx_path, data_only=True)
 
-    all_records: List[CanonicalRecord] = []
+    all_records: list[CanonicalRecord] = []
 
     for sheet_name in wb.sheetnames:
         # Skip the hidden INSTRUCTIONS sheet that ships with the template.
@@ -986,7 +985,7 @@ def convert(
 # CLI
 # --------------------------------------------------------------------------- #
 
-def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Convert a QA-authored xlsx to the canonical QA Touch CSV.",
     )
@@ -1021,7 +1020,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
 
     if not os.path.isfile(args.xlsx):
@@ -1060,7 +1059,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"Type/Severity column-shift swaps applied:  {result.swaps_applied}")
 
     # Group warnings by kind for readability.
-    by_kind: Dict[str, List[Warning]] = {}
+    by_kind: dict[str, list[Warning]] = {}
     for w in result.warnings:
         by_kind.setdefault(w.kind, []).append(w)
     if by_kind:

@@ -29,6 +29,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from dotenv import load_dotenv
+
 load_dotenv()
 from tools.qatouch_client import QATouchClient
 
@@ -99,7 +100,7 @@ def setup_browser(p, use_saved_auth=True):
     browser = p.chromium.launch(headless=False, slow_mo=200)
 
     if use_saved_auth and os.path.exists(AUTH_STATE_FILE):
-        print(f'  Loading saved auth state...')
+        print('  Loading saved auth state...')
         context = browser.new_context(
             viewport={'width': 1400, 'height': 900},
             storage_state=AUTH_STATE_FILE,
@@ -120,9 +121,8 @@ def setup_browser(p, use_saved_auth=True):
         if is_logged_in:
             print('  Auth state valid!')
             return browser, context, page
-        else:
-            print('  Auth state expired. Need fresh login.')
-            context.close()
+        print('  Auth state expired. Need fresh login.')
+        context.close()
 
     context = browser.new_context(viewport={'width': 1400, 'height': 900})
     page = context.new_page()
@@ -141,14 +141,14 @@ def enter_project(page):
     page.locator('text="NexaiQ-Core"').first.click()
     time.sleep(4)
     page.wait_for_load_state('networkidle')
-    print(f'  Entered project.')
+    print('  Entered project.')
 
 
 def navigate_to_module(page, module_name: str) -> bool:
     """Filter the module tree and click the target module."""
     filter_input = page.locator('input[placeholder="Type To Filter Module"]').first
     if filter_input.count() == 0:
-        print(f'    Module filter input not found')
+        print('    Module filter input not found')
         return False
 
     # Use first 2-3 distinctive words for filtering
@@ -434,7 +434,7 @@ def cmd_set_mode(dry_run=False, specific_keys=None):
         return
 
     print(f'\n{"=" * 60}')
-    print(f'  QA Touch Mode=Automation Setter')
+    print('  QA Touch Mode=Automation Setter')
     print(f'  Cases to process: {len(cases)}')
     print(f'{"=" * 60}')
 
@@ -467,7 +467,7 @@ def cmd_set_mode(dry_run=False, specific_keys=None):
                 print(f'\n  Module: {module} ({len(module_cases)} cases)')
 
                 if not navigate_to_module(page, module):
-                    print(f'    SKIP - could not navigate to module')
+                    print('    SKIP - could not navigate to module')
                     failed += len(module_cases)
                     continue
 
@@ -477,7 +477,7 @@ def cmd_set_mode(dry_run=False, specific_keys=None):
                     print(f'\n  Processing [{key}]: "{title[:60]}..."')
 
                     if not find_and_click_case(page, title):
-                        print(f'    FAILED - case not found in list')
+                        print('    FAILED - case not found in list')
                         failed += 1
                         # Re-navigate to module
                         navigate_to_module(page, module)
@@ -491,7 +491,7 @@ def cmd_set_mode(dry_run=False, specific_keys=None):
                         pass
 
                     if not edit_visible:
-                        print(f'    FAILED - not on case detail page')
+                        print('    FAILED - not on case detail page')
                         shot(page, f'not_detail_{key}')
                         failed += 1
                         enter_project(page)
@@ -507,7 +507,7 @@ def cmd_set_mode(dry_run=False, specific_keys=None):
                     time.sleep(2)
 
             print(f'\n{"=" * 60}')
-            print(f'  RESULTS')
+            print('  RESULTS')
             print(f'  Success: {success}')
             print(f'  Failed:  {failed}')
             print(f'{"=" * 60}')
@@ -539,7 +539,7 @@ def cmd_delete(dry_run=False):
             not_found.append(key)
 
     print(f'\n{"=" * 60}')
-    print(f'  QA Touch Stub Deletion')
+    print('  QA Touch Stub Deletion')
     print(f'  Cases to delete: {len(found)}')
     if not_found:
         print(f'  Already deleted: {len(not_found)} ({", ".join(not_found)})')
@@ -613,10 +613,10 @@ def cmd_delete(dry_run=False):
                         if confirm.count() > 0:
                             confirm.first.click()
                             time.sleep(2)
-                            print(f'    Deleted!')
+                            print('    Deleted!')
                             success += 1
                         else:
-                            print(f'    Confirmation dialog not found')
+                            print('    Confirmation dialog not found')
                             shot(page, f'delete_confirm_{key}')
                             failed += 1
                     else:
@@ -624,7 +624,7 @@ def cmd_delete(dry_run=False):
                         failed += 1
 
             print(f'\n{"=" * 60}')
-            print(f'  RESULTS')
+            print('  RESULTS')
             print(f'  Deleted:  {success}')
             print(f'  Failed:   {failed}')
             print(f'{"=" * 60}')

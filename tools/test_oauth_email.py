@@ -5,6 +5,7 @@ Usage: python tools/test_oauth_email.py
 from __future__ import annotations
 
 import os
+
 from dotenv import load_dotenv
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -13,6 +14,7 @@ if os.path.exists(ENV_PATH):
     load_dotenv(ENV_PATH)
 
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import tools.email_client as email_client
 

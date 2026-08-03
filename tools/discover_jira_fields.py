@@ -165,7 +165,7 @@ def discover_all(jira: JIRA, project_key: str, issue_types: list[str]) -> dict:
         print(f"Discovering fields for: {it_name}...")
         result = discover_issue_type_fields(jira, project_key, it_name)
         if result is None:
-            print(f"  Skipped (not found or no access)")
+            print("  Skipped (not found or no access)")
             continue
 
         discovered["issue_types"][it_name] = result

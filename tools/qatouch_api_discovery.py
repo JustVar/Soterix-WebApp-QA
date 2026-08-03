@@ -26,6 +26,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from dotenv import load_dotenv
+
 load_dotenv(os.path.join(ROOT, '.env'))
 
 DOMAIN = 'soterixsystems'
@@ -491,7 +492,7 @@ def main():
 
     existing = {}
     if os.path.exists(OUTPUT_FILE):
-        with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
+        with open(OUTPUT_FILE, encoding='utf-8') as f:
             existing = json.load(f)
 
     # Update discovered endpoints
@@ -675,7 +676,7 @@ def main():
     print(f'\n  FINAL RESULTS saved to: {OUTPUT_FILE}')
 
     # Print final totals
-    print(f'\n  GRAND TOTALS:')
+    print('\n  GRAND TOTALS:')
     print(f'    Internal working (200/201):  {len(disc)}')
     print(f'    Known from code:             {len(known)}')
     print(f'    Validation errors (422):     {len(val_eps)}')

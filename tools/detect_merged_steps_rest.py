@@ -61,8 +61,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Optional, Tuple
-
 
 # Canonical "Step N:" prefix (matches detect_merged_steps.py +
 # qa_post_import_split_and_position.py:146)
@@ -77,7 +75,7 @@ DEFAULT_REST_DOMAIN_SHORT = "soterixsystems"
 DEFAULT_LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 
 
-def load_rest_creds() -> Tuple[Optional[str], str]:
+def load_rest_creds() -> tuple[str | None, str]:
     """Load REST api-token + domain (short form, e.g. 'soterixsystems').
 
     Reads the environment / .env. Same precedence as the other QA Touch tools,
@@ -123,7 +121,7 @@ def rest_get_page(
             raise
 
 
-def classify(case: dict) -> Tuple[str, int, int, str, str]:
+def classify(case: dict) -> tuple[str, int, int, str, str]:
     """Apply the merged/split/empty/single classification to a single case.
 
     Returns (classification, step_count, parsed_step_markers, step_excerpt,

@@ -24,9 +24,7 @@ Programmatic scans:
 import json
 import random
 import re
-import os
-import sys
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
@@ -45,7 +43,7 @@ AUDIT_DIR.mkdir(parents=True, exist_ok=True)
 # Load data
 # ---------------------------------------------------------------------------
 print("Loading master_test_repository.json ...")
-with open(MASTER_JSON, "r", encoding="utf-8") as f:
+with open(MASTER_JSON, encoding="utf-8") as f:
     data = json.load(f)
 
 all_cases_raw = list(data["cases"].values())
@@ -1353,17 +1351,7 @@ for cls, reason in misclass_reasons.items():
     for case in by_classification.get(cls, []):
         title = case.get("title", "").lower()
         # Spot-check for known patterns
-        if cls == "chat_message" and ("error message" in title or "camera tile" in title or "tile" in title):
-            misclassified.append({"case_key": case["case_key"], "title": case["title"], "classification": cls, "reason": reason})
-        elif cls == "drawing_zone" and ("ptz" in title or "directional" in title or "arrow" in title or "moves camera" in title):
-            misclassified.append({"case_key": case["case_key"], "title": case["title"], "classification": cls, "reason": reason})
-        elif cls == "playback_media" and ("scrollbar" in title or "layout" in title or "ui" in title or "align" in title or "visible" in title):
-            misclassified.append({"case_key": case["case_key"], "title": case["title"], "classification": cls, "reason": reason})
-        elif cls == "delete" and ("clearing" in title or "unchecking" in title or "hiding" in title or "restores" in title):
-            misclassified.append({"case_key": case["case_key"], "title": case["title"], "classification": cls, "reason": reason})
-        elif cls == "reset_default" and ("hiding" in title or "filter" in title or "search" in title):
-            misclassified.append({"case_key": case["case_key"], "title": case["title"], "classification": cls, "reason": reason})
-        elif cls == "create" and ("cannot be added twice" in title or "duplicate" in title or "same" in title):
+        if (cls == "chat_message" and ("error message" in title or "camera tile" in title or "tile" in title)) or (cls == "drawing_zone" and ("ptz" in title or "directional" in title or "arrow" in title or "moves camera" in title)) or (cls == "playback_media" and ("scrollbar" in title or "layout" in title or "ui" in title or "align" in title or "visible" in title)) or (cls == "delete" and ("clearing" in title or "unchecking" in title or "hiding" in title or "restores" in title)) or (cls == "reset_default" and ("hiding" in title or "filter" in title or "search" in title)) or (cls == "create" and ("cannot be added twice" in title or "duplicate" in title or "same" in title)):
             misclassified.append({"case_key": case["case_key"], "title": case["title"], "classification": cls, "reason": reason})
 
 print(f"  Precondition-at-end pattern: {len(precondition_at_end)} cases")
@@ -1557,7 +1545,7 @@ report = {
         {
             "priority": "Low",
             "issue": "Auth test step 1 inconsistency",
-            "recommendation": f"Auth cases use 'Open the application login page' as step 1 while all other classifications use 'Log in to the application with valid credentials'. This is intentional for auth tests but documents a pattern difference that may confuse new engineers.",
+            "recommendation": "Auth cases use 'Open the application login page' as step 1 while all other classifications use 'Log in to the application with valid credentials'. This is intentional for auth tests but documents a pattern difference that may confuse new engineers.",
         },
     ],
 }
@@ -1581,7 +1569,7 @@ print(f"    Pass:        {verdict_summary['Pass']} ({report['executive_summary']
 print(f"    Needs Work:  {verdict_summary['Needs Work']} ({report['executive_summary']['sample_needs_work_rate_pct']}%)")
 print(f"    Fail:        {verdict_summary['Fail']} ({report['executive_summary']['sample_fail_rate_pct']}%)")
 print()
-print(f"  Programmatic scan findings:")
+print("  Programmatic scan findings:")
 print(f"    A. Vague expected results:           {vague_cases} unique cases, {len(issues['vague_expected'])} occurrences")
 print(f"    B. Identical action=expected:        {identical_cases} unique cases, {len(issues['identical_action_expected'])} occurrences")
 print(f"    C. Navigation module mismatch:       {nav_mismatch_cases} unique cases")
@@ -1590,7 +1578,7 @@ print(f"    E. Step 1 not a login:               {no_login_cases} cases")
 print(f"    F. Duplicate step text:              {dup_step_cases} unique cases")
 print(f"    G. Template variable leak:           {template_leak_cases} cases")
 print()
-print(f"  Systemic patterns:")
+print("  Systemic patterns:")
 print(f"    Precondition appended at end:        {len(precondition_at_end)} cases")
 print(f"    Title injected into step text:       {len(title_injected_in_steps)} cases")
 print(f"    Misclassified (wrong template):      {len(misclassified)} cases detected")

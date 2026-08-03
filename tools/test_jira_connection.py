@@ -32,6 +32,8 @@ except Exception:
 
 import os
 import uuid
+
+
 def load_env():
     env_path = os.path.join(os.getcwd(), ".env")
     if exists(env_path):
@@ -69,7 +71,7 @@ def main():
     try:
         jira = JIRA(options=options, basic_auth=(JIRA_USER, JIRA_TOKEN))
         print("Connected to Jira successfully.")
-    except Exception as e:
+    except Exception:
         print("Failed to connect to Jira:")
         traceback.print_exc()
         sys.exit(3)

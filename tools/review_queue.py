@@ -9,25 +9,25 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
 import smtplib
-import traceback
+from datetime import datetime
+from typing import Any
+
 import tools.email_client as email_client
-from typing import Dict, Any
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 QUEUE_PATH = os.path.join(ROOT, "tools", "review_queue.json")
 REPORT_PATH = os.path.join(ROOT, "tools", "review_report.html")
 
 
-def load_queue(path: str = QUEUE_PATH) -> Dict[str, Any]:
+def load_queue(path: str = QUEUE_PATH) -> dict[str, Any]:
     if not os.path.exists(path):
         return {"items": []}
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
-def generate_html_report(queue: Dict[str, Any]) -> str:
+def generate_html_report(queue: dict[str, Any]) -> str:
     items = queue.get("items", [])
     pending = [it for it in items if it.get("status", "pending") == "pending"]
     html = [

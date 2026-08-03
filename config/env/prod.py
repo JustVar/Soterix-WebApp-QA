@@ -3,11 +3,11 @@ import os
 config = {
     "base_url": "https://app.example.invalid",
     "api_base_url": "https://app.example.invalid/v-apiserver",
-    
+
     # Safety flags - production is READ-ONLY
     "allow_write": False,
     "allow_delete": False,
-    
+
     # Box configurations
     "boxes": {
         "soterix": {
@@ -17,7 +17,7 @@ config = {
             "default_site_id": None,  # TBD
         },
     },
-    
+
     # Default box if not specified
     "default_box": "soterix",
 }

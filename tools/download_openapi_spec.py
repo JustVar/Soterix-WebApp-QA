@@ -7,9 +7,9 @@ Saves to:
 
 Requires: requests, openapi-spec-validator
 """
+import json
 import os
 import sys
-import json
 from pathlib import Path
 
 QA_URL = "https://qa.example.invalid/v-apiserver/v3/api-docs"
@@ -75,7 +75,7 @@ def summarize(spec: dict) -> dict:
 def validate_spec_file(path: Path) -> bool:
     try:
         from openapi_spec_validator import validate_spec
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             spec = json.load(f)
         validate_spec(spec)
         return True

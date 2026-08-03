@@ -14,10 +14,10 @@ CSV -> Target project:
 Output: tools/.partner_admin_backfill.json
 """
 from __future__ import annotations
+
 import csv
 import json
 import os
-import sys
 import urllib.request
 from pathlib import Path
 

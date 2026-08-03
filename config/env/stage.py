@@ -3,11 +3,11 @@ import os
 config = {
     "base_url": "https://staging.example.invalid",
     "api_base_url": "https://staging.example.invalid/v-apiserver",
-    
+
     # Safety flags - staging allows writes but not deletes
     "allow_write": True,
     "allow_delete": False,
-    
+
     # Box configurations
     "boxes": {
         "us": {
@@ -17,7 +17,7 @@ config = {
             "default_site_id": None,  # TBD - update when known
         },
     },
-    
+
     # Default box if not specified
     "default_box": "us",
 }

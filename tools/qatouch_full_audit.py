@@ -44,6 +44,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / '.env')
 
 try:
@@ -82,7 +83,7 @@ def load_csv_full() -> dict[str, dict]:
         if not os.path.exists(csv_path):
             print(f'  WARNING: CSV not found: {csv_path}')
             continue
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, encoding='utf-8') as f:
             reader = csv.reader(f)
             header = next(reader)
             for row in reader:
@@ -128,7 +129,7 @@ def load_snapshot() -> dict[str, dict]:
     if not os.path.exists(SNAPSHOT_FILE):
         print(f'  WARNING: Snapshot not found: {SNAPSHOT_FILE}')
         return {}
-    with open(SNAPSHOT_FILE, 'r', encoding='utf-8') as f:
+    with open(SNAPSHOT_FILE, encoding='utf-8') as f:
         data = json.load(f)
     return {c['case_key']: c for c in data.get('cases', [])}
 
@@ -460,7 +461,7 @@ def audit_step_count(session, csv_data: dict, report: AuditReport):
         for key, code, tmpl in non_step_templates:
             report.warn(f'{key} ({code}) template={tmpl} - steps may not persist')
     else:
-        report.log(f'  All cases use "Test Case Steps" template (template=2)')
+        report.log('  All cases use "Test Case Steps" template (template=2)')
 
 
 # ---------------------------------------------------------------------------
@@ -530,7 +531,7 @@ def _strip_csv_module_prefix(title: str) -> str:
 def audit_case_titles(session, csv_data: dict, snapshot: dict, report: AuditReport):
     """Compare case titles across CSV, snapshot, and live data."""
     report.log(f'\n{"#" * 60}')
-    report.log(f'# AUDIT 3: Case Title Verification - ALL cases')
+    report.log('# AUDIT 3: Case Title Verification - ALL cases')
     report.log(f'{"#" * 60}\n')
 
     # First: CSV vs Snapshot (offline, fast)
@@ -588,7 +589,7 @@ def audit_case_titles(session, csv_data: dict, snapshot: dict, report: AuditRepo
 def audit_module_integrity(session, csv_data: dict, snapshot: dict, report: AuditReport):
     """Verify module assignments haven't changed."""
     report.log(f'\n{"#" * 60}')
-    report.log(f'# AUDIT 4: Module Integrity - CSV vs Snapshot (offline)')
+    report.log('# AUDIT 4: Module Integrity - CSV vs Snapshot (offline)')
     report.log(f'{"#" * 60}\n')
 
     modules_csv = Counter()
@@ -617,7 +618,7 @@ def audit_module_integrity(session, csv_data: dict, snapshot: dict, report: Audi
         report.passed(f'All {len(csv_data)} cases have matching modules')
 
     # Module distribution
-    report.log(f'\n  Module distribution (top 20 by case count):')
+    report.log('\n  Module distribution (top 20 by case count):')
     for mod, count in modules_csv.most_common(20):
         report.log(f'    {count:>4} cases - {mod}')
 
@@ -628,7 +629,7 @@ def audit_module_integrity(session, csv_data: dict, snapshot: dict, report: Audi
 def audit_duplicate_titles(csv_data: dict, report: AuditReport):
     """Find duplicate titles and verify differentiators exist."""
     report.log(f'\n{"#" * 60}')
-    report.log(f'# AUDIT 5: Duplicate Title Detection')
+    report.log('# AUDIT 5: Duplicate Title Detection')
     report.log(f'{"#" * 60}\n')
 
     title_to_keys = defaultdict(list)
@@ -641,7 +642,7 @@ def audit_duplicate_titles(csv_data: dict, report: AuditReport):
     report.log(f'  Cases affected: {sum(len(k) for k in duplicates.values())}')
 
     if duplicates:
-        report.log(f'\n  Duplicate titles (showing modules for differentiation):')
+        report.log('\n  Duplicate titles (showing modules for differentiation):')
         for title, keys in sorted(duplicates.items(), key=lambda x: -len(x[1])):
             report.log(f'\n    "{title[:80]}" - {len(keys)} copies:')
             for k in keys:
@@ -664,7 +665,7 @@ def audit_duplicate_titles(csv_data: dict, report: AuditReport):
 def audit_tag_preservation(csv_data: dict, snapshot: dict, report: AuditReport):
     """Verify Smoke/Sanity tags in CSV match snapshot - tags must not change."""
     report.log(f'\n{"#" * 60}')
-    report.log(f'# AUDIT 6: Tag Preservation (Smoke/Sanity) - offline')
+    report.log('# AUDIT 6: Tag Preservation (Smoke/Sanity) - offline')
     report.log(f'{"#" * 60}\n')
 
     csv_smoke = set()
@@ -718,7 +719,7 @@ def audit_tag_preservation(csv_data: dict, snapshot: dict, report: AuditReport):
 def audit_csv_cross_reference(report: AuditReport):
     """Verify CSV files cover all cases with no gaps or overlaps."""
     report.log(f'\n{"#" * 60}')
-    report.log(f'# AUDIT 7: CSV Cross-Reference - Part1 + Part2 + Part3')
+    report.log('# AUDIT 7: CSV Cross-Reference - Part1 + Part2 + Part3')
     report.log(f'{"#" * 60}\n')
 
     file_cases = {}
@@ -729,7 +730,7 @@ def audit_csv_cross_reference(report: AuditReport):
         if not os.path.exists(csv_path):
             report.failed(f'{fname}: file not found')
             continue
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, encoding='utf-8') as f:
             reader = csv.reader(f)
             next(reader)
             for row in reader:
@@ -883,7 +884,7 @@ def _run_audits(audits_to_run, session, csv_data, snapshot, content_sample):
     total_warn = sum(r.warn_count for r in reports)
 
     print(f'\n{"=" * 60}')
-    print(f'  FULL AUDIT SUMMARY')
+    print('  FULL AUDIT SUMMARY')
     print(f'  Total passed:   {total_pass}')
     print(f'  Total failed:   {total_fail}')
     print(f'  Total warnings: {total_warn}')

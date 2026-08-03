@@ -14,7 +14,6 @@ import json
 import os
 import re
 import sys
-import textwrap
 
 if sys.stdout.encoding != "utf-8":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
@@ -578,7 +577,7 @@ def parse_test_file(filepath):
 
     Returns: dict of {nodeid_suffix: {"docstring": str, "steps": list}}
     """
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         source = f.read()
 
     try:
@@ -830,7 +829,7 @@ def _generate_steps_from_title(title, module):
 
 def load_case_mapping():
     """Load QA Touch case mapping and build reverse lookup."""
-    with open(MAPPING_FILE, "r", encoding="utf-8") as f:
+    with open(MAPPING_FILE, encoding="utf-8") as f:
         data = json.load(f)
 
     mappings = data.get("mappings", {})

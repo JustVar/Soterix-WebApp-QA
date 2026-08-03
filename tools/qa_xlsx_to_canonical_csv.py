@@ -55,8 +55,8 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Optional, Tuple
 
 try:
     import openpyxl
@@ -195,11 +195,11 @@ class SkippedRow:
 @dataclass
 class ConversionResult:
     rows_written: int = 0
-    skipped: List[SkippedRow] = field(default_factory=list)
+    skipped: list[SkippedRow] = field(default_factory=list)
     module_name_counts: Counter = field(default_factory=Counter)
     swaps_applied: int = 0
-    sheets_processed: List[str] = field(default_factory=list)
-    sheets_skipped: List[str] = field(default_factory=list)
+    sheets_processed: list[str] = field(default_factory=list)
+    sheets_skipped: list[str] = field(default_factory=list)
 
 
 # --------------------------------------------------------------------------- #
@@ -223,7 +223,7 @@ def sanitize(value) -> str:
     return s.strip()
 
 
-def find_header_row(ws) -> Optional[int]:
+def find_header_row(ws) -> int | None:
     """Return 1-indexed row number containing 'Scenario' in col A within first 8 rows."""
     for r in range(1, min(9, ws.max_row + 1)):
         if ws.cell(row=r, column=1).value == "Scenario":
@@ -239,7 +239,7 @@ def map_testing_type_to_canonical_type(testing_type: str) -> str:
 
 def map_to_priority(severity: str, priority_raw: str) -> str:
     """Prefer Priority column if populated; else Severity. Map P1/P2/P3 if used."""
-    def _norm(val: str) -> Optional[str]:
+    def _norm(val: str) -> str | None:
         if not val:
             return None
         v = val.strip()
@@ -262,7 +262,7 @@ def map_to_priority(severity: str, priority_raw: str) -> str:
     return "Medium"  # safe default
 
 
-def maybe_swap_testing_type_severity(testing_type: str, severity: str) -> Tuple[str, str, bool]:
+def maybe_swap_testing_type_severity(testing_type: str, severity: str) -> tuple[str, str, bool]:
     """
     Detect & fix the LDAP rows-73..82 column-shift bug:
         Testing Type cell holds a Severity token AND Severity cell holds a Testing Type token.
@@ -275,9 +275,9 @@ def maybe_swap_testing_type_severity(testing_type: str, severity: str) -> Tuple[
 
 
 def build_module_hierarchy(
-    sub_features: List[str],
+    sub_features: list[str],
     top_feature: str,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Group sub-features by ' - ' prefix into a 2-level hierarchy.
 
@@ -290,7 +290,7 @@ def build_module_hierarchy(
       * Empty sub_feature -> top_feature alone.
     """
     group_counts: Counter = Counter()
-    parsed: Dict[str, Tuple[Optional[str], str]] = {}
+    parsed: dict[str, tuple[str | None, str]] = {}
 
     for sf in sub_features:
         sfn = sanitize(sf)
@@ -306,7 +306,7 @@ def build_module_hierarchy(
         else:
             parsed[sf] = (None, sfn)
 
-    result: Dict[str, str] = {}
+    result: dict[str, str] = {}
     for sf, (group, leaf) in parsed.items():
         if not leaf and not group:
             result[sf] = top_feature
@@ -325,10 +325,10 @@ def build_module_hierarchy(
 # Core extraction
 # --------------------------------------------------------------------------- #
 
-def extract_rows_from_sheet(ws, sheet_name: str) -> Tuple[List[RawRow], List[SkippedRow], int]:
+def extract_rows_from_sheet(ws, sheet_name: str) -> tuple[list[RawRow], list[SkippedRow], int]:
     """Return (raw_rows, skipped, swaps_applied) for one worksheet."""
-    raw: List[RawRow] = []
-    skipped: List[SkippedRow] = []
+    raw: list[RawRow] = []
+    skipped: list[SkippedRow] = []
     swaps = 0
 
     header_row = find_header_row(ws)
@@ -388,10 +388,10 @@ def extract_rows_from_sheet(ws, sheet_name: str) -> Tuple[List[RawRow], List[Ski
 def convert_workbook(
     src_path: str,
     out_path: str,
-    top_feature: Optional[str],
+    top_feature: str | None,
     reference_prefix: str,
-    include_sheets: Optional[Iterable[str]] = None,
-    exclude_sheets: Optional[Iterable[str]] = None,
+    include_sheets: Iterable[str] | None = None,
+    exclude_sheets: Iterable[str] | None = None,
     dry_run: bool = False,
     use_feature_name_as_parent: bool = False,
     created_by: str = "QA",
@@ -407,7 +407,7 @@ def convert_workbook(
     wb = openpyxl.load_workbook(src_path, data_only=True)
 
     # 1) Gather raw rows from every eligible sheet
-    raw_rows: List[RawRow] = []
+    raw_rows: list[RawRow] = []
     for sheet_name in wb.sheetnames:
         if sheet_name in excl:
             result.sheets_skipped.append(sheet_name)
@@ -431,14 +431,14 @@ def convert_workbook(
 
     # 2) Build module hierarchy per (parent, sub_feature_name)
     #    Group rows by their effective parent (top_feature OR row.feature_name).
-    grouped: Dict[str, List[RawRow]] = defaultdict(list)
+    grouped: dict[str, list[RawRow]] = defaultdict(list)
     for rr in raw_rows:
         parent = sanitize(rr.feature_name) if use_feature_name_as_parent else (top_feature or "")
         if not parent:
             parent = sanitize(rr.feature_name) or "Uncategorised"
         grouped[parent].append(rr)
 
-    sub_feature_to_module: Dict[Tuple[str, str], str] = {}
+    sub_feature_to_module: dict[tuple[str, str], str] = {}
     for parent, rows in grouped.items():
         sub_features = sorted({rr.sub_feature_name for rr in rows})
         mapping = build_module_hierarchy(sub_features, parent)
@@ -446,7 +446,7 @@ def convert_workbook(
             sub_feature_to_module[(parent, sf)] = module
 
     # 3) Build canonical rows
-    out_records: List[Dict[str, str]] = []
+    out_records: list[dict[str, str]] = []
     ref_counter: Counter = Counter()
     for rr in raw_rows:
         parent = sanitize(rr.feature_name) if use_feature_name_as_parent else (top_feature or "")
@@ -504,7 +504,7 @@ def convert_workbook(
 # CLI
 # --------------------------------------------------------------------------- #
 
-def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Convert QA-authored Excel to canonical QA Touch import CSV."
     )
@@ -549,7 +549,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
 
     if not args.use_feature_name_as_parent and not args.top_feature:

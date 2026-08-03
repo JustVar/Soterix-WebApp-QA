@@ -92,8 +92,8 @@ import argparse
 import csv
 import functools
 import json
-import re
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -161,7 +161,7 @@ class AuthCreds:
         self.domain = domain
 
     @classmethod
-    def load(cls, path: Path) -> "AuthCreds":
+    def load(cls, path: Path) -> AuthCreds:
         if not path.exists():
             raise SystemExit(
                 f"Auth creds file not found: {path}\n"
@@ -669,7 +669,7 @@ def main() -> int:
     }
 
     # --- Fetch meta (enum enc_ids)
-    print(f"  Fetching case meta (enum enc_ids) ...")
+    print("  Fetching case meta (enum enc_ids) ...")
     try:
         meta = fetch_meta(creds, args.project_key)
     except SystemExit:

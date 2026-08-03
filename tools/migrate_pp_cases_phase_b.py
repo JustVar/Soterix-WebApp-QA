@@ -107,7 +107,7 @@ class AuthCreds:
         self.domain = domain
 
     @classmethod
-    def load(cls, path: Path) -> "AuthCreds":
+    def load(cls, path: Path) -> AuthCreds:
         if not path.exists():
             print(
                 f"Auth creds file not found: {path}\n"
@@ -164,7 +164,7 @@ def http_request(
             pass
         return e.code, body_bytes
     except urllib.error.URLError as e:
-        return 0, f"URLError: {getattr(e, 'reason', e)}".encode("utf-8")
+        return 0, f"URLError: {getattr(e, 'reason', e)}".encode()
 
 
 def internal_post(

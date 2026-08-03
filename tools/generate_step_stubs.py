@@ -213,7 +213,7 @@ def main():
         # Print coverage summary
         from tests.steps.step_registry import get_step_coverage
         coverage = get_step_coverage()
-        print(f'\nStep Coverage:')
+        print('\nStep Coverage:')
         print(f'  Files:            {coverage["total_files"]}')
         print(f'  Total tests:      {coverage["total_tests"]}')
         print(f'  With steps:       {coverage["tests_with_steps"]}')

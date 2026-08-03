@@ -457,7 +457,7 @@ def main():
     if not args.only and not args.dry_run and len(targets) > 5:
         print()
         print('=' * 70)
-        print('  HEADS UP: about to process {} cases.'.format(len(targets)))
+        print(f'  HEADS UP: about to process {len(targets)} cases.')
         print('  If you have NOT yet verified the canary (C2C_OTA_036, caseKey')
         print('  NjL3xy) in the QA Touch UI, cancel now (Ctrl-C) and run:')
         print()

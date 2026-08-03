@@ -7,14 +7,14 @@ misinterpreted this during import. This script regenerates the CSV
 with newline (\n) separated steps instead.
 """
 
-import json
 import csv
+import json
 from pathlib import Path
 
 
 def load_full_steps_data(json_path):
     """Load testcases_export.json with full steps."""
-    with open(json_path, 'r', encoding='utf-8') as f:
+    with open(json_path, encoding='utf-8') as f:
         data = json.load(f)
 
     test_cases = data.get('test_cases', [])
@@ -52,7 +52,7 @@ def load_bugasura_json_files(data_dir):
     test_cases = []
 
     for json_file in data_dir.glob('bugasura_*.json'):
-        with open(json_file, 'r', encoding='utf-8') as f:
+        with open(json_file, encoding='utf-8') as f:
             data = json.load(f)
 
         folder = data.get('folder', '')
@@ -178,8 +178,8 @@ def main():
     print(f"Total test cases:     {len(rows)}")
     print(f"With full steps:      {full_count}")
     print(f"Title only:           {title_only}")
-    print(f"\nStep format: Newline separated (\\n)")
-    print(f"\nReady for QA Touch import!")
+    print("\nStep format: Newline separated (\\n)")
+    print("\nReady for QA Touch import!")
 
 
 if __name__ == '__main__':

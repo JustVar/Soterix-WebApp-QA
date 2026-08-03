@@ -13,8 +13,9 @@ Examples:
 """
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 from email_client import GraphEmailClient
 
 DEFAULT_REPORT = "reports/report.html"

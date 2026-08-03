@@ -39,6 +39,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / ".env")
 
 from playwright.sync_api import sync_playwright
@@ -212,8 +213,7 @@ def add_tag_to_case(page, case_key: str, tag: str) -> tuple[bool, str]:
     result = update_case_newtags(page, case_key, data, updated_newtags)
     if result.get("ok"):
         return True, f"Added '{tag}' ({tag_id})"
-    else:
-        return False, f"HTTP {result.get('status', '?')}: {result.get('body', result.get('error', '?'))[:200]}"
+    return False, f"HTTP {result.get('status', '?')}: {result.get('body', result.get('error', '?'))[:200]}"
 
 
 # ── Commands ──────────────────────────────────────────────────────────
@@ -284,8 +284,8 @@ def cmd_add_smoke(page, args):
     """Add SMOKE tag to cases in specified areas."""
     # Load gap analysis to find cases in target areas
     from tools.qatouch_gap_analysis import (
-        load_latest_snapshot, discover_playwright_tests,
-        load_case_mapping, build_coverage_matrix, classify_module, PRODUCT_AREAS
+        classify_module,
+        load_latest_snapshot,
     )
 
     snapshot = load_latest_snapshot()
@@ -316,7 +316,7 @@ def cmd_add_smoke(page, args):
         for c in smoke_candidates:
             area = classify_module(c.get("module name", ""))
             print(f"    [{area}] {c['case_key']}: {c['case_title'][:80]}")
-        print(f"\n  Dry run -- no changes made. Remove --dry-run to apply.")
+        print("\n  Dry run -- no changes made. Remove --dry-run to apply.")
         return
 
     updated = 0
@@ -368,7 +368,7 @@ def cmd_add_regression(page, args):
         print("  " + "-" * 40)
         for area, count in area_counts.most_common():
             print(f"  {area:<30} {count:>6}")
-        print(f"\n  Dry run -- no changes made. Remove --dry-run to apply.")
+        print("\n  Dry run -- no changes made. Remove --dry-run to apply.")
         return
 
     updated = 0
@@ -395,7 +395,7 @@ def cmd_add_regression(page, args):
             if failed <= 5:
                 print(f"  FAIL {c['key']}: {msg}")
             elif failed == 6:
-                print(f"  (suppressing further failure messages)")
+                print("  (suppressing further failure messages)")
 
         if (i + 1) % 25 == 0:
             elapsed = time.time() - start_time

@@ -27,14 +27,13 @@ Usage:
   python tools/qatouch_gap_analysis.py regression --target 500
 """
 
-import sys
-import os
+import argparse
 import json
 import re
-import argparse
-from pathlib import Path
+import sys
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 
 # Handle Windows encoding
 if sys.platform == "win32":
@@ -702,7 +701,7 @@ def cmd_vet_smoke(args):
     missing_critical = [g["area"] for g in critical_areas
                         if len(smoke_by_area.get(g["area"], [])) == 0 and g["case_count"] > 0]
     if missing_critical:
-        print(f"\nRECOMMENDATION: Add SMOKE cases for these critical/high-risk areas:")
+        print("\nRECOMMENDATION: Add SMOKE cases for these critical/high-risk areas:")
         for area in missing_critical:
             print(f"  - {area}")
 
@@ -722,7 +721,7 @@ def cmd_vet_sanity(args):
 
     # Note: The snapshot only shows 18 with sanity tag, but the SANITY run has 221 cases
     # This discrepancy likely means many sanity cases are added to the run directly, not tagged
-    print("NOTE: Snapshot shows {} tagged 'sanity' but SANITY run (zvXPw) has 221 cases.".format(len(sanity_cases)))
+    print(f"NOTE: Snapshot shows {len(sanity_cases)} tagged 'sanity' but SANITY run (zvXPw) has 221 cases.")
     print("      Cases may be in the run without the tag. Cross-reference with QA Touch run data.\n")
 
     sanity_by_area = defaultdict(list)
@@ -864,7 +863,7 @@ def cmd_regression(args):
             "candidates": selected,
         }, f, indent=2)
     print(f"\nCandidates saved: {output_path.name}")
-    print(f"Review the file, then use qatouch_api_mode_update.py pattern to apply tags via API.")
+    print("Review the file, then use qatouch_api_mode_update.py pattern to apply tags via API.")
 
 
 def cmd_inventory(args):
@@ -958,14 +957,14 @@ def cmd_report(args):
 
     # Print summary
     s = report["summary"]
-    print(f"\n=== GAP ANALYSIS REPORT ===\n")
+    print("\n=== GAP ANALYSIS REPORT ===\n")
     print(f"QA Touch Cases:      {s['total_qatouch_cases']}")
     print(f"Playwright Tests:    {s['total_playwright_tests']}")
     print(f"Automation Coverage: {s['overall_automation_ratio']}%")
     print(f"Product Areas:       {s['product_areas']} ({s['areas_with_automation']} with automation)")
     print(f"Areas w/o Automation:{s['areas_no_automation']}")
     print(f"Feature Inventory:   {'Loaded' if s['has_feature_inventory'] else 'NOT LOADED (run Chrome walkthrough)'}")
-    print(f"\nTagging:")
+    print("\nTagging:")
     print(f"  SMOKE:    {s['smoke_tagged']} cases")
     print(f"  SANITY:   {s['sanity_tagged']} cases")
     print(f"  Untagged: {s['untagged']} cases ({s['untagged']/s['total_qatouch_cases']*100:.0f}%)")

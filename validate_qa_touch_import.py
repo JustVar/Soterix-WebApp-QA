@@ -30,7 +30,7 @@ except ImportError:
 
 def load_source_data(json_path):
     """Load the original testcases_export.json with full steps."""
-    with open(json_path, 'r', encoding='utf-8') as f:
+    with open(json_path, encoding='utf-8') as f:
         data = json.load(f)
 
     # Handle wrapper structure (test_cases array)
@@ -39,7 +39,7 @@ def load_source_data(json_path):
     elif isinstance(data, list):
         test_cases = data
     else:
-        print(f"Warning: Unexpected JSON structure")
+        print("Warning: Unexpected JSON structure")
         test_cases = []
 
     # Build lookup by normalized title
@@ -103,7 +103,7 @@ def load_qa_touch_export(csv_path, title_col='title', steps_col='steps',
     actual_precond_col = find_column(precond_variations, precond_col)
     actual_expected_col = find_column(expected_variations, expected_col)
 
-    print(f"\n  Detected columns:")
+    print("\n  Detected columns:")
     print(f"    Title: {actual_title_col}")
     print(f"    Steps: {actual_steps_col}")
     print(f"    Preconditions: {actual_precond_col}")
@@ -246,7 +246,7 @@ def print_results(results):
     print(f"{'Match rate:':<40} {matched/total*100:.1f}%" if total > 0 else "")
 
     # Summary counts
-    print(f"\n--- Issues Summary ---")
+    print("\n--- Issues Summary ---")
     print(f"{'Missing from QA Touch:':<40} {len(results['missing_from_qa_touch'])}")
     print(f"{'Steps completely missing:':<40} {len(results['steps_missing'])}")
     print(f"{'Steps partial/mismatch:':<40} {len(results['steps_mismatch'])}")
@@ -255,7 +255,7 @@ def print_results(results):
 
     # Details
     if results['missing_from_qa_touch']:
-        print(f"\n" + "-" * 70)
+        print("\n" + "-" * 70)
         print("TEST CASES MISSING FROM QA TOUCH")
         print("-" * 70)
         for i, title in enumerate(results['missing_from_qa_touch'][:15], 1):
@@ -264,7 +264,7 @@ def print_results(results):
             print(f"  ... and {len(results['missing_from_qa_touch']) - 15} more")
 
     if results['steps_missing']:
-        print(f"\n" + "-" * 70)
+        print("\n" + "-" * 70)
         print("TEST CASES WITH MISSING STEPS")
         print("-" * 70)
         for i, (title, issue) in enumerate(results['steps_missing'][:15], 1):
@@ -274,7 +274,7 @@ def print_results(results):
             print(f"  ... and {len(results['steps_missing']) - 15} more")
 
     if results['steps_mismatch']:
-        print(f"\n" + "-" * 70)
+        print("\n" + "-" * 70)
         print("TEST CASES WITH PARTIAL/MISMATCHED STEPS")
         print("-" * 70)
         for i, (title, issue) in enumerate(results['steps_mismatch'][:10], 1):

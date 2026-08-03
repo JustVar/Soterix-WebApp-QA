@@ -103,7 +103,7 @@ def safe_filename(module_name: str) -> str:
 
 
 def load_snapshot() -> dict[str, dict]:
-    with open(SNAPSHOT_FILE, "r", encoding="utf-8") as f:
+    with open(SNAPSHOT_FILE, encoding="utf-8") as f:
         data = json.load(f)
     return {c["case_key"]: c for c in data.get("cases", [])}
 
@@ -114,7 +114,7 @@ def load_csv_cases(keys_needed: set[str]) -> dict[str, dict]:
     for csv_path in CSV_FILES:
         if not os.path.exists(csv_path):
             continue
-        with open(csv_path, "r", encoding="utf-8") as f:
+        with open(csv_path, encoding="utf-8") as f:
             reader = csv.reader(f)
             next(reader)  # skip header
             for row in reader:
@@ -152,7 +152,7 @@ def get_existing_step_keys() -> set[str]:
         if jf.name == "generated_metadata.json":
             continue
         try:
-            with open(jf, "r", encoding="utf-8") as f:
+            with open(jf, encoding="utf-8") as f:
                 data = json.load(f)
             if isinstance(data, dict) and "tests" in data:
                 keys.update(data["tests"].keys())
@@ -167,7 +167,7 @@ def find_existing_file_for_module(module_name: str) -> Path | None:
         if jf.name == "generated_metadata.json":
             continue
         try:
-            with open(jf, "r", encoding="utf-8") as f:
+            with open(jf, encoding="utf-8") as f:
                 data = json.load(f)
             if isinstance(data, dict) and data.get("module_name") == module_name:
                 return jf
@@ -199,7 +199,7 @@ def analyze(snap: dict, csv_cases: dict, missing_keys: set):
             modules_new.append((mod, len(by_module[mod]), area))
 
     print(f"\n{'=' * 60}")
-    print(f"  MISSING STEP FILE ANALYSIS")
+    print("  MISSING STEP FILE ANALYSIS")
     print(f"  Total missing cases: {len(missing_keys)}")
     print(f"  Modules affected: {len(by_module)}")
     print(f"  Cases to append to existing files: {append_count}")
@@ -241,7 +241,7 @@ def generate(snap: dict, csv_cases: dict, missing_keys: set, dry_run: bool = Fal
 
         if existing_file:
             # Append to existing file
-            with open(existing_file, "r", encoding="utf-8") as f:
+            with open(existing_file, encoding="utf-8") as f:
                 data = json.load(f)
 
             added = 0

@@ -1,4 +1,7 @@
-import requests, os
+import os
+
+import requests
+
 base = os.environ.get('API_BASE', 'https://qa.example.invalid')
 paths = [
     "/REST/central/user/auth/login",

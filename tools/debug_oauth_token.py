@@ -1,9 +1,9 @@
 """Debug token acquisition and show Graph request/response details."""
 from __future__ import annotations
 
+import json
 import os
 import sys
-import json
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ENV_PATH = os.path.join(ROOT, '.env')
@@ -15,7 +15,6 @@ if os.path.exists(ENV_PATH):
     except Exception:
         pass
 
-import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from tools.email_client import GraphEmailClient
 

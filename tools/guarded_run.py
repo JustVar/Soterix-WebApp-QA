@@ -82,7 +82,7 @@ def main():
     run_type = args.type
 
     print(f'\n{"=" * 60}')
-    print(f'  GUARDED TEST RUN')
+    print('  GUARDED TEST RUN')
     print(f'  Env: {args.env} | Type: {run_type} | Timeout: {timeout_min}m')
     if args.qatouch_run:
         print(f'  QA Touch run: {args.qatouch_run}')
@@ -94,7 +94,7 @@ def main():
 
     # ── Step 1: Pre-run health gate ──────────────────────────
     if not args.skip_health:
-        print(f'\n[1/5] Pre-run health gate...')
+        print('\n[1/5] Pre-run health gate...')
         health_cmd = [sys.executable, str(ROOT / 'tools' / 'pre_run_check.py'),
                       '--env', args.env]
         if args.skip_qatouch_check:
@@ -104,22 +104,22 @@ def main():
 
         result = subprocess.run(health_cmd)
         if result.returncode != 0:
-            print(f'\n  ABORT: Health gate failed. Fix issues above before running.')
+            print('\n  ABORT: Health gate failed. Fix issues above before running.')
             return 1
     else:
-        print(f'\n[1/5] Pre-run health gate... SKIPPED')
+        print('\n[1/5] Pre-run health gate... SKIPPED')
 
     # ── Step 2: Acquire run lock ─────────────────────────────
     lock_acquired = False
     if not args.skip_lock:
-        print(f'\n[2/5] Acquiring run lock...')
-        from tools.run_lock import acquire, _remove_lock
+        print('\n[2/5] Acquiring run lock...')
+        from tools.run_lock import _remove_lock, acquire
         lock_acquired = acquire(args.env, run_type=run_type)
         if not lock_acquired:
             print(f'\n  ABORT: Could not acquire lock for env={args.env}.')
             return 1
     else:
-        print(f'\n[2/5] Run lock... SKIPPED')
+        print('\n[2/5] Run lock... SKIPPED')
 
     # ── Step 3+4: Run pytest with timeout ────────────────────
     try:
@@ -151,7 +151,7 @@ def main():
 
         # ── Step 5: Post-run validation ──────────────────────
         if args.qatouch_run and not args.skip_validate and pytest_exit != 124:
-            print(f'\n[5/5] Post-run validation...')
+            print('\n[5/5] Post-run validation...')
             validate_cmd = [sys.executable, str(ROOT / 'tools' / 'validate_run.py'),
                             args.qatouch_run, '--project',
                             os.environ.get('QATOUCH_PROJECT_ID', 'JlW1')]
@@ -171,7 +171,7 @@ def main():
             print(f'\n  Lock released for env={args.env}')
 
         print(f'\n{"=" * 60}')
-        print(f'  RUN COMPLETE')
+        print('  RUN COMPLETE')
         print(f'  Time: {time.strftime("%Y-%m-%d %H:%M:%S")}')
         print(f'{"=" * 60}\n')
 

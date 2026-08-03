@@ -985,7 +985,7 @@ def cmd_seed_nav(args):
         json.dump(output, f, indent=2, ensure_ascii=False)
 
     print(f"Wrote {len(nav_modules)} modules to {out_file}")
-    print(f"\nArea distribution:")
+    print("\nArea distribution:")
     for area, count in sorted(area_counts.items(), key=lambda x: x[1], reverse=True):
         print(f"  {area:20s} {count:4d} modules")
 
@@ -1144,11 +1144,11 @@ def cmd_generate(args):
     print(f"\n{prefix}Generation complete:")
     print(f"  Cases generated: {total_generated}")
     print(f"  Files written:   {total_files}")
-    print(f"\n  Quality distribution:")
+    print("\n  Quality distribution:")
     for q, cnt in sorted(quality_counts.items()):
         pct = cnt / total_generated * 100 if total_generated else 0
         print(f"    {q:10s} {cnt:5d} ({pct:.1f}%)")
-    print(f"\n  Classification breakdown:")
+    print("\n  Classification breakdown:")
     for cls, cnt in sorted(classification_counts.items(), key=lambda x: x[1], reverse=True):
         pct = cnt / total_generated * 100 if total_generated else 0
         print(f"    {cls:25s} {cnt:5d} ({pct:.1f}%)")

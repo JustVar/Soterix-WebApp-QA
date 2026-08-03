@@ -52,12 +52,12 @@ except ImportError:
 
 try:
     from config.jira_field_mapping import (
-        mapper as qa_touch_mapper,
-        QA_TOUCH_TO_JIRA_STATUS,
-        PRIORITY_TO_SEVERITY,
         NC_ISSUE_TYPES,
-        get_required_field_ids,
+        PRIORITY_TO_SEVERITY,
+        QA_TOUCH_TO_JIRA_STATUS,
         get_field_allowed_values,
+        get_required_field_ids,
+        mapper as qa_touch_mapper,
     )
 except ImportError:
     qa_touch_mapper = None
@@ -242,7 +242,7 @@ class IntegrationTestSuite:
                                 "Run: python tools/discover_jira_fields.py"))
             return
 
-        with open(mapping_json, "r", encoding="utf-8") as f:
+        with open(mapping_json, encoding="utf-8") as f:
             mapping_data = json.load(f)
 
         self.add(TestResult(2, "Field mapping JSON exists", True))
@@ -819,7 +819,7 @@ def main():
 
     print("=" * 60)
     print("QA Touch <-> Jira Integration Test Suite")
-    print(f"Project: NexaiQ-Core (NC)")
+    print("Project: NexaiQ-Core (NC)")
     print(f"QA Touch Project: {os.getenv('QATOUCH_PROJECT_ID', 'not set')}")
     print(f"Mode: {'LIVE' if args.live else 'DRY-RUN' if args.dry_run else 'STANDARD'}")
     print(f"Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")

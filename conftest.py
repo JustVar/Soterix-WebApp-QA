@@ -1,11 +1,13 @@
 # conftest.py
-import os
 import importlib
 import logging
-import pytest
-from typing import Dict
-from pathlib import Path
+import os
 from datetime import datetime
+from pathlib import Path
+from typing import Dict
+
+import pytest
+
 from config.base_config import config  # dict resolved from ENV
 
 # Register plugins
@@ -21,7 +23,7 @@ def _from_env_or_config(env_key: str, cfg_key: str, default: str = "") -> str:
     """Environment var takes precedence; fallback to active env config dict key."""
     return os.environ.get(env_key) or config.get(cfg_key, default)
 
-def resolve_tenant_data(tenant_name: str) -> Dict[str, str]:
+def resolve_tenant_data(tenant_name: str) -> dict[str, str]:
     """
     Load tenant-specific login data from data/<tenant_name>_login_data.py
     (must define `login_data` dict).
@@ -34,7 +36,7 @@ def resolve_tenant_data(tenant_name: str) -> Dict[str, str]:
             f"Tenant login data file not found: data/{tenant_name}_login_data.py"
         ) from e
 
-def build_no_tenant_login_data() -> Dict[str, str]:
+def build_no_tenant_login_data() -> dict[str, str]:
     """
     Build login data for 'no-tenant' mode.
     Priority:
@@ -86,7 +88,7 @@ def login_data():
     if not user or not password:
         raise ValueError("QA_USER and QA_PASSWORD must be set in environment or .env file. See .env.template")
     logging.info("[TENANT CONFIG] Using QA_USER from environment")
-    return {"username": user, "password": password, "expected_landing": os.environ.get("EXPECTED_LANDING", "/dashboard")} 
+    return {"username": user, "password": password, "expected_landing": os.environ.get("EXPECTED_LANDING", "/dashboard")}
 
 @pytest.fixture
 def login(page, env_config, login_data):
@@ -113,13 +115,13 @@ def tenant_login(login_data):
 # API Testing Fixtures
 # ----------------
 import tests.shared.api_clients.auth_helper as auth_helper_mod
-import tests.shared.api_clients.dashboard_api as dashboard_mod
 import tests.shared.api_clients.camera_api as camera_mod
-import tests.shared.api_clients.user_api as user_mod
-import tests.shared.api_clients.search_api as search_mod
-import tests.shared.api_clients.site_helper as site_helper
+import tests.shared.api_clients.dashboard_api as dashboard_mod
 import tests.shared.api_clients.discovery_helper as discovery_mod
 import tests.shared.api_clients.enterprise_helper as enterprise_mod
+import tests.shared.api_clients.search_api as search_mod
+import tests.shared.api_clients.site_helper as site_helper
+import tests.shared.api_clients.user_api as user_mod
 
 
 @pytest.fixture(scope="session")

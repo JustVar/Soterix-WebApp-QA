@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Simple SMTP test script: reads SMTP creds from .env and sends a test HTML email."""
+import os
 import sys
 import traceback
-import os
 from os.path import exists
 
 try:

@@ -301,7 +301,7 @@ def main():
     pw_steps = {}
     if PLAYWRIGHT_STEPS.exists():
         print("Loading Playwright-generated steps...")
-        with open(PLAYWRIGHT_STEPS, "r", encoding="utf-8") as f:
+        with open(PLAYWRIGHT_STEPS, encoding="utf-8") as f:
             pw_data = json.load(f)
         pw_steps = pw_data.get("cases", {})
         print(f"  {len(pw_steps)} cases from Playwright code")
@@ -354,7 +354,7 @@ def main():
                 updated_pw += 1
 
     out_wb.save(OUTPUT)
-    print(f"\nDone!")
+    print("\nDone!")
     print(f"  Steps from Excel: {updated_excel}")
     print(f"  Steps from Playwright: {updated_pw}")
     print(f"  Steps total: {updated_excel + updated_pw}")

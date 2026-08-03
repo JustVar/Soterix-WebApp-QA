@@ -27,9 +27,8 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 MAPPING_JSON = ROOT / "config" / "jira_field_mapping.json"
@@ -91,7 +90,7 @@ PRIORITY_TO_SEVERITY = {
 def load_discovered_fields() -> dict:
     """Load discovered field mappings from JSON if available."""
     if MAPPING_JSON.exists():
-        with open(MAPPING_JSON, "r", encoding="utf-8") as f:
+        with open(MAPPING_JSON, encoding="utf-8") as f:
             return json.load(f)
     return {}
 
@@ -140,7 +139,7 @@ class QATouchToJiraMapper:
             self._required_fields_cache[issue_type] = get_required_field_ids(issue_type)
         return self._required_fields_cache[issue_type]
 
-    def _find_field_id(self, issue_type: str, field_name_pattern: str) -> Optional[str]:
+    def _find_field_id(self, issue_type: str, field_name_pattern: str) -> str | None:
         """Find a field ID by matching against the field name (case-insensitive partial match)."""
         required = self._get_required_fields(issue_type)
         pattern_lower = field_name_pattern.lower()
@@ -154,7 +153,7 @@ class QATouchToJiraMapper:
                 return fid
         return None
 
-    def _match_allowed_value(self, issue_type: str, field_id: str, search_value: str) -> Optional[dict]:
+    def _match_allowed_value(self, issue_type: str, field_id: str, search_value: str) -> dict | None:
         """Find the best matching allowed value for a select field."""
         allowed = get_field_allowed_values(issue_type, field_id)
         if not allowed:

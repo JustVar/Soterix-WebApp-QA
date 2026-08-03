@@ -29,6 +29,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from dotenv import load_dotenv
+
 load_dotenv(os.path.join(ROOT, '.env'))
 
 FAILURE_LOG_PATH = Path(ROOT) / 'logs' / 'upload_failures.json'
@@ -47,7 +48,7 @@ def validate_run(run_key: str, project_key: str, local_count: int | None = None)
         print(f'  [{FAIL}] Cannot initialize QA Touch client: {e}')
         return 2
 
-    print(f'\n=== Post-Run Validation ===')
+    print('\n=== Post-Run Validation ===')
     print(f'  Run key:     {run_key}')
     print(f'  Project:     {project_key}')
     print()
@@ -66,7 +67,7 @@ def validate_run(run_key: str, project_key: str, local_count: int | None = None)
     untested = sum(1 for r in all_results if r.get('status') == '2' or r.get('code') == 'untested')
     executed = passed + failed + blocked
 
-    print(f'  QA Touch results:')
+    print('  QA Touch results:')
     print(f'    Total cases:  {total}')
     print(f'    Executed:     {executed} (passed={passed}, failed={failed}, blocked={blocked})')
     print(f'    Untested:     {untested}')
@@ -109,16 +110,16 @@ def validate_run(run_key: str, project_key: str, local_count: int | None = None)
 
     print()
     if exit_code == 0:
-        print(f'  Validation: \033[92mPASSED\033[0m')
+        print('  Validation: \033[92mPASSED\033[0m')
     else:
-        print(f'  Validation: \033[91mFAILED\033[0m')
+        print('  Validation: \033[91mFAILED\033[0m')
 
     return exit_code
 
 
 def check_failures() -> int:
     """Check for any pending upload failures across all runs."""
-    print(f'\n=== Upload Failure Check ===')
+    print('\n=== Upload Failure Check ===')
 
     if not FAILURE_LOG_PATH.exists():
         print(f'  [{PASS}] No failure log found - all uploads succeeded')
@@ -142,7 +143,7 @@ def check_failures() -> int:
               f'{f.get("timestamp", "?")}')
         print(f'       Error: {f.get("error", "unknown")}')
 
-    print(f'\n  To retry: python tools/retry_uploads.py')
+    print('\n  To retry: python tools/retry_uploads.py')
     print(f'  To clear: rm {FAILURE_LOG_PATH}')
     return 1
 

@@ -29,6 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / '.env')
 
 from tools.qatouch_client import QATouchClient
@@ -230,12 +231,12 @@ def cmd_build():
     # Summary
     matched_count = len(merged)
     unmatched_count = len(tests) - matched_count
-    print(f'\n=== Mapping Summary ===')
+    print('\n=== Mapping Summary ===')
     print(f'  Playwright tests: {len(tests)}')
     print(f'  Mapped:           {matched_count}')
     print(f'  Unmapped:         {unmatched_count}')
     if new_matches:
-        print(f'\n  New auto-matches:')
+        print('\n  New auto-matches:')
         for nodeid, info in sorted(new_matches.items()):
             print(f'    {nodeid}')
             title = info['case_title'].encode('ascii', 'replace').decode('ascii')

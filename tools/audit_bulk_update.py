@@ -2,7 +2,6 @@
 """Full audit of QATouch_BulkUpdate_Steps.xlsx against QA Touch export and Excel import."""
 
 import io
-import json
 import re
 import sys
 import unicodedata

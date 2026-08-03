@@ -71,7 +71,6 @@ import re
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 _print = print
 print = functools.partial(_print, flush=True)
@@ -112,7 +111,7 @@ RATE_LIMIT_PAUSE = 15.0
 # CSV loader - keyed by Test Case Title (the backfill's match key)
 # --------------------------------------------------------------------------- #
 
-def load_csv_by_title(csv_path: str) -> Dict[str, Dict]:
+def load_csv_by_title(csv_path: str) -> dict[str, dict]:
     """Return {title: {module, steps:[str], expecteds:[str], reference}}.
 
     Steps cell format (canonical, from qa_xlsx_to_qatouch_csv.py):
@@ -124,10 +123,10 @@ def load_csv_by_title(csv_path: str) -> Dict[str, Dict]:
     We strip the "Step N: " prefix and the "1. " numbered-list prefix (in case
     the CSV came from an older converter run).
     """
-    cases: Dict[str, Dict] = {}
+    cases: dict[str, dict] = {}
     # Accept both vendor-canonical slugs (post 2026-06-26 converter rename) and
     # the legacy friendly headers so historical canonical CSVs keep working.
-    def get_col(row: Dict[str, str], canonical: str, legacy: str) -> str:
+    def get_col(row: dict[str, str], canonical: str, legacy: str) -> str:
         val = row.get(canonical)
         if val is None or val == "":
             val = row.get(legacy)
@@ -147,7 +146,7 @@ def load_csv_by_title(csv_path: str) -> Dict[str, Dict]:
             step_lines = [s for s in raw_steps.split("\n") if s.strip()] if raw_steps else []
             expected_lines = raw_expected.split("\n") if raw_expected else []
 
-            steps: List[str] = []
+            steps: list[str] = []
             for line in step_lines:
                 t = line.strip()
                 # Strip "Step N: " prefix (canonical converter format).
@@ -272,10 +271,10 @@ def login(p, auth_state_file: str):
 # QA Touch internal API wrappers - all go through page.evaluate (fetch)
 # --------------------------------------------------------------------------- #
 
-def fetch_project_cases(page, project_key: str) -> List[Dict]:
+def fetch_project_cases(page, project_key: str) -> list[dict]:
     """Paginate /v1/case/list/p/{projectKey} until empty. Returns list of
     {key, title, module}."""
-    all_cases: List[Dict] = []
+    all_cases: list[dict] = []
     page_num = 1
     while True:
         result = page.evaluate(
@@ -324,7 +323,7 @@ def fetch_project_cases(page, project_key: str) -> List[Dict]:
     return all_cases
 
 
-def get_case_steps(page, project_key: str, case_key: str) -> List[Dict]:
+def get_case_steps(page, project_key: str, case_key: str) -> list[dict]:
     """POST /v1/case/edit -> data.caseStep[*]. Returns full step rows so we
     can read both id and existing expected_result text (for idempotency check)."""
     result = page.evaluate(
@@ -372,7 +371,7 @@ def delete_step(page, step_id: str) -> bool:
 
 
 def create_step(page, project_key: str, case_key: str,
-                step_desc: str, expected: str) -> Dict:
+                step_desc: str, expected: str) -> dict:
     # Note: /v1/steps/save does NOT exhibit the /v1/case/update 500-on-success
     # quirk (see ok_500_quirk in backfill_qa_touch_metadata.py:18-20). Status
     # 200 means saved; treat any non-200 as a real failure - no body-content
@@ -416,7 +415,7 @@ def create_step(page, project_key: str, case_key: str,
 # Per-case sync
 # --------------------------------------------------------------------------- #
 
-def _last_step_has_real_expected(steps: List[Dict]) -> bool:
+def _last_step_has_real_expected(steps: list[dict]) -> bool:
     """Idempotency probe - true if the LAST existing step's expected_result is
     non-empty AND not just the "-" sentinel. We strip HTML tags + whitespace
     before checking.
@@ -434,12 +433,12 @@ def sync_case(
     project_key: str,
     case_key: str,
     title: str,
-    steps: List[str],
-    expecteds: List[str],
+    steps: list[str],
+    expecteds: list[str],
     dry_run: bool,
     inter_call_delay: float,
     inter_step_delay: float,
-) -> Dict:
+) -> dict:
     """Split one case. Returns {status, deleted, created, error}."""
     result = {"status": "ok", "deleted": 0, "created": 0,
               "skipped_idempotent": False, "error": ""}
@@ -501,17 +500,17 @@ def sync_case(
 # --------------------------------------------------------------------------- #
 
 def select_targets(
-    csv_cases: Dict[str, Dict],
-    qt_cases: List[Dict],
-    module_key: Optional[str],
-    case_keys: Optional[List[str]],
-    only_titles: Optional[List[str]],
-    limit: Optional[int],
+    csv_cases: dict[str, dict],
+    qt_cases: list[dict],
+    module_key: str | None,
+    case_keys: list[str] | None,
+    only_titles: list[str] | None,
+    limit: int | None,
     resume_from: int,
-) -> List[Tuple[str, str, Dict]]:
+) -> list[tuple[str, str, dict]]:
     """Return ordered list of (case_key, title, csv_payload) tuples."""
     # Build QA Touch title -> case map.
-    qt_by_title: Dict[str, Dict] = {}
+    qt_by_title: dict[str, dict] = {}
     for c in qt_cases:
         if c.get("key") and c.get("title"):
             qt_by_title[c["title"]] = c
@@ -519,7 +518,7 @@ def select_targets(
     only_filters = [t.lower() for t in (only_titles or []) if t]
     case_key_set = set(case_keys or [])
 
-    targets: List[Tuple[str, str, Dict]] = []
+    targets: list[tuple[str, str, dict]] = []
     for title, payload in csv_cases.items():
         qt = qt_by_title.get(title)
         if not qt:
@@ -539,7 +538,7 @@ def select_targets(
     return targets
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--project-key", required=True,

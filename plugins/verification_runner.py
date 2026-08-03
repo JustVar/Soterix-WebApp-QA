@@ -18,9 +18,8 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -165,7 +164,7 @@ class StepCapture:
             'case_key': self._case_key,
             'result': outcome,
             'duration_seconds': round(duration, 2),
-            'captured_at': datetime.now(timezone.utc).isoformat(),
+            'captured_at': datetime.now(UTC).isoformat(),
             'total_steps_defined': len(self._steps),
             'steps': self._steps,
         }

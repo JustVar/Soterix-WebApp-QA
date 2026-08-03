@@ -26,11 +26,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import signal
 import subprocess
 import sys
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -74,7 +72,7 @@ def _is_stale(lock_info: dict, timeout_hours: float) -> bool:
         return True
     try:
         acquired_dt = datetime.fromisoformat(acquired)
-        age_hours = (datetime.now(timezone.utc) - acquired_dt).total_seconds() / 3600
+        age_hours = (datetime.now(UTC) - acquired_dt).total_seconds() / 3600
         return age_hours > timeout_hours
     except (ValueError, TypeError):
         return True
@@ -121,7 +119,7 @@ def acquire(env: str, timeout_hours: float = DEFAULT_TIMEOUT_HOURS,
         'pid': os.getpid(),
         'user': os.environ.get('USER', os.environ.get('USERNAME', 'unknown')),
         'run_type': run_type,
-        'acquired_at': datetime.now(timezone.utc).isoformat(),
+        'acquired_at': datetime.now(UTC).isoformat(),
         'hostname': os.environ.get('COMPUTERNAME', os.environ.get('HOSTNAME', 'unknown')),
     }
     _write_lock(env, lock_info)

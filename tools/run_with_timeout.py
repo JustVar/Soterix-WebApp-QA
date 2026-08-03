@@ -22,8 +22,6 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
-import os
-import signal
 import subprocess
 import sys
 import time
@@ -69,11 +67,11 @@ def run_with_timeout(command: list[str], timeout_minutes: int, run_type: str = '
         elapsed = time.time() - start_time
         print(f'\n  \033[91mTIMEOUT\033[0m: Run exceeded {timeout_minutes} minute limit '
               f'(ran for {elapsed/60:.1f}m)')
-        print(f'  The test process has been terminated.')
-        print(f'  Consider:')
+        print('  The test process has been terminated.')
+        print('  Consider:')
         print(f'    - Increasing timeout: --minutes {timeout_minutes * 2}')
-        print(f'    - Running fewer tests: -k "smoke" or -m "not slow"')
-        print(f'    - Investigating slow tests: --durations=20')
+        print('    - Running fewer tests: -k "smoke" or -m "not slow"')
+        print('    - Investigating slow tests: --durations=20')
         return 124  # GNU timeout convention
 
     except KeyboardInterrupt:

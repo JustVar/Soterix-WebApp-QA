@@ -11,7 +11,6 @@ Usage:
 import argparse
 import io
 import json
-import os
 import re
 import sys
 import unicodedata
@@ -217,7 +216,7 @@ def _derive_expected(text: str) -> str:
 
 def load_snapshot() -> list[dict]:
     """Load QA Touch snapshot cases."""
-    with open(SNAPSHOT_PATH, "r", encoding="utf-8") as f:
+    with open(SNAPSHOT_PATH, encoding="utf-8") as f:
         data = json.load(f)
     return data["cases"]
 
@@ -324,7 +323,7 @@ def load_step_files() -> dict:
         if p.name == "generated_metadata.json":
             continue
         try:
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 data = json.load(f)
             if "tests" in data:
                 files[p] = data
@@ -466,7 +465,7 @@ def reset_checkpoint(matched_keys: set) -> dict:
     if not CHECKPOINT_PATH.exists():
         return {"status": "no_checkpoint", "removed": 0}
 
-    with open(CHECKPOINT_PATH, "r", encoding="utf-8") as f:
+    with open(CHECKPOINT_PATH, encoding="utf-8") as f:
         cp = json.load(f)
 
     old_keys = set(cp.get("synced_case_keys", []))
@@ -521,14 +520,14 @@ def cmd_analyze(args):
     matchable = [r for r in excel_rows if r["steps_text"].strip()]
     matched, stats = match_excel_to_qatouch(matchable, qa_cases)
 
-    print(f"\n  RESULTS:")
+    print("\n  RESULTS:")
     print(f"  Total Excel rows with steps: {stats['total_excel']}")
     print(f"  Matched to QA Touch: {stats['matched']}")
     print(f"  Unmatched (Excel only): {stats['unmatched_excel']}")
     print(f"  Ambiguous (multiple matches): {stats['ambiguous']}")
 
     if stats["ambiguous_details"]:
-        print(f"\n  Ambiguous details (first 20):")
+        print("\n  Ambiguous details (first 20):")
         for a in stats["ambiguous_details"]:
             print(f"    '{a['scenario'][:60]}...' -> {a['count']} matches")
 
@@ -547,7 +546,7 @@ def cmd_analyze(args):
     print(f"    Step file cases NOT in Excel (preserved): {len(step_keys) - in_step_files}")
 
     # Sample matched steps
-    print(f"\n  Sample matched cases (first 5 with steps):")
+    print("\n  Sample matched cases (first 5 with steps):")
     shown = 0
     for ck, row in list(matched.items())[:20]:
         if not row["steps_text"].strip():
@@ -573,7 +572,7 @@ def cmd_import(args):
     excel_rows = parse_excel(args.excel)
     matchable = [r for r in excel_rows if r["steps_text"].strip()]
 
-    print(f"Loading QA Touch snapshot...")
+    print("Loading QA Touch snapshot...")
     qa_cases = load_snapshot()
 
     print(f"Matching {len(matchable)} Excel rows to {len(qa_cases)} QA Touch cases...")
@@ -584,7 +583,7 @@ def cmd_import(args):
     print(f"\nUpdating step files ({mode})...")
     result = update_step_files(matched, dry_run=args.dry_run)
 
-    print(f"\n  Results:")
+    print("\n  Results:")
     print(f"  Cases updated with Excel steps: {result['updated_cases']}")
     print(f"  Cases preserved (no match/no Excel steps): {result['preserved_cases']}")
     print(f"  Total steps written: {result['total_steps_written']}")
@@ -606,15 +605,14 @@ def cmd_validate(args):
     print(f"  Errors: {result['error_count']}")
 
     if result["errors"]:
-        print(f"\n  Error details:")
+        print("\n  Error details:")
         for err in result["errors"][:50]:
             print(f"    {err}")
         if len(result["errors"]) > 50:
             print(f"    ... and {len(result['errors']) - 50} more")
         return False
-    else:
-        print("\n  ALL CHECKS PASSED")
-        return True
+    print("\n  ALL CHECKS PASSED")
+    return True
 
 
 def cmd_reset_checkpoint(args):
@@ -623,10 +621,10 @@ def cmd_reset_checkpoint(args):
     excel_rows = parse_excel(args.excel)
     matchable = [r for r in excel_rows if r["steps_text"].strip()]
 
-    print(f"Loading QA Touch snapshot...")
+    print("Loading QA Touch snapshot...")
     qa_cases = load_snapshot()
 
-    print(f"Matching...")
+    print("Matching...")
     matched, stats = match_excel_to_qatouch(matchable, qa_cases)
 
     # Also check which matched keys are actually in step files with source=excel

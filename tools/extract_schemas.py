@@ -4,8 +4,8 @@
 Saves component schemas to `tests/shared/schemas/responses/{SchemaName}.json`.
 """
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC_PATH = ROOT / "tests" / "shared" / "schemas" / "openapi_spec_qa.json"
@@ -17,7 +17,7 @@ def load_spec():
     if not SPEC_PATH.exists():
         print(f"Spec not found: {SPEC_PATH}. Run download_openapi_spec.py first.")
         sys.exit(2)
-    with open(SPEC_PATH, "r", encoding="utf-8") as f:
+    with open(SPEC_PATH, encoding="utf-8") as f:
         return json.load(f)
 
 

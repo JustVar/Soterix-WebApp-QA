@@ -6,10 +6,9 @@ Usage: python tools/check_oauth_expiration.py
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
-from datetime import datetime, date
+from datetime import date, datetime
 
 import requests
 

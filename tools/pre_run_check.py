@@ -31,10 +31,10 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from dotenv import load_dotenv
+
 load_dotenv(os.path.join(ROOT, '.env'))
 
 import requests
-
 
 # QA Ops Hub on NUC
 QA_OPS_SMOKE_URL = os.environ.get(
@@ -64,9 +64,8 @@ def check_target_env(timeout: int = 15) -> bool:
             print(f'  [{PASS}] Target env: {base_url} (HTTP {resp.status_code}, '
                   f'{resp.elapsed.total_seconds():.1f}s)')
             return True
-        else:
-            print(f'  [{FAIL}] Target env: {base_url} returned HTTP {resp.status_code}')
-            return False
+        print(f'  [{FAIL}] Target env: {base_url} returned HTTP {resp.status_code}')
+        return False
     except requests.ConnectionError:
         print(f'  [{FAIL}] Target env: {base_url} - connection refused')
         return False
@@ -99,15 +98,14 @@ def check_qatouch(timeout: int = 15) -> bool:
             print(f'  [{PASS}] QA Touch: API reachable ({count} projects, '
                   f'{resp.elapsed.total_seconds():.1f}s)')
             return True
-        elif resp.status_code == 429:
+        if resp.status_code == 429:
             print(f'  [{FAIL}] QA Touch: rate limited (429) - wait and retry')
             return False
-        elif resp.status_code == 401:
+        if resp.status_code == 401:
             print(f'  [{FAIL}] QA Touch: unauthorized (401) - check API key/domain')
             return False
-        else:
-            print(f'  [{FAIL}] QA Touch: HTTP {resp.status_code}')
-            return False
+        print(f'  [{FAIL}] QA Touch: HTTP {resp.status_code}')
+        return False
     except requests.Timeout:
         print(f'  [{FAIL}] QA Touch: timed out after {timeout}s')
         return False
@@ -129,9 +127,8 @@ def check_qa_ops(timeout: int = 10) -> bool:
             print(f'  [{PASS}] QA Ops Hub: healthy ({pending} pending, '
                   f'uptime {uptime_h:.1f}h)')
             return True
-        else:
-            print(f'  [{FAIL}] QA Ops Hub: HTTP {resp.status_code}')
-            return False
+        print(f'  [{FAIL}] QA Ops Hub: HTTP {resp.status_code}')
+        return False
     except requests.ConnectionError:
         print(f'  [{FAIL}] QA Ops Hub: {url} - connection refused (NUC down?)')
         return False
@@ -158,7 +155,7 @@ def main():
     if args.env:
         os.environ['ENV'] = args.env
 
-    print(f'\n=== Pre-Run Health Gate ===')
+    print('\n=== Pre-Run Health Gate ===')
     print(f'  Time:  {time.strftime("%Y-%m-%d %H:%M:%S")}')
     print(f'  ENV:   {os.environ.get("ENV", "qa")}')
     print()
@@ -187,15 +184,14 @@ def main():
     if failed:
         print(f'  GATE: \033[91mBLOCKED\033[0m - {len(failed)} check(s) failed: '
               f'{", ".join(failed)}')
-        print(f'  Action: Fix the issues above before starting the test run.')
+        print('  Action: Fix the issues above before starting the test run.')
         print()
         return 1
-    else:
-        passed = len(results)
-        print(f'  GATE: \033[92mCLEAR\033[0m - all {passed} checks passed')
-        print(f'  Action: Safe to proceed with test run.')
-        print()
-        return 0
+    passed = len(results)
+    print(f'  GATE: \033[92mCLEAR\033[0m - all {passed} checks passed')
+    print('  Action: Safe to proceed with test run.')
+    print()
+    return 0
 
 
 if __name__ == '__main__':

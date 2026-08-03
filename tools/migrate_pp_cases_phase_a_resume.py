@@ -71,27 +71,26 @@ try:
 except ImportError:
     pass
 
-from playwright.sync_api import sync_playwright
-
 # Pull in everything reusable from the phase-A script - all pure helpers,
 # no global state, verified at lines 306-460 of migrate_pp_cases_phase_a.py.
 from migrate_pp_cases_phase_a import (  # noqa: E402
-    # browser + auth
-    open_browser,
     DEFAULT_AUTH_STATE,
-    # internal API wrappers
-    internal_get_case,
-    internal_update_case,
-    update_succeeded,
-    # payload construction
-    build_target_update_payload,
-    # REST helpers
-    load_rest_creds,
-    fetch_all_project_cases,
     # constants
     SOURCE_PROJECT,
     TARGET_PROJECT,
+    # payload construction
+    build_target_update_payload,
+    fetch_all_project_cases,
+    # internal API wrappers
+    internal_get_case,
+    internal_update_case,
+    # REST helpers
+    load_rest_creds,
+    # browser + auth
+    open_browser,
+    update_succeeded,
 )
+from playwright.sync_api import sync_playwright
 
 # ── Local constants ─────────────────────────────────────────────────────────
 LOG_DIR = ROOT / "logs"

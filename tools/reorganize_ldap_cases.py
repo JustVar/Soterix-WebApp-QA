@@ -182,7 +182,7 @@ class AuthCreds:
         self.domain = domain
 
     @classmethod
-    def load(cls, path: Path) -> "AuthCreds":
+    def load(cls, path: Path) -> AuthCreds:
         if not path.exists():
             raise SystemExit(
                 f"Auth creds file not found: {path}\n"

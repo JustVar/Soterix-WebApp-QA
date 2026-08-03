@@ -206,7 +206,7 @@ class IntegrationVerifier:
             return False
 
         try:
-            with open(MAPPING_JSON, "r", encoding="utf-8") as f:
+            with open(MAPPING_JSON, encoding="utf-8") as f:
                 data = json.load(f)
 
             issue_types = list(data.get("issue_types", {}).keys())
@@ -319,9 +319,8 @@ class IntegrationVerifier:
                 project_names = ", ".join(p.get("project_name", "?") for p in projects[:5]) if isinstance(projects, list) else ""
                 self.add(CheckResult("QA Touch API connection", True, f"{count} project(s): {project_names}"))
                 return True
-            else:
-                self.add(CheckResult("QA Touch API connection", False, f"HTTP {resp.status_code} from {api_base}"))
-                return False
+            self.add(CheckResult("QA Touch API connection", False, f"HTTP {resp.status_code} from {api_base}"))
+            return False
         except Exception as e:
             self.add(CheckResult("QA Touch API connection", False, str(e)))
             return False

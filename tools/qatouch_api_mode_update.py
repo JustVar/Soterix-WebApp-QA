@@ -14,7 +14,6 @@ from __future__ import annotations
 import argparse
 import csv
 import functools
-import json
 import os
 import sys
 import time
@@ -31,6 +30,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / ".env")
 
 from playwright.sync_api import sync_playwright
@@ -179,7 +179,7 @@ def get_blank_mode_keys() -> list[str]:
     for csv_path in CSV_FILES:
         if not os.path.exists(csv_path):
             continue
-        with open(csv_path, "r", encoding="utf-8") as f:
+        with open(csv_path, encoding="utf-8") as f:
             reader = csv.reader(f)
             next(reader)
             for row in reader:
@@ -208,7 +208,7 @@ def cmd_test(page):
     print(f"  Template: {data.get('template')}")
 
     # Try updating mode to "manual"
-    print(f"\n  Updating mode to 'manual'...")
+    print("\n  Updating mode to 'manual'...")
     result = update_case_mode(page, test_key, data, "manual")
     print(f"  Response: status={result.get('status')} ok={result.get('ok')}")
     print(f"  Body: {result.get('body', '')[:200]}")
@@ -231,14 +231,12 @@ def cmd_test(page):
                 revert_check = get_case_data(page, test_key)
                 print(f"  Reverted mode: '{revert_check.get('mode', '')}'")
             return True
-        else:
-            print(f"  FAIL: Mode didn't change (still '{new_mode}')")
-            return False
-    else:
-        print("  FAIL: Update request failed")
-        # Print full error details
-        print(f"  Full response: {result}")
+        print(f"  FAIL: Mode didn't change (still '{new_mode}')")
         return False
+    print("  FAIL: Update request failed")
+    # Print full error details
+    print(f"  Full response: {result}")
+    return False
 
 
 def cmd_count():
@@ -306,7 +304,7 @@ def cmd_update(page, dry_run: bool = False):
             time.sleep(BURST_PAUSE)
 
     print(f"\n{'=' * 60}")
-    print(f"  MODE UPDATE COMPLETE")
+    print("  MODE UPDATE COMPLETE")
     print(f"  Updated: {updated}")
     print(f"  Skipped (already manual): {skipped}")
     print(f"  Failed: {failed}")
@@ -325,7 +323,7 @@ def main():
         return
 
     print(f"\n{'=' * 60}")
-    print(f"  QA TOUCH API MODE UPDATE")
+    print("  QA TOUCH API MODE UPDATE")
     print(f"{'=' * 60}")
 
     with sync_playwright() as p:

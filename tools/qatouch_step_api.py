@@ -46,6 +46,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / '.env')
 
 try:
@@ -91,7 +92,7 @@ def load_csv_steps() -> dict[str, dict]:
         if not os.path.exists(csv_path):
             print(f'  WARNING: CSV not found: {csv_path}')
             continue
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, encoding='utf-8') as f:
             reader = csv.reader(f)
             next(reader)  # skip header
             for row in reader:
@@ -127,7 +128,7 @@ def load_csv_steps() -> dict[str, dict]:
 # ---------------------------------------------------------------------------
 def load_checkpoint() -> dict:
     if os.path.exists(CHECKPOINT_FILE):
-        with open(CHECKPOINT_FILE, 'r', encoding='utf-8') as f:
+        with open(CHECKPOINT_FILE, encoding='utf-8') as f:
             return json.load(f)
     return {'synced': {}, 'errors': {}}
 
@@ -438,7 +439,7 @@ def cmd_test(page):
         print(f'     => {s["expected"][:80]}')
 
     # Get current step IDs
-    print(f'\n--- Get existing step IDs ---')
+    print('\n--- Get existing step IDs ---')
     step_ids = get_step_ids(page, test_key)
     print(f'  Found {len(step_ids)} existing steps: {step_ids}')
 
@@ -463,7 +464,7 @@ def cmd_test(page):
         time.sleep(INTER_CALL_DELAY)
 
     # Verify
-    print(f'\n--- Verify ---')
+    print('\n--- Verify ---')
     time.sleep(1)
     new_ids = get_step_ids(page, test_key)
     print(f'  New step count: {len(new_ids)} (expected {len(csv_steps)})')
@@ -480,7 +481,7 @@ def run_audit(page, all_cases: dict, checkpoint: dict, sample_size: int = 10,
     import random
     synced_keys = list(checkpoint.get('synced', {}).keys())
     if not synced_keys:
-        print(f'  [audit] No synced cases to verify')
+        print('  [audit] No synced cases to verify')
         return True
 
     sample = random.sample(synced_keys, min(sample_size, len(synced_keys)))
@@ -511,12 +512,12 @@ def run_audit(page, all_cases: dict, checkpoint: dict, sample_size: int = 10,
     if fail_count > 0:
         if zero_count == fail_count and zero_count >= 3:
             print(f'  SESSION EXPIRED: all {zero_count} failures returned 0 steps.')
-            print(f'  This is a dead session, not missing data.')
-            print(f'  Delete auth state and re-run with fresh login:')
-            print(f'    del tools\\.qatouch_auth_state.json')
+            print('  This is a dead session, not missing data.')
+            print('  Delete auth state and re-run with fresh login:')
+            print('    del tools\\.qatouch_auth_state.json')
         else:
             print(f'  WARNING: {fail_count} case(s) failed audit!')
-        print(f'  Sync will PAUSE. Investigate before continuing with --resume.')
+        print('  Sync will PAUSE. Investigate before continuing with --resume.')
         return False
     return True
 
@@ -674,7 +675,7 @@ def cmd_sync(page, dry_run: bool, batch: str | None, cases: list[str] | None,
                                         label=f'after {idx}/{total} ({pct}%)')
                     if not audit_ok:
                         print(f'  Audit FAILED at case {idx}. Stopping sync.')
-                        print(f'  Fix issues, then resume with: sync --resume')
+                        print('  Fix issues, then resume with: sync --resume')
                         break
 
                 if not dry_run:

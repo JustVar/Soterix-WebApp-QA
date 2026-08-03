@@ -9,11 +9,10 @@ import json
 import mimetypes
 import os
 import time
-from typing import List, Optional
 
 import requests
-from msal import ConfidentialClientApplication
 from dotenv import load_dotenv
+from msal import ConfidentialClientApplication
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 ENV_PATH = os.path.join(ROOT, ".env")
@@ -32,7 +31,7 @@ class GraphEmailClient:
 
         authority = f"https://login.microsoftonline.com/{self.tenant_id}"
         self.app = ConfidentialClientApplication(self.client_id, client_credential=self.client_secret, authority=authority)
-        self._token: Optional[str] = None
+        self._token: str | None = None
         self._token_expiry: float = 0.0
 
     def _get_token(self) -> str:
@@ -47,7 +46,7 @@ class GraphEmailClient:
         self._token_expiry = time.time() + expires_in
         return self._token
 
-    def _build_attachments(self, attachments: List[str]):
+    def _build_attachments(self, attachments: list[str]):
         files = []
         for path in attachments:
             if not os.path.exists(path):
@@ -67,7 +66,7 @@ class GraphEmailClient:
             })
         return files
 
-    def send_email(self, to: List[str] | str, subject: str, body_html: str, attachments: List[str] = []):
+    def send_email(self, to: list[str] | str, subject: str, body_html: str, attachments: list[str] = []):
         if isinstance(to, str):
             to = [to]
         token = self._get_token()
@@ -99,7 +98,7 @@ class GraphEmailClient:
 
 
 # module-level client
-_client: Optional[GraphEmailClient] = None
+_client: GraphEmailClient | None = None
 
 
 def get_client() -> GraphEmailClient:
@@ -109,6 +108,6 @@ def get_client() -> GraphEmailClient:
     return _client
 
 
-def send_email(to: List[str] | str, subject: str, body_html: str, attachments: List[str] = []):
+def send_email(to: list[str] | str, subject: str, body_html: str, attachments: list[str] = []):
     c = get_client()
     return c.send_email(to, subject, body_html, attachments)

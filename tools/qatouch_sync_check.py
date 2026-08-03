@@ -13,7 +13,6 @@ Exit codes:
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -99,7 +98,7 @@ def main():
     stale = sorted(mapped_nodeids - actual_set)
 
     # 3. Summary
-    print(f"\n--- Results ---")
+    print("\n--- Results ---")
     print(f"  Total tests:       {len(actual_tests)}")
     print(f"  Mapped:            {len(mapped_nodeids & actual_set)}")
     print(f"  Unmapped:          {len(unmapped_relevant)}")
@@ -113,7 +112,7 @@ def main():
             print(f"  {t}")
 
         if fix_mode:
-            print(f"\n--- Scaffold commands ---")
+            print("\n--- Scaffold commands ---")
             print("Run these to create QA Touch cases + add mappings:\n")
             for t in unmapped_relevant:
                 module = suggest_module(t)

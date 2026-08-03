@@ -58,7 +58,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -301,7 +301,7 @@ def main() -> int:
         "cookie_header": cookie_header,
         "domain": args.domain,
         "source_state_file": str(args.auth_state.resolve()),
-        "extracted_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "extracted_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
 
     if args.print_only:

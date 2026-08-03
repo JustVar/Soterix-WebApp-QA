@@ -5,11 +5,10 @@ Saves discovered project id to .env as `QATOUCH_PROJECT_ID`.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
-import json
-import time
-from typing import List, Dict, Any
+from typing import Any
 
 # Ensure repo root is on sys.path when run directly
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -17,7 +16,6 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from tools.qatouch_client import QATouchClient, QATouchError
-
 
 PROJECT_NAME = 'Soterix AI VSAAS'
 PROJECT_KEY = 'VSAAS'
@@ -35,7 +33,7 @@ CUSTOM_FIELDS = [
 ]
 
 
-def find_or_create_project(client: QATouchClient, name: str, code: str) -> Dict[str, Any]:
+def find_or_create_project(client: QATouchClient, name: str, code: str) -> dict[str, Any]:
     projects = client.list_projects()
     # Attempt to find by name or code
     for p in projects:
@@ -48,7 +46,7 @@ def find_or_create_project(client: QATouchClient, name: str, code: str) -> Dict[
 def save_project_id_to_env(project_id: int, env_file: str = '.env') -> None:
     lines = []
     if os.path.exists(env_file):
-        with open(env_file, 'r', encoding='utf-8') as f:
+        with open(env_file, encoding='utf-8') as f:
             lines = f.readlines()
     key = 'QATOUCH_PROJECT_ID'
     found = False

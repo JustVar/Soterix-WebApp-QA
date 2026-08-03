@@ -21,6 +21,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from dotenv import load_dotenv
+
 load_dotenv(os.path.join(ROOT, '.env'))
 
 FAILURE_LOG_PATH = Path(ROOT) / 'logs' / 'upload_failures.json'
@@ -52,7 +53,7 @@ def main():
         print('Failure log is empty - nothing to retry.')
         return 0
 
-    print(f'\n=== Upload Retry ===')
+    print('\n=== Upload Retry ===')
     print(f'  Pending: {len(failures)} failed upload(s)')
     print()
 
@@ -66,7 +67,7 @@ def main():
             print(f'  {i}. Run {entry.get("run_key", "?")} - '
                   f'{entry.get("result_count", "?")} results - '
                   f'{entry.get("timestamp", "?")}')
-        print(f'\n  Run without --dry-run to execute retries.')
+        print('\n  Run without --dry-run to execute retries.')
         return 0
 
     # Retry each failed upload
@@ -107,10 +108,9 @@ def main():
             json.dump(remaining, f, indent=2)
         print(f'\n  Retried: {succeeded} succeeded, {len(remaining)} still failing')
         return 1
-    else:
-        FAILURE_LOG_PATH.unlink()
-        print(f'\n  All {succeeded} retries succeeded. Failure log cleared.')
-        return 0
+    FAILURE_LOG_PATH.unlink()
+    print(f'\n  All {succeeded} retries succeeded. Failure log cleared.')
+    return 0
 
 
 if __name__ == '__main__':

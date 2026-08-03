@@ -23,7 +23,6 @@ import argparse
 import json
 import random
 import re
-import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -320,7 +319,7 @@ def module_walkthrough(cases: dict, top_n: int = 20) -> list[dict]:
             "case_count": info["count"],
             "classifications": dict(info["classifications"]),
             "sample_cases": info["sample_cases"],
-            "qa_touch_url": f"https://soterixsystems.qatouch.com/v2#/project/JlW1",
+            "qa_touch_url": "https://soterixsystems.qatouch.com/v2#/project/JlW1",
         })
 
     return result
@@ -333,7 +332,7 @@ def generate_report(alignment: list, anomalies: list, samples: dict, walkthrough
     lines = []
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    lines.append(f"# Step Quality Audit Report")
+    lines.append("# Step Quality Audit Report")
     lines.append(f"**Generated:** {now}")
     lines.append("")
 
@@ -347,8 +346,8 @@ def generate_report(alignment: list, anomalies: list, samples: dict, walkthrough
     nav_mismatch = sum(1 for a in alignment if "NAV_MISMATCH" in a.get("issue", ""))
     subject_missing = sum(1 for a in alignment if "SUBJECT_MISSING" in a.get("issue", ""))
 
-    lines.append(f"| Check | Count | Severity |")
-    lines.append(f"|-------|-------|----------|")
+    lines.append("| Check | Count | Severity |")
+    lines.append("|-------|-------|----------|")
     lines.append(f"| Alignment flags | {total_alignment_flags} | Mixed |")
     lines.append(f"| - Critical (score < 0.2 or no steps) | {critical} | High |")
     lines.append(f"| - Warnings (score 0.2-0.4) | {warnings} | Medium |")
@@ -381,8 +380,8 @@ def generate_report(alignment: list, anomalies: list, samples: dict, walkthrough
                 continue
             lines.append(f"### {label} ({len(flagged)})")
             lines.append("")
-            lines.append(f"| Case Key | Score | Module | Title | Classification |")
-            lines.append(f"|----------|-------|--------|-------|----------------|")
+            lines.append("| Case Key | Score | Module | Title | Classification |")
+            lines.append("|----------|-------|--------|-------|----------------|")
             for a in flagged[:30]:  # Cap at 30 per category
                 title_short = a["title"][:50] + ("..." if len(a["title"]) > 50 else "")
                 lines.append(f"| `{a['case_key']}` | {a['score']:.2f} | {a['module'][:25]} | {title_short} | {a['classification']} |")
@@ -398,8 +397,8 @@ def generate_report(alignment: list, anomalies: list, samples: dict, walkthrough
     else:
         lines.append(f"**{len(anomalies)} potential misclassifications found**")
         lines.append("")
-        lines.append(f"| Case Key | Title | Current | Suggested | Reason |")
-        lines.append(f"|----------|-------|---------|-----------|--------|")
+        lines.append("| Case Key | Title | Current | Suggested | Reason |")
+        lines.append("|----------|-------|---------|-----------|--------|")
         for a in anomalies[:50]:
             title_short = a["title"][:40] + ("..." if len(a["title"]) > 40 else "")
             reason_short = a["reason"][:50] + ("..." if len(a["reason"]) > 50 else "")
@@ -431,8 +430,8 @@ def generate_report(alignment: list, anomalies: list, samples: dict, walkthrough
     lines.append("")
     lines.append(f"Top {len(walkthrough)} modules by case count. Review these modules in QA Touch UI.")
     lines.append("")
-    lines.append(f"| # | Module | Cases | Top Classification | Sample Case |")
-    lines.append(f"|---|--------|-------|--------------------|-------------|")
+    lines.append("| # | Module | Cases | Top Classification | Sample Case |")
+    lines.append("|---|--------|-------|--------------------|-------------|")
     for i, mod in enumerate(walkthrough, 1):
         top_cls = max(mod["classifications"], key=mod["classifications"].get) if mod["classifications"] else "-"
         sample = mod["sample_cases"][0]["title"][:40] if mod["sample_cases"] else "-"
@@ -479,7 +478,7 @@ def run_audit(passes: list[str] | None = None):
         print(f"  Info:          {len(info)}")
 
         if critical:
-            print(f"\n  Top 10 critical issues:")
+            print("\n  Top 10 critical issues:")
             for a in critical[:10]:
                 print(f"    [{a['case_key']}] score={a['score']:.2f} | {a['title'][:55]}")
                 print(f"      Issue: {a['issue'][:70]}")
@@ -498,7 +497,7 @@ def run_audit(passes: list[str] | None = None):
             for a in anomaly_results:
                 by_cls[a["current_classification"]].append(a)
 
-            print(f"\n  By current classification:")
+            print("\n  By current classification:")
             for cls, items in sorted(by_cls.items(), key=lambda x: -len(x[1])):
                 print(f"    {cls}: {len(items)} anomalies")
                 for item in items[:3]:
