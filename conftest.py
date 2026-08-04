@@ -19,6 +19,34 @@ os.makedirs("logs", exist_ok=True)
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s")
 
+def pytest_addoption(parser):
+    """Register the opt-in required to run hardware-disrupting tests."""
+    parser.addoption(
+        "--run-destructive",
+        action="store_true",
+        default=False,
+        help="Run tests marked 'destructive'. These interrupt real hardware - "
+             "e.g. rebooting every camera in the C2C registry. Off by default.",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip destructive tests unless they were explicitly asked for.
+
+    A plain `pytest tests/ui/c2c/` parametrises over every enabled camera in
+    the registry, so an unguarded reboot test takes out the whole lab fleet.
+    Running it has to be a deliberate act, not the default.
+    """
+    if config.getoption("--run-destructive"):
+        return
+    skip = pytest.mark.skip(
+        reason="destructive: disrupts real hardware. Pass --run-destructive to run it."
+    )
+    for item in items:
+        if "destructive" in item.keywords:
+            item.add_marker(skip)
+
+
 def _from_env_or_config(env_key: str, cfg_key: str, default: str = "") -> str:
     """Environment var takes precedence; fallback to active env config dict key."""
     return os.environ.get(env_key) or config.get(cfg_key, default)

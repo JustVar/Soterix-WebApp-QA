@@ -61,8 +61,15 @@ class TestC2CSystemInfo:
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
+    @pytest.mark.mutating
     def test_device_name_and_location_editable(self):
-        """Verify device name and location are editable and persist."""
+        """Verify device name and location are editable and persist.
+
+        MUTATING: writes to the camera and puts the original values back. The
+        restore is in a finally block - previously it sat after the assertions,
+        so a failed verification left the device permanently named
+        "TEST-CAM-01" in "QA Lab".
+        """
         self.step_capture.mark(1, "Navigate to System Information")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("SYSTEM INFORMATION")
@@ -73,24 +80,32 @@ class TestC2CSystemInfo:
         original_name = name_input.input_value()
         original_location = location_input.input_value()
 
-        self.step_capture.mark(3, "Change Device name and Location to test values")
-        name_input.fill("TEST-CAM-01")
-        location_input.fill("QA Lab")
+        try:
+            self.step_capture.mark(3, "Change Device name and Location to test values")
+            name_input.fill("TEST-CAM-01")
+            location_input.fill("QA Lab")
 
-        self.step_capture.mark(4, "Click Apply")
-        self.camera.click_apply()
+            self.step_capture.mark(4, "Click Apply")
+            self.camera.click_apply()
 
-        self.step_capture.mark(5, "Refresh and verify changes persisted")
-        self.page.reload(wait_until="domcontentloaded")
-        self.camera.navigate_to_setup_section("SYSTEM")
-        self.camera.navigate_to_setup_subsection("SYSTEM INFORMATION")
-        assert self.page.locator("input").first.input_value() == "TEST-CAM-01"
-        assert self.page.locator("input").nth(1).input_value() == "QA Lab"
-
-        self.step_capture.mark(6, "Restore original values")
-        self.page.locator("input").first.fill(original_name)
-        self.page.locator("input").nth(1).fill(original_location)
-        self.camera.click_apply()
+            self.step_capture.mark(5, "Refresh and verify changes persisted")
+            self.page.reload(wait_until="domcontentloaded")
+            self.camera.navigate_to_setup_section("SYSTEM")
+            self.camera.navigate_to_setup_subsection("SYSTEM INFORMATION")
+            assert self.page.locator("input").first.input_value() == "TEST-CAM-01"
+            assert self.page.locator("input").nth(1).input_value() == "QA Lab"
+        finally:
+            self.step_capture.mark(6, "Restore original values")
+            try:
+                self.page.locator("input").first.fill(original_name)
+                self.page.locator("input").nth(1).fill(original_location)
+                self.camera.click_apply()
+            except Exception as restore_err:  # noqa: BLE001 - must not mask the real failure
+                pytest.fail(
+                    f"Could not restore device name/location on "
+                    f"{self.camera.ip}: {restore_err}. The camera may still be "
+                    f"named TEST-CAM-01 / QA Lab - check it."
+                )
 
 
 class TestC2CPlugins:
@@ -215,8 +230,16 @@ class TestC2CSystemOps:
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
+    @pytest.mark.destructive
     def test_camera_restart(self):
-        """Verify camera can restart cleanly and retains settings."""
+        """Verify camera can restart cleanly and retains settings.
+
+        DESTRUCTIVE: this reboots the physical camera, taking it off the
+        network for a minute or two. It is skipped unless --run-destructive is
+        passed, because the suite parametrises over every enabled camera in the
+        registry - without the guard, a routine `pytest tests/ui/c2c/` reboots
+        the entire lab fleet.
+        """
         self.step_capture.mark(1, "Note current plugin status before restart")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("PLUG-IN")
@@ -234,12 +257,15 @@ class TestC2CSystemOps:
         # Wait for camera to start rebooting
         time.sleep(10)
 
-        # Poll until camera is back online (up to 180 seconds)
-        from tests.shared.pages.camera_hardware_page import CAMERA_IP
-        for attempt in range(36):
+        # Poll the camera under test. This used to read the module-level
+        # CAMERA_IP default (192.168.1.149), so on any parametrised run it
+        # polled a machine that was not the one just rebooted - the test could
+        # never pass, while still having taken the camera down.
+        camera_ip = self.camera.ip
+        for _attempt in range(36):   # 36 x 5s = 3 minutes
             try:
                 self.page.goto(
-                    f"http://{CAMERA_IP}/cgi-bin/admin/setup_main.cgi",
+                    f"http://{camera_ip}/cgi-bin/admin/setup_main.cgi",
                     wait_until="domcontentloaded",
                     timeout=5000,
                 )
@@ -247,7 +273,10 @@ class TestC2CSystemOps:
             except Exception:
                 time.sleep(5)
         else:
-            pytest.fail("Camera did not come back online within 3 minutes after restart")
+            pytest.fail(
+                f"Camera {camera_ip} did not come back online within 3 minutes "
+                f"after restart"
+            )
 
         self.step_capture.mark(5, "Verify web UI is accessible and plugins still running")
         self.camera.navigate_to_setup_section("SYSTEM")

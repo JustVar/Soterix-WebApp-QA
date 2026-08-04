@@ -48,6 +48,7 @@ class TestC2CVideoConfig:
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
+    @pytest.mark.mutating
     def test_stream_codec_and_resolution_change(self):
         """Verify stream codec and resolution can be changed and applied."""
         self.step_capture.mark(1, "Navigate to Video Configuration")
@@ -68,19 +69,28 @@ class TestC2CVideoConfig:
             if original_resolution is not None:
                 break
 
-        self.step_capture.mark(3, "Change Codec to H.264")
-        codec_select.select_option(label="H.264")
+        try:
+            self.step_capture.mark(3, "Change Codec to H.264")
+            codec_select.select_option(label="H.264")
 
-        self.step_capture.mark(4, "Click Apply")
-        self.camera.click_apply()
+            self.step_capture.mark(4, "Click Apply")
+            self.camera.click_apply()
 
-        self.step_capture.mark(5, "Verify codec change was saved")
-        self.page.wait_for_timeout(1000)
-        assert self.page.locator("select").first.input_value() == "H.264"
-
-        self.step_capture.mark(6, "Restore original codec and Apply")
-        self.page.locator("select").first.select_option(label=original_codec)
-        self.camera.click_apply()
+            self.step_capture.mark(5, "Verify codec change was saved")
+            self.page.wait_for_timeout(1000)
+            assert self.page.locator("select").first.input_value() == "H.264"
+        finally:
+            # Restore in a finally block: a failed verification previously left
+            # the camera encoding H.264 instead of its configured codec.
+            self.step_capture.mark(6, "Restore original codec and Apply")
+            try:
+                self.page.locator("select").first.select_option(value=original_codec)
+                self.camera.click_apply()
+            except Exception as restore_err:  # noqa: BLE001 - must not mask the real failure
+                pytest.fail(
+                    f"Could not restore codec on {self.camera.ip}: "
+                    f"{restore_err}. Camera may still be set to H.264."
+                )
 
 
 class TestC2COSD:
