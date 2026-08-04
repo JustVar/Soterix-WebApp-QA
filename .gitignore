@@ -57,8 +57,15 @@ docs/SESSION_CONTINUE.md
 docs/PROJECT_HOURS_LOG.md
 docs/templates/
 
-# Test data files (large, not automation code)
-tests/data/
+# Test data files (large, not automation code).
+# Ignore the CONTENTS rather than the directory itself: git will not consult a
+# negation for a file whose parent directory is excluded, so "tests/data/"
+# would make the exception below unreachable.
+tests/data/*
+# The C2C camera registry is small generated configuration that drives test
+# parametrisation, not bulk data. Without it the C2C suite silently falls back
+# to a single hard-coded camera, so it has to ship with the repo.
+!tests/data/c2c_cameras.yaml
 testcases_export.json
 
 # Generated tool output artifacts

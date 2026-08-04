@@ -118,8 +118,19 @@ class TestC2CSoterixCloud:
         page_text = self.page.locator("body").inner_text()
 
         self.step_capture.mark(4, "Verify Registered Cloud Address is staging.example.invalid")
+        # Distinguish "still pending" from "declined to register" - the camera
+        # sits on "Waiting for cloud registration..." until the QR/registration
+        # completes, and reporting that as "not registered" sends whoever reads
+        # the result looking in the wrong place.
+        if "Waiting for cloud registration" in page_text:
+            pytest.fail(
+                f"Camera {self.camera.ip} is still waiting for cloud "
+                f"registration - it has not completed registration to "
+                f"staging.example.invalid. Upload the QR code / finish "
+                f"provisioning, then re-run."
+            )
         assert "Registered Cloud Address" in page_text, \
-            f"Camera not registered. Page shows: {page_text[:200]}"
+            f"Camera {self.camera.ip} not registered. Page shows: {page_text[:200]}"
         expect(self.page.locator("text=/staging\\.soterixcloud\\.com/")).to_be_visible()
 
         self.step_capture.mark(5, "Verify QR code upload controls are present")

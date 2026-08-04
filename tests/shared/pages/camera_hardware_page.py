@@ -275,46 +275,89 @@ class CameraHardwarePage:
         return result
 
     def get_vca_license(self) -> list[dict]:
-        """Navigate to VCA > LICENSE and return activated licenses."""
+        """Navigate to VCA > LICENSE and return the activated licenses.
+
+        The page renders two tables: the "Activate License" form first, then
+        "Activated License(s)". Taking table.first therefore read the form -
+        which has no data rows - and returned an empty list, making a licensed
+        camera look unlicensed. Match on the header row instead.
+        """
         self.navigate_to_setup()
         self.navigate_to_setup_section("VCA")
         self.navigate_to_setup_subsection("LICENSE")
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(1000)
 
-        licenses = []
-        rows = self.page.locator("table").first.locator("tr")
-        for i in range(1, rows.count()):
-            cells = rows.nth(i).locator("td")
-            if cells.count() >= 2:
-                licenses.append({
-                    "assigned": cells.nth(0).inner_text().strip(),
-                    "license": cells.nth(1).inner_text().strip(),
-                })
-        return licenses
+        return self.page.evaluate(
+            r"""() => {
+              for (const t of document.querySelectorAll('table')) {
+                const rows = [...t.querySelectorAll('tr')];
+                if (rows.length < 2) continue;
+                const head = [...rows[0].querySelectorAll('td,th')]
+                  .map(c => (c.innerText || '').trim().toLowerCase());
+                const a = head.indexOf('assigned'), l = head.indexOf('license');
+                if (a === -1 || l === -1) continue;
+                const out = [];
+                for (const tr of rows.slice(1)) {
+                  const c = [...tr.querySelectorAll('td,th')]
+                    .map(x => (x.innerText || '').trim());
+                  if (c.length > Math.max(a, l) && (c[a] || c[l]))
+                    out.push({assigned: c[a], license: c[l]});
+                }
+                return out;
+              }
+              return [];
+            }"""
+        )
 
     # ------------------------------------------------------------------ #
     #  Setup - Soterix Cloud Connect
     # ------------------------------------------------------------------ #
 
     def get_cloud_connect_status(self) -> dict:
-        """Navigate to Soterix > CONNECT and return registration status."""
+        """Navigate to Soterix > CONNECT and report registration state.
+
+        Returns a dict with a "state" of:
+          registered     - "Registered Cloud Address" is shown
+          waiting        - "Waiting for cloud registration..." (pending; the
+                           camera has not completed registration)
+          not_registered - the page explicitly says so
+          unavailable    - the camera has no Soterix Cloud section at all,
+                           which is the case on unbranded VCA units
+          unknown        - page loaded but matched none of the above
+
+        The previous version only knew about registered / not-registered, so a
+        camera stuck on "Waiting for cloud registration..." reported both flags
+        False and read as unregistered - indistinguishable from a camera that
+        had actively declined to register.
+        """
+        result = {"is_registered": False, "is_unregistered": False,
+                  "state": "unknown", "cloud_address": None}
+
+        # Unbranded units have no Soterix section; say so rather than throwing.
+        if self.page.locator("li#connect").count() == 0:
+            result["state"] = "unavailable"
+            return result
+
         self.navigate_to_setup()
         self.navigate_to_setup_section("Soterix")
         self.navigate_to_setup_subsection("CONNECT")
-        self.page.wait_for_timeout(2000)  # Cloud status can take a moment
+        self.page.wait_for_timeout(3000)  # cloud status resolves asynchronously
 
-        result = {}
         page_text = self.page.locator("body").inner_text()
         result["is_registered"] = "Registered Cloud Address" in page_text
         result["is_unregistered"] = "I am not registered" in page_text
 
         if result["is_registered"]:
-            # Extract cloud address (shown in green text)
+            result["state"] = "registered"
             try:
                 addr = self.page.locator("text=/.*soterixcloud\\.com.*/").inner_text().strip()
                 result["cloud_address"] = addr
             except Exception:
                 result["cloud_address"] = None
+        elif "Waiting for cloud registration" in page_text:
+            result["state"] = "waiting"
+        elif result["is_unregistered"]:
+            result["state"] = "not_registered"
         return result
 
     # ------------------------------------------------------------------ #

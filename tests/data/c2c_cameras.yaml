@@ -1,0 +1,708 @@
+# C2C Camera Registry - GENERATED
+# Produced by tools/discover_c2c_cameras.py on 2026-08-04 15:20.
+#
+# Values under each camera were read from the device's
+# Setup > System Information page, not typed by hand. Re-run the tool
+# after the lab re-addresses or swaps hardware rather than editing here:
+#     python tools/discover_c2c_cameras.py --inventory <inventory.csv>
+#
+# enabled: false marks a camera that did not answer at discovery time,
+# or one whose branding needs confirming. Set it true once resolved and
+# re-run discovery to fill in the specs.
+#
+# Credentials are NOT stored here. The camera login comes from
+# C2C_CAMERA_USER / C2C_CAMERA_PASS (see .env.template).
+
+cameras:
+  - id: cam-10.2.0.101
+    enabled: false
+    ip: 10.2.0.101
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:A2:EB:1B
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.107
+    enabled: false
+    ip: 10.2.0.107
+    user: root
+    model: UNKNOWN
+    mac: 00:18:85:47:F0:21
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.108
+    enabled: false
+    ip: 10.2.0.108
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:8F:4B:CA
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.110
+    enabled: false
+    ip: 10.2.0.110
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:98:63:26
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.111
+    enabled: false
+    ip: 10.2.0.111
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:A4:60:9C
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.112
+    enabled: false
+    ip: 10.2.0.112
+    user: root
+    model: UNKNOWN
+    mac: 00:18:85:2D:A8:AF
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.114
+    enabled: false
+    ip: 10.2.0.114
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:A5:8A:A8
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: ipai355-mr-n100ba3ca
+    enabled: false
+    ip: 10.2.0.116
+    user: root
+    model: IPAi355-MR
+    serial: N100BA3CA
+    mac: 00:13:23:0B:A3:CA
+    manufacturer: VCA
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: unavailable   # as discovered
+    firmware: "2025.06.30_A15.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: VCAedge-AI
+        version: "1.1.124"
+        status: running
+    # licenses currently activated: ProAI 1ch
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+    # reports manufacturer 'VCA', not 'SOTERIX SYSTEMS'. Confirm whether this is an OEM lab unit or an early Soterix-branded iteration, then set enabled: true if it s...
+
+  - id: ipai685s-mr-oa00c0219
+    enabled: false
+    ip: 10.2.0.117
+    user: root
+    model: IPAi685S-MR
+    serial: OA00C0219
+    mac: 00:13:23:0C:02:19
+    manufacturer: VCA
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: unavailable   # as discovered
+    firmware: "2025.06.09_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: VCAedge-AI
+        version: "1.1.124"
+        status: stopped
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+    # reports manufacturer 'VCA', not 'SOTERIX SYSTEMS'. Confirm whether this is an OEM lab unit or an early Soterix-branded iteration, then set enabled: true if it s...
+
+  - id: cam-10.2.0.119
+    enabled: false
+    ip: 10.2.0.119
+    user: root
+    model: UNKNOWN
+    mac: 00:18:85:60:19:B4
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.122
+    enabled: false
+    ip: 10.2.0.122
+    user: root
+    model: UNKNOWN
+    mac: 00:0D:F1:21:EA:92
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: TimeoutError: Page.goto: Timeout 45000ms exceeded. Call log: - navigating to "http://10.2.0.122/cgi-bin/admin/setup_main.cgi", w...
+
+  - id: cam-10.2.0.125
+    enabled: false
+    ip: 10.2.0.125
+    user: root
+    model: UNKNOWN
+    mac: 00:13:23:0C:1E:8D
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: TimeoutError: Page.goto: Timeout 45000ms exceeded. Call log: - navigating to "http://10.2.0.125/cgi-bin/admin/setup_main.cgi", w...
+
+  - id: cam-10.2.0.126
+    enabled: false
+    ip: 10.2.0.126
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:A7:71:E9
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.127
+    enabled: false
+    ip: 10.2.0.127
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:AE:AD:45
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.128
+    enabled: false
+    ip: 10.2.0.128
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:95:C3:08
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: dc-5v-1-q300c5b44
+    enabled: true
+    ip: 10.2.0.129
+    user: root
+    model: DC-5V-1
+    serial: Q300C5B44
+    mac: 00:13:23:0C:5B:44
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.09_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.5.1"
+        status: stopped
+      - name: VCAedge-AI
+        version: "1.2.14"
+        status: running
+    # licenses currently activated: ProAI
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: dc-5v-1-q300c5b41
+    enabled: true
+    ip: 10.2.0.131
+    user: root
+    model: DC-5V-1
+    serial: Q300C5B41
+    mac: 00:13:23:0C:5B:41
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.30_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.5.1"
+        status: stopped
+      - name: VCAedge-AI
+        version: "1.2.14"
+        status: running
+    # licenses currently activated: ProAI
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: dc-5v-1-q300c5b45
+    enabled: true
+    ip: 10.2.0.132
+    user: root
+    model: DC-5V-1
+    serial: Q300C5B45
+    mac: 00:13:23:0C:5B:45
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.09_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.5.1"
+        status: stopped
+      - name: VCAedge-AI
+        version: "1.2.14"
+        status: running
+    # licenses currently activated: ProAI
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: bc-5v-1-pc00c5555
+    enabled: true
+    ip: 10.2.0.136
+    user: root
+    model: BC-5V-1
+    serial: PC00C5555
+    mac: 00:13:23:0C:55:55
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: unavailable   # as discovered
+    firmware: "2025.06.09_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: running
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: bc-5v-1-pc00c5552
+    enabled: true
+    ip: 10.2.0.137
+    user: root
+    model: BC-5V-1
+    serial: PC00C5552
+    mac: 00:13:23:0C:55:52
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.09_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.5.1"
+        status: running
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: running
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: bc-5m-1-pc00c5557
+    enabled: true
+    ip: 10.2.0.138
+    user: root
+    model: BC-5M-1
+    serial: PC00C5557
+    mac: 00:13:23:0C:55:57
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.09_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.5.1"
+        status: running
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: running
+    # licenses currently activated: ProAI 1ch
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: cam-10.2.0.139
+    enabled: false
+    ip: 10.2.0.139
+    user: root
+    model: UNKNOWN
+    mac: 00:13:23:0B:BB:05
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: TimeoutError: Page.goto: Timeout 45000ms exceeded. Call log: - navigating to "http://10.2.0.139/cgi-bin/admin/setup_main.cgi", w...
+
+  - id: cam-10.2.0.140
+    enabled: false
+    ip: 10.2.0.140
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:71:33:E4
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: fc-12f-1-pc00c5558
+    enabled: true
+    ip: 10.2.0.168
+    user: root
+    model: FC-12F-1
+    serial: PC00C5558
+    mac: 00:13:23:0C:55:58
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 4000 x 3000
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.30_A15.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.7.1"
+        status: stopped
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: running
+    features:
+      audio: SUPPORTED
+      optical_zoom: NOT SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: bc-5v-1-pc00c5554
+    enabled: true
+    ip: 10.2.0.171
+    user: root
+    model: BC-5V-1
+    serial: PC00C5554
+    mac: 00:13:23:0C:55:54
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.30_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.7.1"
+        status: running
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: running
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: ms-20v-1-pc00c5559
+    enabled: true
+    ip: 10.2.0.173
+    user: root
+    model: MS-20V-1
+    serial: PC00C5559
+    mac: 00:13:23:0C:55:59
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1   # ASSUMED - not verified
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: unavailable   # as discovered
+    sensor_versions:   # as discovered
+      - "Sensor 1: 2025.06.30_A15.3.3"
+    firmware: "2025.06.30_A15.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: stopped
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: bc-5v-1-pc00c5553
+    enabled: true
+    ip: 10.2.0.174
+    user: root
+    model: BC-5V-1
+    serial: PC00C5553
+    mac: 00:13:23:0C:55:53
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.30_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.7.1"
+        status: running
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: running
+    # licenses currently activated: ProAI 1ch
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: dc-5f-1-pc00c554a
+    enabled: true
+    ip: 10.2.0.177
+    user: root
+    model: DC-5F-1
+    serial: PC00C554A
+    mac: 00:13:23:0C:55:4A
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.30_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.7.1"
+        status: running
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: running
+    # licenses currently activated: ProAI 1ch
+    features:
+      audio: SUPPORTED
+      optical_zoom: NOT SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
+
+  - id: cam-10.2.0.193
+    enabled: false
+    ip: 10.2.0.193
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:3E:1A:98
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: cam-10.2.0.195
+    enabled: false
+    ip: 10.2.0.195
+    user: root
+    model: UNKNOWN
+    mac: E4:30:22:73:1C:C0
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    # reachable but discovery failed: RuntimeError: no nav item li#System_Information on this camera
+
+  - id: bc-5m-1-pc00c5556
+    enabled: true
+    ip: 10.2.0.230
+    user: root
+    model: BC-5M-1
+    serial: PC00C5556
+    mac: 00:13:23:0C:55:56
+    manufacturer: SOTERIX SYSTEMS
+    max_resolution: 2592x1944
+    max_framerate: 30
+    lens_count: 1
+    multi_lens: false
+    expected_license: ProAI 1ch
+    expected_license_count: 1
+    onvif_version: "24.06"
+    onvif_profiles: "S, T, M"
+    cloud_state: waiting   # as discovered
+    firmware: "2025.06.30_A20.3.3"   # as discovered
+    plugins:   # as discovered
+      - name: SOTERIX
+        version: "1.7.1"
+        status: running
+      - name: VCAedge-AI
+        version: "1.1.147"
+        status: running
+    features:
+      audio: SUPPORTED
+      optical_zoom: SUPPORTED
+      digital_zoom: NOT SUPPORTED
+      ptz: NOT SUPPORTED
+      ai: SUPPORTED
+      alarm_in: SUPPORTED
+      relay_out: SUPPORTED
+      cds: SUPPORTED
