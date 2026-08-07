@@ -5,17 +5,32 @@ import os
 import time
 from typing import Optional
 
+import hashlib
+import json
+
 import requests
 import urllib3
-from playwright.sync_api import sync_playwright
-import json
-from tests.shared.pages.login_page import LoginPage
+
+# NOTE: playwright and LoginPage are imported lazily inside login_via_ui() so that
+# importing this module does not pull in the browser stack. API-only test runs
+# must not depend on Playwright being installed.
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Determine verification behaviour: disable verification for non-production envs
 _ENV = os.getenv("ENV", "").lower()
 _VERIFY = False if _ENV not in ("prod", "production") else True
+
+# The web app authenticates against this endpoint. It is NOT the same one as
+# /REST/central/user/auth/login, which requires a `captcha` parameter that only
+# the browser can produce -- that endpoint is unusable from an API client.
+_LOGIN_PATH = "/REST/central/user/login"
+
+# The SPA sends a hardcoded literal here; `accountid` carries the real email.
+# Verified byte-identical in the QA, stage and prod bundles (chunk 6031).
+# If the vendor ever changes it, login breaks -- hence the explicit message in
+# _api_login() rather than a bare "invalid credentials".
+_LOGIN_USERNAME_LITERAL = "Example Label"
 
 
 class AuthHelper:
@@ -106,13 +121,76 @@ class AuthHelper:
             return r.status_code == 200
         except Exception:
             return False
-    def login(self, email: str, password: str) -> str:
-        """Login using API and return bearer/JSESSION token.
+    def _api_login(self, email: str, password: str) -> str:
+        """Authenticate over HTTP and return the JSESSIONID. No browser involved.
 
-        Flow:
-        1) Try cached token
-        2) Try API login (central -> sso)
-        3) Fallback to UI login
+        Mirrors exactly what the web app does: POST the SHA512 hex digest of the
+        password to /REST/central/user/login. Sending the plaintext password, or
+        using /REST/central/user/auth/login, always fails -- the latter requires a
+        captcha token only a browser can produce.
+
+        Raises RuntimeError with a message that says which of the three distinct
+        failure modes occurred, because they need completely different fixes.
+        """
+        url = f"{self.base_url}{_LOGIN_PATH}"
+        payload = {
+            "accountid": email,
+            "username": _LOGIN_USERNAME_LITERAL,
+            "password": hashlib.sha512(password.encode("utf-8")).hexdigest(),
+        }
+
+        try:
+            r = requests.post(url, json=payload, timeout=20, verify=_VERIFY)
+        except requests.RequestException as e:
+            raise RuntimeError(
+                f"Could not reach the API at {url}. Check base_url / network / VPN. "
+                f"({type(e).__name__}: {e})"
+            ) from e
+
+        # The server distinguishes 'no such user' from 'wrong password', and the
+        # difference tells you whether the credential or the environment is wrong.
+        if r.status_code == 404:
+            raise RuntimeError(
+                f"No account '{email}' exists on {self.base_url}. The credential is "
+                f"probably for a different environment (QA / stage / prod each have "
+                f"their own accounts). Check QA_USER and the ENV/BOX you selected."
+            )
+        if r.status_code == 400:
+            raise RuntimeError(
+                f"Account '{email}' exists on {self.base_url} but the password was "
+                f"rejected. The stored password is most likely stale -- refresh it in "
+                f".env. (If it is definitely correct, the SPA's login contract may have "
+                f"changed; verify username literal '{_LOGIN_USERNAME_LITERAL}' and the "
+                f"SHA512 hashing against the app's JS bundle.)"
+            )
+        if r.status_code != 200:
+            raise RuntimeError(
+                f"Unexpected {r.status_code} from {url}: {r.text[:300]}"
+            )
+
+        # Token arrives in the body; the Set-Cookie header is a fallback.
+        token = None
+        try:
+            result = (r.json().get("result") or [{}])[0]
+            token = result.get("JSESSIONID")
+        except Exception:
+            pass
+        token = token or r.cookies.get("JSESSIONID")
+
+        if not token:
+            raise RuntimeError(
+                f"Login returned 200 but no JSESSIONID was found in the response "
+                f"body or cookies: {r.text[:300]}"
+            )
+        return token
+
+    def login(self, email: str, password: str) -> str:
+        """Return a JSESSIONID for the given credentials.
+
+        Order: cached token -> in-memory token -> HTTP login. The old UI-login
+        fallback is now opt-in via ALLOW_UI_LOGIN_FALLBACK=1. It used to run
+        silently on any failure, which meant a stale password quietly launched a
+        headed browser in the middle of an API-only run.
         """
         # 1) Try cached token first
         cached = self._load_cached_token()
@@ -126,71 +204,58 @@ class AuthHelper:
         if self._token and time.time() < self._token_expiry - 30:
             return self._token
 
-        payload = {"username": email, "password": password}
-        masked = {"username": email, "password": "***"}
-
-        # Try API login (central then SSO). If anything goes wrong, fall back to UI.
+        # 3) Browser-free HTTP login
         try:
-            central_url = f"{self.base_url}/REST/central/user/auth/login"
-            print(f"AUTH TRY central -> url={central_url} body={masked}")
-            r = requests.post(central_url, json=payload, timeout=15, verify=_VERIFY)
-            print(f"AUTH RESP central -> status={r.status_code} body={r.text[:800]}")
+            token = self._api_login(email, password)
+            self._token = token
+            self._token_expiry = time.time() + 1800
+            try:
+                self._save_token_to_cache(token)
+            except Exception:
+                pass
+            print("[AUTH] API login succeeded (no browser used)")
+            return token
+        except Exception as api_error:
+            if not os.getenv("ALLOW_UI_LOGIN_FALLBACK"):
+                # Fail loudly. Falling back silently is what hid this bug.
+                raise
+            print(f"[AUTH] API login failed: {api_error}")
+            print("[AUTH] ALLOW_UI_LOGIN_FALLBACK is set -- falling back to UI login")
 
-            # If central not found, try SSO
-            if r.status_code == 404:
-                sso_url = f"{self.base_url}/REST/sso/login"
-                print(f"AUTH FALLBACK -> trying SSO url={sso_url} body={masked}")
-                r2 = requests.post(sso_url, json=payload, timeout=15, verify=_VERIFY)
-                print(f"AUTH RESP sso -> status={r2.status_code} body={r2.text[:800]}")
-                r2.raise_for_status()
-                body = r2.json()
-                token = body.get("token") or body.get("access_token") or body.get("data", {}).get("token")
-            else:
-                r.raise_for_status()
-                body = r.json()
-                token = body.get("token") or body.get("access_token") or body.get("data", {}).get("token")
-
-            if token:
-                self._token = token
-                self._token_expiry = time.time() + 1800
-                try:
-                    self._save_token_to_cache(self._token)
-                except Exception:
-                    pass
-                return token
-            else:
-                print("[AUTH] API login did not return a token; will try UI fallback")
-        except Exception as e:
-            print(f"[AUTH] API login failed: {e}; will try UI fallback")
-
-        # 3) Fallback to UI login
+        token = self.login_via_ui(email, password)
+        if not token:
+            raise RuntimeError("All login methods failed to obtain a token")
+        self._token = token
+        self._token_expiry = time.time() + 1800
         try:
-            print("[AUTH] Falling back to UI login")
-            token = self.login_via_ui(email, password)
-            if token:
-                self._token = token
-                self._token_expiry = time.time() + 1800
-                try:
-                    self._save_token_to_cache(self._token)
-                except Exception:
-                    pass
-                return token
-        except Exception as e:
-            print(f"[AUTH] UI login failed: {e}")
-            raise
-
-        raise RuntimeError("All login methods failed to obtain a token")
+            self._save_token_to_cache(token)
+        except Exception:
+            pass
+        return token
 
     def get_authenticated_client(self, credentials: dict, client_class):
         token = self.login(credentials["username"], credentials["password"])
         return client_class(self.base_url, token)
 
-    def login_via_ui(self, email: str, password: str, headless: bool = False, timeout: int = 60000) -> str:
+    def login_via_ui(self, email: str, password: str, headless: bool = True, timeout: int = 60000) -> str:
         """Perform UI login using Playwright and extract an auth token.
+
+        Legacy path, kept only as an opt-in escape hatch (ALLOW_UI_LOGIN_FALLBACK=1).
+        Prefer _api_login(): it needs no browser and is what login() uses.
+
+        Note this drives a real browser, so it requires Playwright to be installed
+        and the login page to present a solvable reCAPTCHA. Defaults to headless --
+        it used to default to headed, which popped a visible browser window in the
+        middle of API-only runs.
 
         Extraction order: cookies, localStorage, sessionStorage, network requests.
         Returns token string if found, otherwise raises RuntimeError.
         """
+        # Imported here, not at module scope, so API-only runs never load Playwright.
+        from playwright.sync_api import sync_playwright
+
+        from tests.shared.pages.login_page import LoginPage
+
         # Derive site root (remove /v-apiserver if present)
         site = self.base_url
         if site.endswith("/v-apiserver"):

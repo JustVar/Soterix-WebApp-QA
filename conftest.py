@@ -271,17 +271,16 @@ def authenticated_page(browser, auth_state_path, base_url, login_data):
 
 @pytest.fixture(scope="session")
 def api_auth_token(api_auth_helper, login_data):
-    # Use the shared session-scoped AuthHelper
-    helper = api_auth_helper
-    print("[FIXUP] api_auth_token fixture starting; using shared AuthHelper")
-    try:
-        token = helper.login(login_data['username'], login_data['password'])
-        print("[FIXUP] api_auth_token obtained token")
-        return token
-    except Exception as e:
-        print(f"API login failed in fixture, falling back to UI login: {e}")
-        token = helper.login_via_ui(login_data['username'], login_data['password'])
-        return token
+    """Session-scoped JSESSIONID for API tests.
+
+    Deliberately does NOT catch failures to retry via the browser. This fixture
+    used to fall back to `login_via_ui` on any exception, which meant a stale
+    password silently launched a headed Chromium in the middle of an API-only
+    run. AuthHelper.login() now owns that decision and only falls back when
+    ALLOW_UI_LOGIN_FALLBACK is set -- otherwise it raises with a message saying
+    whether the account, the password, or the host is wrong.
+    """
+    return api_auth_helper.login(login_data['username'], login_data['password'])
 
 
 @pytest.fixture(scope="session")
