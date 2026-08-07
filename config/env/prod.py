@@ -16,6 +16,13 @@ config = {
             "password_env": "TEST_AUTO_PROD_PASSWORD",
             "default_site_id": None,  # TBD
         },
+        # QA production box (added 2026-08). Set HARDWARE_LAB_PASSWORD in .env.
+        "hardware-lab": {
+            "user_key": "HARDWARE_LAB",
+            "email": "hardware-lab@soterixsystems.com",
+            "password_env": "HARDWARE_LAB_PASSWORD",
+            "default_site_id": None,  # TBD
+        },
     },
 
     # Default box if not specified
