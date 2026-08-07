@@ -118,7 +118,7 @@ DEFAULT_TITLE_COL = "Test Case Title"
 
 # ---------------------------------------------------------------------------
 # Public REST API (api.qatouch.com) - used ONLY to enumerate live cases by
-# title. Read credentials are taken from the same API config that
+# title. Read credentials are taken from the same QA Touch config that
 # build_ota_update_payloads_v2.py uses, since title->case_key resolution does
 # not depend on the user's browser session.
 # ---------------------------------------------------------------------------
@@ -490,7 +490,7 @@ def build_update_payload(
     # NB: the QA Touch `/v1/case/update` payload uses `description` for the
     # user-visible Description (different from the import wizard, where the
     # `description` column is silently dropped and `test_description` is the
-    # user-visible slug - see docs/qa_touch_integration.md §7.A.1).
+    # user-visible slug - see docs/local/qa_touch_integration.md §7.A.1).
     for canonical_col, legacy_col, qt_field in (
         ("reference", "Reference", "reference"),
         ("test_description", "Description", "description"),

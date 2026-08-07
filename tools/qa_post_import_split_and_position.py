@@ -11,7 +11,7 @@ Why this script exists
 The QA Touch CSV importer (phase 3) collapses our multi-line `Steps` cell
 (which contains `Step 1: ...\\nStep 2: ...\\n...\\nStep N: ...`) into a single
 merged "Step 1" row in the case's Steps tab (see
-docs/qa_touch_integration.md:417-419). This tool:
+docs/local/qa_touch_integration.md:417-419). This tool:
 
   1. For each case in scope:
        a. Reads /v1/case/edit -> data.caseStep[*].id  (the existing merged

@@ -74,13 +74,6 @@ def pytest_addoption(parser: Any) -> None:
         default=None,
         help='QA Touch test run key (e.g. "d6pw"). Also: QATOUCH_RUN_KEY env var.',
     )
-    group.addoption(
-        '--qatouch-mode',
-        default=None,
-        choices=['api', 'api'],
-        help='Upload path. "api" uses tools/qatouch_client (default), "api" uses '
-             'the API server (update_test_run_results_by_code). Also: QATOUCH_USE_MCP=1.',
-    )
 
 
 def pytest_configure(config: Any) -> None:
@@ -94,13 +87,7 @@ def pytest_configure(config: Any) -> None:
                      'Use --qatouch-run <key> or QATOUCH_RUN_KEY env var.')
         return
 
-    # Resolve upload mode: CLI flag wins, then env var, default 'api'.
-    mode = config.getoption('--qatouch-mode', default=None)
-    if not mode:
-        mode = 'api' if os.environ.get(
-            'QATOUCH_USE_API', '').lower() in ('1', 'true', 'yes') else 'api'
-
-    config._qatouch_reporter = QATouchReporter(run_key, mode=mode)
+    config._qatouch_reporter = QATouchReporter(run_key)
     config.pluginmanager.register(config._qatouch_reporter, 'qatouch_reporter')
 
 
@@ -129,9 +116,8 @@ DEFAULT_PROJECT_KEY = 'JlW1'
 
 
 class QATouchReporter:
-    def __init__(self, run_key: str, mode: str = 'api'):
+    def __init__(self, run_key: str):
         self.run_key = run_key
-        self.mode = mode  # 'api' or 'api'
         self.project_key = os.environ.get('QATOUCH_PROJECT_ID', DEFAULT_PROJECT_KEY)
         self.results: dict[str, int] = {}  # case_key -> status code
         # case_key -> project_key resolved at record time (per-test marker override)
@@ -476,34 +462,6 @@ class QATouchReporter:
                 '(API-created run)')
         return results_payload
 
-    def _upload_via_api(self, project_key: str, results_payload: list[dict],
-                       comment: str) -> bool:
-        """Upload via the codebase's API server (update_test_run_results_by_code).
-
-        The API function isn't directly importable from the plugin process, so
-        we invoke it through the qatouch API transport exposed by
-        tools/qatouch_bridge if present, otherwise we fall back to the
-        public-API client. This keeps the API path opt-in without hard-failing
-        when the API bridge isn't wired locally.
-        """
-        try:
-            from tools import qatouch_bridge  # type: ignore
-        except Exception as e:
-            log.error(
-                'QA Touch: API mode requested but tools/qatouch_bridge.py '
-                f'is not available ({e}). Falling back to API path.')
-            return False
-
-        def _do_upload():
-            qatouch_bridge.update_test_run_results_by_code(
-                projectKey=project_key,
-                testRunKey=self.run_key,
-                results=results_payload,
-                comments=comment,
-            )
-
-        return self._upload_with_retry(_do_upload)
-
     def pytest_sessionfinish(self, session: Any, exitstatus: int) -> None:
         """Upload collected results to QA Touch."""
         # Write per-nodeid results JSON for the post-run bug filer first - this
@@ -540,39 +498,7 @@ class QATouchReporter:
         timestamp = datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')
         comment = f'Automated upload from Playwright run at {timestamp}'
 
-        # API path: doesn't need the qatouch_client at all, and no run_key
-        # mapping (API uses case codes directly per the verified signature).
-        if self.mode == 'api':
-            results_payload = []
-            for case_key in case_keys:
-                status_code = self.results[case_key]
-                # Map our internal status int back to the API enum string.
-                status_str = {
-                    STATUS_PASSED: 'passed',
-                    STATUS_FAILED: 'failed',
-                    STATUS_BLOCKED: 'blocked',
-                }.get(status_code, 'untested')
-                results_payload.append({'case': case_key, 'status': status_str})
-
-            log.info(
-                f'QA Touch: Uploading {len(results_payload)} results to run '
-                f'{self.run_key} via API endpoint...')
-            success = self._upload_via_api(
-                self.project_key, results_payload, comment)
-            self._upload_path_used = 'api'
-            if success:
-                self.stats['uploaded'] = len(results_payload)
-                log.info(
-                    f'QA Touch: Successfully uploaded {len(results_payload)} '
-                    'results via API.')
-            else:
-                self.stats['errors'] += 1
-                self._save_failed_results(
-                    results_payload, comment,
-                    f'API upload failed after {MAX_RETRIES} attempts')
-            return
-
-        # API path (default, unchanged behaviour).
+        # Upload via the QA Touch client.
         try:
             from tools.qatouch_client import QATouchClient
             client = QATouchClient()

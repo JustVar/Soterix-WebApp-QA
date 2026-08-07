@@ -2,7 +2,7 @@
 
 These are not API smoke tests against the live system - they exercise the
 plugin's pure-Python resolution logic so the Phase 2 hygiene patches
-(RUN_RESULTS_PATH, per-test project marker, API fallback wiring) don't
+(RUN_RESULTS_PATH, per-test project marker) don't
 regress silently.
 
 Living under tests/plugins/ to be picked up by the default discovery without
@@ -125,39 +125,6 @@ def test_group_results_by_project_splits_by_marker(monkeypatch):
     assert set(groups.keys()) == {'JlW1', 'OTHER'}
     assert sorted(groups['JlW1']) == ['C1', 'C3']
     assert groups['OTHER'] == ['C2']
-
-
-# ---------------------------------------------------------------------------
-# Mode wiring
-# ---------------------------------------------------------------------------
-
-def test_default_mode_is_api():
-    r = qr.QATouchReporter(run_key='rk1')
-    assert r.mode == 'api'
-
-
-def test_mode_api_is_honoured():
-    r = qr.QATouchReporter(run_key='rk1', mode='api')
-    assert r.mode == 'api'
-
-
-def test_addoption_registers_qatouch_mode_flag():
-    """The --qatouch-mode CLI flag must be registered with choices=[api, api]."""
-    parser = MagicMock()
-    group = MagicMock()
-    parser.getgroup.return_value = group
-
-    qr.pytest_addoption(parser)
-
-    # Collect every addoption call and find the one for --qatouch-mode
-    found = False
-    for call in group.addoption.call_args_list:
-        args, kwargs = call
-        if '--qatouch-mode' in args:
-            assert kwargs.get('choices') == ['api', 'api']
-            found = True
-            break
-    assert found, '--qatouch-mode flag not registered'
 
 
 # ---------------------------------------------------------------------------

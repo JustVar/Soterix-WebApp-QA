@@ -10,7 +10,7 @@ The API suite now lives at https://github.com/Soterix-Systems/Soterix-API-QA.
 | Current repo renames to | **`Soterix-WebApp-QA`** (webapp UI automation + manual test cases) |
 | New API repo | **`Soterix-API-QA`** (all API testing: `/v-apiserver` + `/v-integration-api`) |
 | API repo history | **Fresh start** - files copied in, one initial commit; old history stays viewable in the webapp repo |
-| Remotes | Both repos follow the existing dual-remote pattern: `origin` (Soterix-Systems) + `company` (Soterix-Systems), push to both |
+| Remotes | Soterix-Systems is the canonical org for both repos |
 | QA Touch | Single project `JlW1` for both repos; case mappings live only in each repo's `config/qatouch_case_mapping.json` (never in test files) |
 | Browser policy | `Soterix-API-QA` has **no Playwright dependency at all** - API auth is pure HTTP (see `docs/API_SURFACES.md`) |
 
@@ -28,19 +28,18 @@ rename makes the webapp repo's scope obvious.
 
 ## Phase 0 - Freeze a known-good baseline
 
-*All three heads (local, origin, company) are in sync at `cf4238a` with one
-pending change set on top.*
+*Local and remote heads are in sync at `cf4238a` with one pending change set
+on top.*
 
 1. Review and commit the pending changes as logical commits:
    - browser-free API auth (`auth_helper.py`, `conftest.py`)
    - dead-host purge + doc corrections (docs/, tools/, `config/environments.yaml`)
    - `hardware-lab` prod box (`config/env/prod.py`)
    - this plan + `docs/API_SURFACES.md`
-2. Push to **both** remotes. Verify `git rev-parse HEAD origin/main company/main`
-   returns one SHA.
-3. Tag the state: `git tag pre-split && git push origin company --tags`.
+2. Push. Verify `git rev-parse HEAD origin/main` returns one SHA.
+3. Tag the state: `git tag pre-split && git push origin --tags`.
 
-**Gate:** three-way sync confirmed, tag pushed.
+**Gate:** sync confirmed, tag pushed.
 
 ---
 
@@ -60,7 +59,7 @@ restructure, then validate before anything touches GitHub.
 | `config/qatouch_case_mapping.json` | same path | **only the 13 entries keyed by `tests/api/...`**, re-keyed to the new paths |
 | `qa/doc_registry.yaml` | same path | only the "Section I. API" entries, re-pathed |
 | `plugins/qatouch_reporter.py` (+ its unit test) | same layout | each repo tests its own plugin copy. **Dormant by default** - it only uploads when `--qatouch-upload --qatouch-run <KEY>` (or the env-var equivalents) are passed, so carrying it costs nothing at run time |
-| `tools/qatouch_client.py` | `tools/` | **hard dependency of qatouch_reporter** (imported at upload time; needs only `requests`). The plugin's other tools import, `qatouch_bridge`, is optional - file doesn't exist anywhere, import is try/except-guarded, no action needed |
+| `tools/qatouch_client.py` | `tools/` | **hard dependency of qatouch_reporter** (imported at upload time; needs only `requests`) |
 | `tools/`: `discover_cameras.py`, `print_qa_lab_session.py`, `download_openapi_spec.py`, `probe_login.py` (+ `discover_apis.py`, `extract_schemas.py` if grep confirms they import api_clients) | `tools/` | the only non-test consumers of `api_clients` |
 | `docs/API_SURFACES.md`, `docs/API_ENDPOINTS.md`, `docs/API_TESTING_NOTES.md`, `docs/BRUNO_GUIDE.md` | `docs/` | these are API docs; webapp repo keeps pointer stubs |
 | `.gitignore` | `.gitignore` | trim to relevant entries |
@@ -108,32 +107,14 @@ fresh start means the API repo carries none of the webapp repo's weight.
 
 ## Phase 2 - Publish `Soterix-API-QA`
 
-1. `gh repo create Soterix-Systems/Soterix-API-QA --private`
-2. `gh repo create Soterix-Systems/Soterix-API-QA --private` (needs org rights -
+1. `gh repo create Soterix-Systems/Soterix-API-QA --private` (needs org rights -
    verify `gh auth status` account can create in the org **before** starting)
-3. `git init`, single initial commit, `git remote add origin` + `company`,
-   push `main` to **both**.
-4. **Auto-mirror to personal:** configure `origin` with BOTH push URLs so a
-   plain `git push` updates Soterix-Systems *and* Soterix-Systems in one command -
-   no second push to remember, no silent drift:
-
-   ```
-   git remote set-url --add --push origin https://github.com/Soterix-Systems/Soterix-API-QA.git
-   git remote set-url --add --push origin https://github.com/Soterix-Systems/Soterix-API-QA.git
-   ```
-
-   (The first `--add --push` must re-state the personal URL: setting any push
-   URL explicitly replaces the implicit one.) The separate `company` remote is
-   kept for **fetch/compare only** - `git fetch company && git log company/main..main`
-   detects divergence, which is exactly the failure mode that bit this repo
-   before (see memory: company merges silently reverting files). Document the
-   setup in the README so teammates cloning fresh reproduce it.
-5. Set repo descriptions: *"Soterix API - QA · API test automation (internal +
+2. `git init`, single initial commit, `git remote add origin
+   https://github.com/Soterix-Systems/Soterix-API-QA.git`, push `main`.
+3. Set the repo description: *"Soterix API - QA · API test automation (internal +
    integration APIs)"*.
-6. Apply the same double-push-URL config to the webapp repo in Phase 4 step 3,
-   so both repos behave identically.
 
-**Gate:** both remotes show the same SHA; a teammate-visible README renders.
+**Gate:** the remote shows the pushed SHA; a teammate-visible README renders.
 
 ---
 
@@ -169,14 +150,11 @@ One commit, fully revertable, on the current repo:
 ## Phase 4 - Rename to `Soterix-WebApp-QA`
 
 1. `gh repo rename Soterix-WebApp-QA -R Soterix-Systems/playwright-soterix-qa`
-2. `gh repo rename Soterix-WebApp-QA -R Soterix-Systems/playwright-soterix-qa`
-3. Update local remotes explicitly (GitHub redirects old URLs, but don't rely
+2. Update local remotes explicitly (GitHub redirects old URLs, but don't rely
    on redirects - half-renamed states hide breakage):
    `git remote set-url origin https://github.com/Soterix-Systems/Soterix-WebApp-QA.git`
-   (and `company` likewise). Then apply the same double-push-URL config as the
-   API repo (Phase 2 step 4) so one `git push` updates both orgs here too.
-4. Set description: *"Soterix WebApp - QA · UI automation + manual test cases"*.
-5. `git push origin && git push company` - verify.
+3. Set description: *"Soterix WebApp - QA · UI automation + manual test cases"*.
+4. `git push origin` - verify.
 
 **Gate:** `git ls-remote` succeeds against both NEW urls; push works.
 
@@ -184,21 +162,19 @@ One commit, fully revertable, on the current repo:
 
 ## Phase 5 - Workspace, docs, roadmap
 
-1. **`Soterix/NOTES.md`**: update the Git Remotes section (new names + new
-   `Soterix-API-QA` block), Project Structure tree, and the codebase-memory
-   API project-ID table.
-2. **Roadmap (MANDATORY per NOTES.md):** update
+1. **Workspace notes**: update the repo lists and project-structure notes kept
+   outside this repo.
+2. **Roadmap:** update
    `dashboards/soterix-internal-dashboards/docs/FUTURE_ROADMAP.md` - mark the
    split/rename done under Section 1, add a Soterix-API-QA row; regenerate with
    `tools/generate_dashboard.py --team qa --no-deploy`. (**Use `--no-deploy`:**
-   the deploy step SSHes to the NUC, which is retired hardware per workspace
-   NOTES.md - the git pushes still happen, only the dead SSH pull is skipped.)
+   the deploy step SSHes to the retired NUC - the git pushes still happen, only
+   the dead SSH pull is skipped.)
 3. **Local folder renames (optional, recommended for handoff):**
    `qa/playwright-soterix-qa` -> `qa/Soterix-WebApp-QA`. If done:
    - **recreate the venv** (Windows venv scripts embed absolute paths and break
      on folder rename),
-   - re-index code-index (project ID is path-derived),
-   - migrate the Tooling auto-memory directory (also path-keyed),
+   - refresh any local tooling that indexes by folder path,
    - update `.code-workspace`,
    - **update the dashboard generator's hardcoded path**:
      `dashboards/soterix-internal-dashboards/tools/generate_dashboard.py` (~line
@@ -206,14 +182,12 @@ One commit, fully revertable, on the current repo:
      by relative path - it breaks on folder rename (the GitHub rename alone does
      NOT affect it). Fix the path or set `QATOUCH_METRICS_PATH`.
    Doing this later is fine; nothing blocks on it.
-4. Tooling project memory: update `MEMORY.md` pointer lines that name the old
-   repo.
 
 ---
 
 ## Phase 6 - Team handoff
 
-- Announce both repos with clone URLs (company remote) and each repo's
+- Announce both repos with their clone URLs and each repo's
   `.env.template`.
 - QA Touch: agree a run-naming convention so the two suites' runs are
   distinguishable in project `JlW1` (e.g. `WebApp - <date>` / `API - <date>`).
@@ -239,9 +213,9 @@ One commit, fully revertable, on the current repo:
 - **`plugins/verification_runner.py`** is pure pytest/stdlib, self-contained.
   **Deliberately excluded** from the API repo (it serves the manual-verification
   workflow); trivial to add later if wanted.
-- **Org permissions confirmed**: Soterix-Systems is an active org member,
-  `members_can_create_private_repositories: true`, and holds `admin` on the
-  existing company repo - create + rename both verified possible.
+- **Org permissions confirmed**: the maintainer's account is an active org
+  member, `members_can_create_private_repositories: true`, and holds `admin` on
+  the existing company repo - create + rename both verified possible.
 - **Secrets**: `.env` and all auth/session caches were never tracked and are
   absent from the entire git history (audited 2026-08-05).
 

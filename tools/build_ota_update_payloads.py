@@ -2,7 +2,7 @@
 """Build per-case update payloads for the 85 OTA cases in QA Touch project 60W5.
 
 Output: tools/.ota_update_payloads.json - one entry per case, ready for
-qatouch_api_update_test_case or a direct REST POST.
+the QA Touch update_test_case endpoint (direct REST POST).
 
 For each existing OTA case (identified by case_title starting with 'OTA -'):
   - Look up the matching row in tests/data/c2c_ota_test_cases.csv by title.
@@ -22,7 +22,7 @@ Step splitting strategy:
   - The source Expected_result is a single summary sentence covering the case.
   - We attach the summary as the FINAL step's expectedResult.
   - Intermediate steps get a deterministic, non-empty expectedResult derived
-    from the step text (action-result heuristic). The API schema rejects empty
+    from the step text (action-result heuristic). The update schema rejects empty
     expectedResults, so this is mandatory.
 
 Reads QA Touch token + domain from the environment / .env
@@ -111,7 +111,7 @@ def split_steps(merged: str) -> list[str]:
 def derive_intermediate_expected(step_text: str) -> str:
     """Produce a non-empty, generic-but-coherent expected for an intermediate step.
 
-    The API schema forbids empty expectedResults. We synthesize a short result
+    The update schema forbids empty expectedResults. We synthesize a short result
     that mirrors the step's verb so each row reads sensibly in the UI.
     """
     s = step_text.lower()

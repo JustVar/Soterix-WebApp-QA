@@ -100,11 +100,8 @@ config/verification_status.json
 # Point-in-time UI audit snapshots (kept in backups, not in git)
 config/audit_reports/
 
-# Per-developer AI/agent tool configs and prompts (never committed).
-# Shared engineering conventions belong in AGENTS.md, which IS tracked.
-.notes/
+# Per-developer editor/tool configs (never committed)
 .cursor/
-.github/copilot-instructions.md
-NOTES.md
-STARTUP_PROMPT.md
-docs/STARTUP_PROMPT.md
+
+# Maintainer-local working notes (not part of the shared repo)
+docs/local/

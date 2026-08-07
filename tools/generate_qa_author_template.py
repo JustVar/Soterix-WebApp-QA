@@ -23,7 +23,7 @@ sitedevice_authored.xlsx, ldap_authored.xlsx, etc.). At conversion time,
 canonical CSV slugs the QA Touch import wizard expects (including
 routing ``Description`` -> ``test_description`` to side-step the vendor's
 silently-dropped ``description`` slot - see
-``docs/qa_touch_integration.md`` §7.A.1). The converter also accepts a
+``docs/local/qa_touch_integration.md`` §7.A.1). The converter also accepts a
 wider set of header aliases per ``docs/qa_xlsx_import_template.md`` so
 legacy authoring files still convert.
 
@@ -87,7 +87,7 @@ OUTPUT_PATH = ROOT / "tools" / "templates" / "qa_author_template.xlsx"
 # routes the QA-friendly "Description" column to the CSV's
 # `test_description` slot, which is the one the QA Touch UI shows as
 # Description). See docs/qa_xlsx_import_template.md for the alias table
-# and docs/qa_touch_integration.md §7.A.1/§7.A.2 for the wizard internals.
+# and docs/local/qa_touch_integration.md §7.A.1/§7.A.2 for the wizard internals.
 CANONICAL_COLUMNS = [
     "Module_name",        # use ` > ` for module nesting
     "Test Case Title",
