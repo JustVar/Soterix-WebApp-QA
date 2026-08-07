@@ -9,13 +9,11 @@ environments:
     allow_delete: true
     boxes:
       us:
-        user_key: TEST_AUTO_QA
-        email: test-auto-qa@soterixsystems.com
-        default_site_id: 110
+        email_env: QA_US_USER
+        password_env: QA_US_PASSWORD
       india:
-        user_key: JUSTIN
-        email: qa@soterixsystems.com
-        default_site_id: TBD
+        email_env: QA_INDIA_USER
+        password_env: QA_INDIA_PASSWORD
 
   staging:
     base_url: https://staging.example.invalid

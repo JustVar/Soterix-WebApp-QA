@@ -136,7 +136,7 @@ def main_cli():
 
     parser = argparse.ArgumentParser(description='Review queue report generator')
     parser.add_argument('--generate-report', action='store_true')
-    parser.add_argument('--email-to', default='qa@soterixsystems.com')
+    parser.add_argument('--email-to', default=os.environ.get('EMAIL_TO', ''))
     args = parser.parse_args()
 
     queue = load_queue()

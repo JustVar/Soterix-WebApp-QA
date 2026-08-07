@@ -38,7 +38,7 @@ from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DEFAULT_SRC = Path(r"C:\Users\JustinVarughese\Downloads\C2C_OTA_Test_Cases_Refined.xlsx")
+DEFAULT_SRC = Path(r"C:\path\to\downloads\C2C_OTA_Test_Cases_Refined.xlsx")
 DEFAULT_OUT = REPO / "tests" / "data" / "c2c_ota_test_cases.csv"
 
 OUT_COLUMNS = [

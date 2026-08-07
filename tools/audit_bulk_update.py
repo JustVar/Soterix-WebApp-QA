@@ -14,9 +14,9 @@ if sys.stdout.encoding != "utf-8":
 
 import openpyxl
 
-BULK_UPDATE = Path(r"C:\Users\JustinVarughese\Downloads\QATouch_BulkUpdate_Steps.xlsx")
-QT_EXPORT = Path(r"C:\Users\JustinVarughese\Downloads\TestCases_06-03-26-15_23_43.xlsx\TestCases_06-03-26-15_23_43.xlsx")
-EXCEL_IMPORT = Path(r"C:\Users\JustinVarughese\Downloads\Soterix_Testcases (1).xlsx")
+BULK_UPDATE = Path(r"C:\path\to\downloads\QATouch_BulkUpdate_Steps.xlsx")
+QT_EXPORT = Path(r"C:\path\to\downloads\TestCases_06-03-26-15_23_43.xlsx\TestCases_06-03-26-15_23_43.xlsx")
+EXCEL_IMPORT = Path(r"C:\path\to\downloads\Soterix_Testcases (1).xlsx")
 
 COLS = {"scenario": 0, "acceptance": 9, "steps": 10}
 COLS_OFFSET = {k: v + 1 for k, v in COLS.items()}

@@ -105,3 +105,8 @@ config/audit_reports/
 
 # Maintainer-local working notes (not part of the shared repo)
 docs/local/
+
+# Generated audit and snapshot output (contains captured account data)
+config/qatouch_snapshots/
+config/audit_reports/
+tools/audit_reports/

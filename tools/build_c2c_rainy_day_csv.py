@@ -26,7 +26,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DEFAULT_SRC = Path(r"C:\Users\JustinVarughese\Soterix\c2c_rainy_day_tests_v2.csv")
+DEFAULT_SRC = Path(r"C:\path\to\Soterix\c2c_rainy_day_tests_v2.csv")
 DEFAULT_OUT = REPO / "tests" / "data" / "c2c_rainy_day_test_cases.csv"
 
 OUT_COLUMNS = [

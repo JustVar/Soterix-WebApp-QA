@@ -31,7 +31,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-REPO_ROOT = Path("c:/Users/JustinVarughese/Soterix/qa/playwright-soterix-qa")
+REPO_ROOT = Path("c:/path/to/Soterix-WebApp-QA")
 MASTER_JSON = REPO_ROOT / "config" / "master_test_repository.json"
 AUDIT_DIR = REPO_ROOT / "tools" / "audit_reports"
 TODAY = date.today().strftime("%Y%m%d")

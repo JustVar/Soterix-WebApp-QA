@@ -54,14 +54,15 @@ Each environment can have multiple "boxes" (regional deployments) with different
 ### Current .env Variables
 ```bash
 # QA Environment
-QA_LAB_PASSWORD=your_password_here      # For qa@soterixsystems.com (US box)
-JUSTIN_PASSWORD=your_password_here       # For justin.varughese@ (India box)
+QA_INDIA_USER=your_email@soterixsystems.com   # india box account
+QA_INDIA_PASSWORD=your_password_here
 
 # Staging Environment
-JUSTIN_STAGE_PASSWORD=your_password_here
+STAGE_USER=your_email@soterixsystems.com
+STAGE_PASSWORD=your_password_here
 
 # Production Environment (read-only access)
-JUSTIN_PROD_PASSWORD=your_password_here
+HARDWARE_LAB_PASSWORD=your_password_here   # shared QA production box
 ```
 
 ### Adding a New Team Member
@@ -118,7 +119,7 @@ QA_ENGINEER_A_PASSWORD=your_password_here
 ```
 
     You should see output like:
-{'email': 'qa@soterixsystems.com', 'password': 'your_password', 'site_id': None}
+{'email': 'your_email@soterixsystems.com', 'password': 'your_password', 'site_id': None}
 
 4. Run a quick test to verify everything works:
 ```powershell
@@ -126,7 +127,7 @@ QA_ENGINEER_A_PASSWORD=your_password_here
 ```
 
     Expected output:
-[SITE DISCOVERY] Found 1 site(s) for user qa@soterixsystems.com
+[SITE DISCOVERY] Found 1 site(s) for user your_email@soterixsystems.com
 - Driver Site (Site ID: 110, Enterprise ID: 132)
 PASSED
 
@@ -146,7 +147,7 @@ The framework **automatically discovers** your Site ID and Enterprise ID after l
 **You don't need to configure Site IDs manually!**
 
 Example auto-discovery output:
-[SITE DISCOVERY] Found 1 site(s) for user qa@soterixsystems.com
+[SITE DISCOVERY] Found 1 site(s) for user your_email@soterixsystems.com
 
 Driver Site (Site ID: 110, Enterprise ID: 132)
 
@@ -158,7 +159,7 @@ If you need to test a specific site (not your default), you can set it in the co
 "boxes": {
      "us": {
           "user_key": "QA_LAB",
-          "email": "qa@soterixsystems.com",
+          "email": "your_email@soterixsystems.com",
           "password_env": "QA_LAB_PASSWORD",
           "default_site_id": 110,  # Optional: override auto-discovery
      },
@@ -216,10 +217,10 @@ $env:ENV="qa"; $env:BOX="us"
 
 | Variable | Environment | Account |
 |----------|-------------|---------|
-| `QA_LAB_PASSWORD` | QA | qa@soterixsystems.com |
-| `JUSTIN_PASSWORD` | QA | justin.varughese@ (India box) |
-| `JUSTIN_STAGE_PASSWORD` | Staging | justin.varughese@ |
-| `JUSTIN_PROD_PASSWORD` | Production | justin.varughese@ |
+| `QA_INDIA_USER` / `QA_INDIA_PASSWORD` | QA | your own account (india box) |
+| `QA_US_USER` / `QA_US_PASSWORD` | QA | your own account (us box) |
+| `STAGE_USER` / `STAGE_PASSWORD` | Staging | your own account |
+| `HARDWARE_LAB_PASSWORD` | Production | hardware-lab@soterixsystems.com (shared) |
 
 ---
 
@@ -330,6 +331,6 @@ The framework retries ReCAPTCHA up to 3 times. If it still fails:
 
 ## Getting Help
 
-- **US Team:** Contact Justin Varughese or check 1Password
+- Check 1Password for shared account credentials.
 - **India Team:** Contact your US team lead for credential assistance
 - **Technical Issues:** Create a Jira ticket or ask in #qa-automation Slack channel

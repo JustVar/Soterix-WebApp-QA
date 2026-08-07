@@ -10,7 +10,7 @@ Migrated from Selenium:
 
 Known limitations:
 - Vehicle search: Driver Site has no vehicle detections. Needs
-  justin.varughese@soterix account with a different site for data.
+  an account with a different site for data.
 - Play result: QA env video streams use MediaSource (duration=Infinity).
   Occasionally a clip stream fails to load (stays at readyState=0).
   Play tests use @flaky(reruns=1) to handle transient stream failures.

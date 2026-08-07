@@ -13,23 +13,23 @@ config = {
     "test_camera_name": "main gate",
 
     # Box configurations
+    # Box configurations. Each box names the environment variables that hold
+    # the account to use, so every tester signs in as themselves.
     "boxes": {
-        "us": {
-            "user_key": "TEST_AUTO_QA",
-            "email": "test-auto-qa@soterixsystems.com",
-            "password_env": "TEST_AUTO_QA_PASSWORD",
+        "india": {
+            "email_env": "QA_INDIA_USER",
+            "password_env": "QA_INDIA_PASSWORD",
             "default_site_id": None,
         },
-        "india": {
-            "user_key": "JUSTIN",
-            "email": "qa@soterixsystems.com",
-            "password_env": "JUSTIN_PASSWORD",
+        "us": {
+            "email_env": "QA_US_USER",
+            "password_env": "QA_US_PASSWORD",
             "default_site_id": None,
         },
     },
 
     # Default box if not specified
-    "default_box": "us",
+    "default_box": "india",
 }
 
 # Helper to get active box config
@@ -43,10 +43,17 @@ def get_box_config(box_name=None):
 
 # Helper to get credentials for active box
 def get_credentials(box_name=None):
+    """Credentials for a box.
+
+    A box gives either a literal `email` (shared accounts) or an `email_env`
+    naming the variable that holds it (per-tester accounts).
+    """
     box_config = get_box_config(box_name)
+    email = box_config.get("email") or os.environ.get(
+        box_config.get("email_env", ""), "")
     password = os.environ.get(box_config["password_env"], "")
     return {
-        "email": box_config["email"],
+        "email": email,
         "password": password,
         "site_id": box_config["default_site_id"],
     }

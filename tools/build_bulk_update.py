@@ -16,9 +16,9 @@ if sys.stdout.encoding != "utf-8":
 import openpyxl
 
 REPO = Path(__file__).resolve().parent.parent
-QT_EXPORT = Path(r"C:\Users\JustinVarughese\Downloads\TestCases_06-03-26-15_23_43.xlsx\TestCases_06-03-26-15_23_43.xlsx")
-EXCEL_IMPORT = Path(r"C:\Users\JustinVarughese\Downloads\Soterix_Testcases (1).xlsx")
-OUTPUT = Path(r"C:\Users\JustinVarughese\Downloads\QATouch_BulkUpdate_Steps.xlsx")
+QT_EXPORT = Path(r"C:\path\to\downloads\TestCases_06-03-26-15_23_43.xlsx\TestCases_06-03-26-15_23_43.xlsx")
+EXCEL_IMPORT = Path(r"C:\path\to\downloads\Soterix_Testcases (1).xlsx")
+OUTPUT = Path(r"C:\path\to\downloads\QATouch_BulkUpdate_Steps.xlsx")
 PLAYWRIGHT_STEPS = REPO / "config" / "playwright_generated_steps.json"
 
 # Standard column indices for original Excel

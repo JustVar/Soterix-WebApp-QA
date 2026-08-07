@@ -31,7 +31,7 @@ REPO = Path(__file__).resolve().parent.parent
 SNAPSHOT_PATH = REPO / "config" / "qatouch_snapshots" / "snapshot_2026-02-20.json"
 MANUAL_STEPS_DIR = REPO / "tests" / "steps" / "manual"
 CHECKPOINT_PATH = REPO / "config" / "step_sync_checkpoint.json"
-DEFAULT_EXCEL = Path(r"C:\Users\JustinVarughese\Downloads\Soterix_Testcases (1).xlsx")
+DEFAULT_EXCEL = Path(r"C:\path\to\downloads\Soterix_Testcases (1).xlsx")
 
 # Standard column order (0-indexed) for most sheets
 COLS = {

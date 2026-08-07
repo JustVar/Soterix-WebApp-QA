@@ -20,7 +20,9 @@ import tools.email_client as email_client
 
 
 def main():
-    to = os.environ.get('EMAIL_TO') or 'qa@soterixsystems.com'
+    to = os.environ.get('EMAIL_TO')
+    if not to:
+        raise SystemExit('Set EMAIL_TO in .env to run this check.')
     subject = 'QA Automation - OAuth Email Test'
     body = '<html><body><h3>QA Automation OAuth Email Test</h3><p>If you received this, OAuth email works.</p></body></html>'
     try:

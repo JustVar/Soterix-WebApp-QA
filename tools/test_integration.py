@@ -733,7 +733,7 @@ the native Jira integration. Refer to:
 PRE-REQUISITES
 ------------------------------------------------------------
 [ ] Jira admin account credentials available
-[ ] QA Touch admin access (Justin - Admin role)
+[ ] QA Touch admin access (Admin role)
 [ ] NC project exists in Jira (key: NC)
 
 ------------------------------------------------------------
