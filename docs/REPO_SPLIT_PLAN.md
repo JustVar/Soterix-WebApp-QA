@@ -231,10 +231,10 @@ One commit, fully revertable, on the current repo:
 
 | Item | Repo | Notes |
 |---|---|---|
-| Fix `test_event_search_returns_results_or_empty` | API | Payload doesn't match `VSearchEventRequest` (jobId/offset/limit) - needs the two-step job flow |
+| Fix `test_event_search_returns_results_or_empty` | API | Done 08/08/2026: rewritten to the two-step job flow (submit a search for a jobId, then page its events); the suite is fully green |
 | Integration-API test build-out | API | Blocked on `VSAAS_INTEGRATION_KEY` being issued |
-| Verify prod login (`hardware-lab@`) | API | Blocked on `HARDWARE_LAB_PASSWORD` in `.env`; box config already in `config/env/prod.py` |
-| Plugins swallow pytest's final summary line | both | Reporter/verification plugin bug; hides pass/fail totals |
-| Route `login_data` through the box system | both | Two credential mechanisms exist; flat `QA_USER`/`QA_PASSWORD` wins today |
+| Verify prod login (`hardware-lab@`) | API | Done 08/08/2026: login verified against `app.example.invalid`, token validates |
+| Plugins swallow pytest's final summary line | both | Closed 08/08/2026: not a plugin bug. `pytest.ini` already passes `-q`; a second `-q` on the command line hides the totals. A stale field in the reporter summary was fixed along the way |
+| Route `login_data` through the box system | both | Done 08/08/2026: `BOX=<name>` selects the box account; `QA_USER`/`QA_PASSWORD` stays the default. Also fixed a stage-default and a silent-fallback bug in the box lookup |
 | Add CI (GitHub Actions) | API first | No CI exists anywhere yet; API repo is the cheap place to start (no browser install) |
 | `/REST/sso/login` contract unknown | API | Curiosity, not blocking |
