@@ -111,7 +111,7 @@ fresh start means the API repo carries none of the webapp repo's weight.
    verify `gh auth status` account can create in the org **before** starting)
 2. `git init`, single initial commit, `git remote add origin
    https://github.com/Soterix-Systems/Soterix-API-QA.git`, push `main`.
-3. Set the repo description: *"Soterix API - QA · API test automation (internal +
+3. Set the repo description: *"Soterix API - QA - API test automation (internal +
    integration APIs)"*.
 
 **Gate:** the remote shows the pushed SHA; a teammate-visible README renders.
@@ -153,7 +153,7 @@ One commit, fully revertable, on the current repo:
 2. Update local remotes explicitly (GitHub redirects old URLs, but don't rely
    on redirects - half-renamed states hide breakage):
    `git remote set-url origin https://github.com/Soterix-Systems/Soterix-WebApp-QA.git`
-3. Set description: *"Soterix WebApp - QA · UI automation + manual test cases"*.
+3. Set description: *"Soterix WebApp - QA - UI automation + manual test cases"*.
 4. `git push origin` - verify.
 
 **Gate:** `git ls-remote` succeeds against both NEW urls; push works.

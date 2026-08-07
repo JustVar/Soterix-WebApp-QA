@@ -159,8 +159,8 @@ UNICODE_FIXES = {
     " ": " ",     # nbsp
     "'": "'",     # left single quote
     "'": "'",     # right single quote
-    "“": '"',     # left double quote
-    "”": '"',     # right double quote
+    """: '"',     # left double quote
+    """: '"',     # right double quote
 }
 
 

@@ -49,7 +49,7 @@ def _ascii(s: str) -> str:
     repl = {
         "-": " - ", "-": " - ",  # em/en dash
         "'": "'", "'": "'",        # smart single quotes
-        "“": '"', "”": '"',        # smart double quotes
+        """: '"', """: '"',        # smart double quotes
         "...": "...", "�": "-",       # ellipsis, replacement char
         " ": " ",                         # nbsp
     }
