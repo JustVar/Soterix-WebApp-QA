@@ -32,7 +32,11 @@ config = {
 # Helper to get active box config
 def get_box_config(box_name=None):
     box = box_name or os.environ.get("BOX", config["default_box"])
-    return config["boxes"].get(box, config["boxes"][config["default_box"]])
+    if box not in config["boxes"]:
+        raise KeyError(
+            f"Unknown box '{box}' for this environment. "
+            f"Valid boxes: {sorted(config['boxes'])}")
+    return config["boxes"][box]
 
 # Helper to get credentials for active box
 def get_credentials(box_name=None):

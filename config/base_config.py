@@ -85,7 +85,7 @@ def is_delete_allowed():
 
 def _get_env_module():
     """Get the loaded environment module."""
-    env = (os.environ.get("ENV") or "stage").strip().lower()
+    env = (os.environ.get("ENV") or "qa").strip().lower()
     app_type = (os.environ.get("APP_TYPE") or "customer").strip().lower()
     module_path = ENV_ALIAS.get(env)
     if app_type == "partner":

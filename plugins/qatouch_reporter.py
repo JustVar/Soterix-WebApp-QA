@@ -554,7 +554,6 @@ class QATouchReporter:
         terminalreporter.write_sep('=', 'QA Touch Result Upload')
         terminalreporter.write_line(f'  Run key:    {self.run_key}')
         terminalreporter.write_line(f'  Project:    {self.project_key}')
-        terminalreporter.write_line(f'  Mode:       {self.mode}')
         path_used = getattr(self, '_upload_path_used', '(none)')
         terminalreporter.write_line(f'  Upload path: {path_used}')
         terminalreporter.write_line(

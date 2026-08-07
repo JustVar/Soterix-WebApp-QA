@@ -107,16 +107,36 @@ def base_url(env_config):
 
 @pytest.fixture(scope="session")
 def login_data():
+    """Active account credentials.
+
+    Two sources, checked in this order:
+    1. If the BOX env var is set, use that box's account from config/env/
+       (for example BOX=india on ENV=qa). The box names the password variable
+       to read from .env.
+    2. Otherwise read QA_USER and QA_PASSWORD from .env. This is the default
+       and matches how the team runs the suite today.
     """
-    Credentials source (per-user): read from environment variables `QA_USER` and `QA_PASSWORD`.
-    This fixture requires these to be set (e.g., via a `.env` file).
-    """
+    expected_landing = os.environ.get("EXPECTED_LANDING", "/dashboard")
+
+    box = os.environ.get("BOX")
+    if box:
+        from config.base_config import get_credentials
+        creds = get_credentials()
+        if not creds.get("email") or not creds.get("password"):
+            raise ValueError(
+                f"BOX='{box}' is set but its credentials are incomplete. The "
+                f"box's password variable is empty or missing in .env; see the "
+                f"password_env key for this box in config/env/.")
+        logging.info(f"[CREDENTIALS] Using box '{box}' account from env config")
+        return {"username": creds["email"], "password": creds["password"],
+                "expected_landing": expected_landing}
+
     user = os.environ.get("QA_USER")
     password = os.environ.get("QA_PASSWORD")
     if not user or not password:
         raise ValueError("QA_USER and QA_PASSWORD must be set in environment or .env file. See .env.template")
-    logging.info("[TENANT CONFIG] Using QA_USER from environment")
-    return {"username": user, "password": password, "expected_landing": os.environ.get("EXPECTED_LANDING", "/dashboard")}
+    logging.info("[CREDENTIALS] Using QA_USER from environment")
+    return {"username": user, "password": password, "expected_landing": expected_landing}
 
 @pytest.fixture
 def login(page, env_config, login_data):
