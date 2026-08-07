@@ -102,7 +102,7 @@ Run full test suite and email report:
 export SEND_TEST_REPORT=1
 export REPORT_RECIPIENT=person@example.com
 
-cd /path/to/playwright-soterix-qa
+cd /path/to/Soterix-WebApp-QA
 pytest tests/ui/ -m smoke
 # Report automatically sent after tests complete
 ```

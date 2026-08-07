@@ -63,7 +63,7 @@ Append an entry to `qa/doc_registry.yaml`:
 - doc_id: QA-API-PLT-01
   section: I. API
   area: Platform APIs (session, dashboard, widgets, camera tree)
-  path: tests/api/smoke/test_platform_apis.py
+  path: tests/smoke/test_platform_apis.py   # lives in the Soterix-API-QA repo
   owner: JV
   deployment: After FT
   status: active
@@ -123,7 +123,7 @@ Run locally: `python qa/check_doc_ids.py` (warn-only) or `python qa/check_doc_id
 
 | Section | Type prefix | Where tests live | Notes |
 |---|---|---|---|
-| I. API | `QA-API-*` | `tests/api/smoke/` | One Doc # per `test_*_apis.py` file |
+| I. API | `QA-API-*` | `tests/smoke/` in Soterix-API-QA | One Doc # per `test_*_apis.py` file |
 | II. Simulation | `QA-SIM-*` | `tests/simulation/` (mix of automated + manual) | Manual ones live as runbooks in `qa/runbooks/<doc_id>.md` |
 | III. Planned | `QA-PLN-*` | path = (to be created) until built | Keep in registry with `status: planned` |
 | Ref. UI E2E | `QA-REF-UI-*` | `tests/ui/<area>/` | Feature coverage - not part of main automation rollup but tracked for completeness |

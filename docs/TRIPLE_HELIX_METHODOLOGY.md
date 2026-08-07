@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Triple-Helix Testing Methodology provides a systematic approach to QA for AI-powered Video Surveillance as a Service (VSAAS) platforms. It intertwines three testing strands that must work together for comprehensive quality assurance.
+The Triple-Helix Testing Methodology is a QA approach for AI-powered Video Surveillance as a Service (VSAAS) platforms. It combines three testing strands that must work together.
 
 ## Current Status
 

@@ -169,7 +169,7 @@ Tests may opt into the `step_capture` fixture to mark logical steps (one `.mark(
 1. **JSON sidecars** under `tests/steps/` define the step text + expected outcomes per test.
 2. **`--verify-mode`** captures per-step screenshots into `verification_output/screenshots/` for asynchronous QA review - only for tests that request the fixture.
 
-Convention details + examples in `AGENTS.md` under "Step Capture Convention".
+Convention details + examples live in the step registry docstrings (`tests/steps/step_registry.py`).
 
 ## Markers (62 defined in `pytest.ini`)
 
@@ -217,7 +217,7 @@ The Playwright/pytest-aware rule set is the headline difference from a generic r
 
 ## More Documentation
 
-- `AGENTS.md` - engineering conventions, page-object patterns, step-capture rules, marker definitions
+- `docs/STYLE.md` - writing style for docs, comments, and commit messages
 - `docs/CREDENTIALS_SETUP.md` - credential configuration walkthrough
 - `MAINTENANCE_REMINDERS.md` - OAuth expirations, recurring tasks
 - `docs/SESSION_CACHING_IMPLEMENTATION.md` - auth state cache details

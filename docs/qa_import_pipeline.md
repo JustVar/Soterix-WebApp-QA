@@ -103,7 +103,7 @@ variants via alias-resolution, so legacy sheets work without re-authoring.
     `qa_xlsx_import_template.md` for column meanings, accepted aliases, and
     dos/don'ts.
 
-1c. QA commits the xlsx to `playwright-soterix-qa` and notifies Ops.
+1c. QA commits the xlsx to `Soterix-WebApp-QA` and notifies Ops.
 
 **Verify:** the file is present at `tests/data/<release>_<module>_authored.xlsx`
 on the operator's checkout.

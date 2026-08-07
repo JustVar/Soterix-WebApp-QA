@@ -35,7 +35,7 @@ Each environment can have multiple "boxes" (regional deployments) with different
 
 1. Navigate to the project root folder:
 ```powershell
-    cd C:\Users\YourName\QA-Automation\playwright-soterix-qa
+    cd C:\Users\YourName\QA-Automation\Soterix-WebApp-QA
 ```
 
 2. Copy the template file:
@@ -104,7 +104,7 @@ QA_ENGINEER_A_PASSWORD=your_password_here
 
 1. Open PowerShell and navigate to the project:
 ```powershell
-    cd C:\Users\YourName\QA-Automation\playwright-soterix-qa
+    cd C:\Users\YourName\QA-Automation\Soterix-WebApp-QA
 ```
 
 2. Activate the virtual environment:
