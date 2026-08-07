@@ -194,8 +194,6 @@ One commit, fully revertable, on the current repo:
 - Existing clones of the old name keep working via GitHub redirect; teammates
   should still run `git remote set-url` at their convenience.
 - **Credential rotation is now a two-repo action** - rotate in both `.env`s.
-  Still pending from 2026-08-05: rotate `TEST_AUTO_QA_PASSWORD` and
-  `JUSTIN_PROD_PASSWORD` (exposed in a debugging session).
 
 ---
 

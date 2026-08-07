@@ -276,14 +276,14 @@ The `step_verdicts` array is only present when `--step-review` was used. The `ex
   "verified": {
     "tests/ui/views/...::test_export_clip": {
       "session_id": "VS-0005",
-      "verified_by": "Justin",
+      "verified_by": "reviewer_name",
       "verified_at": "2026-03-15T12:00:00Z"
     }
   },
   "rejected": {
     "tests/ui/views/...::test_drag_camera": {
       "session_id": "VS-0005",
-      "rejected_by": "Justin",
+      "rejected_by": "reviewer_name",
       "reject_reason": "Step 3 opens wrong panel",
       "step_verdicts": [
         {"step": 1, "verdict": "ok"},
