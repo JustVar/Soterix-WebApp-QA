@@ -9,7 +9,6 @@ paramiko
 scp
 pytest-rerunfailures
 jira
-jsonschema
 lxml
 msal
 msgraph-core

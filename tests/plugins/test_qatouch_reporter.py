@@ -5,7 +5,7 @@ plugin's pure-Python resolution logic so the Phase 2 hygiene patches
 (RUN_RESULTS_PATH, per-test project marker, API fallback wiring) don't
 regress silently.
 
-Living under tests/api/smoke/ to be picked up by the default discovery without
+Living under tests/plugins/ to be picked up by the default discovery without
 needing to add a new test root or update pytest collection config. The tests
 do not require playwright, network, or QA Touch credentials.
 """
@@ -20,7 +20,7 @@ import pytest
 
 # Ensure the repo root is importable so `plugins.qatouch_reporter` resolves
 # the same way pytest itself loads it during a real run.
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 

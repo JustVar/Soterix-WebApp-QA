@@ -60,7 +60,7 @@ See `.env.template` for the complete list with examples.
 ## Running Tests
 
 ```powershell
-pytest tests/api/smoke/ -v                 # API smoke tests
+# API smoke tests moved to the Soterix-API-QA repo
 pytest -m smoke                            # by marker
 pytest -m "admin and not slow"             # combined markers
 pytest tests/ui/login/test_login_valid.py -v --headed
@@ -98,10 +98,8 @@ tests/
 │   ├── admin/ (incl. LPR)   chats/   c2c/   events/   insights/
 │   ├── licenses/   login/   maps/    media/   notifications/
 │   ├── search/   sequences/   views/
-├── api/smoke/             # 11 files, 47 API smoke tests
 ├── shared/
 │   ├── pages/             # 17 Page Object Models
-│   ├── api_clients/       # 9 API client helpers (extend BaseAPIClient)
 │   ├── helpers/           # Role helper
 │   └── schemas/           # JSON schemas for API response validation
 ├── steps/                 # JSON sidecars defining per-step verification text

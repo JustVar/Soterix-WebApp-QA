@@ -1,8 +1,7 @@
 # Repo Split & Rename Plan
 
-**Status: PLANNED - not yet executed.**
-Drafted 2026-08-07. Execute top to bottom; each phase has a gate that must pass
-before the next phase starts.
+**Status: EXECUTED 2026-08-07.** Kept as the record of what moved and why.
+The API suite now lives at https://github.com/Soterix-Systems/Soterix-API-QA.
 
 ## Decisions (locked)
 

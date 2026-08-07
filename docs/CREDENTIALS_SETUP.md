@@ -122,7 +122,7 @@ QA_ENGINEER_A_PASSWORD=your_password_here
 
 4. Run a quick test to verify everything works:
 ```powershell
-    pytest tests/api/smoke/test_user_apis.py::test_auto_discover_site_and_enterprise -v -s
+    # moved: run from the Soterix-API-QA repo -> pytest tests/smoke/test_user_apis.py::test_auto_discover_site_and_enterprise -v -s
 ```
 
     Expected output:
@@ -180,22 +180,22 @@ Enterprise ID used for -> Roles, Permissions, User Management APIs
 
 ### QA Environment (Default)
 ```powershell
-pytest tests/api/smoke/ -v
+pytest tests/smoke/ -v   # run from the Soterix-API-QA repo
 ```
 
 ### QA Environment - Different Box
 ```powershell
-$env:BOX="india"; pytest tests/api/smoke/ -v
+$env:BOX="india"; pytest tests/smoke/ -v   # run from the Soterix-API-QA repo
 ```
 
 ### Staging Environment
 ```powershell
-$env:ENV="staging"; pytest tests/api/smoke/ -v
+$env:ENV="staging"; pytest tests/smoke/ -v   # run from the Soterix-API-QA repo
 ```
 
 ### Production Environment (Read-Only Tests)
 ```powershell
-$env:ENV="prod"; pytest tests/api/smoke/ -v
+$env:ENV="prod"; pytest tests/smoke/ -v   # run from the Soterix-API-QA repo
 ```
 
 ### Reset to Default
