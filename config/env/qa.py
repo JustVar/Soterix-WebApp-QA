@@ -9,7 +9,7 @@ config = {
     "allow_delete": True,
 
     # Test Data Configuration
-    "test_site_name": "Newtown ActionArea",
+    "test_site_name": "Newtown Action Area",
     "test_camera_name": "main gate",
 
     # Box configurations
