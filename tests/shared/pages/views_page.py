@@ -126,13 +126,32 @@ class ViewsPage:
         # Find the camera thumbnail by its visible name
         camera = self.page.locator(f".cameraThumbnailWrapper:has-text('{camera_name}')").first
 
-        # Hover to reveal the checkbox; the click auto-waits for it to show
+        # Hover to reveal the checkbox. The reveal is flaky (React listens
+        # on a parent the pointer sometimes misses), so retry once with a
+        # pointer jiggle instead of letting the click hang its full timeout.
         camera.hover()
         checkbox = camera.locator(".sidebar-custom-checkbox")
-        checkbox.click()
+        try:
+            checkbox.wait_for(state="visible", timeout=5000)
+        except Exception:
+            self.page.mouse.move(0, 0)
+            camera.hover()
+            checkbox.wait_for(state="visible", timeout=10000)
 
-        # Wait briefly for the tile/UI to update
-        self.page.wait_for_timeout(500)
+        # Adding a camera consumes an empty tile - wait for that instead of
+        # sleeping, so a save that follows cannot race the add. Logged (not
+        # raised) on timeout: callers assert the outcome themselves and a
+        # camera-add that renders without consuming a tile should not fail
+        # here, but a silent swallow would hide the race this wait exists
+        # to close.
+        before_tiles = self.drag_drop_tiles.count()
+        checkbox.click()
+        if before_tiles > 0:
+            try:
+                expect(self.drag_drop_tiles).not_to_have_count(before_tiles, timeout=10000)
+            except AssertionError:
+                print("[VIEWS] Camera checkbox clicked but no tile was "
+                      f"consumed within 10s (still {before_tiles} empty)")
 
     def add_first_camera_via_checkbox(self, camera_name: str = None):
         """Select a camera by revealing its checkbox and clicking it.
@@ -176,13 +195,32 @@ class ViewsPage:
             print(f"DEBUG add_first_camera_via_checkbox: Camera '{camera_name}' not found, using first camera")
             camera = self.page.locator(".cameraThumbnailWrapper").first
 
-        # Hover to reveal the checkbox; the click auto-waits for it to show
+        # Hover to reveal the checkbox. The reveal is flaky (React listens
+        # on a parent the pointer sometimes misses), so retry once with a
+        # pointer jiggle instead of letting the click hang its full timeout.
         camera.hover()
         checkbox = camera.locator(".sidebar-custom-checkbox")
-        checkbox.click()
+        try:
+            checkbox.wait_for(state="visible", timeout=5000)
+        except Exception:
+            self.page.mouse.move(0, 0)
+            camera.hover()
+            checkbox.wait_for(state="visible", timeout=10000)
 
-        # Wait briefly for the tile/UI to update
-        self.page.wait_for_timeout(500)
+        # Adding a camera consumes an empty tile - wait for that instead of
+        # sleeping, so a save that follows cannot race the add. Logged (not
+        # raised) on timeout: callers assert the outcome themselves and a
+        # camera-add that renders without consuming a tile should not fail
+        # here, but a silent swallow would hide the race this wait exists
+        # to close.
+        before_tiles = self.drag_drop_tiles.count()
+        checkbox.click()
+        if before_tiles > 0:
+            try:
+                expect(self.drag_drop_tiles).not_to_have_count(before_tiles, timeout=10000)
+            except AssertionError:
+                print("[VIEWS] Camera checkbox clicked but no tile was "
+                      f"consumed within 10s (still {before_tiles} empty)")
 
     def open_my_views(self):
         """Click the My Views button to open saved views panel."""
@@ -556,6 +594,34 @@ class ViewsPage:
         """
         if site_name:
             site = self.page.locator(f"text={site_name}").first
+            try:
+                site.wait_for(state="visible", timeout=15000)
+            except Exception:
+                # Tenant data drift guard: the shared QA tenant renames sites
+                # under the tests (a 2026-08-07 rename broke every site-
+                # selecting test). Fail fast with the names that ARE there
+                # so the fix is one config edit, not an hour of triage.
+                visible = self.page.evaluate(
+                    """() => {
+                        const els = document.querySelectorAll(
+                            "[role='treeitem'], [class*='panel'] p, [class*='camera'] p, button"
+                        );
+                        const out = [];
+                        for (const el of els) {
+                            const t = (el.innerText || '').trim().split('\\n')[0];
+                            if (t && t.length <= 60 && el.offsetWidth > 0 && !out.includes(t)) {
+                                out.push(t);
+                            }
+                        }
+                        return out.slice(0, 20);
+                    }"""
+                )
+                raise RuntimeError(
+                    f"The configured site '{site_name}' is not in the site "
+                    f"picker. Entries on screen: {visible}. The tenant may "
+                    f"have renamed the site. Update test_site_name in "
+                    f"config/env/ to match the picker."
+                ) from None
             site.click()
         else:
             # Check if "All Cameras" is already visible - site already expanded
@@ -618,7 +684,7 @@ class ViewsPage:
                 return {clicked: null, candidates: found.slice(0, 15)};
             }""", list(known_labels))
             print(f"DEBUG click_site JS result: {result}")
-            self.page.wait_for_timeout(500)
+            self.page.wait_for_timeout(500)  # JS click bypasses waits; no signal
             return result
 
     def click_all_cameras(self):
@@ -674,12 +740,18 @@ class ViewsPage:
         if self._appears(all_cameras, timeout=5000):
             print(f"DEBUG expand_site_and_show_cameras: Clicking 'All Cameras'")
             self.click_all_cameras()
+            # A click that lands during a tree re-render is silently dropped
+            # (measured in trace: click dispatched, no thumbnails loaded).
+            # Retry once if no thumbnails appear.
+            if not self._appears(self.camera_thumbnails, timeout=8000):
+                print(f"DEBUG expand_site_and_show_cameras: Retrying 'All Cameras' click")
+                self.click_all_cameras()
+                self._appears(self.camera_thumbnails, timeout=10000)
         else:
             print(f"DEBUG expand_site_and_show_cameras: 'All Cameras' not visible")
+            # Some tenants show thumbnails without an All Cameras node
+            self._appears(self.camera_thumbnails, timeout=8000)
 
-        # Wait for thumbnails to render; tolerate none appearing (site layout
-        # varies by tenant)
-        self._appears(self.camera_thumbnails, timeout=15000)
         camera_count = self.camera_thumbnails.count()
         print(f"DEBUG expand_site_and_show_cameras: Final result - {camera_count} cameras visible")
 

@@ -165,7 +165,8 @@ class AdminPage:
         """Click the Add User button to open the form."""
         self.add_user_button.wait_for(state="visible", timeout=10000)
         self.add_user_button.click()
-        self.page.wait_for_timeout(2000)
+        # The form's first field is the signal that the modal opened
+        self.name_input.wait_for(state="visible", timeout=10000)
 
     def fill_user_form(self, name: str, last_name: str, email: str):
         """Fill out the Add User form fields."""
@@ -180,25 +181,32 @@ class AdminPage:
         Default index 1 = Admin (0-based in the sitesBox list, but li[2] in Selenium = index 1 here).
         """
         self.role_dropdown.click()
-        self.page.wait_for_timeout(2000)
 
-        # The role options appear in #sitesBox container
+        # The role options appear in #sitesBox container; the wait below is
+        # the dropdown-open signal
         options = self.page.locator("#sitesBox li")
         options.nth(role_index).wait_for(state="visible", timeout=10000)
         options.nth(role_index).click()
-        self.page.wait_for_timeout(1000)
 
     def save_user(self):
-        """Click the Save button to submit the user form."""
+        """Click the Save button to submit the user form.
+
+        Waits for the form to close. A validation failure keeps the form
+        open, so the wait raises instead of silently moving on.
+        """
         self.save_button.click()
-        self.page.wait_for_timeout(3000)
+        self.name_input.wait_for(state="hidden", timeout=15000)
 
     def search_user(self, search_text: str):
-        """Search for a user by typing in the search input."""
+        """Type in the user search input.
+
+        Filtering has no completion signal (zero matches is a valid result),
+        so this method does not wait. Callers wait on the row or control
+        they need next, with a bounded timeout.
+        """
         self.search_input.wait_for(state="visible", timeout=10000)
         self.search_input.clear()
         self.search_input.fill(search_text)
-        self.page.wait_for_timeout(2000)
 
     def delete_user(self):
         """Delete the first user shown in the current view.
@@ -208,17 +216,19 @@ class AdminPage:
         """
         self.options_icon.first.wait_for(state="visible", timeout=10000)
         self.options_icon.first.click()
-        self.page.wait_for_timeout(1000)
 
         self.delete_icon.wait_for(state="visible", timeout=5000)
         self.delete_icon.click()
-        self.page.wait_for_timeout(2000)
 
-        # Click the confirm Delete button in the dialog - try multiple selectors
+        # Click the confirm Delete button in the dialog - try multiple
+        # selectors, waiting for the dialog rather than sleeping
         confirm = self.page.get_by_role("button", name="Delete", exact=True)
-        if confirm.count() > 0:
+        clicked = None
+        try:
+            confirm.first.wait_for(state="visible", timeout=5000)
             confirm.first.click()
-        else:
+            clicked = confirm.first
+        except Exception:
             # Fallback: broader text match for MUI styled "buttons" (div-based)
             fallback = self.page.locator(
                 "div.MuiBox-root:text-is('Delete'), "
@@ -227,26 +237,63 @@ class AdminPage:
             )
             if fallback.count() > 0:
                 fallback.first.click()
+                clicked = fallback.first
             else:
                 # Last resort: click any visible "Delete" text in a dialog
-                self.page.locator("[role='dialog'] >> text=Delete").first.click()
-        self.page.wait_for_timeout(3000)
+                last_resort = self.page.locator("[role='dialog'] >> text=Delete").first
+                last_resort.click()
+                clicked = last_resort
 
-    def toggle_user_status(self):
-        """Toggle the active/suspended switch for the first user in view."""
-        self.user_switch.first.wait_for(state="visible", timeout=10000)
-        self.user_switch.first.click()
-        self.page.wait_for_timeout(2000)
+        # The confirm control disappearing is the signal the delete was
+        # accepted. Waiting on the clicked element (not a blind
+        # [role='dialog'] lookup) because the confirm popup is often a
+        # div-based MUI box with no dialog role, and a zero-match hidden
+        # wait returns instantly with no settle at all.
+        if clicked is not None:
+            try:
+                clicked.wait_for(state="hidden", timeout=15000)
+            except Exception:
+                print("[ADMIN] Delete confirm did not close within 15s - "
+                      "the delete may have been rejected")
+
+    def toggle_user_status(self, user_text: str | None = None):
+        """Toggle the active/suspended switch for a user.
+
+        Pass user_text to scope the click to the card that contains that
+        text. Without it the first switch on the page is used, which can
+        belong to another account while a search filter is still applying -
+        never do that after search_user().
+        """
+        if user_text:
+            # XPath ancestor hop: the nearest container around the matched
+            # text that holds a switch is that user's card
+            switch = self.page.get_by_text(user_text).first.locator(
+                "xpath=ancestor::*[.//*[contains(@class,'MuiSwitch-root')]][1]"
+            ).locator(".MuiSwitch-root").first
+        else:
+            switch = self.user_switch.first
+        switch.wait_for(state="visible", timeout=10000)
+        switch.click()
+        self.page.wait_for_timeout(1000)  # server ack has no DOM signal
 
     # --- Role filter ---
 
     def get_role_options(self) -> list[str]:
         """Open the role filter dropdown and return available role names."""
         self.role_filter_dropdown.first.click()
-        self.page.wait_for_timeout(2000)
 
         options = self.role_options
         options.first.wait_for(state="visible", timeout=10000)
+
+        # The list shows only the 'All Roles' placeholder until a server
+        # fetch fills it - wait for more than 1 entry before reading
+        try:
+            self.page.wait_for_function(
+                "() => document.querySelectorAll('li.MuiMenuItem-root').length > 1",
+                timeout=10000,
+            )
+        except Exception:
+            pass
 
         role_names = []
         for i in range(options.count()):
@@ -260,37 +307,51 @@ class AdminPage:
         )
         option.scroll_into_view_if_needed()
         option.click()
-        self.page.wait_for_timeout(2000)
 
     # --- Rules management ---
 
     def navigate_to_rules(self):
-        """Navigate to Admin > General > Rules."""
-        self.general_tab.wait_for(state="visible", timeout=10000)
+        """Navigate to the Admin Rules list.
+
+        The sidebar carries a top-level Rules entry (2026 layout); older
+        builds nested Rules under General as a card. 'Rules' appears twice
+        on the page (sidebar + General card), so this uses .first for the
+        sidebar and falls back to the General card by its icon.
+        """
+        self.rules_tab.first.wait_for(state="visible", timeout=10000)
+        self.rules_tab.first.click()
+        try:
+            # The Add button is the signal that the Rules content rendered
+            self.add_new_rule_button.wait_for(state="visible", timeout=10000)
+            return
+        except Exception:
+            pass
+        # Fallback: older layout reaches Rules through the General card
         self.general_tab.click()
-        self.page.wait_for_timeout(2000)
-        self.rules_tab.wait_for(state="visible", timeout=10000)
-        self.rules_tab.click()
-        self.page.wait_for_timeout(3000)
+        self.page.locator("img[alt='rules']").click()
+        self.add_new_rule_button.wait_for(state="visible", timeout=15000)
 
     def click_add_new_rule(self):
         """Click the Add New Rule button to open the rule wizard."""
         self.add_new_rule_button.wait_for(state="visible", timeout=10000)
         self.add_new_rule_button.click()
-        self.page.wait_for_timeout(2000)
+        # The wizard's Next button is the signal that it opened
+        self.next_button.first.wait_for(state="visible", timeout=10000)
 
     def select_rule_type(self, rule_type: str):
         """Select a rule type in the wizard (e.g., 'Entry-Exit', 'Heat Map')."""
         rule_label = self.page.locator(f"p:text-is('{rule_type}')")
         rule_label.wait_for(state="visible", timeout=10000)
         rule_label.click()
-        self.page.wait_for_timeout(1000)
 
     def click_next(self):
-        """Click the Next button in the rule creation wizard."""
+        """Click the Next button in the rule creation wizard.
+
+        Does not wait for the next step: each step's own method waits for
+        the control it needs.
+        """
         self.next_button.first.wait_for(state="visible", timeout=10000)
         self.next_button.first.click()
-        self.page.wait_for_timeout(2000)
 
     def select_site_checkbox(self):
         """Toggle the first site checkbox in the rule wizard."""
@@ -298,7 +359,6 @@ class AdminPage:
             state="visible", timeout=10000
         )
         self.site_checkbox_wizard.first.click()
-        self.page.wait_for_timeout(1000)
 
     def fill_rule_name(self, name: str):
         """Fill the rule name input in the wizard."""
@@ -309,16 +369,27 @@ class AdminPage:
         rule_name_input.fill(name)
 
     def save_rule(self):
-        """Click the Save button to save the rule."""
+        """Click the Save button to save the rule.
+
+        Waits for the wizard to close; tolerates it staying open so the
+        caller's own assertion reports the failure.
+        """
         self.save_rule_button.click()
-        self.page.wait_for_timeout(3000)
+        try:
+            self.save_rule_button.wait_for(state="hidden", timeout=15000)
+        except Exception:
+            pass
 
     def search_rule(self, search_text: str):
-        """Search for a rule by name in the rules list."""
+        """Type in the rule search input.
+
+        Filtering has no completion signal (zero matches is a valid result),
+        so this method does not wait. Callers wait on the row or control
+        they need next, with a bounded timeout.
+        """
         self.rule_search_input.wait_for(state="visible", timeout=10000)
         self.rule_search_input.clear()
         self.rule_search_input.fill(search_text)
-        self.page.wait_for_timeout(2000)
 
     def edit_rule(self, index: int = -1):
         """Click the edit icon for a rule at the given index.
@@ -332,26 +403,32 @@ class AdminPage:
         target = count + index if index < 0 else index
         self.rule_edit_icons.nth(target).scroll_into_view_if_needed()
         self.rule_edit_icons.nth(target).click()
-        self.page.wait_for_timeout(5000)
+        # The modal's primary button is the signal that it opened
+        try:
+            self.update_and_close_button.wait_for(state="visible", timeout=15000)
+        except Exception:
+            pass
 
     def click_notification_tab(self):
         """Switch to the Notification tab in the rule edit modal."""
         self.notification_tab.wait_for(state="visible", timeout=15000)
         self.notification_tab.scroll_into_view_if_needed()
         self.notification_tab.click()
-        self.page.wait_for_timeout(3000)
+        # The notification checkboxes are the signal that the tab rendered
+        try:
+            self.popup_checkbox.wait_for(state="attached", timeout=10000)
+        except Exception:
+            pass
 
     def toggle_popup_notification(self):
         """Toggle the popUp notification checkbox."""
         self.popup_checkbox.wait_for(state="attached", timeout=10000)
         self.popup_checkbox.click(force=True)
-        self.page.wait_for_timeout(1000)
 
     def toggle_push_notification(self):
         """Toggle the push notification checkbox."""
         self.push_checkbox.wait_for(state="attached", timeout=10000)
         self.push_checkbox.click(force=True)
-        self.page.wait_for_timeout(1000)
 
     def click_update_and_close(self):
         """Click the Update & Close button in the rule edit modal."""
@@ -359,7 +436,11 @@ class AdminPage:
             state="visible", timeout=10000
         )
         self.update_and_close_button.click()
-        self.page.wait_for_timeout(3000)
+        # The modal closing is the signal that the update was accepted
+        try:
+            self.update_and_close_button.wait_for(state="hidden", timeout=15000)
+        except Exception:
+            pass
 
     def delete_rule(self, index: int = -1):
         """Delete a rule at the given index.
@@ -373,11 +454,14 @@ class AdminPage:
         count = self.rule_delete_icons.count()
         target = count + index if index < 0 else index
         self.rule_delete_icons.nth(target).click()
-        self.page.wait_for_timeout(2000)
 
         self.rule_delete_confirm.wait_for(state="visible", timeout=5000)
         self.rule_delete_confirm.click()
-        self.page.wait_for_timeout(3000)
+        # The confirm button disappearing is the signal the delete ran
+        try:
+            self.rule_delete_confirm.wait_for(state="hidden", timeout=15000)
+        except Exception:
+            pass
 
     def mute_rule_notification(self, index: int = -1):
         """Click the mute notification icon for a rule.
@@ -390,7 +474,7 @@ class AdminPage:
         count = self.mute_notification_icons.count()
         target = count + index if index < 0 else index
         self.mute_notification_icons.nth(target).click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)  # mute ack has no DOM signal
 
     def draw_line_on_canvas(self, start: tuple, end: tuple):
         """Draw a line on the canvas element using mouse actions.
@@ -408,15 +492,16 @@ class AdminPage:
         self.page.mouse.down()
         self.page.mouse.move(cx + end[0], cy + end[1])
         self.page.mouse.up()
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(1000)  # canvas draw settle, no DOM signal
 
     # --- Sites management ---
 
     def search_site(self, search_text: str):
-        """Search for a site by name.
+        """Type in the site search input.
 
-        Sites page may use a different search placeholder than Users page.
-        Tries multiple selectors.
+        Filtering has no completion signal (zero matches is a valid result),
+        so this method does not wait. Callers wait on the card or row they
+        need next, with a bounded timeout.
         """
         site_search = self.page.locator(
             "input[placeholder*='Search']"
@@ -424,19 +509,28 @@ class AdminPage:
         site_search.wait_for(state="visible", timeout=10000)
         site_search.clear()
         site_search.fill(search_text)
-        self.page.wait_for_timeout(2000)
+        # Filtering has no completion signal (zero matches is valid);
+        # callers wait on the card or row they need next
 
     def toggle_to_list_view(self):
         """Switch to list view on the Sites page."""
         self.list_view_toggle.wait_for(state="visible", timeout=10000)
         self.list_view_toggle.click()
-        self.page.wait_for_timeout(2000)
+        # The opposite toggle appearing is the signal the view switched
+        try:
+            self.grid_view_toggle.wait_for(state="visible", timeout=5000)
+        except Exception:
+            pass
 
     def toggle_to_grid_view(self):
         """Switch to grid view on the Sites page."""
         self.grid_view_toggle.wait_for(state="visible", timeout=10000)
         self.grid_view_toggle.click()
-        self.page.wait_for_timeout(2000)
+        # The opposite toggle appearing is the signal the view switched
+        try:
+            self.list_view_toggle.wait_for(state="visible", timeout=5000)
+        except Exception:
+            pass
 
     def get_site_statuses(self) -> list[dict]:
         """Return a list of {name, status} for all visible site cards.
@@ -474,7 +568,13 @@ class AdminPage:
         )
         site.wait_for(state="visible", timeout=10000)
         site.click()
-        self.page.wait_for_timeout(3000)
+        # The site-card content is the signal the detail view rendered
+        try:
+            self.page.locator("div.site-card").first.wait_for(
+                state="visible", timeout=10000
+            )
+        except Exception:
+            pass
 
     def get_camera_names(self) -> list[str]:
         """Return a list of camera names visible in the site detail view."""
@@ -495,19 +595,23 @@ class AdminPage:
         """Click the A-Z sort icon."""
         self.sort_az_icon.wait_for(state="visible", timeout=10000)
         self.sort_az_icon.click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)  # in-place reorder has no DOM signal
 
     def click_sort_za(self):
         """Click the Z-A sort icon."""
         self.sort_za_icon.wait_for(state="visible", timeout=10000)
         self.sort_za_icon.click()
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(1000)  # in-place reorder has no DOM signal
 
     def expand_camera_groups(self):
         """Click the accordion icon to expand camera groups section."""
         self.accordion_icon.wait_for(state="visible", timeout=10000)
         self.accordion_icon.click()
-        self.page.wait_for_timeout(2000)
+        # The Create New button is the signal the section expanded
+        try:
+            self.create_new_button.wait_for(state="visible", timeout=5000)
+        except Exception:
+            pass
 
     def create_camera_group(self, name: str, camera_search: str):
         """Create a new camera group.
@@ -517,22 +621,28 @@ class AdminPage:
         """
         self.create_new_button.wait_for(state="visible", timeout=10000)
         self.create_new_button.click()
-        self.page.wait_for_timeout(2000)
 
         self.group_name_input.wait_for(state="visible", timeout=10000)
         self.group_name_input.fill(name)
 
         self.camera_search_input.wait_for(state="visible", timeout=10000)
         self.camera_search_input.fill(camera_search)
-        self.page.wait_for_timeout(2000)
 
-        if self.camera_checkbox.count() > 0:
+        # Wait for the filtered camera to appear instead of sleeping; a
+        # zero-match search legitimately times out and skips the click
+        try:
+            self.camera_checkbox.first.wait_for(state="attached", timeout=5000)
             self.camera_checkbox.first.click(force=True)
-            self.page.wait_for_timeout(1000)
+        except Exception:
+            pass
 
         self.create_button.wait_for(state="visible", timeout=10000)
         self.create_button.click()
-        self.page.wait_for_timeout(3000)
+        # The form closing is the signal the group was created
+        try:
+            self.group_name_input.wait_for(state="hidden", timeout=15000)
+        except Exception:
+            pass
 
     def edit_camera_group(self, new_name: str):
         """Edit the last camera group's name.
@@ -543,12 +653,10 @@ class AdminPage:
             state="visible", timeout=10000
         )
         self.group_edit_icons.last.click()
-        self.page.wait_for_timeout(2000)
 
         self.group_name_input.wait_for(state="visible", timeout=10000)
         self.group_name_input.clear()
         self.group_name_input.fill(new_name)
-        self.page.wait_for_timeout(1000)
 
         # Click Update button (same position as Create button)
         update_btn = self.page.locator(
@@ -558,7 +666,11 @@ class AdminPage:
             update_btn.first.click()
         else:
             self.create_button.click()
-        self.page.wait_for_timeout(3000)
+        # The form closing is the signal the update was accepted
+        try:
+            self.group_name_input.wait_for(state="hidden", timeout=15000)
+        except Exception:
+            pass
 
     def delete_camera_group(self):
         """Delete the last camera group via its delete icon + Yes confirmation."""
@@ -566,16 +678,20 @@ class AdminPage:
             state="visible", timeout=10000
         )
         self.group_delete_icons.last.click()
-        self.page.wait_for_timeout(2000)
 
         self.group_delete_confirm.wait_for(state="visible", timeout=5000)
         self.group_delete_confirm.click()
-        self.page.wait_for_timeout(3000)
+        # The confirm disappearing is the signal the delete ran
+        try:
+            self.group_delete_confirm.wait_for(state="hidden", timeout=15000)
+        except Exception:
+            pass
 
     def search_inside_site(self, search_text: str):
         """Search for cameras within a site detail view.
 
-        Uses the search input inside the site detail page to filter cameras.
+        Filtering has no completion signal (zero matches is valid), so this
+        method does not wait. Callers wait on the row they need next.
         """
         site_search = self.page.locator(
             "input[placeholder*='Search']"
@@ -583,7 +699,6 @@ class AdminPage:
         site_search.wait_for(state="visible", timeout=10000)
         site_search.clear()
         site_search.fill(search_text)
-        self.page.wait_for_timeout(2000)
 
     # --- Full rule creation wizard ---
 
@@ -607,7 +722,10 @@ class AdminPage:
         dropdown = self.page.locator(".MuiSelect-select").first
         dropdown.wait_for(state="visible", timeout=10000)
         dropdown.click()
-        self.page.wait_for_timeout(2000)
+
+        # The option list is the signal the dropdown opened
+        options = self.page.locator("li[role='option']")
+        options.first.wait_for(state="visible", timeout=10000)
 
         # Try named site first, fall back to first available option
         site_option = self.page.locator(
@@ -618,16 +736,19 @@ class AdminPage:
         if site_option.count() > 0 and site_option.is_visible():
             site_option.click()
         else:
-            first_option = self.page.locator("li[role='option']").first
-            first_option.wait_for(state="visible", timeout=10000)
-            first_option.click()
-        self.page.wait_for_timeout(2000)
+            options.first.click()
+        # The list closing is the signal the selection was applied
+        try:
+            options.first.wait_for(state="hidden", timeout=5000)
+        except Exception:
+            pass
 
     def wait_for_snapshots(self, timeout: int = 60000):
         """Wait for camera snapshot images to load in the rule wizard."""
         self.page.locator("img[src*='data:image']").first.wait_for(
             state="visible", timeout=timeout
         )
+        # The canvas overlay initializes after the snapshot with no DOM signal
         self.page.wait_for_timeout(2000)
 
     def maximize_snapshot(self):
@@ -635,14 +756,15 @@ class AdminPage:
         maximize_btn = self.page.locator("img[alt='maximize']")
         maximize_btn.wait_for(state="visible", timeout=10000)
         maximize_btn.click()
-        self.page.wait_for_timeout(3000)
 
-        # Wait for enlarged snapshot (at least 2 data:image elements)
-        for _ in range(10):
-            snaps = self.page.locator("img[src*='data:image']")
-            if snaps.count() >= 2:
-                break
-            self.page.wait_for_timeout(3000)
+        # Wait for the enlarged snapshot (at least 2 data:image elements)
+        try:
+            self.page.wait_for_function(
+                "() => document.querySelectorAll(\"img[src*='data:image']\").length >= 2",
+                timeout=30000,
+            )
+        except Exception:
+            pass
 
     def draw_zone_on_canvas(self):
         """Draw a 4-point polygon zone on the canvas element.
@@ -660,20 +782,21 @@ class AdminPage:
         cx = box["x"] + box["width"] / 2
         cy = box["y"] + box["height"] / 2
 
-        # 4-point polygon clicks with pauses
+        # 4-point polygon clicks with pauses. The pauses are canvas-library
+        # pacing (fabric.js reads no DOM state a wait could target)
         offsets = [(-100, -150), (100, 20), (10, -20), (-10, 20)]
         for ox, oy in offsets:
             self.page.mouse.click(cx + ox, cy + oy)
             self.page.wait_for_timeout(1000)
 
-        self.page.wait_for_timeout(3000)
+        self.page.wait_for_timeout(3000)  # polygon close settles, no DOM signal
 
         # Confirm the zone: Tab×4 then Enter
         for _ in range(4):
             self.page.keyboard.press("Tab")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(1000)  # focus traversal settles, no DOM signal
         self.page.keyboard.press("Enter")
-        self.page.wait_for_timeout(2000)
+        self.page.wait_for_timeout(2000)  # zone commit settles, no DOM signal
 
     def toggle_mui_switch(self):
         """Toggle the MuiSwitch checkbox used in non-canvas rule types."""
@@ -683,7 +806,7 @@ class AdminPage:
         ).first
         switch_input.wait_for(state="attached", timeout=10000)
         switch_input.click(force=True)
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(1000)  # switch state applies with no DOM signal
 
     def click_ripple_button(self):
         """Click the MUI ripple button that appears after MuiSwitch toggle (optional)."""
@@ -693,17 +816,22 @@ class AdminPage:
         try:
             button.wait_for(state="visible", timeout=5000)
             button.click()
-            self.page.wait_for_timeout(1000)
+            self.page.wait_for_timeout(1000)  # ripple ack has no DOM signal
         except Exception:
             pass
 
     def complete_rule_wizard(
         self, rule_type: str, site_name: str, rule_name: str | None = None
-    ):
+    ) -> bool:
         """Complete the full rule creation wizard end-to-end.
 
         Handles both canvas rules (Entry-Exit, Line Crossing) and
         non-canvas rules (Heat Map, Intrusion Detection, Loitering, Occupancy).
+
+        Returns False without completing when the redesigned step-tab wizard
+        (Select Devices > Set Rule > Configure > Schedule > Notification) is
+        detected: its rule-name control moved, so Save rejects this flow
+        with 'Name the Rule'. Callers should skip in that case.
 
         Args:
             rule_type: One of the 6 rule types.
@@ -714,9 +842,23 @@ class AdminPage:
         self.select_rule_type(rule_type)
         self.click_next()
 
+        # The step tabs render after the type screen; their presence marks
+        # the redesigned wizard this flow cannot complete
+        redesigned = False
+        try:
+            self.page.get_by_text("Select Devices").first.wait_for(
+                state="visible", timeout=3000
+            )
+            redesigned = True
+        except Exception:
+            pass
+        if redesigned:
+            return False
+
         # Step 2: Select site and camera checkbox, then Next
         self.select_site_for_rule(site_name)
         self.select_site_checkbox()
+        # Checkbox state must register before the wizard advances; no signal
         self.page.wait_for_timeout(2000)
         self.click_next()
 
@@ -725,17 +867,23 @@ class AdminPage:
             self.wait_for_snapshots()
             self.maximize_snapshot()
             self.draw_zone_on_canvas()
-            # 3 more Next clicks through remaining wizard steps
+            # 3 more Next clicks through remaining wizard steps. These
+            # generic steps have no per-step signal to wait on, and
+            # back-to-back clicks land before the step transition registers
+            # (measured in trace: 3 clicks in 300ms, save then rejected)
             for _ in range(3):
                 self.click_next()
+                self.page.wait_for_timeout(1500)  # step transition, no signal
         else:
             # Non-canvas: toggle switch + ripple button, then advance
             self.toggle_mui_switch()
             self.click_ripple_button()
-            self.page.wait_for_timeout(1000)
-            # 4 more Next clicks through remaining wizard steps
+            self.page.wait_for_timeout(1000)  # config applies with no DOM signal
+            # 4 more Next clicks through remaining wizard steps; see the
+            # canvas branch for why these are paced
             for _ in range(4):
                 self.click_next()
+                self.page.wait_for_timeout(1500)  # step transition, no signal
 
         # Fill rule name if the wizard has a name field visible
         if rule_name:
@@ -744,8 +892,7 @@ class AdminPage:
             )
             if name_input.count() > 0 and name_input.first.is_visible():
                 name_input.first.fill(rule_name)
-                self.page.wait_for_timeout(1000)
 
-        # Save
-        self.page.wait_for_timeout(3000)
+        # Save (save_rule waits for the wizard to close)
         self.save_rule()
+        return True

@@ -20,11 +20,22 @@ class TestAdminUsers:
                 self.admin.navigate_to_admin()
                 self.admin.navigate_to_users()
                 self.admin.search_user(search_text)
-                self.page.wait_for_timeout(2000)
-                if self.admin.options_icon.count() > 0:
+                if self._user_row_appears():
                     self.admin.delete_user()
             except Exception as e:
                 print(f"Cleanup: failed to delete user '{search_text}': {e}")
+
+    def _user_row_appears(self, timeout: int = 5000) -> bool:
+        """Wait for a filtered user row; False when the search has no match.
+
+        search_user() does not wait (zero matches is a valid filter result),
+        so callers use this bounded wait instead of a sleep + count check.
+        """
+        try:
+            self.admin.options_icon.first.wait_for(state="visible", timeout=timeout)
+            return True
+        except Exception:
+            return False
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -60,8 +71,8 @@ class TestAdminUsers:
         self.admin.select_role(role_index=1)  # Admin role
         self.admin.save_user()
 
-        # Verify save completed (form should close or success indicator)
-        self.page.wait_for_timeout(2000)
+        # save_user waits for the form to close; assert it explicitly
+        expect(self.admin.name_input).to_be_hidden()
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -72,9 +83,8 @@ class TestAdminUsers:
         self.admin.navigate_to_users()
 
         self.admin.search_user("Admin")
-        self.page.wait_for_timeout(2000)
 
-        # Search input should have the entered text
+        # Search input should have the entered text (retries until settled)
         expect(self.admin.search_input).to_have_value("Admin")
 
     @pytest.mark.ui
@@ -85,18 +95,21 @@ class TestAdminUsers:
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 
-        # Search for a user to toggle
+        # Search for a user to toggle. The filtered row appearing is the
+        # filter-applied signal - never touch the first switch on the page
+        # before that, it can belong to another account.
         self.admin.search_user("AutoTest")
-        self.page.wait_for_timeout(2000)
-
-        if self.admin.user_switch.count() == 0:
+        try:
+            self.page.get_by_text("AutoTest").first.wait_for(
+                state="visible", timeout=5000
+            )
+        except Exception:
             pytest.skip("No users found with switch toggle")
 
-        self.admin.toggle_user_status()
+        self.admin.toggle_user_status("AutoTest")
 
         # Toggle back to restore original state
-        self.page.wait_for_timeout(1000)
-        self.admin.toggle_user_status()
+        self.admin.toggle_user_status("AutoTest")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -108,15 +121,22 @@ class TestAdminUsers:
 
         roles = self.admin.get_role_options()
 
-        expected_roles = ["Admin", "Operator", "Supervisor", "Enterprise Super Admin"]
+        # Only the built-in roles are stable. The tenant's role list is
+        # user-editable, and 'Enterprise Super Admin' was renamed away by
+        # 2026-08-07 (the list held 'Temp ESA' plus many custom roles), so
+        # asserting on optional roles tests tenant data, not the product.
+        expected_roles = ["Admin", "Operator", "Supervisor"]
         for expected in expected_roles:
             assert any(expected in role for role in roles), (
                 f"Expected role '{expected}' not found in {roles}"
             )
 
-        # Close dropdown by pressing Escape
+        # Close dropdown by pressing Escape; wait for it to close
         self.page.keyboard.press("Escape")
-        self.page.wait_for_timeout(500)
+        try:
+            self.admin.role_options.first.wait_for(state="hidden", timeout=3000)
+        except Exception:
+            pass
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -126,16 +146,13 @@ class TestAdminUsers:
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 
-        # Open dropdown and select Admin
+        # Open dropdown; the option list appearing is the open signal
         self.admin.role_filter_dropdown.first.click()
-        self.page.wait_for_timeout(2000)
+        self.admin.role_options.first.wait_for(state="visible", timeout=10000)
         self.admin.select_role_filter("Admin")
 
-        # Verify the dropdown shows the selected role
-        dropdown_text = self.admin.role_filter_dropdown.first.inner_text()
-        assert "Admin" in dropdown_text, (
-            f"Expected 'Admin' in dropdown text, got '{dropdown_text}'"
-        )
+        # Verify the dropdown shows the selected role (retries until applied)
+        expect(self.admin.role_filter_dropdown.first).to_contain_text("Admin")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -145,11 +162,9 @@ class TestAdminUsers:
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 
-        # Search for test user
+        # Search for test user; wait for the row before deciding
         self.admin.search_user("AutoTest")
-        self.page.wait_for_timeout(2000)
-
-        if self.admin.options_icon.count() == 0:
+        if not self._user_row_appears():
             pytest.skip("No test users found to delete")
 
         try:
