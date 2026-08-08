@@ -1,33 +1,38 @@
 # QA Touch Integration Guide
 
-> **Last Updated:** 2026-02-10
+> **Last Updated:** 2026-08-07 (counts checked against the live API)
 
 ## Current State
 
 | Metric | Value |
 |--------|-------|
-| **Total test cases in QA Touch** | 2,874 |
-| **Imported from spreadsheet (v4)** | 2,868 |
-| **Preserved (Audio)** | 6 |
-| **Unique modules** | 468 |
-| **Playwright tests mapped** | 132/152 (87%) |
-| **Import status** | Complete (v4, 02/10/2026) |
+| **Total test cases in QA Touch (NexaiQ-Core)** | 3,108 (live count 08/07/2026; cases are added continuously) |
+| **Imported from spreadsheet (v4, 02/10/2026)** | 2,868 (+6 preserved Audio) |
+| **Playwright tests mapped** | 378 mappings across 352 tests (see `config/qatouch_case_mapping.json`) |
+| **Import status** | Complete (v4, 02/10/2026); later cases added directly in QA Touch |
+
+The module count is not verifiable over the API (the modules count endpoint
+returns 404), so this table no longer claims one.
 
 ## Result Upload Pipeline (Built)
 
 ### Automated (pytest plugin)
 ```bash
 # Run tests with automatic QA Touch upload
-pytest tests/ --qatouch-upload --qatouch-run <RUN_KEY> --json-report --json-report-file=report.json
+pytest tests/ --qatouch-upload --qatouch-run <RUN_KEY>
 ```
+
+To also write a JSON report for the manual path, install pytest-json-report
+first (it is in requirements_legacy.txt, not the active requirements) and add
+`--json-report --json-report-file=report.json`.
 
 ### Manual (from JSON report)
 ```bash
-# Upload results from a saved JSON report
-python tools/qatouch_run_manager.py upload --run <RUN_KEY> --file report.json
+# Upload results from a saved JSON report (positional args)
+python tools/qatouch_run_manager.py upload <RUN_KEY> report.json
 
-# Dry-run (preview without uploading)
-python tools/qatouch_run_manager.py upload --run <RUN_KEY> --file report.json --dry-run
+# Preview without uploading
+python tools/qatouch_run_manager.py dry-run report.json
 ```
 
 ### List test runs
@@ -40,7 +45,7 @@ python tools/qatouch_run_manager.py list
 | Tool | Location | Purpose |
 |------|----------|---------|
 | **QA Touch client** | `tools/qatouch_client.py` | API client with list/get/update endpoints + status constants |
-| **Case mapper** | `tools/qatouch_mapper.py` | Builds `config/qatouch_case_mapping.json` (132/152 = 87% mapped) |
+| **Case mapper** | `tools/qatouch_mapper.py` | Builds `config/qatouch_case_mapping.json` (378 mappings) |
 | **pytest reporter** | `plugins/qatouch_reporter.py` | Plugin: `--qatouch-upload --qatouch-run <KEY>` |
 | **Run manager** | `tools/qatouch_run_manager.py` | List runs, upload from JSON report, dry-run mode |
 | **AUTOMATED tags** | `tools/qatouch_automated_tags.csv` | 78 cases tagged for bulk import |
@@ -48,7 +53,9 @@ python tools/qatouch_run_manager.py list
 
 ## Workflow
 
-1. **Create test run** in QA Touch UI (API not supported for run creation)
+1. **Create test run** in the QA Touch UI, or over the API:
+   `python tools/qatouch_run_manager.py create-by-tag <NAME> <USER_KEY> <MILESTONE_KEY> <TAG>`
+   (also `clone`, `milestone`, `release`; run the tool without args for usage)
 2. **Run tests** with `pytest --qatouch-upload --qatouch-run <KEY>` or run separately and upload JSON
 3. **Results auto-uploaded** to the specified test run with pass/fail/skip status
 
@@ -61,12 +68,16 @@ python tools/qatouch_run_manager.py list
 
 ## QA Touch Projects
 
+Live list as of 08/07/2026 (`P0BK` was renamed from NexaiQ-Private Cloud):
+
 | Project | Key | Jira Project |
 |---------|-----|--------------|
 | NexaiQ-Core | JlW1 | NC |
-| NexaiQ-Private Cloud | P0BK | TBD |
+| NexaiQ-Neurosen | P0BK | TBD |
 | NexaiQ-Technician App | 60w8 | TBD |
 | NexaiQ-Partner Admin Tool | 70l1 | TBD |
+| NexiaQ-Mobile | K5kB | TBD |
+| NexaiQ-Camera 2 Cloud | 60W5 | TBD |
 
 ## Environment Variables
 
@@ -91,8 +102,6 @@ QATOUCH_PROJECT_ID=JlW1
 
 ## Next Steps
 
-- Re-run `python tools/qatouch_mapper.py` to rebuild case mapping after v4 import
 - Tag test cases with REGRESSION (~500-700) for release testing
 - Set up test execution plans and run creation workflows
 - See `docs/NC_JIRA_QA_REFERENCE.md` for Jira field mappings
-- QA Touch import complete (2,969 cases) - see `config/qatouch_case_mapping.json` for automation mappings
