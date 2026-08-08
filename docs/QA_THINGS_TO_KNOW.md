@@ -245,9 +245,10 @@ turns ReCAPTCHA off outside production.
   vars in the config. See [CREDENTIALS_SETUP.md](CREDENTIALS_SETUP.md).
 - Test data bindings (`test_site_name`, `test_camera_name`) live in the env
   config. The shared QA tenant drifts: on 2026-08-07 a site rename broke
-  every site-selecting test. If a selector that used to work times out,
-  check the tenant before the test code. The failure trace shows the
-  current names.
+  every site-selecting test. When the configured site is missing,
+  `ViewsPage.click_site` now fails fast and lists the entries actually on
+  screen, so the error itself names the fix. For other selectors, the
+  failure trace shows the current names.
 - Environment variables persist in a terminal session. Reset `ENV` and `BOX`
   explicitly when you switch.
 

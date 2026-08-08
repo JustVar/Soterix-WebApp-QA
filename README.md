@@ -96,10 +96,13 @@ shared tenant data and hardware suites set limits. Read
 ```powershell
 # Captures per-step screenshots into verification_output/screenshots/
 pytest --headed --slowmo 300 --verify-mode -k "test_export_clip"
-
-# Interactive: pauses after each step for QA to approve/flag/quit
-pytest --headed --slowmo 300 --verify-mode --step-review -k "test_export_clip"
 ```
+
+> **Known gap (2026-08-07):** the interactive `--step-review` flag is
+> documented in `docs/VERIFICATION_WORKFLOW.md` but is missing from the
+> code - no plugin registers it. It was built on 03/15/2026 and appears to
+> have been lost in the July branch reconciliation. Recovery is tracked on
+> the roadmap; until then only `--verify-mode` works.
 
 ## Project Structure
 

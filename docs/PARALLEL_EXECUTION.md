@@ -34,6 +34,12 @@ use `-n auto` yet. See the open risks below.
   `destructive` or `mutating` with `-n`. These touch real cameras.
 - **Load.** Each worker is a full Chrome instance. Video-heavy suites
   multiply CPU and bandwidth per worker.
+- **Opt-in plugins stay serial.** The QA Touch reporter
+  (`--qatouch-upload`) batches uploads per pytest session, so each xdist
+  worker would upload its own batch - untested; run uploads without `-n`.
+  Verification mode (`--verify-mode`) is interactive and makes no sense
+  parallel. Both plugins are off by default and register nothing when off,
+  so plain parallel runs are unaffected.
 
 ## Experiment log
 
@@ -54,5 +60,16 @@ Result: 16 passed, 1 error, in 183 s.
   run, so no per-worker cache existed) and the DNS failure burned its
   timeouts. Expect real speedup only on longer suites with warm caches.
 
-Next step before wider rollout: repeat with 2 workers on 4-6 read-mostly
-files, then try 3-4 workers. Watch for session kicks and login rate limits.
+### 2026-08-07 (later): 3 workers, loadfile, same account
+
+Command: `pytest tests/ui/views/test_views_basic.py
+tests/ui/admin/test_admin_general.py tests/ui/views/test_views_subtabs.py
+-n 3 --dist loadfile`
+
+Result: 27 passed, 0 failed. Three concurrent sessions on one account, no
+session kicks, no login failures. This includes the subtabs suite with
+drags and video tiles, so moderate per-worker load is fine on this machine.
+
+Next step before wider rollout: 4 workers across more modules, and a
+decision on the default `-n` for regression runs. Watch for session kicks
+and login rate limits at higher counts.

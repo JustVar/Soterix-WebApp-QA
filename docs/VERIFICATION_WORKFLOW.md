@@ -1,5 +1,12 @@
 # QA Test Verification Workflow
 
+> **Known gap (2026-08-07):** the interactive `--step-review` flag described
+> below is missing from the code - no plugin registers it (repo-wide search
+> confirms). It was built on 03/15/2026 and appears to have been lost in the
+> July branch reconciliation. Recovery is tracked on the roadmap. Until
+> then, only `--verify-mode` (screenshot capture) works; the step-review
+> prompts do not.
+
 ## What Is This?
 
 Every automated test goes through a verification process before it becomes part of the official test suite. A QA tester watches the test run step-by-step, confirms each step does what it's supposed to, and either approves or rejects it.
