@@ -2,6 +2,7 @@
 import importlib
 import logging
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Dict
@@ -173,20 +174,70 @@ def tenant_login(login_data):
 
 AUTH_STATE_FILE = ".auth_state.json"
 
+TRACE_DIR = Path("reports") / "artifacts"
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Stash each phase's report on the item so fixtures can see the outcome.
+
+    Fixtures tear down after the test finishes, so `request.node.rep_call`
+    is how `authenticated_page` knows whether to keep or discard its trace.
+    """
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, f"rep_{rep.when}", rep)
+
+
+def _trace_path(name: str) -> Path:
+    """Build a filesystem-safe trace path from a test node id."""
+    safe = re.sub(r"[^\w.-]+", "-", name).strip("-")[:150]
+    TRACE_DIR.mkdir(parents=True, exist_ok=True)
+    return TRACE_DIR / f"{safe}-trace.zip"
+
+
+def _finish_tracing(context, request) -> None:
+    """Save the trace if the test failed; otherwise discard it.
+
+    Mirrors pytest-playwright's --tracing=retain-on-failure for the context
+    this fixture creates itself (which the plugin's flag does not cover).
+    """
+    rep_call = getattr(request.node, "rep_call", None)
+    failed = rep_call is not None and rep_call.failed
+    try:
+        if failed:
+            path = _trace_path(request.node.nodeid)
+            context.tracing.stop(path=str(path))
+            print(f"[TRACE] Saved failure trace to {path}")
+        else:
+            context.tracing.stop()
+    except Exception as e:
+        print(f"[TRACE] Could not finalize trace: {e}")
+
 
 @pytest.fixture(scope="session")
 def auth_state_path():
-    """Path to the cached authentication state file."""
+    """Path to the cached authentication state file.
+
+    Under pytest-xdist each worker gets its own file so workers never race
+    on a shared cache (each worker is a separate process and session).
+    """
+    worker = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker:
+        return f".auth_state.{worker}.json"
     return AUTH_STATE_FILE
 
 
 @pytest.fixture
-def authenticated_page(browser, auth_state_path, base_url, login_data):
+def authenticated_page(browser, auth_state_path, base_url, login_data, request):
     """Provide a Playwright page with cached authentication.
 
     Uses pytest-playwright's browser fixture to avoid event loop conflicts.
     First run: Logs in via UI and saves storage state to file.
     Subsequent runs: Loads cached state (skips login entirely).
+
+    Records a Playwright trace for every test and keeps it only on failure
+    (reports/artifacts/<test>-trace.zip; open with `playwright show-trace`).
     """
     import os
 
@@ -198,72 +249,70 @@ def authenticated_page(browser, auth_state_path, base_url, login_data):
         print(f"[AUTH] Loading cached session from {auth_state_path}")
         try:
             context = browser.new_context(storage_state=auth_state_path)
+            context.tracing.start(screenshots=True, snapshots=True, sources=True)
             page = context.new_page()
             page.goto(base_url)
             page.wait_for_load_state('domcontentloaded', timeout=30000)
 
-            # Fast session validation - check URL and key elements
-            # Wait briefly for app to initialize, then check state
-            try:
-                page.wait_for_timeout(1500)  # Brief wait for React to hydrate
-
-                # Check if we're on login page (session expired)
-                if '/auth/login' in page.url:
-                    raise Exception("Redirected to login - session invalid")
-
-                # Check for login form (another sign of expired session)
-                if page.locator("input[type='email']").is_visible():
-                    raise Exception("Login form visible - session invalid")
-
-                # Session is valid - verify nav element exists
-                nav = page.locator("text=Views").first
-                nav.wait_for(state="visible", timeout=5000)
-                print("[AUTH] Cached session is valid")
-                yield page
-                page.close()
-                context.close()
-                return
-
-            except Exception as e:
-                print(f"[AUTH] Cached session expired: {e}")
-                page.close()
-                context.close()
-                os.remove(auth_state_path)
+            # Fast session validation. If the session is dead the app shows
+            # the login form instead of the nav, so waiting for the nav is
+            # both the readiness wait and the validity check.
+            if '/auth/login' in page.url or page.locator("input[type='email']").is_visible():
+                raise Exception("Login page shown - session invalid")
+            nav = page.locator("text=Views").first
+            nav.wait_for(state="visible", timeout=10000)
+            print("[AUTH] Cached session is valid")
         except Exception as e:
-            print(f"[AUTH] Failed to load cached session: {e}")
-            if os.path.exists(auth_state_path):
-                try:
-                    os.remove(auth_state_path)
-                except Exception:
-                    pass
+            print(f"[AUTH] Cached session unusable: {e}")
+            if page is not None:
+                page.close()
+            if context is not None:
+                context.close()
+            context = None
+            page = None
+            try:
+                os.remove(auth_state_path)
+            except OSError:
+                pass
 
-    # No valid cache - perform fresh login
-    print("[AUTH] Performing fresh login...")
-    context = browser.new_context()
-    page = context.new_page()
+    if context is None:
+        # No valid cache - perform fresh login
+        print("[AUTH] Performing fresh login...")
+        context = browser.new_context()
+        context.tracing.start(screenshots=True, snapshots=True, sources=True)
+        page = context.new_page()
 
-    try:
-        from tests.shared.pages.login_page import LoginPage
-        lp = LoginPage(page, base_url)
-        lp.login(login_data['username'], login_data['password'])
+        try:
+            from tests.shared.pages.login_page import LoginPage
+            lp = LoginPage(page, base_url)
+            lp.login(login_data['username'], login_data['password'])
 
-        # Wait for login to complete (not on login page anymore)
-        page.wait_for_function(
-            "() => !window.location.href.includes('/auth/login')",
-            timeout=60000
-        )
-        # Use domcontentloaded instead of networkidle (app has persistent connections)
-        page.wait_for_load_state('domcontentloaded', timeout=30000)
+            # Wait for login to complete (not on login page anymore)
+            page.wait_for_function(
+                "() => !window.location.href.includes('/auth/login')",
+                timeout=60000
+            )
+            # Use domcontentloaded instead of networkidle (app has persistent connections)
+            page.wait_for_load_state('domcontentloaded', timeout=30000)
 
-        # Save the authenticated state
-        context.storage_state(path=auth_state_path)
-        print(f"[AUTH] Session saved to {auth_state_path}")
+            # Save the authenticated state
+            context.storage_state(path=auth_state_path)
+            print(f"[AUTH] Session saved to {auth_state_path}")
 
-    except Exception as e:
-        print(f"[AUTH] Login failed: {e}")
-        raise
+        except Exception as e:
+            print(f"[AUTH] Login failed: {e}")
+            try:
+                path = _trace_path(f"{request.node.nodeid}-login-failure")
+                context.tracing.stop(path=str(path))
+                print(f"[TRACE] Saved login-failure trace to {path}")
+            except Exception:
+                pass
+            page.close()
+            context.close()
+            raise
 
     yield page
+    _finish_tracing(context, request)
     page.close()
     context.close()
 

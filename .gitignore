@@ -36,6 +36,7 @@ tools/debug_screenshots/
 # Playwright auth cache
 .playwright_auth.json
 .auth_state.json
+.auth_state.*.json
 # Pytest cache
 nodeids
 .pytest_cache/
