@@ -132,7 +132,8 @@ class AdminPage:
             # SPA may not change URL immediately - verify via visible element
             if "admin" not in self.page.url.lower():
                 raise
-        self.page.wait_for_timeout(3000)
+        # The sidebar tabs are the signal that the Admin section rendered
+        self.users_tab.first.wait_for(state="visible", timeout=15000)
 
     def navigate_to_users(self):
         """Click the Users tab in the Admin sidebar.
@@ -142,7 +143,8 @@ class AdminPage:
         """
         self.users_tab.first.wait_for(state="visible", timeout=10000)
         self.users_tab.first.click()
-        self.page.wait_for_timeout(3000)
+        # The Add button is the signal that the Users content rendered
+        self.add_user_button.wait_for(state="visible", timeout=15000)
 
     def navigate_to_sites(self):
         """Click the Sites tab in the Admin sidebar.
@@ -152,7 +154,10 @@ class AdminPage:
         """
         self.sites_tab.first.wait_for(state="visible", timeout=10000)
         self.sites_tab.first.click()
-        self.page.wait_for_timeout(3000)
+        # The search field is the signal that the Sites content rendered
+        self.page.locator("input[placeholder*='Search']").first.wait_for(
+            state="visible", timeout=15000
+        )
 
     # --- User CRUD ---
 

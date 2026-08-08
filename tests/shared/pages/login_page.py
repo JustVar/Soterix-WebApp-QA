@@ -158,8 +158,8 @@ class LoginPage:
     def login(self, email: str, password: str):
         """Perform login: navigate, fill credentials, attempt recaptcha, submit, and wait.
 
-        This method prefers dashboard navigation as the success signal but falls back
-        to waiting for network idle.
+        Success signal: the browser leaves /auth/login (the landing URL varies
+        by app version, so no specific destination is assumed).
         """
         if "/auth/login" not in self.page.url:
             self.goto()
@@ -188,12 +188,14 @@ class LoginPage:
                     pass
 
         try:
-            self.page.wait_for_url('**/dashboard**', timeout=LOGIN_WAIT)
+            # Success signal: the app leaves the login page. The landing URL
+            # varies (currently '/', historically '/dashboard'), so wait for
+            # departure rather than a specific destination. networkidle is not
+            # usable here - the app holds persistent connections.
+            self.page.wait_for_url(lambda url: '/auth/login' not in url, timeout=LOGIN_WAIT)
+            self.page.wait_for_load_state('domcontentloaded', timeout=LOGIN_WAIT)
         except Exception:
-            try:
-                self.page.wait_for_load_state('networkidle', timeout=LOGIN_WAIT)
-            except Exception:
-                pass
+            pass
 
         return self
 

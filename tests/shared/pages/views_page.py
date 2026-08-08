@@ -71,6 +71,19 @@ class ViewsPage:
         """Wait for the circular progress loader to disappear."""
         self.loader.wait_for(state="hidden", timeout=timeout)
 
+    def _appears(self, locator, timeout: int = 3000) -> bool:
+        """Wait up to `timeout` ms for a locator to become visible.
+
+        Returns True once visible, False on timeout. Use for optional
+        elements: returns as soon as the element shows instead of always
+        sleeping the full duration.
+        """
+        try:
+            locator.first.wait_for(state="visible", timeout=timeout)
+            return True
+        except Exception:
+            return False
+
     def rename_tab(self, tab_index: int, new_name: str):
         """Rename a tab by index (0-based)."""
         # Hover over edit button and click
@@ -113,11 +126,8 @@ class ViewsPage:
         # Find the camera thumbnail by its visible name
         camera = self.page.locator(f".cameraThumbnailWrapper:has-text('{camera_name}')").first
 
-        # Hover to reveal the checkbox
+        # Hover to reveal the checkbox; the click auto-waits for it to show
         camera.hover()
-        self.page.wait_for_timeout(150)
-
-        # Click the checkbox inside the thumbnail
         checkbox = camera.locator(".sidebar-custom-checkbox")
         checkbox.click()
 
@@ -166,11 +176,8 @@ class ViewsPage:
             print(f"DEBUG add_first_camera_via_checkbox: Camera '{camera_name}' not found, using first camera")
             camera = self.page.locator(".cameraThumbnailWrapper").first
 
-        # Hover to reveal the checkbox
+        # Hover to reveal the checkbox; the click auto-waits for it to show
         camera.hover()
-        self.page.wait_for_timeout(150)
-
-        # Click the checkbox inside the thumbnail
         checkbox = camera.locator(".sidebar-custom-checkbox")
         checkbox.click()
 
@@ -261,9 +268,9 @@ class ViewsPage:
                 return  # Success
             except Exception as e:
                 if attempt < max_attempts - 1:
-                    # Retry: refresh and try again
+                    # Retry: refresh and try again (the nav wait at the top of
+                    # the loop absorbs the reload time)
                     self.page.reload()
-                    self.page.wait_for_timeout(500)
                 else:
                     raise RuntimeError(f"Failed to navigate to Views page after {max_attempts} attempts: {e}")
 
@@ -555,6 +562,12 @@ class ViewsPage:
             if self.page.locator("text=All Cameras").count() > 0:
                 return "all_cameras_already_visible"
 
+            # Give the site tree a moment to render before scanning the DOM -
+            # the JS scan below runs immediately and does not retry
+            self._appears(
+                self.page.locator("[role='treeitem'], [class*='panel'] p"),
+                timeout=3000,
+            )
             # Use JS to click the first site-like element in the panel.
             # Sites may be in p/span/div elements, tree nodes, or MUI menu items
             known_labels = {
@@ -638,38 +651,37 @@ class ViewsPage:
         # Step 1: activate Devices panel
         if self.devices_subtab.count() > 0:
             self.devices_subtab.click()
-            self.page.wait_for_timeout(1000)
             print(f"DEBUG expand_site_and_show_cameras: Clicked devices subtab")
         elif self.devices_tab.count() > 0:
             self.devices_tab.first.click()
-            self.page.wait_for_timeout(1000)
             print(f"DEBUG expand_site_and_show_cameras: Clicked devices tab")
 
         # Step 2: "Select Location & Cameras" is a placeholder button that opens
-        # the site picker - click it first to reveal the site tree
+        # the site picker - it renders once the Devices panel loads, so wait
+        # for it briefly instead of sleeping a fixed amount
         select_loc = self.page.locator("text=Select Location & Cameras")
-        if select_loc.count() > 0 and select_loc.first.is_visible():
+        if self._appears(select_loc, timeout=5000):
             select_loc.first.click()
-            self.page.wait_for_timeout(1500)
             print(f"DEBUG expand_site_and_show_cameras: Clicked 'Select Location & Cameras'")
 
-        # Step 3: click the first actual site in the now-visible tree
+        # Step 3: click the site in the now-visible tree (a named site click
+        # auto-waits for the tree to render)
         print(f"DEBUG expand_site_and_show_cameras: Calling click_site({site_name})")
         self.click_site(site_name)
-        self.page.wait_for_timeout(1500)
 
         # Step 4: click "All Cameras" if it appears
         all_cameras = self.page.locator("text=All Cameras")
-        if all_cameras.count() > 0 and all_cameras.first.is_visible():
+        if self._appears(all_cameras, timeout=5000):
             print(f"DEBUG expand_site_and_show_cameras: Clicking 'All Cameras'")
             self.click_all_cameras()
         else:
-            print(f"DEBUG expand_site_and_show_cameras: 'All Cameras' not visible (count={all_cameras.count()})")
+            print(f"DEBUG expand_site_and_show_cameras: 'All Cameras' not visible")
 
+        # Wait for thumbnails to render; tolerate none appearing (site layout
+        # varies by tenant)
+        self._appears(self.camera_thumbnails, timeout=15000)
         camera_count = self.camera_thumbnails.count()
         print(f"DEBUG expand_site_and_show_cameras: Final result - {camera_count} cameras visible")
-
-        self.page.wait_for_timeout(500)
 
     def add_bookmark_on_tile(self, tile_index: int = 0):
         """Add a bookmark on a video tile in fullscreen mode.
