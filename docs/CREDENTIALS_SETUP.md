@@ -110,7 +110,7 @@ QA_ENGINEER_A_PASSWORD=your_password_here
 
 2. Activate the virtual environment:
 ```powershell
-    .venv\Scripts\Activate.ps1
+    venv\Scripts\Activate.ps1
 ```
 
 3. Test your credentials are loaded:
@@ -135,22 +135,17 @@ PASSED
 
 ## How Site and Enterprise IDs Work
 
-### Auto-Discovery (Recommended)
+### In this repo (UI tests)
 
-The framework **automatically discovers** your Site ID and Enterprise ID after login:
+UI tests do not need a Site ID. The browser session sees whatever sites the
+account has access to. `get_credentials()` returns `site_id` from the box
+config when one is set, and `None` otherwise.
 
-1. You login with your email/password
-2. Framework calls `/REST/site/user/{your-email}`
-3. Returns all sites you have access to
-4. Uses the first site as default
+### Auto-Discovery (API repo)
 
-**You don't need to configure Site IDs manually!**
-
-Example auto-discovery output:
-[SITE DISCOVERY] Found 1 site(s) for user your_email@soterixsystems.com
-
-Driver Site (Site ID: 110, Enterprise ID: 132)
-
+The login-time site discovery (`/REST/site/user/{your-email}`) lives in the
+Soterix-API-QA repo with the API clients. See that repo's
+`docs/API_SURFACES.md`.
 
 ### Manual Override (Optional)
 
@@ -181,22 +176,22 @@ Enterprise ID used for -> Roles, Permissions, User Management APIs
 
 ### QA Environment (Default)
 ```powershell
-pytest tests/smoke/ -v   # run from the Soterix-API-QA repo
+pytest -m sanity -v
 ```
 
 ### QA Environment - Different Box
 ```powershell
-$env:BOX="india"; pytest tests/smoke/ -v   # run from the Soterix-API-QA repo
+$env:BOX="india"; pytest -m sanity -v
 ```
 
 ### Staging Environment
 ```powershell
-$env:ENV="staging"; pytest tests/smoke/ -v   # run from the Soterix-API-QA repo
+$env:ENV="staging"; pytest -m sanity -v
 ```
 
 ### Production Environment (Read-Only Tests)
 ```powershell
-$env:ENV="prod"; pytest tests/smoke/ -v   # run from the Soterix-API-QA repo
+$env:ENV="prod"; pytest -m sanity -v
 ```
 
 ### Reset to Default
@@ -226,33 +221,15 @@ $env:ENV="qa"; $env:BOX="us"
 
 ## SSL Verification
 
-The test framework handles SSL certificates differently per environment:
+Nothing in this repo reads an SSL variable. The browser manages its own
+certificate trust, and the QA server presents a valid certificate as of
+2026-08-07 (checked with `curl -I https://qa.example.invalid`, which
+verifies by default).
 
-| Environment | Certificate | SSL_VERIFY | Notes |
-|-------------|-------------|------------|-------|
-| QA | Self-signed | `false` required | Internal dev environment |
-| Staging | Valid public | `true` (default) | No override needed |
-| Production | Valid public | `true` (default) | No override needed |
-
-### Running Tests with SSL Override
-
-For QA environment, you must disable SSL verification:
-```powershell
-$env:SSL_VERIFY='false'; pytest tests/ -v
-```
-
-### Why QA Needs SSL_VERIFY=false
-
-The QA server uses a self-signed certificate (not issued by a trusted authority). Python's requests library rejects these by default. Disabling verification is safe for internal QA testing but should never be done for production.
-
-### Checking Certificate Validity
-
-To verify if an environment has a valid certificate, open the URL in a browser and check for the padlock icon, or run:
-```powershell
-Invoke-WebRequest -Uri "https://[environment-url]" -Method Head -UseBasicParsing
-```
-
-If you get an SSL/TLS error (not a 500 server error), the certificate is invalid or self-signed.
+The `SSL_VERIFY` override belonged to the Python API clients and moved with
+them to the Soterix-API-QA repo. If a page ever shows a certificate warning,
+report it: that is an environment problem, not something to configure around
+here.
 
 
 ## User Roles

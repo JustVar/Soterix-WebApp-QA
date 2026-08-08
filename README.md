@@ -1,6 +1,8 @@
-# Playwright Soterix QA
+# Soterix WebApp QA
 
-End-to-end test suite for **NexaiQ-Core** (Soterix's cloud video platform).
+End-to-end UI test suite for **NexaiQ-Core** (Soterix's cloud video platform).
+The repo was renamed from `playwright-soterix-qa` on 2026-08-07; the local
+folder name may still be the old one.
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type

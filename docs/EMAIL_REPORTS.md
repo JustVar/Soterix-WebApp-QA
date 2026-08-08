@@ -2,6 +2,10 @@
 
 Send test run reports via email to team members using Microsoft Graph API.
 
+> **Status (2026-08-07):** sending is broken. The Azure client secret
+> expired on 2026-07-22 and is not yet rotated. Rotation steps are in
+> `../MAINTENANCE_REMINDERS.md` under OAuth Secret Expiration.
+
 ## Setup
 
 ### Environment Variables
@@ -13,12 +17,16 @@ Add these to your `.env` file:
 AZURE_TENANT_ID=<your-tenant-id>
 AZURE_CLIENT_ID=<your-client-id>
 AZURE_CLIENT_SECRET=<your-client-secret>
-EMAIL_FROM=<person@example.com>
+EMAIL_FROM=qa-reports@soterixsystems.com
 
 # Email Report Settings (optional)
-REPORT_RECIPIENT=person@example.com
+REPORT_RECIPIENT=<recipient@soterixsystems.com>
 SEND_TEST_REPORT=1  # Set to 1 to auto-send after tests
 ```
+
+Reports send from the dedicated `qa-reports@` mailbox, not your own account.
+The Exchange Application Access Policy restricts the OAuth app to that one
+mailbox. The rationale is in `QA_THINGS_TO_KNOW.md` under Email reporting.
 
 ## Usage
 
@@ -28,7 +36,7 @@ Run tests with automatic report sending:
 
 ```bash
 export SEND_TEST_REPORT=1
-export REPORT_RECIPIENT=person@example.com
+export REPORT_RECIPIENT=<recipient@soterixsystems.com>
 pytest tests/ui/events/test_events_filters.py
 ```
 
@@ -43,13 +51,13 @@ Generate a report first, then send it:
 pytest tests/ui/events/test_events_filters.py
 
 # Send the report manually
-python tools/send_test_report.py reports/report.html person@example.com
+python tools/send_test_report.py reports/report.html <recipient@soterixsystems.com>
 ```
 
 ### Option 3: Send Custom Report
 
 ```bash
-python tools/send_test_report.py reports/custom_report.html person@example.com
+python tools/send_test_report.py reports/custom_report.html <recipient@soterixsystems.com>
 ```
 
 ## Report Format
@@ -100,7 +108,7 @@ Run full test suite and email report:
 ```bash
 #!/bin/bash
 export SEND_TEST_REPORT=1
-export REPORT_RECIPIENT=person@example.com
+export REPORT_RECIPIENT=<recipient@soterixsystems.com>
 
 cd /path/to/Soterix-WebApp-QA
 pytest tests/ui/ -m smoke
