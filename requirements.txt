@@ -1,18 +1,18 @@
-pytest
-pytest-playwright
-playwright
-python-dotenv
-pytest-html
-pytest-xdist
-requests
-paramiko
-scp
-pytest-rerunfailures
-jira
-lxml
-msal
-msgraph-core
-PyYAML
+pytest==9.1.1
+pytest-playwright==0.8.0
+playwright==1.62.0
+python-dotenv==1.2.2
+pytest-html==4.2.0
+pytest-xdist==3.8.0
+requests==2.34.2
+paramiko==5.0.0
+scp==0.16.1
+pytest-rerunfailures==16.4
+jira==3.10.5
+lxml==6.1.1
+msal==1.37.0
+msgraph-core==1.5.1
+PyYAML==6.0.3
 
 # Linting / formatting
 ruff>=0.15
