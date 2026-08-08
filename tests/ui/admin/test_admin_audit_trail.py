@@ -322,7 +322,8 @@ class TestAdminAuditTrail:
         self.page.wait_for_timeout(2000)
 
         # General section should show sub-tabs
-        rules_tab = self.page.locator("p:text-is('Rules')")
+        # .first: 'Rules' appears in both the sidebar and General content
+        rules_tab = self.page.locator("p:text-is('Rules')").first
         expect(rules_tab).to_be_visible(timeout=10000)
 
     @pytest.mark.ui

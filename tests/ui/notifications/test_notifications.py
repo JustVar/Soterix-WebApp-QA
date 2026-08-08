@@ -83,8 +83,9 @@ class TestNotifications:
         general_tab.click()
         self.page.wait_for_timeout(2000)
 
-        # Click Rules
-        rules_tab = self.page.locator("p:text-is('Rules')")
+        # Click Rules. .first: 'Rules' appears in both the admin sidebar and
+        # the General content, and the sidebar entry is the navigation target
+        rules_tab = self.page.locator("p:text-is('Rules')").first
         rules_tab.wait_for(state="visible", timeout=10000)
         rules_tab.click()
         self.page.wait_for_timeout(3000)
