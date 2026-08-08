@@ -1,475 +1,58 @@
 # QA Things to Know - Soterix Test Automation
 
-This document captures hard-won knowledge about testing patterns, workarounds, and gotchas discovered during test automation development.
+This document collects testing patterns, workarounds, and gotchas found while
+automating the NexaiQ-Core UI. Each entry states the problem, the cause, and
+the fix, with a minimal example.
 
- 
-## My Views - Opening Saved Views
+Wait rules are not repeated here. New code follows the Waits section in
+[CONVENTIONS.md](CONVENTIONS.md): no fixed sleeps when a DOM signal exists.
+For failure debugging, read [FAILURE_TRIAGE.md](FAILURE_TRIAGE.md) first.
+Failed tests save traces, so most gotchas below can now be diagnosed from a
+trace instead of a rerun.
 
-### Problem
-Playwright's native `.hover()` doesn't trigger React's mouseover handlers needed to reveal the checkbox on saved views in the My Views panel.
-
-### Solution
-Use `ViewsPage.open_saved_view_by_name(view_name)` helper which:
-1. Opens My Views panel
-2. Uses JavaScript to dispatch `mouseenter`/`mouseover` events (reveals checkbox)
-3. Clicks the checkbox to open the view as a tab
-
-### Additional Note
-After saving a view and closing its tab via X button, the checkbox state becomes inconsistent. **Workaround:** Refresh the page before reopening the saved view. This clears the tab state while the saved view persists in the backend.
-
-### Example Usage
-```python
-# Save a view, refresh, then reopen
-self.page.locator("img[src*='save']").nth(1).click()
-self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=20000)
-
-self.page.reload()
-self.page.wait_for_timeout(3000)
-
-self.views.open_saved_view_by_name("MyViewName")
-```
-
----
-
-## Tab Locators
 ## Table of Contents
-1. [Checkbox Interactions](#checkbox-interactions)
-2. [Tab Locators](#tab-locators)
-3. [Element Visibility Issues](#element-visibility-issues)
-4. [JavaScript Workarounds](#javascript-workarounds)
-5. [Migration Notes](#migration-notes)
+
+1. [Hover-revealed checkboxes](#hover-revealed-checkboxes)
+2. [My Views - opening saved views](#my-views---opening-saved-views)
+3. [Tab locators](#tab-locators)
+4. [Click interception and viewport issues](#click-interception-and-viewport-issues)
+5. [JavaScript workarounds](#javascript-workarounds)
+6. [ReCAPTCHA handling](#recaptcha-handling)
+7. [Environments and accounts](#environments-and-accounts)
+8. [Email reporting](#email-reporting)
+9. [Session caching](#session-caching)
+10. [API vs UI tests](#api-vs-ui-tests)
+11. [Drag and drop](#drag-and-drop)
+12. [Debugging failures](#debugging-failures)
+13. [Migration notes (Selenium)](#migration-notes-selenium)
+14. [Updating this document](#updating-this-document)
 
 ---
 
-## Checkbox Interactions
+## Hover-revealed checkboxes
 
-### Problem: Checkboxes Only Appear on Hover
+**Problem:** many checkboxes (cameras, saved views) stay hidden until the user
+hovers over the row. Playwright's `.hover()` does not always reveal them.
 
-Many checkboxes in the Soterix UI (cameras, saved views) are hidden until the user hovers over the row. Playwright's `.hover()` method does NOT trigger the checkbox to appear.
+**Cause:** the UI listens for JavaScript `mouseenter`/`mouseover` events, not
+CSS `:hover`. Playwright's hover fires real mouse events, but React sometimes
+attaches the listeners to a parent that the pointer never crosses.
 
-**Why:** The UI uses JavaScript event listeners for `mouseenter`/`mouseover` events, not CSS `:hover` pseudo-selectors.
+**Fix, in order:**
 
-### Solution: JavaScript Event Dispatch
-```python
-# Trigger hover events via JavaScript
-self.page.evaluate(
-    """(title) => {
-        const span = document.querySelector(`span[title='${title}']`);
-        if (span) {
-            let parent = span.parentElement;
-            for (let i = 0; i < 5; i++) {
-                if (parent) {
-                    parent.dispatchEvent(new MouseEvent('mouseenter', {bubbles: true}));
-                    parent.dispatchEvent(new MouseEvent('mouseover', {bubbles: true}));
-                    parent = parent.parentElement;
-                }
-            }
-        }
-    }""",
+1. Try the plain path first. `camera.hover()` then click the checkbox. The
+   click auto-waits for the checkbox to appear, so no sleep is needed. This
+   works for the camera thumbnails in the Devices panel.
+2. If the checkbox never appears, dispatch the hover events with JavaScript,
+   then click:
 
-    ## ReCAPTCHA Handling
-
-    ### Current State
-    ReCAPTCHA is present on login pages across all environments and blocks automated logins.
-
-    ### Current Workaround: Retry Logic
-
-    The login page object implements retry logic that attempts to work through ReCAPTCHA:
-    ```python
-    # From login_page.py
-When checkbox disappears between hover and click, combine both in single JS:
-        """Attempt login with ReCAPTCHA retry logic."""
-        for attempt in range(max_retries):
-            self.enter_email(email)
-            self.enter_password(password)
-            self.click_login()
-        
-            # Wait for either success or ReCAPTCHA challenge
-            try:
-                # Check for successful login (dashboard element)
-                self.page.wait_for_selector(".dashboard", timeout=10000)
-                return True
-            except:
-                # ReCAPTCHA may have appeared, wait and retry
-                self.page.wait_for_timeout(5000)
-                continue
-        return False
-    ```
-
-    **Timing Notes:**
-    - QA environment is generally slower than other environments
-    - Current implementation works but timing could be optimized
-    - Allow 60-90 seconds for ReCAPTCHA flows in worst case
-
-    ### Planned Solution: ReCAPTCHA Bypass
-
-    A request has been drafted to whitelist automation accounts (see `docs/RECAPTCHA_BYPASS_PLAN.md`).
-
-    **Bypass Options (in order of preference):**
-    1. **Email whitelist** - Skip ReCAPTCHA for automation account emails
-    2. **IP whitelist** - Skip ReCAPTCHA from test server IPs
-    3. **Secret header** - `X-Automation-Key` header bypasses check
-    4. **Environment flag** - Disable ReCAPTCHA on non-prod environments
-
-    **Automation Accounts:**
-    | Environment | Account | Role | Notes |
-    |-------------|---------|------|-------|
-    | QA | test-auto-qa@soterixsystems.com | Admin | Full write/delete |
-    | Staging | test-auto-stage@soterixsystems.com | Admin | Write access |
-    | Production | test-auto-prod@soterixsystems.com | Admin | Manually set read-only if needed |
-
-    ---
-
-    ## Email Reporting
-
-    ### Sender Address: `qa-reports@soterixsystems.com`
-
-    Test report emails are sent from `qa-reports@soterixsystems.com` (shared mailbox) using the Microsoft Graph API with OAuth.
-
-    **Why not `noreply@`?**
-    - Many mail servers and spam filters flag or outright reject emails from `noreply@` addresses
-    - Exchange Online and Microsoft 365 may block sending from `noreply@` due to organizational policies
-    - If a test report bounces or a recipient replies with a question, there's no way to receive that feedback
-    - Some corporate spam filters score `noreply@` senders higher for spam likelihood
-
-    **Why not `autoreply@`?**
-    - The name is misleading - it implies an auto-responder, not a report sender
-    - Exchange Application Access Policies must explicitly allow each mailbox; using a shared company address like `autoreply@` may conflict with other organizational uses
-    - Hard to audit - if multiple systems use `autoreply@`, you can't tell which one sent what
-
-    **Why `qa-reports@`?**
-    - Self-documenting: anyone receiving the email knows it's a QA test report
-    - Must be a full user account (not a shared mailbox) - OAuth requires a licensed mailbox
-    - Contained: Application Access Policy restricts the OAuth app to only this mailbox
-    - Replies go somewhere useful if someone has questions about a report
-
-    ### OAuth Setup Requirements
-
-    The Azure app registration (`QA Test Automation`, App ID: `***REMOVED***`) needs:
-    1. **Microsoft Graph** -> Application permission -> `Mail.Send` -> Admin consent granted
-    2. **Exchange Online Application Access Policy** (PowerShell - must be run by an admin):
-    ```powershell
-    Connect-ExchangeOnline
-    New-ApplicationAccessPolicy `
-      -AppId "***REMOVED***" `
-      -PolicyScopeGroupId "qa-reports@soterixsystems.com" `
-      -AccessRight RestrictAccess `
-      -Description "Allow QA Automation to send test reports"
-    ```
-
-    **Azure client secret expires: 2026-07-22** - set a reminder to regenerate before then.
-
-    ---
-
-    ## Session Caching
-
-    ### How It Works
-
-    The `AuthHelper` class caches authenticated sessions to avoid repeated logins:
-    ```python
-    # Session is cached in .session_cache directory
-    # Default TTL: 8 hours
-    # Cache includes: cookies + localStorage
-    ```
-
-    **Cache Location:** `.session_cache/` directory (git-ignored)
-
-    **Cache Format:** JSON files with session data per environment/user
-
-    ### When Sessions Are Reused
-
-    1. Test starts
-    2. AuthHelper checks for cached session
-    3. If valid (< 8 hours old), injects cookies/localStorage
-    4. If expired or missing, performs fresh login
-    5. Saves new session to cache
-
-    ### Clearing the Cache
-
-    **When to clear:**
-    - After password changes
-    - When encountering unexpected auth errors
-    - When switching between users
-    - After environment configuration changes
-
-    **How to clear:**
-    ```powershell
-    # Delete entire cache
-    Remove-Item -Recurse -Force .session_cache
-
-    # Or delete specific environment
-    Remove-Item -Recurse -Force .session_cache/qa*
-    ```
-
-    **Programmatic clear:**
-    ```python
-    # In Python
-    import shutil
-    shutil.rmtree('.session_cache', ignore_errors=True)
-    ```
-
-    ### Future Improvements
-
-    - [ ] Test cache behavior across longer periods
-    - [ ] Add session validation before reuse (API health check)
-    - [ ] Customer POV testing for session timeout scenarios
-    - [ ] Handle session expiry mid-test gracefully
-
-    ---
-
-    ## Multi-Environment Configuration
-
-    ### Supported Environments
-
-    | Environment | URL | SSL Verify | Write Access |
-    |-------------|-----|------------|--------------|
-    | QA | qa.example.invalid | `false` (self-signed certs) | Yes |
-    | Staging | staging.example.invalid | `true` | Yes |
-    | Production | app.example.invalid | `true` | Read-only |
-
-    ### Switching Environments
-
-    **PowerShell:**
-    ```powershell
-    # Set environment
-    $env:ENV='qa'      # or 'staging', 'prod'
-    $env:BOX='us'      # or 'india'
-
-    # Run tests
-    pytest tests/ -v
-
-    # Reset to default
-    $env:ENV='qa'; $env:BOX='us'
-    ```
-
-    **For QA environment (self-signed certs):**
-    ```powershell
-    $env:SSL_VERIFY='false'; pytest tests/ -v
-    ```
-
-    ### Configuration Files
-    config/
-    ├── base_config.py      # Shared config logic
-    ├── env/
-    │   ├── qa.py           # QA environment settings
-    │   ├── stage.py        # Staging settings
-    │   └── prod.py         # Production settings (read-only)
-
-    ### Environment-Specific Notes
-
-    **QA Environment:**
-    - Uses self-signed SSL certificates -> requires `SSL_VERIFY=false`
-    - Generally slower than other environments
-    - Full write/delete access for testing
-    - Site ID: 110, Enterprise ID: 132
-
-    **Staging Environment:**
-    - Valid public SSL certificates
-    - Write access, no delete access
-    - ReCAPTCHA bypass needed for automation
-
-    **Production Environment:**
-    - Valid public SSL certificates
-    - Read-only access only
-    - Never run destructive tests here
-
-    ### Known Gotchas
-
-    - Environment variables persist in terminal session - restart terminal or explicitly reset
-    - SSL_VERIFY setting affects all API calls in that session
-    - More gotchas to be documented as we expand multi-environment testing
-
-    ---
-
-    ## API vs UI Test Trade-offs
-
-    ### When to Use API Tests
-
-    | Scenario | Why API? |
-    |----------|----------|
-    | Data validation | Faster, no UI rendering overhead |
-    | CRUD operations | Direct verification of backend |
-    | Performance-sensitive | Milliseconds vs seconds |
-    | Setup/teardown | Create test data quickly |
-    | Authentication checks | Verify tokens, sessions, permissions |
-
-    **API Test Advantages:**
-    - 10-100x faster than UI tests
-    - More stable (no DOM changes)
-    - Better error messages
-    - Can run in parallel easily
-
-    ### When to Use UI Tests
-
-    | Scenario | Why UI? |
-    |----------|----------|
-    | User workflows | Validates actual user experience |
-    | Visual elements | Layout, styling, visibility |
-    | JavaScript interactions | Hover, drag-drop, animations |
-    | Integration | Full stack verification |
-    | Accessibility | Screen reader, keyboard nav |
-
-    **UI Test Advantages:**
-    - Tests what users actually see
-    - Catches CSS/JS bugs
-    - Validates end-to-end flows
-    - Screenshots for debugging
-
-    ### Hybrid Approach (Recommended)
-    ```python
-    # Use API for setup
-    api_client.create_test_user()
-    api_client.create_test_site()
-
-    # Use UI for actual test
-    ui.login()
-    ui.navigate_to_site()
-    ui.verify_site_visible()
-
-    # Use API for cleanup
-    api_client.delete_test_site()
-    api_client.delete_test_user()
-    ```
-
-    ### Decision Guide for New Tests
-
-    When tackling new test batches, ask:
-
-    1. **Can this be verified via API?** -> Start with API test
-    2. **Does it require visual verification?** -> UI test needed
-    3. **Is it a user workflow?** -> UI test, possibly with API setup
-    4. **Is it data validation?** -> API test
-    5. **Both possible?** -> Write both - API for speed, UI for confidence
-
-    ### Current Test Distribution
-
-    | Type | Count | Purpose |
-    |------|-------|---------|
-    | API Smoke | 16 | Platform health, data validation |
-    | Login UI | 10 | User auth workflows |
-    | Views UI | 9 | Visual interactions, drag-drop |
-
-    *Decision guidance will be provided as we tackle each new batch of tests.*
-
-    ---
-
-    ## Drag and Drop Interactions
-
-    ### Working Pattern
-
-    Playwright's built-in drag-to works for the Soterix tile grid:
-    ```python
-    # Drag camera/view to a specific tile
-    source = page.locator("span[title='Camera Name']")
-    target = page.locator(".tileItem").nth(0)
-
-    source.drag_to(target)
-    page.wait_for_timeout(1000)  # Allow UI to update
-    ```
-
-    ### Verified Use Cases
-
-    | Action | Status | Notes |
-    |--------|--------|-------|
-    | Drag saved view to tile | ✅ Working | `test_drag_view_to_tile` |
-    | Drag camera to tile | 🔄 To be tested | Expected to work same way |
-    | Drag camera between tiles | 🔄 To be tested | Future test coverage |
-    | Drag to reorder | 🔄 To be tested | May need different approach |
-
-    ### Implementation in ViewsPage
-    ```python
-    def drag_view_to_tile(self, view_name: str, tile_index: int = 0):
-        """Drag a saved view from My Views panel to a tile."""
-        # Open My Views if not already open
-        self.open_my_views_panel()
-    
-        # Find the view name element
-        view_element = self.page.locator(f"span[title='{view_name}']").first
-    
-        # Find target tile
-        tile = self.page.locator(".tileItem").nth(tile_index)
-    
-        # Perform drag
-        view_element.drag_to(tile)
-        self.page.wait_for_timeout(1000)
-    ```
-
-    ### Edge Cases to Explore
-
-    - [ ] Dragging to occupied tile (should it swap or reject?)
-    - [ ] Dragging from one tile to another
-    - [ ] Dragging multiple items
-    - [ ] Drag cancellation (ESC key)
-    - [ ] Touch/mobile drag behavior
-
-    ### Troubleshooting Drag-Drop
-
-    If drag-drop fails:
-    1. Ensure source element is visible
-    2. Ensure target element is visible and in viewport
-    3. Add wait before drag for element stability
-    4. Try with `force=True` if element detection issues
-    5. Check for overlays blocking the drop target
-
-    ---
-
-    ## Updating This Document
-
-    When you discover a new testing pattern, workaround, or gotcha while writing or stabilizing tests, add a concise entry here so the team can reuse it.
-
-    Guidelines:
-    - Add a short header describing the problem.
-    - Briefly state the cause and the recommended solution.
-    - Include a minimal code snippet (Playwright/pytest) if helpful.
-    - Reference any related files (POM, test file, or ticket) using workspace paths.
-    - Use commit message: `docs: add <short-description> to QA_THINGS_TO_KNOW.md`.
-
-    Template:
-    ```markdown
-    ### Short Title
-    Problem: One-line description
-    Cause: Brief explanation
-    Solution: Steps or code snippet
-    Files: tests/... or tests/shared/pages/...
-    ```
-
-    Small example:
-    ```markdown
-    ### Hover-triggered checkboxes
-    Problem: Checkbox appears only after JS hover events
-    Solution: Dispatch `mouseenter`/`mouseover` on parent then click checkbox via JS or locator
-    Files: tests/shared/pages/views_page.py
-    ```
-
-
-    ## To Be Documented
-
-    **Completed:**
-    - [x] ReCAPTCHA handling patterns
-    - [x] Session caching across tests
-    - [x] Multi-environment configuration
-    - [x] API vs UI test trade-offs
-    - [x] Drag and drop to tiles
-
-    **Pending:**
-    - [ ] Video playback verification
-    - [ ] Fullscreen view testing
-    - [ ] Alert/toast message handling
-    - [ ] Test data cleanup strategies
-    - [ ] Parallel test execution
-    - [ ] CI/CD integration patterns
-
-    ---
-
-    *Last updated: January 2025*
-    *Maintainer: System QA/QC Lead*
 ```python
 self.page.evaluate(
     """(title) => {
         const span = document.querySelector(`span[title='${title}']`);
         if (!span) return;
-        
-        # Trigger hover on parents
+
+        // Trigger hover on the parent chain
         let parent = span.parentElement;
         for (let i = 0; i < 5; i++) {
             if (parent) {
@@ -478,8 +61,8 @@ self.page.evaluate(
                 parent = parent.parentElement;
             }
         }
-        
-        # Find and click checkbox (search up DOM tree)
+
+        // Find and click the checkbox (search up the DOM tree)
         let el = span;
         for (let level = 0; level < 6; level++) {
             if (el && el.parentElement) {
@@ -496,91 +79,122 @@ self.page.evaluate(
 )
 ```
 
+**Files:** `tests/shared/pages/views_page.py`
+(`add_first_camera_via_checkbox`, `open_saved_view_by_name`).
+
 ---
 
-## Tab Locators
+## My Views - opening saved views
 
-### Problem: Tab Text Not Visible
+**Problem:** reopening a saved view needs the hover-revealed checkbox above,
+and the checkbox state becomes inconsistent after you save a view and close
+its tab with the X button.
 
-Tab names are stored in the `title` attribute of an inner div, NOT as visible text content.
+**Fix:** use `ViewsPage.open_saved_view_by_name(view_name)`. It opens the My
+Views panel, dispatches the JS hover events, and clicks the checkbox. For the
+inconsistent-state case, reload the page first. The reload clears the tab
+state while the saved view persists in the backend.
 
-**Wrong:**
 ```python
-tab = page.locator(f"button.tabItem:has-text('{view_name}')")  # Returns empty!
+# Save a view, reload, then reopen
+save_btn = self.page.locator("img[src*='save']").nth(1)
+save_btn.evaluate("el => el.click()")
+self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=20000)
+
+self.page.reload()
+# No sleep needed: the next action's own wait covers the reload
+self.views.open_saved_view_by_name("MyViewName")
 ```
 
-**Correct:**
+**Panel-open signal:** the My Views panel shows its Presets / My Views toggle
+even when the tenant has no saved views. Wait for `text=Presets` to know the
+panel opened. Thumbnails only exist when saved views exist.
+
+---
+
+## Tab locators
+
+**Problem:** tab names are stored in the `title` attribute of an inner div,
+not as visible text.
+
 ```python
+# Wrong - returns empty
+tab = page.locator(f"button.tabItem:has-text('{view_name}')")
+
+# Correct
 tab = page.locator(f"button.tabItem:has(div[title='{view_name}'])")
 ```
 
-### Tab HTML Structure
+The tab HTML:
+
 ```html
 <button class="tabItem">
-  <div class="tabInner" title="My View Name">
-    <!-- Title in attribute, not text content -->
-  </div>
+  <div class="tabInner" title="My View Name"></div>
 </button>
 ```
 
-### Hidden Tabs
-The application may have hidden/phantom tabs. Always verify expected count:
+**Ghost tabs:** the app keeps extra `button.tabItem` elements in the DOM.
+Measured on 2026-08-07 via trace: after a tab close, the count of
+`button.tabItem` (and even `button.tabItem:visible`) stays at 2 while the
+screen shows 1 tab. So:
+
+- Do not assert a tab count after closing a tab. Assert on the thing you
+  need next (a success message, a specific tab by title).
+- When you must enumerate tabs, filter by title:
+
 ```python
-all_tabs = page.locator("button.tabItem").all()
-for i, t in enumerate(all_tabs):
-    inner_div = t.locator("div.tabInner").first
-    title = inner_div.get_attribute("title") if inner_div.count() > 0 else "no title"
+for i, t in enumerate(page.locator("button.tabItem").all()):
+    inner = t.locator("div.tabInner").first
+    title = inner.get_attribute("title") if inner.count() > 0 else "no title"
     print(f"Tab {i}: {title}")
 ```
 
 ---
 
-## Element Visibility Issues
+## Click interception and viewport issues
 
-### Save Button Outside Viewport
+Some elements time out on click because an overlay intercepts pointer events
+or because the element sits outside the viewport with fixed positioning.
+Known cases: `text=All Cameras` in the camera tree, `img[src*='save']` icons
+on tabs.
 
-The save button in the tab header may be outside the viewport due to fixed positioning.
+**Escalation ladder, try in order:**
 
-**Problem:** `scroll_into_view_if_needed()` doesn't work for fixed elements.
+1. A plain `click()`. It auto-waits and scrolls. Most elements need nothing
+   else.
+2. `click(scroll="none")` (Playwright 1.62). Skips the auto scroll-into-view,
+   which itself causes interception under sticky headers and lazy-load.
+3. `click(force=True)`. Skips actionability checks.
+4. JavaScript click as the last resort:
 
-**Solution:** Use JavaScript click:
 ```python
-self.page.evaluate("""
-    const saveIcons = document.querySelectorAll("img[src*='save']");
-    if (saveIcons.length > 1) {
-        saveIcons[1].click();
-    }
-""")
+save_btn = self.page.locator("img[src*='save']").nth(1)
+save_btn.evaluate("el => el.click()")
 ```
 
-### Element Intercepted by Overlay
+A JS click bypasses every Playwright check, so pair it with an explicit wait
+on the effect (for example the save success message).
 
-When clicking fails with "subtree intercepts pointer events":
-1. Try `force=True` parameter
-2. If that fails, use JavaScript click
-3. Check for modal dialogs or loading overlays
+`scroll_into_view_if_needed()` does not help for fixed-position elements.
 
 ---
 
-## JavaScript Workarounds
-
-### When to Use JS Instead of Playwright
+## JavaScript workarounds
 
 | Scenario | Use JS? | Reason |
 |----------|---------|--------|
-| Hover-triggered elements | Yes | Playwright hover doesn't trigger JS events |
-| Fixed position elements | Yes | Can't scroll into view |
-| Elements outside viewport | Yes | Direct DOM manipulation |
-| Quick state checks | Yes | Faster than multiple Playwright calls |
-| Click intercepted | Maybe | Try `force=True` first |
+| Hover-triggered elements | Yes | Playwright hover may not reach the React listener |
+| Fixed-position elements | Yes | Cannot scroll into view |
+| Click intercepted | Last resort | Try `scroll="none"`, then `force=True` first |
+| Quick state checks | Rarely | Prefer `expect()`, which retries |
 
-### Debugging DOM Structure
+Debugging a DOM neighborhood from a test:
+
 ```python
-dom_structure = self.page.evaluate(
+dom = self.page.evaluate(
     """(selector) => {
         const el = document.querySelector(selector);
         if (!el) return 'not found';
-        
         let html = [];
         let current = el;
         for (let i = 0; i < 6; i++) {
@@ -593,92 +207,202 @@ dom_structure = self.page.evaluate(
     }""",
     "span[title='MyElement']"
 )
-print(f"DOM: {dom_structure}")
 ```
 
-## Click Interception Workarounds
-
-### Problem
-Some elements (like "All Cameras", save icons) have overlapping elements that intercept pointer events, causing Playwright clicks to timeout.
-
-### Solution
-Use `wait_for` + `click(force=True)`:
-```python
-element = self.page.locator("text=All Cameras").first
-element.wait_for(state="visible", timeout=10000)
-element.click(force=True)
-```
-
-### Affected Elements
-- `text=All Cameras` in camera tree
-- `img[src*='save']` save icons on tabs
-
+For a failed test you do not need this: the saved trace contains the DOM at
+every action (`playwright trace snapshot <action-id> snapshot`).
 
 ---
 
-## Migration Notes
+## ReCAPTCHA handling
 
-### Patterns That Don't Migrate Directly from Selenium
+ReCAPTCHA is present on the login pages and can block automated logins.
 
-| Selenium Pattern | Playwright Equivalent | Notes |
-|-----------------|----------------------|-------|
-| `ActionChains.move_to_element()` | May need JS events | CSS hover works, JS hover may not |
-| `WebDriverWait` | Built-in auto-wait | Usually not needed |
-| XPath heavy selectors | CSS + `:has()` | Playwright prefers CSS |
-| `driver.execute_script()` | `page.evaluate()` | Same concept, different syntax |
+**Current workaround:** `_handle_recaptcha()` in
+`tests/shared/pages/login_page.py` retries through the challenge during
+`login()`. Allow 60 to 90 seconds for the worst case. The QA environment is
+slower than the others.
 
-### Test Cases Requiring Special Handling
-
-| Test | Issue | Solution |
-|------|-------|----------|
-| Camera checkbox selection | Hover-triggered visibility | JS event dispatch |
-| Saved view checkbox | Same as camera | JS event dispatch |
-| Tab verification | Title in attribute | Use `div[title='...']` selector |
-| Save button click | Outside viewport | JS click |
+**Planned fix:** whitelist the automation accounts so they skip ReCAPTCHA.
+The request is drafted but not yet granted. Options, in order of preference:
+email whitelist, IP whitelist, secret header, or an environment flag that
+turns ReCAPTCHA off outside production.
 
 ---
 
-## Debugging Tips
+## Environments and accounts
 
-### Take Screenshot at Failure Point
+| ENV value | URL | Write access |
+|-----------|-----|--------------|
+| `qa` | qa.example.invalid | Full write and delete |
+| `stage` (alias `staging`, `uat`) | staging.example.invalid | Write, no delete |
+| `prod` (alias `production`, `user`, `demo`) | app.example.invalid | Read-only. Never run destructive tests here |
+
+- `ENV` selects `config/env/{qa,stage,prod}.py`. `APP_TYPE=partner` appends
+  `_pat` to the module path.
+- Credentials come from `.env` (`QA_USER` / `QA_PASSWORD`), or per-box
+  accounts via `BOX` (for example `BOX=india`). Each box names its own env
+  vars in the config. See [CREDENTIALS_SETUP.md](CREDENTIALS_SETUP.md).
+- Test data bindings (`test_site_name`, `test_camera_name`) live in the env
+  config. The shared QA tenant drifts: on 2026-08-07 a site rename broke
+  every site-selecting test. If a selector that used to work times out,
+  check the tenant before the test code. The failure trace shows the
+  current names.
+- Environment variables persist in a terminal session. Reset `ENV` and `BOX`
+  explicitly when you switch.
+
+---
+
+## Email reporting
+
+Test report emails go out from a dedicated `qa-reports@` mailbox through the
+Microsoft Graph API with OAuth. Setup, mailbox rationale, and the Exchange
+Application Access Policy are documented in
+[EMAIL_REPORTS.md](EMAIL_REPORTS.md).
+
+Points that bite:
+
+- The sender must be a licensed user mailbox. OAuth `Mail.Send` does not work
+  with a shared mailbox alone.
+- An Application Access Policy restricts the app to this one mailbox. Without
+  it the app could send as anyone.
+- The Azure client secret expired on 2026-07-22 and is not yet rotated.
+  Report email stays broken until it is. Rotation steps are in
+  [../MAINTENANCE_REMINDERS.md](../MAINTENANCE_REMINDERS.md).
+
+---
+
+## Session caching
+
+UI tests reuse a logged-in browser session instead of logging in per test.
+The `authenticated_page` fixture in `conftest.py` saves Playwright storage
+state to `.auth_state.json` (per-worker files under pytest-xdist) and reloads
+it on later runs. A full login costs about 65 seconds. A cache load costs 2
+to 3 seconds.
+
+Details, history, and measured numbers:
+[SESSION_CACHING_IMPLEMENTATION.md](SESSION_CACHING_IMPLEMENTATION.md).
+
+**When to clear the cache:** after a password change, on unexpected auth
+errors, or when switching accounts.
+
+```powershell
+del .auth_state.json
+del .auth_state.*.json
+```
+
+The next run logs in fresh and rebuilds the cache.
+
+---
+
+## API vs UI tests
+
+API tests live in the sibling repo **Soterix-API-QA** and stay browser-free.
+This repo holds UI tests only. The split is documented in
+[REPO_SPLIT_PLAN.md](REPO_SPLIT_PLAN.md).
+
+Choosing where a new test belongs:
+
+- Data validation, CRUD checks, auth and permission checks: API test, in
+  Soterix-API-QA. API tests run 10 to 100 times faster and do not break on
+  DOM changes.
+- User workflows, visual elements, hover and drag interactions, end-to-end
+  flows: UI test, here.
+- Both possible: write the API test for speed and the UI test for the user
+  path.
+
+The hybrid pattern (API for setup and cleanup, UI for the test body) needs
+clients from the API repo, so plan it as cross-repo work.
+
+---
+
+## Drag and drop
+
+Use the visible-drag helper, never raw `drag_to()`. The helper highlights the
+source (red border) and the target (green border) so a tester watching in
+headed mode can see the drag. The convention is in
+[CONVENTIONS.md](CONVENTIONS.md) under Drag and drop. The current
+implementation is `_visible_drag()` in `tests/ui/views/test_views_subtabs.py`.
+
+If a drag fails:
+
+1. Check that the source is visible and the target is in the viewport.
+2. Check for overlays over the drop target.
+3. Fall back to the JS drag simulators in `views_page.py`
+   (`_simulate_drag_via_js`, `_simulate_camera_drag_via_js`).
+
+Open questions (untested): dragging to an occupied tile, tile-to-tile moves,
+multi-item drags, and drag cancellation with ESC.
+
+---
+
+## Debugging failures
+
+**Read the trace first.** Every failed test saves one to `reports/artifacts/`.
+`playwright trace errors` names the failing action, `actions` shows the
+timing, `snapshot` shows the DOM at that moment. Full guide:
+[FAILURE_TRIAGE.md](FAILURE_TRIAGE.md). Most reruns are unnecessary.
+
+Quick state prints while developing a test:
+
 ```python
+print(f"Tabs: {self.page.locator('button.tabItem').count()}")
+print(f"Checkboxes: {self.page.locator('.sidebar-custom-checkbox').count()}")
 self.page.screenshot(path="debug_screenshot.png")
 ```
 
-### Print Current State
-```python
-# Tab count
-print(f"Tabs: {self.page.locator('button.tabItem').count()}")
+Assertion rules (see the Waits section in CONVENTIONS.md):
 
-# Checkbox count  
-print(f"Checkboxes: {self.page.locator('.sidebar-custom-checkbox').count()}")
-
-# Check if element exists
-print(f"Found: {self.page.locator('selector').count() > 0}")
-```
-
-### Common Assertion Patterns
-```python
-# Wait for element then assert
-element.wait_for(state="visible", timeout=10000)
-assert element.count() > 0
-
-# Verify element disappeared
-assert element.count() == 0, f"Expected gone, found {element.count()}"
-```
+- `expect()` retries. `count()`, `is_visible()`, and `get_attribute()` read
+  once. Assert with `expect()` after any action.
+- To verify an element is gone, use
+  `expect(locator).to_have_count(0)`, not `assert locator.count() == 0`.
 
 ---
 
-## To Be Documented
+## Migration notes (Selenium)
 
-- [ ] ReCAPTCHA handling patterns
-- [ ] Session caching across tests
-- [ ] Multi-environment configuration
-- [ ] API vs UI test trade-offs
-- [ ] Drag and drop to tiles
+| Selenium pattern | Playwright equivalent | Notes |
+|------------------|----------------------|-------|
+| `ActionChains.move_to_element()` | `.hover()`, or JS events | See Hover-revealed checkboxes |
+| `WebDriverWait` | Built-in auto-wait + `expect()` | Explicit waits rarely needed |
+| XPath-heavy selectors | CSS + `:has()` | Playwright prefers CSS |
+| `driver.execute_script()` | `page.evaluate()` | Same concept, different syntax |
+
+Test cases that needed special handling in the migration: camera and saved
+view checkboxes (JS hover), tab verification (title attribute), save button
+(JS click).
+
+---
+
+## Updating this document
+
+When you find a new pattern, workaround, or gotcha, add a short entry so the
+team can reuse it.
+
+- State the problem in the header.
+- Give the cause and the fix.
+- Include a minimal Playwright/pytest snippet when it helps.
+- Reference the related files with workspace paths.
+- Commit message: `docs: add <short-description> to QA_THINGS_TO_KNOW.md`.
+
+Template:
+
+```markdown
+### Short title
+Problem: one line
+Cause: brief explanation
+Solution: steps or code
+Files: tests/... or tests/shared/pages/...
+```
+
+## To be documented
+
 - [ ] Video playback verification
+- [ ] Fullscreen view testing
+- [ ] Alert/toast message handling
+- [ ] CI/CD integration patterns
 
 ---
 
-*Last updated: January 2025*
-*Maintainer: System QA/QC Lead*
+*Last updated: 2026-08-07*

@@ -4,7 +4,7 @@ End-to-end test suite for **NexaiQ-Core** (Soterix's cloud video platform).
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **642 tests collected** across 69 files (UI + API), with `legacy/` and `legacy-selenium-tests/` excluded from collection
+- **830 tests collected** across 59 files (UI only; API tests live in Soterix-API-QA), with `legacy/` and `legacy-selenium-tests/` excluded from collection. The c2c hardware tests parametrize over the camera registry, so the count moves with it.
 
 ## How we run today
 
@@ -31,6 +31,10 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 python -m playwright install chromium
 ```
+
+`requirements.txt` pins exact versions (playwright 1.62.0, pytest-playwright
+0.8.0), so a fresh clone installs the same set the suite was verified against.
+Upgrade deliberately: change the pin, run a suite, then commit.
 
 Copy the env template and fill in the automation credentials:
 
@@ -69,7 +73,21 @@ pytest tests/ui/login/test_login_valid.py -v --headed
 An HTML report is written to `reports/report.html` on every run (configured in
 `pytest.ini`). Open it, review pass/fail, and report results manually.
 
-To email that report to someone, see `docs/EMAIL_REPORTS.md`.
+Every failed test also saves a Playwright trace (DOM snapshots per action,
+network, console, timeline) to `reports/artifacts/`. View one with
+`playwright show-trace <file>` or inspect it from the terminal with
+`playwright trace`. The folder is cleared at the start of each run, so copy a
+trace out before the next run if you want to keep it. Full guide:
+[docs/FAILURE_TRIAGE.md](docs/FAILURE_TRIAGE.md).
+
+To email the HTML report to someone, see `docs/EMAIL_REPORTS.md`.
+
+### Parallel runs (experimental)
+
+`pytest <files> -n 2 --dist loadfile` runs one test file per worker. A
+2-worker run against the QA tenant worked without session conflicts, but
+shared tenant data and hardware suites set limits. Read
+[docs/PARALLEL_EXECUTION.md](docs/PARALLEL_EXECUTION.md) before using `-n`.
 
 ### Verification mode (QA reviewer flow)
 
@@ -185,6 +203,8 @@ Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`, `pytest -m "r
 
 - `authenticated_page` fixture: loads cached `.auth_state.json` (~2-3s) instead of a full UI login (~65s).
 - First run logs in via UI and saves browser storage state; subsequent runs reload + validate it; re-login fires only if the cached state expired.
+- Under pytest-xdist each worker gets its own cache file (`.auth_state.<worker>.json`), so workers never race on one file.
+- The fixture also records a Playwright trace for every test and keeps it only on failure - this is what makes the traces in `reports/artifacts/` work for the ~90% of UI tests that use `authenticated_page` (the plugin's `--tracing` flag only covers its own `page` fixture).
 - API auth: `AuthHelper.login()` prefers OAuth bearer tokens with UI fallback. Tokens are reused across the entire pytest session.
 
 ## Linting
@@ -217,7 +237,9 @@ The Playwright/pytest-aware rule set is the headline difference from a generic r
 
 ## More Documentation
 
-- `docs/CONVENTIONS.md` - engineering conventions: page objects, step capture, markers, adding tests
+- `docs/CONVENTIONS.md` - engineering conventions: page objects, waits, step capture, markers, adding tests
+- `docs/FAILURE_TRIAGE.md` - reading failure traces (GUI + terminal)
+- `docs/PARALLEL_EXECUTION.md` - pytest-xdist status, risks, experiment log
 - `docs/STYLE.md` - writing style for docs, comments, and commit messages
 - `docs/CREDENTIALS_SETUP.md` - credential configuration walkthrough
 - `MAINTENANCE_REMINDERS.md` - OAuth expirations, recurring tasks

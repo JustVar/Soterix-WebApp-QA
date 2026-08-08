@@ -6,12 +6,17 @@ it here first.
 Read before making changes:
 
 1. `docs/CONVENTIONS.md` - how tests are organized and written here: page
-   objects, step capture, markers, adding a test.
+   objects, waits, step capture, markers, adding a test. The Waits section
+   is mandatory for new code: no `wait_for_timeout()` sleeps when a DOM
+   signal exists.
 2. `docs/writing/ste.md` - the writing rules for all prose: docs, comments,
    docstrings, error messages, commit messages. Use strict mode for error
    messages and log lines, flavored mode for docs. `docs/STYLE.md` is the
    short human summary. Never apply the rules to code, identifiers, or any
    name the reader must match against a screen.
+3. `docs/FAILURE_TRIAGE.md` - failed tests save Playwright traces to
+   `reports/artifacts/`. Read the trace before you rerun or guess: the
+   `playwright trace` command works from the terminal.
 
 Hard rules:
 

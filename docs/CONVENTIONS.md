@@ -20,6 +20,34 @@ prose is separate: see [STYLE.md](STYLE.md).
 - Methods: `navigate_to_*()`, `click_*()`, `fill_*()`, `verify_*()`.
 - Use `expect()` for assertions and `wait_for(state="visible")` for waits.
 
+## Waits
+
+Do not add `page.wait_for_timeout()` or `time.sleep()` to new code. A fixed
+sleep is too long on a fast run and too short on a slow one. Wait for the
+signal instead:
+
+- Actions (`click`, `fill`, `hover`) wait for the element on their own. Do not
+  sleep before them. A hover-revealed icon needs no sleep either, because the
+  click on the icon waits for it to appear.
+- After an action, wait for the element the next step needs:
+  `locator.wait_for(state="visible")` or an `expect()` assertion.
+- `count()`, `get_attribute()`, and `is_visible()` read once and do not retry.
+  Do not assert on them right after an action. Use `expect(...).to_have_count()`
+  or `expect(...).to_have_value()`, which retry until the timeout.
+- For an optional element, use `ViewsPage._appears(locator, timeout)`:
+  it returns True when the element shows and False on timeout, and it returns
+  as soon as the element appears.
+- If a transition has no DOM signal, keep a short sleep and add a comment that
+  says why. These should stay rare.
+
+For assertion-dense tests, `expect.soft()` collects all assertion failures and
+reports them together at the end of the test instead of stopping at the first.
+For clicks that a sticky header or a lazy-loaded overlay intercepts, try
+`click(scroll="none")` before you reach for `force=True` or a JS click.
+
+Failed tests save a Playwright trace. See
+[FAILURE_TRIAGE.md](FAILURE_TRIAGE.md).
+
 ## Auth and session caching
 
 - The `authenticated_page` fixture loads cached `.auth_state.json` (2-3 s
@@ -189,9 +217,11 @@ def test_valid_login(authenticated_page, step_capture):
 
 ## Drag and drop
 
-All drag-and-drop tests must use `ViewsPage.visible_drag(source, target)`,
-never raw `drag_to()`. It highlights the source (red border) and target (green
-border) so testers can see the drag in headed mode.
+All drag-and-drop tests must use the visible-drag helper, never raw
+`drag_to()`. It highlights the source (red border) and target (green border)
+so testers can see the drag in headed mode. The current implementation is
+`_visible_drag()` in `tests/ui/views/test_views_subtabs.py`; promote it to
+`ViewsPage` when a second module needs it.
 
 ## Critical rules
 

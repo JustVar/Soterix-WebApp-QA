@@ -15,21 +15,19 @@ Use Playwright's native `storage_state` feature to:
 1. Login once, save all cookies/localStorage/sessionStorage to a file
 2. Subsequent tests load the saved state (~2-3s instead of 65s)
 
-## Files Changed
-
-| File | Change |
-|------|--------|
-| `conftest.py` | Added session-scoped auth fixtures |
-| `conftest.py.backup` | Backup of original (for rollback) |
-
 ## Implementation Details
 
-### New Fixtures Added
+### Fixtures (current, in `conftest.py`)
 
-1. **`auth_state_path`** (session) - Path to cached auth state JSON file
-2. **`session_browser`** (session) - Single browser instance for all UI tests
-3. **`session_context`** (session) - Authenticated context with cached state
-4. **`authenticated_page`** (function) - Page from authenticated context
+1. **`auth_state_path`** (session) - Path to the cached auth state JSON file.
+   Returns `.auth_state.json`, or `.auth_state.<worker>.json` under
+   pytest-xdist so parallel workers do not race on one file.
+2. **`authenticated_page`** (function) - Page in a context created from the
+   cached state. Logs in and saves the state when no valid cache exists.
+
+Earlier versions used session-scoped `session_browser` / `session_context`
+fixtures. Those are gone: the fixture now builds on pytest-playwright's
+`browser` fixture and creates one context per test.
 
 ### How It Works
 
@@ -46,16 +44,14 @@ Subsequent tests:
   3. Return page (already logged in!)
 ```
 
-## Rollback Instructions
+## If the cache misbehaves
 
-If tests fail after this change:
+Delete the cache files and rerun. The next run logs in fresh and saves a new
+state:
 
-```bash
-# Restore original conftest.py
-cp conftest.py.backup conftest.py
-
-# Delete cached auth state
+```powershell
 del .auth_state.json
+del .auth_state.*.json
 ```
 
 ## Expected Performance Improvement
@@ -92,6 +88,16 @@ del .auth_state.json
 ## Notes
 
 - Login tests intentionally bypass the cache (they use pytest-playwright's `page` fixture)
-- Cache file `.auth_state.json` is in `.gitignore`
-- If auth expires, delete `.auth_state.json` to force re-login
+- Cache files (`.auth_state.json`, `.auth_state.*.json`) are in `.gitignore`
+- If auth expires, delete the cache files to force re-login
 - The `authenticated_page` fixture navigates to `base_url` after loading cached session
+
+## Updates (2026-08-07)
+
+- The fixture records a Playwright trace for every test and keeps it only on
+  failure (`reports/artifacts/<test>-trace.zip`). A failed login saves a
+  trace too. See `docs/FAILURE_TRIAGE.md`.
+- Session validation waits for the nav element instead of sleeping 1.5 s for
+  hydration. An invalid session shows the login form, so the nav wait is both
+  the readiness wait and the validity check.
+- Per-worker cache files under pytest-xdist (see `auth_state_path` above).
