@@ -18,12 +18,14 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import pytest
+from playwright.sync_api import Error as PlaywrightError
 
 log = logging.getLogger('verification_runner')
 
@@ -45,6 +47,14 @@ def pytest_addoption(parser: Any) -> None:
         default=False,
         help='Enable step-by-step screenshot capture for verification.',
     )
+    group.addoption(
+        '--step-review',
+        action='store_true',
+        default=False,
+        help='Interactive QA review: terminal prompt after every step '
+             '([Enter]=OK, [f]=Flag, [q]=Quit). Needs --verify-mode and '
+             '--headed, and an interactive terminal.',
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -56,8 +66,34 @@ def step_capture():
     return StepCapture(active=False)
 
 
+def _step_review_allowed(config: Any) -> bool:
+    """Apply the step-review safety guards from the workflow doc.
+
+    Guards: --verify-mode must be on, --headed must be on (no browser to
+    watch otherwise), and the real terminal must be interactive (CI has
+    no stdin for prompts). A failed guard disables review, never the run.
+    """
+    def disabled(reason: str) -> bool:
+        sys.stderr.write(f'[step-review] {reason}; step review disabled.\n')
+        log.warning('%s; step review disabled.', reason)
+        return False
+
+    if not config.getoption('--step-review', default=False):
+        return False
+    if not config.getoption('--verify-mode', default=False):
+        return disabled('--step-review needs --verify-mode')
+    if not config.getoption('--headed', default=False):
+        return disabled('--step-review needs --headed (no browser to watch)')
+    real_stdin = sys.__stdin__
+    if real_stdin is None or not real_stdin.isatty():
+        return disabled('--step-review needs an interactive terminal '
+                        '(no stdin for prompts)')
+    return True
+
+
 def pytest_configure(config: Any) -> None:
     enabled = config.getoption('--verify-mode', default=False)
+    config._step_review_active = _step_review_allowed(config)
     if not enabled:
         return
 
@@ -81,10 +117,16 @@ class StepCapture:
     When verification mode is OFF: all methods are no-ops (zero overhead).
     """
 
-    def __init__(self, page=None, nodeid: str = '', active: bool = False):
+    def __init__(self, page=None, nodeid: str = '', active: bool = False,
+                 review: bool = False, config: Any = None,
+                 step_defs: list[dict[str, Any]] | None = None):
         self._page = page
         self._nodeid = nodeid
         self._active = active
+        self._review = review
+        self._config = config
+        self._step_defs = step_defs or []
+        self._verdicts: list[dict[str, Any]] = []
         self._steps: list[dict[str, Any]] = []
         self._start_time = time.time()
         self._case_key = ''
@@ -112,13 +154,110 @@ class StepCapture:
 
         screenshot_path = self._take_screenshot(step_num)
 
-        self._steps.append({
+        record = {
             'step': step_num,
             'description': description,
             'screenshot': str(screenshot_path) if screenshot_path else None,
             'timestamp': time.time(),
             'result': 'passed',  # Updated to 'failed' if test fails after this step
-        })
+        }
+        expected = self._expected_for(step_num)
+        if expected:
+            record['expected'] = expected
+        self._steps.append(record)
+
+        self._show_overlay(step_num, description)
+
+        if self._review:
+            self._review_step(step_num, description, expected)
+
+    def _expected_for(self, step_num: int) -> str:
+        """Return the sidecar 'expected' text for a step, or ''."""
+        for step in self._step_defs:
+            if step.get('n') == step_num:
+                return step.get('expected', '')
+        return ''
+
+    def _step_total(self) -> str:
+        return str(len(self._step_defs)) if self._step_defs else '?'
+
+    def _show_overlay(self, step_num: int, description: str) -> None:
+        """Paint the green step banner into the headed browser."""
+        if not self._page or not self._config:
+            return
+        if not self._config.getoption('--headed', default=False):
+            return
+        label = f'Step {step_num}/{self._step_total()}: {description}'
+        try:
+            self._page.evaluate(
+                """(text) => {
+                    let el = document.getElementById('qa-step-overlay');
+                    if (!el) {
+                        el = document.createElement('div');
+                        el.id = 'qa-step-overlay';
+                        el.style.cssText =
+                            'position:fixed;top:0;left:0;right:0;' +
+                            'z-index:2147483647;background:#2e7d32;' +
+                            'color:#fff;font:14px/1.6 sans-serif;' +
+                            'padding:6px 12px;text-align:center;' +
+                            'pointer-events:none;';
+                        document.body.appendChild(el);
+                    }
+                    el.textContent = text;
+                }""",
+                label,
+            )
+        except PlaywrightError as e:
+            log.debug('Step overlay failed: %s', e)
+
+    def _review_step(self, step_num: int, description: str,
+                     expected: str) -> None:
+        """Prompt the reviewer in the terminal and record the verdict."""
+        capman = None
+        if self._config is not None:
+            capman = self._config.pluginmanager.getplugin('capturemanager')
+        try:
+            if capman is not None:
+                with capman.global_and_fixture_disabled():
+                    verdict, note = self._read_verdict(
+                        step_num, description, expected
+                    )
+            else:
+                verdict, note = self._read_verdict(
+                    step_num, description, expected
+                )
+        except (EOFError, OSError):
+            # stdin went away mid-run; treat the step as unreviewed OK
+            verdict, note = 'ok', 'stdin closed during review'
+
+        self._verdicts.append(
+            {'step': step_num, 'verdict': verdict, 'note': note}
+        )
+        if verdict == 'quit':
+            pytest.fail(
+                f'Step review aborted by reviewer at step {step_num}',
+                pytrace=False,
+            )
+
+    def _read_verdict(self, step_num: int, description: str,
+                      expected: str) -> tuple[str, str]:
+        sys.stdout.write(
+            f'\n  ┌─ Step {step_num}/{self._step_total()}: '
+            f'{description}\n'
+        )
+        if expected:
+            sys.stdout.write(f'  │  Expected: {expected}\n')
+        sys.stdout.write(
+            '  └─ [Enter] = OK   [f] = Flag   [q] = Quit early\n'
+        )
+        sys.stdout.flush()
+        answer = input('  > ').strip().lower()
+        if answer == 'f':
+            note = input('  note > ').strip()
+            return 'flagged', note
+        if answer == 'q':
+            return 'quit', ''
+        return 'ok', ''
 
     def _take_screenshot(self, step_num: int) -> Path | None:
         """Capture a screenshot for a step."""
@@ -159,7 +298,7 @@ class StepCapture:
         if outcome == 'failed' and self._steps:
             self._steps[-1]['result'] = 'failed'
 
-        return {
+        evidence = {
             'nodeid': self._nodeid,
             'case_key': self._case_key,
             'result': outcome,
@@ -168,6 +307,10 @@ class StepCapture:
             'total_steps_defined': len(self._steps),
             'steps': self._steps,
         }
+        if self._review:
+            evidence['step_verdicts'] = self._verdicts
+            evidence['review_mode'] = 'step_review'
+        return evidence
 
 
 # ---------------------------------------------------------------------------
@@ -217,10 +360,22 @@ class VerificationCollector:
         """
         nodeid = request.node.nodeid
         active = request.config.getoption('--verify-mode', default=False)
+        review = getattr(request.config, '_step_review_active', False)
+
+        step_defs = None
+        if active:
+            try:
+                from tests.steps.step_registry import load_steps
+                step_defs = load_steps(nodeid)
+            except (ImportError, OSError, ValueError, KeyError, TypeError) as e:
+                log.debug('No step definitions for %s: %s', nodeid, e)
 
         capture = StepCapture(
             nodeid=nodeid,
             active=active,
+            review=review,
+            config=request.config,
+            step_defs=step_defs,
         )
 
         if active:

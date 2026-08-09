@@ -98,11 +98,12 @@ shared tenant data and hardware suites set limits. Read
 pytest --headed --slowmo 300 --verify-mode -k "test_export_clip"
 ```
 
-> **Known gap (2026-08-07):** the interactive `--step-review` flag is
-> documented in `docs/VERIFICATION_WORKFLOW.md` but is missing from the
-> code - no plugin registers it. It was built on 03/15/2026 and appears to
-> have been lost in the July branch reconciliation. Recovery is tracked on
-> the roadmap; until then only `--verify-mode` works.
+> **Rebuilt (2026-08-08):** the interactive `--step-review` flag was lost
+> in the July branch reconciliation and has been rebuilt in
+> `plugins/verification_runner.py` from the contract in
+> `docs/VERIFICATION_WORKFLOW.md`: per-step terminal prompts, safety
+> guards, `step_verdicts` in the evidence JSON, and the headed step
+> overlay. Add it to a headed `--verify-mode` run to review step by step.
 
 ## Project Structure
 

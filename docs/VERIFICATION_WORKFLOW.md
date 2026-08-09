@@ -1,11 +1,12 @@
 # QA Test Verification Workflow
 
-> **Known gap (2026-08-07):** the interactive `--step-review` flag described
-> below is missing from the code - no plugin registers it (repo-wide search
-> confirms). It was built on 03/15/2026 and appears to have been lost in the
-> July branch reconciliation. Recovery is tracked on the roadmap. Until
-> then, only `--verify-mode` (screenshot capture) works; the step-review
-> prompts do not.
+> **Status (2026-08-08):** the interactive `--step-review` flag was rebuilt
+> in `plugins/verification_runner.py` from this document after the original
+> (built 03/15/2026) was lost in the July branch reconciliation. No backup
+> held the code, so the rebuild follows the contract below: safety guards,
+> per-step prompts, `step_verdicts`, and the headed step overlay. The
+> guards are verified; run one headed review session to confirm the prompt
+> flow end to end.
 
 ## What Is This?
 
