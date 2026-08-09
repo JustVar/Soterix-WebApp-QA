@@ -35,3 +35,7 @@ Hard rules:
 - Never commit `.env` or any credential.
 - Before you edit a file you did not create, read it fully and keep its
   intent. Propose a large rewrite instead of applying it.
+- Before every commit, run both gates and fix what they report:
+  `python -m ruff check .` and `python tools/convention_check.py`. The
+  checker blocks on sleeps without a why-comment and on QA Touch markers
+  in test files.

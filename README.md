@@ -233,6 +233,22 @@ python -m ruff check plugins/
 
 The Playwright/pytest-aware rule set is the headline difference from a generic ruff config: `PT` enforces fixture conventions (`@pytest.fixture` not `@pytest.fixture()`, parametrize value style, etc.), `BLE` flags blind `except Exception` in test code where it usually hides real problems, and `T20` catches leftover `print()` statements in test bodies. Tools and discovery scripts keep their `print()` usage by per-file-ignore. New code should aim for zero new lints; existing remaining issues are tracked for incremental cleanup.
 
+Ruff cannot see the house testing rules, so a second gate does:
+
+```powershell
+# Check the lines you added since HEAD against docs/CONVENTIONS.md
+python tools/convention_check.py
+
+# Whole-repo standing debt report
+python tools/convention_check.py --all
+```
+
+HIGH findings (uncommented sleeps, QA Touch markers in test files) block
+the commit; MEDIUM findings (absolute count oracles, `img[src]` icon
+guesses, hardcoded tenant names) warn. The default mode diffs against
+HEAD, so debt in files you did not touch never blocks you. Run both
+gates before every commit.
+
 ## CI Notes
 
 - `python -m playwright install chromium` must run in CI before pytest.

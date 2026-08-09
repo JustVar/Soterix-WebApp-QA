@@ -267,3 +267,26 @@ so testers can see the drag in headed mode. The current implementation is
   plugins/ allow unused-arg (pytest hook signatures).
 - `docs/archive/`, `config/audit_reports/`, `config/qatouch_snapshots/`,
   `legacy/`, `verification_output/`, and `logs/` are excluded entirely.
+
+## Convention checker
+
+Ruff checks Python style; `tools/convention_check.py` checks the rules on
+this page that ruff cannot see. Run both before every commit:
+
+```
+python -m ruff check .
+python tools/convention_check.py
+```
+
+- **HIGH, blocks the commit:** a sleep (`wait_for_timeout` or `time.sleep`)
+  with no why-comment, and `@pytest.mark.qatouch` in a test file.
+- **MEDIUM, warns:** absolute `count() > 0` oracles, `img[src]` icon locator
+  guesses, and hardcoded tenant data names.
+
+The default mode checks only the lines added since HEAD, so debt in files
+you did not touch never blocks you. `--base <ref>` widens the diff (use it
+before pushing a branch: `--base origin/main`). `--all` scans every test
+file and reports the standing debt.
+
+A sleep earns its comment by naming the missing signal ("canvas pacing",
+"server ack has no DOM signal"), not by restating the sleep.
