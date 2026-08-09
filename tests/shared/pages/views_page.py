@@ -1,4 +1,6 @@
 """Views Page Object Model for video wall and camera views."""
+import time
+
 from playwright.sync_api import Page, expect
 
 
@@ -83,6 +85,21 @@ class ViewsPage:
             return True
         except Exception:
             return False
+
+    def _tile_count_changed(self, before: int, action: str,
+                            timeout_s: float = 10.0):
+        """Wait for the empty-tile count to move off a pre-action baseline.
+
+        Dropping content consumes a tile; loading a saved view redraws
+        the grid. Both change the count of 'Drag & Drop' placeholders.
+        """
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            if self.drag_drop_tiles.count() != before:
+                return
+            self.page.wait_for_timeout(250)  # poll tick for tile change
+        print(f"[VIEWS] {action} finished but the empty-tile count "
+              f"stayed at {before} for {timeout_s:.0f}s")
 
     def rename_tab(self, tab_index: int, new_name: str):
         """Rename a tab by index (0-based)."""
@@ -247,10 +264,10 @@ class ViewsPage:
         Note: Requires JS hover workaround because Playwright's native hover
         doesn't trigger React's mouseover handlers for checkbox reveal.
         """
-        # Open My Views panel if not already open
+        # Open My Views panel if not already open; the view-span wait
+        # below is the panel-open signal
         my_views_btn = self.page.locator("img[src*='myviews']")
         my_views_btn.click()
-        self.page.wait_for_timeout(1000)
 
         # Find saved view
         view_span = self.page.locator(f"span[title='{view_name}']").first
@@ -273,12 +290,13 @@ class ViewsPage:
             }""",
             view_name
         )
-        self.page.wait_for_timeout(250)
 
-        # Click checkbox to open the view
+        # Click checkbox to open the view; loading the view changes the
+        # number of empty tiles, which is the applied signal
+        before_tiles = self.drag_drop_tiles.count()
         checkbox = self.page.locator(".sidebar-custom-checkbox").first
         checkbox.click()
-        self.page.wait_for_timeout(1000)
+        self._tile_count_changed(before_tiles, "open saved view")
 
     def save_current_view(self):
         """Click the save view button."""
@@ -415,10 +433,12 @@ class ViewsPage:
         target_tile = self.drag_drop_tiles.nth(tile_index)
         target_tile.wait_for(state="visible", timeout=10000)
 
+        before_tiles = self.drag_drop_tiles.count()
         try:
             # Try Playwright's high-level drag first
             camera.drag_to(target_tile)
-            self.page.wait_for_timeout(1000)
+            # A successful drop consumes the empty tile
+            self._tile_count_changed(before_tiles, "camera drag")
         except Exception:
             # Fall back to JS-driven DataTransfer-based drag/drop simulation
             self._simulate_camera_drag_via_js(camera_name, tile_index)
@@ -460,8 +480,12 @@ class ViewsPage:
             return {ok: true, dropped: !!dropped};
         }
         """
+        before_tiles = self.drag_drop_tiles.count()
         result = self.page.evaluate(script, camera_name, tile_index)
-        self.page.wait_for_timeout(1000)
+        if result.get("ok"):
+            # React applies the simulated drop async; a consumed tile is
+            # the applied signal
+            self._tile_count_changed(before_tiles, "JS camera drag")
         return result
 
     def drag_location_to_tile(self, location_name: str, tile_index: int = 0):
@@ -478,10 +502,12 @@ class ViewsPage:
         target_tile = self.drag_drop_tiles.nth(tile_index)
         target_tile.wait_for(state="visible", timeout=10000)
 
+        before_tiles = self.drag_drop_tiles.count()
         try:
             # Try Playwright's high-level drag first
             location.drag_to(target_tile)
-            self.page.wait_for_timeout(1000)
+            # A successful drop consumes the empty tile
+            self._tile_count_changed(before_tiles, "location drag")
         except Exception:
             # Fall back to JS simulation
             self._simulate_location_drag_via_js(location_name, tile_index)
@@ -521,8 +547,12 @@ class ViewsPage:
             return {ok: true, dropped: !!dropped};
         }
         """
+        before_tiles = self.drag_drop_tiles.count()
         result = self.page.evaluate(script, location_name, tile_index)
-        self.page.wait_for_timeout(1000)
+        if result.get("ok"):
+            # React applies the simulated drop async; a consumed tile is
+            # the applied signal
+            self._tile_count_changed(before_tiles, "JS location drag")
         return result
 
     def drag_map_to_tile(self, map_name: str = None, tile_index: int = 0):
@@ -532,9 +562,9 @@ class ViewsPage:
             map_name: The name of the map to drag. If None, drags the first map.
             tile_index: Target tile index (0-based). Default is first tile.
         """
-        # Open maps panel first
+        # Open maps panel first; the map-element wait below is the
+        # panel-open signal
         self.open_maps()
-        self.page.wait_for_timeout(1000)
 
         # Find the map element
         if map_name:
@@ -546,9 +576,11 @@ class ViewsPage:
         map_element.wait_for(state="visible", timeout=10000)
         target_tile = self.drag_drop_tiles.nth(tile_index)
 
+        before_tiles = self.drag_drop_tiles.count()
         try:
             map_element.drag_to(target_tile)
-            self.page.wait_for_timeout(1000)
+            # A successful drop consumes the empty tile
+            self._tile_count_changed(before_tiles, "map drag")
         except Exception:
             # Maps may need special handling
             pass
@@ -764,10 +796,10 @@ class ViewsPage:
         3. Hover the timeline to reveal bookmark icon
         4. Click the bookmark icon
         """
-        # Enter fullscreen first (timeline is always available in fullscreen)
+        # Enter fullscreen first (timeline is always available in
+        # fullscreen); the stream wait below is the entered signal
         print(f"DEBUG add_bookmark_on_tile: Entering fullscreen...")
         self.enter_fullscreen_on_tile(tile_index)
-        self.page.wait_for_timeout(1000)
 
         # Import FullScreenPage for fullscreen operations
         from tests.shared.pages.fullscreen_page import FullScreenPage
@@ -778,22 +810,24 @@ class ViewsPage:
         fs.wait_for_stream_loaded(timeout=30000)
         print(f"DEBUG add_bookmark_on_tile: Stream loaded!")
 
-        # In fullscreen, timeline is always available - hover it to reveal bookmark icon
+        # In fullscreen, timeline is always available - hover it to reveal
+        # bookmark icon; the icon click waits for the reveal on its own
         print(f"DEBUG add_bookmark_on_tile: Hovering timeline in fullscreen...")
         timeline = fs.video_container.locator("[class*='timeline'], svg").first
         timeline.hover()
-        self.page.wait_for_timeout(500)
 
         # Click the bookmark icon
         print(f"DEBUG add_bookmark_on_tile: Clicking bookmark icon...")
         bookmark_icon = fs.video_container.locator("img[src*='Bookmark']")
         bookmark_icon.click()
+        # The bookmark save shows no confirmation on the timeline
         self.page.wait_for_timeout(2000)
         print(f"DEBUG add_bookmark_on_tile: Bookmark added!")
 
         # Exit fullscreen
         print(f"DEBUG add_bookmark_on_tile: Exiting fullscreen...")
         fs.exit_fullscreen()
+        # The fullscreen exit animation has no reliable DOM signal
         self.page.wait_for_timeout(1000)
         print(f"DEBUG add_bookmark_on_tile: Done!")
 
@@ -808,23 +842,21 @@ class ViewsPage:
             "[class*='video_container'][class*='new_video_player']"
         ).nth(tile_index)
 
+        # Hover chains: each following click waits for its own target,
+        # so no pacing sleeps are needed between the reveals
         video_tile.hover()
-        self.page.wait_for_timeout(500)
 
         # Click three-dot menu
         three_dots = video_tile.locator(".control-small-view")
         three_dots.click()
-        self.page.wait_for_timeout(2000)
 
         # Hover timeline to reveal share icon
         timeline = video_tile.locator("#svg-line-2")
         timeline.hover()
-        self.page.wait_for_timeout(500)
 
-        # Click share icon
+        # Click share icon; the dialog wait below is the opened signal
         share_icon = video_tile.locator("img[src*='media/icon-share']")
         share_icon.click()
-        self.page.wait_for_timeout(2000)
 
         # Fill email in share dialog
         share_container = self.page.locator(".share_live_main_container")
@@ -832,24 +864,22 @@ class ViewsPage:
         email_field = share_container.locator(".fileName_inputfield")
         email_field.fill(email)
 
-        # Click Share button
+        # Click Share button; the Copy button wait is the shared signal
         share_button = self.page.locator("button:has(span:text-is('Share'))")
         share_button.click()
-        self.page.wait_for_timeout(3000)
 
         # Click Copy button for the link
         copy_button = self.page.locator("span:text-is('Copy')")
         try:
             copy_button.wait_for(state="visible", timeout=10000)
             copy_button.click()
-            self.page.wait_for_timeout(2000)
         except Exception:
             pass
 
-        # Close the share dialog
+        # Close the share dialog if it is still open
         cancel_btn = share_container.locator(".cancel_button_share_live")
-        if cancel_btn.count() > 0 and cancel_btn.is_visible():
-            cancel_btn.click()
+        if self._appears(cancel_btn, timeout=3000):
+            cancel_btn.first.click()
 
     def toggle_favorite(self, camera_name: str):
         """Toggle the favorite star on a camera in the left panel.
@@ -857,17 +887,28 @@ class ViewsPage:
         Finds the camera by name in the site tree and clicks its
         favorite button.
         """
-        fav_button = self.page.locator(
-            f"span[title='{camera_name}']/../..//button[.//img[@alt='favorite']]"
-        )
+        # Scope to the camera's row (grandparent of the title span),
+        # then find its favorite button. The old selector mixed XPath
+        # into a CSS string and never parsed. The star is revealed on
+        # row hover, so hover the row first.
+        row_anchor = self.page.locator(f"span[title='{camera_name}']").first
+        row_anchor.wait_for(state="visible", timeout=10000)
+        row_anchor.hover()
+        fav_button = row_anchor.locator("xpath=../..").locator(
+            "button:has(img[alt='favorite'])"
+        ).first
         fav_button.wait_for(state="visible", timeout=10000)
         fav_button.click()
+        # The favorite state is saved server-side with no validated DOM
+        # signal for the toggle landing
         self.page.wait_for_timeout(2000)
 
     def is_camera_favorited(self, camera_name: str) -> bool:
         """Return True if the camera has a filled favorite icon."""
         filled_icon = self.page.locator(
-            f"span[title='{camera_name}']/..//..//img[contains(@src,'media/favoriteIconFilled')]"
+            f"span[title='{camera_name}']"
+        ).locator("xpath=../..").locator(
+            "img[src*='media/favoriteIconFilled']"
         )
         return filled_icon.count() > 0
 
@@ -875,12 +916,14 @@ class ViewsPage:
         """Open the favorites panel by clicking the favorites icon."""
         fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
         fav_icon.click()
+        # The panel slide-in has no known DOM signal
         self.page.wait_for_timeout(2000)
 
     def close_favorites_panel(self):
         """Close the favorites panel by clicking the favorites icon again."""
         fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
         fav_icon.click()
+        # The panel slide-out has no known DOM signal
         self.page.wait_for_timeout(1000)
 
     def is_camera_in_favorites(self, camera_name: str) -> bool:
@@ -899,9 +942,10 @@ class ViewsPage:
         ).nth(tile_index)
 
         video_tile.hover()
-        self.page.wait_for_timeout(500)
 
+        # Wait for the hover-revealed controls before counting them
         zoom_buttons = video_tile.locator("img[src*='media/Zoom.']")
+        self._appears(zoom_buttons, timeout=5000)
         if zoom_buttons.count() > 1:
             zoom_buttons.nth(1).click()
         else:

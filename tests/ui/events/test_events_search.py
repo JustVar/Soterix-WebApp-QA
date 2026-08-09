@@ -3,13 +3,17 @@
 Covers the Events page search flow: site selection, camera selection,
 duration filtering, searching, validating results, and pinning events.
 """
+import time
+
 import pytest
 from playwright.sync_api import expect
+
+from config.base_config import config
 from tests.shared.pages.events_page import EventsPage
 
-
-# Site name used across event tests (same as Views tests)
-SITE_NAME = "Driver Site"
+# Site name used across event tests (same as Views tests). The shared
+# tenant renames sites, so the name lives in config, never in the test.
+SITE_NAME = config.get("test_site_name")
 
 
 class TestEventsSearch:
@@ -42,12 +46,12 @@ class TestEventsSearch:
         self.step_capture.mark(1, "Navigate to Events page and wait for load")
 
         self.events.select_site(SITE_NAME)
-        self.step_capture.mark(2, "Open the site dropdown and select 'Driver Site'")
+        self.step_capture.mark(2, "Open the site dropdown and select the test site")
 
         # After selecting, the dropdown should close and site name visible
         site_label = self.page.get_by_text(SITE_NAME, exact=False).first
         expect(site_label).to_be_visible(timeout=5000)
-        self.step_capture.mark(3, "Verify 'Driver Site' text is visible on the page")
+        self.step_capture.mark(3, "Verify the selected site name is visible on the page")
 
     @pytest.mark.ui
     @pytest.mark.events
@@ -189,21 +193,109 @@ class TestEventsSearch:
         """Verify search filters results by a single camera channel.
 
         Uses route interception to modify the API channelList from all
-        cameras to just channel 14 (Hanwha_6). This bypasses the MUI
-        checkbox zero-dimension limitation while verifying per-camera
-        search works at the API level.
+        cameras to one channel. This bypasses the MUI checkbox
+        zero-dimension limitation while verifying per-camera search
+        works at the API level.
 
-        Channel 14 = Hanwha_6 (confirmed to have events in Last 7 Days).
+        The channel is discovered from the unfiltered search response
+        instead of hardcoded: the shared tenant renames sites and
+        re-numbers channels, so a fixed channel is a delayed failure.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
 
         self.events.select_site(SITE_NAME)
         self.events.select_duration("Last 7")
-        self.events.search_events_for_channels([14], timeout=60000)
 
-        count = self.events.get_event_count()
-        assert count > 0, (
-            "Expected events for Hanwha_6 (channel 14) in the last 7 days"
+        # Unfiltered search first; capture its API responses to learn
+        # which channel actually has events on this tenant.
+        seen_events = []
+
+        def capture_events(response):
+            if "site/search/event" not in response.url:
+                return
+            try:
+                for block in response.json().get("result", []):
+                    seen_events.extend(block.get("eventList", []))
+            except (ValueError, KeyError, TypeError, AttributeError):
+                pass
+
+        self.page.on("response", capture_events)
+        try:
+            self.events.search_events(timeout=60000)
+        finally:
+            self.page.remove_listener("response", capture_events)
+
+        channel = None
+        channel_key = None
+        for event in seen_events:
+            if not isinstance(event, dict):
+                continue
+            for key in ("channelId", "channel", "channelNo", "channel_id"):
+                if event.get(key) is not None:
+                    channel = int(event[key])
+                    channel_key = key
+                    break
+            if channel is not None:
+                break
+        if channel is None:
+            pytest.skip(
+                "Search responses carry no recognizable channel field; "
+                "cannot derive a channel with events"
+            )
+
+        # Reload the Events page so the filtered search runs as the
+        # first search of a fresh view: a second click on the results
+        # view does not dispatch a new search POST.
+        self.page.reload()
+        self.events.wait_for_page_load()
+        self.events.select_site(SITE_NAME)
+        self.events.select_duration("Last 7")
+
+        # Filtered search for the discovered channel. The oracle is the
+        # API result stream: the client stops polling once it has its
+        # batches, so a 100-percent completion response is not
+        # guaranteed and the captured events themselves are the proof.
+        totals = []
+        filtered_events = []
+
+        def capture_filtered(response):
+            if "site/search/event" not in response.url:
+                return
+            try:
+                for block in response.json().get("result", []):
+                    totals.append(block.get("totalEvent", 0))
+                    filtered_events.extend(block.get("eventList", []))
+            except (ValueError, KeyError, TypeError, AttributeError):
+                pass
+
+        self.page.on("response", capture_filtered)
+        try:
+            self.events.search_events_for_channels([channel], timeout=60000)
+            # The search job is async: hold the listener open until an
+            # event batch or a positive total arrives
+            deadline = time.monotonic() + 30
+            while (time.monotonic() < deadline
+                   and not filtered_events
+                   and not any(t > 0 for t in totals)):
+                self.page.wait_for_timeout(500)  # poll for job results
+        finally:
+            self.page.remove_listener("response", capture_filtered)
+
+        assert filtered_events or any(t > 0 for t in totals), (
+            f"Channel {channel} produced events in the unfiltered search "
+            f"but the filtered search returned none (totals: {totals})"
+        )
+
+        # The filter itself is the point: every returned event must
+        # belong to the requested channel
+        mismatched = {
+            ev.get(channel_key) for ev in filtered_events
+            if isinstance(ev, dict)
+            and ev.get(channel_key) not in (None, channel)
+        }
+        assert not mismatched, (
+            f"Filtered search for channel {channel} returned events "
+            f"from other channels: {sorted(mismatched)}"
         )
 

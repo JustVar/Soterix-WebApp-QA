@@ -9,10 +9,12 @@ Migrated from Selenium:
 - switch_to_widgets helper (line 254)
 """
 import pytest
+
+from config.base_config import config
 from tests.shared.pages.insights_page import InsightsPage
 
-
-SITE_NAME = "Driver Site"
+# The shared tenant renames sites, so the name lives in config
+SITE_NAME = config.get("test_site_name")
 
 
 class TestInsightsNavigation:
@@ -47,8 +49,8 @@ class TestInsightsNavigation:
     def test_open_system_status_dashboard(self):
         """Verify the System Status dashboard opens and loads for a site.
 
-        Navigates to Insights, clicks System Status, selects Driver Site,
-        and verifies 'Devices' text appears.
+        Navigates to Insights, clicks System Status, selects the
+        configured test site, and verifies 'Devices' text appears.
         """
         self.insights.open_system_status(SITE_NAME)
 

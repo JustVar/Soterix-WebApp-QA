@@ -5,7 +5,8 @@ grid/list view toggle, clip and folder operations (group, rename, move,
 delete, create link, vault, share, export), and search.
 """
 import datetime
-from playwright.sync_api import Page, expect
+
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class MediaPage:
@@ -120,24 +121,19 @@ class MediaPage:
         except Exception:
             pass
         self.media_nav_link.click(force=True)
-        self.page.wait_for_timeout(3000)
         self._wait_for_page_ready()
 
     def _wait_for_page_ready(self):
         """Wait for the Media page to finish loading."""
-        try:
-            if self.loader.count() > 0 and self.loader.first.is_visible():
-                self.loader.first.wait_for(state="hidden", timeout=30000)
-        except Exception:
-            pass
-        self.page.wait_for_timeout(1000)
+        # Loader may take a beat to appear, then must disappear
+        self._appears(self.loader.first, timeout=2000)
+        self._appears_hidden(self.loader.first, timeout=30000)
 
     # --- Date filter ---
 
     def select_date_filter(self, option_text: str = "Last 30 Days"):
         """Open the date filter combobox and select an option."""
         self.date_filter.click()
-        self.page.wait_for_timeout(1000)
 
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=10000)
@@ -146,7 +142,8 @@ class MediaPage:
             f"li[role='option']:has-text('{option_text}')"
         ).first
         option.click()
-        self.page.wait_for_timeout(2000)
+        # Listbox hidden = MUI applied the selection
+        listbox.wait_for(state="hidden", timeout=10000)
         self._wait_for_page_ready()
 
     # --- View toggle ---
@@ -154,11 +151,13 @@ class MediaPage:
     def switch_to_grid_view(self):
         """Switch to grid view."""
         self.grid_view_button.click()
+        # The toggle re-renders client-side: no loader and no DOM signal
         self.page.wait_for_timeout(2000)
 
     def switch_to_list_view(self):
         """Switch to list view."""
         self.list_view_button.click()
+        # The toggle re-renders client-side: no loader and no DOM signal
         self.page.wait_for_timeout(2000)
 
     # --- Tab navigation ---
@@ -176,7 +175,7 @@ class MediaPage:
         tab = tab_map.get(tab_name)
         assert tab is not None, f"Unknown tab name: {tab_name}"
         tab.click()
-        self.page.wait_for_timeout(2000)
+        # The tab fetch runs a loader cycle; page-ready covers it
         self._wait_for_page_ready()
 
     def is_page_empty(self, timeout: int = 5000) -> bool:
@@ -208,7 +207,6 @@ class MediaPage:
             f"Expected at least {index + 1} checkboxes, found {count}"
         )
         checkboxes.nth(index).click()
-        self.page.wait_for_timeout(1000)
 
     # --- Clip operations ---
 
@@ -218,9 +216,9 @@ class MediaPage:
         Creates a folder with the default name from the selected clips.
         """
         self.group_clips_action.click()
-        self.page.wait_for_timeout(1000)
         self.group_clips_confirm.click()
-        self.page.wait_for_timeout(3000)
+        # The confirm control leaves the DOM when grouping starts
+        self._appears_hidden(self.group_clips_confirm, timeout=15000)
         self._wait_for_page_ready()
 
     def open_options_menu(self, index: int = 0):
@@ -230,7 +228,11 @@ class MediaPage:
         """
         icons = self.page.locator("img[src*='icon-options']")
         icons.nth(index).click()
-        self.page.wait_for_timeout(1000)
+        # The context menu popover carries the item actions. :visible
+        # skips stale keepMounted menus left hidden in the DOM.
+        self.page.locator(
+            "[role='menu']:visible, .MuiMenu-paper:visible"
+        ).first.wait_for(state="visible", timeout=10000)
 
     def click_menu_item(self, text: str):
         """Click a menu item by text in the currently open context menu."""
@@ -239,7 +241,8 @@ class MediaPage:
         ).first
         item.wait_for(state="visible", timeout=5000)
         item.click()
-        self.page.wait_for_timeout(1000)
+        # The menu closes once the action registers
+        self._appears_hidden(item, timeout=10000)
 
     def rename_item(self, new_name: str):
         """Rename a clip or folder after opening the Rename option.
@@ -253,7 +256,11 @@ class MediaPage:
         self.rename_input.click()
         self.rename_input.fill(new_name)
         self.rename_input.press("Enter")
-        self.page.wait_for_timeout(3000)
+        # The inline input closes when the rename commits
+        if not self._appears_hidden(self.rename_input, timeout=10000):
+            print("[MEDIA] Rename submitted but the input is still "
+                  "visible after 10s")
+        self._wait_for_page_ready()
 
     def delete_item(self):
         """Delete a clip or folder via options menu > Delete > confirm.
@@ -262,9 +269,10 @@ class MediaPage:
         """
         self.open_options_menu()
         self.click_menu_item("Delete")
-        self.page.wait_for_timeout(1000)
         self.confirm_button.click()
-        self.page.wait_for_timeout(3000)
+        # The dialog leaves the DOM with its confirm button
+        self._appears_hidden(self.confirm_button, timeout=15000)
+        self._wait_for_page_ready()
 
     def create_link_for_item(self):
         """Create a link for a clip or folder via options menu.
@@ -281,21 +289,18 @@ class MediaPage:
         ).first
         create_link.wait_for(state="visible", timeout=5000)
         create_link.click()
-        self.page.wait_for_timeout(2000)
+        self._appears_hidden(create_link, timeout=10000)
 
-        # Check if a dialog with a Create/OK button appeared
+        # A confirmation dialog may appear; without one the link was
+        # created immediately
         create_btn = self.page.locator(
             "button:has-text('Create'), "
             "[class*='modal'] button, "
             ".MuiDialog-root button"
         ).first
-        try:
-            create_btn.wait_for(state="visible", timeout=3000)
+        if self._appears(create_btn, timeout=3000):
             create_btn.click()
-            self.page.wait_for_timeout(2000)
-        except Exception:
-            # No dialog appeared - link was created immediately
-            pass
+            self._appears_hidden(create_btn, timeout=10000)
 
     def move_clip_to_folder(self):
         """Move a selected clip to an existing folder.
@@ -307,7 +312,6 @@ class MediaPage:
         disabled placeholder option).
         """
         self.menu_move_to_folder.click()
-        self.page.wait_for_timeout(2000)
 
         select_el = self.page.locator("select.modalForm-input-event")
         select_el.wait_for(state="visible", timeout=10000)
@@ -331,10 +335,10 @@ class MediaPage:
                 sel.dispatchEvent(new Event('change', {bubbles: true}));
             }
         }""")
-        self.page.wait_for_timeout(1000)
 
         self.move_button.click()
-        self.page.wait_for_timeout(3000)
+        # The move dialog leaves the DOM with its button
+        self._appears_hidden(self.move_button, timeout=15000)
         self._wait_for_page_ready()
         return True
 
@@ -342,54 +346,56 @@ class MediaPage:
 
     def add_to_vault(self):
         """Click the 'Add to Vault' icon on the first visible item."""
-        # Hover the first media item to reveal action icons
+        # Hover the first media item to reveal action icons; the icon
+        # wait below covers the reveal
         self.media_items.hover()
-        self.page.wait_for_timeout(500)
         self.add_to_vault_icon.wait_for(state="visible", timeout=10000)
         self.add_to_vault_icon.click()
-        self.page.wait_for_timeout(2000)
+        # The add icon leaves the item once it is vaulted
+        if not self._appears_hidden(self.add_to_vault_icon, timeout=10000):
+            print("[MEDIA] Add to Vault clicked but the icon is still "
+                  "visible after 10s")
 
     def remove_from_vault(self):
         """Click 'Remove from Vault' icon and confirm with 'Yes'."""
         self.remove_from_vault_icon.wait_for(state="visible", timeout=10000)
         self.remove_from_vault_icon.click()
-        self.page.wait_for_timeout(1000)
 
-        # Confirm removal
+        # Confirm removal; the dialog leaves the DOM with the button
         yes_button = self.page.locator(
             "button:has-text('Yes')"
         ).first
         yes_button.wait_for(state="visible", timeout=5000)
         yes_button.click()
-        self.page.wait_for_timeout(2000)
+        self._appears_hidden(yes_button, timeout=15000)
 
     # --- Share ---
 
     def share_folder(self, email: str = "test@example.com"):
         """Share a folder via the share icon and email dialog."""
         self.media_items.hover()
-        self.page.wait_for_timeout(500)
         self.share_icon.click()
-        self.page.wait_for_timeout(1000)
 
         self.email_input.wait_for(state="visible", timeout=10000)
         self.email_input.fill(email)
-        self.page.wait_for_timeout(1000)
 
         self.share_button.click()
-        self.page.wait_for_timeout(2000)
+        # The success panel is the sharing-done signal
+        if not self._appears(self.share_success, timeout=10000):
+            print("[MEDIA] Share clicked but no success panel appeared "
+                  "within 10s")
 
     # --- Export ---
 
     def export_folder(self):
         """Export a folder via the download icon."""
         self.media_items.hover()
-        self.page.wait_for_timeout(500)
         self.download_icon.click()
-        self.page.wait_for_timeout(1000)
 
+        self.export_span.wait_for(state="visible", timeout=10000)
         self.export_span.click()
-        self.page.wait_for_timeout(2000)
+        # The export control leaves the DOM once the export starts
+        self._appears_hidden(self.export_span, timeout=10000)
 
     # --- Search ---
 
@@ -399,5 +405,25 @@ class MediaPage:
         self.search_input.fill("")
         self.search_input.fill(query)
         self.search_input.press("Enter")
-        self.page.wait_for_timeout(3000)
+        # The search fetch runs a loader cycle; page-ready covers it
         self._wait_for_page_ready()
+
+    # --- Wait helpers ---
+
+    @staticmethod
+    def _appears(locator, timeout: int = 5000) -> bool:
+        """True when the element shows within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="visible", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
+
+    @staticmethod
+    def _appears_hidden(locator, timeout: int = 5000) -> bool:
+        """True when the element hides within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="hidden", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False

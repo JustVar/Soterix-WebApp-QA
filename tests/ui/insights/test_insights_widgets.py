@@ -21,10 +21,12 @@ Note: Heatmap + Event is not a valid combination - the UI only offers
 Person and Vehicle categories when Heat Map graph type is selected.
 """
 import pytest
+
+from config.base_config import config
 from tests.shared.pages.insights_page import InsightsPage
 
-
-SITE_NAME = "Driver Site"
+# The shared tenant renames sites, so the name lives in config
+SITE_NAME = config.get("test_site_name")
 
 # All valid graph/category combinations (11 total)
 # Heat map only supports Person and Vehicle (no Event option in UI)

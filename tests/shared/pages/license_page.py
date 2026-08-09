@@ -4,7 +4,9 @@ Shared page object for Licenses module - Available Licenses, Assigned Licenses,
 device list, assign/unassign/suspend workflows, and CSV export.
 Used by all License test modules.
 """
-from playwright.sync_api import Page, expect
+import time
+
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class LicensePage:
@@ -130,52 +132,33 @@ class LicensePage:
 
     def navigate(self):
         """Navigate to Licenses page via Admin menu > Licenses."""
-        # Wait for any overlays to clear
-        self.page.wait_for_timeout(1000)
-
-        # Click Admin menu first
+        # Click Admin menu first. Prefer the href link; fall back to the
+        # text node if the sidebar has not rendered the anchor yet.
         admin_link = self.page.locator("a[href*='admin']").first
-        if not admin_link.is_visible():
+        if not self._appears(admin_link, timeout=3000):
             admin_link = self.page.get_by_text("Admin").first
         admin_link.wait_for(state="visible", timeout=10000)
         admin_link.click(force=True)
-        self.page.wait_for_timeout(2000)
 
-        # Then click Licenses submenu
+        # Then click Licenses submenu once the submenu reveals it
         license_link = self.page.locator("a[href*='license']").first
-        if not license_link.is_visible():
+        if not self._appears(license_link, timeout=3000):
             license_link = self.page.get_by_text("License").first
         license_link.wait_for(state="visible", timeout=10000)
         license_link.click(force=True)
-        self.page.wait_for_timeout(3000)
         self._wait_for_page_ready()
 
     def _wait_for_page_ready(self):
         """Wait for loaders to hide and content to appear."""
-        # Wait for any loaders to disappear
-        loaders_hidden = False
-        if self.loader.count() > 0:
-            try:
-                self.loader.first.wait_for(state="hidden", timeout=30000)
-                loaders_hidden = True
-            except Exception:
-                pass
+        # Loader may take a beat to appear, then must disappear
+        self._appears(self.loader.first, timeout=2000)
+        self._appears_hidden(self.loader.first, timeout=30000)
 
-        # If we waited for loaders, add extra time for content to render
-        if loaders_hidden:
-            self.page.wait_for_timeout(2000)
-
-        # Wait for main content to be visible
-        content_found = False
-        try:
-            self.total_licenses_widget.wait_for(state="visible", timeout=20000)
-            content_found = True
-        except Exception:
-            pass
-
-        # Extra wait if content took time to appear
-        if content_found:
-            self.page.wait_for_timeout(1000)
+        # The main page renders the summary widget; sub-pages (device
+        # list) render the breadcrumb instead. Either marks content
+        # ready, so the wait does not burn its timeout on sub-pages.
+        ready = self.total_licenses_widget.or_(self.breadcrumb.first)
+        self._appears(ready.first, timeout=20000)
 
     # ----- Tab switching -----
 
@@ -183,34 +166,32 @@ class LicensePage:
         """Click the Available Licenses tab."""
         self.available_tab.wait_for(state="visible", timeout=10000)
         self.available_tab.click(force=True)
-        self.page.wait_for_timeout(2000)
+        # The tab fetch runs a loader cycle; page-ready covers it
         self._wait_for_page_ready()
 
     def switch_to_assigned_tab(self):
         """Click the Assigned Licenses tab."""
         self.assigned_tab.wait_for(state="visible", timeout=10000)
         self.assigned_tab.click(force=True)
-        self.page.wait_for_timeout(2000)
         self._wait_for_page_ready()
 
     # ----- Search -----
 
     def search(self, query: str):
-        """Type into the search input."""
+        """Type into the search input and wait for the filter to settle."""
         self.search_input.wait_for(state="visible", timeout=10000)
         self.search_input.fill(query)
-        self.page.wait_for_timeout(2000)
+        self._rows_settled()
 
     def clear_search(self):
-        """Clear the search field."""
+        """Clear the search field and wait for the filter to settle."""
         self.search_input.fill("")
-        self.page.wait_for_timeout(2000)
+        self._rows_settled()
 
     # ----- Available Licenses -----
 
     def get_visible_row_count(self) -> int:
         """Count visible rows in the license table."""
-        self.page.wait_for_timeout(1000)
         return self.license_rows.count()
 
     def get_column_headers(self) -> list[str]:
@@ -230,9 +211,8 @@ class LicensePage:
     def download_csv(self) -> str:
         """Click the CSV download button and return the downloaded file path."""
         self.csv_download_button.wait_for(state="visible", timeout=10000)
-        # Hover to activate the element
+        # Hover to activate the element; the download event is the signal
         self.csv_download_button.hover()
-        self.page.wait_for_timeout(500)
         with self.page.expect_download(timeout=15000) as download_info:
             self.csv_download_button.click(force=True)
         download = download_info.value
@@ -247,20 +227,21 @@ class LicensePage:
 
     def expand_site(self, index: int = 0):
         """Expand a site row to reveal feature-level licenses."""
-        expandable = self.site_expand_icons.nth(index)
-        expandable.click()
-        self.page.wait_for_timeout(2000)
+        before = self.site_rows.count()
+        self.site_expand_icons.nth(index).click()
+        # Expansion inserts feature rows below the site row
+        self._row_count_changed(before, "expand")
 
     def collapse_site(self, index: int = 0):
         """Collapse an expanded site row."""
-        expandable = self.site_expand_icons.nth(index)
-        expandable.click()
-        self.page.wait_for_timeout(1000)
+        before = self.site_rows.count()
+        self.site_expand_icons.nth(index).click()
+        # Collapse removes the feature rows again
+        self._row_count_changed(before, "collapse")
 
     def toggle_site_enable(self, index: int = 0):
         """Toggle the enable/disable switch for a site."""
-        self.site_toggle_switches.nth(index).click()
-        self.page.wait_for_timeout(2000)
+        self._toggle_switch(self.site_toggle_switches.nth(index))
 
     # ----- Feature-Level -----
 
@@ -270,13 +251,17 @@ class LicensePage:
 
     def toggle_feature_enable(self, index: int = 0):
         """Toggle the enable/disable switch for a feature."""
-        self.feature_toggle_switches.nth(index).click()
-        self.page.wait_for_timeout(2000)
+        self._toggle_switch(self.feature_toggle_switches.nth(index))
 
     def click_feature_device_link(self, index: int = 0):
         """Click a feature row to navigate to the device list."""
         self.feature_rows.nth(index).click()
-        self.page.wait_for_timeout(3000)
+        # The device list page shows a breadcrumb; sub-page loaders
+        # are covered by page-ready
+        if not self._appears(self.breadcrumb.first, timeout=10000):
+            print("[LICENSE] Feature row clicked but no breadcrumb "
+                  "appeared within 10s")
+        self._wait_for_page_ready()
 
     # ----- Device List -----
 
@@ -287,69 +272,91 @@ class LicensePage:
     def open_device_menu(self, index: int = 0):
         """Open the three-dot options menu for a device."""
         self.options_icons.nth(index).click()
-        self.page.wait_for_timeout(1000)
+        # The menu popover carries the action options. :visible skips
+        # stale keepMounted menus left hidden in the DOM.
+        self.page.locator(
+            "[role='menu']:visible, .MuiMenu-paper:visible"
+        ).first.wait_for(state="visible", timeout=10000)
 
     def suspend_device(self, index: int = 0):
         """Suspend a device license via the options menu."""
         self.open_device_menu(index)
         self.suspend_option.click()
-        self.page.wait_for_timeout(1000)
+        # The confirmation dialog is the next step's target
+        self.confirm_button.wait_for(state="visible", timeout=10000)
 
     def confirm_action(self):
         """Click the confirm button in the dialog."""
         self.confirm_button.click()
-        self.page.wait_for_timeout(2000)
+        # The clicked button leaves the DOM with the dialog
+        self._appears_hidden(self.confirm_button, timeout=10000)
         self._wait_for_page_ready()
 
     def cancel_action(self):
         """Click the cancel button in the dialog."""
         self.cancel_button.click()
-        self.page.wait_for_timeout(1000)
+        self._appears_hidden(self.cancel_button, timeout=10000)
 
     def unassign_device(self, index: int = 0):
         """Unassign a device license via the options menu."""
         self.open_device_menu(index)
         self.unassign_option.click()
-        self.page.wait_for_timeout(1000)
+        self.confirm_button.wait_for(state="visible", timeout=10000)
 
     # ----- Assign New License -----
 
     def open_assign_modal(self):
-        """Click the Assign New License button."""
+        """Click the Assign New License button.
+
+        Callers check assign_modal.count() and skip when the modal is
+        not implemented, so a missing modal must not raise here.
+        """
         self.assign_button.wait_for(state="visible", timeout=10000)
         self.assign_button.click(force=True)
-        self.page.wait_for_timeout(3000)
+        visible_modal = self.page.locator(
+            "div[class*='modal']:visible, div[role='dialog']:visible"
+        )
+        if not self._appears(visible_modal.first, timeout=10000):
+            print("[LICENSE] Assign clicked but no modal appeared "
+                  "within 10s")
 
     def close_assign_modal(self):
         """Close the assign modal."""
         self.modal_close.click()
-        self.page.wait_for_timeout(1000)
+        # The clicked close control leaves the DOM with the modal
+        self._appears_hidden(self.modal_close, timeout=10000)
 
     def select_site_in_modal(self, site_name: str):
         """Select a site from the dropdown in the assign modal."""
         self.site_dropdown.click()
-        self.page.wait_for_timeout(1000)
         option = self.page.locator(
             f"li[role='option']:has-text('{site_name}'), "
             f"option:has-text('{site_name}')"
         ).first
         option.click()
-        self.page.wait_for_timeout(2000)
+        # Listbox hidden = MUI applied the selection (native selects
+        # have no listbox, so a miss is fine)
+        self._appears_hidden(
+            self.page.locator("[role='listbox']"), timeout=10000
+        )
 
     def select_device(self, index: int = 0):
-        """Select a device checkbox for assignment."""
+        """Select a device checkbox for assignment.
+
+        The next step (Assign) waits for its own actionability, so no
+        wait is needed after the checkbox click.
+        """
         self.device_checkboxes.nth(index).click(force=True)
-        self.page.wait_for_timeout(500)
 
     def select_all_devices(self):
         """Select the 'Select All' checkbox."""
         self.select_all_checkbox.click(force=True)
-        self.page.wait_for_timeout(1000)
 
     def confirm_assignment(self):
         """Click the final Assign button in the modal."""
         self.assign_confirm_button.click()
-        self.page.wait_for_timeout(3000)
+        # Modal closes on success; then the page refreshes its data
+        self._appears_hidden(self.assign_modal.first, timeout=15000)
         self._wait_for_page_ready()
 
     # ----- Navigation helpers -----
@@ -359,7 +366,76 @@ class LicensePage:
         links = self.breadcrumb.locator("a, span[class*='link']")
         if links.count() > 0:
             links.first.click()
-            self.page.wait_for_timeout(2000)
+            self._wait_for_page_ready()
+
+    # ----- Wait helpers -----
+
+    @staticmethod
+    def _appears(locator, timeout: int = 5000) -> bool:
+        """True when the element shows within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="visible", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
+
+    @staticmethod
+    def _appears_hidden(locator, timeout: int = 5000) -> bool:
+        """True when the element hides within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="hidden", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
+
+    def _rows_settled(self, timeout_s: float = 5.0):
+        """Wait for the filtered row count to hold for a full second.
+
+        A search that matches everything never changes the count, so
+        stability is the signal, not change: the first return is after
+        one second of equal reads, which also gives the refetch a
+        lead-in instead of settling on a transient state.
+        """
+        deadline = time.monotonic() + timeout_s
+        last = -1
+        stable = 0
+        while time.monotonic() < deadline:
+            current = self.license_rows.count()
+            stable = stable + 1 if current == last else 0
+            if stable >= 4:
+                return
+            last = current
+            self.page.wait_for_timeout(250)  # poll tick for filter settle
+
+    def _row_count_changed(self, before: int, action: str,
+                           timeout_s: float = 10.0):
+        """Wait for the row count to move off the pre-click baseline."""
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            if self.site_rows.count() != before:
+                return
+            self.page.wait_for_timeout(250)  # poll tick for row change
+        print(f"[LICENSE] Site {action} clicked but the row count "
+              f"stayed at {before} for {timeout_s:.0f}s")
+
+    def _toggle_switch(self, switch):
+        """Click a MUI switch and wait for its input state to flip."""
+        checkbox = switch.locator("input[type='checkbox']").first
+        try:
+            before = checkbox.is_checked()
+        except PlaywrightError:
+            before = None
+        switch.click()
+        if before is None:
+            return
+        try:
+            if before:
+                expect(checkbox).not_to_be_checked(timeout=10000)
+            else:
+                expect(checkbox).to_be_checked(timeout=10000)
+        except AssertionError:
+            print("[LICENSE] Switch clicked but its state did not flip "
+                  "within 10s")
 
     def get_page_title_text(self) -> str:
         """Return the main heading text on the current licenses sub-page."""

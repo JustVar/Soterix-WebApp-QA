@@ -1,5 +1,5 @@
 """LPR (License Plate Recognition) Page Object Model."""
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class LprPage:
@@ -70,13 +70,11 @@ class LprPage:
         # Wait for main layout
         self.page.locator("body").wait_for(state="visible", timeout=30000)
 
-        # Click Admin
+        # Click Admin; the LPR menu click waits for the submenu itself
         self.admin_nav.first.click()
-        self.page.wait_for_timeout(1000)
 
         # Click LPR menu
         self.lpr_menu.first.click()
-        self.page.wait_for_timeout(1000)
 
         # Wait for LPR Lists page to load
         self.create_list_button.first.wait_for(state="visible", timeout=30000)
@@ -199,12 +197,10 @@ class LprPage:
 
         # Navigate to Lists first
         self.ensure_lpr_lists_page()
-        self.page.wait_for_timeout(1000)
 
         # Click Categories tab with force=True to bypass overlays
         print("[LPR] Clicking Categories tab")
         self.categories_tab.first.click(force=True)
-        self.page.wait_for_timeout(1000)
         self.add_category_button.first.wait_for(state="visible", timeout=20000)
 
     # ===================== Helper Methods =====================
@@ -290,7 +286,6 @@ class LprPage:
         ).first
         dropdown_btn.wait_for(state="visible", timeout=30000)
         dropdown_btn.click()
-        self.page.wait_for_timeout(1500)
 
         # Verify it opened by checking for up arrow or site list
         try:
@@ -312,7 +307,6 @@ class LprPage:
             if backdrop.count() > 0 and backdrop.first.is_visible(timeout=2000):
                 print("[LPR] Backdrop detected, dismissing with Escape")
                 self.page.keyboard.press("Escape")
-                self.page.wait_for_timeout(1000)
                 backdrop.first.wait_for(state="hidden", timeout=10000)
                 print("[LPR] Backdrop dismissed")
         except Exception as e:
@@ -324,7 +318,6 @@ class LprPage:
         timeout_icon = self.page.locator("img[src='/icons/timer.svg']").last
         timeout_icon.wait_for(state="visible", timeout=30000)
         timeout_icon.click()
-        self.page.wait_for_timeout(1000)
 
         # Verify popup opened
         popup_title = self.page.locator("p:has-text('Set Timeout Duration')")
@@ -337,7 +330,6 @@ class LprPage:
         timeout_icon = self.page.locator("img[src='/icons/timer.svg']").last
         timeout_icon.wait_for(state="visible", timeout=30000)
         timeout_icon.click()
-        self.page.wait_for_timeout(1000)
 
         # Verify popup opened
         popup_title = self.page.locator("p:has-text('Set Timeout Duration')")
@@ -352,23 +344,27 @@ class LprPage:
 
     def play_camera(self, site_name: str, location_name: str, camera_name: str = "", play_all_cameras: bool = False):
         """Play camera(s) by dragging to tile."""
-        self.page.wait_for_timeout(5000)
-
         # Wait for site to load
         print(f"[LPR] Checking for Site '{site_name}'")
         self.page.locator(f"text={site_name}").first.wait_for(state="visible", timeout=60000)
         print(f"[LPR] Site '{site_name}' loaded")
 
-        # Click site
-        self.page.wait_for_timeout(5000)
+        # Click site. A click that lands during tree hydration is
+        # silently dropped, so wait for the location to appear and
+        # re-click the site once if it does not.
         site_elements = self.page.locator(f"text='{site_name}'")
         site_elements.first.click()
         print(f"[LPR] Clicked on site '{site_name}'")
-        self.page.wait_for_timeout(3000)
+        location_elements = self.page.locator(f"text='{location_name}'")
+        try:
+            location_elements.first.wait_for(state="visible", timeout=15000)
+        except PlaywrightError:
+            print("[LPR] Site click did not expand the tree, retrying")
+            site_elements.first.click()
+            location_elements.first.wait_for(state="visible", timeout=15000)
 
         # Select location
         print(f"[LPR] Selecting location '{location_name}'")
-        location_elements = self.page.locator(f"text='{location_name}'")
         location_elements.first.scroll_into_view_if_needed()
         location_elements.first.click()
         print(f"[LPR] Clicked on location '{location_name}'")
@@ -399,10 +395,10 @@ class LprPage:
             try:
                 print(f"[LPR] Dragging camera {idx + 1}")
                 tiles.nth(0 if not "lpr" in self.page.url.lower() else 1).drag_to(camera)
-                self.page.wait_for_timeout(2000)
 
-                # Wait for loader to disappear
+                # Wait for the stream loader to appear then disappear
                 loader = self.page.locator("*[contains(@class,'CircularProgress')]")
+                self._appears(loader.first, timeout=2000)
                 if loader.count() > 0:
                     loader.first.wait_for(state="hidden", timeout=60000)
 
@@ -415,7 +411,6 @@ class LprPage:
                 print(f"[LPR] Camera {idx + 1} playing successfully")
 
                 if play_all_cameras:
-                    self.page.wait_for_timeout(2000)
                     clear_btn = self.page.locator("button:has-text('Clear All')").first
                     clear_btn.wait_for(state="visible", timeout=10000)
                     clear_btn.click()
@@ -440,6 +435,8 @@ class LprPage:
         # Wait for video or canvas
         video_or_canvas = self.page.locator("video, canvas").first
         video_or_canvas.wait_for(state="visible", timeout=60000)
+        # The stream needs a beat after the first frame before the tile
+        # accepts activation clicks; there is no DOM signal for that
         self.page.wait_for_timeout(3000)
 
         # Click to activate
@@ -461,7 +458,11 @@ class LprPage:
         views_tab = self.page.locator("span:has-text('Views')").first
         views_tab.wait_for(state="visible", timeout=30000)
         views_tab.click(force=True)
-        self.page.wait_for_timeout(2000)
+        # The URL change is the navigation signal
+        try:
+            self.page.wait_for_url("**/views**", timeout=15000)
+        except PlaywrightError:
+            print("[LPR] Views click did not change the URL within 15s")
         print("[LPR] Switched to Views page")
 
     def wait_for_site_list(self, site_name: str):
@@ -474,25 +475,35 @@ class LprPage:
         """Safe reset to Views page (non-breaking)."""
         print("[LPR] Safe reset to Views (non-breaking)")
         try:
+            # reload() waits for the load event on its own
             self.page.reload()
-            self.page.wait_for_timeout(5000)
         except:
             pass
 
         # Try navigating to Views
         try:
             views_btn = self.page.locator("span:has-text('Views')").first
-            if views_btn.is_visible(timeout=2000):
+            if self._appears(views_btn, timeout=10000):
                 views_btn.click()
-                self.page.wait_for_timeout(3000)
+                self.page.wait_for_url("**/views**", timeout=15000)
         except:
             print("[LPR] Views button not found, continuing")
 
         # Remove any overlay
         try:
             self.page.locator("body").first.click()
-            self.page.wait_for_timeout(1000)
         except:
             pass
 
         print("[LPR] Safe reset done")
+
+    # ===================== Wait helpers =====================
+
+    @staticmethod
+    def _appears(locator, timeout: int = 5000) -> bool:
+        """True when the element shows within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="visible", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False

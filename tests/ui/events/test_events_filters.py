@@ -5,8 +5,9 @@ filter combination workflows, and pin/unpin event lifecycle.
 """
 import pytest
 from playwright.sync_api import expect
-from tests.shared.pages.events_page import EventsPage
+
 from config.base_config import config
+from tests.shared.pages.events_page import EventsPage
 
 SITE_NAME = config.get("test_site_name")
 

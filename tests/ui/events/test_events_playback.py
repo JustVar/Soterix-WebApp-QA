@@ -5,10 +5,11 @@ closing the player, and exporting events.
 The modernized Events page plays videos inline (no separate player page).
 """
 import datetime
+
 import pytest
 from playwright.sync_api import expect
-from tests.shared.pages.events_page import EventsPage
 
+from tests.shared.pages.events_page import EventsPage
 
 # Site name used across event tests
 

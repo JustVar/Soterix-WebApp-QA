@@ -3,9 +3,11 @@
 Models the Events page including site/camera selection, duration filtering,
 event search, pinning, review, playback, and export flows.
 """
-import json
 import datetime
-from playwright.sync_api import Page, expect
+import json
+import time
+
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class EventsPage:
@@ -114,41 +116,46 @@ class EventsPage:
             f"li[role='option']:has-text('{rule_name}')"
         ).first
         option.click()
-        self.page.wait_for_timeout(1000)
+        # Listbox hidden = MUI applied the selection
+        listbox.wait_for(state="hidden", timeout=10000)
 
     def select_site(self, site_name: str = None):
         """Open site dropdown and select a site by name.
 
         MUI Select renders options as li[role='option'] MuiMenuItem elements.
         Each option has a data-value attribute with the site ID.
-        Pass None to select the first available site (Newtown ActionArea).
+        Pass None to use test_site_name from config/env/.
         """
+        if site_name is None:
+            from config.base_config import config
+            site_name = config.get("test_site_name")
+            if not site_name:
+                raise RuntimeError(
+                    "test_site_name is not set for this ENV in config/env/. "
+                    "Add it before running site-dependent tests."
+                )
+
         self.site_dropdown.click()
-        self.page.wait_for_timeout(1000)
 
         # Wait for the MUI Menu listbox to appear
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=20000)
-        self.page.wait_for_timeout(1000)
 
-        # Select option by name or first available (skip "All Sites")
-        if site_name:
-            option = listbox.locator(
-                f"li[role='option']:has(span:has-text('{site_name}'))"
-            ).first
-        else:
-            # Skip first option "All Sites", select second option (Newtown ActionArea)
-            option = listbox.locator("li[role='option']").nth(1)
+        option = listbox.locator(
+            f"li[role='option']:has(span:has-text('{site_name}'))"
+        ).first
 
         # Click the MuiMenuItem (li element) to trigger selection
         option.click()
 
-        # Wait for dropdown to close (listbox should disappear)
-        # This ensures the state change propagates to the backend
+        # Listbox hidden = MUI applied the selection
         listbox.wait_for(state="hidden", timeout=20000)
 
-        # Wait for state to propagate before proceeding
-        self.page.wait_for_timeout(2000)
+        # The combobox now shows the chosen site: that is the signal that
+        # the selection reached component state and search may proceed.
+        self.page.get_by_text(site_name, exact=False).first.wait_for(
+            state="visible", timeout=10000
+        )
 
     def select_camera(self, site_name: str, camera_name: str,
                       location_name: str = None):
@@ -164,7 +171,6 @@ class EventsPage:
         selection state. Search uses 'all cameras' by default.
         """
         self.camera_dropdown.click()
-        self.page.wait_for_timeout(1000)
 
         menu = self.page.locator("#simple-menu")
         menu.wait_for(state="visible", timeout=10000)
@@ -174,20 +180,20 @@ class EventsPage:
             f".MuiListItemButton-root:has-text('{site_name}')"
         ).first
         site_node.click()
-        self.page.wait_for_timeout(1000)
 
-        # Expand "All Cameras" to show individual cameras
-        all_cameras = menu.get_by_text("All Cameras")
-        if all_cameras.count() > 0:
+        # Site expansion reveals the "All Cameras" node
+        all_cameras = menu.get_by_text("All Cameras").first
+        if self._appears(all_cameras, timeout=5000):
             all_cameras.click()
-            self.page.wait_for_timeout(1000)
+            menu.locator(".global-search-camera-container").first.wait_for(
+                state="visible", timeout=10000
+            )
 
         # Expand the location if specified
         if location_name:
-            location_node = menu.get_by_text(location_name, exact=False)
-            if location_node.count() > 0:
-                location_node.first.click()
-                self.page.wait_for_timeout(1000)
+            location_node = menu.get_by_text(location_name, exact=False).first
+            if self._appears(location_node, timeout=3000):
+                location_node.click()
 
         # Find and scroll to the target camera
         containers = menu.locator(".global-search-camera-container")
@@ -196,9 +202,7 @@ class EventsPage:
             text = container.evaluate("el => el.textContent || ''")
             if camera_name in text:
                 container.scroll_into_view_if_needed()
-                self.page.wait_for_timeout(300)
                 break
-        self.page.wait_for_timeout(500)
 
         # Dismiss the menu
         self._dismiss_camera_menu()
@@ -215,7 +219,6 @@ class EventsPage:
         Search uses 'all cameras' by default when no checkbox is checked.
         """
         self.camera_dropdown.click()
-        self.page.wait_for_timeout(1000)
 
         # The menu renders in a popover with id="simple-menu"
         menu = self.page.locator("#simple-menu")
@@ -226,18 +229,15 @@ class EventsPage:
             f".MuiListItemButton-root:has-text('{site_name}')"
         ).first
         site_node.click()
-        self.page.wait_for_timeout(1000)
 
-        # Click "All Cameras" to expand the cameras list
-        all_cameras = menu.get_by_text("All Cameras")
-        if all_cameras.count() > 0:
+        # Site expansion reveals the "All Cameras" node
+        all_cameras = menu.get_by_text("All Cameras").first
+        if self._appears(all_cameras, timeout=5000):
             all_cameras.click()
-            self.page.wait_for_timeout(1000)
 
         # Verify cameras are listed
         containers = menu.locator(".global-search-camera-container")
         containers.first.wait_for(state="visible", timeout=10000)
-        self.page.wait_for_timeout(500)
 
         # Dismiss the menu
         self._dismiss_camera_menu()
@@ -271,7 +271,8 @@ class EventsPage:
             f"li[role='option']:has-text('{duration_text}')"
         ).first
         option.click()
-        self.page.wait_for_timeout(1000)
+        # Listbox hidden = MUI applied the selection
+        listbox.wait_for(state="hidden", timeout=10000)
 
     def get_rule_options(self) -> list:
         """Open rule dropdown and return all available rule type names."""
@@ -279,13 +280,14 @@ class EventsPage:
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=10000)
         options = listbox.locator("li[role='option']")
+        options.first.wait_for(state="visible", timeout=10000)
         texts = []
         for i in range(options.count()):
             txt = options.nth(i).inner_text().strip()
             if txt:
                 texts.append(txt)
         self.page.keyboard.press("Escape")
-        self.page.wait_for_timeout(500)
+        listbox.wait_for(state="hidden", timeout=5000)
         return texts
 
     def get_site_options(self) -> list:
@@ -294,13 +296,14 @@ class EventsPage:
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=10000)
         options = listbox.locator("li[role='option']")
+        options.first.wait_for(state="visible", timeout=10000)
         texts = []
         for i in range(options.count()):
             txt = options.nth(i).inner_text().strip()
             if txt:
                 texts.append(txt)
         self.page.keyboard.press("Escape")
-        self.page.wait_for_timeout(500)
+        listbox.wait_for(state="hidden", timeout=5000)
         return texts
 
     def search_events_safe(self, timeout: int = 60000) -> bool:
@@ -311,10 +314,9 @@ class EventsPage:
         self.search_button.click()
         try:
             self.event_results.first.wait_for(state="visible", timeout=timeout)
-            self.page.wait_for_timeout(2000)
+            self._results_settled()
             return True
         except Exception:
-            self.page.wait_for_timeout(2000)
             return False
 
     # --- Search ---
@@ -322,18 +324,13 @@ class EventsPage:
     def search_events(self, timeout: int = 60000):
         """Click the search button and wait for event results to load."""
         self.search_button.click()
-        self.page.wait_for_timeout(500)
 
-        # Wait for loader to disappear (API call completes)
-        try:
-            if self.loader.count() > 0:
-                self.loader.first.wait_for(state="hidden", timeout=timeout)
-        except Exception:
-            pass
+        # Wait for the loader to appear then disappear (API call completes)
+        self._wait_for_loader_finish(timeout)
 
-        # Wait for results to appear
+        # Wait for results to appear, then for the streamed count to settle
         self.event_results.first.wait_for(state="visible", timeout=timeout)
-        self.page.wait_for_timeout(2000)
+        self._results_settled()
 
     def search_events_for_channels(self, channel_list: list[int],
                                    timeout: int = 60000):
@@ -344,10 +341,10 @@ class EventsPage:
         This bypasses the MUI camera checkbox (which has zero-dimension
         elements) while still using the UI's full search flow.
 
-        Camera-to-channel mapping (Driver Site, alphabetical order):
-            CH 1=Advidia, CH 7=Axis_1, CH 11=Hanwha_2, CH 13=Hanwha_5,
-            CH 14=Hanwha_6, CH 15=Hanwha_7, CH 23=Hanwha_PTZ, etc.
-        Channel N = camera at 0-based index (N-1) in alphabetical list.
+        Channel N = camera at 0-based index (N-1) in the site's
+        alphabetical camera list. The mapping was captured on the tenant
+        before the 2026-08 site rename; re-derive it if a channel search
+        returns nothing.
         """
         def modify_search(route):
             request = route.request
@@ -366,7 +363,7 @@ class EventsPage:
             self.event_results.first.wait_for(
                 state="visible", timeout=timeout
             )
-            self.page.wait_for_timeout(2000)
+            self._results_settled()
         finally:
             self.page.unroute("**/v-apiserver/REST/site/search**")
 
@@ -402,15 +399,24 @@ class EventsPage:
         """
         event_img = self.event_results.nth(index)
         event_img.hover(force=True)
-        self.page.wait_for_timeout(500)
 
         # Pin icon appears on hover within the overlay
         # Find pin icon within the hovered event's container, not globally
         event_container = event_img.locator("xpath=ancestor::div[1]")
         pin = event_container.locator("img[src*='roundPinIcon']")
         pin.wait_for(state="visible", timeout=5000)
+
+        # The pinned counter reflects the click: wait for its text to
+        # change from the pre-click baseline (it hides at zero pins).
+        before = self._pinned_state()
         pin.click()
-        self.page.wait_for_timeout(500)
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline:
+            if self._pinned_state() != before:
+                return
+            self.page.wait_for_timeout(250)  # poll tick for counter update
+        print(f"[EVENTS] Pin clicked but the counter still reads "
+              f"'{before or 'hidden'}' after 5s")
 
     def get_pinned_count_text(self) -> str:
         """Return the text from the pinned clips counter."""
@@ -420,7 +426,11 @@ class EventsPage:
         """Click the 'Review Pinned Clips' button."""
         self.review_pinned_button.wait_for(state="visible", timeout=10000)
         self.review_pinned_button.click()
-        self.page.wait_for_timeout(1000)
+        # The click opens the pinned review player; the button leaves the
+        # page with the results grid.
+        if not self._appears_hidden(self.review_pinned_button, timeout=10000):
+            print("[EVENTS] Review Pinned Clips clicked but the button "
+                  "is still visible after 10s")
 
     # --- Single event playback ---
 
@@ -436,9 +446,7 @@ class EventsPage:
 
         # Move mouse away then re-hover to guarantee a fresh :hover state
         self.page.mouse.move(0, 0)
-        self.page.wait_for_timeout(300)
         event_img.hover(force=True)
-        self.page.wait_for_timeout(500)
 
         play_icon = self.page.locator("img[alt='Play Video']").first
         try:
@@ -456,8 +464,14 @@ class EventsPage:
 
     def close_player(self):
         """Close the inline event player via CloseIcon."""
-        self.player_close_button.first.click()
-        self.page.wait_for_timeout(1000)
+        close = self.player_close_button.first
+        close.click()
+        # The clicked CloseIcon leaves the DOM with the player. The
+        # locator is page-global, so another visible CloseIcon (toast,
+        # dialog) may keep matching: report instead of raising.
+        if not self._appears_hidden(close, timeout=10000):
+            print("[EVENTS] Player close clicked but a CloseIcon is "
+                  "still visible after 10s")
 
     # --- Export ---
 
@@ -500,19 +514,75 @@ class EventsPage:
         backdrop = self.page.locator("#simple-menu .MuiBackdrop-root")
         if backdrop.count() > 0:
             backdrop.click(force=True)
-            self.page.wait_for_timeout(500)
+            self._appears_hidden(menu, timeout=3000)
 
-        # Verify menu dismissed; if still open, force-close via JS
+        # Verify menu dismissed; if still open, force-close via JS.
+        # The evaluate() removal is synchronous, so no wait follows it.
         if menu.count() > 0 and menu.is_visible():
             self.page.evaluate(
                 "document.querySelector('#simple-menu')?.remove()"
             )
-            self.page.wait_for_timeout(300)
+
+    @staticmethod
+    def _appears(locator, timeout: int = 5000) -> bool:
+        """True when the element shows within timeout, False otherwise.
+
+        Returns as soon as the element appears; use for optional elements
+        instead of a one-shot count() check after an action.
+        """
+        try:
+            locator.wait_for(state="visible", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
+
+    @staticmethod
+    def _appears_hidden(locator, timeout: int = 5000) -> bool:
+        """True when the element hides within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="hidden", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
+
+    def _results_settled(self, timeout_s: float = 6.0):
+        """Wait until the result thumbnail count stops growing.
+
+        Results stream in after the first thumbnail renders and there is
+        no completion signal in the DOM, so poll the count until it holds
+        for a full second (three equal 500ms reads); a single quiet gap
+        in the stream is not settled.
+        """
+        deadline = time.monotonic() + timeout_s
+        last = -1
+        stable_reads = 0
+        while time.monotonic() < deadline:
+            current = self.event_results.count()
+            if current == last:
+                stable_reads += 1
+                if stable_reads >= 2:
+                    return
+            else:
+                stable_reads = 0
+            last = current
+            self.page.wait_for_timeout(500)  # poll tick for streamed results
+
+    def _pinned_state(self) -> str:
+        """Return the pinned counter text, or '' while it is hidden."""
+        counter = self.pinned_counter.first
+        try:
+            if counter.is_visible():
+                return counter.inner_text().strip()
+        except PlaywrightError:
+            pass
+        return ""
 
     def _wait_for_loader_finish(self, timeout: int = 60000):
         """Wait for the CircularProgress loader to appear then disappear."""
         try:
-            self.loader.first.wait_for(state="visible", timeout=5000)
+            # Short appear grace: instant responses show no loader at
+            # all, and burning 5s on every fast search adds up
+            self.loader.first.wait_for(state="visible", timeout=2000)
         except Exception:
             pass  # Loader may have already finished
         try:

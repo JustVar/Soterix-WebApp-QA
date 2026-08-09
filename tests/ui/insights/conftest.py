@@ -1,5 +1,6 @@
 """Insights test fixtures."""
 import pytest
+
 from tests.shared.pages.insights_page import InsightsPage
 
 
