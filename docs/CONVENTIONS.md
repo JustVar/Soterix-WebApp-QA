@@ -48,6 +48,32 @@ For clicks that a sticky header or a lazy-loaded overlay intercepts, try
 Failed tests save a Playwright trace. See
 [FAILURE_TRIAGE.md](FAILURE_TRIAGE.md).
 
+## Locators and scoping
+
+Patterns validated twice over - once in the team's fixes (July 2026) and
+once independently in the wait conversion (August 2026). Use them:
+
+- **MUI dropdowns:** the option list is `li[role='option']` inside a
+  `[role='listbox']` portal. Wait for the listbox to appear, click the
+  option plainly (no hover chain, no force), then wait for the listbox to
+  become **hidden** - that is the selection-applied signal
+  (`events_page.select_site`, `admin_page.select_site_for_rule`).
+- **Scope before .first:** when an icon or switch exists once per row or
+  card, find the row by its text and locate the control inside it. A page
+  -global `.first` can pick another row's control while a filter or hover
+  is still applying (`events_page` pin fix, `admin_page.toggle_user_status`).
+- **MUI ships data-testid on icons.** `svg[data-testid='ExpandMoreIcon']`,
+  `SearchIcon`, `CloseIcon` work today, no frontend change needed - prefer
+  them over `img[src*=...]` guesses for MUI icon buttons. The login form
+  also has custom test ids (`[data-testid='email']`). Check for a test id
+  before writing a CSS guess.
+- **Counting oracles compare against a baseline** taken before the action
+  (`expanded_rows > initial_rows`, `_content_added`). An absolute
+  `count() > 0` passes on pre-existing elements and can never fail.
+- **Tenant data names come from config**, never hardcoded in tests
+  (`test_site_name`, `test_camera_name` in `config/env/`). The shared
+  tenant renames things; a hardcoded name is a delayed test failure.
+
 ## Auth and session caching
 
 - The `authenticated_page` fixture loads cached `.auth_state.json` (2-3 s
