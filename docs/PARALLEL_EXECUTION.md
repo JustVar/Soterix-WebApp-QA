@@ -6,12 +6,18 @@ parallel runs need, what already works, and what still blocks a full rollout.
 ## How to run
 
 ```
-pytest <files> -n 2 --dist loadfile
+pytest <files> -n 4 --dist loadfile
 ```
 
 `--dist loadfile` keeps each test file on one worker. Tests inside a file run
-in their written order, so in-file ordering assumptions keep working. Do not
-use `-n auto` yet. See the open risks below.
+in their written order, so in-file ordering assumptions keep working.
+
+**Rollout decision (2026-08-08):** `-n 4 --dist loadfile` is the recommended
+command for read-mostly regression runs on this class of machine, validated
+by the experiment below. It stays a deliberate flag, not a pytest.ini
+default: QA Touch uploads and `--verify-mode` must run serial, and a hidden
+default `-n` would silently break both. Do not use `-n auto`. See the open
+risks below.
 
 ## What already works
 
@@ -70,6 +76,23 @@ Result: 27 passed, 0 failed. Three concurrent sessions on one account, no
 session kicks, no login failures. This includes the subtabs suite with
 drags and video tiles, so moderate per-worker load is fine on this machine.
 
-Next step before wider rollout: 4 workers across more modules, and a
-decision on the default `-n` for regression runs. Watch for session kicks
-and login rate limits at higher counts.
+### 2026-08-08: 4 workers, loadfile, same account
+
+Command: `pytest tests/ui/views/test_views_basic.py
+tests/ui/admin/test_admin_general.py tests/ui/events/test_events_filters.py
+tests/ui/licenses/test_license_navigation.py -n 4 --dist loadfile`
+
+Result: 42 passed, 0 failed, in 630 s.
+
+- Four concurrent sessions on one account: no session kicks, no login
+  failures, all four per-worker auth caches created and reused.
+- Four modules at once (views video tiles, admin, events searches,
+  licenses) confirms moderate mixed load is fine on this machine.
+- Wall clock tracks the slowest file (events filters, with its long
+  server-side searches), which is the expected loadfile behavior: the
+  longest file sets the floor.
+
+Decision recorded above: `-n 4 --dist loadfile` is the recommended
+regression command; mutating, hardware, upload, and verify-mode runs
+stay serial. Revisit `-n 6`/`-n auto` only if regression wall-clock
+becomes a problem and the account survives more concurrent sessions.
