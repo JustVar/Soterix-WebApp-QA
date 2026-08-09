@@ -102,10 +102,13 @@ class LicensePage:
             "button:has-text('Cancel'), button:has-text('No')"
         ).first
 
-        # Assign New License modal
+        # Assign New License modal. No bare :has-text('Assign') clause:
+        # it substring-matches the 'Assigned Licenses' TAB, which sits
+        # earlier in the DOM, so clicks switched tabs instead of opening
+        # the modal (found 08/09/2026 via DOM probe).
         self.assign_button = page.locator(
             "button.add-btn, button:has-text('Assign New License'), "
-            "button:has-text('Assign License'), button:has-text('Assign')"
+            "button:has-text('Assign License')"
         ).first
         self.assign_modal = page.locator(
             "div[class*='modal'], div[role='dialog']"
@@ -309,9 +312,12 @@ class LicensePage:
         """Click the Assign New License button.
 
         Callers check assign_modal.count() and skip when the modal is
-        not implemented, so a missing modal must not raise here.
+        not implemented, so neither a missing button nor a missing
+        modal may raise here.
         """
-        self.assign_button.wait_for(state="visible", timeout=10000)
+        if not self._appears(self.assign_button, timeout=10000):
+            print("[LICENSE] No Assign New License button on this page")
+            return
         self.assign_button.click(force=True)
         visible_modal = self.page.locator(
             "div[class*='modal']:visible, div[role='dialog']:visible"

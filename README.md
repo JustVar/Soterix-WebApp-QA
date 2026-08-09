@@ -262,6 +262,7 @@ gates before every commit.
 - `docs/CONVENTIONS.md` - engineering conventions: page objects, waits, step capture, markers, adding tests
 - `docs/FAILURE_TRIAGE.md` - reading failure traces (GUI + terminal)
 - `docs/TEAM_CHANGES.md` - reviewing teammates' script changes before refactors (`tools/team_changes.py`)
+- `docs/TEST_REPAIRS.md` - register of tests needing repair, reinvestigation, or a verify run; work it before writing new tests
 - `docs/PARALLEL_EXECUTION.md` - pytest-xdist status, risks, experiment log
 - `docs/STYLE.md` - writing style for docs, comments, and commit messages
 - `docs/CREDENTIALS_SETUP.md` - credential configuration walkthrough

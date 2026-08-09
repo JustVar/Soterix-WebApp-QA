@@ -850,18 +850,33 @@ class ViewsPage:
         three_dots = video_tile.locator(".control-small-view")
         three_dots.click()
 
-        # Hover timeline to reveal share icon
+        # Hover timeline to reveal share icon. The svg line itself has
+        # a zero-height box that Playwright treats as never visible, so
+        # hover its parent svg; fall back to a forced hover on the line.
         timeline = video_tile.locator("#svg-line-2")
-        timeline.hover()
+        try:
+            timeline.locator("xpath=..").hover(timeout=5000)
+        except Exception:
+            timeline.hover(force=True)
 
-        # Click share icon; the dialog wait below is the opened signal
-        share_icon = video_tile.locator("img[src*='media/icon-share']")
+        # Click share icon; the dialog wait below is the opened signal.
+        # The tile renders two share imgs (controls bar + timeline
+        # overlay): click the one the hover revealed.
+        share_icon = video_tile.locator(
+            "img[src*='media/icon-share']:visible"
+        ).first
         share_icon.click()
 
-        # Fill email in share dialog
+        # Fill email in share dialog. The dialog holds two
+        # .fileName_inputfield inputs; prefer the one whose placeholder
+        # names an email.
         share_container = self.page.locator(".share_live_main_container")
         share_container.wait_for(state="visible", timeout=10000)
-        email_field = share_container.locator(".fileName_inputfield")
+        email_field = share_container.locator(
+            "input[placeholder*='mail' i]"
+        ).first
+        if email_field.count() == 0:
+            email_field = share_container.locator(".fileName_inputfield").first
         email_field.fill(email)
 
         # Click Share button; the Copy button wait is the shared signal

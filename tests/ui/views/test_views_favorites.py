@@ -42,11 +42,13 @@ class TestViewsFavorites:
     @pytest.mark.ui
     @pytest.mark.favorites
     @pytest.mark.skip(reason=(
-        "Favorites flow needs an interactive rebuild. The original "
-        "locator mixed XPath into CSS and never parsed (broken since "
-        "03/2026, so this test has never exercised the flow), and the "
-        "current tree renders no span[title] anchor for the configured "
-        "camera. Tracked on the QA roadmap rebuild list."
+        "Favorites flow needs an interactive rebuild. DOM probe "
+        "08/09/2026: the camera rows with the favorite star live in "
+        "the sidebar tree, which stays mounted but HIDDEN after "
+        "expand_site_and_show_cameras closes the panel, so the star "
+        "is never visible when the test reaches it. Find the panel "
+        "state that shows the tree rows. Row anatomy and locators are "
+        "already fixed. Tracked in docs/TEST_REPAIRS.md section A."
     ))
     def test_add_remove_favorites(self):
         """Verify adding a camera to favorites, seeing it in the panel, and removing it.
@@ -64,6 +66,10 @@ class TestViewsFavorites:
 
         # Get a camera name to use for the favorite toggle
         camera_name = self._get_camera_name()
+
+        # Clean start: a failed earlier run can leave the star on
+        if self.views.is_camera_favorited(camera_name):
+            self.views.toggle_favorite(camera_name)
 
         # Add to favorites
         self.views.toggle_favorite(camera_name)

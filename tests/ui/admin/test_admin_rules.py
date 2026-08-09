@@ -1,7 +1,10 @@
 """Admin Rules tests - navigation, wizard flow, search, edit, delete, mute."""
 import datetime
+
 import pytest
 from playwright.sync_api import expect
+
+from config.base_config import config
 from tests.shared.pages.admin_page import AdminPage
 
 RULE_TYPES = [
@@ -13,7 +16,8 @@ RULE_TYPES = [
     "Line Crossing",
 ]
 
-SITE_NAME = "Driver Site"
+# The shared tenant renames sites, so the name lives in config
+SITE_NAME = config.get("test_site_name")
 
 
 class TestAdminRules:

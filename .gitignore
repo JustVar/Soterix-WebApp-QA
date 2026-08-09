@@ -111,3 +111,4 @@ docs/local/
 config/qatouch_snapshots/
 config/audit_reports/
 tools/audit_reports/
+verification_output/

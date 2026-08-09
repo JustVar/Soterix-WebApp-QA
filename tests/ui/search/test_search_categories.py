@@ -9,8 +9,9 @@ Migrated from Selenium:
 - test_global_event_search (line 2548)
 
 Known limitations:
-- Vehicle search: Driver Site has no vehicle detections. Needs
-  an account with a different site for data.
+- Vehicle search: the test site had no vehicle detections when the
+  skips were added (pre-rename tenant). Recheck against the current
+  tenant - tracked in docs/TEST_REPAIRS.md section B.
 - Play result: QA env video streams use MediaSource (duration=Infinity).
   Occasionally a clip stream fails to load (stays at readyState=0).
   Play tests use @flaky(reruns=1) to handle transient stream failures.
@@ -52,7 +53,7 @@ class TestSearchCategories:
         self.search.select_description_gender("Male")
         self.step_capture.mark(3, "Select Description = 'Male' from the gender dropdown")
         self.search.select_locations_cameras(None)
-        self.step_capture.mark(4, "Select Location = 'Driver Site' and cameras")
+        self.step_capture.mark(4, "Select the test site location and cameras")
         self.search.select_duration_by_index(5)
         self.step_capture.mark(5, "Select duration filter (index 5)")
         self.search.execute_search(timeout=60000)
