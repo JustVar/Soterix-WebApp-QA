@@ -254,4 +254,4 @@ The Playwright/pytest-aware rule set is the headline difference from a generic r
 - `docs/API_ENDPOINTS.md` - REST endpoint catalog + coverage status
 - `docs/BRUNO_GUIDE.md` - interactive API exploration with Bruno
 - `docs/automation-mapping.md` - QA Automation Doc # ↔ test mapping
-- Workspace-level roadmap: `dashboards/soterix-internal-dashboards/docs/FUTURE_ROADMAP.md` (single source of truth across all Soterix projects)
+- QA roadmap: `dashboards/soterix-internal-dashboards/docs/QA_ROADMAP.md` (single source of truth for all QA work; split from the old unified roadmap 2026-08-08)

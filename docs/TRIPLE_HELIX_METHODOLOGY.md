@@ -250,6 +250,6 @@ GPU Utilization        Inference Speed        Response Time
 
 - [Implementation Roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Selenium Migration Status](SELENIUM_TO_PLAYWRIGHT_MIGRATION.md)
-- [Future Roadmap](FUTURE_ROADMAP.md)
+- QA Roadmap: `dashboards/soterix-internal-dashboards/docs/QA_ROADMAP.md` (workspace-level)
 - [Hardware Reference](reference/hardware/README.md)
 - [Original Methodology](reference/archive/Optimized_Triple-Helix_Testing.txt)
