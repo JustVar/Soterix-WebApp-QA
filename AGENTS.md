@@ -17,6 +17,11 @@ Read before making changes:
 3. `docs/FAILURE_TRIAGE.md` - failed tests save Playwright traces to
    `reports/artifacts/`. Read the trace before you rerun or guess: the
    `playwright trace` command works from the terminal.
+4. `docs/TEAM_CHANGES.md` - before a large refactor of shared files
+   (page objects, conftest, fixtures), run
+   `python tools/team_changes.py` and review the overlap list. Other
+   team members fix scripts in this repo; their fixes must survive your
+   refactor or be replaced on purpose, never by accident.
 
 Hard rules:
 

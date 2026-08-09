@@ -244,6 +244,7 @@ The Playwright/pytest-aware rule set is the headline difference from a generic r
 
 - `docs/CONVENTIONS.md` - engineering conventions: page objects, waits, step capture, markers, adding tests
 - `docs/FAILURE_TRIAGE.md` - reading failure traces (GUI + terminal)
+- `docs/TEAM_CHANGES.md` - reviewing teammates' script changes before refactors (`tools/team_changes.py`)
 - `docs/PARALLEL_EXECUTION.md` - pytest-xdist status, risks, experiment log
 - `docs/STYLE.md` - writing style for docs, comments, and commit messages
 - `docs/CREDENTIALS_SETUP.md` - credential configuration walkthrough
