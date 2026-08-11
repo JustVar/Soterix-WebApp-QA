@@ -42,10 +42,11 @@ class SearchPage:
         self.replay_icon = page.locator("img[alt='Replay']")
 
         # Zone/Line drawing
+        # No page-wide Create Zone/Line locators here: every camera
+        # container holds its own always-mounted copy, so the links are
+        # located inside the hovered container (_hover_camera_and_click_action)
         self.canvas = page.locator(".upper-canvas")
         self.done_button = page.locator(".save-btn")
-        self.create_zone_link = page.get_by_text("Create Zone", exact=True)
-        self.create_line_link = page.get_by_text("Create Line", exact=True)
 
         # Loader
         self.loader = page.locator(".MuiCircularProgress-root")
@@ -532,14 +533,16 @@ class SearchPage:
             text = container.evaluate("el => el.textContent || ''")
             if camera_name in text:
                 container.hover(force=True)
-                self.page.wait_for_timeout(500)
 
-                action_link = self.page.get_by_text(
+                # Scope to the hovered container: every container has
+                # its own always-mounted copy of the action link, so a
+                # page-wide .first grabs another container's hidden one
+                action_link = container.get_by_text(
                     action_text, exact=True
                 ).first
                 action_link.wait_for(state="visible", timeout=5000)
                 action_link.click()
-                self.page.wait_for_timeout(1000)
+                # The drawing canvas opening is the caller's wait
                 return
         raise AssertionError(
             f"Camera '{camera_name}' not found in camera containers"

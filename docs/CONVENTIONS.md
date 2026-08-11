@@ -84,9 +84,11 @@ once independently in the wait conversion (August 2026). Use them:
   when the panel is missing, and make the applied-signal check RAISE,
   not print: a selection that did not apply invalidates everything
   after it.
-- **The app salts labels with zero-width spaces**, so `:text-is()` on
-  UI text can fail while the text looks identical on screen. Prefer
-  `:has-text()` with a distinctive substring for label matching.
+- **Some labels carry zero-width spaces** (seen on the search sidebar
+  section labels), so `:text-is()` can fail while the text looks
+  identical on screen. Prefer `:has-text()` with a distinctive
+  substring for label matching; exact matching is fine where a run
+  proves the text is clean.
 
 ## Auth and session caching
 

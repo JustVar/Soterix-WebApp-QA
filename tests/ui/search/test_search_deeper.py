@@ -167,7 +167,7 @@ class TestSearchDeeper:
 
         120s search budget: the server runs searches as async jobs and
         Event over 30 days is the heaviest; its latency grows when runs
-        hammer the tenant (audit 08/09/2026).
+        hammer the tenant (measured 08/09/2026).
         """
         self.search.select_category("Event")
         self.search.select_locations_cameras(None)
@@ -259,7 +259,7 @@ class TestSearchDeeper:
         """Verify get_result_count() matches visible result images.
 
         120s search budget plus one rerun: async job latency under
-        load exceeded even 120s once in measurement (audit 08/09/2026).
+        load exceeded even 120s once in measurement (measured 08/09/2026).
         """
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
