@@ -6,10 +6,8 @@ filter change workflows, and result content checks.
 """
 import pytest
 from playwright.sync_api import expect
+
 from tests.shared.pages.search_page import SearchPage
-
-
-
 
 
 class TestSearchDeeper:
@@ -20,6 +18,11 @@ class TestSearchDeeper:
         self.page = authenticated_page
         self.search = SearchPage(self.page)
         self.search.navigate()
+        # A search view that already ran a search does not dispatch the
+        # next one (SPA nav clicks are no-ops on the same route), so
+        # every test starts from a reloaded page. Proven in isolation:
+        # the same flows pass on a fresh view and time out on a warm one.
+        self.page.reload()
         self.search.wait_for_page_load()
         yield
 

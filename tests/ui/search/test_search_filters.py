@@ -5,10 +5,8 @@ are visible, and selecting each filter type independently.
 """
 import pytest
 from playwright.sync_api import expect
+
 from tests.shared.pages.search_page import SearchPage
-
-
-
 
 
 class TestSearchFilters:

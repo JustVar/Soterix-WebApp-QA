@@ -5,9 +5,11 @@ Tests the in-camera search overlay that opens from the video player controls,
 allowing Person/Vehicle search with filters within a single camera's feed.
 """
 import pytest
-from tests.shared.pages.views_page import ViewsPage
+
 from tests.shared.pages.fullscreen_page import FullScreenPage
 from tests.shared.pages.incamera_search_page import InCameraSearchPage
+from tests.shared.pages.views_page import ViewsPage
+
 
 class TestInCameraSearch:
     """Tests for in-camera forensic search."""

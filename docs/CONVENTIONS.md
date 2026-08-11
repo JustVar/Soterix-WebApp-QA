@@ -73,6 +73,17 @@ once independently in the wait conversion (August 2026). Use them:
 - **Tenant data names come from config**, never hardcoded in tests
   (`test_site_name`, `test_camera_name` in `config/env/`). The shared
   tenant renames things; a hardcoded name is a delayed test failure.
+- **Every selection needs an applied signal.** After picking a site,
+  duration, or option, wait for state the page shows: the control stops
+  reading Select, the listbox hides, a count changes. A helper that
+  never observes its own effect goes silently dead when the DOM drifts:
+  the search filters no-opped for months while their suites stayed
+  green (found 08/09/2026), because their JS fallbacks returned without
+  error. For the same reason, never wrap a selection in JS that returns
+  silently when the panel is missing.
+- **The app salts labels with zero-width spaces**, so `:text-is()` on
+  UI text can fail while the text looks identical on screen. Prefer
+  `:has-text()` with a distinctive substring for label matching.
 
 ## Auth and session caching
 

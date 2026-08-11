@@ -1,10 +1,10 @@
-"""Global Search Page Object Model.
+﻿"""Global Search Page Object Model.
 
 Models the Global Search page including category selection, description
 filters, locations/cameras picker, duration, zone/line drawing on canvas,
 search execution, and result playback.
 """
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class SearchPage:
@@ -183,53 +183,77 @@ class SearchPage:
         gender_option.click()
         self.page.wait_for_timeout(500)
 
+    def _open_section(self, label: str):
+        """Open a search sidebar section by clicking its value control.
+
+        The 2026-08 search page renders each filter as a
+        p.select-box-headings label with a div.select-box-sub-heading
+        value control next to it. Clicking the label does nothing; the
+        value control opens the panel. The old helpers clicked the
+        label and their JS fallbacks returned silently, which left
+        every filter unset while the tests kept running (probe
+        08/09/2026).
+        """
+        heading = self.page.locator(
+            f"p.select-box-headings:has-text('{label}')"
+        ).first
+        heading.wait_for(state="visible", timeout=10000)
+        value = heading.locator(
+            "xpath=following-sibling::div"
+            "[contains(@class,'select-box-sub-heading')]"
+        ).first
+        if value.count() == 0:
+            value = heading.locator(
+                "xpath=../..//div[contains(@class,'select-box-sub-heading')]"
+            ).first
+        value.click()
+        return value
+
+    def _section_value_text(self, label: str) -> str:
+        """Current value text shown for a search sidebar section."""
+        heading = self.page.locator(
+            f"p.select-box-headings:has-text('{label}')"
+        ).first
+        value = heading.locator(
+            "xpath=following-sibling::div"
+            "[contains(@class,'select-box-sub-heading')]"
+        ).first
+        try:
+            return value.inner_text().strip()
+        except PlaywrightError:
+            return ""
+
     def select_locations_cameras(self, site_name: str = None):
-        """Open the Locations & Cameras dropdown, expand site, and select
+        """Open the Locations & Cameras panel, pick a site, and select
         all cameras via the 'All Cameras' checkbox.
 
         The 'All Cameras' checkbox has zero-dimension elements (same MUI
-        bug as Events page), but input.click() via JS successfully toggles
-        the state and enables the search button.
-
-        Uses JS to click the site node within the dropdown panel to avoid
-        accidentally clicking notification toasts that also contain the
-        site name text. Pass None to select the first available site.
+        bug as Events page), so a JS input.click() toggles it. Pass None
+        to use the configured test site (first row as fallback).
         """
-        dropdown = self._get_dropdown_by_text("Locations")
-        assert dropdown is not None, "Locations & Cameras dropdown not found"
-        dropdown.click()
-        self.page.wait_for_timeout(1000)
+        self._open_section("Locations & Cameras")
 
-        if site_name:
-            # Click the specific site name within the dropdown panel
-            self.page.evaluate("""(siteName) => {
-                const panel = document.querySelector('.scrollBarCustom') ||
-                              document.querySelector('[class*="drop-down"]');
-                if (!panel) return;
-                const texts = panel.querySelectorAll('p, span');
-                for (const t of texts) {
-                    if (t.textContent.includes(siteName) && t.offsetWidth > 0) {
-                        t.click();
-                        return;
-                    }
-                }
-            }""", site_name)
-        else:
-            # Click the first available site in the panel
-            self.page.evaluate("""() => {
-                const panel = document.querySelector('.scrollBarCustom') ||
-                              document.querySelector('[class*="drop-down"]');
-                if (!panel) return;
-                const texts = panel.querySelectorAll('p, span');
-                for (const t of texts) {
-                    const text = t.textContent.trim();
-                    if (text && t.offsetWidth > 0) {
-                        t.click();
-                        return;
-                    }
-                }
-            }""")
-        self.page.wait_for_timeout(1000)
+        panel = self.page.locator(
+            ".scrollBarCustom, [class*='drop-down']"
+        ).first
+        panel.wait_for(state="visible", timeout=10000)
+        rows = panel.locator(".MuiListItemButton-root")
+        rows.first.wait_for(state="visible", timeout=10000)
+
+        if site_name is None:
+            from config.base_config import config
+            site_name = config.get("test_site_name")
+
+        site_row = rows.filter(has_text=site_name).first if site_name else rows.first
+        if site_name and site_row.count() == 0:
+            site_row = rows.first
+        site_row.click()
+
+        # Site expansion reveals the 'All Cameras' row
+        all_row = panel.locator(
+            ".MuiListItemButton-root:has-text('All Cameras')"
+        ).first
+        all_row.wait_for(state="visible", timeout=10000)
 
         # Click 'All Cameras' checkbox via JS (zero-dimension workaround)
         self.page.evaluate("""() => {
@@ -245,23 +269,56 @@ class SearchPage:
                 }
             }
         }""")
-        self.page.wait_for_timeout(1000)
 
-        # Dismiss by clicking the dropdown again
-        dropdown.click()
-        self.page.wait_for_timeout(500)
+        # Dismiss by clicking the value control again, then verify the
+        # section no longer reads 'Select' - the applied signal the old
+        # code never checked
+        self._open_section("Locations & Cameras")
+        deadline_ms = 5000
+        try:
+            expect(
+                self.page.locator(
+                    "p.select-box-headings:has-text('Locations')"
+                ).first.locator(
+                    "xpath=following-sibling::div"
+                    "[contains(@class,'select-box-sub-heading')]"
+                ).first
+            ).not_to_have_text("Select", timeout=deadline_ms)
+        except AssertionError:
+            print("[SEARCH] Locations & Cameras still reads 'Select' "
+                  "after selection")
 
     def select_duration(self, duration_text: str = "Today"):
         """Select a duration from the Duration dropdown."""
-        dropdown = self._get_dropdown_by_text("Duration")
-        assert dropdown is not None, "Duration dropdown not found"
-        self._select_dropdown_item_by_text(dropdown, duration_text)
+        self._open_section("Duration")
+        option = self.page.locator(
+            f".dropdownItem:text-is('{duration_text}')"
+        ).first
+        option.wait_for(state="visible", timeout=10000)
+        option.click()
+        self._dropdown_closed(option)
 
     def select_duration_by_index(self, index: int = 4):
-        """Select a duration by dropdown index (4 = Today in Selenium)."""
-        dropdown = self._get_dropdown_by_text("Duration")
-        assert dropdown is not None, "Duration dropdown not found"
-        self._select_dropdown_item(dropdown, index)
+        """Select a duration by option index.
+
+        Current option order (probe 08/09/2026): 0=Last 1 Hour,
+        1=Last 2 Hours, 2=Today, 3=Yesterday, 4=Last 7 Days,
+        5=Last 30 Days, 6=Custom.
+        """
+        self._open_section("Duration")
+        options = self.page.locator(".dropdownItem")
+        options.first.wait_for(state="visible", timeout=10000)
+        option = options.nth(index)
+        option.click()
+        self._dropdown_closed(option)
+
+    def _dropdown_closed(self, option) -> None:
+        """Wait for a clicked dropdownItem to leave with its list."""
+        try:
+            option.wait_for(state="hidden", timeout=5000)
+        except PlaywrightError:
+            print("[SEARCH] Dropdown option list still open 5s after "
+                  "selection")
 
     # --- Zone / Line drawing ---
 
@@ -394,16 +451,31 @@ class SearchPage:
         then hovers the container and clicks the action (Create Zone /
         Create Line).
         """
-        dropdown = self._get_dropdown_by_text("Locations")
-        assert dropdown is not None, "Locations & Cameras dropdown not found"
-        dropdown.click()
-        self.page.wait_for_timeout(1000)
+        # Open the panel via its value control (the old label click
+        # went dead with the 2026-08 sidebar, same as the filters)
+        self._open_section("Locations")
+        panel = self.page.locator(
+            ".scrollBarCustom, [class*='drop-down']"
+        ).first
+        panel.wait_for(state="visible", timeout=10000)
 
-        # Type camera name in the dropdown search field to filter
-        search_input = self.page.locator(".sidebarSearch input").first
-        search_input.wait_for(state="visible", timeout=5000)
-        search_input.fill(camera_name)
-        self.page.wait_for_timeout(2000)
+        # Camera containers render only after expanding the site and
+        # its All Cameras node (probe 08/09/2026); the search filter
+        # alone does not reveal them
+        rows = panel.locator(".MuiListItemButton-root")
+        rows.first.wait_for(state="visible", timeout=10000)
+        from config.base_config import config
+        site = config.get("test_site_name")
+        site_row = rows.filter(has_text=site).first if site else rows.first
+        if site and site_row.count() == 0:
+            site_row = rows.first
+        site_row.click()
+        all_row = panel.locator(
+            ".MuiListItemButton-root:has-text('All Cameras')"
+        ).first
+        all_row.wait_for(state="visible", timeout=10000)
+        all_row.click()
+        self.camera_containers.first.wait_for(state="visible", timeout=10000)
 
         # Find the matching camera container
         containers = self.camera_containers

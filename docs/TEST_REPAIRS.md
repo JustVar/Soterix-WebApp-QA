@@ -24,7 +24,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 | Test | Status | Detail |
 |------|--------|--------|
 | tests/ui/licenses/test_license_assignment.py TestLicenseAssignModal (4 tests) | [DONE] | Rebuilt and green 08/09/2026 (4/4). Probes found: the button is labeled 'Assign New' and exists only on the Assigned Licenses tab (the old bare :has-text('Assign') clause clicked the tab itself); it opens a customMuiModal overlay whose position:fixed root made offsetParent-based visibility probes miss it; the modal has no Cancel and dismisses on Escape; its backdrop blocks the whole page, so tests must close it before ending (session-scoped page). Site select verified listing all five real sites. |
-| tests/ui/search/test_search_categories.py vehicle tests (2 skips) | [DONE] | Premise reconfirmed live 08/09/2026 on the renamed tenant: a Vehicle search over the widest duration returns 0 results in 60s. The skips are legitimate; reasons updated with the recheck date. Revisit only when a site with vehicle detections joins the tenant. |
+| tests/ui/search/test_search_categories.py vehicle tests | [DONE] | Un-skipped and GREEN 08/09/2026 - the 'no vehicle detections' premise was false all along. Justin's correction exposed it: the SearchPage filter helpers were silently dead against the 2026-08 sidebar (label + value-control pairs; the old code clicked the label and its JS fallbacks returned without error), so NO search test was applying Locations or Duration filters and searches never dispatched - my own first probe measured a search that never ran and misread it as missing data. Rebuilt: _open_section clicks the value control (substring match - the app salts labels with zero-width spaces, so :text-is never matches), site row + All Cameras via the scrollBarCustom panel, durations via .dropdownItem with the current option order documented, and the section value leaving 'Select' as the applied signal. Categories suite 7/7 green including both vehicle tests. |
 
 ## C. Not run since the page-object conversion - verify before trusting
 
@@ -54,6 +54,26 @@ users/rules/sites (with honest redesign skips), 4-worker xdist run
 | tests/ui/admin/test_admin_sites.py test_search_site "Driver" | [DATA] | Fixed 08/09/2026: was typing the old site name and only asserting the input echoed it (vacuous). Now searches the configured site's first word. |
 | tests/ui/search/test_search_categories.py step text 'Driver Site' | [DATA] | Fixed 08/09/2026: mark text and the limitation note no longer name the old site. The vehicle-detection premise stays open in section B. |
 | tests/steps/manual/maps/maps.json and test_insights_navigation.json | [ARTIFACT] | Sidecar actions say "Driver Site"; update alongside the next sidecar sync. |
+
+## B2. Search suites - revalidated with the rebuilt filter helpers
+
+Every Global Search suite ran with silently dead filter helpers until
+08/09/2026 (see the vehicle row above). Revalidation results:
+
+- test_search_categories: 7/7 green, both vehicle tests un-skipped.
+- test_search_filters: 6/6 green.
+- test_search_deeper: 14/14 green after a fresh-view fixture fix - a
+  search view that already ran a search does not dispatch the next one
+  (SPA nav clicks are no-ops on the same route), proven by the failing
+  tests passing in isolation. The fixture reloads before each test.
+- test_incamera_search: 2/2 green after bounding the loader wait (the
+  page keeps tile-placeholder spinners alive forever, so waiting for
+  CircularProgress hidden can never finish; results are the signal).
+- test_search_drawing: 8 tests SKIPPED with a precise reason (below).
+
+| Test | Status | Detail |
+|------|--------|--------|
+| tests/ui/search/test_search_drawing.py (8 tests) | [REDO] | Mechanics repaired 08/09/2026 (panel opener, site + All Cameras expansion to render camera containers, config camera name replacing hardcoded 'Hanwha_6'), but the hover-revealed Create Zone / Create Line links no longer appear on camera containers: the drawing entry point moved in the 2026-08 redesign. Explore its new home with tools/explore_app.py, rebuild open_zone_drawing / open_line_drawing, then remove the module skip. |
 
 ## E. Test-artifact defects
 

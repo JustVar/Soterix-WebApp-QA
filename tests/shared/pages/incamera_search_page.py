@@ -97,12 +97,18 @@ class InCameraSearchPage:
         self.search_button.click()
         self.page.wait_for_timeout(1000)
 
-        # Wait for loader to finish
+        # Wait for loader to finish. Bounded and non-fatal: the page
+        # keeps several CircularProgress spinners alive (tile
+        # placeholders never stop), so the results wait below is the
+        # real signal.
         try:
             self.loader.first.wait_for(state="visible", timeout=5000)
         except Exception:
             pass
-        self.loader.wait_for(state="hidden", timeout=timeout)
+        try:
+            self.loader.first.wait_for(state="hidden", timeout=15000)
+        except Exception:
+            pass
 
         # Wait for results
         self.result_images.first.wait_for(state="visible", timeout=timeout)

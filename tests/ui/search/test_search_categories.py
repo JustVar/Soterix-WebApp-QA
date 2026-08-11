@@ -9,19 +9,14 @@ Migrated from Selenium:
 - test_global_event_search (line 2548)
 
 Known limitations:
-- Vehicle search: the test site had no vehicle detections when the
-  skips were added (pre-rename tenant). Recheck against the current
-  tenant - tracked in docs/TEST_REPAIRS.md section B.
 - Play result: QA env video streams use MediaSource (duration=Infinity).
   Occasionally a clip stream fails to load (stays at readyState=0).
   Play tests use @flaky(reruns=1) to handle transient stream failures.
 """
 import pytest
 from playwright.sync_api import expect
+
 from tests.shared.pages.search_page import SearchPage
-
-
-
 
 
 class TestSearchCategories:
@@ -102,11 +97,6 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.skip(
-        reason="The test site has no vehicle detections (rechecked live "
-        "08/09/2026 on the renamed tenant: 0 results in 60s); needs a "
-        "site with vehicle data"
-    )
     def test_vehicle_search(self):
         """Verify Vehicle search returns results.
 
@@ -125,11 +115,6 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.skip(
-        reason="The test site has no vehicle detections (rechecked live "
-        "08/09/2026 on the renamed tenant: 0 results in 60s); needs a "
-        "site with vehicle data"
-    )
     def test_vehicle_search_play_result(self):
         """Verify playing a Vehicle search result clip works."""
         self.search.navigate()
