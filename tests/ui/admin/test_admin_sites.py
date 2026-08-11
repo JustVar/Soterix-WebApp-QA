@@ -18,8 +18,16 @@ class TestAdminSites:
         self.admin = AdminPage(self.page)
         self._created_groups = []
         yield
-        # Cleanup: no reliable delete mechanism for camera groups in UI,
-        # so we track names but rely on manual cleanup if needed.
+        # Cleanup: delete created groups by name so runs do not leak
+        # AutoTest groups into the shared tenant. Best effort: the
+        # dropdown may already be closed when a test fails mid-flow.
+        for group_name in self._created_groups:
+            try:
+                self.admin.open_groups_dropdown()
+                if not self.admin.delete_camera_group_by_name(group_name):
+                    print(f"Cleanup: group '{group_name}' not found")
+            except Exception as e:
+                print(f"Cleanup: could not delete '{group_name}': {e}")
 
     def _navigate_to_sites(self):
         """Helper to navigate to Admin > Sites."""
@@ -212,16 +220,13 @@ class TestAdminSites:
         """Verify creating a new camera group with camera selection."""
         self._navigate_to_sites()
         self._open_first_site()
-        self._skip_if_redesigned_detail()
 
-        # Expand camera groups section
-        if not self._appears(self.admin.accordion_icon):
-            pytest.skip("Accordion icon not found - camera groups not available")
-
-        self.admin.expand_camera_groups()
-
-        if not self._appears(self.admin.create_new_button):
-            pytest.skip("Create New button not visible")
+        # Group management lives in the Groups dropdown since 2026-08.
+        # Skip only when the dropdown does not exist; a dropdown that
+        # exists but will not open must fail loud, not skip.
+        if not self._appears(self.page.get_by_text("Groups:"), timeout=5000):
+            pytest.skip("No Groups dropdown on this site detail")
+        self.admin.open_groups_dropdown()
 
         timestamp = datetime.datetime.now().strftime("%H%M%S")
         group_name = f"AutoTest Group {timestamp}"
@@ -239,13 +244,13 @@ class TestAdminSites:
         """Verify editing a camera group name."""
         self._navigate_to_sites()
         self._open_first_site()
-        self._skip_if_redesigned_detail()
 
-        # Expand camera groups
-        if not self._appears(self.admin.accordion_icon):
-            pytest.skip("Accordion icon not found")
-
-        self.admin.expand_camera_groups()
+        # Group management lives in the Groups dropdown since 2026-08.
+        # Skip only when the dropdown does not exist; a dropdown that
+        # exists but will not open must fail loud, not skip.
+        if not self._appears(self.page.get_by_text("Groups:"), timeout=5000):
+            pytest.skip("No Groups dropdown on this site detail")
+        self.admin.open_groups_dropdown()
 
         if not self._appears(self.admin.group_edit_icons):
             pytest.skip("No camera group edit icons found")
@@ -262,13 +267,13 @@ class TestAdminSites:
         """Verify deleting a camera group with Yes confirmation."""
         self._navigate_to_sites()
         self._open_first_site()
-        self._skip_if_redesigned_detail()
 
-        # Expand camera groups
-        if not self._appears(self.admin.accordion_icon):
-            pytest.skip("Accordion icon not found")
-
-        self.admin.expand_camera_groups()
+        # Group management lives in the Groups dropdown since 2026-08.
+        # Skip only when the dropdown does not exist; a dropdown that
+        # exists but will not open must fail loud, not skip.
+        if not self._appears(self.page.get_by_text("Groups:"), timeout=5000):
+            pytest.skip("No Groups dropdown on this site detail")
+        self.admin.open_groups_dropdown()
 
         if not self._appears(self.admin.group_delete_icons):
             pytest.skip("No camera group delete icons found")
@@ -276,11 +281,11 @@ class TestAdminSites:
         initial_count = self.admin.group_delete_icons.count()
         self.admin.delete_camera_group()
 
-        # Verify the group count changed (retries until the list refreshes).
-        # Not an exact count: rows can still be attaching when the baseline
-        # is read, so exact arithmetic fails a passing delete.
-        expect(self.admin.group_delete_icons).not_to_have_count(
-            initial_count, timeout=10000
+        # Direction-aware oracle: exactly one group fewer. An any-change
+        # check also passes when the dropdown closes (count 0) or a
+        # dialog adds an icon, which is not a delete.
+        expect(self.admin.group_delete_icons).to_have_count(
+            initial_count - 1, timeout=10000
         )
 
     @pytest.mark.ui

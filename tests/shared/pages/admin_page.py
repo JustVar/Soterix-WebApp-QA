@@ -96,9 +96,9 @@ class AdminPage:
         self.accordion_icon = page.locator(
             "img[src*='downAccordionIcon']"
         )
-        self.create_new_button = page.locator(
-            "div.MuiBox-root:has-text('Create New')"
-        )
+        # Exact text node: a :has-text MuiBox union matches ancestor
+        # boxes too, and clicking their center misses the item
+        self.create_new_button = page.get_by_text("Create New", exact=True)
         self.group_name_input = page.locator(
             "input[placeholder='Type here...']"
         )
@@ -117,9 +117,14 @@ class AdminPage:
         self.group_delete_icons = page.locator(
             "img[alt='delete'].delete-icon"
         )
+        # The Delete Group confirmation renders in a customMuiModal;
+        # its Delete control may be a button or a MuiBox. Modal-scoped
+        # only: unscoped legacy candidates can outrank these in DOM
+        # order via .first
         self.group_delete_confirm = page.locator(
-            "div.MuiBox-root:text-is('Yes')"
-        )
+            ".customMuiModal button:has-text('Delete'), "
+            ".customMuiModal div.MuiBox-root:text-is('Delete')"
+        ).first
 
     # --- Navigation ---
 
@@ -603,24 +608,60 @@ class AdminPage:
         self.sort_za_icon.click()
         self.page.wait_for_timeout(1000)  # in-place reorder has no DOM signal
 
-    def expand_camera_groups(self):
-        """Click the accordion icon to expand camera groups section."""
-        self.accordion_icon.wait_for(state="visible", timeout=10000)
-        self.accordion_icon.click()
-        # The Create New button is the signal the section expanded
+    def delete_camera_group_by_name(self, name: str) -> bool:
+        """Delete the group with the given name; False when not found.
+
+        Scoped to the named row so cleanup never deletes someone
+        else's group on the shared tenant.
+        """
+        row_anchor = self.page.get_by_text(name, exact=True).first
         try:
-            self.create_new_button.wait_for(state="visible", timeout=5000)
+            row_anchor.wait_for(state="visible", timeout=5000)
+        except Exception:
+            return False
+        icon = row_anchor.locator("xpath=../..").locator(
+            "img[alt='delete']"
+        ).first
+        try:
+            icon.wait_for(state="visible", timeout=5000)
+        except Exception:
+            return False
+        icon.click()
+        dialog_shown = True
+        try:
+            self.group_delete_confirm.wait_for(state="visible", timeout=3000)
+        except Exception:
+            dialog_shown = False
+        if dialog_shown:
+            self.group_delete_confirm.click()
+            self.group_delete_confirm.wait_for(state="hidden", timeout=15000)
+        return True
+
+    def open_groups_dropdown(self):
+        """Open the Groups dropdown on the site detail page.
+
+        Since the 2026-08 redesign, group management (the group list
+        and Create New) lives inside this dropdown.
+        """
+        try:
+            self.create_new_button.first.wait_for(
+                state="visible", timeout=2000
+            )
+            return  # already open
         except Exception:
             pass
+        trigger = self.page.get_by_text("Groups:", exact=False).first
+        trigger.locator("xpath=following-sibling::*[1]").click()
+        self.create_new_button.first.wait_for(state="visible", timeout=10000)
 
     def create_camera_group(self, name: str, camera_search: str):
         """Create a new camera group.
 
-        Clicks Create New, fills name, searches camera, selects first,
-        and clicks Create.
+        Opens the Groups dropdown, clicks Create New, fills the name,
+        searches a camera, selects it, and clicks Create.
         """
-        self.create_new_button.wait_for(state="visible", timeout=10000)
-        self.create_new_button.click()
+        self.open_groups_dropdown()
+        self.create_new_button.first.click()
 
         self.group_name_input.wait_for(state="visible", timeout=10000)
         self.group_name_input.fill(name)
@@ -673,19 +714,27 @@ class AdminPage:
             pass
 
     def delete_camera_group(self):
-        """Delete the last camera group via its delete icon + Yes confirmation."""
+        """Delete the last camera group via its delete icon.
+
+        A confirmation dialog is optional: the 2026-08 Groups dropdown
+        deletes immediately when none appears. Callers assert on the
+        group count, which is the real signal either way.
+        """
         self.group_delete_icons.last.wait_for(
             state="visible", timeout=10000
         )
         self.group_delete_icons.last.click()
 
-        self.group_delete_confirm.wait_for(state="visible", timeout=5000)
-        self.group_delete_confirm.click()
-        # The confirm disappearing is the signal the delete ran
+        # Only the dialog's absence is optional. Once it shows, the
+        # click and the close must succeed or the failure surfaces.
+        dialog_shown = True
         try:
-            self.group_delete_confirm.wait_for(state="hidden", timeout=15000)
+            self.group_delete_confirm.wait_for(state="visible", timeout=3000)
         except Exception:
-            pass
+            dialog_shown = False  # no dialog: the delete applies immediately
+        if dialog_shown:
+            self.group_delete_confirm.click()
+            self.group_delete_confirm.wait_for(state="hidden", timeout=15000)
 
     def search_inside_site(self, search_text: str):
         """Search for cameras within a site detail view.
