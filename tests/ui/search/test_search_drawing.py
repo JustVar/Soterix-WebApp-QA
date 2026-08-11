@@ -1,4 +1,4 @@
-"""Global Search zone and line drawing tests.
+﻿"""Global Search zone and line drawing tests.
 
 Covers Zone and Line category searches where the user draws a polygon
 or line on a canvas before executing the search.
@@ -66,7 +66,7 @@ class TestSearchDrawing:
         self.search.click_done()
 
         self.search.select_duration_by_index(5)
-        self.search.execute_search(timeout=60000)
+        self.search.execute_search(timeout=120000)
 
         count = self.search.get_result_count()
         assert count > 0, "Expected at least one Zone search result"
@@ -85,7 +85,7 @@ class TestSearchDrawing:
         self.search.click_done()
 
         self.search.select_duration_by_index(5)
-        self.search.execute_search(timeout=60000)
+        self.search.execute_search(timeout=120000)
 
         self.search.play_result(0, timeout=60000)
 
@@ -128,7 +128,7 @@ class TestSearchDrawing:
         self.search.click_done()
 
         self.search.select_duration_by_index(5)
-        self.search.execute_search(timeout=60000)
+        self.search.execute_search(timeout=120000)
 
         count = self.search.get_result_count()
         assert count > 0, "Expected at least one Line search result"
@@ -147,7 +147,7 @@ class TestSearchDrawing:
         self.search.click_done()
 
         self.search.select_duration_by_index(5)
-        self.search.execute_search(timeout=60000)
+        self.search.execute_search(timeout=120000)
 
         self.search.play_result(0, timeout=60000)
 

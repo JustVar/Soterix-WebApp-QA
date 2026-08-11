@@ -27,11 +27,15 @@ class TestChats:
                     if delete_icon.count() > 0:
                         delete_icon.click()
                         self.page.wait_for_timeout(2000)
-                        confirm = self.page.locator(
-                            "div.MuiBox-root:has-text('Delete')"
+                        # Exact text node with .first: the has-text box
+                        # union multi-matches ancestors and the bare
+                        # click was a strict-mode error the blanket
+                        # except silently ate, leaking the group
+                        confirm = self.page.get_by_text(
+                            "Delete", exact=True
                         )
                         if confirm.count() > 0:
-                            confirm.click()
+                            confirm.first.click()
                             self.page.wait_for_timeout(2000)
             except Exception as e:
                 print(f"Cleanup: failed to delete group '{group_name}': {e}")

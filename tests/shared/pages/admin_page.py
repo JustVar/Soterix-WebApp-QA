@@ -61,7 +61,6 @@ class AdminPage:
         self.next_button = page.locator(
             "button:has-text('Next')"
         )
-        self.save_rule_button = page.locator("button:has-text('Save')")
         self.rule_search_input = page.locator(
             "input.input-search-bar[placeholder*='Rule Type']"
         )
@@ -82,9 +81,6 @@ class AdminPage:
             "img[aria-label='Mute Notification']"
         )
         self.canvas = page.locator("canvas.upper-canvas")
-        self.site_checkbox_wizard = page.locator(
-            "input[type='checkbox']"
-        )
 
         # Sites management
         self.list_view_toggle = page.locator("img[alt='tableIcon']")
@@ -358,33 +354,6 @@ class AdminPage:
         self.next_button.first.wait_for(state="visible", timeout=10000)
         self.next_button.first.click()
 
-    def select_site_checkbox(self):
-        """Toggle the first site checkbox in the rule wizard."""
-        self.site_checkbox_wizard.first.wait_for(
-            state="visible", timeout=10000
-        )
-        self.site_checkbox_wizard.first.click()
-
-    def fill_rule_name(self, name: str):
-        """Fill the rule name input in the wizard."""
-        rule_name_input = self.page.locator(
-            "input[placeholder*='name'], input[placeholder*='Name']"
-        )
-        rule_name_input.wait_for(state="visible", timeout=10000)
-        rule_name_input.fill(name)
-
-    def save_rule(self):
-        """Click the Save button to save the rule.
-
-        Waits for the wizard to close; tolerates it staying open so the
-        caller's own assertion reports the failure.
-        """
-        self.save_rule_button.click()
-        try:
-            self.save_rule_button.wait_for(state="hidden", timeout=15000)
-        except Exception:
-            pass
-
     def search_rule(self, search_text: str):
         """Type in the rule search input.
 
@@ -447,6 +416,24 @@ class AdminPage:
         except Exception:
             pass
 
+    def delete_rule_by_name(self, name: str) -> bool:
+        """Delete the rule with the given name; False when not found.
+
+        Name-scoped so cleanup never deletes a team-owned rule on the
+        shared tenant.
+        """
+        self.search_rule(name)
+        try:
+            self.rule_delete_icons.first.wait_for(
+                state="visible", timeout=5000
+            )
+        except Exception:
+            self.search_rule("")
+            return False
+        self.delete_rule(0)
+        self.search_rule("")
+        return True
+
     def delete_rule(self, index: int = -1):
         """Delete a rule at the given index.
 
@@ -480,24 +467,6 @@ class AdminPage:
         target = count + index if index < 0 else index
         self.mute_notification_icons.nth(target).click()
         self.page.wait_for_timeout(1000)  # mute ack has no DOM signal
-
-    def draw_line_on_canvas(self, start: tuple, end: tuple):
-        """Draw a line on the canvas element using mouse actions.
-
-        Args:
-            start: (x_offset, y_offset) from canvas center
-            end: (x_offset, y_offset) from canvas center
-        """
-        box = self.canvas.bounding_box()
-        if not box:
-            return
-        cx = box["x"] + box["width"] / 2
-        cy = box["y"] + box["height"] / 2
-        self.page.mouse.move(cx + start[0], cy + start[1])
-        self.page.mouse.down()
-        self.page.mouse.move(cx + end[0], cy + end[1])
-        self.page.mouse.up()
-        self.page.wait_for_timeout(1000)  # canvas draw settle, no DOM signal
 
     # --- Sites management ---
 
@@ -678,40 +647,46 @@ class AdminPage:
             pass
 
         self.create_button.wait_for(state="visible", timeout=10000)
-        self.create_button.click()
-        # The form closing is the signal the group was created
         try:
-            self.group_name_input.wait_for(state="hidden", timeout=15000)
+            self.create_button.click(timeout=15000)
         except Exception:
-            pass
+            # The MuiBox control occasionally stays inert to the
+            # element click; the exact text node accepts it
+            self.page.get_by_text("Create", exact=True).last.click()
+        # The form closing is the signal the group was created
+        self.group_name_input.wait_for(state="hidden", timeout=15000)
 
-    def edit_camera_group(self, new_name: str):
-        """Edit the last camera group's name.
+    def edit_camera_group_by_name(self, name: str, new_name: str) -> bool:
+        """Rename the group with the given name; False when not found.
 
-        Clicks last edit icon, clears name, fills new name, and submits.
+        Name-scoped so tests rename their own group, never a
+        team-owned one on the shared tenant.
         """
-        self.group_edit_icons.last.wait_for(
-            state="visible", timeout=10000
-        )
-        self.group_edit_icons.last.click()
+        row_anchor = self.page.get_by_text(name, exact=True).first
+        try:
+            row_anchor.wait_for(state="visible", timeout=5000)
+        except Exception:
+            return False
+        icon = row_anchor.locator("xpath=../..").locator(
+            "img[alt='edit']"
+        ).first
+        icon.wait_for(state="visible", timeout=5000)
+        icon.click()
 
         self.group_name_input.wait_for(state="visible", timeout=10000)
         self.group_name_input.clear()
         self.group_name_input.fill(new_name)
 
-        # Click Update button (same position as Create button)
-        update_btn = self.page.locator(
-            "div.MuiBox-root:has-text('Update')"
-        )
+        # Exact text node: a :has-text MuiBox union matches ancestor
+        # boxes and the click misses the control (same fix as Create New)
+        update_btn = self.page.get_by_text("Update", exact=True)
         if update_btn.count() > 0:
             update_btn.first.click()
         else:
             self.create_button.click()
         # The form closing is the signal the update was accepted
-        try:
-            self.group_name_input.wait_for(state="hidden", timeout=15000)
-        except Exception:
-            pass
+        self.group_name_input.wait_for(state="hidden", timeout=15000)
+        return True
 
     def delete_camera_group(self):
         """Delete the last camera group via its delete icon.
@@ -751,123 +726,6 @@ class AdminPage:
 
     # --- Full rule creation wizard ---
 
-    CANVAS_RULES = {"Entry-Exit", "Line Crossing"}
-    NON_CANVAS_RULES = {
-        "Heat Map", "Intrusion Detection", "Loitering", "Occupancy",
-    }
-
-    def select_site_for_rule(self, site_name: str):
-        """Select a site from the MuiSelect dropdown in the rule wizard.
-
-        Falls back to the first available option if site_name is not found.
-        """
-        # Check if site already shown
-        site_text = self.page.locator(
-            f"text=/{site_name}/i"
-        )
-        if site_text.count() > 0 and site_text.first.is_visible():
-            return
-
-        dropdown = self.page.locator(".MuiSelect-select").first
-        dropdown.wait_for(state="visible", timeout=10000)
-        dropdown.click()
-
-        # The option list is the signal the dropdown opened
-        options = self.page.locator("li[role='option']")
-        options.first.wait_for(state="visible", timeout=10000)
-
-        # Try named site first, fall back to first available option
-        site_option = self.page.locator(
-            f"li:has-text('{site_name}'), "
-            f"div:text-is('{site_name}'), "
-            f"span:text-is('{site_name}')"
-        ).first
-        if site_option.count() > 0 and site_option.is_visible():
-            site_option.click()
-        else:
-            options.first.click()
-        # The list closing is the signal the selection was applied
-        try:
-            options.first.wait_for(state="hidden", timeout=5000)
-        except Exception:
-            pass
-
-    def wait_for_snapshots(self, timeout: int = 60000):
-        """Wait for camera snapshot images to load in the rule wizard."""
-        self.page.locator("img[src*='data:image']").first.wait_for(
-            state="visible", timeout=timeout
-        )
-        # The canvas overlay initializes after the snapshot with no DOM signal
-        self.page.wait_for_timeout(2000)
-
-    def maximize_snapshot(self):
-        """Click the maximize button on a camera snapshot."""
-        maximize_btn = self.page.locator("img[alt='maximize']")
-        maximize_btn.wait_for(state="visible", timeout=10000)
-        maximize_btn.click()
-
-        # Wait for the enlarged snapshot (at least 2 data:image elements)
-        try:
-            self.page.wait_for_function(
-                "() => document.querySelectorAll(\"img[src*='data:image']\").length >= 2",
-                timeout=30000,
-            )
-        except Exception:
-            pass
-
-    def draw_zone_on_canvas(self):
-        """Draw a 4-point polygon zone on the canvas element.
-
-        Uses mouse click offsets from canvas center to create a closed polygon,
-        then Tab×4 + Enter to confirm the zone.
-        """
-        # Use the last (largest) canvas - there may be multiple upper-canvas elements
-        canvas = self.page.locator("canvas.upper-canvas").last
-        canvas.wait_for(state="visible", timeout=10000)
-        box = canvas.bounding_box()
-        if not box:
-            return
-
-        cx = box["x"] + box["width"] / 2
-        cy = box["y"] + box["height"] / 2
-
-        # 4-point polygon clicks with pauses. The pauses are canvas-library
-        # pacing (fabric.js reads no DOM state a wait could target)
-        offsets = [(-100, -150), (100, 20), (10, -20), (-10, 20)]
-        for ox, oy in offsets:
-            self.page.mouse.click(cx + ox, cy + oy)
-            self.page.wait_for_timeout(1000)
-
-        self.page.wait_for_timeout(3000)  # polygon close settles, no DOM signal
-
-        # Confirm the zone: Tab×4 then Enter
-        for _ in range(4):
-            self.page.keyboard.press("Tab")
-        self.page.wait_for_timeout(1000)  # focus traversal settles, no DOM signal
-        self.page.keyboard.press("Enter")
-        self.page.wait_for_timeout(2000)  # zone commit settles, no DOM signal
-
-    def toggle_mui_switch(self):
-        """Toggle the MuiSwitch checkbox used in non-canvas rule types."""
-        switch_input = self.page.locator(
-            "input[type='checkbox'].MuiSwitch-input, "
-            "input[aria-label='ant design']"
-        ).first
-        switch_input.wait_for(state="attached", timeout=10000)
-        switch_input.click(force=True)
-        self.page.wait_for_timeout(1000)  # switch state applies with no DOM signal
-
-    def click_ripple_button(self):
-        """Click the MUI ripple button that appears after MuiSwitch toggle (optional)."""
-        button = self.page.locator(
-            "button.MuiButtonBase-root:not([disabled])"
-        ).first
-        try:
-            button.wait_for(state="visible", timeout=5000)
-            button.click()
-            self.page.wait_for_timeout(1000)  # ripple ack has no DOM signal
-        except Exception:
-            pass
 
     def _check_wizard_camera(self):
         """Filter to the configured camera on Select Devices and check it."""
@@ -877,25 +735,36 @@ class AdminPage:
             "input[placeholder*='camera name']"
         ).first
         search.wait_for(state="visible", timeout=10000)
+        # The device tree loads async after the step renders: wait for
+        # it before filtering, so slow loads do not read as a missing
+        # camera
+        self.page.locator("input[type='checkbox']").first.wait_for(
+            state="attached", timeout=20000
+        )
         if camera:
             search.fill(camera)
             # The tree filter re-renders with no completion signal
             self.page.wait_for_timeout(1000)
-        # Prefer the configured camera's own row; fall back to the
-        # deepest checkbox. JS click covers the zero-dimension MUI
-        # input pattern.
-        box = None
-        if camera:
-            row = self.page.get_by_text(camera, exact=False).first
-            try:
-                row.wait_for(state="visible", timeout=5000)
-                box = row.locator(
-                    "xpath=ancestor::*[.//input[@type='checkbox']][1]"
-                ).locator("input[type='checkbox']").first
-            except Exception:
-                box = None
-        if box is None or box.count() == 0:
-            box = self.page.locator("input[type='checkbox']").last
+        # The configured camera's own row, fail-fast: a silent fallback
+        # to another checkbox would create the rule against an
+        # arbitrary device and pass on wrong data
+        if not camera:
+            raise RuntimeError(
+                "test_camera_name is not set for this ENV in config/env/."
+            )
+        row = self.page.get_by_text(camera, exact=False).first
+        try:
+            row.wait_for(state="visible", timeout=10000)
+        except Exception:
+            visible = self._wizard_leaf_texts()[:10]
+            raise RuntimeError(
+                f"Camera '{camera}' is not in the wizard device tree. "
+                f"On-screen: {visible}. Update test_camera_name in "
+                f"config/env/ if the tenant renamed it."
+            ) from None
+        box = row.locator(
+            "xpath=ancestor::*[.//input[@type='checkbox']][1]"
+        ).locator("input[type='checkbox']").first
         box.wait_for(state="attached", timeout=10000)
         box.evaluate("el => el.click()")
         # Checked state is the applied signal
@@ -916,6 +785,9 @@ class AdminPage:
         """
         canvas = self.page.locator("canvas.upper-canvas").last
         canvas.wait_for(state="visible", timeout=15000)
+        # bounding_box is viewport-relative: a scrolled canvas would
+        # send the clicks into whatever overlays those coordinates
+        canvas.scroll_into_view_if_needed()
         box = canvas.bounding_box()
         if not box:
             print("[ADMIN] Region canvas has no bounding box")
@@ -1018,8 +890,11 @@ class AdminPage:
             self.page.wait_for_timeout(1500)
 
             if rule_name:
+                # Exclude the camera-search box, whose placeholder also
+                # contains 'name'
                 name_input = self.page.locator(
-                    "input[placeholder*='name' i], "
+                    "input[placeholder*='name' i]"
+                    ":not([placeholder*='camera' i]), "
                     "input[placeholder='Type here...']"
                 ).first
                 try:
@@ -1033,35 +908,41 @@ class AdminPage:
                 "button:has-text('Finish'), button:has-text('Create')"
             ).first
             try:
-                if save.is_visible():
-                    save.click()
-                    # Save prompts 'Name the Rule' in a dialog: the
-                    # name lives THERE, not on any step (this is what
-                    # rejected the old flow). Fill it and confirm.
-                    prompt = self.page.get_by_text("Name the Rule").first
-                    try:
-                        prompt.wait_for(state="visible", timeout=5000)
-                        name_box = self.page.locator(
-                            ".customMuiModal input, "
-                            "input[placeholder*='Type here']"
-                        ).last
-                        if rule_name:
-                            name_box.fill(rule_name)
-                        confirm = self.page.locator(
-                            ".customMuiModal button:has-text('Done'), "
-                            ".customMuiModal button:has-text('Save'), "
-                            "button.btn-done"
-                        ).first
-                        confirm.click()
-                    except Exception:
-                        pass  # no prompt: saved directly
-                    # The wizard closing is the created signal
-                    self.page.get_by_text("Select Devices").first.wait_for(
-                        state="hidden", timeout=15000
-                    )
-                    return True
+                save_visible = save.is_visible()
             except Exception:
-                pass
+                save_visible = False
+            if save_visible:
+                save.click()
+                # Save prompts 'Name the Rule' in a dialog: the name
+                # lives THERE, not on any step (this is what rejected
+                # the old flow). Only the prompt's ABSENCE is optional;
+                # once it shows, the fill and confirm must succeed, and
+                # a failure past Save raises rather than reading as
+                # not-completed while the rule may exist server-side.
+                prompt = self.page.get_by_text("Name the Rule").first
+                prompt_shown = True
+                try:
+                    prompt.wait_for(state="visible", timeout=5000)
+                except Exception:
+                    prompt_shown = False  # no prompt: saved directly
+                if prompt_shown:
+                    name_box = self.page.locator(
+                        ".customMuiModal input, "
+                        "input[placeholder*='Type here']"
+                    ).last
+                    if rule_name:
+                        name_box.fill(rule_name, timeout=10000)
+                    confirm = self.page.locator(
+                        ".customMuiModal button:has-text('Done'), "
+                        ".customMuiModal button:has-text('Save'), "
+                        "button.btn-done"
+                    ).first
+                    confirm.click(timeout=10000)
+                # The wizard closing is the created signal
+                self.page.get_by_text("Select Devices").first.wait_for(
+                    state="hidden", timeout=15000
+                )
+                return True
 
         print(f"[ADMIN] Rule wizard stalled; visible: "
               f"{self._wizard_leaf_texts()[:20]}")
@@ -1072,9 +953,13 @@ class AdminPage:
         skip = {"Views", "Events", "Maps", "Insights", "Media", "Search",
                 "LPR", "Admin", "Dashboard", "Sites", "Users",
                 "Integrations", "Rules", "General", "Licenses", "JV"}
+        # getClientRects, not offsetParent: fixed-position containers
+        # (customMuiModal and friends) have no offsetParent even when
+        # fully visible, and diagnostics must see them
         texts = self.page.evaluate(
             '() => [...document.querySelectorAll("body *")]'
-            '.filter(e => e.children.length === 0 && e.offsetParent !== null)'
+            '.filter(e => e.children.length === 0 '
+            '&& e.getClientRects().length)'
             '.map(e => (e.textContent || "").trim())'
             '.filter(t => t && t.length < 30)'
         )

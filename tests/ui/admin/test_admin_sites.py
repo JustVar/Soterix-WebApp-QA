@@ -252,13 +252,20 @@ class TestAdminSites:
             pytest.skip("No Groups dropdown on this site detail")
         self.admin.open_groups_dropdown()
 
-        if not self._appears(self.admin.group_edit_icons):
-            pytest.skip("No camera group edit icons found")
-
+        # Create our own group and rename THAT: renaming the last
+        # existing group mutates team-owned data on the shared tenant
         timestamp = datetime.datetime.now().strftime("%H%M%S")
-        new_name = f"Edited Group {timestamp}"
+        group_name = f"AutoTest Group {timestamp}"
+        self._created_groups.append(group_name)
+        camera_search = config.get("test_camera_name", "camera")
+        self.admin.create_camera_group(group_name, camera_search=camera_search)
 
-        self.admin.edit_camera_group(new_name)
+        self.admin.open_groups_dropdown()
+        new_name = f"AutoTest Edited {timestamp}"
+        self._created_groups.append(new_name)
+        assert self.admin.edit_camera_group_by_name(group_name, new_name), (
+            f"Created group '{group_name}' not found for rename"
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -275,18 +282,22 @@ class TestAdminSites:
             pytest.skip("No Groups dropdown on this site detail")
         self.admin.open_groups_dropdown()
 
-        if not self._appears(self.admin.group_delete_icons):
-            pytest.skip("No camera group delete icons found")
+        # Create our own group and delete THAT: deleting the last
+        # existing group destroys team-owned data on the shared tenant
+        timestamp = datetime.datetime.now().strftime("%H%M%S")
+        group_name = f"AutoTest Group {timestamp}"
+        camera_search = config.get("test_camera_name", "camera")
+        self.admin.create_camera_group(group_name, camera_search=camera_search)
 
-        initial_count = self.admin.group_delete_icons.count()
-        self.admin.delete_camera_group()
-
-        # Direction-aware oracle: exactly one group fewer. An any-change
-        # check also passes when the dropdown closes (count 0) or a
-        # dialog adds an icon, which is not a delete.
-        expect(self.admin.group_delete_icons).to_have_count(
-            initial_count - 1, timeout=10000
+        self.admin.open_groups_dropdown()
+        assert self.admin.delete_camera_group_by_name(group_name), (
+            f"Created group '{group_name}' not found for delete"
         )
+
+        # The named row leaving the list is the delete signal
+        expect(
+            self.page.get_by_text(group_name, exact=True)
+        ).to_have_count(0, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin

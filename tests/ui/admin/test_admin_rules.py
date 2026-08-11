@@ -27,7 +27,16 @@ class TestAdminRules:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.admin = AdminPage(self.page)
+        self._created_rules = []
         yield
+        # Cleanup: delete created rules by name so runs do not leak
+        # Auto rules into the shared tenant. Best effort by design.
+        for rule_name in self._created_rules:
+            try:
+                if not self.admin.delete_rule_by_name(rule_name):
+                    print(f"Cleanup: rule '{rule_name}' not found")
+            except Exception as e:
+                print(f"Cleanup: could not delete '{rule_name}': {e}")
 
     def _navigate_to_rules(self):
         """Helper to navigate to Admin > General > Rules."""
@@ -179,6 +188,7 @@ class TestAdminRules:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         rule_name = f"{rule_type.replace(' ', '_')}_Auto_{timestamp}"
 
+        self._created_rules.append(rule_name)
         completed = self.admin.complete_rule_wizard(
             rule_type=rule_type,
             site_name=SITE_NAME,
@@ -190,5 +200,11 @@ class TestAdminRules:
                 "the run output for the step it stalled on"
             )
 
-        # Verify we're back on the rules list after save (expect retries)
+        # The rule must exist by name: a closed wizard alone would also
+        # pass a save the backend rejected
         expect(self.admin.rule_search_input).to_be_visible(timeout=15000)
+        self.admin.search_rule(rule_name)
+        expect(
+            self.page.get_by_text(rule_name, exact=False).first
+        ).to_be_visible(timeout=15000)
+        self.admin.search_rule("")
