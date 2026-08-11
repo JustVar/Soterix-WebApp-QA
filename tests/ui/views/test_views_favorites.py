@@ -19,9 +19,13 @@ class TestViewsFavorites:
         yield
 
     def _expand_site(self):
-        """Expand the site tree and show cameras."""
+        """Expand the site tree and show cameras.
+
+        No settling sleep here: the tree collapses itself within a few
+        seconds of expansion, so act on it immediately (toggle_favorite
+        re-expands when it finds the tree closed).
+        """
         self.views.expand_site_and_show_cameras(SITE_NAME)
-        self.page.wait_for_timeout(2000)
 
     def _get_camera_name(self) -> str:
         """Get a real camera name to favorite.
@@ -41,15 +45,6 @@ class TestViewsFavorites:
 
     @pytest.mark.ui
     @pytest.mark.favorites
-    @pytest.mark.skip(reason=(
-        "Favorites flow needs an interactive rebuild. DOM probe "
-        "08/09/2026: the camera rows with the favorite star live in "
-        "the sidebar tree, which stays mounted but HIDDEN after "
-        "expand_site_and_show_cameras closes the panel, so the star "
-        "is never visible when the test reaches it. Find the panel "
-        "state that shows the tree rows. Row anatomy and locators are "
-        "already fixed. Tracked in docs/TEST_REPAIRS.md section A."
-    ))
     def test_add_remove_favorites(self):
         """Verify adding a camera to favorites, seeing it in the panel, and removing it.
 

@@ -904,10 +904,14 @@ class ViewsPage:
         """
         # Scope to the camera's row (grandparent of the title span),
         # then find its favorite button. The old selector mixed XPath
-        # into a CSS string and never parsed. The star is revealed on
-        # row hover, so hover the row first.
+        # into a CSS string and never parsed.
         row_anchor = self.page.locator(f"span[title='{camera_name}']").first
-        row_anchor.wait_for(state="visible", timeout=10000)
+        if not self._appears(row_anchor, timeout=3000):
+            # The camera tree collapses itself shortly after expansion,
+            # and the bare panel toggle reopens it collapsed (probe
+            # 08/09/2026): run the full expansion to reach the row
+            self.expand_site_and_show_cameras(None)
+            row_anchor.wait_for(state="visible", timeout=10000)
         row_anchor.hover()
         fav_button = row_anchor.locator("xpath=../..").locator(
             "button:has(img[alt='favorite'])"

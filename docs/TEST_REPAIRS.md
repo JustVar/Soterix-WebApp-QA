@@ -14,7 +14,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 
 | Test | Status | Detail |
 |------|--------|--------|
-| tests/ui/views/test_views_favorites.py::test_add_remove_favorites | [REDO] | Narrowed 08/09/2026 by DOM probe. Fixed already: locator (was XPath-in-CSS, never parsed since 03/2026), row scoping (span[title] grandparent, button:has(img[alt='favorite'])), config camera name, clean-start toggle. Remaining: the sidebar tree rows that hold the star stay mounted but HIDDEN after expand_site_and_show_cameras closes the panel, so the star is never visible when the test acts. Rebuild = find the panel state that shows the tree rows, then remove the skip. Beware: 'main gate' may be left favorited by earlier iterations. |
+| tests/ui/views/test_views_favorites.py::test_add_remove_favorites | [DONE] | Green 08/09/2026 - first time since the test was written (locator was XPath-in-CSS and never parsed since 03/2026). Full repair: parseable row-scoped locator, config camera name, clean-start toggle, and the real blocker: the camera tree collapses itself a few seconds after expansion, so toggle_favorite now re-runs the full expansion when the row is not reachable and the test acts without a settling sleep. |
 | tests/ui/admin/test_admin_sites site detail tests | [REDO] | Skip with drift message since 08/07/2026: detail page redesigned (breadcrumb, Groups, Add Devices layout). |
 | tests/ui/admin/test_admin_rules wizard tests | [REDO] | complete_rule_wizard returns False on the redesigned Select Devices step tabs; tests skip. Need the new step flow and where the rule name lives. |
 | tests/ui/views/test_views_subtabs.py insights add-to-tile | [REDO] | Skips honestly: insights widgets expose no hover checkbox and direct click adds nothing. Find the real affordance. |
@@ -23,8 +23,8 @@ the page-object conversion, [DATA] stale tenant data in the test,
 
 | Test | Status | Detail |
 |------|--------|--------|
-| tests/ui/licenses/test_license_assignment.py TestLicenseAssignModal (3 tests) | [REDO] | Resolved to a rebuild 08/09/2026. DOM probe found the old locator's bare :has-text('Assign') clause was clicking the 'Assigned Licenses' TAB (fixed: clause removed, open_assign_modal no longer raises). With the correct button found and clicked, still no dialog appears: the assign flow no longer opens a modal. Explore what it opens now (full page or drawer) and rebuild the three modal tests against it. |
-| tests/ui/search/test_search_categories.py vehicle tests (2 skips) | [INVESTIGATE] | Skip reason says the old site has no vehicle detections. Premise predates the tenant rename; recheck against the current tenant before trusting the skips. |
+| tests/ui/licenses/test_license_assignment.py TestLicenseAssignModal (4 tests) | [DONE] | Rebuilt and green 08/09/2026 (4/4). Probes found: the button is labeled 'Assign New' and exists only on the Assigned Licenses tab (the old bare :has-text('Assign') clause clicked the tab itself); it opens a customMuiModal overlay whose position:fixed root made offsetParent-based visibility probes miss it; the modal has no Cancel and dismisses on Escape; its backdrop blocks the whole page, so tests must close it before ending (session-scoped page). Site select verified listing all five real sites. |
+| tests/ui/search/test_search_categories.py vehicle tests (2 skips) | [DONE] | Premise reconfirmed live 08/09/2026 on the renamed tenant: a Vehicle search over the widest duration returns 0 results in 60s. The skips are legitimate; reasons updated with the recheck date. Revisit only when a site with vehicle detections joins the tenant. |
 
 ## C. Not run since the page-object conversion - verify before trusting
 
@@ -80,6 +80,24 @@ sweeping future runs:
 - `_appears`/`_appears_hidden` swallow PlaywrightError, so a strict-mode
   violation looks like a timeout; if a bounded wait misses persistently,
   check the selector for multi-match before blaming timing.
+
+## Tooling
+
+`tools/explore_app.py` is the probe harness that closed the assign and
+favorites items: it opens the app logged in (cached state or fresh
+login) with the repo's page objects importable, as a REPL or running a
+probe script. Use it for the remaining section A rebuilds instead of
+guessing selectors. Its docstring carries the paid-for lessons
+(fixed-position modals dodge offsetParent checks; probed state decays;
+close what you open).
+
+On Playwright's official test agents (planner/generator/healer,
+playwright.dev/docs/test-agents, checked 08/09/2026): they require the
+Node.js Playwright Test runner (init-agents, seed tests,
+playwright.config.ts, VS Code 1.105+) and offer no Python support, so
+they do not plug into this pytest framework. The roles they automate
+are covered here by trace-first triage, this register, the convention
+checker, and the probe harness.
 
 ## G. Conversion debt (not broken, still on old sleeps)
 

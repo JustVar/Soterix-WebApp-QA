@@ -103,8 +103,9 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.skip(
-        reason="Driver Site has no vehicle detections; needs different "
-        "account/site with vehicle data"
+        reason="The test site has no vehicle detections (rechecked live "
+        "08/09/2026 on the renamed tenant: 0 results in 60s); needs a "
+        "site with vehicle data"
     )
     def test_vehicle_search(self):
         """Verify Vehicle search returns results.
@@ -125,8 +126,9 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.skip(
-        reason="Driver Site has no vehicle detections; needs different "
-        "account/site with vehicle data"
+        reason="The test site has no vehicle detections (rechecked live "
+        "08/09/2026 on the renamed tenant: 0 results in 60s); needs a "
+        "site with vehicle data"
     )
     def test_vehicle_search_play_result(self):
         """Verify playing a Vehicle search result clip works."""

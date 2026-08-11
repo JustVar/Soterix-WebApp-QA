@@ -280,7 +280,15 @@ class TestLicenseDeviceList:
 
 
 class TestLicenseAssignModal:
-    """Tests for the Assign New License modal workflow."""
+    """Tests for the Assign New License panel workflow.
+
+    The 2026-08 app renders assignment as an inline panel that replaces
+    the Assigned Licenses tab content (heading 'Assign New License',
+    Bulk/Individual toggle, Site select, Features, Devices). The old
+    modal never opens; the 'Assign New' button only exists on the
+    Assigned Licenses tab. Test names keep the historical 'modal'
+    wording so QA Touch nodeid mappings stay stable.
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page):
@@ -291,81 +299,65 @@ class TestLicenseAssignModal:
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assign_button_visible(self):
-        """Verify Assign New License button is visible."""
+        """Verify the Assign New button is visible on the Assigned tab."""
         self.license.navigate()
-
-        assign_btn = self.page.locator(
-            "button:has-text('Assign'), button:has-text('Assign New License')"
-        ).first
-        expect(assign_btn).to_be_visible(timeout=10000)
+        self.license.switch_to_assigned_tab()
+        expect(self.license.assign_button).to_be_visible(timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assign_modal_opens(self):
-        """Verify Assign New License modal opens on button click."""
+        """Verify the Assign New License panel opens on button click."""
         self.license.navigate()
 
-        # Check if Assign button exists
-        if self.license.assign_button.count() == 0:
-            pytest.skip("Assign button not found on page")
+        if not self.license.open_assign_panel():
+            pytest.skip("Assign New is not available on this tenant")
 
-        self.license.open_assign_modal()
+        expect(self.license.assign_panel).to_be_visible()
+        expect(
+            self.page.get_by_text("Assign to Bulk").first
+        ).to_be_visible()
 
-        modal = self.page.locator(
-            "div[role='dialog'], div[class*='modal'], "
-            "div[class*='MuiModal'], div[class*='MuiDialog']"
-        ).first
-
-        # Skip if modal functionality not available
-        if modal.count() == 0:
-            pytest.skip("Assign modal not implemented or not available")
-
-        expect(modal).to_be_visible(timeout=10000)
+        # The page is session-scoped: leave no modal behind
         self.license.close_assign_modal()
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assign_modal_close_via_cancel(self):
-        """Verify Assign New License modal closes using Cancel."""
+        """Verify the assign modal dismisses via Escape.
+
+        The customMuiModal has no Cancel button; its backdrop blocks
+        the page (tab clicks included), and Escape dismisses it.
+        """
         self.license.navigate()
-        self.license.open_assign_modal()
 
-        modal = self.page.locator(
-            "div[role='dialog'], div[class*='modal'], "
-            "div[class*='MuiModal'], div[class*='MuiDialog']"
-        ).first
+        if not self.license.open_assign_panel():
+            pytest.skip("Assign New is not available on this tenant")
 
-        # Skip if modal functionality not available
-        if modal.count() == 0:
-            pytest.skip("Assign modal not implemented or not available")
-
-        expect(modal).to_be_visible(timeout=10000)
+        expect(self.license.assign_panel).to_be_visible()
 
         self.license.close_assign_modal()
-        self.page.wait_for_timeout(1000)
-
-        # Modal should no longer be visible
-        expect(modal).to_be_hidden(timeout=5000)
+        expect(self.license.assign_panel).to_be_hidden(timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_site_dropdown_in_modal(self):
-        """Verify site dropdown lists available sites in assign modal."""
+        """Verify the Site select in the assign panel lists real sites."""
+        from config.base_config import config
+
         self.license.navigate()
-        self.license.open_assign_modal()
 
-        modal = self.page.locator(
-            "div[role='dialog'], div[class*='modal'], "
-            "div[class*='MuiModal'], div[class*='MuiDialog']"
-        ).first
+        if not self.license.open_assign_panel():
+            pytest.skip("Assign New is not available on this tenant")
 
-        # Skip if modal functionality not available
-        if modal.count() == 0:
-            pytest.skip("Assign modal not implemented or not available")
+        # The Site select shows the 'Select' placeholder until opened
+        self.page.get_by_text("Select", exact=True).first.click()
 
-        dropdown = self.page.locator(
-            "div[role='combobox'], select, div[class*='dropdown']"
-        ).first
-        expect(dropdown).to_be_visible(timeout=5000)
+        site_name = config.get("test_site_name")
+        option = self.page.get_by_text(site_name, exact=False).last
+        expect(option).to_be_visible(timeout=10000)
 
+        # Close the option list, then the modal itself: the page is
+        # session-scoped and a leftover backdrop blocks later tests
+        self.page.keyboard.press("Escape")
         self.license.close_assign_modal()

@@ -102,14 +102,18 @@ class LicensePage:
             "button:has-text('Cancel'), button:has-text('No')"
         ).first
 
-        # Assign New License modal. No bare :has-text('Assign') clause:
-        # it substring-matches the 'Assigned Licenses' TAB, which sits
-        # earlier in the DOM, so clicks switched tabs instead of opening
-        # the modal (found 08/09/2026 via DOM probe).
+        # Assign New License modal. The button is labeled 'Assign New'
+        # and exists ONLY on the Assigned Licenses tab. It opens a
+        # customMuiModal overlay (heading 'Assign New License',
+        # Bulk/Individual toggle, Site select). The overlay is
+        # position:fixed, so offsetParent-based visibility probes miss
+        # it. No bare :has-text('Assign') clause: it substring-matches
+        # the 'Assigned Licenses' TAB (DOM probes 08/09/2026).
         self.assign_button = page.locator(
             "button.add-btn, button:has-text('Assign New License'), "
-            "button:has-text('Assign License')"
+            "button:has-text('Assign New')"
         ).first
+        self.assign_panel = page.get_by_text("Assign to Individual").first
         self.assign_modal = page.locator(
             "div[class*='modal'], div[role='dialog']"
         )
@@ -308,29 +312,36 @@ class LicensePage:
 
     # ----- Assign New License -----
 
-    def open_assign_modal(self):
-        """Click the Assign New License button.
+    def open_assign_panel(self):
+        """Open the Assign New License panel.
 
-        Callers check assign_modal.count() and skip when the modal is
-        not implemented, so neither a missing button nor a missing
-        modal may raise here.
+        The 'Assign New' button lives on the Assigned Licenses tab and
+        swaps the tab content for an inline panel. Returns True when
+        the panel renders, False otherwise (callers skip on False).
         """
+        self.switch_to_assigned_tab()
         if not self._appears(self.assign_button, timeout=10000):
-            print("[LICENSE] No Assign New License button on this page")
-            return
-        self.assign_button.click(force=True)
-        visible_modal = self.page.locator(
-            "div[class*='modal']:visible, div[role='dialog']:visible"
-        )
-        if not self._appears(visible_modal.first, timeout=10000):
-            print("[LICENSE] Assign clicked but no modal appeared "
-                  "within 10s")
+            print("[LICENSE] No Assign New button on the Assigned tab")
+            return False
+        self.assign_button.click()
+        if not self._appears(self.assign_panel, timeout=10000):
+            print("[LICENSE] Assign New clicked but the panel did not "
+                  "render within 10s")
+            return False
+        return True
+
+    # Kept for callers written against the pre-2026-08 modal flow
+    open_assign_modal = open_assign_panel
 
     def close_assign_modal(self):
-        """Close the assign modal."""
-        self.modal_close.click()
-        # The clicked close control leaves the DOM with the modal
-        self._appears_hidden(self.modal_close, timeout=10000)
+        """Close the assign modal.
+
+        The customMuiModal has no Cancel button; Escape dismisses it.
+        """
+        self.page.keyboard.press("Escape")
+        if not self._appears_hidden(self.assign_panel, timeout=10000):
+            print("[LICENSE] Escape did not close the assign modal "
+                  "within 10s")
 
     def select_site_in_modal(self, site_name: str):
         """Select a site from the dropdown in the assign modal."""
