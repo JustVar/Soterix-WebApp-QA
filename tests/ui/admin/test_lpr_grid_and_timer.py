@@ -1,4 +1,4 @@
-"""LPR Grid layout and Timer popup tests."""
+﻿"""LPR Grid layout and Timer popup tests."""
 import pytest
 import time
 from tests.shared.pages.lpr_page import LprPage
@@ -112,7 +112,7 @@ class TestLprTimer:
                 print("[STEP 3] Popup opened successfully")
 
                 self.step_capture.mark(4, "Close popup with X icon")
-                close_icon = self.page.locator("img[contains(@src,'close')]").first
+                close_icon = self.page.locator("img[src*='close']").first
                 if close_icon.count() > 0:
                     close_icon.click()
                     self.page.wait_for_timeout(1000)

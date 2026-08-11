@@ -923,10 +923,18 @@ class ViewsPage:
         self.page.wait_for_timeout(2000)
 
     def is_camera_favorited(self, camera_name: str) -> bool:
-        """Return True if the camera has a filled favorite icon."""
-        filled_icon = self.page.locator(
-            f"span[title='{camera_name}']"
-        ).locator("xpath=../..").locator(
+        """Return True if the camera has a filled favorite icon.
+
+        Re-expands the tree when the row is unreachable, exactly like
+        toggle_favorite: a one-shot count on a self-collapsed tree
+        would report not-favorited for a favorited camera and make the
+        caller invert its toggle.
+        """
+        row_anchor = self.page.locator(f"span[title='{camera_name}']").first
+        if not self._appears(row_anchor, timeout=3000):
+            self.expand_site_and_show_cameras(None)
+            row_anchor.wait_for(state="visible", timeout=10000)
+        filled_icon = row_anchor.locator("xpath=../..").locator(
             "img[src*='media/favoriteIconFilled']"
         )
         return filled_icon.count() > 0

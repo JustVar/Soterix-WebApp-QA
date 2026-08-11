@@ -23,7 +23,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 
 | Test | Status | Detail |
 |------|--------|--------|
-| tests/ui/licenses/test_license_assignment.py TestLicenseAssignModal (4 tests) | [DONE] | Rebuilt and green 08/09/2026 (4/4). Probes found: the button is labeled 'Assign New' and exists only on the Assigned Licenses tab (the old bare :has-text('Assign') clause clicked the tab itself); it opens a customMuiModal overlay whose position:fixed root made offsetParent-based visibility probes miss it; the modal has no Cancel and dismisses on Escape; its backdrop blocks the whole page, so tests must close it before ending (session-scoped page). Site select verified listing all five real sites. |
+| tests/ui/licenses/test_license_assignment.py TestLicenseAssignModal (4 tests) | [DONE] | Rebuilt and green 08/09/2026 (4/4, stable on rerun). Probes found: the button is labeled 'Assign New' and exists only on the Assigned Licenses tab (the old bare :has-text('Assign') clause clicked the tab itself); it opens a customMuiModal overlay whose position:fixed root made offsetParent-based visibility probes miss it; the modal has no Cancel and dismisses on Escape. Audit hardening: a present-but-unresponsive button now fails loud instead of skipping (the feature is verified on this tenant), and the Site assertion is scoped to the option list because the tab's table underneath also renders site names. Note: contexts are function-scoped (fresh page per test) - the modal close at test end is within-test hygiene, not cross-test protection. |
 | tests/ui/search/test_search_categories.py vehicle tests | [DONE] | Un-skipped and GREEN 08/09/2026 - the 'no vehicle detections' premise was false all along. Justin's correction exposed it: the SearchPage filter helpers were silently dead against the 2026-08 sidebar (label + value-control pairs; the old code clicked the label and its JS fallbacks returned without error), so NO search test was applying Locations or Duration filters and searches never dispatched - my own first probe measured a search that never ran and misread it as missing data. Rebuilt: _open_section clicks the value control (substring match - the app salts labels with zero-width spaces, so :text-is never matches), site row + All Cameras via the scrollBarCustom panel, durations via .dropdownItem with the current option order documented, and the section value leaving 'Select' as the applied signal. Categories suite 7/7 green including both vehicle tests. |
 
 ## C. Not run since the page-object conversion - verify before trusting
@@ -62,18 +62,39 @@ Every Global Search suite ran with silently dead filter helpers until
 
 - test_search_categories: 7/7 green, both vehicle tests un-skipped.
 - test_search_filters: 6/6 green.
-- test_search_deeper: 14/14 green after a fresh-view fixture fix - a
-  search view that already ran a search does not dispatch the next one
-  (SPA nav clicks are no-ops on the same route), proven by the failing
-  tests passing in isolation. The fixture reloads before each test.
+- test_search_deeper: audited 08/09/2026 after an unstable rerun. The
+  contexts are function-scoped (fresh page per test), so the earlier
+  fixture-reload "fix" was a coincidence and is removed. The real
+  mechanism: searches run as async server jobs whose latency grows
+  when runs hammer the tenant, so the heavy tests (Event over 30 days,
+  re-searches) blow a 60s budget late in long chains - those four
+  tests now carry a 120s budget. The two re-search tests are also
+  dispatch-verified (execute_search_dispatched): stale results from
+  the first search satisfy a visibility wait, so only the outgoing
+  request proves the second search ran.
 - test_incamera_search: 2/2 green after bounding the loader wait (the
   page keeps tile-placeholder spinners alive forever, so waiting for
   CircularProgress hidden can never finish; results are the signal).
-- test_search_drawing: 8 tests SKIPPED with a precise reason (below).
+- test_search_drawing: 6 tests SKIPPED with a precise reason (below).
 
 | Test | Status | Detail |
 |------|--------|--------|
-| tests/ui/search/test_search_drawing.py (8 tests) | [REDO] | Mechanics repaired 08/09/2026 (panel opener, site + All Cameras expansion to render camera containers, config camera name replacing hardcoded 'Hanwha_6'), but the hover-revealed Create Zone / Create Line links no longer appear on camera containers: the drawing entry point moved in the 2026-08 redesign. Explore its new home with tools/explore_app.py, rebuild open_zone_drawing / open_line_drawing, then remove the module skip. |
+| tests/ui/search/test_search_drawing.py (6 tests) | [REDO] | Mechanics repaired 08/09/2026 (panel opener, site + All Cameras expansion to render camera containers, config camera name replacing hardcoded 'Hanwha_6'), but the hover-revealed Create Zone / Create Line links no longer appear on camera containers: the drawing entry point moved in the 2026-08 redesign. Explore its new home with tools/explore_app.py, rebuild open_zone_drawing / open_line_drawing, then remove the module skip. |
+| tests/ui/admin/test_lpr_playback.py play_camera tests (2) | [REDO] | Found by the 08/09/2026 audit lateral sweep: play_camera's camera-elements locator was XPath-in-CSS and never parsed, and both calling tests wrap the call in except-print with no assertion after, so they have been passing green without ever playing a camera. The locators are fixed (valid CSS now); the except-print swallowing in the tests still needs replacing with real assertions before these count as coverage. test_dismiss_backdrop passes vacuously the same way (dismiss_any_backdrop was silently dead, now fixed). |
+| tests/ui/admin/test_lpr_events.py + test_lpr_grid_and_timer.py | [VERIFY] | Same sweep: four XPath-in-CSS locators fixed in test bodies (details/info panels, speed button, popup close icon). These files were never in the earlier verify runs; run them to see what the fixed locators surface. |
+
+## Known app behavior (confirmed, not bugs)
+
+- **Repeat search clicks need changed filters.** By design (confirmed
+  by Justin, 08/09/2026): a user must change filters or settings
+  before a search re-runs; clicking Search again on an unchanged (or
+  partially re-set) view dispatches no request. Our dispatch probe
+  measured that even a category change alone did not re-arm the click,
+  which fits the design if the category switch resets the dependent
+  filters. Tests therefore run each search on a fresh view with all
+  filters re-applied (events channel test, search deeper re-search
+  tests), and execute_search_dispatched exists to tell an armed click
+  from a dead one when a test genuinely needs a warm re-search.
 
 ## E. Test-artifact defects
 

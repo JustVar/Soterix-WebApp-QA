@@ -1,4 +1,4 @@
-"""LPR Event selection, playback, and scrubber control tests."""
+﻿"""LPR Event selection, playback, and scrubber control tests."""
 import pytest
 import time
 from playwright.sync_api import expect
@@ -196,9 +196,9 @@ class TestLprEventPlayback:
 
         self.step_capture.mark(4, "Check for details panel")
         # Look for details or info panel
-        details = self.page.locator("div[contains(@class,'details')]").first
+        details = self.page.locator("div[class*='details']").first
         if details.count() == 0:
-            details = self.page.locator("div[contains(@class,'info')]").first
+            details = self.page.locator("div[class*='info']").first
 
         if details.count() > 0:
             print("[STEP 4] Details panel visible")
@@ -231,7 +231,7 @@ class TestLprEventPlayback:
         self.step_capture.mark(3, "Look for speed control")
         speed_button = self.page.locator("button:has-text('1x')").first
         if speed_button.count() == 0:
-            speed_button = self.page.locator("button[contains(@class,'speed')]").first
+            speed_button = self.page.locator("button[class*='speed']").first
 
         if speed_button.count() > 0:
             self.step_capture.mark(4, "Speed control found")

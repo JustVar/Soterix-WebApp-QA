@@ -54,15 +54,16 @@ class TestSearchFilters:
     @pytest.mark.ui
     @pytest.mark.search
     def test_select_duration(self):
-        """Verify the Duration dropdown opens and a duration is selectable.
+        """Verify the Duration dropdown opens and Today is selectable.
 
-        Selenium uses index 4 for 'Today'. We use index-based selection
-        since the dropdown item text may vary.
+        Index 2 is Today in the current option order (documented in
+        select_duration_by_index); the old Selenium-era comment claimed
+        index 4, which now selects Last 7 Days.
         """
         self.search.navigate()
         self.search.wait_for_page_load()
 
-        self.search.select_duration_by_index(4)
+        self.search.select_duration_by_index(2)
 
         # After selecting, the search button should still be accessible
         expect(self.search.search_button).to_be_visible(timeout=5000)

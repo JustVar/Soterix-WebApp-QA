@@ -77,10 +77,13 @@ once independently in the wait conversion (August 2026). Use them:
   duration, or option, wait for state the page shows: the control stops
   reading Select, the listbox hides, a count changes. A helper that
   never observes its own effect goes silently dead when the DOM drifts:
-  the search filters no-opped for months while their suites stayed
-  green (found 08/09/2026), because their JS fallbacks returned without
-  error. For the same reason, never wrap a selection in JS that returns
-  silently when the panel is missing.
+  the search filter helpers died with the 2026-08 sidebar redesign and
+  nothing noticed until a live probe (08/09/2026), because their JS
+  fallbacks returned without error and the suites had not run since
+  the redesign. Never wrap a selection in JS that returns silently
+  when the panel is missing, and make the applied-signal check RAISE,
+  not print: a selection that did not apply invalidates everything
+  after it.
 - **The app salts labels with zero-width spaces**, so `:text-is()` on
   UI text can fail while the text looks identical on screen. Prefer
   `:has-text()` with a distinctive substring for label matching.

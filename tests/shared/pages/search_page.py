@@ -1,4 +1,4 @@
-﻿"""Global Search Page Object Model.
+"""Global Search Page Object Model.
 
 Models the Global Search page including category selection, description
 filters, locations/cameras picker, duration, zone/line drawing on canvas,
@@ -147,6 +147,39 @@ class SearchPage:
         except Exception:
             return False
 
+    def execute_search_dispatched(self, timeout: int = 60000) -> bool:
+        """Click search, require the request to actually dispatch, then
+        wait for results.
+
+        For re-searches on a view that already shows results: stale
+        thumbnails satisfy a visibility wait instantly, so only the
+        outgoing request proves the click did anything. Raises when no
+        request leaves within 15s. KNOWN APP BEHAVIOR: a search only
+        re-runs after filters change; an unchanged or partially re-set
+        view ignores the click by design (see TEST_REPAIRS.md). Prefer
+        a fresh view with all filters re-applied; use this method when
+        a test genuinely needs to prove a warm re-search dispatched.
+        Returns False when the search dispatched but produced no
+        visible results.
+        """
+        try:
+            with self.page.expect_request(
+                lambda r: "/REST/" in r.url and "search" in r.url.lower(),
+                timeout=15000,
+            ):
+                self.search_button.click()
+        except PlaywrightError:
+            raise RuntimeError(
+                "Search click dispatched no request within 15s. The app "
+                "re-runs a search only after filters change; re-apply "
+                "the filters or start from a fresh view."
+            ) from None
+        try:
+            self.result_images.first.wait_for(state="visible", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
+
     # --- Filters ---
 
     def select_category(self, category_name: str):
@@ -198,30 +231,16 @@ class SearchPage:
             f"p.select-box-headings:has-text('{label}')"
         ).first
         heading.wait_for(state="visible", timeout=10000)
+        # No structural fallback: a grandparent-wide .first would open
+        # the WRONG section under exactly the DOM drift that makes the
+        # sibling lookup miss, and a wrong filter is worse than a loud
+        # failure here
         value = heading.locator(
             "xpath=following-sibling::div"
             "[contains(@class,'select-box-sub-heading')]"
         ).first
-        if value.count() == 0:
-            value = heading.locator(
-                "xpath=../..//div[contains(@class,'select-box-sub-heading')]"
-            ).first
         value.click()
         return value
-
-    def _section_value_text(self, label: str) -> str:
-        """Current value text shown for a search sidebar section."""
-        heading = self.page.locator(
-            f"p.select-box-headings:has-text('{label}')"
-        ).first
-        value = heading.locator(
-            "xpath=following-sibling::div"
-            "[contains(@class,'select-box-sub-heading')]"
-        ).first
-        try:
-            return value.inner_text().strip()
-        except PlaywrightError:
-            return ""
 
     def select_locations_cameras(self, site_name: str = None):
         """Open the Locations & Cameras panel, pick a site, and select
@@ -243,10 +262,25 @@ class SearchPage:
         if site_name is None:
             from config.base_config import config
             site_name = config.get("test_site_name")
+            if not site_name:
+                raise RuntimeError(
+                    "test_site_name is not set for this ENV in "
+                    "config/env/. Add it before running search tests."
+                )
 
-        site_row = rows.filter(has_text=site_name).first if site_name else rows.first
-        if site_name and site_row.count() == 0:
-            site_row = rows.first
+        # Fail fast on a missing site instead of silently picking the
+        # first row: the tenant renames sites, and a wrong-site search
+        # passes on wrong data or fails with no hint of the cause
+        site_row = rows.filter(has_text=site_name).first
+        try:
+            site_row.wait_for(state="visible", timeout=10000)
+        except PlaywrightError:
+            visible = [t.strip()[:40] for t in rows.all_inner_texts()][:8]
+            raise RuntimeError(
+                f"Site '{site_name}' is not in the Locations panel. "
+                f"On-screen entries: {visible}. The tenant may have "
+                f"renamed the site: update test_site_name in config/env/."
+            ) from None
         site_row.click()
 
         # Site expansion reveals the 'All Cameras' row
@@ -272,9 +306,10 @@ class SearchPage:
 
         # Dismiss by clicking the value control again, then verify the
         # section no longer reads 'Select' - the applied signal the old
-        # code never checked
+        # code never checked. This RAISES: a selection that did not
+        # apply makes every later assertion meaningless, and a print
+        # here would recreate the silent no-op this rebuild fixed.
         self._open_section("Locations & Cameras")
-        deadline_ms = 5000
         try:
             expect(
                 self.page.locator(
@@ -283,10 +318,12 @@ class SearchPage:
                     "xpath=following-sibling::div"
                     "[contains(@class,'select-box-sub-heading')]"
                 ).first
-            ).not_to_have_text("Select", timeout=deadline_ms)
+            ).not_to_have_text("Select", timeout=5000)
         except AssertionError:
-            print("[SEARCH] Locations & Cameras still reads 'Select' "
-                  "after selection")
+            raise RuntimeError(
+                "Locations & Cameras still reads 'Select' after the "
+                "selection flow: the selection did not apply."
+            ) from None
 
     def select_duration(self, duration_text: str = "Today"):
         """Select a duration from the Duration dropdown."""
@@ -466,9 +503,18 @@ class SearchPage:
         rows.first.wait_for(state="visible", timeout=10000)
         from config.base_config import config
         site = config.get("test_site_name")
-        site_row = rows.filter(has_text=site).first if site else rows.first
-        if site and site_row.count() == 0:
-            site_row = rows.first
+        # Fail fast on a missing site: silently drawing on the first
+        # row's cameras would test the wrong site without a trace
+        site_row = rows.filter(has_text=site).first
+        try:
+            site_row.wait_for(state="visible", timeout=10000)
+        except PlaywrightError:
+            visible = [t.strip()[:40] for t in rows.all_inner_texts()][:8]
+            raise RuntimeError(
+                f"Site '{site}' is not in the Locations panel. "
+                f"On-screen entries: {visible}. Update test_site_name "
+                f"in config/env/ if the tenant renamed it."
+            ) from None
         site_row.click()
         all_row = panel.locator(
             ".MuiListItemButton-root:has-text('All Cameras')"

@@ -1,4 +1,4 @@
-"""LPR Camera selection tests - multi-camera selection, hover, drag-drop."""
+﻿"""LPR Camera selection tests - multi-camera selection, hover, drag-drop."""
 import pytest
 import time
 from playwright.sync_api import expect
@@ -61,7 +61,7 @@ class TestLprCameraSelection:
         all_cameras.hover()
         self.page.wait_for_timeout(1000)
 
-        checkbox = self.page.locator("img[contains(@src,'uncheck-icon')]").first
+        checkbox = self.page.locator("img[src*='uncheck-icon']").first
         if checkbox.count() > 0:
             checkbox.click()
             print("[STEP 5] All Cameras selected")

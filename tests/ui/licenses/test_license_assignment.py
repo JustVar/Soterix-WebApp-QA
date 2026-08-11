@@ -282,12 +282,13 @@ class TestLicenseDeviceList:
 class TestLicenseAssignModal:
     """Tests for the Assign New License panel workflow.
 
-    The 2026-08 app renders assignment as an inline panel that replaces
-    the Assigned Licenses tab content (heading 'Assign New License',
-    Bulk/Individual toggle, Site select, Features, Devices). The old
-    modal never opens; the 'Assign New' button only exists on the
+    The 2026-08 app renders assignment as a customMuiModal overlay
+    (heading 'Assign New License', Bulk/Individual toggle, Site select,
+    Features, Devices). The 'Assign New' button only exists on the
     Assigned Licenses tab. Test names keep the historical 'modal'
-    wording so QA Touch nodeid mappings stay stable.
+    wording so QA Touch nodeid mappings stay stable. Each test closes
+    the modal it opens: contexts are per-test, but a lingering backdrop
+    would block every later step inside the same test.
     """
 
     @pytest.fixture(autouse=True)
@@ -318,7 +319,8 @@ class TestLicenseAssignModal:
             self.page.get_by_text("Assign to Bulk").first
         ).to_be_visible()
 
-        # The page is session-scoped: leave no modal behind
+        # Close what the test opened: a lingering backdrop blocks any
+        # later step in this test
         self.license.close_assign_modal()
 
     @pytest.mark.ui
@@ -353,11 +355,17 @@ class TestLicenseAssignModal:
         # The Site select shows the 'Select' placeholder until opened
         self.page.get_by_text("Select", exact=True).first.click()
 
+        # Scope the assertion to the option list: the Assigned tab's
+        # table underneath also renders site names, and a page-wide
+        # text match could pass without the select ever opening
         site_name = config.get("test_site_name")
-        option = self.page.get_by_text(site_name, exact=False).last
+        option = self.page.locator(
+            f"li:has-text('{site_name}'), "
+            f"[role='option']:has-text('{site_name}')"
+        ).first
         expect(option).to_be_visible(timeout=10000)
 
-        # Close the option list, then the modal itself: the page is
-        # session-scoped and a leftover backdrop blocks later tests
+        # Close the option list, then the modal, so no backdrop blocks
+        # any later step in this test
         self.page.keyboard.press("Escape")
         self.license.close_assign_modal()

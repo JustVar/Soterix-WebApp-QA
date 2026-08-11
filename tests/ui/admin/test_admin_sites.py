@@ -229,7 +229,6 @@ class TestAdminSites:
 
         # Search term for cameras to add: the configured camera name,
         # never a hardcoded vendor name (the tenant renames cameras)
-        from config.base_config import config
         camera_search = config.get("test_camera_name", "camera")
         self.admin.create_camera_group(group_name, camera_search=camera_search)
 

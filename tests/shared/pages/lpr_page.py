@@ -1,4 +1,4 @@
-"""LPR (License Plate Recognition) Page Object Model."""
+﻿"""LPR (License Plate Recognition) Page Object Model."""
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
@@ -274,7 +274,7 @@ class LprPage:
     def ensure_lpr_dropdown_open(self):
         """Opens the Locations & Cameras dropdown on LPR page."""
         # Check if already open (up arrow icon visible)
-        up_arrow = self.page.locator("img[contains(@src,'upAccordionIcon')][alt='up-icon']")
+        up_arrow = self.page.locator("img[src*='upAccordionIcon'][alt='up-icon']")
         if up_arrow.count() > 0:
             print("[LPR] Locations & Cameras dropdown already open")
             return
@@ -282,20 +282,20 @@ class LprPage:
         print("[LPR] Opening Locations & Cameras dropdown")
         # Click the dropdown header
         dropdown_btn = self.page.locator(
-            "p[contains(@class,'select-box-content')]:has-text('Locations')"
+            "p[class*='select-box-content']:has-text('Locations')"
         ).first
         dropdown_btn.wait_for(state="visible", timeout=30000)
         dropdown_btn.click()
 
         # Verify it opened by checking for up arrow or site list
         try:
-            self.page.locator("img[contains(@src,'upAccordionIcon')][alt='up-icon']").first.wait_for(
+            self.page.locator("img[src*='upAccordionIcon'][alt='up-icon']").first.wait_for(
                 state="visible", timeout=10000
             )
             print("[LPR] Dropdown confirmed open (up arrow visible)")
         except:
             # Fallback: check if site list is visible
-            self.page.locator("div[contains(@class,'select-box-sub-heading')]").first.wait_for(
+            self.page.locator("div[class*='select-box-sub-heading']").first.wait_for(
                 state="visible", timeout=10000
             )
             print("[LPR] Dropdown confirmed open (site list visible)")
@@ -303,7 +303,7 @@ class LprPage:
     def dismiss_any_backdrop(self):
         """Helper to close any open modal/backdrop before proceeding."""
         try:
-            backdrop = self.page.locator("div[contains(@class,'MuiBackdrop-root')]")
+            backdrop = self.page.locator("div[class*='MuiBackdrop-root']")
             if backdrop.count() > 0 and backdrop.first.is_visible(timeout=2000):
                 print("[LPR] Backdrop detected, dismissing with Escape")
                 self.page.keyboard.press("Escape")
@@ -371,7 +371,7 @@ class LprPage:
 
         # Wait for cameras to load
         camera_elements = self.page.locator(
-            "div[contains(@class,'MuiStack-root')][contains(@class,'mui-ebmxkk')]"
+            "div[class*='MuiStack-root'][class*='mui-ebmxkk']"
         )
         camera_elements.first.wait_for(state="visible", timeout=60000)
 
@@ -397,7 +397,7 @@ class LprPage:
                 tiles.nth(0 if not "lpr" in self.page.url.lower() else 1).drag_to(camera)
 
                 # Wait for the stream loader to appear then disappear
-                loader = self.page.locator("*[contains(@class,'CircularProgress')]")
+                loader = self.page.locator("[class*='CircularProgress']")
                 self._appears(loader.first, timeout=2000)
                 if loader.count() > 0:
                     loader.first.wait_for(state="hidden", timeout=60000)

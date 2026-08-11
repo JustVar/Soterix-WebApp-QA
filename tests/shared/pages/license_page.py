@@ -313,11 +313,14 @@ class LicensePage:
     # ----- Assign New License -----
 
     def open_assign_panel(self):
-        """Open the Assign New License panel.
+        """Open the Assign New License modal.
 
-        The 'Assign New' button lives on the Assigned Licenses tab and
-        swaps the tab content for an inline panel. Returns True when
-        the panel renders, False otherwise (callers skip on False).
+        Returns False only when the 'Assign New' button is absent from
+        the Assigned Licenses tab (a tenant without the feature - the
+        callers' designed skip). A button that is present but does not
+        open the modal is locator or app drift, and that must fail
+        loud, not read as a skip: the feature is verified present on
+        the QA tenant (08/09/2026).
         """
         self.switch_to_assigned_tab()
         if not self._appears(self.assign_button, timeout=10000):
@@ -325,12 +328,14 @@ class LicensePage:
             return False
         self.assign_button.click()
         if not self._appears(self.assign_panel, timeout=10000):
-            print("[LICENSE] Assign New clicked but the panel did not "
-                  "render within 10s")
-            return False
+            raise RuntimeError(
+                "Assign New was clicked but the assign modal did not "
+                "render within 10s. The feature exists on this tenant, "
+                "so this is locator or app drift, not unavailability."
+            )
         return True
 
-    # Kept for callers written against the pre-2026-08 modal flow
+    # Alias: no current callers, kept so older call sites keep working
     open_assign_modal = open_assign_panel
 
     def close_assign_modal(self):
