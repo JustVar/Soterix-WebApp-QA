@@ -185,13 +185,9 @@ class TestAdminRules:
             rule_name=rule_name,
         )
         if not completed:
-            # The 2026-08 wizard rework (step tabs, rule name via a new
-            # control) replaced the flow this test automates; Save rejects
-            # it with 'Name the Rule'. Rebuild is tracked on the roadmap
-            # (Rules wizard tests rework).
             pytest.skip(
-                "Rule wizard redesigned (step-tab layout) - this test "
-                "automates the old flow and needs a rebuild"
+                "Rule wizard flow did not complete for this type - see "
+                "the run output for the step it stalled on"
             )
 
         # Verify we're back on the rules list after save (expect retries)

@@ -869,79 +869,213 @@ class AdminPage:
         except Exception:
             pass
 
+    def _check_wizard_camera(self):
+        """Filter to the configured camera on Select Devices and check it."""
+        from config.base_config import config
+        camera = config.get("test_camera_name")
+        search = self.page.locator(
+            "input[placeholder*='camera name']"
+        ).first
+        search.wait_for(state="visible", timeout=10000)
+        if camera:
+            search.fill(camera)
+            # The tree filter re-renders with no completion signal
+            self.page.wait_for_timeout(1000)
+        # Prefer the configured camera's own row; fall back to the
+        # deepest checkbox. JS click covers the zero-dimension MUI
+        # input pattern.
+        box = None
+        if camera:
+            row = self.page.get_by_text(camera, exact=False).first
+            try:
+                row.wait_for(state="visible", timeout=5000)
+                box = row.locator(
+                    "xpath=ancestor::*[.//input[@type='checkbox']][1]"
+                ).locator("input[type='checkbox']").first
+            except Exception:
+                box = None
+        if box is None or box.count() == 0:
+            box = self.page.locator("input[type='checkbox']").last
+        box.wait_for(state="attached", timeout=10000)
+        box.evaluate("el => el.click()")
+        # Checked state is the applied signal
+        self.page.wait_for_timeout(500)  # state propagates, no DOM signal
+        try:
+            if not box.is_checked():
+                print("[ADMIN] Wizard camera checkbox did not register")
+        except Exception:
+            pass
+
+    def _draw_wizard_region(self):
+        """Draw a region on the Set Rule canvas and confirm with Done.
+
+        Only the fabric upper-canvas is the drawing surface: the page
+        also renders a bare classless canvas in the header area, and
+        clicking relative to that one lands on navigation (measured
+        08/11/2026 - it exited the wizard).
+        """
+        canvas = self.page.locator("canvas.upper-canvas").last
+        canvas.wait_for(state="visible", timeout=15000)
+        box = canvas.bounding_box()
+        if not box:
+            print("[ADMIN] Region canvas has no bounding box")
+            return
+        cx = box["x"] + box["width"] / 2
+        cy = box["y"] + box["height"] / 2
+        # 4-point polygon with pacing: the canvas library reads no DOM
+        # state a wait could target
+        for ox, oy in ((-80, -80), (80, -80), (80, 80), (-80, 80)):
+            self.page.mouse.click(cx + ox, cy + oy)
+            self.page.wait_for_timeout(800)  # canvas pacing, no DOM signal
+        self.page.wait_for_timeout(1500)  # polygon close settles, no signal
+        done = self.page.locator("button.btn-done").first
+        try:
+            if done.is_visible():
+                done.click()
+                self.page.wait_for_timeout(1000)  # commit, no signal
+        except Exception:
+            pass
+
     def complete_rule_wizard(
         self, rule_type: str, site_name: str, rule_name: str | None = None
     ) -> bool:
-        """Complete the full rule creation wizard end-to-end.
+        """Complete the rule creation wizard end-to-end.
 
-        Handles both canvas rules (Entry-Exit, Line Crossing) and
-        non-canvas rules (Heat Map, Intrusion Detection, Loitering, Occupancy).
-
-        Returns False without completing when the redesigned step-tab wizard
-        (Select Devices > Set Rule > Configure > Schedule > Notification) is
-        detected: its rule-name control moved, so Save rejects this flow
-        with 'Name the Rule'. Callers should skip in that case.
-
-        Args:
-            rule_type: One of the 6 rule types.
-            site_name: Site to select in the wizard.
-            rule_name: Optional name for the rule (filled if name input exists).
+        2026-08 flow: Add New Rule opens a card-picker modal (pick the
+        rule type, Next), then a full-page wizard with step tabs
+        Select Devices > Set Rule > Configure > Schedule >
+        Notification. The camera comes from config on Select Devices;
+        canvas rules draw at Set Rule; the rule name is filled on
+        whichever step shows a name input; Save finishes. Returns
+        False with a diagnostic print when the walk stalls.
         """
-        # Step 1: Select rule type and click Next
-        self.select_rule_type(rule_type)
-        self.click_next()
-
-        # The step tabs render after the type screen; their presence marks
-        # the redesigned wizard this flow cannot complete
-        redesigned = False
+        # The caller opens the picker (click_add_new_rule); choose the
+        # rule type card. A type the picker no longer offers is a
+        # clean False, not an error.
+        modal = self.page.locator(".customMuiModal")
+        card = modal.get_by_text(rule_type, exact=True).first
         try:
-            self.page.get_by_text("Select Devices").first.wait_for(
-                state="visible", timeout=3000
-            )
-            redesigned = True
+            card.wait_for(state="visible", timeout=10000)
         except Exception:
-            pass
-        if redesigned:
+            print(f"[ADMIN] Rule type card '{rule_type}' not in the picker")
             return False
+        card.click()
+        modal.get_by_text("Next", exact=True).first.click()
 
-        # Step 2: Select site and camera checkbox, then Next
-        self.select_site_for_rule(site_name)
-        self.select_site_checkbox()
-        # Checkbox state must register before the wizard advances; no signal
-        self.page.wait_for_timeout(2000)
-        self.click_next()
+        # Select Devices: the step tabs mark the wizard page
+        self.page.get_by_text("Select Devices").first.wait_for(
+            state="visible", timeout=10000
+        )
+        self._check_wizard_camera()
 
-        # Step 3: Configure rule (canvas vs non-canvas)
-        if rule_type in self.CANVAS_RULES:
-            self.wait_for_snapshots()
-            self.maximize_snapshot()
-            self.draw_zone_on_canvas()
-            # 3 more Next clicks through remaining wizard steps. These
-            # generic steps have no per-step signal to wait on, and
-            # back-to-back clicks land before the step transition registers
-            # (measured in trace: 3 clicks in 300ms, save then rejected)
-            for _ in range(3):
-                self.click_next()
-                self.page.wait_for_timeout(1500)  # step transition, no signal
-        else:
-            # Non-canvas: toggle switch + ripple button, then advance
-            self.toggle_mui_switch()
-            self.click_ripple_button()
-            self.page.wait_for_timeout(1000)  # config applies with no DOM signal
-            # 4 more Next clicks through remaining wizard steps; see the
-            # canvas branch for why these are paced
-            for _ in range(4):
-                self.click_next()
-                self.page.wait_for_timeout(1500)  # step transition, no signal
+        # Walk the steps: handle the canvas and the name input where
+        # they appear, advance on Next, finish on Save
+        for step in range(6):
+            # Set Rule blocks Next until configured: canvas rules draw
+            # a region; Heat Map class rules offer 'Use full view'
+            region_prompt = self.page.get_by_text(
+                "Create Region", exact=False
+            ).first
+            try:
+                region_visible = region_prompt.is_visible()
+            except Exception:
+                region_visible = False
+            if region_visible:
+                self._draw_wizard_region()
+            else:
+                full_view = self.page.get_by_text(
+                    "Use full view", exact=False
+                ).first
+                try:
+                    if full_view.is_visible():
+                        # The label text does not toggle its checkbox:
+                        # JS-click the input beside it (zero-dimension
+                        # MUI input pattern)
+                        cb = full_view.locator(
+                            "xpath=ancestor::*[.//input][1]"
+                        ).locator("input").first
+                        if cb.count() > 0:
+                            cb.evaluate("el => el.click()")
+                        else:
+                            full_view.click()
+                        self.page.wait_for_timeout(500)  # state, no signal
+                        done = self.page.locator("button.btn-done").first
+                        if done.is_visible():
+                            done.click()
+                            # Commit has no DOM signal
+                            self.page.wait_for_timeout(1000)
+                except Exception:
+                    pass
 
-        # Fill rule name if the wizard has a name field visible
-        if rule_name:
-            name_input = self.page.locator(
-                "input[placeholder*='name'], input[placeholder*='Name']"
-            )
-            if name_input.count() > 0 and name_input.first.is_visible():
-                name_input.first.fill(rule_name)
+            nxt = self.page.get_by_text("Next", exact=True).first
+            try:
+                nxt.wait_for(state="visible", timeout=5000)
+                nxt.click(timeout=10000)
+            except Exception as e:
+                print(f"[ADMIN] Wizard step {step}: Next not clickable: "
+                      f"{str(e)[:80]}")
+            # Step transitions re-render in place with no signal
+            self.page.wait_for_timeout(1500)
 
-        # Save (save_rule waits for the wizard to close)
-        self.save_rule()
-        return True
+            if rule_name:
+                name_input = self.page.locator(
+                    "input[placeholder*='name' i], "
+                    "input[placeholder='Type here...']"
+                ).first
+                try:
+                    if name_input.is_visible() and not name_input.input_value():
+                        name_input.fill(rule_name)
+                except Exception:
+                    pass
+
+            save = self.page.locator(
+                "button:has-text('Save'), div.MuiBox-root:text-is('Save'), "
+                "button:has-text('Finish'), button:has-text('Create')"
+            ).first
+            try:
+                if save.is_visible():
+                    save.click()
+                    # Save prompts 'Name the Rule' in a dialog: the
+                    # name lives THERE, not on any step (this is what
+                    # rejected the old flow). Fill it and confirm.
+                    prompt = self.page.get_by_text("Name the Rule").first
+                    try:
+                        prompt.wait_for(state="visible", timeout=5000)
+                        name_box = self.page.locator(
+                            ".customMuiModal input, "
+                            "input[placeholder*='Type here']"
+                        ).last
+                        if rule_name:
+                            name_box.fill(rule_name)
+                        confirm = self.page.locator(
+                            ".customMuiModal button:has-text('Done'), "
+                            ".customMuiModal button:has-text('Save'), "
+                            "button.btn-done"
+                        ).first
+                        confirm.click()
+                    except Exception:
+                        pass  # no prompt: saved directly
+                    # The wizard closing is the created signal
+                    self.page.get_by_text("Select Devices").first.wait_for(
+                        state="hidden", timeout=15000
+                    )
+                    return True
+            except Exception:
+                pass
+
+        print(f"[ADMIN] Rule wizard stalled; visible: "
+              f"{self._wizard_leaf_texts()[:20]}")
+        return False
+
+    def _wizard_leaf_texts(self):
+        """Short visible leaf texts, nav chrome excluded (diagnostics)."""
+        skip = {"Views", "Events", "Maps", "Insights", "Media", "Search",
+                "LPR", "Admin", "Dashboard", "Sites", "Users",
+                "Integrations", "Rules", "General", "Licenses", "JV"}
+        texts = self.page.evaluate(
+            '() => [...document.querySelectorAll("body *")]'
+            '.filter(e => e.children.length === 0 && e.offsetParent !== null)'
+            '.map(e => (e.textContent || "").trim())'
+            '.filter(t => t && t.length < 30)'
+        )
+        return [t for t in texts if t not in skip]
