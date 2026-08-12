@@ -74,6 +74,8 @@ class TestLprEventPlayback:
         cards = self._open_feed_or_skip()
 
         self.step_capture.mark(2, "Verify the feed is populated")
+        # State assertion on live data behind the helper's bounded
+        # visible-wait, not an action oracle racing a render
         assert cards.count() >= 1, "Feed anchor visible but no cards counted"
 
     @pytest.mark.ui
@@ -104,6 +106,8 @@ class TestLprEventPlayback:
         self.lpr.ensure_lpr_camera_page()
 
         self.step_capture.mark(2, "Open the filter panel")
+        # The filter icon ships no alt text and no testid; its src is
+        # the only handle it has
         self.page.locator("img[src*='filter']").first.click()
         expect(self.page.get_by_text("Duration", exact=True).first)\
             .to_be_visible(timeout=10000)
