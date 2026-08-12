@@ -201,10 +201,13 @@ class TestAdminRules:
             )
 
         # The rule must exist by name: a closed wizard alone would also
-        # pass a save the backend rejected
+        # pass a save the backend rejected. The list truncates the Name
+        # cell in the DOM ('Entry-Exit_Auto_202608...'), so search by
+        # the full unique name and assert the row by prefix: any row
+        # the search returns is this rule
         expect(self.admin.rule_search_input).to_be_visible(timeout=15000)
         self.admin.search_rule(rule_name)
         expect(
-            self.page.get_by_text(rule_name, exact=False).first
+            self.page.locator("tr").filter(has_text=rule_name[:20]).first
         ).to_be_visible(timeout=15000)
         self.admin.search_rule("")

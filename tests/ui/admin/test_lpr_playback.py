@@ -1,9 +1,18 @@
 """LPR camera playback and views integration tests.
 
-Tests for LPR camera playback, timeout settings, and views page integration.
+Tests for LPR camera playback, timeout settings, and views page
+integration. Playback flow: the Locations & Cameras panel starts
+closed and lists site > camera groups > cameras; cameras drag onto
+'Drag & Drop Camera here' tiles.
 """
 import pytest
+from playwright.sync_api import expect
+
+from config.base_config import config
 from tests.shared.pages.lpr_page import LprPage
+
+SITE_NAME = config.get("test_site_name")
+CAMERA_NAME = config.get("test_camera_name")
 
 
 class TestLprCameraPlayback:
@@ -24,142 +33,126 @@ class TestLprCameraPlayback:
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
-        self.step_capture.mark(2, "Verify Drag & Drop text is visible")
-        drag_drop = self.page.locator("div:has-text('Drag & Drop Camera here')")
-        assert drag_drop.count() > 0, "Drag & Drop text not found"
+        self.step_capture.mark(2, "Verify a playback tile is visible")
+        expect(
+            self.page.get_by_text("Drag & Drop Camera here", exact=True).first
+        ).to_be_visible(timeout=15000)
 
         self.step_capture.mark(3, "Verify on correct URL")
         assert "/lpr" in self.page.url, "Not on LPR camera page"
-
-        print("[PASS] Navigated to LPR camera page successfully")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_open_locations_dropdown(self):
-        """Verify Locations & Cameras dropdown can be opened."""
-        self.step_capture.mark(1, "Navigate to LPR page")
-        self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
+        """Verify Locations & Cameras dropdown opens and lists the site."""
+        self.step_capture.mark(1, "Navigate to LPR camera page")
+        self.lpr.ensure_lpr_camera_page()
 
-        self.step_capture.mark(2, "Look for Locations & Cameras dropdown")
-        locations = self.page.locator("p:has-text('Locations & Cameras')").first
-        if locations.count() == 0:
-            locations = self.page.locator("span:has-text('Locations')").first
+        self.step_capture.mark(2, "Open the Locations & Cameras dropdown")
+        self.lpr.ensure_lpr_dropdown_open()
 
-        if locations.count() > 0:
-            try:
-                locations.click()
-                self.page.wait_for_timeout(1500)
-                self.step_capture.mark(3, "Verify dropdown is open")
-                # Check if sites appeared
-                sites = self.page.locator("span").all()
-                visible_sites = [s for s in sites if s.is_visible() and ("Newtown" in s.text_content() or "site" in s.text_content().lower())]
-
-                if len(visible_sites) > 0:
-                    print("[PASS] Locations & Cameras dropdown opened successfully")
-                else:
-                    print("[INFO] Dropdown may be open but no sites visible")
-            except Exception as e:
-                print(f"[INFO] Could not open dropdown: {e}")
-        else:
-            print("[INFO] Locations dropdown element not found")
+        self.step_capture.mark(3, "Verify the configured site is listed")
+        expect(
+            self.page.get_by_text(SITE_NAME, exact=False).first
+        ).to_be_visible(timeout=30000)
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_wait_for_site_list_loading(self):
         """Verify site list loads correctly."""
-        from config.base_config import config
-
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
-        # Get site name from config
-        site_name = config.get("test_site_name", "Newtown ActionArea")
-
-        self.step_capture.mark(2, f"Wait for site '{site_name}' to load")
-        try:
-            self.lpr.wait_for_site_list(site_name)
-            print(f"[PASS] Site '{site_name}' loaded")
-        except Exception as e:
-            print(f"[INFO] Site '{site_name}' not available: {e}")
+        self.step_capture.mark(2, "Open the panel and wait for the site")
+        self.lpr.ensure_lpr_dropdown_open()
+        self.lpr.wait_for_site_list(SITE_NAME)
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_safe_reset_to_views(self):
-        """Verify safe reset to Views page doesn't break on errors."""
+        """Verify safe reset lands on the Views page."""
         self.step_capture.mark(1, "Call safe reset to Views")
         self.lpr.safe_reset_to_views()
 
-        self.step_capture.mark(2, "Verify page is still responsive")
-        assert self.page is not None, "Page object lost"
-
-        print("[PASS] Safe reset to Views completed")
+        self.step_capture.mark(2, "Verify the Views page is active")
+        # Views renders at the root URL; the subtab bar is the marker
+        expect(self.page.locator(".viewTabs").first).to_be_visible(
+            timeout=15000
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_camera_tile_activation(self):
-        """Verify camera tile can be activated (if camera present)."""
-        self.step_capture.mark(1, "Check if camera is present")
-        camera_present = self.lpr.ensure_camera_present()
+        """Play the configured camera, then activate its tile."""
+        self.step_capture.mark(1, "Navigate to LPR camera page")
+        self.lpr.ensure_lpr_camera_page()
 
-        if not camera_present:
-            self.step_capture.mark(2, "No camera present - skipping activation")
-            print("[INFO] No active camera to activate")
-        else:
-            self.step_capture.mark(2, "Activate camera tile")
-            try:
-                self.lpr.activate_camera_tile()
-                print("[PASS] Camera tile activated")
-            except Exception as e:
-                print(f"[INFO] Could not activate camera tile: {e}")
+        self.step_capture.mark(2, f"Play camera '{CAMERA_NAME}'")
+        self.lpr.play_camera(site_name=SITE_NAME, camera_name=CAMERA_NAME)
+
+        self.step_capture.mark(3, "Activate the camera tile")
+        self.lpr.activate_camera_tile()
+        expect(self.page.locator("video").first).to_be_visible(
+            timeout=15000
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_dismiss_backdrop(self):
-        """Verify backdrop dismissal doesn't error on page without backdrop."""
-        self.step_capture.mark(1, "Call dismiss backdrop")
+        """Verify backdrop dismissal leaves no click-blocking overlay."""
+        self.step_capture.mark(1, "Navigate to LPR camera page")
+        self.lpr.ensure_lpr_camera_page()
+
+        self.step_capture.mark(2, "Dismiss any backdrop")
         self.lpr.dismiss_any_backdrop()
 
-        self.step_capture.mark(2, "Verify page still responsive")
-        assert self.page is not None, "Page became unresponsive"
-
-        print("[PASS] Backdrop dismissal completed safely")
+        self.step_capture.mark(3, "Verify no backdrop blocks the page")
+        backdrop = self.page.locator("div[class*='MuiBackdrop-root']")
+        if backdrop.count() > 0:
+            assert not backdrop.first.is_visible(), (
+                "A backdrop still covers the page after dismissal"
+            )
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_open_playback_timeout_popup(self):
-        """Verify playback timeout popup can be opened."""
-        self.step_capture.mark(1, "Navigate to page with timeout icon")
-        # This test requires being on a page with the timeout icon
+        """Verify playback timeout popup opens on the Views page."""
+        self.step_capture.mark(1, "Navigate to the Views page")
         self.lpr.go_to_views_page()
 
-        self.step_capture.mark(2, "Open playback timeout popup")
-        try:
-            self.lpr.open_playback_timeout_popup()
-            print("[PASS] Playback timeout popup opened")
-        except Exception as e:
-            print(f"[INFO] Timeout popup not available: {e}")
+        self.step_capture.mark(2, "Open the playback timeout popup")
+        self.lpr.open_playback_timeout_popup()
+        expect(
+            self.page.get_by_text("Playback Auto-Timeout").first
+        ).to_be_visible(timeout=10000)
+
+        self.step_capture.mark(3, "Close the popup")
+        self.page.keyboard.press("Escape")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_open_lpr_playback_timeout_popup(self):
-        """Verify LPR playback timeout popup can be opened."""
+        """Verify LPR playback timeout popup opens on the LPR page."""
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
-        self.step_capture.mark(2, "Open LPR playback timeout popup")
-        try:
-            self.lpr.open_lpr_playback_timeout_popup()
-            print("[PASS] LPR playback timeout popup opened")
-        except Exception as e:
-            print(f"[INFO] LPR timeout popup not available: {e}")
+        self.step_capture.mark(2, "Open the LPR playback timeout popup")
+        self.lpr.open_lpr_playback_timeout_popup()
+        expect(
+            self.page.get_by_text("Playback Auto-Timeout").first
+        ).to_be_visible(timeout=10000)
+
+        self.step_capture.mark(3, "Close the popup")
+        self.page.keyboard.press("Escape")
 
 
 class TestLprViewsIntegration:
@@ -181,15 +174,10 @@ class TestLprViewsIntegration:
         self.lpr.go_to_views_page()
 
         self.step_capture.mark(2, "Verify on Views page")
-        # Either URL contains 'views' or specific elements are visible
-        is_on_views = "/views" in self.page.url.lower() or \
-                      self.page.locator("video, canvas").count() > 0 or \
-                      self.page.locator("div:has-text('Drag & Drop')").count() > 0
-
-        if is_on_views:
-            print("[PASS] Navigated to Views page successfully")
-        else:
-            print("[INFO] May not be on Views page - URL or elements check failed")
+        # Views renders at the root URL; the subtab bar is the marker
+        expect(self.page.locator(".viewTabs").first).to_be_visible(
+            timeout=15000
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -199,64 +187,43 @@ class TestLprViewsIntegration:
         self.step_capture.mark(1, "Navigate to LPR Lists page first")
         self.lpr.navigate_to_lpr()
 
-        self.step_capture.mark(2, "Call safe Views navigation")
+        self.step_capture.mark(2, "Navigate to Views")
         self.lpr.go_to_views_page()
 
-        self.step_capture.mark(3, "Verify navigation completed")
-        # Just verify the page is still responsive
-        assert self.page is not None, "Page became unresponsive"
-
-        print("[PASS] Safe Views navigation completed")
+        self.step_capture.mark(3, "Verify the Views page is active")
+        # Views renders at the root URL; the subtab bar is the marker
+        expect(self.page.locator(".viewTabs").first).to_be_visible(
+            timeout=15000
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_play_camera_by_location(self):
-        """Verify camera can be played from location."""
-        from config.base_config import config
-
+        """Verify the configured camera plays from its site group."""
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
-        site_name = config.get("test_site_name", "Newtown ActionArea")
-        camera_name = config.get("test_camera_name", "main gate")
+        self.step_capture.mark(2, f"Play camera '{CAMERA_NAME}'")
+        self.lpr.play_camera(site_name=SITE_NAME, camera_name=CAMERA_NAME)
 
-        self.step_capture.mark(2, f"Play camera '{camera_name}' from site '{site_name}'")
-        try:
-            self.lpr.play_camera(
-                site_name=site_name,
-                location_name=site_name,
-                camera_name=camera_name,
-                play_all_cameras=False
-            )
-            print(f"[PASS] Camera '{camera_name}' played successfully")
-        except AssertionError as e:
-            print(f"[INFO] Camera playback not available: {e}")
-        except Exception as e:
-            print(f"[INFO] Camera playback error: {e}")
+        self.step_capture.mark(3, "Clear the view")
+        self.lpr.clear_all_tiles()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_play_all_cameras(self):
-        """Verify all cameras from location can be played."""
-        from config.base_config import config
-
+        """Verify the whole camera group plays onto the tiles."""
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
-        site_name = config.get("test_site_name", "Newtown ActionArea")
+        self.step_capture.mark(2, f"Play all cameras of '{SITE_NAME}'")
+        self.lpr.play_camera(site_name=SITE_NAME, play_all_cameras=True)
 
-        self.step_capture.mark(2, f"Play all cameras from site '{site_name}'")
-        try:
-            self.lpr.play_camera(
-                site_name=site_name,
-                location_name=site_name,
-                camera_name="",
-                play_all_cameras=True
-            )
-            print("[PASS] All cameras played successfully")
-        except AssertionError as e:
-            print(f"[INFO] Camera playback not available: {e}")
-        except Exception as e:
-            print(f"[INFO] Camera playback error: {e}")
+        self.step_capture.mark(3, "Clear the view")
+        self.lpr.clear_all_tiles()

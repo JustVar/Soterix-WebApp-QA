@@ -10,6 +10,9 @@ config = {
 
     # Test Data Configuration
     "test_site_name": "Newtown Action Area",
+    # NOTE: the rule wizard hides cameras that are at rule capacity.
+    # If this camera is missing from the wizard device list, check for
+    # leftover *_Auto_* rules on it and delete them (verified 08/2026)
     "test_camera_name": "main gate",
 
     # Box configurations

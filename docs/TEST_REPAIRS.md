@@ -17,8 +17,8 @@ the page-object conversion, [DATA] stale tenant data in the test,
 | tests/ui/views/test_views_favorites.py::test_add_remove_favorites | [DONE] | Green 08/09/2026 - first time since the test was written (locator was XPath-in-CSS and never parsed since 03/2026). Full repair: parseable row-scoped locator, config camera name, clean-start toggle, and the real blocker: the camera tree collapses itself a few seconds after expansion, so toggle_favorite now re-runs the full expansion when the row is not reachable and the test acts without a settling sleep. |
 | tests/ui/admin/test_admin_sites site detail tests | [DONE] | Group CRUD rebuilt and green 08/11/2026: group management lives in the Groups dropdown (Create New opens a modal with name input, camera search, and checkboxes; delete confirms in a customMuiModal whose Delete control needed modal-scoped matching; the old accordion is gone). Camera sorting keeps its honest skip: no sort control exists on the current detail page. |
 | tests/ui/admin/test_admin_sites.py::test_search_inside_site | [REDO] | Still skips through the redesign guard on the current detail page; it automates the old camera-search layout. Rebuild against the current detail view (camera cards + per-camera panel), then retire _skip_if_redesigned_detail if nothing else uses it. |
-| tests/ui/admin/test_admin_rules wizard tests | [WIP] | Rebuilt 08/11/2026; 3 of 6 types create rules end to end (Entry-Exit, Intrusion Detection, Line Crossing - up from zero since the redesign). The walker: card picker modal, config camera on Select Devices, region drawn on the fabric upper-canvas ONLY (a bare header canvas also exists and clicking relative to it exits the wizard), Done button, steps to Notification, Save, then the 'Name the Rule' dialog - the name lives there, which is what rejected the old flow. Remaining: Heat Map / Loitering / Occupancy use a 'Use full view' Set Rule variant that stays gated after both label and JS-input clicks; needs a live look at that step. Rule cleanup now exists (created rules delete themselves by name at teardown) and the create test asserts the rule exists by name after the wizard closes. Open observation 08/11 evening: after heavy run days the Select Devices device tree sometimes never renders and the camera fail-fast fires with only the step tabs on screen - by design it fails loud naming the screen; rerun in a fresh window, and if it persists probe the tree container (it may be fixed-position). |
-| tests/ui/views/test_views_subtabs.py insights add-to-tile | [REDO] | Skips honestly: insights widgets expose no hover checkbox and direct click adds nothing. Find the real affordance. |
+| tests/ui/admin/test_admin_rules wizard tests | [WIP] | Rebuilt 08/11/2026; 3 of 6 types create rules end to end (Entry-Exit, Intrusion Detection, Line Crossing - up from zero since the redesign). The walker: card picker modal, config camera on Select Devices, region drawn on the fabric upper-canvas ONLY (a bare header canvas also exists and clicking relative to it exits the wizard), Done button, steps to Notification, Save, then the 'Name the Rule' dialog - the name lives there, which is what rejected the old flow. Remaining: Heat Map / Loitering / Occupancy use a 'Use full view' Set Rule variant that stays gated after both label and JS-input clicks; needs a live look at that step. Rule cleanup now exists (created rules delete themselves by name at teardown) and the create test asserts the rule exists after the wizard closes - by searching the full unique name and matching the row on a prefix, because the list truncates the Name cell in the DOM ('Entry-Exit_Auto_202608...'), so a full-name text match can never succeed. RESOLVED 08/12/2026, the 08/11-evening 'device tree never renders' observation: the tree was rendering fine but showed one camera, because the wizard hides cameras that are at rule capacity, and the leaked pre-teardown Auto rules (3 on the config camera alone) had capped them. Deleting the leaked rules restored the device list from 1 camera to 4 in the same session, and Entry-Exit went green again on the config camera. Not load, not a redesign, not a rename - self-inflicted, and the teardown now prevents recurrence. |
+| tests/ui/views/test_views_subtabs.py insights add-to-tile | [DONE] | Green 08/12/2026. The affordance is drag-to-tile: widget cards are draggable, and the drop lands as a forced drag with the tile pre-scrolled into view (the unforced drag completes without adding anything - measured on both the old test and the probe). The consumed empty tile is the added signal. The checkbox variant keeps an honest skip (insight widgets expose no hover checkbox, measured 08/07 and 08/12) and now fails loud instead of skipping if a checkbox ever appears and the add still does nothing. |
 
 ## B. Skipping today - investigate whether the feature moved or died
 
@@ -36,7 +36,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 | tests/ui/views/test_views_fullscreen.py | [VERIFY] | Exercises the converted enter_fullscreen_on_tile zoom-control wait. |
 | tests/ui/views/test_views_playback.py | [VERIFY] | Player controls on tiles; page-object hover paths changed. |
 | tests/ui/insights/test_insights_widgets.py | [VERIFY] | The heavily converted create_widget flow (accordion survivors, dropdownItem-hidden signals) ran 0 times since conversion. Run at least the Line_Person parametrization end to end. |
-| tests/ui/admin/test_lpr_camera_selection.py and test_lpr_playback.py | [VERIFY] | lpr_page play_camera gained the site-click retry; only test_lpr_navigation ran. |
+| tests/ui/admin/test_lpr_camera_selection.py | [VERIFY] | Uses the config camera name against the rebuilt lpr_page; run it (test_lpr_playback is done, see B2). |
 | Headed parity spot-check | [VERIFY] | All verify runs this tranche were headless. Tests must behave identically headed: the viewport is pinned to 1280x720 in both modes (no override in conftest), but the QA team runs headed with --slowmo 300 --verify-mode, and the rebuilt step overlay now injects on every mark() in headed mode. Run test_views_basic headed, and one test headed with --verify-mode, to prove the overlay changes nothing. |
 
 Verified green 08/08-08/09: events (28/28 over three files), licenses
@@ -81,21 +81,32 @@ Every Global Search suite ran with silently dead filter helpers until
 | Test | Status | Detail |
 |------|--------|--------|
 | tests/ui/search/test_search_drawing.py (6 tests) | [DONE] | Green 08/11/2026. The Create Zone / Create Line links never moved: they render inside each camera container on hover once a Zone or Line category is selected (an earlier probe used the wrong category). Fixes: panel opener, site + All Cameras expansion, config camera name (was 'Hanwha_6'), and the action link scoped to the hovered container - every container holds its own always-mounted copy, so a page-wide .first grabbed another container's hidden one. |
-| tests/ui/admin/test_lpr_playback.py play_camera tests (2) | [REDO] | Found 08/09/2026 by a sweep for never-parsing locators: play_camera's camera-elements locator was XPath-in-CSS and never parsed, and both calling tests wrap the call in except-print with no assertion after, so they have been passing green without ever playing a camera. The locators are fixed (valid CSS now); the except-print swallowing in the tests still needs replacing with real assertions before these count as coverage. test_dismiss_backdrop passes vacuously the same way (dismiss_any_backdrop was silently dead, now fixed). |
+| tests/ui/admin/test_lpr_playback.py (12 tests) | [DONE] | Rebuilt and green 08/12/2026. The whole file asserted nothing: play failures, popup failures, and navigation failures all drowned in info prints while the suite stayed green (the baseline run passed 12/12 with both play tests broken underneath). All 12 tests now assert. The play flow matches the current page: the Locations & Cameras panel starts closed and open means a site row is visible (the old accordion-src check never matched, so a second open call closed the panel, and the sub-heading fallback confirmed panels that were shut); the tree walks site > group > camera, all draggable rows; the camera drops on the LAST empty tile - the panel floats over the left tiles, so a drop on the first tile lands on the panel and does nothing (this cost three diagnosis rounds: unforced first-tile drags hung on actionability, forced ones dispatched into the panel); a new video past the baseline count is the played signal, with no loader wait (empty tiles keep placeholder spinners alive forever - the in-camera search trap again). The timeout popup title is 'Playback Auto-Timeout' now, Views is detected by its subtab bar because the app renders Views at the root URL, and tile activation clicks the last video (a video-canvas union resolves .last to a hidden canvas). |
 | tests/ui/admin/test_lpr_events.py + test_lpr_grid_and_timer.py | [VERIFY] | Same 08/09/2026 sweep: four XPath-in-CSS locators fixed in test bodies (details/info panels, speed button, popup close icon). These files were never in the earlier verify runs; run them to see what the fixed locators surface. |
 
 ## Tenant mop-up (manual pass for Justin)
 
 The repair runs left test artifacts on the shared tenant before the
-teardowns landed. One manual pass clears them:
+teardowns landed. Remaining manual pass:
 - Site detail > Groups dropdown: delete anything named
-  "AutoTest Group *" or "Edited Group *".
-- Admin > Rules: filter "Auto", delete rules named "*_Auto_2026*"
-  (the wizard runs created roughly 3 to 12 across the repair window;
-  test teardown now deletes new ones as they are created).
+  "AutoTest Group *", "Edited Group *", or the
+  "20260507163515AutomationEdited *" / "20260707153125AutomationEdited *"
+  pair visible in the Newtown Action Area group list.
+- DONE 08/12/2026 - Admin > Rules: all 6 leaked "*_Auto_2026*" rules
+  deleted (each row name-verified against the automation prefixes
+  before deletion; zero rows match "Auto" now). Test teardown deletes
+  new ones as they are created.
 
 ## Known app behavior (confirmed, not bugs)
 
+- **The rule wizard hides cameras at rule capacity.** Measured
+  08/12/2026: with 6 leftover automation rules on the site, Select
+  Devices listed 1 of the site's 5 cameras; deleting the rules brought
+  the list to 4 in the same session. A camera "missing from the device
+  tree" means its rule slots are full (or it is otherwise ineligible),
+  not that the tree failed to render. First check Admin > Rules for
+  leftover *_Auto_* rules on that camera. The config note on
+  test_camera_name records the same remedy.
 - **Repeat search clicks need changed filters.** By design (confirmed
   by Justin, 08/09/2026): a user must change filters or settings
   before a search re-runs; clicking Search again on an unchanged (or

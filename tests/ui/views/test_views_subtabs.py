@@ -464,28 +464,23 @@ class TestViewsSubtabs:
             fallback = self.page.locator(".sidebar-custom-checkbox").first
             if self.views._appears(fallback, timeout=2000):
                 checkbox = fallback
+        if checkbox is None:
+            # Measured 2026-08-07 and again 2026-08-12: insight widgets
+            # expose no hover checkbox and a direct card click adds
+            # nothing. Drag-to-tile is the add path the UI supports
+            # (covered by test_insights_drag_to_tile).
+            pytest.skip(
+                "Insight widgets expose no checkbox affordance; "
+                "drag-to-tile is the supported add path"
+            )
 
         content_sel = (
             "canvas, svg, [class*='chart'], [class*='graph'], "
             "[class*='widget'], [class*='insight'], iframe"
         )
         baseline = self._content_baseline(content_sel)
-        if checkbox is not None:
-            checkbox.click()
-        else:
-            # Direct click on widget card to add it
-            widget_card.click()
-
+        checkbox.click()
         if not self._content_added(initial_tiles, content_sel, baseline):
-            if checkbox is None:
-                # Measured 2026-08-07: insight widgets expose no hover
-                # checkbox and a direct card click adds nothing measurable.
-                # The old assertion passed vacuously on sidebar previews.
-                # The add flow needs a rebuild against the current UI.
-                pytest.skip(
-                    "Insight widget add has no working affordance in the "
-                    "current UI - flow needs a rebuild"
-                )
             pytest.fail(
                 f"Insight widget not added. Tiles: {initial_tiles} -> "
                 f"{self.views.get_available_tile_count()}"
@@ -529,32 +524,25 @@ class TestViewsSubtabs:
         if widget_card is None:
             pytest.skip("No insight widgets available - widgets are user-created")
 
-        # Check if drag tiles are visible
-        target_tiles = self.views.drag_drop_tiles
-        if target_tiles.count() == 0:
-            # Try alternate tile selector
-            alt_tiles = self.page.locator("text=Drag & Drop")
-            if alt_tiles.count() == 0:
-                pytest.skip("No drag-drop tiles visible - use checkbox method")
-            target_tiles = alt_tiles
+        target_tile = self.views.drag_drop_tiles.first
+        target_tile.wait_for(state="visible", timeout=10000)
 
-        target_tile = target_tiles.first
-        try:
-            target_tile.wait_for(state="visible", timeout=5000)
-        except Exception:
-            pytest.skip("Drag-drop tiles not visible - use checkbox method")
-
-        # Visible drag with animation (red source, green target)
+        # Forced drag, measured working 08/12/2026; the unforced drag
+        # completes without adding anything
         content_sel = (
             "canvas, svg, [class*='chart'], [class*='graph'], "
             "[class*='widget'], [class*='insight'], iframe"
         )
         baseline = self._content_baseline(content_sel)
-        self._visible_drag(widget_card, target_tile)
+        target_tile.scroll_into_view_if_needed()
+        self._visible_drag(widget_card, target_tile, force=True)
 
-        # If no change, drag may not be supported for this widget type
-        if not self._content_added(initial_tiles, content_sel, baseline, timeout_s=8.0):
-            pytest.skip("Insight widget drag-to-tile not supported - use checkbox method")
+        # The consumed tile is the added signal
+        if not self._content_added(initial_tiles, content_sel, baseline):
+            pytest.fail(
+                f"Insight widget drag did not consume a tile. Tiles: "
+                f"{initial_tiles} -> {self.views.get_available_tile_count()}"
+            )
 
     # =========================================================================
     # HELPER METHODS
@@ -641,7 +629,7 @@ class TestViewsSubtabs:
         except Exception as e:
             print(f"Cleanup: failed to delete view '{view_name}': {e}")
 
-    def _visible_drag(self, source, target):
+    def _visible_drag(self, source, target, force: bool = False):
         """Helper: Perform a visible drag operation with highlights.
 
         Adds visual highlights around source (red) and target (green)
@@ -652,6 +640,9 @@ class TestViewsSubtabs:
         Args:
             source: Source locator to drag from
             target: Target locator to drag to
+            force: Skip the drop target's actionability checks. Needed
+                when the target grid relayouts continuously (insight
+                tiles) and can never pass the stability check.
         """
         # Highlight source (red border - what we're dragging)
         try:
@@ -668,7 +659,7 @@ class TestViewsSubtabs:
         self.page.wait_for_timeout(400)  # visual pacing
 
         # Perform the drag
-        source.drag_to(target)
+        source.drag_to(target, force=force)
 
         # Remove highlights
         try:

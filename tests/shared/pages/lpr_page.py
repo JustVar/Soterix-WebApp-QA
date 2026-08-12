@@ -272,33 +272,29 @@ class LprPage:
         print("[LPR] LPR camera page ready")
 
     def ensure_lpr_dropdown_open(self):
-        """Opens the Locations & Cameras dropdown on LPR page."""
-        # Check if already open (up arrow icon visible)
-        up_arrow = self.page.locator("img[src*='upAccordionIcon'][alt='up-icon']")
-        if up_arrow.count() > 0:
-            print("[LPR] Locations & Cameras dropdown already open")
-            return
+        """Open the Locations & Cameras panel when it is closed.
 
-        print("[LPR] Opening Locations & Cameras dropdown")
-        # Click the dropdown header
+        Open means a site row (draggable) is visible. The accordion
+        icon cannot carry the state check: the app keeps the
+        downAccordionIcon src and only flips the alt text, and the
+        panel sub-headings are visible even when the panel is closed,
+        so both old checks re-clicked an open panel shut.
+        """
+        site_rows = self.page.locator("div[draggable='true']")
+        try:
+            site_rows.first.wait_for(state="visible", timeout=2000)
+            print("[LPR] Locations & Cameras panel already open")
+            return
+        except PlaywrightError:
+            pass
+
+        print("[LPR] Opening Locations & Cameras panel")
         dropdown_btn = self.page.locator(
             "p[class*='select-box-content']:has-text('Locations')"
         ).first
         dropdown_btn.wait_for(state="visible", timeout=30000)
         dropdown_btn.click()
-
-        # Verify it opened by checking for up arrow or site list
-        try:
-            self.page.locator("img[src*='upAccordionIcon'][alt='up-icon']").first.wait_for(
-                state="visible", timeout=10000
-            )
-            print("[LPR] Dropdown confirmed open (up arrow visible)")
-        except:
-            # Fallback: check if site list is visible
-            self.page.locator("div[class*='select-box-sub-heading']").first.wait_for(
-                state="visible", timeout=10000
-            )
-            print("[LPR] Dropdown confirmed open (site list visible)")
+        site_rows.first.wait_for(state="visible", timeout=15000)
 
     def dismiss_any_backdrop(self):
         """Helper to close any open modal/backdrop before proceeding."""
@@ -313,157 +309,198 @@ class LprPage:
             print(f"[LPR] No backdrop to dismiss: {e}")
 
     def open_playback_timeout_popup(self):
-        """Open Playback Timeout popup (generic views page)."""
+        """Open the playback timeout popup (Views page).
+
+        The popup title is 'Playback Auto-Timeout' since the 2026-08
+        redesign (was 'Set Timeout Duration').
+        """
         print("[LPR] Opening Playback Timeout popup")
         timeout_icon = self.page.locator("img[src='/icons/timer.svg']").last
         timeout_icon.wait_for(state="visible", timeout=30000)
         timeout_icon.click()
 
-        # Verify popup opened
-        popup_title = self.page.locator("p:has-text('Set Timeout Duration')")
-        popup_title.first.wait_for(state="visible", timeout=30000)
+        self.page.get_by_text("Playback Auto-Timeout").first.wait_for(
+            state="visible", timeout=15000
+        )
         print("[LPR] Playback Timeout popup opened")
 
     def open_lpr_playback_timeout_popup(self):
-        """Open LPR-specific Playback Timeout popup."""
+        """Open the playback timeout popup on the LPR page."""
         print("[LPR] Opening LPR Playback Timeout popup")
         timeout_icon = self.page.locator("img[src='/icons/timer.svg']").last
         timeout_icon.wait_for(state="visible", timeout=30000)
         timeout_icon.click()
 
-        # Verify popup opened
-        popup_title = self.page.locator("p:has-text('Set Timeout Duration')")
-        popup_title.first.wait_for(state="visible", timeout=30000)
+        self.page.get_by_text("Playback Auto-Timeout").first.wait_for(
+            state="visible", timeout=15000
+        )
         print("[LPR] LPR Playback Timeout popup opened")
-
-    def dismiss_lpr_backdrop(self):
-        """Dismiss backdrop on LPR page."""
-        self.dismiss_any_backdrop()
 
     # ===================== Camera Playback Methods =====================
 
-    def play_camera(self, site_name: str, location_name: str, camera_name: str = "", play_all_cameras: bool = False):
-        """Play camera(s) by dragging to tile."""
-        # Wait for site to load
-        print(f"[LPR] Checking for Site '{site_name}'")
-        self.page.locator(f"text={site_name}").first.wait_for(state="visible", timeout=60000)
-        print(f"[LPR] Site '{site_name}' loaded")
+    def open_site_group(self, site_name: str, group_name: str = "All Cameras"):
+        """Expand the panel down to a site's camera group.
 
-        # Click site. A click that lands during tree hydration is
-        # silently dropped, so wait for the location to appear and
-        # re-click the site once if it does not.
-        site_elements = self.page.locator(f"text='{site_name}'")
-        site_elements.first.click()
-        print(f"[LPR] Clicked on site '{site_name}'")
-        location_elements = self.page.locator(f"text='{location_name}'")
+        The Locations & Cameras panel starts closed and lists
+        site > camera groups > cameras; every level is a draggable row.
+        Returns the group row locator with the group open.
+        """
+        self.ensure_lpr_dropdown_open()
+
+        site = self.page.locator("div[draggable='true']").filter(
+            has_text=site_name
+        ).first
+        site.wait_for(state="visible", timeout=60000)
+
+        group = self.page.locator("div[draggable='true']").filter(
+            has_text=group_name
+        ).first
+        # A click during tree hydration is silently dropped: re-click
+        # the site once if the group list does not appear
         try:
-            location_elements.first.wait_for(state="visible", timeout=15000)
+            group.wait_for(state="visible", timeout=3000)
         except PlaywrightError:
-            print("[LPR] Site click did not expand the tree, retrying")
-            site_elements.first.click()
-            location_elements.first.wait_for(state="visible", timeout=15000)
-
-        # Select location
-        print(f"[LPR] Selecting location '{location_name}'")
-        location_elements.first.scroll_into_view_if_needed()
-        location_elements.first.click()
-        print(f"[LPR] Clicked on location '{location_name}'")
-
-        # Wait for cameras to load
-        camera_elements = self.page.locator(
-            "div[class*='MuiStack-root'][class*='mui-ebmxkk']"
-        )
-        camera_elements.first.wait_for(state="visible", timeout=60000)
-
-        # Filter cameras if camera_name provided
-        if camera_name:
-            filtered = camera_elements.filter(has_text=camera_name)
-            if filtered.count() == 0:
-                raise AssertionError(f"Camera '{camera_name}' not available")
-            cameras_to_play = [filtered.nth(0)]
-            print(f"[LPR] Camera '{camera_name}' found")
-        else:
-            cameras_to_play = [camera_elements.nth(i) for i in range(camera_elements.count())]
-            print(f"[LPR] Found {len(cameras_to_play)} camera(s) to play")
-
-        # Drag and drop cameras
-        tiles = self.page.locator("div:has-text('Drag & Drop Camera here')")
-        if tiles.count() == 0:
-            raise AssertionError("No available tiles to drop camera into")
-
-        for idx, camera in enumerate(cameras_to_play):
+            site.click()
             try:
-                print(f"[LPR] Dragging camera {idx + 1}")
-                tiles.nth(0 if not "lpr" in self.page.url.lower() else 1).drag_to(camera)
+                group.wait_for(state="visible", timeout=15000)
+            except PlaywrightError:
+                print("[LPR] Site click did not expand the tree, retrying")
+                site.click()
+                group.wait_for(state="visible", timeout=15000)
+        return group
 
-                # Wait for the stream loader to appear then disappear
-                loader = self.page.locator("[class*='CircularProgress']")
-                self._appears(loader.first, timeout=2000)
-                if loader.count() > 0:
-                    loader.first.wait_for(state="hidden", timeout=60000)
+    def _empty_tile(self):
+        """An empty playback tile, clearing the view when none is free.
 
-                # Check stream status
-                error = self.page.locator("text=failed to load")
-                if error.count() > 0:
-                    print(f"[LPR] Streaming failed for camera")
-                    raise AssertionError("Streaming failed for camera")
+        The last tile: the Locations & Cameras panel floats over the
+        left side of the grid, so a drop on the first tile lands on
+        the panel and does nothing.
+        """
+        tile = self.page.get_by_text(
+            "Drag & Drop Camera here", exact=True
+        ).last
+        try:
+            tile.wait_for(state="visible", timeout=5000)
+            return tile
+        except PlaywrightError:
+            pass
+        self.clear_all_tiles()
+        tile.wait_for(state="visible", timeout=15000)
+        return tile
 
-                print(f"[LPR] Camera {idx + 1} playing successfully")
+    def clear_all_tiles(self):
+        """Clear playing streams so empty tiles come back. Best effort."""
+        for label in ("Clear All", "Reset View"):
+            btn = self.page.get_by_text(label, exact=True).first
+            try:
+                if btn.is_visible():
+                    btn.click()
+                    # Clearing re-renders the tiles with no other signal
+                    self.page.wait_for_timeout(1500)
+                    return
+            except PlaywrightError:
+                continue
 
-                if play_all_cameras:
-                    clear_btn = self.page.locator("button:has-text('Clear All')").first
-                    clear_btn.wait_for(state="visible", timeout=10000)
-                    clear_btn.click()
-                    print("[LPR] Cleared camera for next")
+    def play_camera(self, site_name: str, camera_name: str = "",
+                    play_all_cameras: bool = False,
+                    group_name: str = "All Cameras"):
+        """Drag a camera (or the whole group) onto a playback tile.
 
-            except Exception as e:
-                raise AssertionError(f"Error playing camera {idx + 1}: {e}")
+        Raises AssertionError when the camera is missing from the group
+        or no new stream element appears after the drop.
+        """
+        group = self.open_site_group(site_name, group_name)
 
-    def ensure_camera_present(self):
-        """Verify camera is present on page."""
-        videos = self.page.locator("video")
-        if videos.count() == 0:
-            print("[LPR] No active camera found")
-            return False
-        print("[LPR] Active camera present")
-        return True
+        if play_all_cameras:
+            source = group
+            print(f"[LPR] Playing every camera in '{group_name}'")
+        else:
+            cameras = self.page.locator("div[draggable='true']").filter(
+                has_text=camera_name
+            )
+            # Expand the group only when the camera is not already
+            # showing: a click on an expanded group collapses it
+            try:
+                cameras.first.wait_for(state="visible", timeout=2000)
+            except PlaywrightError:
+                group.click()
+                try:
+                    cameras.first.wait_for(state="visible", timeout=30000)
+                except PlaywrightError:
+                    raise AssertionError(
+                        f"Camera '{camera_name}' is not in group "
+                        f"'{group_name}' of site '{site_name}'"
+                    ) from None
+            source = cameras.first
+            print(f"[LPR] Camera '{camera_name}' found")
+
+        tile = self._empty_tile()
+        before = self.page.locator("video").count()
+        failed_before = self.page.locator("text=failed to load").count()
+        tile.scroll_into_view_if_needed()
+        source.drag_to(tile)
+
+        # No loader wait: empty tiles keep placeholder spinners alive
+        # forever (same trap as in-camera search), so CircularProgress
+        # hidden can never finish. The new stream element is the signal.
+        # Baseline delta: a failed tile left over from the saved layout
+        # must not fail this drop
+        if self.page.locator("text=failed to load").count() > failed_before:
+            raise AssertionError(
+                f"Stream failed to load for '{camera_name or group_name}'"
+            )
+
+        # A new stream element past the baseline is the played signal
+        try:
+            self.page.locator("video").nth(before).wait_for(
+                state="attached", timeout=60000
+            )
+        except PlaywrightError:
+            raise AssertionError(
+                f"No new stream appeared after dropping "
+                f"'{camera_name or group_name}' (had {before} videos)"
+            ) from None
+        print("[LPR] Stream playing")
 
     def activate_camera_tile(self):
         """Activate camera tile for playback."""
         print("[LPR] Activating camera tile")
 
-        # Wait for video or canvas
-        video_or_canvas = self.page.locator("video, canvas").first
-        video_or_canvas.wait_for(state="visible", timeout=60000)
+        # The last video: play_camera drops on the last tile, and a
+        # video-canvas union resolves .last to a hidden canvas overlay
+        video = self.page.locator("video").last
+        video.wait_for(state="visible", timeout=60000)
         # The stream needs a beat after the first frame before the tile
         # accepts activation clicks; there is no DOM signal for that
         self.page.wait_for_timeout(3000)
 
-        # Click to activate
-        video_or_canvas.click()
+        # force: tile overlays (controls fade layer) intercept the
+        # actionability check while the click itself lands fine
+        video.click(force=True)
         print("[LPR] Camera tile activated")
 
     # ===================== Views Page Methods =====================
 
     def go_to_views_page(self):
-        """Navigate to Views page safely."""
-        print("[LPR] Ensuring Views page (safe mode)")
+        """Navigate to the Views page.
 
-        # Check if already on Views
-        if "/views" in self.page.url.lower():
-            print("[LPR] Already on Views page")
-            return
+        The app renders Views at the root URL, so the subtab bar
+        (.viewTabs) is the page marker, not the URL.
+        """
+        marker = self.page.locator(".viewTabs").first
+        try:
+            if marker.is_visible():
+                print("[LPR] Already on Views page")
+                return
+        except PlaywrightError:
+            pass
 
         print("[LPR] Navigating to Views page")
         views_tab = self.page.locator("span:has-text('Views')").first
         views_tab.wait_for(state="visible", timeout=30000)
         views_tab.click(force=True)
-        # The URL change is the navigation signal
-        try:
-            self.page.wait_for_url("**/views**", timeout=15000)
-        except PlaywrightError:
-            print("[LPR] Views click did not change the URL within 15s")
-        print("[LPR] Switched to Views page")
+        marker.wait_for(state="visible", timeout=15000)
+        print("[LPR] Views page ready")
 
     def wait_for_site_list(self, site_name: str):
         """Wait for site list to load."""
@@ -477,22 +514,25 @@ class LprPage:
         try:
             # reload() waits for the load event on its own
             self.page.reload()
-        except:
+        except Exception:
             pass
 
-        # Try navigating to Views
+        # Try navigating to Views (rendered at the root URL, so the
+        # subtab bar is the arrival signal)
         try:
             views_btn = self.page.locator("span:has-text('Views')").first
             if self._appears(views_btn, timeout=10000):
                 views_btn.click()
-                self.page.wait_for_url("**/views**", timeout=15000)
-        except:
+                self.page.locator(".viewTabs").first.wait_for(
+                    state="visible", timeout=15000
+                )
+        except Exception:
             print("[LPR] Views button not found, continuing")
 
         # Remove any overlay
         try:
             self.page.locator("body").first.click()
-        except:
+        except Exception:
             pass
 
         print("[LPR] Safe reset done")
