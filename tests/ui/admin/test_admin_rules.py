@@ -195,10 +195,9 @@ class TestAdminRules:
             rule_name=rule_name,
         )
         if not completed:
-            pytest.skip(
-                "Rule wizard flow did not complete for this type - see "
-                "the run output for the step it stalled on"
-            )
+            # False only means the picker does not offer this type;
+            # a stalled walk raises inside the wizard instead
+            pytest.skip(f"Rule type '{rule_type}' not offered in the picker")
 
         # The rule must exist by name: a closed wizard alone would also
         # pass a save the backend rejected. The list truncates the Name

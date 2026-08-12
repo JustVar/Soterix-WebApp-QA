@@ -545,30 +545,44 @@ class AdminPage:
         """
         site = self.page.locator(
             f"p.MuiTypography-root:text-is('{site_name}')"
-        )
+        ).first
         site.wait_for(state="visible", timeout=10000)
         site.click()
-        detail = self.page.get_by_text("Groups:").first
+        detail = self.page.get_by_text("Groups:", exact=True).first
         try:
             detail.wait_for(state="visible", timeout=10000)
         except Exception:
-            site.click()
+            # Retry only while the list is still mounted (its Version
+            # lines are list-only): re-clicking the site name on an
+            # already-loaded detail would hit the breadcrumb instead
+            if self.page.locator("p:has-text('Version:')").count() > 0:
+                site.click()
             detail.wait_for(state="visible", timeout=15000)
 
     def get_camera_names(self) -> list[str]:
-        """Return a list of camera names visible in the site detail view."""
-        camera_elements = self.page.locator(
-            "div.site-card .MuiTypography-root"
+        """Camera names in the site detail list.
+
+        The redesigned detail lists cameras as name + 'IP: <addr>'
+        rows (div.site-card is gone); the name is the first line of
+        the row that holds the IP line.
+        """
+        return self.page.evaluate(
+            r"""() => [...document.querySelectorAll('body *')]
+                .filter(e => e.children.length === 0
+                        && e.getClientRects().length > 0
+                        && /^IP: \d/.test((e.textContent || '').trim()))
+                .map(e => {
+                    let n = e;
+                    for (let d = 0; d < 4 && n.parentElement; d++) {
+                        n = n.parentElement;
+                        const first = ((n.innerText || '')
+                            .split('\n')[0] || '').trim();
+                        if (first && !first.startsWith('IP:'))
+                            return first;
+                    }
+                    return '';
+                }).filter(Boolean)"""
         )
-        if camera_elements.count() == 0:
-            return []
-        camera_elements.first.wait_for(state="visible", timeout=10000)
-        names = []
-        for i in range(camera_elements.count()):
-            text = camera_elements.nth(i).inner_text().strip()
-            if text:
-                names.append(text)
-        return names
 
     def click_sort_az(self):
         """Click the A-Z sort icon."""
@@ -824,7 +838,8 @@ class AdminPage:
         Notification. The camera comes from config on Select Devices;
         canvas rules draw at Set Rule; the rule name is filled on
         whichever step shows a name input; Save finishes. Returns
-        False with a diagnostic print when the walk stalls.
+        False only when the picker does not offer the rule type; a
+        stalled walk raises.
         """
         # The caller opens the picker (click_add_new_rule); choose the
         # rule type card. A type the picker no longer offers is a
@@ -852,8 +867,10 @@ class AdminPage:
         full_view_rules = {"Heat Map", "Loitering", "Occupancy"}
 
         # Walk the steps: handle the canvas and the name input where
-        # they appear, advance on Next, finish on Save
-        for step in range(6):
+        # they appear, advance on Next, finish on Save. Seven
+        # iterations: the happy path uses five, and one slow render
+        # must not exhaust the budget
+        for step in range(7):
             full_view = self.page.get_by_text(
                 "Use full view", exact=False
             ).first
@@ -871,12 +888,22 @@ class AdminPage:
 
             if rule_type in full_view_rules and fv_visible:
                 # The label text does not toggle the switch: JS-click
-                # the input (zero-dimension MUI input pattern)
+                # the input (zero-dimension MUI input pattern). The
+                # toggle is verified, not fire-and-forget: Done arms
+                # on the snapshot load regardless of the switch, so a
+                # silently skipped toggle would walk through with the
+                # step unconfigured.
                 sw = full_view.locator(
                     "xpath=ancestor::label[1]"
                 ).locator("input").first
-                if sw.count() > 0 and not sw.evaluate("el => el.checked"):
+                sw.wait_for(state="attached", timeout=5000)
+                if not sw.evaluate("el => el.checked"):
                     sw.evaluate("el => el.click()")
+                    self.page.wait_for_timeout(300)  # state, no signal
+                if not sw.evaluate("el => el.checked"):
+                    raise RuntimeError(
+                        "The 'Use full view' switch did not turn on"
+                    )
                 # Done arms only after the snapshot loads, and the
                 # modal backdrop eats pointer clicks - wait for the
                 # armed button, then click it through JS
@@ -896,12 +923,14 @@ class AdminPage:
             except Exception as e:
                 # A lingering invisible backdrop can eat pointer
                 # clicks; a JS click is safe because a disabled Next
-                # ignores it
-                try:
-                    self.page.locator(
-                        "button.btn-primary:has-text('Next')"
-                    ).first.evaluate("el => el.click()")
-                except Exception:
+                # ignores it. Count-gated so a missing button does
+                # not sit out an auto-wait inside the except.
+                fallback = self.page.locator(
+                    "button.btn-primary:has-text('Next')"
+                )
+                if fallback.count() > 0:
+                    fallback.first.evaluate("el => el.click()")
+                else:
                     print(f"[ADMIN] Wizard step {step}: Next not "
                           f"clickable: {str(e)[:80]}")
             # Step transitions re-render in place with no signal
@@ -962,9 +991,13 @@ class AdminPage:
                 )
                 return True
 
-        print(f"[ADMIN] Rule wizard stalled; visible: "
-              f"{self._wizard_leaf_texts()[:20]}")
-        return False
+        # A stall is a failure, not a False: every rule type is
+        # expected to complete, and a False reads as a designed skip
+        # at the call site (only the missing picker card returns False)
+        raise RuntimeError(
+            f"Rule wizard stalled walking '{rule_type}'; visible: "
+            f"{self._wizard_leaf_texts()[:20]}"
+        )
 
     def _wizard_leaf_texts(self):
         """Short visible leaf texts, nav chrome excluded (diagnostics)."""

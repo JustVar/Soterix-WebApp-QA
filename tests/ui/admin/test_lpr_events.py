@@ -8,14 +8,17 @@ strip, and Share / Export / Create Link / fullscreen / seek controls.
 import re
 
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import TimeoutError as PWTimeoutError, expect
 
 from tests.shared.pages.lpr_page import LprPage
 
 # Position/duration readout in the clip player ('00:00 / 00:20')
 TIME_STRIP_RE = re.compile(r"\d{2}:\d{2} / \d{2}:\d{2}")
-# A card's full timestamp line carries the date too
-FULL_TS_RE = re.compile(r"\d{1,2}:\d{2}:\d{2} [AP]M \| \w{3} \d{1,2} \d{4}")
+# A card's full timestamp line carries the date too (tolerant of the
+# time and date landing in sibling nodes)
+FULL_TS_RE = re.compile(
+    r"\d{1,2}:\d{2}:\d{2} [AP]M\s*\|\s*\w{3} \d{1,2} \d{4}"
+)
 
 
 class TestLprEventPlayback:
@@ -32,13 +35,26 @@ class TestLprEventPlayback:
         """Land on the LPR camera page with at least one event card.
 
         The feed is live tenant data: an empty feed is a state, not a
-        defect, so it skips instead of failing.
+        defect, so it skips - but only a genuinely empty feed. Feed
+        content that the card anchor fails to match is locator rot
+        and fails loud instead of hiding as nine data-state skips.
         """
         self.lpr.ensure_lpr_camera_page()
         cards = self.lpr.event_cards()
         try:
             cards.first.wait_for(state="visible", timeout=30000)
-        except Exception:
+        except PWTimeoutError:
+            has_content = (
+                self.page.get_by_text(re.compile(r"\d+%")).count() > 0
+                or self.page.get_by_text(
+                    re.compile(r"\d{1,2}:\d{2}:\d{2}")
+                ).count() > 0
+            )
+            if has_content:
+                pytest.fail(
+                    "The feed shows event content but no card matched "
+                    "the timestamp anchor - the card locator rotted"
+                )
             pytest.skip("No LPR events in the live feed")
         return cards
 
@@ -74,9 +90,9 @@ class TestLprEventPlayback:
         cards = self._open_feed_or_skip()
 
         self.step_capture.mark(2, "Verify the feed is populated")
-        # State assertion on live data behind the helper's bounded
-        # visible-wait, not an action oracle racing a render
-        assert cards.count() >= 1, "Feed anchor visible but no cards counted"
+        # Polling count: the live feed re-renders as events arrive,
+        # so an instant read can catch a transient zero
+        expect(cards).not_to_have_count(0, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -109,13 +125,12 @@ class TestLprEventPlayback:
         # The filter icon ships no alt text and no testid; its src is
         # the only handle it has
         self.page.locator("img[src*='filter']").first.click()
-        expect(self.page.get_by_text("Duration", exact=True).first)\
+        expect(self.page.get_by_text("Cameras", exact=True).first)\
             .to_be_visible(timeout=10000)
+        expect(self.page.get_by_text("Duration", exact=True).first)\
+            .to_be_visible()
         expect(self.page.get_by_text("Apply", exact=True).first)\
             .to_be_visible()
-
-        self.step_capture.mark(3, "Dismiss the panel")
-        self.page.keyboard.press("Escape")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -160,8 +175,15 @@ class TestLprEventPlayback:
         self.lpr.open_first_event()
 
         self.step_capture.mark(2, "Look for a speed control")
+        # The player chrome renders after the video attaches; decide
+        # only once the timeline readout proves the chrome is up
+        expect(self.page.get_by_text(TIME_STRIP_RE).first).to_be_visible(
+            timeout=10000
+        )
         speed = self.page.get_by_text(re.compile(r"^[0-9.]+x$"))
-        if speed.count() == 0:
+        try:
+            speed.first.wait_for(state="visible", timeout=3000)
+        except PWTimeoutError:
             self.lpr.close_event_player()
             # Measured 08/12/2026: the LPR clip player has no speed
             # control. Fail loud if one appears so it gets a real test.
@@ -212,8 +234,11 @@ class TestLprEventPlayback:
 
         self.step_capture.mark(3, "Exit fullscreen")
         # Escape does not release programmatic fullscreen headless;
-        # exitFullscreen is the dependable path
-        self.page.evaluate("document.exitFullscreen()")
+        # exitFullscreen is the dependable path. Guarded: the call
+        # rejects when fullscreen already dropped on its own
+        self.page.evaluate(
+            "document.fullscreenElement ? document.exitFullscreen() : null"
+        )
         self.page.wait_for_function(
             "() => document.fullscreenElement == null", timeout=10000
         )

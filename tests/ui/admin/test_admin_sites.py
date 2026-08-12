@@ -69,16 +69,14 @@ class TestAdminSites:
         self.admin.click_site(name)
 
     def _skip_if_redesigned_detail(self):
-        """Skip old-UI site-detail tests on the redesigned detail page.
+        """Legacy drift guard kept for test_camera_sorting only.
 
-        The 2026-08 site detail rework replaced the sort icons, the camera
-        group accordion, and the site-card layout with a breadcrumb header,
-        a 'Sort By' toggle, a Groups dropdown, and an Add Devices button.
-        The tests below automate the old layout. The rebuild is tracked on
-        the roadmap (Site detail tests rework).
+        Its 'Add Devices' marker no longer renders on the current
+        detail page, so this never skips; the sorting test still
+        exits honestly on its own sort-icon check. The other detail
+        tests were rebuilt against the current layout and no longer
+        call this.
         """
-        # Bounded wait, not an instant count: the detail view renders after
-        # click_site returns and its render signal is best-effort
         try:
             self.page.get_by_text("Add Devices").first.wait_for(
                 state="visible", timeout=3000
@@ -88,8 +86,8 @@ class TestAdminSites:
             redesigned = False
         if redesigned:
             pytest.skip(
-                "Site detail page redesigned (breadcrumb + Add Devices layout) - "
-                "these tests automate the old layout and need a rebuild"
+                "Site detail page changed again (Add Devices layout) - "
+                "the sorting test targets the current layout"
             )
 
     @pytest.mark.ui
@@ -180,11 +178,14 @@ class TestAdminSites:
 
         self._open_first_site()
 
-        # The Groups dropdown marks the detail view (the redesigned
-        # detail has no div.site-card and the URL does not change)
-        expect(self.page.get_by_text("Groups:").first).to_be_visible(
-            timeout=10000
-        )
+        # click_site already waited for the Groups label; the
+        # independent proof of navigation is the LIST unmounting -
+        # its per-site 'Version:' lines exist only there
+        expect(self.page.get_by_text("Groups:", exact=True).first)\
+            .to_be_visible(timeout=10000)
+        expect(
+            self.page.locator("p:has-text('Version:')")
+        ).to_have_count(0, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -206,6 +207,9 @@ class TestAdminSites:
 
         self.admin.click_sort_az()
         names_az = self.admin.get_camera_names()
+        assert names_az, (
+            "Sort ran but no camera names were read from the detail list"
+        )
 
         # Sort Z-A
         self.admin.click_sort_za()
@@ -226,10 +230,8 @@ class TestAdminSites:
         self._open_first_site()
 
         # Group management lives in the Groups dropdown since 2026-08.
-        # Skip only when the dropdown does not exist; a dropdown that
-        # exists but will not open must fail loud, not skip.
-        if not self._appears(self.page.get_by_text("Groups:"), timeout=5000):
-            pytest.skip("No Groups dropdown on this site detail")
+        # click_site already failed loud if the detail (and its Groups
+        # label) never rendered, so no skip guard belongs here.
         self.admin.open_groups_dropdown()
 
         timestamp = datetime.datetime.now().strftime("%H%M%S")
@@ -250,10 +252,8 @@ class TestAdminSites:
         self._open_first_site()
 
         # Group management lives in the Groups dropdown since 2026-08.
-        # Skip only when the dropdown does not exist; a dropdown that
-        # exists but will not open must fail loud, not skip.
-        if not self._appears(self.page.get_by_text("Groups:"), timeout=5000):
-            pytest.skip("No Groups dropdown on this site detail")
+        # click_site already failed loud if the detail (and its Groups
+        # label) never rendered, so no skip guard belongs here.
         self.admin.open_groups_dropdown()
 
         # Create our own group and rename THAT: renaming the last
@@ -280,10 +280,8 @@ class TestAdminSites:
         self._open_first_site()
 
         # Group management lives in the Groups dropdown since 2026-08.
-        # Skip only when the dropdown does not exist; a dropdown that
-        # exists but will not open must fail loud, not skip.
-        if not self._appears(self.page.get_by_text("Groups:"), timeout=5000):
-            pytest.skip("No Groups dropdown on this site detail")
+        # click_site already failed loud if the detail (and its Groups
+        # label) never rendered, so no skip guard belongs here.
         self.admin.open_groups_dropdown()
 
         # Create our own group and delete THAT: deleting the last
@@ -328,19 +326,34 @@ class TestAdminSites:
         self.admin.click_site(site_name)
 
         # Camera rows render async after the detail marker; each row
-        # carries an 'IP: <addr>' line, unlike the panel's bare 'IP:'
+        # carries an 'IP: <addr>' line, unlike the panel's bare 'IP:'.
+        # The baseline count settles over two matching reads so a
+        # half-hydrated list cannot seed it.
         ip_rows = self.page.get_by_text(re.compile(r"IP: \d"))
         expect(ip_rows.first).to_be_visible(timeout=15000)
         row_count = ip_rows.count()
+        for _ in range(8):
+            self.page.wait_for_timeout(250)  # settle tick, not a blind sleep
+            now = ip_rows.count()
+            if now == row_count:
+                break
+            row_count = now
+
+        if row_count < 2:
+            pytest.skip(
+                "Site lists fewer than two cameras - the filter "
+                "count oracle cannot discriminate a dead search"
+            )
 
         self.admin.search_inside_site(camera)
 
-        # The full unique name filters to exactly one row; the count
-        # settling there is the filter-applied signal
+        # The full unique name filters to exactly one row: the count
+        # settling at 1 is the filter-applied signal, and the name
+        # check pins WHICH row survived
+        expect(ip_rows).to_have_count(1, timeout=10000)
         expect(
             self.page.get_by_text(camera, exact=True).first
         ).to_be_visible(timeout=10000)
-        expect(ip_rows).to_have_count(1, timeout=10000)
 
         # Clearing restores the list
         self.admin.search_inside_site("")
