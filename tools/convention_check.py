@@ -176,6 +176,16 @@ def check_no_oracle_tests(path: str, lines: list[str]) -> list[dict]:
         body = [lines[i] for i in _block_range(lines, idx)]
         if any("oracle" in b.lower() for b in body):
             continue
+        # A body whose only statement is pytest.skip is an explicit
+        # hold: it reports SKIP every run and can never pass green
+        code = [
+            b.strip() for b in body
+            if b.strip() and not b.strip().startswith(("#", '"', "'"))
+        ]
+        if code and all(
+            s.startswith(("pytest.skip", ")")) for s in code
+        ):
+            continue
         if not any(ORACLE_RE.search(b) for b in body):
             findings.append({
                 "sev": "MEDIUM", "rule": "no-oracle-test",
