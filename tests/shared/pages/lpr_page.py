@@ -1,5 +1,11 @@
 ﻿"""LPR (License Plate Recognition) Page Object Model."""
+import re
+
 from playwright.sync_api import Error as PlaywrightError, Page, expect
+
+# An event card's timestamp line ('1:37:38 AM | Aug 11 2026'). The
+# time part alone anchors the card; assertions add the date part.
+EVENT_TIME_RE = re.compile(r"\d{1,2}:\d{2}:\d{2} [AP]M")
 
 
 class LprPage:
@@ -507,6 +513,35 @@ class LprPage:
             state="visible", timeout=10000
         )
         print("[LPR] Camera tile activated")
+
+    # ===================== Event Feed Methods =====================
+
+    def event_cards(self):
+        """Event cards in the live feed on the LPR camera page.
+
+        A card is the third ancestor of its timestamp line: the feed
+        carries no stable class names, and the plate texts end with a
+        trailing space, so the timestamp is the dependable anchor.
+        """
+        return self.page.get_by_text(EVENT_TIME_RE).locator(
+            "xpath=ancestor::*[position()=3]"
+        )
+
+    def open_first_event(self):
+        """Open the first event's clip player; the video is the signal."""
+        cards = self.event_cards()
+        cards.first.wait_for(state="visible", timeout=30000)
+        cards.first.click()
+        self.page.locator("video").first.wait_for(
+            state="attached", timeout=30000
+        )
+
+    def close_event_player(self):
+        """Close the clip player; the video leaving is the signal."""
+        self.page.locator("img[alt='close icon']").first.click()
+        self.page.locator("video").first.wait_for(
+            state="detached", timeout=10000
+        )
 
     # ===================== Views Page Methods =====================
 
