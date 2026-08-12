@@ -105,7 +105,8 @@ class TestLprTimer:
                 return
 
             self.step_capture.mark(3, "Verify popup opened")
-            popup_title = self.page.locator("p:has-text('Set Timeout Duration')").first
+            # Title is 'Playback Auto-Timeout' since the 2026-08 redesign
+            popup_title = self.page.get_by_text("Playback Auto-Timeout").first
             if popup_title.count() > 0:
                 popup_title.wait_for(state="visible", timeout=30000)
                 assert popup_title.is_visible(), "Popup not visible"
@@ -146,7 +147,7 @@ class TestLprTimer:
 
             try:
                 # Open timer if not already open
-                popup = self.page.locator("p:has-text('Set Timeout Duration')").first
+                popup = self.page.get_by_text("Playback Auto-Timeout").first
                 if popup.count() == 0:
                     timer_btn.click()
                     self.page.wait_for_timeout(500)
@@ -210,7 +211,7 @@ class TestLprTimer:
         # This is the actual check the test exists for, so it is deliberately
         # left un-caught - a popup that stays open after Cancel must fail.
         self.step_capture.mark(4, "Verify popup closed")
-        popup = self.page.locator("p:has-text('Set Timeout Duration')").all()
+        popup = self.page.get_by_text("Playback Auto-Timeout").all()
         visible_popups = [p for p in popup if p.is_visible()]
         assert len(visible_popups) == 0, "Popup still visible after Cancel"
 

@@ -20,6 +20,11 @@ class TestLprCameraPlayback:
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page, step_capture):
+        if not SITE_NAME or not CAMERA_NAME:
+            pytest.skip(
+                "test_site_name / test_camera_name not configured "
+                "for this ENV (see config/env/)"
+            )
         self.page = authenticated_page
         self.step_capture = step_capture
         step_capture.set_page(self.page)
@@ -68,6 +73,9 @@ class TestLprCameraPlayback:
         self.step_capture.mark(2, "Open the panel and wait for the site")
         self.lpr.ensure_lpr_dropdown_open()
         self.lpr.wait_for_site_list(SITE_NAME)
+        expect(
+            self.page.get_by_text(SITE_NAME, exact=False).first
+        ).to_be_visible()
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -98,9 +106,10 @@ class TestLprCameraPlayback:
 
         self.step_capture.mark(3, "Activate the camera tile")
         self.lpr.activate_camera_tile()
-        expect(self.page.locator("video").first).to_be_visible(
-            timeout=15000
-        )
+        # The live icon shows only on an activated tile
+        expect(
+            self.page.locator("img[alt='live icon']").first
+        ).to_be_visible(timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -114,11 +123,11 @@ class TestLprCameraPlayback:
         self.lpr.dismiss_any_backdrop()
 
         self.step_capture.mark(3, "Verify no backdrop blocks the page")
-        backdrop = self.page.locator("div[class*='MuiBackdrop-root']")
-        if backdrop.count() > 0:
-            assert not backdrop.first.is_visible(), (
-                "A backdrop still covers the page after dismissal"
-            )
+        # Visible-filtered: MUI keeps detached hidden backdrops in the
+        # DOM, so a bare count (or a .first peek) checks the wrong thing
+        expect(
+            self.page.locator("div[class*='MuiBackdrop-root']:visible")
+        ).to_have_count(0)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -160,6 +169,11 @@ class TestLprViewsIntegration:
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page, step_capture):
+        if not SITE_NAME or not CAMERA_NAME:
+            pytest.skip(
+                "test_site_name / test_camera_name not configured "
+                "for this ENV (see config/env/)"
+            )
         self.page = authenticated_page
         self.step_capture = step_capture
         step_capture.set_page(self.page)

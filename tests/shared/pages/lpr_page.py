@@ -294,13 +294,26 @@ class LprPage:
         ).first
         dropdown_btn.wait_for(state="visible", timeout=30000)
         dropdown_btn.click()
-        site_rows.first.wait_for(state="visible", timeout=15000)
+        # The header is a toggle: if the panel was open with rows still
+        # rendering, that click closed it - one more click self-heals
+        try:
+            site_rows.first.wait_for(state="visible", timeout=15000)
+        except PlaywrightError:
+            dropdown_btn.click()
+            site_rows.first.wait_for(state="visible", timeout=15000)
 
     def dismiss_any_backdrop(self):
-        """Helper to close any open modal/backdrop before proceeding."""
+        """Helper to close any open modal/backdrop before proceeding.
+
+        Gates on visible backdrops: MUI leaves detached hidden
+        backdrops in the DOM, so a .first check can look at a stale
+        one while a real backdrop sits later in the list.
+        """
         try:
-            backdrop = self.page.locator("div[class*='MuiBackdrop-root']")
-            if backdrop.count() > 0 and backdrop.first.is_visible(timeout=2000):
+            backdrop = self.page.locator(
+                "div[class*='MuiBackdrop-root']:visible"
+            )
+            if backdrop.count() > 0:
                 print("[LPR] Backdrop detected, dismissing with Escape")
                 self.page.keyboard.press("Escape")
                 backdrop.first.wait_for(state="hidden", timeout=10000)
@@ -412,25 +425,34 @@ class LprPage:
         group = self.open_site_group(site_name, group_name)
 
         if play_all_cameras:
+            # The oracle stays at one new stream: the shared tenant
+            # keeps offline cameras in the group, so requiring all of
+            # them would fail on tenant state, not on the drop
             source = group
-            print(f"[LPR] Playing every camera in '{group_name}'")
+            print(f"[LPR] Playing the '{group_name}' group")
         else:
             cameras = self.page.locator("div[draggable='true']").filter(
                 has_text=camera_name
             )
             # Expand the group only when the camera is not already
-            # showing: a click on an expanded group collapses it
+            # showing: a click on an expanded group collapses it. If
+            # that first click collapsed a slow-rendering open group,
+            # one more click self-heals before the loud failure.
             try:
                 cameras.first.wait_for(state="visible", timeout=2000)
             except PlaywrightError:
                 group.click()
                 try:
-                    cameras.first.wait_for(state="visible", timeout=30000)
+                    cameras.first.wait_for(state="visible", timeout=20000)
                 except PlaywrightError:
-                    raise AssertionError(
-                        f"Camera '{camera_name}' is not in group "
-                        f"'{group_name}' of site '{site_name}'"
-                    ) from None
+                    group.click()
+                    try:
+                        cameras.first.wait_for(state="visible", timeout=15000)
+                    except PlaywrightError:
+                        raise AssertionError(
+                            f"Camera '{camera_name}' is not in group "
+                            f"'{group_name}' of site '{site_name}'"
+                        ) from None
             source = cameras.first
             print(f"[LPR] Camera '{camera_name}' found")
 
@@ -442,20 +464,22 @@ class LprPage:
 
         # No loader wait: empty tiles keep placeholder spinners alive
         # forever (same trap as in-camera search), so CircularProgress
-        # hidden can never finish. The new stream element is the signal.
-        # Baseline delta: a failed tile left over from the saved layout
-        # must not fail this drop
-        if self.page.locator("text=failed to load").count() > failed_before:
-            raise AssertionError(
-                f"Stream failed to load for '{camera_name or group_name}'"
-            )
-
+        # hidden can never finish. The new stream element is the signal;
+        # failed_before keeps a leftover failed tile from being blamed.
         # A new stream element past the baseline is the played signal
         try:
             self.page.locator("video").nth(before).wait_for(
                 state="attached", timeout=60000
             )
         except PlaywrightError:
+            # Name the real cause when the app rendered a failure
+            if self.page.locator(
+                "text=failed to load"
+            ).count() > failed_before:
+                raise AssertionError(
+                    f"Stream failed to load for "
+                    f"'{camera_name or group_name}'"
+                ) from None
             raise AssertionError(
                 f"No new stream appeared after dropping "
                 f"'{camera_name or group_name}' (had {before} videos)"
@@ -477,6 +501,11 @@ class LprPage:
         # force: tile overlays (controls fade layer) intercept the
         # actionability check while the click itself lands fine
         video.click(force=True)
+        # The player's live icon appearing is the activation signal
+        # (measured: it shows only after the tile click)
+        self.page.locator("img[alt='live icon']").first.wait_for(
+            state="visible", timeout=10000
+        )
         print("[LPR] Camera tile activated")
 
     # ===================== Views Page Methods =====================

@@ -117,7 +117,7 @@ class TestViewsSubtabs:
 
         Steps:
         1. Click Devices tab (default)
-        2. Expand site (Driver Site) -> Click "All Cameras"
+        2. Expand the configured site -> Click "All Cameras"
         3. Hover camera thumbnail to reveal checkbox
         4. Click checkbox
 
@@ -290,7 +290,7 @@ class TestViewsSubtabs:
 
         Steps:
         1. Click Maps tab
-        2. Click site to expand (Driver Site)
+        2. Click site to expand
         3. Hover map thumbnail -> Click checkbox
 
         Success: Tile count decreases OR map content (leaflet/iframe) appears
@@ -306,7 +306,7 @@ class TestViewsSubtabs:
         # deciding to skip - an instant count() races the panel render
         map_thumb = self.page.locator(".cameraThumbnailWrapper").first
         if not self.views._appears(map_thumb, timeout=5000):
-            pytest.skip("No maps available under Driver Site")
+            pytest.skip("No maps available under the configured site")
 
         checkbox = self._reveal_checkbox(map_thumb)
         if checkbox is None:
@@ -315,13 +315,9 @@ class TestViewsSubtabs:
         baseline = self._content_baseline(content_sel)
         checkbox.click()
 
-        # Wait for map to load (loader may not appear for cached maps)
-        try:
-            loader = self.page.locator("[class*='CircularProgress']")
-            if loader.count() > 0:
-                loader.wait_for(state="hidden", timeout=60000)
-        except Exception:
-            pass
+        # No loader wait: empty tiles keep placeholder spinners alive,
+        # so CircularProgress hidden can never finish; the content
+        # poll below is the signal
 
         assert self._content_added(initial_tiles, content_sel, baseline), \
             f"Map not added. Tiles: {initial_tiles} -> {self.views.get_available_tile_count()}"
@@ -460,8 +456,13 @@ class TestViewsSubtabs:
 
         checkbox = self._reveal_checkbox(widget_card)
         if checkbox is None:
-            # Widget checkboxes sometimes render outside the card
-            fallback = self.page.locator(".sidebar-custom-checkbox").first
+            # Widget checkboxes sometimes render outside the card;
+            # scope to the panel so a stray checkbox from another
+            # subtab's item is never clicked
+            fallback = self.page.locator(
+                ".viewTabPanel .sidebar-custom-checkbox, "
+                ".sidebar-content .sidebar-custom-checkbox"
+            ).first
             if self.views._appears(fallback, timeout=2000):
                 checkbox = fallback
         if checkbox is None:
@@ -474,17 +475,13 @@ class TestViewsSubtabs:
                 "drag-to-tile is the supported add path"
             )
 
-        content_sel = (
-            "canvas, svg, [class*='chart'], [class*='graph'], "
-            "[class*='widget'], [class*='insight'], iframe"
-        )
-        baseline = self._content_baseline(content_sel)
+        # Tile-count oracle only: the sidebar previews match any
+        # content selector page-wide, so a consumed tile is the one
+        # signal a misfired add cannot fake
         checkbox.click()
-        if not self._content_added(initial_tiles, content_sel, baseline):
-            pytest.fail(
-                f"Insight widget not added. Tiles: {initial_tiles} -> "
-                f"{self.views.get_available_tile_count()}"
-            )
+        expect(self.views.drag_drop_tiles).to_have_count(
+            initial_tiles - 1, timeout=15000
+        )
 
     @pytest.mark.ui
     @pytest.mark.subtabs
@@ -529,20 +526,15 @@ class TestViewsSubtabs:
 
         # Forced drag, measured working 08/12/2026; the unforced drag
         # completes without adding anything
-        content_sel = (
-            "canvas, svg, [class*='chart'], [class*='graph'], "
-            "[class*='widget'], [class*='insight'], iframe"
-        )
-        baseline = self._content_baseline(content_sel)
         target_tile.scroll_into_view_if_needed()
         self._visible_drag(widget_card, target_tile, force=True)
 
-        # The consumed tile is the added signal
-        if not self._content_added(initial_tiles, content_sel, baseline):
-            pytest.fail(
-                f"Insight widget drag did not consume a tile. Tiles: "
-                f"{initial_tiles} -> {self.views.get_available_tile_count()}"
-            )
+        # Tile-count oracle only: the sidebar previews match any
+        # content selector page-wide, so a consumed tile is the one
+        # signal a misdropped drag cannot fake
+        expect(self.views.drag_drop_tiles).to_have_count(
+            initial_tiles - 1, timeout=15000
+        )
 
     # =========================================================================
     # HELPER METHODS

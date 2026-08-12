@@ -203,11 +203,13 @@ class TestAdminRules:
         # The rule must exist by name: a closed wizard alone would also
         # pass a save the backend rejected. The list truncates the Name
         # cell in the DOM ('Entry-Exit_Auto_202608...'), so search by
-        # the full unique name and assert the row by prefix: any row
-        # the search returns is this rule
+        # the full unique name and require EXACTLY ONE matching row.
+        # to_have_count polls until the filter settles: the unfiltered
+        # table (many rows) and a rejected save (zero rows) both fail,
+        # and so does a leaked same-type row surviving the filter.
         expect(self.admin.rule_search_input).to_be_visible(timeout=15000)
         self.admin.search_rule(rule_name)
         expect(
-            self.page.locator("tr").filter(has_text=rule_name[:20]).first
-        ).to_be_visible(timeout=15000)
+            self.page.locator("tr").filter(has_text=rule_name[:20])
+        ).to_have_count(1, timeout=15000)
         self.admin.search_rule("")
