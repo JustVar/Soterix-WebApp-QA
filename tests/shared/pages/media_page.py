@@ -33,8 +33,8 @@ class MediaPage:
         self.tab_folders = page.locator("span:has-text('Folders')").first
         self.tab_vault = page.locator("span:has-text('Vault')").first
 
-        # Content area - media items (clips/folders displayed as cards)
-        self.media_items = page.locator(".media-card, .media-item, [class*='media']").first
+        # Item names render as inline inputs (see item_names/item_row);
+        # there is no card class on the current list layout
 
         # Empty state
         self.no_results_text = page.locator(
@@ -75,31 +75,21 @@ class MediaPage:
         self.folder_dropdown = page.locator(".modalForm-input-event")
         self.move_button = page.locator("button:has-text('Move')")
 
-        # Vault icons
-        self.add_to_vault_icon = page.locator("img[alt='Add to Vault']").first
-        self.remove_from_vault_icon = page.locator(
-            "img[alt='Remove from Vault']"
-        ).first
-
         # Share dialog
-        self.share_icon = page.locator("img[alt='Share']").first
         self.email_input = page.locator(
             "input[placeholder='Add Email ID']"
         )
-        self.share_button = page.locator("span:has-text('Share')").first
+        # Exact text: a has-text substring also matches the
+        # 'Shared With Me' tab label, which precedes the dialog
+        self.share_button = page.get_by_text("Share", exact=True).first
         self.share_success = page.locator(".successfull-container")
 
         # Export
-        self.download_icon = page.locator("img[alt='Export']").first
-        self.export_span = page.locator("span:has-text('Export')").first
+        # Exact text: has-text substring matches wrapper spans too
+        self.export_span = page.get_by_text("Export", exact=True).first
 
         # Create link dialog
         self.create_button = page.locator("span:has-text('Create')").first
-
-        # Rename input
-        self.rename_input = page.locator(
-            "input[class*='rename'], input.MuiInputBase-input"
-        ).first
 
         # Search
         self.search_input = page.locator(
@@ -217,8 +207,9 @@ class MediaPage:
         """
         self.group_clips_action.click()
         self.group_clips_confirm.click()
-        # The confirm control leaves the DOM when grouping starts
-        self._appears_hidden(self.group_clips_confirm, timeout=15000)
+        # The confirm control leaves the DOM when grouping starts; a
+        # stuck dialog raises
+        self.group_clips_confirm.wait_for(state="hidden", timeout=15000)
         self._wait_for_page_ready()
 
     def open_options_menu(self, index: int = 0):
@@ -235,72 +226,108 @@ class MediaPage:
         ).first.wait_for(state="visible", timeout=10000)
 
     def click_menu_item(self, text: str):
-        """Click a menu item by text in the currently open context menu."""
+        """Click a menu item by text in the currently open context menu.
+
+        Visible-filtered: stale keepMounted menus stay in the DOM.
+        """
         item = self.page.locator(
-            f"li[role='menuitem']:has-text('{text}')"
+            f"li[role='menuitem']:has-text('{text}'):visible"
         ).first
         item.wait_for(state="visible", timeout=5000)
         item.click()
         # The menu closes once the action registers
         self._appears_hidden(item, timeout=10000)
 
-    def rename_item(self, new_name: str):
-        """Rename a clip or folder after opening the Rename option.
+    def item_names(self) -> list[str]:
+        """Names of the visible list items.
 
-        Opens options menu, clicks Rename, enters name, presses Enter.
+        Names render as inline text inputs (invisible to text
+        engines), bare of class, with the name as value. This reads
+        the live value property; item_row and the applied-signal
+        waits match the value ATTRIBUTE - the app mirrors the two
+        (measured 08/12/2026), and a future divergence shows up as
+        item_names returning a name item_row cannot find.
         """
-        self.open_options_menu()
-        self.click_menu_item("Rename")
+        return self.page.evaluate(
+            """() => [...document.querySelectorAll("input[type='text']")]
+                .filter(i => i.getClientRects().length > 0
+                        && !i.className && i.value
+                        && i.getAttribute('title') === i.value)
+                .map(i => i.value)"""
+        )
 
-        self.rename_input.wait_for(state="visible", timeout=5000)
-        self.rename_input.click()
-        self.rename_input.fill(new_name)
-        self.rename_input.press("Enter")
-        # The inline input closes when the rename commits
-        if not self._appears_hidden(self.rename_input, timeout=10000):
-            print("[MEDIA] Rename submitted but the input is still "
-                  "visible after 10s")
-        self._wait_for_page_ready()
+    def item_row(self, name: str):
+        """The list row of a named item (clip or folder)."""
+        if "'" in name or '"' in name:
+            raise ValueError(
+                f"Item name {name!r} would break the value selector; "
+                "quote-bearing names need an escaping strategy first"
+            )
+        return self.page.locator(f"input[value='{name}']").locator(
+            "xpath=ancestor::*[.//img[contains(@src,'icon-options')]][1]"
+        ).first
+
+    def rename_item(self, current: str, new_name: str):
+        """Rename a named item; the success toast is the server ack.
+
+        The inline input updates optimistically, so only the toast
+        proves the rename committed - a rename can look done in the
+        DOM and never reach the server (measured 08/12/2026). The
+        toast lingers for seconds, so back-to-back renames must
+        serialize on its ABSENCE first or the second wait matches
+        the first rename's toast (also measured, the hard way). The
+        row anchor keys on the value being edited, so the input node
+        is held as a handle across the fill. The toast text is
+        measured for clips; folder renames are unmeasured.
+        """
+        toast = self.page.get_by_text("File name updated successfully")
+        toast.first.wait_for(state="hidden", timeout=10000)
+        row = self.item_row(current)
+        row.locator("img[src*='icon-options']").first.click()
+        self.click_menu_item("Rename")
+        handle = row.locator("input[type='text']").first.element_handle()
+        handle.fill(new_name)
+        # A maxlength (or a not-yet-editable input) truncates or drops
+        # the fill silently; verify before committing
+        typed = handle.evaluate("el => el.value")
+        if typed != new_name:
+            raise RuntimeError(
+                f"Name input holds {typed!r} after filling {new_name!r}"
+            )
+        handle.press("Enter")
+        toast.first.wait_for(state="visible", timeout=10000)
 
     def delete_item(self):
         """Delete a clip or folder via options menu > Delete > confirm.
 
-        Opens options menu, clicks Delete, then confirms.
+        Opens options menu, clicks Delete, then confirms. The dialog
+        leaving the DOM is the applied signal; a stuck dialog raises.
         """
         self.open_options_menu()
         self.click_menu_item("Delete")
         self.confirm_button.click()
-        # The dialog leaves the DOM with its confirm button
-        self._appears_hidden(self.confirm_button, timeout=15000)
+        self.confirm_button.wait_for(state="hidden", timeout=15000)
         self._wait_for_page_ready()
 
-    def create_link_for_item(self):
-        """Create a link for a clip or folder via options menu.
+    def open_create_link_dialog(self, name: str):
+        """Open the Create Link dialog for a named item.
 
-        Opens options menu, clicks 'Create Link'. The app may either
-        show a confirmation dialog with a 'Create' button or create
-        the link immediately without a dialog.
+        The dialog carries Start/End/Duration, an optional link name,
+        and Cancel/Create (measured 08/12/2026).
         """
-        self.open_options_menu()
+        row = self.item_row(name)
+        row.locator("img[src*='icon-options']").first.click()
+        self.click_menu_item("Create Link")
+        self.page.get_by_text("Add Link Name").first.wait_for(
+            state="visible", timeout=10000
+        )
 
-        # Create Link may be in an li or a different menu structure
-        create_link = self.page.locator(
-            "li:has-text('Create Link')"
-        ).first
-        create_link.wait_for(state="visible", timeout=5000)
-        create_link.click()
-        self._appears_hidden(create_link, timeout=10000)
-
-        # A confirmation dialog may appear; without one the link was
-        # created immediately
-        create_btn = self.page.locator(
-            "button:has-text('Create'), "
-            "[class*='modal'] button, "
-            ".MuiDialog-root button"
-        ).first
-        if self._appears(create_btn, timeout=3000):
-            create_btn.click()
-            self._appears_hidden(create_btn, timeout=10000)
+    def cancel_dialog(self):
+        """Cancel the open dialog; its Cancel control leaving is the
+        closed signal."""
+        cancel = self.page.get_by_text("Cancel", exact=True).first
+        cancel.click()
+        cancel.wait_for(state="hidden", timeout=10000)
 
     def move_clip_to_folder(self):
         """Move a selected clip to an existing folder.
@@ -337,65 +364,74 @@ class MediaPage:
         }""")
 
         self.move_button.click()
-        # The move dialog leaves the DOM with its button
-        self._appears_hidden(self.move_button, timeout=15000)
+        # The move dialog leaves the DOM with its button; stuck raises
+        self.move_button.wait_for(state="hidden", timeout=15000)
         self._wait_for_page_ready()
         return True
 
     # --- Vault operations ---
 
-    def add_to_vault(self):
-        """Click the 'Add to Vault' icon on the first visible item."""
-        # Hover the first media item to reveal action icons; the icon
-        # wait below covers the reveal
-        self.media_items.hover()
-        self.add_to_vault_icon.wait_for(state="visible", timeout=10000)
-        self.add_to_vault_icon.click()
-        # The add icon leaves the item once it is vaulted
-        if not self._appears_hidden(self.add_to_vault_icon, timeout=10000):
-            print("[MEDIA] Add to Vault clicked but the icon is still "
-                  "visible after 10s")
+    def add_to_vault(self, name: str):
+        """Vault a named item.
 
-    def remove_from_vault(self):
-        """Click 'Remove from Vault' icon and confirm with 'Yes'."""
-        self.remove_from_vault_icon.wait_for(state="visible", timeout=10000)
-        self.remove_from_vault_icon.click()
+        Vaulting FLAGS the item: it appears in the Vault tab and
+        stays in its list (measured 08/12/2026 - an earlier 'the row
+        moves' reading was a name-desync artifact). The live signal
+        is the row's Add icon detaching after its spinner cycle.
+        """
+        row = self.item_row(name)
+        add_icon = row.locator("img[alt='Add to Vault']").first
+        add_icon.click()
+        add_icon.wait_for(state="detached", timeout=15000)
 
-        # Confirm removal; the dialog leaves the DOM with the button
+    def remove_from_vault(self, name: str):
+        """Un-vault a named item from the Vault tab (Yes confirm).
+
+        The row leaving the Vault list is the applied signal.
+        """
+        row = self.item_row(name)
+        row.locator("img[alt='Remove from Vault']").first.click()
+        # Visible-filtered: a stale keepMounted confirm from earlier
+        # in the session can sit first in DOM order
         yes_button = self.page.locator(
-            "button:has-text('Yes')"
+            "button:has-text('Yes'):visible"
         ).first
         yes_button.wait_for(state="visible", timeout=5000)
         yes_button.click()
-        self._appears_hidden(yes_button, timeout=15000)
+        self.page.locator(f"input[value='{name}']").wait_for(
+            state="detached", timeout=15000
+        )
 
     # --- Share ---
 
-    def share_folder(self, email: str = "test@example.com"):
-        """Share a folder via the share icon and email dialog."""
-        self.media_items.hover()
-        self.share_icon.click()
+    def share_item(self, name: str, email: str = "test@example.com"):
+        """Share a named item via its row Share icon and email dialog.
+
+        The success panel is the shared signal; its absence raises.
+        """
+        row = self.item_row(name)
+        row.locator("img[alt='Share']").first.click()
 
         self.email_input.wait_for(state="visible", timeout=10000)
         self.email_input.fill(email)
 
         self.share_button.click()
-        # The success panel is the sharing-done signal
-        if not self._appears(self.share_success, timeout=10000):
-            print("[MEDIA] Share clicked but no success panel appeared "
-                  "within 10s")
+        self.share_success.first.wait_for(state="visible", timeout=10000)
 
     # --- Export ---
 
-    def export_folder(self):
-        """Export a folder via the download icon."""
-        self.media_items.hover()
-        self.download_icon.click()
+    def export_item(self, name: str):
+        """Export a named item via its row Export icon.
+
+        The export control leaving the DOM is the started signal; a
+        stuck control raises.
+        """
+        row = self.item_row(name)
+        row.locator("img[alt='Export']").first.click()
 
         self.export_span.wait_for(state="visible", timeout=10000)
         self.export_span.click()
-        # The export control leaves the DOM once the export starts
-        self._appears_hidden(self.export_span, timeout=10000)
+        self.export_span.wait_for(state="hidden", timeout=10000)
 
     # --- Search ---
 

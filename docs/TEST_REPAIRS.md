@@ -26,6 +26,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 
 | Test | Status | Detail |
 |------|--------|--------|
+| tests/ui/media/test_media_operations.py destructive set (clip delete, folder delete, grouping, move to folder) | [INVESTIGATE] | Held as skips 08/12/2026: these operated on the team's clips (the old delete removed the first list item; grouping relocates team clips into a folder). Before activating, measure whether deleting a folder deletes the clips grouped into it and whether ungrouping exists - if folder delete only ungroups, the whole chain becomes safe own-data (group two clips, operate on the folder, delete it). Needs Justin's answer or a disposable measurement. The rest of the file is rebuilt on measured mechanisms: names are inline inputs (text engines cannot see them - the old rename typed into the SEARCH box because its locator matched that first), the rename success toast is the server ack (an optimistic rename can show in the DOM and never commit - measured), and vaulting MOVES the row between the list and the Vault tab. |
 | tests/ui/licenses/test_license_assignment.py TestLicenseAssignModal (4 tests) | [DONE] | Rebuilt, green and stable 08/09/2026. The button is 'Assign New', only on the Assigned Licenses tab (the old bare :has-text('Assign') clause clicked the tab itself). It opens a customMuiModal overlay; no Cancel control, Escape dismisses. A present-but-unresponsive button fails loud instead of skipping, and the Site assertion is scoped to the option list (the tab's table underneath also renders site names). |
 | tests/ui/search/test_search_categories.py vehicle tests | [DONE] | Un-skipped and green 08/09/2026 - the 'no vehicle detections' premise was false. The SearchPage filter helpers went dead with the 2026-08 sidebar (the old code clicked the label, not the value control, and its JS fallbacks returned without error), so no filters applied and searches never dispatched. Rebuilt: _open_section clicks the value control with substring matching (labels carry zero-width spaces, so exact text never matches), site row + All Cameras via the scrollBarCustom panel, durations via .dropdownItem, and the section value leaving 'Select' as the applied signal. Categories 7/7 green. |
 
@@ -57,6 +58,7 @@ users/rules/sites (with honest redesign skips), 4-worker xdist run
 | tests/ui/admin/test_admin_sites.py test_search_site "Driver" | [DATA] | Fixed 08/09/2026: was typing the old site name and only asserting the input echoed it (vacuous). Now searches the configured site's first word. |
 | tests/ui/search/test_search_categories.py step text 'Driver Site' | [DATA] | Fixed 08/09/2026: mark text and the limitation note no longer name the old site. The vehicle-detection premise stays open in section B. |
 | tests/steps/manual/maps/maps.json and test_insights_navigation.json | [ARTIFACT] | Sidecar actions say "Driver Site"; update alongside the next sidecar sync. |
+| tests/steps/ui/media/test_media_operations.json | [ARTIFACT] | Sidecar titles/steps describe the pre-rebuild flow (edit-form rename, hover icons); regenerate from the rebuilt tests at the next sidecar sync, case keys kept. |
 
 ## B2. Search suites - revalidated with the rebuilt filter helpers
 
@@ -100,6 +102,16 @@ teardowns landed. Remaining manual pass:
 
 ## Known app behavior (confirmed, not bugs)
 
+- **The Media page serves stale state per page load.** Measured
+  08/12/2026, two faces of one behavior: (1) only the FIRST rename
+  in a page load commits - later ones are silently dropped, no
+  toast, no error, no server change (retries at +0s through +180s
+  all dropped; a hard reload re-arms the next rename); (2) the
+  Vault tab's listing does not pick up items vaulted in the same
+  page load - a fresh session or hard reload always shows them.
+  Possibly an app defect worth reporting; until then, media tests
+  hard-reload between mutations and before reading vault state.
+
 - **The rule wizard hides cameras at rule capacity.** Measured
   08/12/2026: with 6 leftover automation rules on the site, Select
   Devices listed 1 of the site's 5 cameras; deleting the rules brought
@@ -133,8 +145,8 @@ and the call is burning its full timeout. Swept all 08/08-08/09 run
 outputs: zero occurrences, so every premise that ran held. Keep
 sweeping future runs:
 
-- `[MEDIA] Add to Vault clicked but the icon is still visible` /
-  `no success panel appeared` (media_page vault + share signals)
+- (retired 08/12/2026: the media vault and share warning prints are
+  raises now - the media rebuild removed both watch items)
 - `[EVENTS] Review Pinned Clips clicked but the button is still visible`
   (method currently unused by tests)
 - `[VIEWS] open saved view finished but the empty-tile count stayed`
@@ -181,12 +193,14 @@ checker, and the probe harness.
 The new checker rules enumerate the standing versions of the classes
 the recent repairs fixed (`python tools/convention_check.py --all`):
 
-- **33 tests with no failure path** (no assert/expect, no raising
-  wait): test_media_operations.py carries 13 of them; the rest
-  spread over admin_general (3), lpr_grid_and_timer (3), chats (2),
-  lpr_widgets (2), insights_widgets (2), and singles. These are the
-  rebuild worklist, ordered with the section C verify rows - a test
-  that cannot fail is not coverage.
+- **33 tests with no failure path** at sweep time (no assert/expect,
+  no raising wait): test_media_operations.py carried 13 - fixed
+  08/12/2026 (9 rebuilt with real oracles, 4 held as explicit skips,
+  see section B). The rest spread over admin_general (3),
+  lpr_grid_and_timer (3), chats (2), lpr_widgets (2),
+  insights_widgets (2), and singles - re-run `--all` for the live
+  count. These are the rebuild worklist, ordered with the section C
+  verify rows - a test that cannot fail is not coverage.
 - **110 except blocks that only print** - triage alongside each
   file's rebuild; cleanup paths may keep them with a why-comment.
 - **4 .first/.last picks on union selectors**, the hidden-copy trap.
