@@ -1,6 +1,7 @@
 """Admin Sites tests - navigation, search, view toggle, status, versions,
 camera sorting, camera group CRUD."""
 import datetime
+import re
 
 import pytest
 from playwright.sync_api import expect
@@ -179,8 +180,11 @@ class TestAdminSites:
 
         self._open_first_site()
 
-        # The site detail view shows camera cards
-        expect(self.page.locator("div.site-card").first).to_be_visible(timeout=10000)
+        # The Groups dropdown marks the detail view (the redesigned
+        # detail has no div.site-card and the URL does not change)
+        expect(self.page.get_by_text("Groups:").first).to_be_visible(
+            timeout=10000
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -303,33 +307,41 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_search_inside_site(self):
-        """Verify searching for cameras within a site detail view."""
+        """Verify searching for cameras within a site detail view.
+
+        The redesigned detail lists cameras as name + IP rows with a
+        per-camera panel. Searching the configured camera's full name
+        must leave exactly its row.
+        """
+        site_name = config.get("test_site_name", "")
+        camera = config.get("test_camera_name", "")
+        if not site_name or not camera:
+            pytest.skip(
+                "test_site_name / test_camera_name not configured "
+                "for this ENV (see config/env/)"
+            )
+
         self._navigate_to_sites()
-        self._open_first_site()
-        self._skip_if_redesigned_detail()
+        if not self._appears(self.page.locator(
+                f"p.MuiTypography-root:text-is('{site_name}')")):
+            pytest.skip(f"Site '{site_name}' not on the Sites page")
+        self.admin.click_site(site_name)
 
-        # Get a camera name to search for
-        cameras = self.admin.get_camera_names()
-        if not cameras:
-            pytest.skip("No cameras found in site")
+        # Camera rows render async after the detail marker; each row
+        # carries an 'IP: <addr>' line, unlike the panel's bare 'IP:'
+        ip_rows = self.page.get_by_text(re.compile(r"IP: \d"))
+        expect(ip_rows.first).to_be_visible(timeout=15000)
+        row_count = ip_rows.count()
 
-        # Use the first word of the first camera name as search term
-        search_term = cameras[0].split()[0]
-        self.admin.search_inside_site(search_term)
+        self.admin.search_inside_site(camera)
 
-        # Wait for filtered results instead of reading the count instantly
-        results = self.page.locator("div.site-card")
-        assert self._appears(results, timeout=10000), (
-            f"No results found when searching for '{search_term}'"
-        )
+        # The full unique name filters to exactly one row; the count
+        # settling there is the filter-applied signal
+        expect(
+            self.page.get_by_text(camera, exact=True).first
+        ).to_be_visible(timeout=10000)
+        expect(ip_rows).to_have_count(1, timeout=10000)
 
-        # Verify at least one result contains the search term
-        found = False
-        for i in range(results.count()):
-            text = results.nth(i).inner_text().strip()
-            if search_term.lower() in text.lower():
-                found = True
-                break
-        assert found, (
-            f"Search term '{search_term}' not found in any result"
-        )
+        # Clearing restores the list
+        self.admin.search_inside_site("")
+        expect(ip_rows).to_have_count(row_count, timeout=10000)

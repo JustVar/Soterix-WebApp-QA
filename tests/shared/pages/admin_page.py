@@ -536,19 +536,24 @@ class AdminPage:
         return versions
 
     def click_site(self, site_name: str):
-        """Click a site card to navigate into the site detail view."""
+        """Click a site card to navigate into the site detail view.
+
+        The detail signal is the Groups dropdown label: the redesigned
+        detail has no div.site-card, and the URL does not change. A
+        click that lands during list hydration is silently dropped,
+        so the signal gets one retry.
+        """
         site = self.page.locator(
             f"p.MuiTypography-root:text-is('{site_name}')"
         )
         site.wait_for(state="visible", timeout=10000)
         site.click()
-        # The site-card content is the signal the detail view rendered
+        detail = self.page.get_by_text("Groups:").first
         try:
-            self.page.locator("div.site-card").first.wait_for(
-                state="visible", timeout=10000
-            )
+            detail.wait_for(state="visible", timeout=10000)
         except Exception:
-            pass
+            site.click()
+            detail.wait_for(state="visible", timeout=15000)
 
     def get_camera_names(self) -> list[str]:
         """Return a list of camera names visible in the site detail view."""
