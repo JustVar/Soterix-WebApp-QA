@@ -840,11 +840,22 @@ class AdminPage:
         )
         self._check_wizard_camera()
 
+        # Heat Map class rules configure Set Rule through the 'Use full
+        # view' switch; the canvas rules draw a region. The Set Rule
+        # modal shows BOTH texts for the full-view types, so the branch
+        # keys on the rule type, not on which prompt happens to render.
+        full_view_rules = {"Heat Map", "Loitering", "Occupancy"}
+
         # Walk the steps: handle the canvas and the name input where
         # they appear, advance on Next, finish on Save
         for step in range(6):
-            # Set Rule blocks Next until configured: canvas rules draw
-            # a region; Heat Map class rules offer 'Use full view'
+            full_view = self.page.get_by_text(
+                "Use full view", exact=False
+            ).first
+            try:
+                fv_visible = full_view.is_visible()
+            except Exception:
+                fv_visible = False
             region_prompt = self.page.get_by_text(
                 "Create Region", exact=False
             ).first
@@ -852,40 +863,42 @@ class AdminPage:
                 region_visible = region_prompt.is_visible()
             except Exception:
                 region_visible = False
-            if region_visible:
-                self._draw_wizard_region()
-            else:
-                full_view = self.page.get_by_text(
-                    "Use full view", exact=False
+
+            if rule_type in full_view_rules and fv_visible:
+                # The label text does not toggle the switch: JS-click
+                # the input (zero-dimension MUI input pattern)
+                sw = full_view.locator(
+                    "xpath=ancestor::label[1]"
+                ).locator("input").first
+                if sw.count() > 0 and not sw.evaluate("el => el.checked"):
+                    sw.evaluate("el => el.click()")
+                # Done arms only after the snapshot loads, and the
+                # modal backdrop eats pointer clicks - wait for the
+                # armed button, then click it through JS
+                done = self.page.locator(
+                    "button.btn-done:not([disabled])"
                 ).first
-                try:
-                    if full_view.is_visible():
-                        # The label text does not toggle its checkbox:
-                        # JS-click the input beside it (zero-dimension
-                        # MUI input pattern)
-                        cb = full_view.locator(
-                            "xpath=ancestor::*[.//input][1]"
-                        ).locator("input").first
-                        if cb.count() > 0:
-                            cb.evaluate("el => el.click()")
-                        else:
-                            full_view.click()
-                        self.page.wait_for_timeout(500)  # state, no signal
-                        done = self.page.locator("button.btn-done").first
-                        if done.is_visible():
-                            done.click()
-                            # Commit has no DOM signal
-                            self.page.wait_for_timeout(1000)
-                except Exception:
-                    pass
+                done.wait_for(state="visible", timeout=30000)
+                done.evaluate("el => el.click()")
+                self.page.wait_for_timeout(1000)  # close has no signal
+            elif region_visible:
+                self._draw_wizard_region()
 
             nxt = self.page.get_by_text("Next", exact=True).first
             try:
                 nxt.wait_for(state="visible", timeout=5000)
                 nxt.click(timeout=10000)
             except Exception as e:
-                print(f"[ADMIN] Wizard step {step}: Next not clickable: "
-                      f"{str(e)[:80]}")
+                # A lingering invisible backdrop can eat pointer
+                # clicks; a JS click is safe because a disabled Next
+                # ignores it
+                try:
+                    self.page.locator(
+                        "button.btn-primary:has-text('Next')"
+                    ).first.evaluate("el => el.click()")
+                except Exception:
+                    print(f"[ADMIN] Wizard step {step}: Next not "
+                          f"clickable: {str(e)[:80]}")
             # Step transitions re-render in place with no signal
             self.page.wait_for_timeout(1500)
 
