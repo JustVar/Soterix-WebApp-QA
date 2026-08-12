@@ -13,8 +13,12 @@ In the REPL or probe script these names are in scope:
   page      - the Playwright page, logged in, on the app
   config    - the active env config dict
   pw        - the sync_playwright handle
+  snap      - snap("label") saves a screenshot to reports/probe_shots/
+              and prints its path
 
 Probe scripts are plain Python run with exec(); print what you learn.
+Snap at every decision point: a screenshot settles layout questions
+(what covers what, where a panel floats) that DOM dumps argue about.
 
 Lessons already paid for (keep them in mind when probing):
 - position:fixed overlays (MUI modals) have offsetParent === null, so
@@ -65,7 +69,19 @@ def main() -> int:
                 os.environ["QA_USER"], os.environ["QA_PASSWORD"]
             )
 
-        scope = {"page": page, "config": config, "pw": pw}
+        shots = REPO / "reports" / "probe_shots"
+        counter = {"n": 0}
+
+        def snap(label: str = "probe") -> str:
+            """Save a screenshot; the path prints so it can be opened."""
+            shots.mkdir(parents=True, exist_ok=True)
+            counter["n"] += 1
+            path = shots / f"{label}_{counter['n']:02d}.png"
+            page.screenshot(path=str(path))
+            print(f"[SNAP] {path}")
+            return str(path)
+
+        scope = {"page": page, "config": config, "pw": pw, "snap": snap}
         if args.script:
             source = Path(args.script).read_text(encoding="utf-8")
             exec(compile(source, args.script, "exec"), scope)  # noqa: S102

@@ -150,10 +150,23 @@ sweeping future runs:
 `tools/explore_app.py` is the probe harness that closed the assign and
 favorites items: it opens the app logged in (cached state or fresh
 login) with the repo's page objects importable, as a REPL or running a
-probe script. Use it for the remaining section A rebuilds instead of
-guessing selectors. Its docstring carries the paid-for lessons
-(fixed-position modals dodge offsetParent checks; probed state decays;
-close what you open).
+probe script. Use it for rebuilds instead of guessing selectors. Its
+docstring carries the paid-for lessons (fixed-position modals dodge
+offsetParent checks; probed state decays; close what you open), and
+probe scripts now have `snap("label")` in scope - screenshots settle
+layout questions (what covers what, where a panel floats) that DOM
+dumps argue about; the first-tile-under-the-panel diagnosis cost three
+rounds that one screenshot would have ended.
+
+Discipline since 08/12/2026: the defect-class review runs on the
+UNCOMMITTED diff before the first commit, and every class a review
+finds becomes a convention_check rule so it cannot recur. Claims
+about app mechanisms go in commit messages and this register only
+when a probe measured them; anything extrapolated is written as
+unmeasured. When a fix changes a shared fact (a title, a signal, a
+helper's contract), the same batch greps every consumer of that fact
+- the retitled popup silently disarming three checks in a sibling
+file is the lesson.
 
 On Playwright's official test agents (planner/generator/healer,
 playwright.dev/docs/test-agents, checked 08/09/2026): they require the
@@ -162,6 +175,21 @@ playwright.config.ts, VS Code 1.105+) and offer no Python support, so
 they do not plug into this pytest framework. The roles they automate
 are covered here by trace-first triage, this register, the convention
 checker, and the probe harness.
+
+## G2. Oracle debt (08/12/2026 whole-repo sweep)
+
+The new checker rules enumerate the standing versions of the classes
+the recent repairs fixed (`python tools/convention_check.py --all`):
+
+- **33 tests with no failure path** (no assert/expect, no raising
+  wait): test_media_operations.py carries 13 of them; the rest
+  spread over admin_general (3), lpr_grid_and_timer (3), chats (2),
+  lpr_widgets (2), insights_widgets (2), and singles. These are the
+  rebuild worklist, ordered with the section C verify rows - a test
+  that cannot fail is not coverage.
+- **110 except blocks that only print** - triage alongside each
+  file's rebuild; cleanup paths may keep them with a why-comment.
+- **4 .first/.last picks on union selectors**, the hidden-copy trap.
 
 ## G. Conversion debt (not broken, still on old sleeps)
 

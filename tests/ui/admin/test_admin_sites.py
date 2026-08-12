@@ -225,7 +225,11 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_create_camera_group(self):
-        """Verify creating a new camera group with camera selection."""
+        """Verify creating a new camera group with camera selection.
+
+        The oracle lives in create_camera_group: its form-close wait
+        raises when the Create never lands.
+        """
         self._navigate_to_sites()
         self._open_first_site()
 

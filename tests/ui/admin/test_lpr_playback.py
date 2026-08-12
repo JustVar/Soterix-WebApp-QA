@@ -216,7 +216,11 @@ class TestLprViewsIntegration:
     @pytest.mark.livestream
     @pytest.mark.flaky(reruns=1)
     def test_play_camera_by_location(self):
-        """Verify the configured camera plays from its site group."""
+        """Verify the configured camera plays from its site group.
+
+        The oracle lives in play_camera: it raises when the camera is
+        missing or no new stream appears past the baseline.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -232,7 +236,11 @@ class TestLprViewsIntegration:
     @pytest.mark.livestream
     @pytest.mark.flaky(reruns=1)
     def test_play_all_cameras(self):
-        """Verify the whole camera group plays onto the tiles."""
+        """Verify the whole camera group plays onto the tiles.
+
+        The oracle lives in play_camera: it raises when no new stream
+        appears past the baseline after the group drop.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 

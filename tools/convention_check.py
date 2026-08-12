@@ -2,7 +2,12 @@
 
 Ruff checks Python style. This tool checks the rules ruff cannot see:
 uncommented sleeps, in-test QA Touch markers, absolute count oracles,
-icon locator guesses, and hardcoded tenant names.
+icon locator guesses, hardcoded tenant names, except blocks that
+swallow failures into prints, test bodies with no oracle, and
+.first/.last picks on union selectors.
+
+Every rule here started as a defect found in review; when a review
+finds a new class, it gets a detector so the class cannot recur.
 
 By default the tool checks only the lines ADDED since HEAD, so standing
 debt in files you did not touch never blocks you. Untracked test files
@@ -36,6 +41,18 @@ QATOUCH_RE = re.compile(r"@pytest\.mark\.qatouch")
 ABS_COUNT_RE = re.compile(r"\.count\(\)\s*(?:>\s*0|>=\s*[01])\b")
 IMG_SRC_RE = re.compile(r"img\[src\*?=")
 TENANT_NAME_RE = re.compile(r"[\"'](?:Driver Site|Hanwha)")
+# locator("a, b").first/.last - .last can resolve to a hidden copy in
+# a different container (the video-canvas union lesson)
+UNION_PICK_RE = re.compile(
+    r"locator\(\s*[\"'][^\"']*,[^\"']*[\"']\s*\)\s*\.\s*(?:first|last)\b"
+)
+EXCEPT_RE = re.compile(r"^\s*except\b.*:")
+TEST_DEF_RE = re.compile(r"^\s*def (test_\w+)")
+# Anything in a test body that can fail the test
+ORACLE_RE = re.compile(
+    r"\bassert\b|\bexpect\s*\(|pytest\.(?:fail|raises|xfail)|"
+    r"\.wait_for\s*\(|wait_for_function\s*\("
+)
 
 
 def line_is_excused(lines: list[str], idx: int) -> bool:
@@ -89,9 +106,85 @@ def check_line(path: str, lines: list[str], idx: int) -> list[dict]:
             "msg": "the shared tenant renames things. Use test_site_name / "
                    "test_camera_name from config/env/ instead.",
         })
+    if UNION_PICK_RE.search(line):
+        findings.append({
+            "sev": "MEDIUM", "rule": "union-first-last",
+            "msg": ".first/.last on a union selector can resolve to a "
+                   "hidden copy of the OTHER selector. Split the union or "
+                   "scope it to a container.",
+        })
 
     for f in findings:
         f["path"], f["line"], f["text"] = path, idx + 1, stripped
+    return findings
+
+
+def _block_range(lines: list[str], idx: int) -> range:
+    """Line indexes of the indented block that starts after line idx."""
+    indent = len(lines[idx]) - len(lines[idx].lstrip())
+    end = idx + 1
+    while end < len(lines):
+        line = lines[end]
+        if line.strip() and (len(line) - len(line.lstrip())) <= indent:
+            break
+        end += 1
+    return range(idx + 1, end)
+
+
+def check_except_blocks(path: str, lines: list[str]) -> list[dict]:
+    """Except blocks whose only content is print/pass/continue.
+
+    A swallowed failure reads as a pass - the pattern behind every
+    vacuous-green suite this repo has repaired. A why-comment on the
+    except line (or the line above) excuses a deliberate best-effort
+    block, cleanup paths mostly.
+    """
+    findings = []
+    for idx, line in enumerate(lines):
+        if not EXCEPT_RE.match(line):
+            continue
+        if "#" in line or (idx > 0 and lines[idx - 1].strip().startswith("#")):
+            continue
+        body = [lines[i].strip() for i in _block_range(lines, idx)]
+        code = [s for s in body if s and not s.startswith("#")]
+        if code and all(
+            s.startswith(("print(", "pass", "continue")) for s in code
+        ):
+            findings.append({
+                "sev": "MEDIUM", "rule": "except-swallow",
+                "path": path, "line": idx + 1, "text": line.strip(),
+                "msg": "except block only prints or passes: a real failure "
+                       "reads as a pass. Re-raise, pytest.fail, or comment "
+                       "why best-effort is correct here.",
+            })
+    return findings
+
+
+def check_no_oracle_tests(path: str, lines: list[str]) -> list[dict]:
+    """Test functions whose body can never fail.
+
+    A body with no assert, no expect, no pytest.fail/raises, and no
+    raising wait is green no matter what the app does. A body line
+    mentioning 'oracle' excuses a deliberate delegation to a raising
+    page-object call - the comment names where the failure comes from.
+    """
+    findings = []
+    for idx, line in enumerate(lines):
+        m = TEST_DEF_RE.match(line)
+        if not m:
+            continue
+        body = [lines[i] for i in _block_range(lines, idx)]
+        if any("oracle" in b.lower() for b in body):
+            continue
+        if not any(ORACLE_RE.search(b) for b in body):
+            findings.append({
+                "sev": "MEDIUM", "rule": "no-oracle-test",
+                "path": path, "line": idx + 1, "text": line.strip(),
+                "msg": f"{m.group(1)} has no assert/expect and no raising "
+                       "wait in its body: it cannot fail. If the oracle "
+                       "lives in a raising page-object call, comment which "
+                       "call carries it.",
+            })
     return findings
 
 
@@ -163,12 +256,26 @@ def main() -> int:
             lines = read_lines(path)
             for idx in range(len(lines)):
                 findings.extend(check_line(path, lines, idx))
+            findings.extend(check_except_blocks(path, lines))
+            findings.extend(check_no_oracle_tests(path, lines))
     else:
         for path, line_nums in added_lines_since(args.base).items():
             lines = read_lines(path)
+            added = set(line_nums)
             for n in line_nums:
                 if n - 1 < len(lines):
                     findings.extend(check_line(path, lines, n - 1))
+            # Block rules anchor on the except/def line; only blocks
+            # the diff touched are reported
+            for f in check_except_blocks(path, lines):
+                if f["line"] in added:
+                    findings.append(f)
+            for f in check_no_oracle_tests(path, lines):
+                block = _block_range(lines, f["line"] - 1)
+                if f["line"] in added or any(
+                    (i + 1) in added for i in block
+                ):
+                    findings.append(f)
 
     high = [f for f in findings if f["sev"] == "HIGH"]
     medium = [f for f in findings if f["sev"] == "MEDIUM"]
