@@ -1,16 +1,27 @@
-"""Admin Event Wall tests - configuration, event display, and layout.
+"""Admin Event Wall tests - configuration table and the Add form.
 
-Extends the Admin General tests with deeper validation of the Event Wall
-sub-section under Admin > General. Verifies the event wall configuration
-page, event display, site/camera selection, and layout behavior.
+Rebuilt 08/13/2026 on the measured page. Admin > General is a card
+layout; the Event Wall card's View link opens 'General > Event Wall':
+a configuration TABLE (Configuration Name | Site | No of Devices |
+Devices, 'No configuration found.' when empty) with an Add
+Configuration button. The Add modal holds the Configuration Name
+input, an Available Cameras panel (site accordion rows + search), the
+Select Rule combobox, Configured Details, and Cancel/Save. The old
+tests clicked the card TITLE (a no-op) and probed page-level
+dropdowns, event images, and grids that do not exist on this page.
 """
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Error as PlaywrightError, expect
 from tests.shared.pages.admin_page import AdminPage
+
+from config.base_config import config
+
+SITE_NAME = config.get("test_site_name")
+CAMERA_NAME = config.get("test_camera_name")
 
 
 class TestAdminEventWall:
-    """Deeper tests for Admin > General > Event Wall."""
+    """Tests for Admin > General > Event Wall configuration."""
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page):
@@ -18,20 +29,65 @@ class TestAdminEventWall:
         self.admin = AdminPage(self.page)
         self.admin.navigate_to_admin()
 
-        # Navigate to General > Event Wall
+        # General renders as cards; the Rules sub-tab marks it ready
         self.admin.general_tab.wait_for(state="visible", timeout=10000)
         self.admin.general_tab.click()
-        self.page.wait_for_timeout(2000)
+        self.page.locator("p:text-is('Rules')").first.wait_for(
+            state="visible", timeout=10000
+        )
 
-        self.event_wall = self.page.get_by_text(
-            "Event Wall", exact=False
+        # The Event Wall card's View link is the entry point (the
+        # card title itself is a no-op)
+        card = self.page.locator(".MuiCard-root").filter(
+            has_text="Event Wall"
         ).first
-        if self.event_wall.count() == 0 or not self.event_wall.is_visible():
-            pytest.skip("Event Wall tab not found in General section")
+        try:
+            card.wait_for(state="visible", timeout=10000)
+        except PlaywrightError:
+            pytest.skip("Event Wall card not found on Admin > General")
+        card.get_by_text("View", exact=False).first.click()
 
-        self.event_wall.click()
-        self.page.wait_for_timeout(3000)
+        # the Add Configuration button is the arrived signal
+        self.add_config = self.page.get_by_text(
+            "Add Configuration", exact=True
+        )
+        self.add_config.wait_for(state="visible", timeout=15000)
         yield
+
+    def _open_add_form(self):
+        """Open the Add Configuration modal; the name input is the
+        open marker."""
+        self.add_config.click()
+        name_input = self.page.locator("input[name='name']")
+        name_input.wait_for(state="visible", timeout=10000)
+        return name_input
+
+    def _close_add_form(self):
+        """Cancel out of the modal; the name input leaving is the
+        closed signal."""
+        self.page.get_by_text("Cancel", exact=True).first.click()
+        self.page.locator("input[name='name']").wait_for(
+            state="hidden", timeout=10000
+        )
+
+    def _back_to_general_cards(self):
+        """Return to the General cards via the breadcrumb (the whole
+        'General > Event Wall' crumb is one clickable p; the section
+        tab is a no-op while already inside General - measured)."""
+        self.page.get_by_text("General >", exact=False).first.click()
+        expect(self.page.locator(".MuiCard-root").filter(
+            has_text="Event Wall"
+        ).first).to_be_visible(timeout=10000)
+
+    def _expand_site_to_groups(self):
+        """In the Add form, expand the config site; sites expand to
+        camera GROUPS (measured), cameras sit one level deeper."""
+        site_row = self.page.get_by_text(SITE_NAME, exact=False).first
+        site_row.wait_for(state="visible", timeout=10000)
+        site_row.click()
+        group_row = self.page.get_by_text("All Cameras", exact=True).first
+        group_row.wait_for(state="visible", timeout=10000)
+        return group_row
 
     # --- Page structure ---
 
@@ -39,191 +95,151 @@ class TestAdminEventWall:
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
     def test_event_wall_page_loads(self):
-        """Verify Event Wall page loads with visible content."""
-        assert "admin" in self.page.url.lower()
-
-        # Should have a configuration area or event display
-        has_content = (
-            self.page.locator("div.MuiBox-root").count() > 5
-            or self.page.locator("[class*='event'], [class*='wall']").count() > 0
-            or self.page.locator("img").count() > 2
-        )
-        assert has_content, "Event Wall page should have visible content"
+        """The Event Wall page shows its breadcrumb and Add button."""
+        expect(self.page.get_by_text(
+            "General > Event Wall", exact=False
+        ).first).to_be_visible(timeout=10000)
+        expect(self.add_config).to_be_visible()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
     def test_event_wall_has_configuration_area(self):
-        """Verify Event Wall has a configuration or settings area."""
-        config_elements = self.page.locator(
-            "select, .MuiSelect-root, "
-            "input[type='checkbox'], .MuiSwitch-root, "
-            "button, .MuiButton-root, "
-            "[class*='config'], [class*='setting']"
-        )
-        assert config_elements.count() > 0, (
-            "Expected configuration elements on Event Wall page"
-        )
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.admin_event_wall
-    def test_event_wall_site_selector(self):
-        """Verify Event Wall has a site selection dropdown."""
-        dropdown = self.page.locator(
-            "div[role='combobox'], .MuiSelect-select, "
-            "select, [class*='dropdown'], [class*='select']"
-        )
-        if dropdown.count() == 0:
-            pytest.skip("No site selector dropdown found on Event Wall")
-
-        expect(dropdown.first).to_be_visible(timeout=10000)
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.admin_event_wall
-    def test_event_wall_site_dropdown_opens(self):
-        """Verify the site dropdown can be opened on Event Wall."""
-        dropdown = self.page.locator(
-            "div[role='combobox'], .MuiSelect-select"
-        ).first
-        if dropdown.count() == 0 or not dropdown.is_visible():
-            pytest.skip("No dropdown found on Event Wall")
-
-        dropdown.click()
-        self.page.wait_for_timeout(1000)
-
-        # Should show options
-        options = self.page.locator(
-            "[role='listbox'], [role='option'], li.MuiMenuItem-root"
-        )
-        has_options = options.count() > 0
-        self.page.keyboard.press("Escape")
-
-        assert has_options, "Dropdown should show options when opened"
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.admin_event_wall
-    def test_event_wall_has_rule_types(self):
-        """Verify Event Wall shows rule type filters or labels."""
-        rule_keywords = [
-            "Intrusion", "Entry", "Exit", "Line", "Heat",
-            "Loitering", "Occupancy", "Detection",
-        ]
-        found_rule = False
-        for kw in rule_keywords:
-            locator = self.page.locator(f"text=/{kw}/i")
-            if locator.count() > 0:
-                found_rule = True
-                break
-
-        if found_rule:
-            assert found_rule
-            return
-
-        # Check for checkbox or toggle elements that might be rule selectors
-        toggles = self.page.locator(
-            "input[type='checkbox'], .MuiSwitch-root, "
-            ".MuiCheckbox-root"
-        )
-        if toggles.count() > 0:
-            assert toggles.count() > 0
-            return
-
-        # Event Wall config may not display rule types directly
-        pytest.skip("No rule type labels or filter toggles found on Event Wall")
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.admin_event_wall
-    def test_event_wall_camera_checkboxes(self):
-        """Verify Event Wall has camera selection checkboxes."""
-        checkboxes = self.page.locator(
-            "input[type='checkbox'], .MuiCheckbox-root, "
-            ".MuiSwitch-root, input.PrivateSwitchBase-input"
-        )
-        if checkboxes.count() == 0:
-            pytest.skip("No checkboxes found on Event Wall")
-
-        assert checkboxes.count() > 0, "Expected camera selection checkboxes"
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.admin_event_wall
-    def test_event_wall_toggle_checkbox(self):
-        """Verify a checkbox on Event Wall can be toggled."""
-        checkboxes = self.page.locator(
-            "input[type='checkbox']:not([disabled])"
-        )
-        if checkboxes.count() == 0:
-            checkboxes = self.page.locator(
-                ".MuiCheckbox-root, .MuiSwitch-root"
-            )
-        if checkboxes.count() == 0:
-            pytest.skip("No toggleable checkboxes found")
-
-        checkboxes.first.click(force=True)
-        self.page.wait_for_timeout(1000)
-
-        # Page should remain valid
-        assert "admin" in self.page.url.lower()
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.admin_event_wall
-    def test_event_wall_event_images(self):
-        """Verify Event Wall displays event images or thumbnails."""
-        images = self.page.locator(
-            "img[src*='data:image'], img[src*='snapshot'], "
-            "img[src*='event'], img[src*='thumb'], "
-            "img:not([src*='icon']):not([src*='logo'])"
-        )
-        # Event wall may or may not have images depending on events
-        if images.count() > 0:
-            expect(images.first).to_be_visible(timeout=10000)
-        else:
-            # No event images - check for empty state text
-            has_empty_state = (
-                self.page.locator("text=/no event/i").count() > 0
-                or self.page.locator("text=/no data/i").count() > 0
-                or self.page.locator("[class*='empty']").count() > 0
-            )
-            # Either images or empty state should exist - page is still valid
-            assert "admin" in self.page.url.lower()
+        """The configuration table renders its column headers."""
+        for header in ("Configuration Name", "Site", "Devices"):
+            expect(self.page.get_by_text(header, exact=True).first
+                   ).to_be_visible(timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
     def test_event_wall_grid_layout(self):
-        """Verify Event Wall uses a grid or card-based layout for events."""
-        grid_elements = self.page.locator(
-            "[class*='grid'], [class*='card'], "
-            ".MuiGrid-root, .MuiCard-root, "
-            "[class*='tile'], [class*='wall']"
+        """The table shows data rows or the measured empty state."""
+        empty = self.page.get_by_text("No configuration found.",
+                                      exact=True)
+        rows = self.page.locator("table tbody tr")
+        either = empty.or_(rows.first)
+        expect(either.first).to_be_visible(timeout=10000)
+
+    # --- The Add Configuration form ---
+
+    @pytest.mark.ui
+    @pytest.mark.admin
+    @pytest.mark.admin_event_wall
+    def test_event_wall_site_selector(self):
+        """The Add form lists sites under Available Cameras."""
+        self._open_add_form()
+        expect(self.page.get_by_text("Available Cameras", exact=True)
+               ).to_be_visible(timeout=10000)
+        expect(self.page.get_by_text(SITE_NAME, exact=False).first
+               ).to_be_visible(timeout=10000)
+        self._close_add_form()
+
+    @pytest.mark.ui
+    @pytest.mark.admin
+    @pytest.mark.admin_event_wall
+    def test_event_wall_site_dropdown_opens(self):
+        """A site accordion row expands to its camera groups."""
+        self._open_add_form()
+        # oracle: _expand_site_to_groups raises unless the group list
+        # renders (sites expand to groups, not cameras - measured)
+        self._expand_site_to_groups()
+        self._close_add_form()
+
+    @pytest.mark.ui
+    @pytest.mark.admin
+    @pytest.mark.admin_event_wall
+    def test_event_wall_has_rule_types(self):
+        """The Add form carries the Select Rule dropdown."""
+        self._open_add_form()
+        expect(self.page.locator(
+            "div[role='combobox'], .MuiSelect-select"
+        ).first).to_be_visible(timeout=10000)
+        self._close_add_form()
+
+    @pytest.mark.ui
+    @pytest.mark.admin
+    @pytest.mark.admin_event_wall
+    def test_event_wall_camera_checkboxes(self):
+        """Camera rows expose a selection control once a group expands."""
+        self._open_add_form()
+        group_row = self._expand_site_to_groups()
+        group_row.click()
+        # the config camera appearing is the group-expanded signal
+        self.page.get_by_text(CAMERA_NAME, exact=False).first.wait_for(
+            state="visible", timeout=10000
         )
-        # Event wall should have some kind of layout structure
-        has_layout = (
-            grid_elements.count() > 0
-            or self.page.locator("div.MuiBox-root").count() > 5
+        selectors = self.page.locator(
+            "input[type='checkbox'], .MuiCheckbox-root, "
+            "input.PrivateSwitchBase-input"
         )
-        assert has_layout, "Expected grid or card-based layout"
+        try:
+            selectors.first.wait_for(state="visible", timeout=5000)
+        # none visible: the row itself may be the selection control
+        except PlaywrightError:
+            self._close_add_form()
+            pytest.skip(
+                "Expanded camera rows expose no checkbox on the "
+                "current form - selection may be row-click based"
+            )
+        self._close_add_form()
+
+    @pytest.mark.ui
+    @pytest.mark.admin
+    @pytest.mark.admin_event_wall
+    def test_event_wall_toggle_checkbox(self):
+        """A camera selection control can be toggled."""
+        self._open_add_form()
+        group_row = self._expand_site_to_groups()
+        group_row.click()
+        self.page.get_by_text(CAMERA_NAME, exact=False).first.wait_for(
+            state="visible", timeout=10000
+        )
+        boxes = self.page.locator("input[type='checkbox']")
+        try:
+            boxes.first.wait_for(state="visible", timeout=5000)
+        # no checkbox: same current-form behavior as the test above
+        except PlaywrightError:
+            self._close_add_form()
+            pytest.skip("No toggleable checkbox on the current form")
+        before = boxes.first.is_checked()
+        boxes.first.click()
+        if before:
+            expect(boxes.first).not_to_be_checked(timeout=5000)
+        else:
+            expect(boxes.first).to_be_checked(timeout=5000)
+        self._close_add_form()
+
+    @pytest.mark.ui
+    @pytest.mark.admin
+    @pytest.mark.admin_event_wall
+    def test_event_wall_event_images(self):
+        """The live event wall display is out of this account's reach.
+
+        The wall itself is a separate UI experience behind a special
+        local-access login (that user logs in, selects a site, and
+        the wall appears); the regular login only configures it here
+        (per Justin, 08/13/2026). Covering the display needs that
+        account provisioned for automation.
+        """
+        # oracle: none by design - an explicit hold until the wall's
+        # special login is provisioned for automation
+        pytest.skip(
+            "The event wall display requires the special local-access "
+            "login; the regular account covers configuration only"
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
     def test_event_wall_save_or_apply(self):
-        """Verify Event Wall has a save or apply button for configuration."""
-        save_btn = self.page.locator(
-            "button:has-text('Save'), "
-            "button:has-text('Apply'), "
-            "button:has-text('Update'), "
-            "button.btn-primary"
-        )
-        if save_btn.count() == 0:
-            pytest.skip("No save/apply button found on Event Wall")
-
-        expect(save_btn.first).to_be_visible(timeout=10000)
+        """The Add form carries Save and Cancel."""
+        self._open_add_form()
+        expect(self.page.get_by_text("Save", exact=True).first
+               ).to_be_visible(timeout=10000)
+        expect(self.page.get_by_text("Cancel", exact=True).first
+               ).to_be_visible()
+        self._close_add_form()
 
     # --- Navigation ---
 
@@ -231,73 +247,62 @@ class TestAdminEventWall:
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
     def test_back_to_general_from_event_wall(self):
-        """Verify navigating back from Event Wall to General section works."""
-        general_link = self.page.locator(
-            "a:has-text('General'), "
-            "span:has-text('General'), "
-            "p:text-is('General')"
-        )
+        """The breadcrumb returns to the General cards page."""
+        # oracle: _back_to_general_cards expects the cards visible
+        self._back_to_general_cards()
 
-        if general_link.count() > 0 and general_link.first.is_visible():
-            general_link.first.click()
-        else:
-            self.admin.general_tab.click()
+    def _open_card_view(self, card_title: str, arrival):
+        """Click a General card's View and wait for arrival.
 
-        self.page.wait_for_timeout(2000)
-
-        # .first: 'Rules' appears in both the sidebar and General content
-        rules_tab = self.page.locator("p:text-is('Rules')").first
-        expect(rules_tab).to_be_visible(timeout=10000)
+        A View click right after the cards page re-renders can be
+        silently dropped (the hydration behavior the sites rebuild
+        measured), so one retry click self-heals.
+        """
+        card = self.page.locator(".MuiCard-root").filter(
+            has_text=card_title
+        ).first
+        card.wait_for(state="visible", timeout=10000)
+        card.get_by_text("View", exact=False).first.click()
+        try:
+            arrival.wait_for(state="visible", timeout=7000)
+        except PlaywrightError:
+            card.get_by_text("View", exact=False).first.click()
+            arrival.wait_for(state="visible", timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
     def test_event_wall_to_audit_trail_round_trip(self):
-        """Verify navigating from Event Wall to Audit Trail and back."""
-        # Go to Audit Trail
-        audit = self.page.get_by_text("Audit Trail", exact=False).first
-        if audit.count() == 0:
-            # Navigate back to General first - use .first to avoid strict mode
-            self.page.locator("p:text-is('General')").first.click()
-            self.page.wait_for_timeout(2000)
-            audit = self.page.get_by_text("Audit Trail", exact=False).first
+        """Event Wall -> General cards -> Event Wall round trip.
 
-        if audit.count() == 0 or not audit.is_visible():
-            pytest.skip("Audit Trail tab not accessible from Event Wall")
-
-        audit.click()
-        self.page.wait_for_timeout(2000)
-
-        # Go back to Event Wall - use .first to avoid strict mode
-        self.page.locator("p:text-is('General')").first.click()
-        self.page.wait_for_timeout(2000)
-        event_wall = self.page.get_by_text("Event Wall", exact=False).first
-        event_wall.click()
-        self.page.wait_for_timeout(2000)
-
-        assert "admin" in self.page.url.lower()
+        The Audit Trail leg is dropped: its View click does not
+        navigate in-page even with the hydration retry (measured
+        08/13/2026, twice) - where it goes belongs to the audit
+        file's rebuild.
+        """
+        # oracle: both helpers raise unless their arrival markers
+        # render (cards page, then Add Configuration)
+        self._back_to_general_cards()
+        self._open_card_view(
+            "Event Wall",
+            self.page.get_by_text("Add Configuration", exact=True),
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
     def test_event_wall_after_refresh(self):
-        """Verify Event Wall page loads correctly after browser refresh."""
+        """The admin section stays valid after a browser refresh."""
+        # reload waits for the load event on its own
         self.page.reload()
-        self.page.wait_for_timeout(3000)
-
         assert "admin" in self.page.url.lower()
+        self.admin.general_tab.wait_for(state="visible", timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_event_wall
     def test_event_wall_scrollable(self):
-        """Verify Event Wall content area is scrollable when content overflows."""
-        # Scroll down to verify the page scrolls
+        """The page survives scrolling (synchronous, no settle)."""
         self.page.evaluate("window.scrollBy(0, 300)")
-        self.page.wait_for_timeout(500)
-
-        # Scroll back up
         self.page.evaluate("window.scrollTo(0, 0)")
-        self.page.wait_for_timeout(500)
-
-        assert "admin" in self.page.url.lower()
+        expect(self.add_config).to_be_visible()

@@ -3,8 +3,9 @@
 Ruff checks Python style. This tool checks the rules ruff cannot see:
 uncommented sleeps, in-test QA Touch markers, absolute count oracles,
 icon locator guesses, hardcoded tenant names, except blocks that
-swallow failures into prints, test bodies with no oracle, and
-.first/.last picks on union selectors.
+swallow failures into prints, test bodies with no oracle, early
+test-body returns (vacuous passes), and .first/.last picks on union
+selectors.
 
 Every rule here started as a defect found in review; when a review
 finds a new class, it gets a detector so the class cannot recur.
@@ -201,6 +202,40 @@ def check_no_oracle_tests(path: str, lines: list[str]) -> list[dict]:
     return findings
 
 
+def check_early_exit_tests(path: str, lines: list[str]) -> list[dict]:
+    """Bare return statements inside test bodies.
+
+    A test that returns early passes with its remaining steps and
+    asserts never run - the class behind the LPR camera selection
+    file, whose three tests hunted a panel on the wrong page, printed
+    INFO, and returned green for months. Static oracle checks cannot
+    see unreachable asserts, so the return itself is the tell. A
+    why-comment on the return line (or the line above) excuses a
+    deliberate one.
+    """
+    findings = []
+    for idx, line in enumerate(lines):
+        if not TEST_DEF_RE.match(line):
+            continue
+        for i in _block_range(lines, idx):
+            body_line = lines[i]
+            if not re.match(r"^\s*return\b", body_line):
+                continue
+            if "#" in body_line or (
+                i > 0 and lines[i - 1].strip().startswith("#")
+            ):
+                continue
+            findings.append({
+                "sev": "MEDIUM", "rule": "early-exit-pass",
+                "path": path, "line": i + 1, "text": body_line.strip(),
+                "msg": "return inside a test body: everything after "
+                       "it never runs and the test passes vacuously. "
+                       "Use pytest.skip/fail, or comment why the "
+                       "return is safe.",
+            })
+    return findings
+
+
 def wanted(path: str) -> bool:
     if not path.endswith(".py"):
         return False
@@ -271,6 +306,7 @@ def main() -> int:
                 findings.extend(check_line(path, lines, idx))
             findings.extend(check_except_blocks(path, lines))
             findings.extend(check_no_oracle_tests(path, lines))
+            findings.extend(check_early_exit_tests(path, lines))
     else:
         for path, line_nums in added_lines_since(args.base).items():
             lines = read_lines(path)
@@ -288,6 +324,10 @@ def main() -> int:
                 if f["line"] in added or any(
                     (i + 1) in added for i in block
                 ):
+                    findings.append(f)
+            # early-exit findings anchor on the return line itself
+            for f in check_early_exit_tests(path, lines):
+                if f["line"] in added:
                     findings.append(f)
 
     high = [f for f in findings if f["sev"] == "HIGH"]

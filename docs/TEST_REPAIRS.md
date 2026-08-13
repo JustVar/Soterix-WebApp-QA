@@ -105,6 +105,26 @@ teardowns landed. Remaining manual pass:
 
 ## Known app behavior (confirmed, not bugs)
 
+- **The live event wall is a separate login experience.** Confirmed
+  by Justin 08/13/2026: viewing the actual event wall requires a
+  special user with local access enabled - that user logs in,
+  selects a site, and the wall UI appears (a different experience
+  from the regular app). The regular login only SETS UP the wall
+  (Admin > General > Event Wall card > View: a configuration table
+  plus the Add Configuration modal). Automation coverage of the
+  display side needs that special account provisioned; until then
+  the event-images test holds as an explicit skip.
+- **Admin > General is a card page; card titles are no-ops.** Each
+  card (Deployment, Audit Trail, System Logs, Multi-Factor
+  Authentication, Event Wall) navigates via its View link only, the
+  breadcrumb ('General > X', one clickable p) navigates back, and
+  the General section tab is a no-op while already inside the
+  section (all measured 08/13/2026). A View click right after the
+  cards page re-renders can be silently dropped - same hydration
+  behavior the sites rebuild measured; retry once. The Audit Trail
+  card's View did NOT navigate in-page even with the retry -
+  measure where it goes when rebuilding the audit file.
+
 - **The Media page serves stale state per page load.** Measured
   08/12/2026, two faces of one behavior: (1) only the FIRST rename
   in a page load commits - later ones are silently dropped, no
@@ -241,7 +261,21 @@ test bodies, media deeper/operations, and singles.
 sequences (was 20) converted 08/13/2026 by delegating the test
 bodies to the already-signal-based SequencePage (7/7 green twice);
 lpr_camera_selection (was 13) rebuilt the same day (see section C
-row - its sleeps died with the vacuous early-exit flow).
+row - its sleeps died with the vacuous early-exit flow);
+admin_event_wall (was 12) REBUILT 08/13/2026 - the old suite
+clicked the Event Wall card TITLE (a no-op, see Known app
+behavior) and probed page-level dropdowns/images/grids that only
+ever matched the General page around it. Now 13 green + 1 designed
+skip on the measured config page: breadcrumb + Add Configuration
+arrival, table headers, empty state, and the Add modal (name
+input, site accordion expanding to camera groups then cameras,
+Select Rule combobox, camera checkbox toggle, Save/Cancel).
+
+New checker rule early-exit-pass (08/13/2026): a bare return in a
+test body passes with everything after it unreachable - the class
+static oracle checks cannot see. Standing sweep found 11: audit
+trail (7), event wall (2, gone with its rebuild), events_search
+(2). A why-comment on the return excuses deliberate ones.
 
 views drag_drop (was the largest at 36) converted 08/13/2026, 6
 passed + 1 designed skip. The conversion surfaced a structural
