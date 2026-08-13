@@ -212,10 +212,15 @@ class InsightsPage:
 
     def create_widget(self, graph_name: str = "Line",
                       category_name: str = "Person",
-                      site_name: str = None) -> str:
+                      site_name: str | None = None,
+                      description_name: str | None = None) -> str:
         """Create a widget with specified graph type and category.
 
         Pass site_name=None to use test_site_name from config/env/.
+        For the Event category, description_name selects one named
+        description (e.g. 'License Plate Recognition') instead of the
+        default every-visible-checkbox sweep; the description
+        checkboxes carry the label in their name attribute.
         Returns the generated widget name for later search/operations.
         """
         if site_name is None:
@@ -280,6 +285,12 @@ class InsightsPage:
                 ).first
                 if bike.count() > 0:
                     bike.click()
+            elif description_name:
+                # Event with a named description: the checkbox input
+                # carries the label in its name attribute
+                self.page.locator(
+                    f".PrivateSwitchBase-input[name='{description_name}']"
+                ).click()
             else:
                 # Event: select first visible checkbox in description
                 desc_cbs = self.page.locator(

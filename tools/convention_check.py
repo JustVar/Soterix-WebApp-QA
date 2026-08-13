@@ -48,9 +48,12 @@ UNION_PICK_RE = re.compile(
 )
 EXCEPT_RE = re.compile(r"^\s*except\b.*:")
 TEST_DEF_RE = re.compile(r"^\s*def (test_\w+)")
-# Anything in a test body that can fail the test
+# Anything in a test body that can fail the test. expect.soft counts:
+# pytest-playwright collects soft failures per test and raises them
+# in an ExceptionGroup at test end.
 ORACLE_RE = re.compile(
-    r"\bassert\b|\bexpect\s*\(|pytest\.(?:fail|raises|xfail)|"
+    r"\bassert\b|\bexpect\s*\(|\bexpect\.soft\s*\(|"
+    r"pytest\.(?:fail|raises|xfail)|"
     r"\.wait_for\s*\(|wait_for_function\s*\("
 )
 

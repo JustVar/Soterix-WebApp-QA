@@ -60,6 +60,7 @@ class TestAdminGeneral:
     @pytest.mark.admin_general
     def test_general_section_has_rules_tab(self):
         """Verify the General section contains the Rules sub-tab."""
+        # oracle: _open_general expects the Rules sub-tab visible
         self._open_general()
 
     @pytest.mark.ui
@@ -101,6 +102,8 @@ class TestAdminGeneral:
     @pytest.mark.admin_general
     def test_switch_sites_to_general(self):
         """Verify switching from Sites tab to General tab works."""
+        # oracle: _open_general expects the Rules sub-tab visible
+        # after the switch away from Sites
         self.admin.navigate_to_sites()
         self._open_general()
 

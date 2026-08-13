@@ -20,6 +20,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 | tests/ui/admin/test_admin_sites.py::test_search_inside_site | [DONE] | Rebuilt and green 08/12/2026 for the redesigned detail: cameras are name + IP rows and div.site-card is gone, so click_site's detail signal is now the Groups label with one retry (a click during list hydration is silently dropped - reproduced twice), and test_navigate_to_online_site's oracle moved off site-card too. The test searches the configured camera's full name and requires exactly one IP row, then clears and requires the full list back. _skip_if_redesigned_detail stays for camera sorting, but its 'Add Devices' marker no longer renders, so it never skips - the sorting test still exits honestly on its own sort-icon check. |
 | tests/ui/admin/test_admin_rules wizard tests | [DONE] | All 6 types create rules end to end, green 08/12/2026 (up from zero since the redesign; canvas types came green 08/11). The walker: card picker modal, config camera on Select Devices, then per type - the canvas types (Entry-Exit, Intrusion Detection, Line Crossing) draw on the fabric upper-canvas ONLY (a bare header canvas also exists and clicking relative to it exits the wizard); the full-view types (Heat Map, Loitering, Occupancy) key on the rule type because their Set Rule modal shows BOTH the region prompt and the 'Use full view' switch, verify the switch actually turned on (Done arms on the snapshot load regardless, so an unverified toggle could walk through unconfigured), then JS-click the armed Done - the modal backdrop eats pointer clicks, and Next clicks fall back to JS the same way. Save then the 'Name the Rule' dialog (the name lives there - what rejected the old flow). A stalled walk raises; False only means the picker lacks the type. The create test searches the full unique name and requires exactly one matching row (the list truncates the Name cell in the DOM, so a full-name text match can never succeed), and created rules delete themselves by name at teardown. The 08/11-evening 'device tree never renders' observation is resolved: the wizard hides cameras at rule capacity and leaked pre-teardown Auto rules had capped them - see Known app behavior. |
 | tests/ui/views/test_views_subtabs.py insights add-to-tile | [DONE] | Green 08/12/2026. The affordance is drag-to-tile: widget cards are draggable, and the drop lands as a forced drag with the tile pre-scrolled into view (the unforced drag completes without adding anything - measured on both the old test and the probe). The consumed empty tile is the ONLY oracle (sidebar previews match any content selector page-wide, so content-count checks can pass on a misdrop). The checkbox variant keeps an honest skip (insight widgets expose no hover checkbox, measured 08/07 and 08/12) and now fails loud instead of skipping if a checkbox ever appears and the add still does nothing. |
+| tests/ui/admin/test_lpr_widgets.py (3 tests) | [DONE] | Rebuilt and green 08/13/2026 (3/3, drop test stable across 3 runs). The old file was dead code: the whole creation flow sat inside an except branch AFTER its return, so the test clicked Insights and passed vacuously, no widget ever existed, and the two dependent tests skipped forever. Rebuilt on the shared InsightsPage.create_widget with a new description_name parameter (Event descriptions are labeled checkboxes carrying the label in their name attribute; 'License Plate Recognition' makes the widget an LPR one). The LPR camera page lists LPR widgets in its Widgets panel (search_select_box_container, cards behind skeletons - the visible card is the open marker, fill() filters fine here unlike the chat search). There is NO checkbox on the panel - placing a widget is drag-to-tile like cameras: drop on the LAST empty tile, tile-count baseline plus div.box[aria-label=name] as the landed oracle (zero-data widgets render an EMPTY highcharts title, so the name-in-title check false-fails; the aria-label box renders for both, shortly after the tile is consumed, so the wait retries). An unforced drag can complete without landing anything (same flake the insights add-to-tile fix measured) - one forced retry self-heals. Placement is session-scoped (reload clears it, measured). Each test creates its own widget and deletes it in teardown; delete_widget verified working. Probe snaps: reports/probe_shots/lprw*_*.png. |
 | tests/ui/admin/test_lpr_playback.py (12 tests) | [DONE] | Rebuilt and green 08/12/2026. The whole file asserted nothing: play failures, popup failures, and navigation failures all drowned in info prints while the suite stayed green (the baseline run passed 12/12 with both play tests broken underneath). All 12 tests now fail loud. The play flow matches the current page: the Locations & Cameras panel starts closed and open means a site row is visible (the old accordion-src check never matched, so a second open call closed the panel, and the sub-heading fallback confirmed panels that were shut; the header click now self-heals once because it is a toggle); the tree walks site > group > camera, all draggable rows; the camera drops on the LAST empty tile - the panel floats over the left tiles, so a drop on the first tile lands on the panel and does nothing (this cost three diagnosis rounds: unforced first-tile drags hung on actionability, forced ones dispatched into the panel); a new video past the baseline count is the played signal, with no loader wait (empty tiles keep placeholder spinners alive forever - the in-camera search trap again). The play-all oracle stays at one new stream by design: the shared tenant keeps offline cameras in the group. The timeout popup ('Set Timeout Duration') opens only over a playing stream - its icon tooltip 'Playback Auto-Timeout' shows on any click and satisfied text waits vacuously until 08/12 - Views is detected by its subtab bar because the app renders Views at the root URL, and tile activation waits for the player's live icon - the one element that shows only after the tile click (clicking the last video; a video-canvas union resolves .last to a hidden canvas). Dropped streams are session-scoped (verified: a fresh login shows all tiles empty), so runs leave no layout behind. |
 
 ## B. Skipping today - investigate whether the feature moved or died
@@ -39,7 +40,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 | tests/ui/views/test_views_share.py | [VERIFY] | Exercises the converted share_live_view_on_tile hover chains and copy flow. |
 | tests/ui/views/test_views_fullscreen.py | [VERIFY] | Exercises the converted enter_fullscreen_on_tile zoom-control wait. |
 | tests/ui/views/test_views_playback.py | [VERIFY] | Player controls on tiles; page-object hover paths changed. |
-| tests/ui/insights/test_insights_widgets.py | [VERIFY] | The heavily converted create_widget flow (accordion survivors, dropdownItem-hidden signals) ran 0 times since conversion. Run at least the Line_Person parametrization end to end. |
+| tests/ui/insights/test_insights_widgets.py | [DONE] | Verified 08/13/2026: Line_Person create ran green end to end (112s), and the rebuilt lpr_widgets suite now exercises create_widget (Event + LPR description) and delete_widget on every run. The two no-oracle tests in the file (view/report) stay on the G2 worklist. |
 | tests/ui/admin/test_lpr_camera_selection.py | [VERIFY] | Uses the config camera name against the rebuilt lpr_page; run it (test_lpr_playback is done, see section A). |
 | Headed parity spot-check | [VERIFY] | All verify runs this tranche were headless. Tests must behave identically headed: the viewport is pinned to 1280x720 in both modes (no override in conftest), but the QA team runs headed with --slowmo 300 --verify-mode, and the rebuilt step overlay now injects on every mark() in headed mode. Run test_views_basic headed, and one test headed with --verify-mode, to prove the overlay changes nothing. |
 
@@ -199,13 +200,18 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
   no raising wait): test_media_operations.py carried 13 - fixed
   08/12/2026 (9 rebuilt with real oracles, 4 held as explicit skips,
   see section B). lpr_grid_and_timer (3) cleared with the 08/13
-  rebuild and chats (2) with the panel rebuild the same day. Live
-  count 08/13/2026: admin_general (3), lpr_widgets (2),
-  insights_widgets (2), and 8 singles (maps, license_permissions,
-  views_bookmarks, incamera_search, admin_users, lpr_views,
-  license_assignment, admin_sites - one each). These are the rebuild
-  worklist, ordered with the section C verify rows - a test that
-  cannot fail is not coverage.
+  rebuild and chats (2) with the panel rebuild the same day.
+  admin_general (3) cleared 08/13: one was a checker false positive
+  (expect.soft IS an oracle - pytest-playwright raises collected soft
+  failures at test end; ORACLE_RE now knows), two were oracle
+  delegation to _open_general's expect, now commented; 11/11 green
+  the same day. lpr_widgets (2) cleared 08/13 with the file rebuild
+  (section A row). Live count: insights_widgets (2: view/report) and
+  8 singles (maps, license_permissions, views_bookmarks,
+  incamera_search, admin_users, lpr_views, license_assignment,
+  admin_sites - one each). These are the rebuild worklist, ordered
+  with the section C verify rows - a test that cannot fail is not
+  coverage.
 - **110 except blocks that only print** - triage alongside each
   file's rebuild; cleanup paths may keep them with a why-comment.
 - **4 .first/.last picks on union selectors**, the hidden-copy trap.
@@ -214,9 +220,10 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 
 Test FILES still carry ~380 uncommented sleeps (page objects are done):
 views drag_drop/playback/bookmarks, search suites, the LPR
-test files not yet rebuilt (playback, events, grid_and_timer are
-sleep-free now, and the 08/13 chats rebuild left both chat files
-sleep-free), notifications, c2c, insights dashboard/widgets test
-bodies, license test bodies, sequences test body. Converted file by file with
+test files not yet rebuilt (playback, events, grid_and_timer, and
+widgets are sleep-free now, and the 08/13 chats rebuild left both
+chat files sleep-free), notifications, c2c, insights
+dashboard/widgets test bodies, license test bodies, sequences test
+body. Converted file by file with
 its own verify run, same measure-convert-verify discipline. The
 convention checker blocks NEW sleeps; this table is the old ones.

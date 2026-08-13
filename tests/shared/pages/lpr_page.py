@@ -308,6 +308,92 @@ class LprPage:
             dropdown_btn.click()
             site_rows.first.wait_for(state="visible", timeout=15000)
 
+    # --- Widgets panel (LPR camera page) ---
+
+    @property
+    def widgets_panel(self):
+        """The Widgets select-box on the LPR camera page."""
+        return self.page.locator(
+            ".search_select_box_container"
+        ).filter(has_text="Widgets")
+
+    @property
+    def widget_cards(self):
+        """Widget preview cards inside the Widgets panel."""
+        return self.widgets_panel.locator(".cameraThumbnailWrapper")
+
+    def open_widgets_panel(self):
+        """Open the Widgets panel; open means a widget card is visible.
+
+        Cards load behind skeletons, so the card (not the panel body)
+        is the open marker. The header is a toggle - only click when
+        no card shows yet.
+        """
+        try:
+            self.widget_cards.first.wait_for(state="visible", timeout=2000)
+            return
+        # not open yet (or still loading) - fall through to the click
+        except PlaywrightError:
+            pass
+        self.widgets_panel.locator(
+            "p[class*='select-box-content']:has-text('Widgets')"
+        ).first.click()
+        self.widget_cards.first.wait_for(state="visible", timeout=30000)
+
+    def search_widgets(self, name: str):
+        """Filter the widget cards; returns the matching card locator."""
+        self.widgets_panel.locator(
+            "input[placeholder='Search']"
+        ).fill(name)
+        return self.widget_cards.filter(has_text=name)
+
+    def drop_widget_on_tile(self, widget_name: str):
+        """Drag a widget card onto the last empty tile.
+
+        There is no checkbox on the redesigned panel - placing a
+        widget is a drag, like cameras (measured 08/13/2026). The
+        consumed empty tile is the drop signal and the landed div.box
+        carrying the name in aria-label is the identity check (the
+        chart title stays empty for zero-data widgets). Placement is
+        session-scoped: a reload clears it, so nothing needs cleanup.
+        """
+        card = self.widget_cards.filter(has_text=widget_name)
+        card.first.wait_for(state="visible", timeout=10000)
+
+        tile = self._empty_tile()
+        empty_tiles = self.page.get_by_text(
+            "Drag & Drop Camera here", exact=True
+        )
+        before = empty_tiles.count()
+        tile.scroll_into_view_if_needed()
+        card.first.drag_to(tile)
+
+        # baseline comparison: the drop consumed exactly one tile. An
+        # unforced drag can complete without landing anything (the
+        # same flake the insights add-to-tile fix measured), so one
+        # forced retry self-heals before failing loud.
+        try:
+            expect(empty_tiles).to_have_count(before - 1, timeout=10000)
+        except AssertionError:
+            card.first.drag_to(tile, force=True)
+            expect(empty_tiles).to_have_count(before - 1, timeout=15000)
+
+        # identity: the landed widget renders a div.box carrying the
+        # name in aria-label - even for zero-data widgets, whose
+        # chart title stays empty (measured; renders shortly after
+        # the tile is consumed, so this wait must retry)
+        landed = self.page.locator(
+            f"div.box[aria-label='{widget_name}']"
+        )
+        try:
+            landed.first.wait_for(state="visible", timeout=30000)
+        except PlaywrightError:
+            raise AssertionError(
+                f"A tile was consumed but widget '{widget_name}' does "
+                "not render outside the Widgets panel - the drop "
+                "landed something else"
+            ) from None
+
     def dismiss_any_backdrop(self):
         """Helper to close any open modal/backdrop before proceeding.
 
