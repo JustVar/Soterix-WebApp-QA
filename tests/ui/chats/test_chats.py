@@ -77,7 +77,11 @@ class TestChats:
     @pytest.mark.ui
     @pytest.mark.chats
     def test_search_and_send_group_message(self):
-        """Verify a message can be sent in a group chat."""
+        """Verify a message can be sent in a group chat.
+
+        The oracle lives in send_message: it raises when the sent
+        text never appears in the thread.
+        """
         self.chat.open_chat_panel()
 
         # Create a group first
@@ -105,7 +109,11 @@ class TestChats:
     @pytest.mark.ui
     @pytest.mark.chats
     def test_send_individual_message(self):
-        """Verify a message can be sent to an individual user."""
+        """Verify a message can be sent to an individual user.
+
+        The oracle lives in send_message: it raises when the sent
+        text never appears in the thread.
+        """
         self.chat.open_chat_panel()
 
         # Search for a user
