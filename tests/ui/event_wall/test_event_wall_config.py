@@ -1,14 +1,21 @@
-"""Admin Event Wall tests - configuration table and the Add form.
+"""Event Wall configuration tests (regular login).
 
-Rebuilt 08/13/2026 on the measured page. Admin > General is a card
-layout; the Event Wall card's View link opens 'General > Event Wall':
-a configuration TABLE (Configuration Name | Site | No of Devices |
-Devices, 'No configuration found.' when empty) with an Add
-Configuration button. The Add modal holds the Configuration Name
-input, an Available Cameras panel (site accordion rows + search), the
-Select Rule combobox, Configured Details, and Cancel/Save. The old
-tests clicked the card TITLE (a no-op) and probed page-level
-dropdowns, event images, and grids that do not exist on this page.
+Event Wall is its own feature, deliberately separated from the
+regular app's Views/Events coverage (per Justin, 08/13/2026). It has
+two surfaces that must not be mixed:
+
+- CONFIGURATION (this file): the regular login sets the wall up at
+  Admin > General > Event Wall card > View - a configuration TABLE
+  (Configuration Name | Site | No of Devices | Devices, 'No
+  configuration found.' when empty) plus the Add Configuration modal
+  (name input, Available Cameras site accordion expanding to camera
+  groups then cameras, Select Rule combobox, Cancel/Save).
+- DISPLAY (test_event_wall_display.py): the live wall is a separate
+  UI experience behind a special local-access login.
+
+Rebuilt 08/13/2026 on the measured page; the old suite clicked the
+General card TITLE (a no-op) and probed page-level dropdowns, event
+images, and grids that do not exist on this page.
 """
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
@@ -20,8 +27,8 @@ SITE_NAME = config.get("test_site_name")
 CAMERA_NAME = config.get("test_camera_name")
 
 
-class TestAdminEventWall:
-    """Tests for Admin > General > Event Wall configuration."""
+class TestEventWallConfig:
+    """Tests for the Event Wall configuration surface (regular login)."""
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page):
@@ -93,7 +100,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_page_loads(self):
         """The Event Wall page shows its breadcrumb and Add button."""
         expect(self.page.get_by_text(
@@ -103,7 +110,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_has_configuration_area(self):
         """The configuration table renders its column headers."""
         for header in ("Configuration Name", "Site", "Devices"):
@@ -112,7 +119,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_grid_layout(self):
         """The table shows data rows or the measured empty state."""
         empty = self.page.get_by_text("No configuration found.",
@@ -125,7 +132,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_site_selector(self):
         """The Add form lists sites under Available Cameras."""
         self._open_add_form()
@@ -137,7 +144,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_site_dropdown_opens(self):
         """A site accordion row expands to its camera groups."""
         self._open_add_form()
@@ -148,7 +155,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_has_rule_types(self):
         """The Add form carries the Select Rule dropdown."""
         self._open_add_form()
@@ -159,7 +166,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_camera_checkboxes(self):
         """Camera rows expose a selection control once a group expands."""
         self._open_add_form()
@@ -186,7 +193,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_toggle_checkbox(self):
         """A camera selection control can be toggled."""
         self._open_add_form()
@@ -212,26 +219,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
-    def test_event_wall_event_images(self):
-        """The live event wall display is out of this account's reach.
-
-        The wall itself is a separate UI experience behind a special
-        local-access login (that user logs in, selects a site, and
-        the wall appears); the regular login only configures it here
-        (per Justin, 08/13/2026). Covering the display needs that
-        account provisioned for automation.
-        """
-        # oracle: none by design - an explicit hold until the wall's
-        # special login is provisioned for automation
-        pytest.skip(
-            "The event wall display requires the special local-access "
-            "login; the regular account covers configuration only"
-        )
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_save_or_apply(self):
         """The Add form carries Save and Cancel."""
         self._open_add_form()
@@ -245,7 +233,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_back_to_general_from_event_wall(self):
         """The breadcrumb returns to the General cards page."""
         # oracle: _back_to_general_cards expects the cards visible
@@ -271,7 +259,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_to_audit_trail_round_trip(self):
         """Event Wall -> General cards -> Event Wall round trip.
 
@@ -290,7 +278,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_after_refresh(self):
         """The admin section stays valid after a browser refresh."""
         # reload waits for the load event on its own
@@ -300,7 +288,7 @@ class TestAdminEventWall:
 
     @pytest.mark.ui
     @pytest.mark.admin
-    @pytest.mark.admin_event_wall
+    @pytest.mark.event_wall
     def test_event_wall_scrollable(self):
         """The page survives scrolling (synchronous, no settle)."""
         self.page.evaluate("window.scrollBy(0, 300)")

@@ -2146,84 +2146,84 @@
       "module": "Audit Trail",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_page_loads[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_page_loads[chromium]": {
       "case_key": "VKbeN9",
       "case_title": "Verify general functionality behaves as expected - Event Wall page loads completely without broken UI.",
       "score": 1.0,
       "module": "Event Wall",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_has_configuration_area[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_configuration_area[chromium]": {
       "case_key": "RgGBWd",
       "case_title": "Verify general functionality behaves as expected - Event Wall configuration page opens successfully.",
       "score": 0.6,
       "module": "Event Wall",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_site_selector[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_site_selector[chromium]": {
       "case_key": "B86ENR",
       "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
       "score": 0.5,
       "module": "Event Wall",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_site_dropdown_opens[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_site_dropdown_opens[chromium]": {
       "case_key": "0rzlLl",
       "case_title": "Verify Event Type dropdown opens when clicked",
       "score": 0.6,
       "module": "Category - Event",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_camera_checkboxes[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_camera_checkboxes[chromium]": {
       "case_key": "5BRDm7",
       "case_title": "Verify selecting Camera Tamper filters Event Type correctly",
       "score": 0.5,
       "module": "Category - Event",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_toggle_checkbox[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_toggle_checkbox[chromium]": {
       "case_key": "B86ENR",
       "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
       "score": 0.5,
       "module": "Event Wall",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_event_images[chromium]": {
+    "tests/ui/event_wall/test_event_wall_display.py::TestEventWallDisplay::test_event_wall_event_images[chromium]": {
       "case_key": "gQxw5N",
       "case_title": "Verify Event search result images are valid",
       "score": 0.75,
       "module": "Camera Search Filters",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_grid_layout[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_grid_layout[chromium]": {
       "case_key": "xm9dgR",
       "case_title": "Verify event cards are displayed in grid layout",
       "score": 0.75,
       "module": "Search Results",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_save_or_apply[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_save_or_apply[chromium]": {
       "case_key": "VKbeN2",
       "case_title": "Verify general functionality behaves as expected - Event Wall configuration is saved successfully.",
       "score": 0.62,
       "module": "Event Wall",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_back_to_general_from_event_wall[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_back_to_general_from_event_wall[chromium]": {
       "case_key": "B86ENR",
       "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
       "score": 0.6,
       "module": "Event Wall",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_after_refresh[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_after_refresh[chromium]": {
       "case_key": "J8dzJp",
       "case_title": "Verify Event duration persists after page refresh",
       "score": 0.75,
       "module": "Event - Execution & Results",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_scrollable[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_scrollable[chromium]": {
       "case_key": "B86ENR",
       "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
       "score": 0.67,
@@ -2342,14 +2342,14 @@
       "module": "Audit Trail",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_has_rule_types[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_rule_types[chromium]": {
       "case_key": "RgGBNa",
       "case_title": "Verify general functionality behaves as expected - Intrusion Detection rule is selectable successfully.",
       "score": 1.0,
       "module": "Event Wall",
       "auto_matched": true
     },
-    "tests/ui/admin/test_admin_event_wall.py::TestAdminEventWall::test_event_wall_to_audit_trail_round_trip[chromium]": {
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_to_audit_trail_round_trip[chromium]": {
       "case_key": "68leZv",
       "case_title": "Verify general functionality behaves as expected - User is navigated back to the General landing page from Event Wall.",
       "score": 1.0,

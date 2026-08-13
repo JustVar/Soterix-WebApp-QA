@@ -105,15 +105,22 @@ teardowns landed. Remaining manual pass:
 
 ## Known app behavior (confirmed, not bugs)
 
-- **The live event wall is a separate login experience.** Confirmed
-  by Justin 08/13/2026: viewing the actual event wall requires a
-  special user with local access enabled - that user logs in,
-  selects a site, and the wall UI appears (a different experience
-  from the regular app). The regular login only SETS UP the wall
-  (Admin > General > Event Wall card > View: a configuration table
-  plus the Add Configuration modal). Automation coverage of the
-  display side needs that special account provisioned; until then
-  the event-images test holds as an explicit skip.
+- **Event Wall is its own feature with two surfaces - never mix
+  them, or with regular Views/Events.** Confirmed by Justin
+  08/13/2026: the regular app keeps its normal Views and Events
+  pages; the Event Wall is a separate item. Its CONFIGURATION is
+  done by a regular login (Admin > General > Event Wall card >
+  View: a configuration table plus the Add Configuration modal).
+  Its DISPLAY is a separate UI experience behind a special user
+  with local access enabled - that user logs in, selects a site,
+  and the wall appears. Test structure mirrors this: the feature
+  owns tests/ui/event_wall/ (test_event_wall_config.py runs today
+  on the regular login; test_event_wall_display.py holds as
+  explicit skips until the special account is provisioned for
+  automation, with its own event_wall_display mark). The old
+  admin_event_wall mark is a legacy alias; event_wall is the
+  feature mark. QA Touch mapping keys re-pointed (13 config + 1
+  display).
 - **Admin > General is a card page; card titles are no-ops.** Each
   card (Deployment, Audit Trail, System Logs, Multi-Factor
   Authentication, Event Wall) navigates via its View link only, the
