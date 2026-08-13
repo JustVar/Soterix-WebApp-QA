@@ -233,12 +233,17 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 
 ## G. Conversion debt (not broken, still on old sleeps)
 
-Test FILES still carry ~380 uncommented sleeps (page objects are done):
-views drag_drop/playback/bookmarks, search suites, the LPR
-test files not yet rebuilt (playback, events, grid_and_timer, and
-widgets are sleep-free now, and the 08/13 chats rebuild left both
-chat files sleep-free), notifications, c2c, insights
+Test FILES still carry uncommented sleeps (page objects are done):
+views drag_drop (36, the largest single file), search suites, the
+LPR test files not yet rebuilt, notifications, c2c, insights
 dashboard/widgets test bodies, license test bodies, sequences test
-body. Converted file by file with
+body. Sleep-free as of 08/13/2026: LPR playback/events/
+grid_and_timer/widgets, both chat files, and the views
+fullscreen/share/playback/bookmarks files plus views/conftest (27
+sleeps converted to signal waits in one tranche, all four suites
+25/25 green after conversion - the recurring patterns were settles
+whose real signal already followed on the next line, async
+bookmark-row renders now on bounded first-row waits, and instant
+counts after clicks now on retrying expects). Converted file by file with
 its own verify run, same measure-convert-verify discipline. The
 convention checker blocks NEW sleeps; this table is the old ones.

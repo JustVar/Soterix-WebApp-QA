@@ -5,7 +5,7 @@ volume interaction, share/settings/overlays visibility, live mode
 indicator, and multi-camera fullscreen transitions.
 """
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Error as PlaywrightError, expect
 from tests.shared.pages.views_page import ViewsPage
 from tests.shared.pages.fullscreen_page import FullScreenPage
 
@@ -29,9 +29,8 @@ class TestViewsPlayback:
         )
         if video_tiles.count() == 0:
             self.views.expand_site_and_show_cameras(SITE_NAME)
-            self.page.wait_for_timeout(500)
             self.views.add_first_camera_via_checkbox()
-            self.page.wait_for_timeout(2000)
+            # the tile appearing is the added signal
             video_tiles.first.wait_for(state="visible", timeout=30000)
 
     def _enter_fullscreen(self) -> FullScreenPage:
@@ -96,11 +95,11 @@ class TestViewsPlayback:
 
         # Click volume (toggles mute)
         fs.volume_control.click()
-        self.page.wait_for_timeout(1000)
 
-        # Volume icon should still be visible (just changed state)
+        # the icon stays present through the mute toggle; the
+        # retrying expect absorbs the state flip
         volume_icons = self.page.locator("img[src*='media/volumn']")
-        assert volume_icons.count() > 0, "Volume icon should still be present after click"
+        expect(volume_icons.first).to_be_visible(timeout=5000)
 
     # --- Fullscreen transitions ---
 
@@ -111,9 +110,8 @@ class TestViewsPlayback:
         fs = self._enter_fullscreen()
         assert fs.is_streaming(), "Should stream on first entry"
 
-        # Exit
+        # Exit; the add-tab button returning is the signal
         fs.exit_fullscreen()
-        self.page.wait_for_timeout(1000)
         self.views.add_tab_button.wait_for(state="visible", timeout=10000)
 
         # Re-enter
@@ -127,13 +125,10 @@ class TestViewsPlayback:
         fs = self._enter_fullscreen()
         expect(fs.bookmarks_toggle).to_be_visible(timeout=5000)
 
-        # Open bookmarks panel
+        # Open and close the bookmarks panel; both page-object calls
+        # settle internally
         fs.open_bookmarks_panel()
-        self.page.wait_for_timeout(1000)
-
-        # Close bookmarks panel (toggle again)
         fs.close_bookmarks_panel()
-        self.page.wait_for_timeout(500)
 
         # Player should still be streaming after toggle
         assert fs.is_streaming(), "Stream should remain active after bookmark panel toggle"
@@ -146,28 +141,29 @@ class TestViewsPlayback:
 
         Adds a second camera, enters fullscreen on it, and verifies streaming.
         """
-        # Ensure site tree is expanded
+        # Ensure site tree is expanded (the call confirms cameras
+        # visible on its own)
         self.views.expand_site_and_show_cameras(SITE_NAME)
-        self.page.wait_for_timeout(500)
 
         # Check if there's a second camera to add
         thumbnails = self.page.locator(".cameraThumbnailWrapper")
         if thumbnails.count() < 2:
             pytest.skip("Need at least 2 cameras for multi-tile test")
 
-        # Hover and add second camera via checkbox
+        # Hover and add second camera via checkbox; the click's own
+        # actionability wait covers the hover-rendered checkbox
         second_camera = thumbnails.nth(1)
         second_camera.hover()
-        self.page.wait_for_timeout(150)
         checkbox = second_camera.locator(".sidebar-custom-checkbox")
         checkbox.click()
-        self.page.wait_for_timeout(2000)
 
-        # Enter fullscreen on second tile
+        # the second tile appearing is the added signal
         video_tiles = self.page.locator(
             "[class*='video_container'][class*='new_video_player']"
         )
-        if video_tiles.count() < 2:
+        try:
+            video_tiles.nth(1).wait_for(state="visible", timeout=15000)
+        except PlaywrightError:
             pytest.skip("Second camera tile not loaded")
 
         self.views.enter_fullscreen_on_tile(1)

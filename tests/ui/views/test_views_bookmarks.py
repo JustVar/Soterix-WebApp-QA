@@ -6,7 +6,7 @@ exist, operation tests will skip gracefully.
 """
 import datetime
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Error as PlaywrightError, expect
 from tests.shared.pages.views_page import ViewsPage
 from tests.shared.pages.fullscreen_page import FullScreenPage
 
@@ -31,9 +31,8 @@ def test_add_bookmark(authenticated_page):
     )
     if video_tiles.count() == 0:
         views.expand_site_and_show_cameras(None)
-        page.wait_for_timeout(500)
         views.add_first_camera_via_checkbox()
-        page.wait_for_timeout(3000)
+        # the tile appearing is the added signal
         video_tiles.first.wait_for(state="visible", timeout=30000)
 
     # Add a bookmark on the first tile
@@ -41,10 +40,16 @@ def test_add_bookmark(authenticated_page):
 
     # Verify: enter fullscreen and check bookmarks panel has at least one entry
     views.enter_fullscreen_on_tile(0)
-    page.wait_for_timeout(2000)
     fs = FullScreenPage(page)
+    fs.wait_for_stream_loaded(timeout=120000)
     fs.open_bookmarks_panel()
-    page.wait_for_timeout(1000)
+    # bookmark rows render async after the panel opens; the first row
+    # appearing is the signal
+    try:
+        fs.bookmark_items.first.wait_for(state="visible", timeout=10000)
+    # no row within the bound means no bookmarks - the assert fails
+    except PlaywrightError:
+        pass
     assert fs.has_bookmarks(), "Bookmark was not created - no bookmarks found in panel"
 
 
@@ -61,15 +66,23 @@ class TestViewsBookmarks:
         for index, _name in reversed(self._renamed_bookmarks):
             try:
                 self.fs.open_bookmarks_panel()
-                self.page.wait_for_timeout(500)
                 self.fs.rename_bookmark(index=index, new_name="Bookmark")
+            # best-effort revert: the verdict is already decided
             except Exception:
                 pass
 
     def _ensure_bookmarks_panel_open(self):
         """Open bookmarks panel and skip if no bookmarks exist."""
         self.fs.open_bookmarks_panel()
-        self.page.wait_for_timeout(1000)
+        # bookmark rows render async; the first row appearing is the
+        # signal, and none appearing routes to the skip below
+        try:
+            self.fs.bookmark_items.first.wait_for(
+                state="visible", timeout=10000
+            )
+        # no row within the bound routes to the skip below
+        except PlaywrightError:
+            pass
 
         if not self.fs.has_bookmarks():
             pytest.skip(
@@ -83,7 +96,6 @@ class TestViewsBookmarks:
     def test_open_bookmarks_panel(self):
         """Verify bookmarks panel opens when clicking the dots icon."""
         self.fs.open_bookmarks_panel()
-        self.page.wait_for_timeout(1000)
 
         panel_visible = (
             self.fs.bookmark_items.count() > 0
@@ -97,14 +109,22 @@ class TestViewsBookmarks:
     def test_close_bookmarks_panel(self):
         """Verify bookmarks panel closes when clicking the dots icon again."""
         self.fs.open_bookmarks_panel()
-        self.page.wait_for_timeout(500)
-
+        # rows render async; count only after the first row lands (a
+        # zero count just skips the hidden check below)
+        try:
+            self.fs.bookmark_items.first.wait_for(
+                state="visible", timeout=10000
+            )
+        # no row within the bound leaves a zero count, which just
+        # skips the hidden check
+        except PlaywrightError:
+            pass
         initial_count = self.fs.bookmark_items.count()
 
         self.fs.close_bookmarks_panel()
-        self.page.wait_for_timeout(500)
 
         if initial_count > 0:
+            # the retrying expect absorbs the close animation
             expect(self.fs.bookmark_items.first).to_be_hidden(timeout=5000)
 
     @pytest.mark.ui

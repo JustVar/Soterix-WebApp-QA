@@ -32,14 +32,12 @@ def fullscreen_page(authenticated_page):
     video_tiles = page.locator("[class*='video_container'][class*='new_video_player']")
     if video_tiles.count() == 0:
         views.expand_site_and_show_cameras(None)
-        page.wait_for_timeout(500)
         views.add_first_camera_via_checkbox()
-        page.wait_for_timeout(2000)
+        # the tile appearing is the added signal
         video_tiles.first.wait_for(state="visible", timeout=30000)
 
-    # Enter full screen
+    # Enter full screen; the stream-loaded wait is the entered signal
     views.enter_fullscreen_on_tile(0)
-    page.wait_for_timeout(1000)
 
     fs = FullScreenPage(page)
     fs.wait_for_stream_loaded(timeout=120000)

@@ -28,9 +28,8 @@ def test_share_live_view(authenticated_page):
     )
     if video_tiles.count() == 0:
         views.expand_site_and_show_cameras(SITE_NAME)
-        page.wait_for_timeout(500)
         views.add_first_camera_via_checkbox()
-        page.wait_for_timeout(3000)
+        # the tile appearing is the added signal
         video_tiles.first.wait_for(state="visible", timeout=30000)
 
     # Share the live view

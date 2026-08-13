@@ -21,9 +21,8 @@ class TestViewsFullscreen:
         )
         if video_tiles.count() == 0:
             self.views.expand_site_and_show_cameras(None)
-            self.page.wait_for_timeout(500)
             self.views.add_first_camera_via_checkbox()
-            self.page.wait_for_timeout(2000)
+            # the tile appearing is the added signal
             video_tiles.first.wait_for(state="visible", timeout=30000)
 
     @pytest.mark.ui
@@ -32,7 +31,6 @@ class TestViewsFullscreen:
     def test_enter_fullscreen(self):
         """Verify clicking zoom icon enters full screen and video streams."""
         self.views.enter_fullscreen_on_tile(0)
-        self.page.wait_for_timeout(1000)
 
         fs = FullScreenPage(self.page)
         fs.wait_for_stream_loaded(timeout=120000)
@@ -49,9 +47,8 @@ class TestViewsFullscreen:
         fs.wait_for_stream_loaded(timeout=120000)
 
         fs.exit_fullscreen()
-        self.page.wait_for_timeout(1000)
 
-        # Verify we're back on the views grid
+        # back on the views grid: the add-tab button is the signal
         self.views.add_tab_button.wait_for(state="visible", timeout=10000)
 
     @pytest.mark.ui
