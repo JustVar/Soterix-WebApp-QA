@@ -1,7 +1,20 @@
-﻿"""LPR Grid layout and Timer popup tests."""
+"""LPR grid layout and playback-timeout popup tests.
+
+The layout picker is three side-by-side buttons on the LPR camera
+page (1x1, 2x2, 3x3); the active one carries the activeLayout class
+and the visible empty-tile count matches the layout (1/4/9). The
+timeout popup ('Set Timeout Duration') opens only while a stream is
+playing - without one, the icon click yields nothing but its
+'Playback Auto-Timeout' tooltip. Measured 08/12-08/13/2026.
+"""
 import pytest
-import time
+from playwright.sync_api import expect
+
+from config.base_config import config
 from tests.shared.pages.lpr_page import LprPage
+
+SITE_NAME = config.get("test_site_name")
+CAMERA_NAME = config.get("test_camera_name")
 
 
 class TestLprGridLayout:
@@ -9,280 +22,211 @@ class TestLprGridLayout:
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page, step_capture):
+        # No config guard: the layout test uses no tenant names
         self.page = authenticated_page
         self.step_capture = step_capture
         step_capture.set_page(self.page)
         self.lpr = LprPage(self.page)
+
+    def _layout_buttons(self):
+        """The three layout buttons, anchored on the 1x1 icon."""
+        bar = self.page.locator("img[alt='1*1']").first.locator(
+            "xpath=ancestor::*[count(.//button) >= 3][1]"
+        )
+        return bar.locator("button")
+
+    def _visible_tiles(self) -> int:
+        """Visible empty tiles; hidden layouts stay mounted."""
+        return self.page.evaluate(
+            """() => [...document.querySelectorAll('body *')]
+                .filter(e => e.children.length === 0
+                        && e.getClientRects().length > 0
+                        && (e.textContent || '').trim() ===
+                           'Drag & Drop Camera here').length"""
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_select_grid_layouts(self):
-        """Test selecting 1x1, 2x2, and 3x3 grid layouts."""
-        self.step_capture.mark(1, "Navigate to LPR page")
-        self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
+        """Each layout button shows its tile count and active state."""
+        self.step_capture.mark(1, "Navigate to the LPR camera page")
+        self.lpr.ensure_lpr_camera_page()
+        buttons = self._layout_buttons()
+        # Exactly three: a toolbar gaining a fourth button would
+        # silently remap the indexes
+        expect(buttons).to_have_count(3, timeout=10000)
 
-        # Test 1x1 Grid
-        self.step_capture.mark(2, "Click 1x1 grid layout")
         try:
-            grid_1x1 = self.page.locator("img[alt='1*1'], img[alt='1x1']").first
-            if grid_1x1.count() == 0:
-                grid_1x1 = self.page.locator("img[src*='grid']").first
+            for idx, count in ((0, 1), (1, 4), (2, 9)):
+                self.step_capture.mark(
+                    2 + idx, f"Select the {count}-tile layout"
+                )
+                buttons.nth(idx).click()
+                assert self._wait_tiles(count), (
+                    f"Layout button {idx} did not settle at {count} "
+                    f"visible tiles (saw {self._visible_tiles()})"
+                )
+                assert buttons.nth(idx).evaluate(
+                    "el => el.className.includes('activeLayout')"
+                ), f"Layout button {idx} did not become active"
+        finally:
+            # The layout persists server-side per user (measured:
+            # fresh sessions keep it), and the other LPR suites were
+            # measured on 2x2 - restore it even on failure
+            self.step_capture.mark(5, "Restore the 2x2 layout")
+            buttons.nth(1).click()
+            assert self._wait_tiles(4), "2x2 restore did not settle"
 
-            if grid_1x1.count() > 0:
-                grid_1x1.scroll_into_view_if_needed()
-                grid_1x1.click()
-                self.page.wait_for_timeout(2000)
-                print("[STEP 2] Clicked 1x1 grid")
-        except Exception as e:
-            print(f"[INFO] Could not click 1x1 grid: {e}")
+    def _wait_tiles(self, count: int, timeout_ms: int = 10000) -> bool:
+        """Poll until the visible-tile count holds for two reads.
 
-        # Test 2x2 Grid
-        self.step_capture.mark(3, "Click 2x2 grid layout")
-        try:
-            grid_2x2 = self.page.locator("button:has(span.grid-two)").first
-            if grid_2x2.count() == 0:
-                grid_2x2 = self.page.locator("button[class*='grid']").nth(1)
-
-            if grid_2x2.count() > 0:
-                grid_2x2.click()
-                self.page.wait_for_timeout(2000)
-                print("[STEP 3] Clicked 2x2 grid")
-        except Exception as e:
-            print(f"[INFO] Could not click 2x2 grid: {e}")
-
-        # Test 3x3 Grid
-        self.step_capture.mark(4, "Click 3x3 grid layout")
-        try:
-            grid_3x3 = self.page.locator("button:has(span.i-icon-grid-nine)").first
-            if grid_3x3.count() == 0:
-                grid_3x3 = self.page.locator("button[class*='grid']").nth(2)
-
-            if grid_3x3.count() > 0:
-                grid_3x3.click()
-                self.page.wait_for_timeout(2000)
-                print("[STEP 4] Clicked 3x3 grid")
-        except Exception as e:
-            print(f"[INFO] Could not click 3x3 grid: {e}")
-
-        self.step_capture.mark(5, "Grid layout changes completed")
-        print("[PASS] Grid layout selection test passed")
+        Layout cross-fades keep both grids' tiles visible briefly, so
+        a single sample can pass THROUGH the target transiently.
+        """
+        waited = 0
+        streak = 0
+        while waited <= timeout_ms:
+            if self._visible_tiles() == count:
+                streak += 1
+                if streak >= 2:
+                    return True
+            else:
+                streak = 0
+            self.page.wait_for_timeout(250)  # poll tick, not a sleep
+            waited += 250
+        return False
 
 
 class TestLprTimer:
-    """Tests for LPR timer popup functionality."""
+    """Tests for the playback timeout popup."""
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page, step_capture):
+        if not SITE_NAME or not CAMERA_NAME:
+            pytest.skip(
+                "test_site_name / test_camera_name not configured "
+                "for this ENV (see config/env/)"
+            )
         self.page = authenticated_page
         self.step_capture = step_capture
         step_capture.set_page(self.page)
         self.lpr = LprPage(self.page)
 
+    def _open_popup_with_stream(self):
+        """Play the configured camera and open the timeout popup."""
+        self.lpr.ensure_lpr_camera_page()
+        self.lpr.play_camera(site_name=SITE_NAME, camera_name=CAMERA_NAME)
+        self.lpr.open_lpr_playback_timeout_popup()
+
+    def _popup(self):
+        """The timeout dialog, scoped off its title.
+
+        Page-wide Save/Cancel picks can land on stale mounted
+        dialogs or unrelated controls.
+        """
+        return self.page.get_by_text(
+            "Set Timeout Duration"
+        ).first.locator("xpath=ancestor::*[.//*[text()='Save']][1]")
+
+    def _close_popup(self):
+        cancel = self._popup().get_by_text("Cancel", exact=True).first
+        cancel.click()
+        expect(
+            self.page.get_by_text("Set Timeout Duration").first
+        ).to_be_hidden(timeout=10000)
+
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_timer_popup_validation(self):
-        """Validate timer popup opens and closes correctly."""
-        self.step_capture.mark(1, "Navigate to LPR page")
-        self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
+        """The popup opens over a playing stream and closes on Cancel."""
+        self.step_capture.mark(1, "Play a stream and open the popup")
+        self._open_popup_with_stream()
 
-        self.step_capture.mark(2, "Click Timer button")
-        # Try different selectors for timer button
-        timer_btn = self.page.locator("button:has(img[src*='timer'])").first
-        if timer_btn.count() == 0:
-            timer_btn = self.page.locator("button[class*='timer']").first
+        self.step_capture.mark(2, "Verify the popup controls")
+        popup = self._popup()
+        expect(popup.get_by_text("Save", exact=True).first).to_be_visible()
+        expect(popup.get_by_text("Cancel", exact=True).first)\
+            .to_be_visible()
 
-        if timer_btn.count() > 0:
-            try:
-                timer_btn.wait_for(state="visible", timeout=30000)
-                timer_btn.click()
-                self.page.wait_for_timeout(1000)
-            except Exception as e:
-                print(f"[INFO] Could not click timer button: {e}")
-                return
-
-            self.step_capture.mark(3, "Verify popup opened")
-            # Title is 'Playback Auto-Timeout' since the 2026-08 redesign
-            popup_title = self.page.get_by_text("Playback Auto-Timeout").first
-            if popup_title.count() > 0:
-                popup_title.wait_for(state="visible", timeout=30000)
-                assert popup_title.is_visible(), "Popup not visible"
-                print("[STEP 3] Popup opened successfully")
-
-                self.step_capture.mark(4, "Close popup with X icon")
-                close_icon = self.page.locator("img[src*='close']").first
-                if close_icon.count() > 0:
-                    close_icon.click()
-                    self.page.wait_for_timeout(1000)
-                    print("[STEP 4] Popup closed")
-
-        self.step_capture.mark(5, "Timer validation completed")
-        print("[PASS] Timer popup validation passed")
+        self.step_capture.mark(3, "Close and clear")
+        self._close_popup()
+        self.lpr.clear_all_tiles()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_timer_dropdown_values(self):
-        """Test selecting different timeout duration values."""
-        self.step_capture.mark(1, "Navigate to LPR page")
-        self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
+        """The duration dropdown offers the preset values."""
+        self.step_capture.mark(1, "Play a stream and open the popup")
+        self._open_popup_with_stream()
 
-        self.step_capture.mark(2, "Click Timer button")
-        timer_btn = self.page.locator("button:has(img[src*='timer'])").first
-        if timer_btn.count() == 0:
-            timer_btn = self.page.locator("button[class*='timer']").first
+        self.step_capture.mark(2, "Open the duration dropdown")
+        current = self._popup().get_by_text("Minutes", exact=False).first
+        expect(current).to_be_visible()
+        current.click()
 
-        if timer_btn.count() == 0:
-            print("[INFO] Timer button not available, skipping test")
-            return
+        self.step_capture.mark(3, "Verify the preset options")
+        options = self.page.locator("li:visible")
+        expect(
+            options.filter(has_text="30 Minutes").first
+        ).to_be_visible(timeout=10000)
+        expect(
+            options.filter(has_text="45 Minutes").first
+        ).to_be_visible()
 
-        durations = ["15 Minutes", "30 Minutes", "45 Minutes"]
-
-        for duration in durations:
-            self.step_capture.mark(3, f"Testing duration: {duration}")
-
-            try:
-                # Open timer if not already open
-                popup = self.page.get_by_text("Playback Auto-Timeout").first
-                if popup.count() == 0:
-                    timer_btn.click()
-                    self.page.wait_for_timeout(500)
-
-                # Open dropdown
-                dropdown = self.page.locator(".MuiSelect-select").first
-                if dropdown.count() == 0:
-                    dropdown = self.page.locator("div[class*='MuiSelect']").first
-
-                if dropdown.count() > 0:
-                    dropdown.click()
-                    self.page.wait_for_timeout(500)
-
-                    # Select duration
-                    option = self.page.locator(f"li:has-text('{duration}')").first
-                    if option.count() > 0:
-                        option.click()
-                        self.page.wait_for_timeout(500)
-                        print(f"[STEP 3.1] Selected {duration}")
-
-                        # Click Save
-                        save_btn = self.page.locator("div:has-text('Save'), button:has-text('Save')").first
-                        if save_btn.count() > 0:
-                            save_btn.click()
-                            self.page.wait_for_timeout(1000)
-                            print(f"[STEP 3.2] Saved {duration}")
-            except Exception as e:
-                print(f"[INFO] Could not select {duration}: {e}")
-                continue
-
-        self.step_capture.mark(4, "All duration values tested")
-        print("[PASS] Timer dropdown values test passed")
+        self.step_capture.mark(4, "Dismiss without saving")
+        self.page.keyboard.press("Escape")
+        self._close_popup()
+        self.lpr.clear_all_tiles()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_timer_cancel_button(self):
-        """Test timer popup cancel button."""
-        self.step_capture.mark(1, "Navigate to LPR page")
-        self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
+        """Cancel closes the popup without saving."""
+        self.step_capture.mark(1, "Play a stream and open the popup")
+        self._open_popup_with_stream()
 
-        self.step_capture.mark(2, "Open timer popup")
-        timer_btn = self.page.locator("button:has(img[src*='timer'])").first
-        if timer_btn.count() == 0:
-            timer_btn = self.page.locator("button[class*='timer']").first
-        if timer_btn.count() == 0:
-            pytest.skip("No timer control on the LPR page - nothing to cancel")
+        self.step_capture.mark(2, "Cancel the popup")
+        self._popup().get_by_text("Cancel", exact=True).first.click()
+        # The popup staying open after Cancel is this test's reason
+        # to exist
+        expect(
+            self.page.get_by_text("Set Timeout Duration").first
+        ).to_be_hidden(timeout=10000)
 
-        timer_btn.click()
-        self.page.wait_for_timeout(500)
-
-        self.step_capture.mark(3, "Click Cancel button")
-        cancel_btn = self.page.locator("div:has-text('Cancel'), button:has-text('Cancel')").first
-        if cancel_btn.count() == 0:
-            pytest.skip("Timer popup exposes no Cancel control")
-
-        cancel_btn.click()
-        self.page.wait_for_timeout(1000)
-
-        # This is the actual check the test exists for, so it is deliberately
-        # left un-caught - a popup that stays open after Cancel must fail.
-        self.step_capture.mark(4, "Verify popup closed")
-        popup = self.page.get_by_text("Playback Auto-Timeout").all()
-        visible_popups = [p for p in popup if p.is_visible()]
-        assert len(visible_popups) == 0, "Popup still visible after Cancel"
-
-        self.step_capture.mark(5, "Cancel button test completed")
+        self.step_capture.mark(3, "Clear the view")
+        self.lpr.clear_all_tiles()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_timer_after_page_refresh(self):
-        """Test timer default value persists after page refresh."""
-        from config.base_config import config
+        """The popup reopens with a value after a reload."""
+        self.step_capture.mark(1, "Play a stream and open the popup")
+        self._open_popup_with_stream()
+        expect(
+            self._popup().get_by_text("Minutes", exact=False).first
+        ).to_be_visible()
+        self._close_popup()
 
-        self.step_capture.mark(1, "Navigate to Views and add camera")
-        self.lpr.go_to_views_page()
+        self.step_capture.mark(2, "Reload and reopen")
+        self.page.reload()
+        self._open_popup_with_stream()
+        expect(
+            self._popup().get_by_text("Minutes", exact=False).first
+        ).to_be_visible()
 
-        camera_name = config.get("test_camera_name", "main gate")
-
-        # Add camera
-        locations = self.page.locator("p:has-text('Locations & Cameras')").first
-        if locations.count() == 0:
-            locations = self.page.locator("span:has-text('Locations')").first
-
-        if locations.count() > 0:
-            try:
-                locations.click()
-                self.page.wait_for_timeout(1000)
-
-                search = self.page.locator("input[placeholder='Search']").first
-                if search.count() > 0:
-                    search.fill(camera_name)
-                    self.page.wait_for_timeout(1000)
-
-                    checkbox = self.page.locator("img[src*='uncheck-icon']").first
-                    if checkbox.count() > 0:
-                        checkbox.hover()
-                        checkbox.click()
-                        print("[STEP 1] Camera selected")
-            except Exception as e:
-                print(f"[INFO] Could not add camera: {e}")
-
-        self.step_capture.mark(2, "Refresh page")
-        try:
-            self.page.reload()
-            self.page.wait_for_load_state("networkidle", timeout=30000)
-            self.page.wait_for_timeout(2000)
-            print("[STEP 2] Page refreshed")
-        except Exception as e:
-            print(f"[INFO] Page refresh issue: {e}")
-
-        self.step_capture.mark(3, "Verify timer default value is 15 Minutes")
-        timer_btn = self.page.locator("button:has(img[src*='timer'])").first
-        if timer_btn.count() == 0:
-            timer_btn = self.page.locator("button[class*='timer']").first
-
-        if timer_btn.count() > 0:
-            try:
-                timer_btn.click()
-                self.page.wait_for_timeout(500)
-
-                default_value = self.page.locator("p:has-text('15 Minutes')").first
-                if default_value.count() > 0 and default_value.is_visible():
-                    print("[STEP 3] Timer default value confirmed: 15 Minutes")
-
-                    # Close popup
-                    cancel_btn = self.page.locator("div:has-text('Cancel'), button:has-text('Cancel')").first
-                    if cancel_btn.count() > 0:
-                        cancel_btn.click()
-                else:
-                    print("[INFO] Default 15 Minutes not visible")
-            except Exception as e:
-                print(f"[INFO] Timer verification error: {e}")
-
-        self.step_capture.mark(4, "Timer refresh test completed")
-        print("[PASS] Timer default value persisted after refresh")
+        self.step_capture.mark(3, "Close and clear")
+        self._close_popup()
+        self.lpr.clear_all_tiles()

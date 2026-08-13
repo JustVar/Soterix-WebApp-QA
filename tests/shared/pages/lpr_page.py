@@ -328,29 +328,36 @@ class LprPage:
             print(f"[LPR] No backdrop to dismiss: {e}")
 
     def open_playback_timeout_popup(self):
-        """Open the playback timeout popup (Views page).
+        """Open the playback timeout popup.
 
-        The popup title is 'Playback Auto-Timeout' since the 2026-08
-        redesign (was 'Set Timeout Duration').
+        The popup opens only while a stream is playing and is titled
+        'Set Timeout Duration'. The icon's TOOLTIP reads 'Playback
+        Auto-Timeout' and shows on any click, which made a
+        tooltip-text wait pass with the popup never opening
+        (measured 08/12/2026).
         """
         print("[LPR] Opening Playback Timeout popup")
         timeout_icon = self.page.locator("img[src='/icons/timer.svg']").last
         timeout_icon.wait_for(state="visible", timeout=30000)
         timeout_icon.click()
 
-        self.page.get_by_text("Playback Auto-Timeout").first.wait_for(
+        self.page.get_by_text("Set Timeout Duration").first.wait_for(
             state="visible", timeout=15000
         )
         print("[LPR] Playback Timeout popup opened")
 
     def open_lpr_playback_timeout_popup(self):
-        """Open the playback timeout popup on the LPR page."""
+        """Open the playback timeout popup on the LPR page.
+
+        Same contract as open_playback_timeout_popup: a stream must
+        be playing, and 'Set Timeout Duration' is the popup title.
+        """
         print("[LPR] Opening LPR Playback Timeout popup")
         timeout_icon = self.page.locator("img[src='/icons/timer.svg']").last
         timeout_icon.wait_for(state="visible", timeout=30000)
         timeout_icon.click()
 
-        self.page.get_by_text("Playback Auto-Timeout").first.wait_for(
+        self.page.get_by_text("Set Timeout Duration").first.wait_for(
             state="visible", timeout=15000
         )
         print("[LPR] LPR Playback Timeout popup opened")

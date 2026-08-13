@@ -132,36 +132,58 @@ class TestLprCameraPlayback:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_open_playback_timeout_popup(self):
-        """Verify playback timeout popup opens on the Views page."""
-        self.step_capture.mark(1, "Navigate to the Views page")
-        self.lpr.go_to_views_page()
+        """Verify the timeout popup opens for a playing LPR stream.
+
+        The popup opens only while a stream plays; without one the
+        icon click yields nothing but its tooltip.
+        """
+        self.step_capture.mark(1, "Play the configured camera")
+        self.lpr.ensure_lpr_camera_page()
+        self.lpr.play_camera(site_name=SITE_NAME, camera_name=CAMERA_NAME)
 
         self.step_capture.mark(2, "Open the playback timeout popup")
         self.lpr.open_playback_timeout_popup()
-        expect(
-            self.page.get_by_text("Playback Auto-Timeout").first
-        ).to_be_visible(timeout=10000)
+        # Dialog-scoped: page-wide Cancel picks can land elsewhere
+        popup = self.page.get_by_text("Set Timeout Duration").first\
+            .locator("xpath=ancestor::*[.//*[text()='Save']][1]")
+        expect(popup.get_by_text("Cancel", exact=True).first)\
+            .to_be_visible()
 
-        self.step_capture.mark(3, "Close the popup")
-        self.page.keyboard.press("Escape")
+        self.step_capture.mark(3, "Cancel and clear the view")
+        popup.get_by_text("Cancel", exact=True).first.click()
+        expect(
+            self.page.get_by_text("Set Timeout Duration").first
+        ).to_be_hidden(timeout=10000)
+        self.lpr.clear_all_tiles()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
+    @pytest.mark.livestream
+    @pytest.mark.flaky(reruns=1)
     def test_open_lpr_playback_timeout_popup(self):
-        """Verify LPR playback timeout popup opens on the LPR page."""
-        self.step_capture.mark(1, "Navigate to LPR camera page")
+        """Verify the LPR timeout popup opens and closes cleanly."""
+        self.step_capture.mark(1, "Play the configured camera")
         self.lpr.ensure_lpr_camera_page()
+        self.lpr.play_camera(site_name=SITE_NAME, camera_name=CAMERA_NAME)
 
         self.step_capture.mark(2, "Open the LPR playback timeout popup")
         self.lpr.open_lpr_playback_timeout_popup()
-        expect(
-            self.page.get_by_text("Playback Auto-Timeout").first
-        ).to_be_visible(timeout=10000)
+        # Dialog-scoped: page-wide Save/Cancel picks can land elsewhere
+        popup = self.page.get_by_text("Set Timeout Duration").first\
+            .locator("xpath=ancestor::*[.//*[text()='Save']][1]")
+        expect(popup.get_by_text("Save", exact=True).first)\
+            .to_be_visible()
 
-        self.step_capture.mark(3, "Close the popup")
-        self.page.keyboard.press("Escape")
+        self.step_capture.mark(3, "Cancel and clear the view")
+        popup.get_by_text("Cancel", exact=True).first.click()
+        expect(
+            self.page.get_by_text("Set Timeout Duration").first
+        ).to_be_hidden(timeout=10000)
+        self.lpr.clear_all_tiles()
 
 
 class TestLprViewsIntegration:

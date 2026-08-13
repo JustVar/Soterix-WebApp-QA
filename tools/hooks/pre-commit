@@ -1,0 +1,8 @@
+#!/bin/sh
+# House-conventions gate: runs the convention checker on the lines
+# this commit adds. HIGH findings block the commit; MEDIUM findings
+# print and pass (justify them in the commit message).
+#
+# Install: copy this file to .git/hooks/pre-commit (no extension).
+# Bypass only for a genuine emergency: git commit --no-verify.
+venv/Scripts/python.exe tools/convention_check.py
