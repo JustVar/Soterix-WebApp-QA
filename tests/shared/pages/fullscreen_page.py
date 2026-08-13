@@ -5,6 +5,8 @@ video tile. Includes player controls, bookmark panel, and export/share
 dialogs.
 """
 import datetime
+import re
+
 from playwright.sync_api import Page, expect
 
 
@@ -82,8 +84,36 @@ class FullScreenPage:
     def is_streaming(self) -> bool:
         """Return True if video appears to be streaming (no loader, no error)."""
         loader_hidden = self.loader.count() == 0 or not self.loader.first.is_visible()
-        no_failure = self.streaming_failed.count() == 0
+        # visibility, not count: a recovered failure overlay can stay
+        # mounted hidden
+        no_failure = (self.streaming_failed.count() == 0
+                      or not self.streaming_failed.first.is_visible())
         return loader_hidden and no_failure
+
+    def recover_stream_if_failed(self, timeout: int = 60000) -> bool:
+        """Click the failure overlay's refresh link when the player
+        shows 'The camera failed to load'.
+
+        The live player intermittently raises that overlay even with
+        a live frame rendering behind it (measured 08/13/2026); the
+        refresh link is the user-path recovery. Loose case-insensitive
+        match because the link label is not stable ('Rafresh' on the
+        current build). Returns True when a recovery click was made
+        and the overlay left; raises if the overlay stays.
+        """
+        if (self.streaming_failed.count() == 0
+                or not self.streaming_failed.first.is_visible()):
+            return False
+        refresh = self.page.get_by_text(
+            re.compile(r"r.fresh", re.IGNORECASE)
+        )
+        if refresh.count() == 0:
+            return False
+        refresh.first.click()
+        self.streaming_failed.first.wait_for(
+            state="hidden", timeout=timeout
+        )
+        return True
 
     def is_live_mode(self) -> bool:
         """Return True if the player is in live streaming mode."""

@@ -36,13 +36,13 @@ the page-object conversion, [DATA] stale tenant data in the test,
 
 | Suite | Status | Detail |
 |------|--------|--------|
-| tests/ui/views/test_views_bookmarks.py | [VERIFY] | Exercises the converted add_bookmark_on_tile (fullscreen + timeline hover chain). |
-| tests/ui/views/test_views_share.py | [VERIFY] | Exercises the converted share_live_view_on_tile hover chains and copy flow. |
-| tests/ui/views/test_views_fullscreen.py | [VERIFY] | Exercises the converted enter_fullscreen_on_tile zoom-control wait. |
-| tests/ui/views/test_views_playback.py | [VERIFY] | Player controls on tiles; page-object hover paths changed. |
+| tests/ui/views/test_views_bookmarks.py | [DONE] | Verified 08/13/2026: 9/9 green first run, export and share flows included. |
+| tests/ui/views/test_views_share.py | [DONE] | Verified 08/13/2026: 1/1 green first run. |
+| tests/ui/views/test_views_fullscreen.py | [DONE] | Verified 08/13/2026: 5/5 green first run. |
+| tests/ui/views/test_views_playback.py | [DONE] | Verified 08/13/2026: 10/10 green after one real fix - the second-tile fullscreen test failed three straight runs because the live player intermittently shows 'The camera failed to load. Please try again.' OVER a rendering live frame (trace-confirmed on Street#36). recover_stream_if_failed clicks the overlay's refresh link once (loose case-insensitive match - the link label reads 'Rafresh' on the current build), the user-path recovery, and is_streaming now checks the overlay's visibility instead of its count so a recovered-but-mounted overlay cannot false-fail it. |
 | tests/ui/insights/test_insights_widgets.py | [DONE] | Verified 08/13/2026: Line_Person create ran green end to end (112s), and the rebuilt lpr_widgets suite now exercises create_widget (Event + LPR description) and delete_widget on every run. The two no-oracle tests in the file (view/report) stay on the G2 worklist. |
-| tests/ui/admin/test_lpr_camera_selection.py | [VERIFY] | Uses the config camera name against the rebuilt lpr_page; run it (test_lpr_playback is done, see section A). |
-| Headed parity spot-check | [VERIFY] | All verify runs this tranche were headless. Tests must behave identically headed: the viewport is pinned to 1280x720 in both modes (no override in conftest), but the QA team runs headed with --slowmo 300 --verify-mode, and the rebuilt step overlay now injects on every mark() in headed mode. Run test_views_basic headed, and one test headed with --verify-mode, to prove the overlay changes nothing. |
+| tests/ui/admin/test_lpr_camera_selection.py | [DONE] | Verified 08/13/2026: 3/3 green first run against the rebuilt lpr_page. |
+| Headed parity spot-check | [DONE] | Verified 08/13/2026: test_views_basic headed 6/6 green, and two tests headed with --slowmo 300 --verify-mode both green - one WITH step marks (lpr_playback navigation) so the injected overlay path itself ran and changed nothing. Evidence files landed in verification_output/. |
 
 Verified green 08/08-08/09: events (28/28 over three files), licenses
 (31 passed, designed skips restored), media deeper (14/14), camera

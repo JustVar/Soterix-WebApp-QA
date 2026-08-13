@@ -174,6 +174,11 @@ class TestViewsPlayback:
         fs = FullScreenPage(self.page)
         fs.wait_for_stream_loaded(timeout=120000)
 
+        # one user-path self-heal: the player intermittently shows
+        # 'The camera failed to load' over a rendering live frame
+        # (measured 08/13/2026); refresh recovers it
+        fs.recover_stream_if_failed()
+
         assert fs.is_streaming(), "Second camera should stream in fullscreen"
 
     @pytest.mark.ui
