@@ -116,12 +116,17 @@ class ChatPage:
         """Send a message in the currently open chat.
 
         Uses TAB to reach the message input from the current focus.
+        The sent text appearing in the thread is the delivered
+        signal; callers must pass run-unique text or the wait can
+        match an older message.
         """
         self.page.keyboard.press("Tab")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(1000)  # focus settle, no signal
         self.page.keyboard.type(text, delay=50)
         self.page.keyboard.press("Enter")
-        self.page.wait_for_timeout(2000)
+        self.page.get_by_text(text, exact=False).first.wait_for(
+            state="visible", timeout=15000
+        )
 
     def edit_group_name(self, old_name: str, new_name: str):
         """Edit a group's name.

@@ -98,8 +98,9 @@ class TestChats:
         group.click()
         self.page.wait_for_timeout(3000)
 
-        # Send a message
-        self.chat.send_message("Group chat by automation test")
+        # Send a message; the unique text keeps the delivered-wait
+        # from matching an older run's message
+        self.chat.send_message(f"Group chat check {timestamp}")
 
     @pytest.mark.ui
     @pytest.mark.chats
@@ -128,7 +129,10 @@ class TestChats:
         individual.first.click()
         self.page.wait_for_timeout(3000)
 
-        self.chat.send_message("Individual chat by automation test")
+        # Unique text keeps the delivered-wait from matching an
+        # older run's message
+        stamp = datetime.datetime.now().strftime("%H%M%S")
+        self.chat.send_message(f"Individual chat check {stamp}")
 
     @pytest.mark.ui
     @pytest.mark.chats
