@@ -234,10 +234,20 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 ## G. Conversion debt (not broken, still on old sleeps)
 
 Test FILES still carry uncommented sleeps (page objects are done):
-views drag_drop (36, the largest single file), search suites, the
-LPR test files not yet rebuilt, notifications, c2c, insights
-dashboard/widgets test bodies, license test bodies, sequences test
-body. Sleep-free as of 08/13/2026: LPR playback/events/
+search suites, the LPR test files not yet rebuilt, notifications,
+c2c, insights dashboard/widgets test bodies, license test bodies,
+sequences test body.
+
+views drag_drop (was the largest at 36) converted 08/13/2026, 6
+passed + 1 designed skip. The conversion surfaced a structural
+fact the sleeps had hidden: the add (+) tab is ALSO a
+button.tabItem (untitled tabInner), so any tab-count logic that
+counts tabItems is off by one - the old cleanup loop always met
+the iconless + tab first and broke without closing anything, a
+silent no-op since conversion day. View tabs are now selected via
+button.tabItem:has(div.tabInner[title]) and the renamed tab via
+.active; drops wait on a bounded tile-consumed signal
+(_wait_tile_consumed) with each test's union oracle unchanged. Sleep-free as of 08/13/2026: LPR playback/events/
 grid_and_timer/widgets, both chat files, and the views
 fullscreen/share/playback/bookmarks files plus views/conftest (27
 sleeps converted to signal waits in one tranche, all four suites

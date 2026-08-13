@@ -1,6 +1,6 @@
 """Views drag-and-drop tests - dragging cameras, views, locations to tiles."""
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Error as PlaywrightError, expect
 from tests.shared.pages.views_page import ViewsPage
 
 
@@ -21,46 +21,75 @@ class TestViewsDragDrop:
                 self._delete_saved_view_safe(name)
             except Exception as e:
                 print(f"Cleanup: failed to delete view '{name}': {e}")
-        # Cleanup: close extra tabs (only first tab should remain)
+        # Cleanup: close extra view tabs (only the first should
+        # remain). The old loop counted the untitled add (+) tab as a
+        # tab, always found no close icon on it, and broke without
+        # closing anything - a silent no-op since conversion.
         try:
-            tabs = self.page.locator("button.tabItem")
+            tabs = self._view_tabs()
             while tabs.count() > 1:
+                before = tabs.count()
                 last_tab = tabs.last
                 last_tab.hover()
-                self.page.wait_for_timeout(150)
                 close_icon = last_tab.locator("img[src*='closeIcon']")
-                if close_icon.count() > 0:
-                    close_icon.click()
-                    self.page.wait_for_timeout(500)
-                else:
+                if close_icon.count() == 0:
                     break
+                close_icon.click()
+                # the tab leaving is the closed signal; a timeout
+                # raises into the cleanup except below
+                expect(tabs).to_have_count(before - 1, timeout=10000)
         except Exception as e:
             print(f"Cleanup: failed to close extra tabs: {e}")
+
+    def _view_tabs(self):
+        """View tabs only: they carry the view name in the tabInner
+        title, while the add (+) tab's tabInner has no title."""
+        return self.page.locator("button.tabItem:has(div.tabInner[title])")
 
     def _delete_saved_view_safe(self, view_name):
         """Delete a saved view from the My Views panel."""
         self.page.locator("img[src*='myviews']").click()
-        self.page.wait_for_timeout(500)
         saved_view = self.page.locator(f"span[title='{view_name}']")
-        if saved_view.count() > 0:
-            saved_view.hover()
-            self.page.wait_for_timeout(150)
-            self.page.locator("img[src*='delete-icon']").click()
-            self.page.wait_for_timeout(250)
-            self.page.locator("button:has-text('Delete')").click()
-            self.page.locator("text=Successfully deleted").wait_for(
-                state="visible", timeout=60000
+        try:
+            saved_view.first.wait_for(state="visible", timeout=5000)
+        # absent from the panel means already deleted - nothing to do
+        except PlaywrightError:
+            return
+        saved_view.hover()
+        # the delete icon renders on hover as an img asset (this
+        # app's pattern, not MUI svg); the click's own actionability
+        # wait covers the render
+        self.page.locator("img[src*='delete-icon']").click()
+        self.page.locator("button:has-text('Delete')").click()
+        # the toast is the deleted signal
+        self.page.locator("text=Successfully deleted").wait_for(
+            state="visible", timeout=60000
+        )
+
+    def _wait_tile_consumed(self, initial_count: int, timeout: int = 15000):
+        """Bounded wait for an empty tile to be consumed after a drop.
+
+        Misses are tolerated: callers keep their own union oracle
+        (some drops land streams without changing the counted tiles),
+        so this only replaces the old fixed sleeps with a bounded
+        signal wait.
+        """
+        try:
+            expect(self.views.drag_drop_tiles).to_have_count(
+                initial_count - 1, timeout=timeout
             )
-            self.page.wait_for_timeout(500)
+        # a miss falls through to the caller's own oracle
+        except AssertionError:
+            pass
 
     @pytest.mark.ui
     @pytest.mark.dragdrop
     @pytest.mark.views_devices
     def test_drag_camera_to_tile(self):
         """Verify a camera thumbnail can be dragged to an empty tile."""
-        # Expand Driver Site and show cameras
+        # Expand site and show cameras (the call confirms cameras
+        # visible on its own)
         self.views.expand_site_and_show_cameras(None)
-        self.page.wait_for_timeout(1000)
 
         # Count available tiles before drag
         initial_tile_count = self.views.get_available_tile_count()
@@ -76,7 +105,7 @@ class TestViewsDragDrop:
         # Drag the camera to the first empty tile
         target_tile = self.views.drag_drop_tiles.first
         camera.drag_to(target_tile)
-        self.page.wait_for_timeout(2000)
+        self._wait_tile_consumed(initial_tile_count)
 
         # Verify: either tile count decreased OR video element appeared
         new_tile_count = self.views.get_available_tile_count()
@@ -92,9 +121,9 @@ class TestViewsDragDrop:
     @pytest.mark.views_devices
     def test_drag_camera_by_name_to_tile(self):
         """Verify a specific camera can be dragged to a tile by name."""
-        # Expand Driver Site and show cameras
+        # Expand site and show cameras (the call confirms cameras
+        # visible on its own)
         self.views.expand_site_and_show_cameras(None)
-        self.page.wait_for_timeout(1000)
 
         # Get available cameras
         cameras = self.page.locator(".cameraThumbnailWrapper")
@@ -111,7 +140,7 @@ class TestViewsDragDrop:
 
             # Use the helper method to drag by name
             self.views.drag_camera_to_tile_by_name(camera_name, tile_index=0)
-            self.page.wait_for_timeout(2000)
+            self._wait_tile_consumed(initial_tile_count)
 
             # Verify drag worked
             new_tile_count = self.views.get_available_tile_count()
@@ -133,44 +162,46 @@ class TestViewsDragDrop:
         view_name = f"DragTest_{datetime.datetime.now().strftime('%H%M%S')}"
         self._saved_view_names.append(view_name)
 
+        view_tabs = self._view_tabs()
+        baseline_tabs = view_tabs.count()
         self.views.add_new_tab()
-        self.page.wait_for_timeout(500)
+        # a new view tab appearing is the added signal; the new tab
+        # becomes the active one
+        expect(view_tabs).to_have_count(baseline_tabs + 1, timeout=10000)
+        tab = self.page.locator("button.tabItem.active")
 
-        # Rename the tab
-        tab = self.page.locator("button.tabItem").nth(1)
+        # Rename the tab; the click's own actionability wait covers
+        # the hover-rendered edit icon
         tab.hover()
-        self.page.wait_for_timeout(150)
         tab.locator("img[src*='editIcon']").click()
-        self.page.wait_for_timeout(150)
 
-        tab_input = self.page.locator("input.tabTitle").nth(1)
+        tab_input = tab.locator("input.tabTitle")
         tab_input.fill(view_name)
         tab_input.press("Enter")
-        self.page.wait_for_timeout(250)
+        # the input holding the new name is the committed signal
+        expect(tab_input).to_have_value(view_name)
 
-        # Add a camera to the view
+        # Add a camera to the view (the expand call confirms cameras
+        # visible on its own; the tile appearing is the added signal)
         self.views.expand_site_and_show_cameras(None)
-        self.page.wait_for_timeout(500)
         self.views.add_first_camera_via_checkbox()
-        self.page.wait_for_timeout(500)
+        self.page.locator(
+            "[class*='video_container'][class*='new_video_player']"
+        ).first.wait_for(state="visible", timeout=30000)
 
-        # Save the view
+        # Save the view; the toast is the saved signal
         save_btn = self.page.locator("img[src*='save']").nth(1)
         save_btn.evaluate("el => el.click()")
-        self.page.wait_for_timeout(500)
         self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=60000)
 
-        # Close the tab
+        # Close the tab; the view-tab count returning to baseline is
+        # the closed signal (the untitled + tab never counts)
         tab.hover()
-        self.page.wait_for_timeout(150)
         tab.locator("img[src*='closeIcon']").click()
-        self.page.wait_for_timeout(500)
+        expect(view_tabs).to_have_count(baseline_tabs, timeout=10000)
 
-        # Open My Views
+        # Open My Views; the saved view appearing is the signal
         self.page.locator("img[src*='myviews']").click()
-        self.page.wait_for_timeout(1000)
-
-        # Find the saved view
         saved_view = self.page.locator(f"span[title='{view_name}']")
         saved_view.wait_for(state="visible", timeout=20000)
 
@@ -179,7 +210,7 @@ class TestViewsDragDrop:
 
         # Attempt to drag the saved view to a tile
         self.views.drag_view_to_tile(view_name, tile_index=0)
-        self.page.wait_for_timeout(2000)
+        self._wait_tile_consumed(initial_tile_count)
 
         # Verify: check for new tab or video content
         new_tile_count = self.views.get_available_tile_count()
@@ -198,10 +229,10 @@ class TestViewsDragDrop:
         initial_tile_count = self.views.get_available_tile_count()
         assert initial_tile_count > 0, "No empty tiles available"
 
-        # Find and drag a location (Driver Site) to a tile
+        # Find and drag a location/site to a tile
         try:
             self.views.drag_location_to_tile(None, tile_index=0)
-            self.page.wait_for_timeout(2000)
+            self._wait_tile_consumed(initial_tile_count)
         except Exception as e:
             pytest.skip(f"Location drag not supported or failed: {e}")
 
@@ -229,37 +260,40 @@ class TestViewsDragDrop:
         try:
             # Step 1: Open maps panel
             self.views.open_maps()
-            self.page.wait_for_timeout(1500)
 
-            # Step 2: Click on site to expand maps (e.g., "Driver Site")
-            # Expand the first available site to show maps
+            # Step 2: Click on site to expand maps
             self.views.click_site(None)
-            self.page.wait_for_timeout(500)
-            self.page.wait_for_timeout(1500)
 
-            # Step 3: Find map thumbnails (same class as cameras)
+            # Step 3: Map thumbnails render async after the expand;
+            # the first appearing is the signal, a miss skips below
             map_thumbnails = self.page.locator(".cameraThumbnailWrapper")
+            try:
+                map_thumbnails.first.wait_for(
+                    state="visible", timeout=10000
+                )
+            # none within the bound routes to the skip below
+            except PlaywrightError:
+                pass
             if map_thumbnails.count() == 0:
-                pytest.skip("No maps available under Driver Site")
+                pytest.skip("No maps available under the site")
 
             print(f"Found {map_thumbnails.count()} map thumbnail(s)")
 
-            # Step 4: Add map via checkbox (same pattern as cameras)
+            # Step 4: Add map via checkbox (same pattern as cameras);
+            # the click's actionability wait covers the hover render
             map_thumbnail = map_thumbnails.first
             map_thumbnail.hover()
-            self.page.wait_for_timeout(300)
 
             checkbox = map_thumbnail.locator(".sidebar-custom-checkbox")
             if checkbox.count() > 0:
                 print("Using checkbox to add map")
                 checkbox.click()
-                self.page.wait_for_timeout(2000)
             else:
                 # Fallback: try drag
                 print("No checkbox - trying drag")
                 target_tile = self.views.drag_drop_tiles.first
                 map_thumbnail.drag_to(target_tile)
-                self.page.wait_for_timeout(2000)
+            self._wait_tile_consumed(initial_tile_count)
 
             # Step 5: Wait for map to load (may show circular progress)
             try:
@@ -300,7 +334,15 @@ class TestViewsDragDrop:
             channels_tab = self.page.locator("text=Channels").first
             channels_tab.wait_for(state="visible", timeout=10000)
             channels_tab.click()
-            self.page.wait_for_timeout(1500)
+            # channel entries render async; the first wrapper
+            # appearing is the signal, a miss falls to the hunt below
+            try:
+                self.page.locator(
+                    ".cameraThumbnailWrapper"
+                ).first.wait_for(state="visible", timeout=10000)
+            # the locator hunt below covers the other channel markups
+            except PlaywrightError:
+                pass
 
             # Step 2: Look for channel thumbnails or list items
             channel_locators = [
@@ -321,21 +363,20 @@ class TestViewsDragDrop:
             if channel_element is None:
                 pytest.skip("No channels available in Channels panel")
 
-            # Step 3: Add channel via checkbox
+            # Step 3: Add channel via checkbox; the click's
+            # actionability wait covers the hover render
             channel_element.hover()
-            self.page.wait_for_timeout(300)
 
             checkbox = channel_element.locator(".sidebar-custom-checkbox")
             if checkbox.count() > 0:
                 print("Using checkbox to add channel")
                 checkbox.click()
-                self.page.wait_for_timeout(2000)
             else:
                 # Direct click or drag
                 print("Trying direct interaction with channel")
                 target_tile = self.views.drag_drop_tiles.first
                 channel_element.drag_to(target_tile)
-                self.page.wait_for_timeout(2000)
+            self._wait_tile_consumed(initial_tile_count)
 
             # Verify
             new_tile_count = self.views.get_available_tile_count()
@@ -357,9 +398,9 @@ class TestViewsDragDrop:
     @pytest.mark.views_devices
     def test_multiple_cameras_to_multiple_tiles(self):
         """Verify multiple cameras can be added to multiple tiles."""
-        # Expand site and show cameras
+        # Expand site and show cameras (the call confirms cameras
+        # visible on its own)
         self.views.expand_site_and_show_cameras(None)
-        self.page.wait_for_timeout(1000)
 
         # Get available cameras and tiles
         cameras = self.page.locator(".cameraThumbnailWrapper")
@@ -369,21 +410,19 @@ class TestViewsDragDrop:
         assert camera_count >= 2, f"Need at least 2 cameras, found {camera_count}"
         assert initial_tile_count >= 2, f"Need at least 2 tiles, found {initial_tile_count}"
 
-        # Add first camera via checkbox
+        # Add first camera via checkbox; a consumed tile is the
+        # added signal
         self.views.add_first_camera_via_checkbox()
-        self.page.wait_for_timeout(1000)
+        self._wait_tile_consumed(initial_tile_count)
 
-        # Check tile count after first camera
-        tile_count_after_first = self.views.get_available_tile_count()
-
-        # Add second camera via checkbox (if available)
+        # Add second camera via checkbox (if available); the click's
+        # actionability wait covers the hover render
         second_camera = cameras.nth(1)
         second_camera.hover()
-        self.page.wait_for_timeout(150)
         checkbox = second_camera.locator(".sidebar-custom-checkbox")
         if checkbox.count() > 0:
             checkbox.click()
-            self.page.wait_for_timeout(1000)
+            self._wait_tile_consumed(initial_tile_count - 1)
 
         # Verify at least one camera was added
         final_tile_count = self.views.get_available_tile_count()
