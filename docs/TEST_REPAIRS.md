@@ -26,7 +26,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 
 | Test | Status | Detail |
 |------|--------|--------|
-| tests/ui/chats/test_chats.py (all 6) | [REDO] | Probed 08/13/2026: the chat panel is REDESIGNED into a search-first overlay - 'Chat' header, X close, one search bar, and an empty state ('Use the search bar to find and chat with the person you're looking for'). No Create Group button, no upfront group list, so every group CRUD flow automates controls that no longer exist, and open_chat_panel's open-marker (the dead Create Group locator) made its retry click toggle the panel SHUT every time - the reliable open marker now is input.chat-search-input. Group creation needs rediscovery (probe what appears after searching a user). Rebuild map, measured 08/13: the DOM holds FOUR input.chat-search-input elements - the visible panel search (placeholder 'Search'), TWO mounted chat-thread message inputs (placeholder 'Enter Message Here' - the real send target, replacing the blind TAB-typing in send_message), and one 'Search1' (likely a mounted create-group dialog's member search). Scope every chat locator by placeholder and visibility, never by the shared class. The two message tests gained a real oracle the same day (send_message waits for the sent text in the thread; tests send run-unique messages - the old fire-and-forget sends with static strings would have matched older runs' messages), unverified until the rebuild. Probe snaps: reports/probe_shots/chat_one_click_01.png. |
+| tests/ui/chats/test_chats.py (6) + test_chats_deeper.py (11) | [DONE] | Rebuilt and green 08/13/2026: 12 passed, 5 designed skips, zero sleeps left in either file. The panel is a search-first overlay; the open marker is the visible panel search (its 'Search1' twin is the mounted member-search view), the header icon is a toggle so the opener clicks only when the marker is absent, close is the popup-head X (the in-input search icon shares the same iconSmallCross alt - scope to popup-head). The search responds to real keystrokes ONLY: a lone programmatic fill after open is dropped every time (measured across four probes - fill produced zero results, key-by-key typing always landed by the second pass), so search_chat types with press_sequentially and retypes once; clears use real keys for the same reason. A result click behaves two ways, both measured: a first-ever contact lands a conversation row in the recent-chats list, an existing conversation opens its thread directly - start_conversation accepts either marker. Sent text renders as span.sentMsg in the thread, the panel-scoped delivered oracle (tests send run-unique text). Group creation has NO entry point in the redesigned panel (probed fresh, search, result-click, thread, and hover states; the mounted 'Add Members'/Update view serves group conversations this account cannot create), so the 4 group CRUD tests plus create_group_button_present skip honestly and fail loud via group_creation_affordance() the day a creation control returns. Chat partner moved to config (test_chat_user_search/test_chat_user_name). Probe snaps: reports/probe_shots/chat_probe*.png. |
 | tests/ui/media/test_media_operations.py destructive set (clip delete, folder delete, grouping, move to folder) | [INVESTIGATE] | Held as skips 08/12/2026: these operated on the team's clips (the old delete removed the first list item; grouping relocates team clips into a folder). Before activating, measure whether deleting a folder deletes the clips grouped into it and whether ungrouping exists - if folder delete only ungroups, the whole chain becomes safe own-data (group two clips, operate on the folder, delete it). Needs Justin's answer or a disposable measurement. The rest of the file is rebuilt on measured mechanisms: names are inline inputs (text engines cannot see them - the old rename typed into the SEARCH box because its locator matched that first), the rename success toast is the server ack (an optimistic rename can show in the DOM and never commit - measured), and vaulting MOVES the row between the list and the Vault tab. |
 | tests/ui/licenses/test_license_assignment.py TestLicenseAssignModal (4 tests) | [DONE] | Rebuilt, green and stable 08/09/2026. The button is 'Assign New', only on the Assigned Licenses tab (the old bare :has-text('Assign') clause clicked the tab itself). It opens a customMuiModal overlay; no Cancel control, Escape dismisses. A present-but-unresponsive button fails loud instead of skipping, and the Site assertion is scoped to the option list (the tab's table underneath also renders site names). |
 | tests/ui/search/test_search_categories.py vehicle tests | [DONE] | Un-skipped and green 08/09/2026 - the 'no vehicle detections' premise was false. The SearchPage filter helpers went dead with the 2026-08 sidebar (the old code clicked the label, not the value control, and its JS fallbacks returned without error), so no filters applied and searches never dispatched. Rebuilt: _open_section clicks the value control with substring matching (labels carry zero-width spaces, so exact text never matches), site row + All Cameras via the scrollBarCustom panel, durations via .dropdownItem, and the section value leaving 'Select' as the applied signal. Categories 7/7 green. |
@@ -60,6 +60,7 @@ users/rules/sites (with honest redesign skips), 4-worker xdist run
 | tests/ui/search/test_search_categories.py step text 'Driver Site' | [DATA] | Fixed 08/09/2026: mark text and the limitation note no longer name the old site. The vehicle-detection premise stays open in section B. |
 | tests/steps/manual/maps/maps.json and test_insights_navigation.json | [ARTIFACT] | Sidecar actions say "Driver Site"; update alongside the next sidecar sync. |
 | tests/steps/ui/media/test_media_operations.json | [ARTIFACT] | Sidecar titles/steps describe the pre-rebuild flow (edit-form rename, hover icons); regenerate from the rebuilt tests at the next sidecar sync, case keys kept. |
+| tests/steps/ui/chats/test_chats.json + test_chats_deeper.json | [ARTIFACT] | Sidecar steps describe the pre-redesign panel (Create Group button, group CRUD, TAB-typing); regenerate from the rebuilt tests at the next sidecar sync, case keys kept. |
 
 ## B2. Search suites - revalidated with the rebuilt filter helpers
 
@@ -197,11 +198,14 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 - **33 tests with no failure path** at sweep time (no assert/expect,
   no raising wait): test_media_operations.py carried 13 - fixed
   08/12/2026 (9 rebuilt with real oracles, 4 held as explicit skips,
-  see section B). The rest spread over admin_general (3),
-  lpr_grid_and_timer (3), chats (2), lpr_widgets (2),
-  insights_widgets (2), and singles - re-run `--all` for the live
-  count. These are the rebuild worklist, ordered with the section C
-  verify rows - a test that cannot fail is not coverage.
+  see section B). lpr_grid_and_timer (3) cleared with the 08/13
+  rebuild and chats (2) with the panel rebuild the same day. Live
+  count 08/13/2026: admin_general (3), lpr_widgets (2),
+  insights_widgets (2), and 8 singles (maps, license_permissions,
+  views_bookmarks, incamera_search, admin_users, lpr_views,
+  license_assignment, admin_sites - one each). These are the rebuild
+  worklist, ordered with the section C verify rows - a test that
+  cannot fail is not coverage.
 - **110 except blocks that only print** - triage alongside each
   file's rebuild; cleanup paths may keep them with a why-comment.
 - **4 .first/.last picks on union selectors**, the hidden-copy trap.
@@ -209,9 +213,10 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 ## G. Conversion debt (not broken, still on old sleeps)
 
 Test FILES still carry ~380 uncommented sleeps (page objects are done):
-views drag_drop/playback/bookmarks, chats, search suites, the LPR
-test files not yet rebuilt (playback and events are sleep-free now),
-notifications, c2c, insights dashboard/widgets test bodies,
-license test bodies, sequences test body. Converted file by file with
+views drag_drop/playback/bookmarks, search suites, the LPR
+test files not yet rebuilt (playback, events, grid_and_timer are
+sleep-free now, and the 08/13 chats rebuild left both chat files
+sleep-free), notifications, c2c, insights dashboard/widgets test
+bodies, license test bodies, sequences test body. Converted file by file with
 its own verify run, same measure-convert-verify discipline. The
 convention checker blocks NEW sleeps; this table is the old ones.

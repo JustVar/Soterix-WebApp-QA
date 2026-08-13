@@ -14,6 +14,11 @@ config = {
     # If this camera is missing from the wizard device list, check for
     # leftover *_Auto_* rules on it and delete them (verified 08/2026)
     "test_camera_name": "main gate",
+    # Chat panel: the user the messaging tests chat with. The search
+    # term must match them in the chat user search; the name is the
+    # full display name shown on their conversation row.
+    "test_chat_user_search": "QA Engineer B",
+    "test_chat_user_name": "Chat Partner",
 
     # Box configurations
     # Box configurations. Each box names the environment variables that hold

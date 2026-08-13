@@ -1,21 +1,43 @@
-"""Chat deeper tests - panel toggle, search, chat list, cross-page behavior.
+"""Chat deeper tests - panel toggle, search, conversation flow,
+cross-page behavior.
 
-Extends the base chat tests with non-CRUD scenarios covering panel management,
-search functionality, chat list validation, and cross-page persistence.
+Rebuilt 08/13/2026 against the redesigned search-first panel (see the
+chats row in docs/TEST_REPAIRS.md). The open marker is the visible
+panel search input; the old Create Group marker is gone.
 """
 import pytest
 from playwright.sync_api import expect
+
+from config.base_config import config
 from tests.shared.pages.chat_page import ChatPage
+
+CHAT_USER_SEARCH = config.get("test_chat_user_search", "QA Engineer B")
+CHAT_USER_NAME = config.get("test_chat_user_name", "Chat Partner")
+
+GROUPS_GONE = (
+    "Group creation has no entry point in the redesigned chat panel "
+    "(probed 08/13/2026, docs/TEST_REPAIRS.md chats row)"
+)
 
 
 class TestChatsDeeper:
-    """Deeper tests for the Chat panel overlay."""
+    """Deeper tests for the redesigned Chat panel overlay."""
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.chat = ChatPage(self.page)
-        yield
+        return
+
+    def _search_partner_or_fail(self):
+        """Search the configured chat user; missing data is a failure
+        pointing at config, not a silent skip."""
+        found = self.chat.search_chat(CHAT_USER_SEARCH)
+        assert found > 0, (
+            f"No chat user matches '{CHAT_USER_SEARCH}' - if the "
+            "tenant user changed, update test_chat_user_search in "
+            "config/env"
+        )
 
     # --- Panel management ---
 
@@ -23,40 +45,38 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_chat_panel_closes_on_second_click(self):
-        """Verify the chat panel closes when the chat icon is clicked again."""
+        """The header icon is a toggle: a second click closes the
+        panel (this toggle is what broke the old opener)."""
         self.chat.open_chat_panel()
-        expect(self.chat.create_group_button).to_be_visible(timeout=10000)
+        expect(self.chat.search_input).to_be_visible()
 
-        # Close panel
-        self.chat.close_chat_panel()
-        self.page.wait_for_timeout(1000)
-
-        expect(self.chat.create_group_button).to_be_hidden(timeout=5000)
+        self.chat.toggle_chat_icon()
+        expect(self.chat.search_input).to_be_hidden(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_chat_panel_reopens_after_close(self):
-        """Verify the chat panel can be reopened after closing."""
+        """The panel reopens after closing via the header X."""
         self.chat.open_chat_panel()
-        expect(self.chat.create_group_button).to_be_visible(timeout=10000)
-
         self.chat.close_chat_panel()
-        self.page.wait_for_timeout(1000)
-
         self.chat.open_chat_panel()
-        expect(self.chat.create_group_button).to_be_visible(timeout=10000)
+        expect(self.chat.search_input).to_be_visible()
 
     @pytest.mark.ui
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_create_group_button_present(self):
-        """Verify the Create Group button is present in the chat panel."""
+        """The redesign removed the Create Group control. Skip while
+        it stays gone; fail loud the day it returns so the group CRUD
+        tests get rebuilt."""
         self.chat.open_chat_panel()
-
-        expect(self.chat.create_group_button).to_be_visible(timeout=10000)
-        button_text = self.chat.create_group_button.inner_text()
-        assert "Create Group" in button_text
+        if self.chat.group_creation_affordance():
+            pytest.fail(
+                "A group-creation control is visible in the chat panel "
+                "again - rebuild the group CRUD tests against it"
+            )
+        pytest.skip(GROUPS_GONE)
 
     # --- Search functionality ---
 
@@ -64,95 +84,87 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_chat_search_input_visible(self):
-        """Verify the chat search input is visible in the panel."""
+        """The panel search input is visible once the panel opens."""
         self.chat.open_chat_panel()
-
-        expect(self.chat.chat_search_input).to_be_visible(timeout=10000)
+        expect(self.chat.search_input).to_be_visible()
 
     @pytest.mark.ui
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_search_returns_results(self):
-        """Verify searching for a known user returns results."""
+        """Searching the configured user returns a visible result."""
         self.chat.open_chat_panel()
-
-        self.chat.search_chat("QA Engineer B")
-        self.page.wait_for_timeout(3000)
-
-        result_count = self.chat.search_results.count()
-        if result_count == 0:
-            pytest.skip("No search results for 'QA Engineer B' - user may not exist")
-
-        assert result_count > 0, "Expected at least one search result"
+        self._search_partner_or_fail()
+        expect(self.chat.search_results.first).to_contain_text(
+            CHAT_USER_NAME.split()[0]
+        )
 
     @pytest.mark.ui
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_search_with_no_match(self):
-        """Verify searching for a nonexistent user shows no results."""
+        """A nonsense term empties the results.
+
+        The real search first proves results can render; without it, a
+        dead search box would pass this test vacuously.
+        """
         self.chat.open_chat_panel()
+        self._search_partner_or_fail()
 
-        self.chat.search_chat("zzzznonexistentuser99999")
-        self.page.wait_for_timeout(3000)
-
-        assert self.chat.search_results.count() == 0, \
-            "Expected no search results for nonexistent user"
+        found = self.chat.search_chat("zzzznonexistentuser99999",
+                                      timeout=4000)
+        assert found == 0, (
+            f"Expected no results for a nonsense term, got {found}"
+        )
 
     @pytest.mark.ui
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_search_clear_resets_results(self):
-        """Verify clearing the search input resets the search state."""
+        """Clearing the search removes the results and empties the
+        input."""
         self.chat.open_chat_panel()
+        self._search_partner_or_fail()
 
-        # Search first
-        self.chat.search_chat("QA Engineer B")
-        self.page.wait_for_timeout(2000)
+        self.chat.clear_search()
+        expect(self.chat.search_results).to_have_count(0, timeout=5000)
+        expect(self.chat.search_input).to_have_value("")
 
-        # Clear search
-        self.chat.chat_search_input.clear()
-        self.page.wait_for_timeout(2000)
-
-        # Search input should be empty
-        value = self.chat.chat_search_input.input_value()
-        assert value == "", f"Expected empty search input, got '{value}'"
-
-    # --- Chat list content ---
+    # --- Conversation flow ---
 
     @pytest.mark.ui
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_chat_panel_has_content(self):
-        """Verify the chat panel contains some content (groups or conversations)."""
+        """An open panel shows the search input plus either the
+        empty-state instruction or the recent-conversations list."""
         self.chat.open_chat_panel()
+        expect(self.chat.search_input).to_be_visible()
 
-        # The panel should have at least the Create Group button and search input
-        expect(self.chat.create_group_button).to_be_visible(timeout=10000)
-        expect(self.chat.chat_search_input).to_be_visible(timeout=5000)
+        # either the empty-state instruction or a populated recent
+        # list qualifies as content
+        content = self.chat.empty_state.or_(self.chat.recent_rows)
+        expect(content.first).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_click_search_result_opens_chat(self):
-        """Verify clicking a search result opens the chat conversation."""
+        """Clicking a search result reaches the conversation: a
+        first-ever contact lands a row in the recent-chats list, an
+        existing conversation opens its thread directly (both
+        measured). Either way the thread opens and back returns to a
+        list holding the conversation row."""
         self.chat.open_chat_panel()
+        self._search_partner_or_fail()
 
-        self.chat.search_chat("QA Engineer B")
-        self.page.wait_for_timeout(3000)
+        self.chat.start_conversation()
+        self.chat.open_conversation(CHAT_USER_NAME)
+        expect(self.chat.message_input.first).to_be_visible()
 
-        if self.chat.search_results.count() == 0:
-            pytest.skip("No search results for 'QA Engineer B'")
-
-        self.chat.click_search_result()
-        self.page.wait_for_timeout(3000)
-
-        # After clicking, the chat should open - re-open panel to verify
-        self.chat.open_chat_panel()
-        self.page.wait_for_timeout(2000)
-
-        partner_chat = self.page.locator("p:has-text('QA Engineer B')")
-        if partner_chat.count() > 0:
-            expect(partner_chat.first).to_be_visible(timeout=5000)
+        self.chat.back_to_list()
+        row = self.chat.recent_rows.filter(has_text=CHAT_USER_NAME)
+        expect(row.first).to_be_visible(timeout=10000)
 
     # --- Cross-page behavior ---
 
@@ -160,23 +172,24 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_chat_icon_visible_on_events_page(self):
-        """Verify the chat icon is accessible from the Events page."""
-        # Navigate to Events
+        """The chat panel opens from the Events page too."""
         events_link = self.page.locator("a[href*='events']")
         if events_link.count() > 0:
             events_link.first.click()
-            self.page.wait_for_timeout(3000)
+            self.page.wait_for_load_state("domcontentloaded")
 
         self.chat.open_chat_panel()
-        expect(self.chat.create_group_button).to_be_visible(timeout=10000)
+        expect(self.chat.search_input).to_be_visible()
 
     @pytest.mark.ui
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_chat_panel_survives_page_refresh(self):
-        """Verify the chat panel can be opened after a page refresh."""
+        """The panel opens after a page refresh."""
         self.page.reload()
-        self.page.wait_for_timeout(3000)
+        # the app bootstrap has no ready signal; the opener's own
+        # marker wait absorbs the remainder
+        self.page.wait_for_load_state("domcontentloaded")
 
         self.chat.open_chat_panel()
-        expect(self.chat.create_group_button).to_be_visible(timeout=10000)
+        expect(self.chat.search_input).to_be_visible()
