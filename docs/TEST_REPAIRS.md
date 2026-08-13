@@ -199,19 +199,34 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 - **33 tests with no failure path** at sweep time (no assert/expect,
   no raising wait): test_media_operations.py carried 13 - fixed
   08/12/2026 (9 rebuilt with real oracles, 4 held as explicit skips,
-  see section B). lpr_grid_and_timer (3) cleared with the 08/13
-  rebuild and chats (2) with the panel rebuild the same day.
-  admin_general (3) cleared 08/13: one was a checker false positive
-  (expect.soft IS an oracle - pytest-playwright raises collected soft
-  failures at test end; ORACLE_RE now knows), two were oracle
-  delegation to _open_general's expect, now commented; 11/11 green
-  the same day. lpr_widgets (2) cleared 08/13 with the file rebuild
-  (section A row). Live count: insights_widgets (2: view/report) and
-  8 singles (maps, license_permissions, views_bookmarks,
-  incamera_search, admin_users, lpr_views, license_assignment,
-  admin_sites - one each). These are the rebuild worklist, ordered
-  with the section C verify rows - a test that cannot fail is not
-  coverage.
+  see section B). **CLEARED to zero repo-wide 08/13/2026.**
+  lpr_grid_and_timer (3) with the 08/13 rebuild, chats (2) with the
+  panel rebuild, admin_general (3) same day (one checker false
+  positive - expect.soft IS an oracle, pytest-playwright raises
+  collected soft failures at test end, ORACLE_RE now knows; two were
+  delegation to _open_general's expect, commented; 11/11 green),
+  lpr_widgets (2) with the file rebuild (section A row), and the
+  final 10 (insights view/report + 8 singles) on 08/13, all verified
+  green except the two comment-only delegations (incamera play,
+  bookmarks export - real raising waits already inside). Notables
+  from the final batch: insights report now waits on the BROWSER
+  DOWNLOAD event (the old toast wait swallowed its timeout, so a
+  failed download passed silently; the download fires - measured);
+  lpr_views close-all rebuilt on the real tab mechanics
+  (div.tabInner[title] + closeTabIcon; closing the LAST view fires a
+  native alert 'Action not permitted' and the view survives - the
+  old code looked for nonexistent Close buttons and registered its
+  dialog handler after the click); license dedup keys on WHOLE rows
+  (feature names repeat by design); and the new post-delete oracle
+  on test_delete_user caught a live footgun - the Users search
+  filter is server-side and the pre-filter rows stay visible while
+  it runs, so the instant row check handed delete_user the tenant's
+  FIRST UNFILTERED user (the server refused, no harm done).
+  delete_user now scopes to the .MuiPaper-root card matching the
+  searched text and the test waits for the count to leave the
+  unfiltered baseline before touching anything. The run also
+  consumed one of the two leaked 'AutoTest Playwright' users from
+  08/07; the next run consumes the other.
 - **110 except blocks that only print** - triage alongside each
   file's rebuild; cleanup paths may keep them with a why-comment.
 - **4 .first/.last picks on union selectors**, the hidden-copy trap.

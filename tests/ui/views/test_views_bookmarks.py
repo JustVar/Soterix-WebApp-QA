@@ -145,6 +145,8 @@ class TestViewsBookmarks:
         self._ensure_bookmarks_panel_open()
 
         filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        # oracle: export_bookmark raises unless the export dialog
+        # opens and the progress bar appears and completes
         self.fs.export_bookmark(index=0, filename=filename)
 
     @pytest.mark.ui

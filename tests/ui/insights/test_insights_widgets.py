@@ -115,6 +115,8 @@ class TestInsightsWidgetOperations:
         self._created_widgets.append(widget_name)
         self.page.wait_for_timeout(2000)
 
+        # oracle: view_widget raises unless the View page opens (its
+        # back-arrow wait) and closes again
         self.insights.view_widget(widget_name)
 
     @pytest.mark.ui
@@ -134,6 +136,8 @@ class TestInsightsWidgetOperations:
         self._created_widgets.append(widget_name)
         self.page.wait_for_timeout(2000)
 
+        # oracle: download_report raises unless the browser download
+        # actually starts
         self.insights.download_report(widget_name)
 
     @pytest.mark.ui

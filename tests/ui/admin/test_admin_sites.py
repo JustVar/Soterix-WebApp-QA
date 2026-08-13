@@ -125,16 +125,21 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_toggle_grid_list_view(self):
-        """Verify toggling between grid and list view on the Sites page."""
+        """Verify toggling between grid and list view on the Sites page.
+
+        Only the inactive view's toggle renders, so the opposite
+        toggle appearing after each click is the switched signal. The
+        old version guarded both clicks behind presence checks and
+        could pass without toggling anything.
+        """
         self._navigate_to_sites()
 
-        # Toggle to list view
-        if self._appears(self.admin.list_view_toggle):
-            self.admin.toggle_to_list_view()
+        expect(self.admin.list_view_toggle).to_be_visible(timeout=10000)
+        self.admin.toggle_to_list_view()
+        expect(self.admin.grid_view_toggle).to_be_visible(timeout=5000)
 
-        # Toggle back to grid view
-        if self._appears(self.admin.grid_view_toggle):
-            self.admin.toggle_to_grid_view()
+        self.admin.toggle_to_grid_view()
+        expect(self.admin.list_view_toggle).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.admin

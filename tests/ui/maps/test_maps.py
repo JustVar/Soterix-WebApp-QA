@@ -49,6 +49,9 @@ class TestMaps:
                 "No map card has cameras (device counts are 0) -- "
                 "may be a data/selector issue with .icon-text-aligner"
             )
+        # the found card must be a real rendered card, not a hidden
+        # mounted copy (the finder reads counts, not visibility)
+        expect(map_with_cameras).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.maps

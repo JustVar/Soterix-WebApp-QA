@@ -1,6 +1,7 @@
 """LPR Views management tests - create, close, and manage multiple views."""
 import pytest
 import time
+from playwright.sync_api import expect
 from tests.shared.pages.lpr_page import LprPage
 
 
@@ -88,38 +89,43 @@ class TestLprViews:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_close_all_views_with_popup(self):
-        """Close all views and handle popup alert when closing last view."""
+        """Close views down to the last one, which refuses with an alert.
+
+        Rebuilt 08/13/2026 on measured mechanics: view tabs are
+        div.tabInner[title] with a closeTabIcon button, the untitled
+        tabInner is the add (+) tab, and closing the FINAL view fires
+        a native alert 'Action not permitted' while the view stays.
+        The old version looked for 'Close' buttons that do not exist
+        and registered its dialog handler after the click.
+        """
         self.step_capture.mark(1, "Navigate to Views page")
         self.lpr.go_to_views_page()
 
-        self.step_capture.mark(2, "Close views until alert appears")
-        while True:
-            close_buttons = self.page.locator("button:has-text('Close')").all()
+        tabs = self.page.locator("div.tabInner[title]")
+        tabs.first.wait_for(state="visible", timeout=30000)
 
-            if len(close_buttons) == 1:
-                self.step_capture.mark(3, "Close last view and handle alert")
-                close_buttons[0].click()
-                self.page.wait_for_timeout(500)
-                print("[STEP 3] Attempted to close last view")
+        self.step_capture.mark(2, "Add a view so a closable one exists")
+        baseline = tabs.count()
+        self.page.locator("div.tabInner:not([title])").first.click()
+        expect(tabs).to_have_count(baseline + 1, timeout=10000)
 
-                # Handle alert if it appears
-                try:
-                    self.page.on("dialog", lambda dialog: dialog.accept())
-                    print("[STEP 3.1] Alert handled successfully")
-                except:
-                    print("[INFO] No alert popup appeared")
+        self.step_capture.mark(3, "Close views down to the last one")
+        while tabs.count() > 1:
+            before = tabs.count()
+            tabs.last.locator("button.closeTabIcon").click()
+            expect(tabs).to_have_count(before - 1, timeout=10000)
 
-                break
-
-            elif len(close_buttons) > 1:
-                self.step_capture.mark(2, f"Close view - {len(close_buttons)} remaining")
-                close_buttons[-1].click()
-                self.page.wait_for_timeout(2000)
-                print(f"[STEP 2] Closed one view ({len(close_buttons)-1} remaining)")
-
-            else:
-                print("[INFO] No close buttons found")
-                break
-
-        self.step_capture.mark(4, "Verify views closed")
-        print("[PASS] Views handled successfully")
+        self.step_capture.mark(4, "The last view refuses with an alert")
+        alerts = []
+        self.page.on(
+            "dialog", lambda d: (alerts.append(d.message), d.dismiss())
+        )
+        tabs.first.locator("button.closeTabIcon").click()
+        # the native alert fires and dismisses with no DOM signal to
+        # wait on; the assert below carries the oracle
+        self.page.wait_for_timeout(1500)
+        assert alerts, (
+            "Closing the last view should fire the 'Action not "
+            "permitted' alert"
+        )
+        expect(tabs).to_have_count(1)

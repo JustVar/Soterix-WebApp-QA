@@ -72,19 +72,26 @@ class TestLicenseAssignedTab:
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_collapse_site_hides_features(self):
-        """Verify collapsing a site hides feature-level details."""
+        """Verify collapsing a site hides feature-level details.
+
+        Expansion must add rows and collapse must restore the exact
+        pre-expand count - the old version clicked both ways without
+        checking either.
+        """
         self._navigate_to_assigned()
 
         expand_icons = self.license.site_expand_icons
-        if expand_icons.count() > 0:
-            # Expand then collapse
-            self.license.expand_site(0)
-            self.page.wait_for_timeout(1000)
-            self.license.collapse_site(0)
-            self.page.wait_for_timeout(1000)
-            # Nested content should be hidden
-        else:
+        if expand_icons.count() == 0:
             pytest.skip("No expandable sites available")
+
+        rows = self.page.locator("tr.MuiTableRow-root")
+        initial_rows = rows.count()
+
+        self.license.expand_site(0)
+        expect(rows).not_to_have_count(initial_rows, timeout=10000)
+
+        self.license.collapse_site(0)
+        expect(rows).to_have_count(initial_rows, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.licenses

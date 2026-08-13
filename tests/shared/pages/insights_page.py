@@ -7,7 +7,12 @@ categories, widget search, and widget operations (view, report, delete).
 import datetime
 import time
 
-from playwright.sync_api import Error as PlaywrightError, Page, expect
+from playwright.sync_api import (
+    Error as PlaywrightError,
+    Page,
+    TimeoutError as PlaywrightTimeoutError,
+    expect,
+)
 
 # Graph type indices in the dropdown
 GRAPH_INDEX = {"Line": 0, "Bar": 1, "Pie": 4, "Heat": 5}
@@ -470,22 +475,22 @@ class InsightsPage:
             state="visible", timeout=30000
         )
 
+        # The browser download starting is the completion signal. The
+        # old success-toast wait swallowed its own timeout, so a
+        # silently failed download still passed - and the toast can
+        # show and dismiss unseen while a slow report generates.
         try:
-            self.report_download_button.click(timeout=5000)
-        except Exception:
-            # Overlay might block - force click as fallback
-            self.report_download_button.click(force=True)
-
-        # Wait for success message (report generation can be slow)
-        try:
-            self.report_success_msg.wait_for(
-                state="visible", timeout=60000
-            )
-        except Exception:
-            # Toast may have appeared and dismissed before we checked, or
-            # the download completed without a toast; there is no other
-            # completion signal to wait on
-            self.page.wait_for_timeout(3000)
+            with self.page.expect_download(timeout=90000):
+                try:
+                    self.report_download_button.click(timeout=5000)
+                except PlaywrightError:
+                    # Overlay might block - force click as fallback
+                    self.report_download_button.click(force=True)
+        except PlaywrightTimeoutError:
+            raise AssertionError(
+                f"No report download started for '{widget_name}' "
+                "within 90s of clicking the download button"
+            ) from None
 
     def delete_widget(self, widget_name: str):
         """Delete a widget via the three-dot menu and verify deletion."""

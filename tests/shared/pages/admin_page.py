@@ -209,14 +209,28 @@ class AdminPage:
         self.search_input.clear()
         self.search_input.fill(search_text)
 
-    def delete_user(self):
-        """Delete the first user shown in the current view.
+    def delete_user(self, match_text: str | None = None):
+        """Delete a listed user via options icon > delete > confirm.
 
-        Assumes search has already been performed to filter to the target user.
-        Clicks options icon > delete icon > confirm delete.
+        With match_text, the options icon is scoped to the user card
+        (.MuiPaper-root) containing that text, so an unfiltered or
+        still-filtering list can never hand the delete an arbitrary
+        first user - the 08/13/2026 near-miss: the server-side filter
+        was still running, the pre-filter rows were visible, and the
+        first options icon belonged to a real tenant user. Without
+        match_text the first icon is used, which is only safe on a
+        list the caller has verified as filtered.
         """
-        self.options_icon.first.wait_for(state="visible", timeout=10000)
-        self.options_icon.first.click()
+        if match_text:
+            # same selector as options_icon: these render as img
+            # assets on this page (probed), not MUI svg icons
+            icon = self.page.locator(
+                ".MuiPaper-root", has_text=match_text
+            ).locator("img[src*='optionIcon']").first
+        else:
+            icon = self.options_icon.first
+        icon.wait_for(state="visible", timeout=10000)
+        icon.click()
 
         self.delete_icon.wait_for(state="visible", timeout=5000)
         self.delete_icon.click()

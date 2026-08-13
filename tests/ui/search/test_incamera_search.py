@@ -113,4 +113,6 @@ class TestInCameraSearch:
         if not ics.has_results():
             pytest.skip("No search results to play")
 
+        # oracle: play_result raises unless the player's play button
+        # appears after the result click
         ics.play_result(index=0, timeout=30000)

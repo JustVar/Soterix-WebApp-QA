@@ -21,7 +21,9 @@ class TestAdminUsers:
                 self.admin.navigate_to_users()
                 self.admin.search_user(search_text)
                 if self._user_row_appears():
-                    self.admin.delete_user()
+                    # scoped to the created user's card: if the filter
+                    # is still running, this can never grab a stranger
+                    self.admin.delete_user(match_text=search_text)
             except Exception as e:
                 print(f"Cleanup: failed to delete user '{search_text}': {e}")
 
@@ -162,13 +164,28 @@ class TestAdminUsers:
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 
-        # Search for test user; wait for the row before deciding
+        # Unfiltered baseline first: the search filter is server-side
+        # and the pre-filter rows stay visible while it runs, so only
+        # the count moving off this baseline proves the filter applied
+        # (an instant row check once handed delete_user the tenant's
+        # first user while the filter was still in flight - caught by
+        # the post-delete oracle 08/13/2026)
+        self.admin.options_icon.first.wait_for(
+            state="visible", timeout=15000
+        )
+        all_rows = self.admin.options_icon.count()
+
         self.admin.search_user("AutoTest")
-        if not self._user_row_appears():
+        expect(self.admin.options_icon).not_to_have_count(
+            all_rows, timeout=15000
+        )
+
+        rows_before = self.admin.options_icon.count()
+        if rows_before == 0:
             pytest.skip("No test users found to delete")
 
         try:
-            self.admin.delete_user()
+            self.admin.delete_user(match_text="AutoTest")
         except Exception as e:
             pytest.skip(f"Delete confirmation dialog not found: {e}")
 
@@ -176,3 +193,9 @@ class TestAdminUsers:
         error_msg = self.page.locator("text=Can't delete")
         if error_msg.count() > 0:
             pytest.skip("App returned 'Can't delete the user' error")
+
+        # The deletion is only real when the filtered list shrinks -
+        # the old version ended here and passed on a silent no-op
+        expect(self.admin.options_icon).to_have_count(
+            rows_before - 1, timeout=15000
+        )

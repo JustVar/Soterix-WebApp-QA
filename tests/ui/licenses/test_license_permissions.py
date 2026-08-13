@@ -29,27 +29,32 @@ class TestLicensePermissions:
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_license_page_no_duplicate_records(self):
-        """Verify Licenses page does not display duplicate records."""
+        """Verify the Licenses page does not render duplicate records.
+
+        Feature names repeat by design - the tenant holds several
+        licenses of one feature (measured 08/13/2026) - so the check
+        keys on the WHOLE row: a double-render bug duplicates entire
+        rows, while legitimate same-feature rows differ in the other
+        columns (Quantity, Available, Active).
+        """
         self.license.navigate()
 
-        self.page.wait_for_timeout(3000)
+        rows = self.page.locator("tr:has(td)")
+        expect(rows.first).to_be_visible(timeout=15000)
 
-        # Collect visible license item texts
-        items = self.page.locator(
-            "td:first-child, div[class*='cell']:first-child"
-        )
-        texts = []
-        for i in range(min(items.count(), 50)):
-            text = items.nth(i).inner_text().strip()
+        row_texts = []
+        for i in range(rows.count()):
+            text = " | ".join(rows.nth(i).inner_text().split())
             if text:
-                texts.append(text)
+                row_texts.append(text)
 
-        # Check for duplicates (allow empty strings)
-        unique = set(texts)
-        if len(texts) > 0:
-            # Some duplicate cell text is expected in tables (e.g., status values)
-            # but actual license names/keys should be unique
-            pass  # Visual verification - full dedup requires data-specific logic
+        assert row_texts, "License table rendered no data rows"
+        dupes = sorted({t for t in row_texts if row_texts.count(t) > 1})
+        assert not dupes, (
+            f"Duplicate license rows rendered: {dupes[:3]} - either a "
+            "double-render bug or two records identical in every "
+            "column (check the page data before blaming the render)"
+        )
 
     @pytest.mark.ui
     @pytest.mark.licenses
