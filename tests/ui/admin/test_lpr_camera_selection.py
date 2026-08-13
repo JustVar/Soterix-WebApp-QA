@@ -1,8 +1,27 @@
-﻿"""LPR Camera selection tests - multi-camera selection, hover, drag-drop."""
+"""LPR Camera selection tests - group checkbox, drag-drop, single camera.
+
+Rebuilt 08/13/2026. The old file navigated to Admin > LPR (the Lists
+page), failed to find the Locations & Cameras panel there, and
+returned early - all three tests passed without testing anything. The
+panel lives on the sidebar LPR camera page: camera and group rows are
+draggable and show a hover checkbox (sidebar-custom-checkbox) that
+adds them to the grid. A new video element past the baseline is the
+started signal (measured: the group checkbox took the page from 0 to
+4 streams; empty tiles keep placeholder spinners alive forever, so
+loader waits can never finish). Reset View clears the grid to 0
+videos, and placements are session-scoped.
+
+The panel has no camera search box (the page's only Search input
+belongs to the Widgets panel), so the old search step is gone.
+"""
 import pytest
-import time
 from playwright.sync_api import expect
 from tests.shared.pages.lpr_page import LprPage
+
+from config.base_config import config
+
+SITE_NAME = config.get("test_site_name")
+CAMERA_NAME = config.get("test_camera_name")
 
 
 class TestLprCameraSelection:
@@ -15,187 +34,88 @@ class TestLprCameraSelection:
         step_capture.set_page(self.page)
         self.lpr = LprPage(self.page)
 
+    def _expect_new_stream(self, before: int, timeout: int = 60000):
+        """A video element past the baseline is the started signal."""
+        self.page.locator("video").nth(before).wait_for(
+            state="attached", timeout=timeout
+        )
+
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_select_multi_camera_by_site(self):
-        """Select multiple cameras by site using checkbox."""
-        from config.base_config import config
+        """The group row's hover checkbox starts the group's cameras."""
+        self.step_capture.mark(1, "Navigate to LPR camera page")
+        self.lpr.ensure_lpr_camera_page()
 
-        self.step_capture.mark(1, "Navigate to LPR page")
-        self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
+        self.step_capture.mark(2, "Open the Locations & Cameras panel")
+        self.lpr.ensure_lpr_dropdown_open()
 
-        site_name = config.get("test_site_name", "Newtown ActionArea")
-        self.step_capture.mark(2, f"Open Locations & Cameras for site: {site_name}")
+        self.step_capture.mark(3, f"Open site '{SITE_NAME}'")
+        group = self.lpr.open_site_group(SITE_NAME)
 
-        # Try to find and click Locations & Cameras dropdown
-        locations = self.page.locator("p:has-text('Locations & Cameras')").first
-        if locations.count() == 0:
-            locations = self.page.locator("span:has-text('Locations')").first
+        self.step_capture.mark(4, "Hover the group row, click its checkbox")
+        before = self.page.locator("video").count()
+        group.hover()
+        group.locator(".sidebar-custom-checkbox").first.click()
 
-        try:
-            if locations.count() > 0:
-                locations.wait_for(state="visible", timeout=30000)
-                locations.click()
-                self.page.wait_for_timeout(1000)
-            else:
-                print("[INFO] Locations dropdown not found - may need to navigate further")
-                self.step_capture.mark(3, "Locations not found")
-                return
-        except Exception as e:
-            print(f"[INFO] Could not open locations: {e}")
-            return
+        self.step_capture.mark(5, "A new stream past the baseline starts")
+        self._expect_new_stream(before)
 
-        self.step_capture.mark(3, "Find and click site")
-        site = self.page.locator(f"span:has-text('{site_name}')").first
-        site.wait_for(state="visible", timeout=30000)
-        site.click()
-        self.page.wait_for_timeout(1000)
-
-        self.step_capture.mark(4, "Find All Cameras option")
-        all_cameras = self.page.locator("span:has-text('All Cameras')").first
-        all_cameras.wait_for(state="visible", timeout=30000)
-
-        self.step_capture.mark(5, "Hover and select All Cameras checkbox")
-        all_cameras.hover()
-        self.page.wait_for_timeout(1000)
-
-        checkbox = self.page.locator("img[src*='uncheck-icon']").first
-        if checkbox.count() > 0:
-            checkbox.click()
-            print("[STEP 5] All Cameras selected")
-
-        self.step_capture.mark(6, "Verify camera players loaded")
-        players = self.page.locator("video, canvas, div:has-text('Live')").all()
-        visible_players = [p for p in players if p.is_visible()]
-
-        assert len(visible_players) > 0, "Multi-camera views not loaded"
-        print(f"[PASS] Multi-camera views loaded: {len(visible_players)} players")
-
-        self.step_capture.mark(7, "Reset View")
-        reset_btn = self.page.locator("p:has-text('Reset View')").first
-        reset_btn.wait_for(state="visible", timeout=30000)
-        reset_btn.click()
-        self.page.wait_for_timeout(2000)
+        self.step_capture.mark(6, "Reset View clears the grid")
+        self.page.get_by_text("Reset View", exact=True).click()
+        expect(self.page.locator("video")).to_have_count(0, timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_drag_drop_camera_to_grid(self):
-        """Drag and drop all cameras to a specific grid cell."""
-        from config.base_config import config
+        """Dragging the group onto a tile starts its cameras."""
+        self.step_capture.mark(1, "Navigate to LPR camera page")
+        self.lpr.ensure_lpr_camera_page()
 
-        self.step_capture.mark(1, "Navigate to LPR page")
-        self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
-
-        site_name = config.get("test_site_name", "Newtown ActionArea")
-        self.step_capture.mark(2, "Open Locations & Cameras")
-
-        locations = self.page.locator("p:has-text('Locations & Cameras')").first
-        if locations.count() == 0:
-            locations = self.page.locator("span:has-text('Locations')").first
-
-        if locations.count() > 0:
-            try:
-                locations.wait_for(state="visible", timeout=30000)
-                locations.click()
-                self.page.wait_for_timeout(1000)
-            except Exception as e:
-                print(f"[INFO] Could not open locations: {e}")
-                return
-        else:
-            print("[INFO] Locations element not found")
-            return
-
-        self.step_capture.mark(3, "Click site")
-        site = self.page.locator(f"span:has-text('{site_name}')").first
-        site.wait_for(state="visible", timeout=30000)
-        site.click()
-        self.page.wait_for_timeout(1000)
-
-        self.step_capture.mark(4, "Find All Cameras")
-        all_cameras = self.page.locator("span:has-text('All Cameras')").first
-        all_cameras.wait_for(state="visible", timeout=30000)
-
-        self.step_capture.mark(5, "Find target grid for drag-drop")
-        target_grid = self.page.locator("div:has-text('Drag & Drop Camera here')").nth(1)
-        target_grid.wait_for(state="visible", timeout=30000)
-
-        self.step_capture.mark(6, "Drag and drop cameras to grid")
-        all_cameras.drag_to(target_grid)
-        self.page.wait_for_timeout(2000)
-        print("[STEP 6] Drag and drop completed")
-
-        self.step_capture.mark(7, "Verify cameras loaded in grid")
-        players = self.page.locator("video, canvas").all()
-        visible_players = [p for p in players if p.is_visible()]
-
-        assert len(visible_players) > 0, "Camera players not loaded after drag-drop"
-        print(f"[PASS] Cameras loaded in grid: {len(visible_players)} players")
+        self.step_capture.mark(2, f"Drag the '{SITE_NAME}' group to a tile")
+        # oracle: play_camera raises unless a new stream element
+        # appears after the drop (one stream by design - the shared
+        # tenant keeps offline cameras in the group)
+        self.lpr.play_camera(SITE_NAME, play_all_cameras=True)
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_hover_and_select_single_camera(self):
-        """Hover over camera and select checkbox."""
-        from config.base_config import config
+        """A camera row's hover checkbox starts that camera."""
+        self.step_capture.mark(1, "Navigate to LPR camera page")
+        self.lpr.ensure_lpr_camera_page()
 
-        self.step_capture.mark(1, "Navigate to LPR page")
-        self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
+        self.step_capture.mark(2, "Open the Locations & Cameras panel")
+        self.lpr.ensure_lpr_dropdown_open()
 
-        camera_name = config.get("test_camera_name", "main gate")
-        self.step_capture.mark(2, "Open Locations & Cameras")
+        self.step_capture.mark(3, f"Expand to camera '{CAMERA_NAME}'")
+        group = self.lpr.open_site_group(SITE_NAME)
+        cameras = self.page.locator("div[draggable='true']").filter(
+            has_text=CAMERA_NAME
+        )
+        try:
+            cameras.first.wait_for(state="visible", timeout=3000)
+        # the group may still be collapsed; one expand click self-heals
+        except Exception:
+            group.click()
+            cameras.first.wait_for(state="visible", timeout=15000)
 
-        locations = self.page.locator("p:has-text('Locations & Cameras')").first
-        if locations.count() == 0:
-            locations = self.page.locator("span:has-text('Locations')").first
+        self.step_capture.mark(4, "Hover the camera row, click its checkbox")
+        before = self.page.locator("video").count()
+        row = cameras.first
+        row.hover()
+        # JS click on the inner input: the row re-renders continuously
+        # (its snapshot image refreshes), so a pointer click never
+        # passes the stability check, and MUI checkboxes handle the
+        # change on the input, not the span (the sequences page uses
+        # the same input-targeted JS click). The new-stream wait below
+        # is the oracle.
+        row.locator(
+            ".sidebar-custom-checkbox input[type='checkbox']"
+        ).first.evaluate("el => el.click()")
 
-        if locations.count() > 0:
-            try:
-                locations.wait_for(state="visible", timeout=30000)
-                locations.click()
-                self.page.wait_for_timeout(1000)
-            except Exception as e:
-                print(f"[INFO] Could not open locations: {e}")
-                return
-        else:
-            print("[INFO] Locations not found")
-            return
-
-        self.step_capture.mark(3, f"Search for camera: {camera_name}")
-        search = self.page.locator("input[placeholder='Search']").first
-        if search.count() > 0:
-            try:
-                search.wait_for(state="visible", timeout=30000)
-                search.fill(camera_name)
-                self.page.wait_for_timeout(1000)
-            except Exception as e:
-                print(f"[INFO] Could not search: {e}")
-                return
-
-        self.step_capture.mark(4, "Find camera image")
-        camera_image = self.page.locator(f"img[alt='{camera_name}']").first
-        if camera_image.count() == 0:
-            camera_image = self.page.locator(f"text={camera_name}").first.locator("..").locator("img").first
-
-        if camera_image.count() > 0:
-            try:
-                camera_image.wait_for(state="visible", timeout=30000)
-
-                self.step_capture.mark(5, "Hover over camera")
-                camera_image.hover()
-                self.page.wait_for_timeout(1000)
-
-                self.step_capture.mark(6, "Click checkbox to select")
-                checkbox = self.page.locator("img[src*='uncheck-icon']").first
-                if checkbox.count() > 0:
-                    checkbox.click()
-                    print(f"[STEP 6] Camera '{camera_name}' selected")
-            except Exception as e:
-                print(f"[INFO] Could not select camera: {e}")
-
-        self.step_capture.mark(7, "Verify selection")
-        print(f"[PASS] Camera selection completed for {camera_name}")
+        self.step_capture.mark(5, "A new stream past the baseline starts")
+        self._expect_new_stream(before)

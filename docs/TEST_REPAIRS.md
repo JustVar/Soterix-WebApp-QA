@@ -41,7 +41,7 @@ the page-object conversion, [DATA] stale tenant data in the test,
 | tests/ui/views/test_views_fullscreen.py | [DONE] | Verified 08/13/2026: 5/5 green first run. |
 | tests/ui/views/test_views_playback.py | [DONE] | Verified 08/13/2026: 10/10 green after one real fix - the second-tile fullscreen test failed three straight runs because the live player intermittently shows 'The camera failed to load. Please try again.' OVER a rendering live frame (trace-confirmed on Street#36). recover_stream_if_failed clicks the overlay's refresh link once (loose case-insensitive match - the link label reads 'Rafresh' on the current build), the user-path recovery, and is_streaming now checks the overlay's visibility instead of its count so a recovered-but-mounted overlay cannot false-fail it. |
 | tests/ui/insights/test_insights_widgets.py | [DONE] | Verified 08/13/2026: Line_Person create ran green end to end (112s), and the rebuilt lpr_widgets suite now exercises create_widget (Event + LPR description) and delete_widget on every run. The two no-oracle tests in the file (view/report) stay on the G2 worklist. |
-| tests/ui/admin/test_lpr_camera_selection.py | [DONE] | Verified 08/13/2026: 3/3 green first run against the rebuilt lpr_page. |
+| tests/ui/admin/test_lpr_camera_selection.py | [DONE] | REBUILT 08/13/2026 - the same-day '3/3 green first run' note was wrong: those passes were vacuous. The old file navigated to Admin > LPR (the Lists page), failed to find the Locations & Cameras panel there, printed INFO, and returned early before any assert - the static no-oracle checker cannot see unreachable asserts. Rebuilt on the camera page's measured mechanics: group and camera rows show a hover checkbox (sidebar-custom-checkbox) that adds them to the grid - the group checkbox took the page from 0 to 4 streams, Reset View back to 0; a new video element past the baseline is the started signal. Camera rows re-render continuously (their snapshot refreshes), so their checkbox needs an input-targeted JS click - a pointer click never passes the stability check. The panel has no camera search box (the page's only Search belongs to the Widgets panel), so the old search step is gone. 3/3 green on the real flows. |
 | Headed parity spot-check | [DONE] | Verified 08/13/2026: test_views_basic headed 6/6 green, and two tests headed with --slowmo 300 --verify-mode both green - one WITH step marks (lpr_playback navigation) so the injected overlay path itself ran and changed nothing. Evidence files landed in verification_output/. |
 
 Verified green 08/08-08/09: events (28/28 over three files), licenses
@@ -234,9 +234,14 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 ## G. Conversion debt (not broken, still on old sleeps)
 
 Test FILES still carry uncommented sleeps (page objects are done):
-search suites, the LPR test files not yet rebuilt, notifications,
-c2c, insights dashboard/widgets test bodies, license test bodies,
-sequences test body.
+search suites, lpr_operations, admin_event_wall, admin_audit_trail,
+notifications, c2c, insights dashboard/widgets test bodies, license
+test bodies, media deeper/operations, and singles.
+
+sequences (was 20) converted 08/13/2026 by delegating the test
+bodies to the already-signal-based SequencePage (7/7 green twice);
+lpr_camera_selection (was 13) rebuilt the same day (see section C
+row - its sleeps died with the vacuous early-exit flow).
 
 views drag_drop (was the largest at 36) converted 08/13/2026, 6
 passed + 1 designed skip. The conversion surfaced a structural
