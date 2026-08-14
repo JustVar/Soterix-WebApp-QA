@@ -75,11 +75,9 @@ class TestLicenseNavigation:
         content_before = self.page.locator("text=Total Licenses").first
         expect(content_before).to_be_visible(timeout=10000)
 
-        # Reload page and re-navigate to ensure content loads properly
+        # Reload, then re-navigate; navigate carries its own arrival
+        # waits (reload waits for the load event on its own)
         self.page.reload()
-        self.page.wait_for_timeout(3000)
-
-        # Re-navigate to licenses to ensure proper state
         self.license.navigate()
 
         # Content should be visible after re-navigation
@@ -127,12 +125,12 @@ class TestLicenseNavigation:
         self._navigate()
         self.license.switch_to_available_tab()
 
-        # Should show at least one row/item in the table
+        # Should show at least one row/item in the table; the raising
+        # wait carries the oracle
         rows = self.page.locator(
             "tr, div[class*='row']"
         )
-        self.page.wait_for_timeout(2000)
-        assert rows.count() > 0, "No license features displayed in Available tab"
+        rows.first.wait_for(state="visible", timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -155,13 +153,9 @@ class TestLicenseNavigation:
         dashboard_link = self.page.get_by_text("Dashboard").first
         if dashboard_link.count() > 0:
             dashboard_link.click()
-            self.page.wait_for_timeout(3000)
 
-        # Navigate back to Licenses
+        # Navigate back; the retrying expect below is the signal
         self._navigate()
-        self.page.wait_for_timeout(3000)
-
-        # Available tab should still be visible/active
         expect(self.license.available_tab).to_be_visible(timeout=15000)
 
     @pytest.mark.ui
@@ -179,9 +173,9 @@ class TestLicenseNavigation:
         self._navigate()
 
         for _ in range(3):
+            # reload waits for the load event; navigate carries the
+            # arrival waits
             self.page.reload()
-            self.page.wait_for_timeout(2000)
-            # Re-navigate to ensure page loads correctly after refresh
             self.license.navigate()
 
         # Content should be accessible after multiple refresh cycles

@@ -26,11 +26,11 @@ class TestLicenseSearch:
         self._navigate()
 
         self.license.search("Channel")
-        self.page.wait_for_timeout(2000)
 
-        # After searching, content should still be visible (filtered)
+        # After searching, content should still be visible (filtered);
+        # the raising wait carries the oracle
         rows = self.page.locator("tr, div[class*='row']")
-        assert rows.count() > 0, "Search returned no results for 'Channel'"
+        rows.first.wait_for(state="visible", timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -39,7 +39,6 @@ class TestLicenseSearch:
         self._navigate()
 
         self.license.search("Chan")
-        self.page.wait_for_timeout(2000)
 
         # Should still return some results
         content = self.page.locator(
@@ -55,9 +54,9 @@ class TestLicenseSearch:
 
         # Search with a license key format (alphanumeric)
         self.license.search("LIC")
-        self.page.wait_for_timeout(2000)
 
-        # Results should render (or empty state)
+        # Results should render (or empty state); the retrying expect
+        # absorbs the filter latency
         expect(self.license.search_input).to_have_value("LIC")
 
     @pytest.mark.ui
@@ -67,6 +66,8 @@ class TestLicenseSearch:
         self._navigate()
 
         self.license.search("ZZZZNONEXISTENT999")
+        # the nonsense filter has no completion signal; the bounded
+        # settle lets the empty state land before the checks below
         self.page.wait_for_timeout(2000)
 
         # Should show empty state or zero rows
@@ -84,19 +85,23 @@ class TestLicenseSearch:
         """Verify clearing search restores full license list."""
         self._navigate()
 
-        # Do a search first
+        # Do a search first; a rendered row marks the filter applied
         self.license.search("Channel")
-        self.page.wait_for_timeout(2000)
+        rows = self.page.locator("tr, div[class*='row']")
+        rows.first.wait_for(state="visible", timeout=10000)
 
         # Count filtered results
-        filtered_count = self.page.locator("tr, div[class*='row']").count()
+        filtered_count = rows.count()
 
-        # Clear search
+        # Clear search; a rendered row marks the list restored
         self.license.clear_search()
-        self.page.wait_for_timeout(2000)
+        rows.first.wait_for(state="visible", timeout=10000)
+        # the restore has no completion signal beyond the first row;
+        # the bounded settle lets the full list land before counting
+        self.page.wait_for_timeout(1000)
 
         # Full list should have at least as many items
-        full_count = self.page.locator("tr, div[class*='row']").count()
+        full_count = rows.count()
         assert full_count >= filtered_count, \
             "Clearing search did not restore the full list"
 
@@ -109,6 +114,8 @@ class TestLicenseSearch:
         initial_count = self.page.locator("tr, div[class*='row']").count()
 
         self.license.search("")
+        # a no-op search has no completion signal; the bounded settle
+        # gives an unexpected change a beat to appear before comparing
         self.page.wait_for_timeout(1000)
 
         after_count = self.page.locator("tr, div[class*='row']").count()
@@ -147,7 +154,6 @@ class TestLicenseExport:
     def test_csv_download_triggers_file(self):
         """Verify CSV download button is available and functional."""
         self._navigate()
-        self.page.wait_for_timeout(2000)
 
         # Look for download image or button
         download_elem = self.page.locator(
@@ -161,9 +167,9 @@ class TestLicenseExport:
         # Verify element is visible
         expect(download_elem).to_be_visible(timeout=10000)
 
-        # Hover over the download element to activate it
+        # Hover over the download element to activate it; the click's
+        # own actionability wait covers the hover render
         download_elem.hover()
-        self.page.wait_for_timeout(500)
 
         # Trigger the download and capture it.
         #

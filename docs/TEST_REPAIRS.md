@@ -266,9 +266,20 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 ## G. Conversion debt (not broken, still on old sleeps)
 
 Test FILES still carry uncommented sleeps (page objects are done):
-search suites, lpr_operations, admin_event_wall, admin_audit_trail,
-notifications, c2c, insights dashboard/widgets test bodies, license
-test bodies, media deeper/operations, and singles.
+search suites, c2c, insights dashboard/widgets test bodies, media
+deeper/operations, lpr_views' three old-style tests, and singles.
+
+lpr_operations (was 11) and the license family (navigation 5,
+search 9, assignment 9, permissions 4) converted 08/14/2026 -
+lpr_operations 10/10 green, licenses 34 green + 8 designed skips.
+Two sanctioned commented settles remain in license_search (the
+clear-restore and no-op-search premises have no completion signal).
+The lpr_operations conversion exposed a render race its settles
+had absorbed: an instant row read right after navigation sees the
+table pre-render and mis-skips on 'no lists'; row reads now go
+through a bounded render wait. The license drill-down and suspend
+flows gained real arrival signals (breadcrumb, dialog) where they
+had trailing sleeps.
 
 sequences (was 20) converted 08/13/2026 by delegating the test
 bodies to the already-signal-based SequencePage (7/7 green twice);

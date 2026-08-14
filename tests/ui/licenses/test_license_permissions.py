@@ -67,8 +67,8 @@ class TestLicensePermissions:
         expect(available_search).to_be_visible(timeout=10000)
 
         # Switch to Assigned and verify similar structure
+        # the page-ready helper carries the settled signal
         self.license.switch_to_assigned_tab()
-        self.page.wait_for_timeout(2000)
         self.license._wait_for_page_ready()
 
         # Verify Assigned tab is active by checking the button
@@ -87,18 +87,26 @@ class TestLicensePermissions:
             pytest.skip("No expandable sites for dialog test")
 
         self.license.expand_site(0)
-        self.page.wait_for_timeout(2000)
 
-        # Navigate to device list if possible
+        # Navigate to device list if possible; feature links render
+        # with the expansion, and the count check below handles a miss
         feature_links = self.page.locator(
             "div[class*='feature'] a, div[class*='nested'] a, "
             "td a, div[class*='clickable']"
         )
+        try:
+            feature_links.first.wait_for(state="visible", timeout=10000)
+        # absence routes to the skip below
+        except Exception:
+            pass
         if feature_links.count() == 0:
             pytest.skip("No feature links for device drill-down")
 
         feature_links.first.click()
-        self.page.wait_for_timeout(3000)
+        # the device-list breadcrumb is the navigated signal
+        self.license.breadcrumb.first.wait_for(
+            state="visible", timeout=15000
+        )
 
         options = self.license.options_icons
         if options.count() == 0:
@@ -112,12 +120,17 @@ class TestLicensePermissions:
         ).first
         if suspend.count() > 0:
             suspend.click()
-            self.page.wait_for_timeout(1000)
 
-            # Verify dialog has meaningful text (not empty)
+            # Verify dialog has meaningful text (not empty); it
+            # renders async, and a miss skips the text check
             dialog = self.page.locator(
                 "div[role='dialog'], div[class*='modal']"
             ).first
+            try:
+                dialog.wait_for(state="visible", timeout=5000)
+            # absence falls to the count guard below
+            except Exception:
+                pass
             if dialog.count() > 0:
                 text = dialog.inner_text()
                 assert len(text.strip()) > 10, \
@@ -137,7 +150,6 @@ class TestLicensePermissions:
             "img[title], img[alt], button[title], "
             "[aria-label], [data-tooltip]"
         )
-        self.page.wait_for_timeout(2000)
-
-        # At least some icons should have accessibility attributes
-        assert icons.count() > 0, "No icons with tooltip/alt text found"
+        # the raising wait carries the oracle (attached: some carry
+        # aria-labels while hidden)
+        icons.first.wait_for(state="attached", timeout=10000)

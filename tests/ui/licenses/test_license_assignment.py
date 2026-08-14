@@ -31,7 +31,12 @@ class TestLicenseAssignedTab:
             "div[class*='site'], div[class*='group'], "
             "tr[class*='site'], div[class*='expand']"
         )
-        self.page.wait_for_timeout(2000)
+        # site rows render async; a miss falls to the empty-state arm
+        try:
+            site_content.first.wait_for(state="visible", timeout=10000)
+        # absence routes to the empty-state check below
+        except Exception:
+            pass
         # Either sites exist or empty state message
         has_sites = site_content.count() > 0
         has_empty = self.page.locator("text=No assigned licenses, text=No data").first.count() > 0
@@ -42,7 +47,6 @@ class TestLicenseAssignedTab:
     def test_multiple_sites_displayed(self):
         """Verify multiple sites are displayed correctly if available."""
         self._navigate_to_assigned()
-        self.page.wait_for_timeout(2000)
 
         # Count site-level expandable items
         site_items = self.page.locator(
@@ -60,11 +64,12 @@ class TestLicenseAssignedTab:
 
         expand_icons = self.license.site_expand_icons
         if expand_icons.count() > 0:
-            initial_rows = self.page.locator("tr.MuiTableRow-root").count()
+            rows = self.page.locator("tr.MuiTableRow-root")
+            initial_rows = rows.count()
             self.license.expand_site(0)
-            # After expanding, more rows should appear (nested feature rows)
-            self.page.wait_for_timeout(2000)
-            expanded_rows = self.page.locator("tr.MuiTableRow-root").count()
+            # the row count leaving the baseline marks the expansion
+            expect(rows).not_to_have_count(initial_rows, timeout=10000)
+            expanded_rows = rows.count()
             assert expanded_rows > initial_rows, "No additional rows shown after site expansion"
         else:
             pytest.skip("No expandable sites available")
@@ -115,14 +120,10 @@ class TestLicenseAssignedTab:
         dashboard_link = self.page.get_by_text("Dashboard").first
         if dashboard_link.count() > 0:
             dashboard_link.click()
-            self.page.wait_for_timeout(3000)
 
-        # Come back
+        # Come back; the retrying expect below is the signal
         self.license.navigate()
         self.license.switch_to_assigned_tab()
-
-        # Assigned tab should be active and visible
-        self.page.wait_for_timeout(2000)
         expect(self.license.assigned_tab).to_be_visible(timeout=10000)
 
     @pytest.mark.ui
@@ -131,9 +132,8 @@ class TestLicenseAssignedTab:
         """Verify Assigned Licenses tab loads correctly after page refresh."""
         self._navigate_to_assigned()
 
-        # Reload the page
+        # Reload the page (reload waits for the load event on its own)
         self.page.reload()
-        self.page.wait_for_timeout(3000)
 
         # Re-navigate to licenses and switch to Assigned tab
         # (page reload doesn't preserve tab state, so we re-navigate)
@@ -163,17 +163,25 @@ class TestLicenseDeviceList:
             pytest.skip("No expandable sites available for device list drill-down")
 
         self.license.expand_site(0)
-        self.page.wait_for_timeout(2000)
 
-        # Click on a feature row to navigate to device list
+        # Feature rows render with the expansion; a miss falls to the
+        # skip below
         feature_links = self.page.locator(
             "div[class*='feature'] a, div[class*='nested'] a, "
             "div[class*='feature'] span[class*='link'], "
             "td a, div[class*='clickable']"
         )
+        try:
+            feature_links.first.wait_for(state="visible", timeout=10000)
+        # absence routes to the skip below
+        except Exception:
+            pass
         if feature_links.count() > 0:
             feature_links.first.click()
-            self.page.wait_for_timeout(3000)
+            # the device-list breadcrumb is the navigated signal
+            expect(self.license.breadcrumb.first).to_be_visible(
+                timeout=15000
+            )
         else:
             pytest.skip("No feature links found for drill-down")
 
@@ -218,9 +226,10 @@ class TestLicenseDeviceList:
         ).first
         expect(suspend).to_be_visible(timeout=5000)
 
-        # Close menu by pressing Escape
+        # Close menu by pressing Escape; the menu item leaving is the
+        # closed signal
         self.page.keyboard.press("Escape")
-        self.page.wait_for_timeout(500)
+        suspend.wait_for(state="hidden", timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
