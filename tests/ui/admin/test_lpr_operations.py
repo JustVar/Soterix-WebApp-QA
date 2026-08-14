@@ -8,6 +8,24 @@ import datetime
 from tests.shared.pages.lpr_page import LprPage
 
 
+def _list_rows(page):
+    """List rows after a bounded render wait.
+
+    An instant .all() right after navigation reads the table before
+    it renders and mis-skips on 'no lists' (caught live 08/14/2026);
+    a miss after the bound falls to the caller's skip for a genuinely
+    empty table.
+    """
+    rows = page.locator("table tbody tr")
+    try:
+        rows.first.wait_for(state="visible", timeout=10000)
+    # no row within the bound: the caller's skip covers the genuinely
+    # empty table
+    except Exception:
+        pass
+    return rows.all()
+
+
 class TestLprListOperations:
     """Tests for LPR list CRUD operations."""
 
@@ -27,7 +45,6 @@ class TestLprListOperations:
             return
         try:
             self.lpr.navigate_to_lpr()
-            self.page.wait_for_timeout(1000)
             # Could add cleanup logic here
         except Exception as e:
             print(f"[CLEANUP] Failed to cleanup lists: {e}")
@@ -66,7 +83,11 @@ class TestLprListOperations:
         assert categories_tab.count() > 0, "Categories tab not found"
 
         self.step_capture.mark(4, "Verify table is visible")
-        assert self.page.locator("table").count() > 0, "Table not found"
+        # the table renders async after navigation; the raising wait
+        # carries the oracle
+        self.page.locator("table").first.wait_for(
+            state="visible", timeout=15000
+        )
 
         self.step_capture.mark(5, "Verify search field")
         search_field = self.page.locator("input[placeholder*='Search']").first
@@ -87,7 +108,6 @@ class TestLprListOperations:
         create_btn = self.lpr.create_list_button.first
         create_btn.wait_for(state="visible", timeout=30000)
         create_btn.click()
-        self.page.wait_for_timeout(1000)
 
         self.step_capture.mark(3, "Fill in list name")
         timestamp = datetime.datetime.now().strftime("%H%M%S")
@@ -105,13 +125,13 @@ class TestLprListOperations:
         dropdown = self.page.locator("div.modalForm-input:has(span:has-text('Select'))")
         dropdown.wait_for(state="visible", timeout=30000)
         dropdown.click()
-        self.page.wait_for_timeout(500)
 
-        # Select "White List" option from dropdown
+        # Select "White List"; the option hiding again is the
+        # selection-applied signal
         white_list_option = self.page.locator("li[role='menuitem']:has-text('White List')")
         white_list_option.wait_for(state="visible", timeout=30000)
         white_list_option.click()
-        self.page.wait_for_timeout(500)
+        white_list_option.wait_for(state="hidden", timeout=5000)
         print("[STEP 4] White List selected from dropdown")
 
         self.step_capture.mark(5, "Click Save button")
@@ -123,7 +143,6 @@ class TestLprListOperations:
         # Wait for modal to close by checking if the specific modal input field is gone
         modal_input = self.page.locator("input#firstName[placeholder='Enter List Name']")
         modal_input.wait_for(state="hidden", timeout=30000)
-        self.page.wait_for_timeout(2000)
 
         self.step_capture.mark(7, "Verify list created in table")
         list_row = self.page.locator(f"tr:has-text('{list_name}')").first
@@ -142,7 +161,7 @@ class TestLprListOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find first list in table")
-        list_rows = self.page.locator("table tbody tr").all()
+        list_rows = _list_rows(self.page)
         if len(list_rows) == 0:
             pytest.skip("No LPR lists available to search")
 
@@ -152,11 +171,11 @@ class TestLprListOperations:
         self.step_capture.mark(3, f"Search for list: {list_name}")
         search_field = self.page.locator("input[placeholder*='Search']").first
         search_field.fill(list_name)
-        self.page.wait_for_timeout(1000)
 
         self.step_capture.mark(4, "Verify search results")
+        # the raising wait carries the oracle
         search_result = self.page.locator(f"tr:has-text('{list_name}')").first
-        assert search_result.count() > 0, f"Search result for '{list_name}' not found"
+        search_result.wait_for(state="visible", timeout=10000)
 
         print(f"[PASS] List search for '{list_name}' succeeded")
 
@@ -169,7 +188,7 @@ class TestLprListOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find first list")
-        list_rows = self.page.locator("table tbody tr").all()
+        list_rows = _list_rows(self.page)
         if len(list_rows) == 0:
             pytest.skip("No LPR lists available")
 
@@ -198,7 +217,7 @@ class TestLprListOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find first list row")
-        list_rows = self.page.locator("table tbody tr").all()
+        list_rows = _list_rows(self.page)
         if len(list_rows) == 0:
             pytest.skip("No LPR lists available")
 
@@ -227,7 +246,7 @@ class TestLprListOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find first list row")
-        list_rows = self.page.locator("table tbody tr").all()
+        list_rows = _list_rows(self.page)
         if len(list_rows) == 0:
             pytest.skip("No LPR lists available")
 
@@ -261,7 +280,7 @@ class TestLprFilterOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find and open first list")
-        list_rows = self.page.locator("table tbody tr").all()
+        list_rows = _list_rows(self.page)
         if len(list_rows) < 2:
             pytest.skip("Not enough lists available")
 
@@ -279,12 +298,9 @@ class TestLprFilterOperations:
         self.lpr.apply_filter_button.first.click()
 
         self.step_capture.mark(5, "Verify Search Results view")
-        self.page.wait_for_timeout(2000)
+        # the results header rendering is the applied signal
         search_results = self.lpr.search_results_header.first
-        if search_results.count() > 0:
-            print("[PASS] Filter applied - Search Results view shown")
-        else:
-            print("[INFO] Search Results view may take time to appear or no results")
+        search_results.wait_for(state="visible", timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -295,7 +311,7 @@ class TestLprFilterOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Open first list and filter panel")
-        list_rows = self.page.locator("table tbody tr").all()
+        list_rows = _list_rows(self.page)
         if len(list_rows) < 2:
             pytest.skip("Not enough lists available")
 
@@ -310,7 +326,10 @@ class TestLprFilterOperations:
 
         self.step_capture.mark(3, "Apply filter")
         self.lpr.apply_filter_button.first.click()
-        self.page.wait_for_timeout(2000)
+        # the results header rendering is the applied signal
+        self.lpr.search_results_header.first.wait_for(
+            state="visible", timeout=15000
+        )
 
         self.step_capture.mark(4, "Click Reset button")
         reset_btn = self.lpr.reset_filter_button.first
@@ -318,9 +337,9 @@ class TestLprFilterOperations:
         reset_btn.click()
 
         self.step_capture.mark(5, "Verify returned to Plate page")
-        self.page.wait_for_timeout(1000)
+        # the raising wait carries the oracle
         add_plate_btn = self.lpr.add_plate_button.first
-        assert add_plate_btn.count() > 0, "Add Plate button not visible - not on Plate page"
+        add_plate_btn.wait_for(state="visible", timeout=15000)
 
         print("[PASS] Filter reset - returned to Plate page")
 
@@ -333,7 +352,7 @@ class TestLprFilterOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Open first list")
-        list_rows = self.page.locator("table tbody tr").all()
+        list_rows = _list_rows(self.page)
         if len(list_rows) < 2:
             pytest.skip("Not enough lists available")
 
@@ -345,7 +364,10 @@ class TestLprFilterOperations:
         filter_icon = self.lpr.filter_icon.first
         filter_icon.wait_for(state="visible", timeout=30000)
         filter_icon.click()
-        self.page.wait_for_timeout(500)
+        # the Apply button rendering is the panel-open signal
+        self.lpr.apply_filter_button.first.wait_for(
+            state="visible", timeout=10000
+        )
 
         self.step_capture.mark(4, "Verify Apply and Reset buttons visible")
         assert self.lpr.apply_filter_button.count() > 0, "Apply button not visible"
@@ -353,6 +375,9 @@ class TestLprFilterOperations:
 
         self.step_capture.mark(5, "Close filter panel by clicking filter icon again")
         filter_icon.click()
-        self.page.wait_for_timeout(500)
+        # the Apply button leaving is the panel-closed signal
+        self.lpr.apply_filter_button.first.wait_for(
+            state="hidden", timeout=10000
+        )
 
         print("[PASS] Filter panel toggle verified")
