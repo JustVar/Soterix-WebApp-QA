@@ -46,6 +46,8 @@ def test_brute_force_protection(page, base_url):
 
     for i in range(5):
         lp.login("test@example.com", f"wrongpassword{i}")
+        # a rejected attempt has no completion signal beyond the error
+        # banner; the beat lets captcha/lockout render before checking
         page.wait_for_timeout(1000)
 
         if lp.has_captcha() or lp.has_lockout_message():

@@ -136,8 +136,8 @@ class TestMapsDeeper:
     @pytest.mark.maps_deeper
     def test_maps_page_after_refresh(self):
         """Verify the Maps page reloads correctly after a browser refresh."""
+        # reload waits for the load event on its own
         self.page.reload()
-        self.page.wait_for_timeout(3000)
 
         # Should still show the site dropdown
         expect(self.maps.site_dropdown).to_be_visible(timeout=15000)

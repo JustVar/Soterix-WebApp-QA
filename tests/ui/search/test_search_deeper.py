@@ -53,7 +53,15 @@ class TestSearchDeeper:
     def test_description_panel_shown_for_person(self):
         """Verify the Description filter appears after selecting Person."""
         self.search.select_category("Person")
-        self.page.wait_for_timeout(1000)
+        # the Description dropdown renders async after the category
+        # applies; a miss leaves the boolean assert to report it
+        try:
+            self.page.get_by_text("Description", exact=False).first.wait_for(
+                state="visible", timeout=8000
+            )
+        # absence falls to the assert below
+        except Exception:
+            pass
 
         assert self.search.is_description_panel_visible(), (
             "Description panel should be visible for Person category"
@@ -69,12 +77,16 @@ class TestSearchDeeper:
         gender-specific options (Male/Female) only appear for Person.
         """
         self.search.select_category("Event")
+        # absence premises have no completion signal; the settle gives
+        # the panel a beat to render before the negative checks
         self.page.wait_for_timeout(1000)
 
         # Click Description dropdown if present
         dropdown = self.search._get_dropdown_by_text("Description")
         if dropdown is not None and dropdown.is_visible():
             dropdown.click()
+            # same absence premise: give gender options a beat to
+            # appear before asserting they do not
             self.page.wait_for_timeout(1000)
 
         # Gender container should NOT be visible for Event

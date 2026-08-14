@@ -127,17 +127,16 @@ class TestLprNavigation:
         self.step_capture.mark(1, "Navigate to Categories page")
         self.lpr.navigate_to_lpr()
         self.lpr.ensure_lpr_categories_page()
-        self.page.wait_for_timeout(2000)
 
         self.step_capture.mark(2, "Click List tab to switch from Categories")
         # Click the List tab button instead of trying to navigate away
         list_tab = self.page.locator("button:has-text('List')").first
         list_tab.wait_for(state="visible", timeout=30000)
         list_tab.click(force=True)
-        self.page.wait_for_timeout(2000)
 
         self.step_capture.mark(3, "Verify on Lists page")
-        self.lpr.create_list_button.first.wait_for(state="visible", timeout=10000)
+        # the Create List button is the Lists-page signal
+        self.lpr.create_list_button.first.wait_for(state="visible", timeout=15000)
         assert self.lpr.create_list_button.count() > 0, "Should be on Lists page"
 
         self.step_capture.mark(4, "Navigation completed successfully")

@@ -32,7 +32,10 @@ class TestLprViews:
             views_element = self.page.locator("span:has-text('Views'), a[href*='views'], button:has-text('Views')").first
             if views_element.count() > 0:
                 views_element.click()
-                self.page.wait_for_timeout(2000)
+                # a titled view tab is the Views-page arrival signal
+                self.page.locator("div.tabInner[title]").first.wait_for(
+                    state="visible", timeout=15000
+                )
                 print("[STEP 3] Navigated to Views page")
         except Exception as e:
             print(f"[INFO] Could not navigate to Views: {e}")
@@ -47,7 +50,6 @@ class TestLprViews:
         """Create multiple view tabs by clicking view plus button."""
         self.step_capture.mark(1, "Navigate to LPR page first")
         self.lpr.navigate_to_lpr()
-        self.page.wait_for_timeout(1000)
 
         self.step_capture.mark(2, "Look for Views page navigation")
         # Try to find and navigate to Views page
@@ -55,7 +57,10 @@ class TestLprViews:
             views_link = self.page.locator("span:has-text('Views'), a[href*='views'], button:has-text('Views')").first
             if views_link.count() > 0:
                 views_link.click()
-                self.page.wait_for_timeout(2000)
+                # a titled view tab is the Views-page arrival signal
+                self.page.locator("div.tabInner[title]").first.wait_for(
+                    state="visible", timeout=15000
+                )
                 print("[STEP 2] Navigated to Views page")
         except Exception as e:
             print(f"[INFO] Could not navigate to Views: {e}")
@@ -74,7 +79,10 @@ class TestLprViews:
 
                 self.step_capture.mark(4, "Click view button")
                 view_button.click()
-                self.page.wait_for_timeout(1000)
+                # a second titled tab is the view-added signal
+                self.page.locator("div.tabInner[title]").nth(1).wait_for(
+                    state="visible", timeout=10000
+                )
                 print("[STEP 4] Clicked view button")
 
                 self.step_capture.mark(5, "Verify view tabs created")

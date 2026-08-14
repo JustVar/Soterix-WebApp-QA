@@ -113,7 +113,6 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         self._created_widgets.append(widget_name)
-        self.page.wait_for_timeout(2000)
 
         # oracle: view_widget raises unless the View page opens (its
         # back-arrow wait) and closes again
@@ -134,7 +133,6 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         self._created_widgets.append(widget_name)
-        self.page.wait_for_timeout(2000)
 
         # oracle: download_report raises unless the browser download
         # actually starts
@@ -155,7 +153,6 @@ class TestInsightsWidgetOperations:
             site_name=SITE_NAME,
         )
         # Not added to _created_widgets - deletion is this test's purpose
-        self.page.wait_for_timeout(2000)
 
         deleted = self.insights.delete_widget(widget_name)
         assert deleted, f"Widget '{widget_name}' should be deleted"

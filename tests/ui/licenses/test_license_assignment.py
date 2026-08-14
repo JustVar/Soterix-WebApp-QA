@@ -248,8 +248,9 @@ class TestLicenseDeviceList:
         ).first
         expect(unassign).to_be_visible(timeout=5000)
 
+        # the menu item leaving is the closed signal
         self.page.keyboard.press("Escape")
-        self.page.wait_for_timeout(500)
+        unassign.wait_for(state="hidden", timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -284,8 +285,8 @@ class TestLicenseDeviceList:
 
         self.license.open_device_menu(0)
         self.license.unassign_option.click()
-        self.page.wait_for_timeout(1000)
 
+        # the retrying expect below absorbs the dialog render
         confirm_dialog = self.page.locator(
             "div[role='dialog'], div[class*='modal'], div[class*='confirm']"
         )

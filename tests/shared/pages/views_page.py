@@ -1,7 +1,7 @@
 """Views Page Object Model for video wall and camera views."""
 import time
 
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class ViewsPage:
@@ -162,7 +162,16 @@ class ViewsPage:
         # here, but a silent swallow would hide the race this wait exists
         # to close.
         before_tiles = self.drag_drop_tiles.count()
-        checkbox.click()
+        # JS-click fallback on the inner input: camera rows re-render
+        # with their snapshot refresh, so a pointer click can churn on
+        # the stability check until it times out (the same class the
+        # LPR panel checkbox hit); MUI handles the change on the input
+        try:
+            checkbox.click(timeout=5000)
+        except PlaywrightError:
+            # no inner input on this custom checkbox - JS-click the
+            # element itself
+            checkbox.first.evaluate("el => el.click()")
         if before_tiles > 0:
             try:
                 expect(self.drag_drop_tiles).not_to_have_count(before_tiles, timeout=10000)
@@ -231,7 +240,16 @@ class ViewsPage:
         # here, but a silent swallow would hide the race this wait exists
         # to close.
         before_tiles = self.drag_drop_tiles.count()
-        checkbox.click()
+        # JS-click fallback on the inner input: camera rows re-render
+        # with their snapshot refresh, so a pointer click can churn on
+        # the stability check until it times out (the same class the
+        # LPR panel checkbox hit); MUI handles the change on the input
+        try:
+            checkbox.click(timeout=5000)
+        except PlaywrightError:
+            # no inner input on this custom checkbox - JS-click the
+            # element itself
+            checkbox.first.evaluate("el => el.click()")
         if before_tiles > 0:
             try:
                 expect(self.drag_drop_tiles).not_to_have_count(before_tiles, timeout=10000)

@@ -265,9 +265,23 @@ the recent repairs fixed (`python tools/convention_check.py --all`):
 
 ## G. Conversion debt (not broken, still on old sleeps)
 
-Test FILES still carry uncommented sleeps (page objects are done):
-search suites, c2c, insights dashboard/widgets test bodies, media
-deeper/operations, lpr_views' three old-style tests, and singles.
+Test-file sleep debt CLEARED 08/14/2026 except two holds: the c2c
+files (3 sleeps; converting them unverified would break the
+measure-convert-verify discipline - they need a hardware session)
+and a handful of comment-sanctioned settles for signal-less
+premises (absence checks, no-op comparisons, rejected-login pacing,
+post-URL-miss beats). The tail tranche: insights_dashboard (10),
+media_deeper (6), lpr_views' old tests (4), events_filters (3),
+incamera_search (3), search_deeper (3, two now sanctioned),
+favorites (2), lpr_navigation (2), logout (2, one sanctioned),
+insights_widgets (3), license_assignment leftovers (2), maps_deeper
+(1), login_security (1, sanctioned).
+
+CORRECTION to the old 'page objects are done' claim: the 08/14
+sweep shows PAGE OBJECTS still carry ~53 uncommented sleeps
+(search_page 15, incamera_search_page 10, camera_hardware_page 9,
+fullscreen_page 8, maps_page 8, login_page 3). They are the
+remaining conversion debt alongside the c2c hold.
 
 lpr_operations (was 11) and the license family (navigation 5,
 search 9, assignment 9, permissions 4) converted 08/14/2026 -

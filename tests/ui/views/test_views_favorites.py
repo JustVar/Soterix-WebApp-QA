@@ -68,7 +68,6 @@ class TestViewsFavorites:
 
         # Add to favorites
         self.views.toggle_favorite(camera_name)
-        self.page.wait_for_timeout(2000)
 
         # Open favorites and verify camera appears
         self.views.open_favorites_panel()
@@ -79,7 +78,6 @@ class TestViewsFavorites:
 
         # Remove from favorites
         self.views.toggle_favorite(camera_name)
-        self.page.wait_for_timeout(2000)
 
         # Open favorites and verify camera is gone
         self.views.open_favorites_panel()

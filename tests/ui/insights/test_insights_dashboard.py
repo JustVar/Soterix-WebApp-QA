@@ -108,7 +108,6 @@ class TestInsightsDashboard:
             pytest.skip("No dashboard cards found to click")
 
         cards.first.click()
-        self.page.wait_for_timeout(3000)
 
         # Should navigate to a dashboard view or remain on insights
         assert "insights" in self.page.url.lower() or "dashboard" in self.page.url.lower()
@@ -166,7 +165,6 @@ class TestInsightsDashboard:
             )
             if view_all.count() > 1:
                 view_all.nth(1).click()
-                self.page.wait_for_timeout(2000)
                 create_btn = self.page.locator(
                     "button:has-text('Create New'), "
                     "button:has-text('Create')"
@@ -191,7 +189,15 @@ class TestInsightsDashboard:
             pytest.skip("Create New button not found")
 
         create_btn.first.click()
-        self.page.wait_for_timeout(3000)
+        # the creation form rendering any control is the open
+        # signal; a miss falls to the checks below
+        try:
+            self.page.locator(
+                "input, button:has-text('Save')"
+            ).first.wait_for(state="visible", timeout=10000)
+        # absence falls to the following checks/skips
+        except Exception:
+            pass
 
         # Should show a form with name input or widget selection
         has_form = (
@@ -216,7 +222,15 @@ class TestInsightsDashboard:
             pytest.skip("Create New button not found")
 
         create_btn.first.click()
-        self.page.wait_for_timeout(3000)
+        # the creation form rendering any control is the open
+        # signal; a miss falls to the checks below
+        try:
+            self.page.locator(
+                "input, button:has-text('Save')"
+            ).first.wait_for(state="visible", timeout=10000)
+        # absence falls to the following checks/skips
+        except Exception:
+            pass
 
         save = self.page.locator("button:has-text('Save')")
         discard = self.page.locator(
@@ -244,7 +258,15 @@ class TestInsightsDashboard:
             pytest.skip("Create New button not found")
 
         create_btn.first.click()
-        self.page.wait_for_timeout(3000)
+        # the creation form rendering any control is the open
+        # signal; a miss falls to the checks below
+        try:
+            self.page.locator(
+                "input, button:has-text('Save')"
+            ).first.wait_for(state="visible", timeout=10000)
+        # absence falls to the following checks/skips
+        except Exception:
+            pass
 
         # Look for an editable name input - exclude disabled inputs
         name_input = self.page.locator(
@@ -260,7 +282,6 @@ class TestInsightsDashboard:
             pytest.skip("Dashboard name input not found")
 
         name_input.first.fill("Test Dashboard Automation")
-        self.page.wait_for_timeout(500)
 
         value = name_input.first.input_value()
         assert "Test Dashboard" in value
@@ -279,7 +300,15 @@ class TestInsightsDashboard:
             pytest.skip("Create New button not found")
 
         create_btn.first.click()
-        self.page.wait_for_timeout(3000)
+        # the creation form rendering any control is the open
+        # signal; a miss falls to the checks below
+        try:
+            self.page.locator(
+                "input, button:has-text('Save')"
+            ).first.wait_for(state="visible", timeout=10000)
+        # absence falls to the following checks/skips
+        except Exception:
+            pass
 
         save = self.page.locator("button:has-text('Save')")
         if save.count() == 0:
@@ -304,9 +333,7 @@ class TestInsightsDashboard:
     def test_insights_page_scrollable(self):
         """Verify Insights dashboard page is scrollable."""
         self.page.evaluate("window.scrollBy(0, 300)")
-        self.page.wait_for_timeout(500)
         self.page.evaluate("window.scrollTo(0, 0)")
-        self.page.wait_for_timeout(500)
 
         assert "insights" in self.page.url.lower()
 
@@ -315,8 +342,8 @@ class TestInsightsDashboard:
     @pytest.mark.insights_dashboard
     def test_dashboard_page_after_refresh(self):
         """Verify Insights dashboard page loads correctly after refresh."""
+        # reload waits for the load event on its own
         self.page.reload()
-        self.page.wait_for_timeout(3000)
 
         assert "insights" in self.page.url.lower()
         expect(self.insights.system_status_link.first).to_be_visible(

@@ -47,7 +47,6 @@ class TestEventsFilters:
         assert len(initial_sites) > 0, "At least one site should be available"
 
         self.events.select_site(None)
-        self.page.wait_for_timeout(2000)
 
         # After site selection, rules dropdown should be enabled with options
         rules = self.events.get_rule_options()
@@ -64,7 +63,6 @@ class TestEventsFilters:
         Rules may only populate after a site is selected.
         """
         self.events.select_site(None)
-        self.page.wait_for_timeout(2000)
 
         rules = self.events.get_rule_options()
         assert len(rules) >= 2, f"Expected multiple rule types, got: {rules}"
@@ -93,7 +91,6 @@ class TestEventsFilters:
         no events in the time range.
         """
         self.events.select_site(None)
-        self.page.wait_for_timeout(2000)
 
         rules = self.events.get_rule_options()
         # Find a rule that isn't "All Rules" or "Intrusion Detection"

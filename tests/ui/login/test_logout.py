@@ -80,6 +80,8 @@ def test_cannot_access_app_after_logout(authenticated_page, base_url):
     try:
         page.wait_for_url('**/auth/login**', timeout=15000)
     except Exception:
+        # the URL wait missed; give the redirect one more beat and
+        # let the assert below decide
         page.wait_for_timeout(5000)
 
     assert lp.is_login_page() or "/auth/login" in page.url, \
@@ -98,7 +100,13 @@ def test_back_button_after_logout(authenticated_page, base_url):
 
     page.go_back()
     page.wait_for_load_state("domcontentloaded", timeout=15000)
-    page.wait_for_timeout(3000)
+    # the auth guard bounces back to login; a miss leaves the assert
+    # below to decide
+    try:
+        page.wait_for_url('**/auth/login**', timeout=10000)
+    # staying off the login URL is exactly what the assert reports
+    except Exception:
+        pass
 
     assert lp.is_login_page() or "/auth/login" in page.url, \
         "Browser back should not bypass authentication after logout"
@@ -135,7 +143,8 @@ def test_logout_from_different_pages(authenticated_page, base_url, path, page_na
     try:
         page.locator('.MuiAvatar-root').first.wait_for(state="visible", timeout=20000)
     except Exception:
-        # Some pages render the header after heavy content - wait and retry
+        # Some pages render the header after heavy content; one more
+        # bounded beat before logout tries anyway
         page.wait_for_timeout(5000)
 
     lp.logout()
