@@ -217,8 +217,22 @@ def check_early_exit_tests(path: str, lines: list[str]) -> list[dict]:
     for idx, line in enumerate(lines):
         if not TEST_DEF_RE.match(line):
             continue
+        # returns inside functions NESTED in the test body (response
+        # listeners, local helpers) are those functions' own control
+        # flow, not test exits
+        nested_def_indent = None
         for i in _block_range(lines, idx):
             body_line = lines[i]
+            stripped = body_line.strip()
+            indent = len(body_line) - len(body_line.lstrip())
+            if nested_def_indent is not None:
+                if stripped and indent <= nested_def_indent:
+                    nested_def_indent = None
+                else:
+                    continue
+            if re.match(r"def \w+", stripped):
+                nested_def_indent = indent
+                continue
             if not re.match(r"^\s*return\b", body_line):
                 continue
             if "#" in body_line or (

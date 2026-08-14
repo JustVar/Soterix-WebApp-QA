@@ -52,7 +52,7 @@ class TestEventWallConfig:
             card.wait_for(state="visible", timeout=10000)
         except PlaywrightError:
             pytest.skip("Event Wall card not found on Admin > General")
-        card.get_by_text("View", exact=False).first.click()
+        card.get_by_text("View", exact=True).first.click()
 
         # the Add Configuration button is the arrived signal
         self.add_config = self.page.get_by_text(
@@ -176,7 +176,13 @@ class TestEventWallConfig:
         self.page.get_by_text(CAMERA_NAME, exact=False).first.wait_for(
             state="visible", timeout=10000
         )
-        selectors = self.page.locator(
+        # scope to the Available Cameras panel: page-wide checkbox
+        # locators resolve to switches BEHIND the modal, whose clicks
+        # the backdrop intercepts
+        panel = self.page.locator("div").filter(
+            has_text="Available Cameras"
+        ).last
+        selectors = panel.locator(
             "input[type='checkbox'], .MuiCheckbox-root, "
             "input.PrivateSwitchBase-input"
         )
@@ -202,7 +208,11 @@ class TestEventWallConfig:
         self.page.get_by_text(CAMERA_NAME, exact=False).first.wait_for(
             state="visible", timeout=10000
         )
-        boxes = self.page.locator("input[type='checkbox']")
+        # scope to the panel: switches behind the modal backdrop hang
+        # pointer clicks (measured)
+        boxes = self.page.locator("div").filter(
+            has_text="Available Cameras"
+        ).last.locator("input[type='checkbox']")
         try:
             boxes.first.wait_for(state="visible", timeout=5000)
         # no checkbox: same current-form behavior as the test above
@@ -250,11 +260,11 @@ class TestEventWallConfig:
             has_text=card_title
         ).first
         card.wait_for(state="visible", timeout=10000)
-        card.get_by_text("View", exact=False).first.click()
+        card.get_by_text("View", exact=True).first.click()
         try:
             arrival.wait_for(state="visible", timeout=7000)
         except PlaywrightError:
-            card.get_by_text("View", exact=False).first.click()
+            card.get_by_text("View", exact=True).first.click()
             arrival.wait_for(state="visible", timeout=15000)
 
     @pytest.mark.ui

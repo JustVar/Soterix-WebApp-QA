@@ -128,9 +128,14 @@ teardowns landed. Remaining manual pass:
   the General section tab is a no-op while already inside the
   section (all measured 08/13/2026). A View click right after the
   cards page re-renders can be silently dropped - same hydration
-  behavior the sites rebuild measured; retry once. The Audit Trail
-  card's View did NOT navigate in-page even with the retry -
-  measure where it goes when rebuilding the audit file.
+  behavior the sites rebuild measured; retry once. Match the View
+  label with exact=True: get_by_text's default substring matching
+  clicked the Audit card's BLURB ('Monitor and re-VIEW-all
+  activities...') instead of the button, which looked like
+  View-does-not-navigate for two runs; the Event Wall card only
+  worked because its blurb happens to contain no 'view'. With the
+  exact match, Audit's View navigates in-page to 'General > Audit
+  Trail'.
 
 - **The Media page serves stale state per page load.** Measured
   08/12/2026, two faces of one behavior: (1) only the FIRST rename
@@ -280,9 +285,27 @@ Select Rule combobox, camera checkbox toggle, Save/Cancel).
 
 New checker rule early-exit-pass (08/13/2026): a bare return in a
 test body passes with everything after it unreachable - the class
-static oracle checks cannot see. Standing sweep found 11: audit
-trail (7), event wall (2, gone with its rebuild), events_search
-(2). A why-comment on the return excuses deliberate ones.
+static oracle checks cannot see. A why-comment on the return
+excuses deliberate ones; returns inside functions NESTED in a test
+body (response listeners, local helpers) are excluded as those
+functions' own control flow (refined 08/14/2026 - events_search's
+two were exactly that). Standing count: ZERO after the audit trail
+rebuild.
+
+admin_audit_trail (was 7 early-exits + 6 sleeps) REBUILT
+08/14/2026: the old setup clicked the Audit card TITLE (no-op) and
+every test probed the General cards page through over-broad
+unions. The card's View button (exact=True - see Known app
+behavior for the substring trap) opens a real table (Username |
+Role Type | Date & Time | IP | Action) with live records; tests
+now assert the measured headers, dd-mm-yyyy/hh:mm timestamps,
+populated user and action cells, breadcrumb return, and a
+next-page oracle keyed on the first row changing. The table
+renders a 'No data available' placeholder row while the fetch is
+in flight and an empty spacer row besides (both caught live) - the
+first-record wait filters to rows with non-whitespace text that
+are not the placeholder. 13 green + 1 designed skip (no pagination
+control at current record counts).
 
 views drag_drop (was the largest at 36) converted 08/13/2026, 6
 passed + 1 designed skip. The conversion surfaced a structural
