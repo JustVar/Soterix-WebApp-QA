@@ -40,18 +40,24 @@ Worked top to bottom, the current list is:
 7. Tenant mop-up (manual, below): the site-group leftovers list, and
    one leaked 'AutoTest Playwright' user from 08/07 remains - the
    next test_delete_user run consumes it.
-8. [BLOCKED] APP DEFECT (report to the app team): Global Search is
-   down on vsaas-qa as of 08/14/2026 ~14:00. POST
-   /v-apiserver/REST/site/search returns HTTP 400 Bad Request with
-   an empty result for a contract-valid payload (siteId 16, channel
-   list, 7-day window, category PERSON, empty description filters -
-   captured via the real UI flow; note the response body says
-   message:'SUCCESS!' on a 400). Every search-family suite fails on
-   it (search_categories, search_deeper, search_drawing, and the
-   events_search four - 19 tests), serially reproduced, all green
-   on 08/11. Snap: reports/probe_shots/search_health_01.png. These
-   suites stay red until the app fix; do not chase them as test
-   bugs.
+8. [BLOCKED] APP DEFECT (Justin is filing it): search is down
+   GLOBALLY on vsaas-qa as of 08/14/2026 ~13:45-14:00. The single
+   dispatch endpoint POST /v-apiserver/REST/site/search returns
+   HTTP 400 Bad Request with an empty result for contract-valid
+   payloads (captured via the real UI flows; the response body says
+   message:'SUCCESS!' on a 400 - flag that too). All three UI
+   surfaces post to it and all fail: the Global Search page, the
+   in-camera player search (Views > camera > fullscreen > search -
+   covered by test_incamera_search.py, 2/2 green at ~13:30 and
+   failing by ~15:00, which time-boxes the break), and the Events
+   tab search (confirmed by probe - it dispatches to the same
+   endpoint, not a separate event API). 21 tests cover the outage
+   across search_categories, search_deeper, search_drawing,
+   events_search, and incamera_search; all were green on 08/11 and
+   serially reproduce the failure. Snaps:
+   reports/probe_shots/search_health_01.png and
+   event_search_health_01.png. These suites stay red until the app
+   fix; do not chase them as test bugs.
 
 Full-suite 4-worker baseline (08/14/2026, 819 tests): 383 passed,
 182 skipped, 6 reruns. Every failure/error is accounted for: 232 of
