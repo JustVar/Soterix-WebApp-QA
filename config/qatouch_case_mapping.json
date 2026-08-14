@@ -2188,7 +2188,7 @@
       "module": "Event Wall",
       "auto_matched": true
     },
-    "tests/ui/event_wall/test_event_wall_display.py::TestEventWallDisplay::test_event_wall_event_images[chromium]": {
+    "tests/ui/event_wall/test_event_wall_display.py::TestEventWallDisplay::test_event_wall_event_images": {
       "case_key": "gQxw5N",
       "case_title": "Verify Event search result images are valid",
       "score": 0.75,
