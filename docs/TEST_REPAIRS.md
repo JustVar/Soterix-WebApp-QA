@@ -3,13 +3,47 @@
 Tests that need reinvestigation, repair, or a verification run before we
 write any new tests. Work this list top to bottom; do not add new test
 files while an item here is open. Sourced from the 08/08-08/11/2026 conversion and repair work and the
-live verify runs, extended through the 08/12/2026 repairs.
+live verify runs, extended through the 08/14/2026 repairs.
 
 Status tokens: [REDO] rebuild against the current app, [INVESTIGATE]
 find out whether the feature moved or died, [VERIFY] suite not run since
 the page-object conversion, [DATA] stale tenant data in the test,
 [ARTIFACT] test support files wrong, [WATCH] warning print to chase,
-[WIP] rebuild underway, [DONE] repaired and verified green.
+[WIP] rebuild underway, [DONE] repaired and verified green,
+[BLOCKED] waiting on something outside the repo.
+
+## Open items as of 08/14/2026 (everything else below is [DONE])
+
+Worked top to bottom, the current list is:
+
+1. [BLOCKED] Event Wall display suite
+   (tests/ui/event_wall/test_event_wall_display.py) - holds as
+   explicit skips until the local-access wall user exists. Justin is
+   creating it; on arrival add its credentials to config/env (own
+   env vars, never the regular QA account), probe the login +
+   site-select entry, and build the wall's own markers.
+2. [INVESTIGATE] Media destructive set (section B row) - waiting on
+   the folder-delete semantics answer (does deleting a folder delete
+   the clips grouped into it?) or a disposable measurement.
+3. Page-object sleeps: ~53 uncommented across six files
+   (search_page 15, incamera_search_page 10, camera_hardware_page 9,
+   fullscreen_page 8, maps_page 8, login_page 3). The next
+   conversion tranche, file by file with verify runs (section G).
+4. [BLOCKED] c2c sleeps (3) - conversion needs a hardware session to
+   verify; converting blind would break measure-convert-verify.
+5. [ARTIFACT] Sidecar step files describing pre-rebuild flows
+   (section D/E rows: maps, media_operations, chats) - regenerate at
+   the next sidecar sync, case keys kept; events_search corrected
+   steps still need Justin's manual push to live QA Touch.
+6. QA Touch gap analysis (coverage vs the case mapping) - deferred
+   by Justin until after the above.
+7. Tenant mop-up (manual, below): the site-group leftovers list, and
+   one leaked 'AutoTest Playwright' user from 08/07 remains - the
+   next test_delete_user run consumes it.
+
+Standing quality gates, all at zero on 08/14/2026: no-oracle tests,
+early-exit passes, and uncommented test-file sleeps (outside the c2c
+hold). The convention checker enforces all three on every commit.
 
 ## A. Broken or never-worked - needs a rebuild
 
