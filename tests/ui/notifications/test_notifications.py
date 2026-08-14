@@ -1,6 +1,6 @@
 """Notification tests - mute notifications, clear all, admin rule mute."""
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Error as PlaywrightError, expect
 
 
 class TestNotifications:
@@ -9,101 +9,99 @@ class TestNotifications:
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page):
         self.page = authenticated_page
+        self.header_icons = self.page.locator(".header-right-group .icon")
+        # the mute/unmute control is the panel-open marker; the muted
+        # state's src is 'UnMuteNotification' (capital M), which
+        # CONTAINS 'MuteNotification', so one substring matches both
+        self.mute_union = self.page.locator(
+            "img[src*='MuteNotification']"
+        )
+
+    def _open_panel(self):
+        """Open the notification panel; the bell is a toggle, so only
+        click when the open marker is absent."""
+        self.header_icons.first.wait_for(state="visible", timeout=10000)
+        if self.mute_union.count() and self.mute_union.first.is_visible():
+            return
+        self.header_icons.nth(1).click()
+        self.mute_union.first.wait_for(state="visible", timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.notifications
     def test_open_notification_panel(self):
         """Verify clicking the notification bell opens the notification panel."""
-        # Find notification icons in header-right-group
-        header_icons = self.page.locator(".header-right-group .icon")
-        header_icons.first.wait_for(state="visible", timeout=10000)
+        self.header_icons.first.wait_for(state="visible", timeout=10000)
 
-        icon_count = header_icons.count()
+        icon_count = self.header_icons.count()
         assert icon_count >= 2, (
             f"Expected at least 2 header icons (notifications), found {icon_count}"
         )
 
-        # Click the notification icon (second icon in the group)
-        header_icons.nth(1).click()
-        self.page.wait_for_timeout(1000)
-
-        # Verify notification panel opened - look for mute button as indicator
-        mute_button = self.page.locator("img[src*='media/MuteNotification']")
-        expect(mute_button).to_be_visible(timeout=5000)
+        self._open_panel()
+        # state-agnostic: either the mute or unmute control marks open
+        expect(self.mute_union.first).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.notifications
     def test_mute_notifications(self):
-        """Verify notifications can be muted via the mute button."""
-        # Open notification panel
-        header_icons = self.page.locator(".header-right-group .icon")
-        header_icons.first.wait_for(state="visible", timeout=10000)
-        header_icons.nth(1).click()
-        self.page.wait_for_timeout(1000)
+        """The mute control toggles state and restores.
 
-        # Click the mute notification button
-        mute_button = self.page.locator("img[src*='media/MuteNotification']")
-        expect(mute_button).to_be_visible(timeout=5000)
+        The src flipping (MuteNotification <-> UnMuteNotification) is
+        the state-changed oracle; the second toggle restores the
+        shared account to its starting state.
+        """
+        self._open_panel()
+        before = self.mute_union.first.get_attribute("src")
 
-        # Hover the notification area to ensure mute button is interactable
-        notification_area = self.page.locator(".header-right-group .icon").nth(3)
-        if notification_area.is_visible():
-            notification_area.hover()
-            self.page.wait_for_timeout(300)
-
-        mute_button.click()
-        self.page.wait_for_timeout(1000)
-
-        # Mute action completed without error (button click succeeded)
-        # The panel may close or icon may toggle after mute - re-open and verify
-        header_icons.nth(1).click()
-        self.page.wait_for_timeout(1000)
-
-        mute_or_unmute = self.page.locator(
-            "img[src*='media/MuteNotification'], img[src*='media/UnmuteNotification']"
+        self.mute_union.first.click()
+        # the click can close the panel; the toggle-safe reopen
+        # resolves it
+        self._open_panel()
+        expect(self.mute_union.first).not_to_have_attribute(
+            "src", before, timeout=10000
         )
-        if mute_or_unmute.count() == 0:
-            # Panel may not re-open to same state; mute click succeeded above
-            pass
-        else:
-            expect(mute_or_unmute.first).to_be_visible(timeout=5000)
+
+        self.mute_union.first.click()
+        self._open_panel()
+        expect(self.mute_union.first).to_have_attribute(
+            "src", before, timeout=10000
+        )
 
     @pytest.mark.ui
     @pytest.mark.notifications
     def test_admin_mute_rule_notification(self):
         """Verify a rule notification can be muted from Admin > General > Rules."""
-        # Navigate to Admin
-        admin_link = self.page.locator("a[href*='admin']")
-        admin_link.click()
-        self.page.wait_for_timeout(3000)
-
-        # Click General in the admin sidebar
+        # Navigate to Admin; the General tab appearing is the signal
+        self.page.locator("a[href*='admin']").click()
         general_tab = self.page.locator("p:text-is('General')")
-        general_tab.wait_for(state="visible", timeout=10000)
+        general_tab.wait_for(state="visible", timeout=15000)
         general_tab.click()
-        self.page.wait_for_timeout(2000)
 
-        # Click Rules. .first: 'Rules' appears in both the admin sidebar and
-        # the General content, and the sidebar entry is the navigation target
+        # .first: 'Rules' appears in both the admin sidebar and the
+        # General content, and the sidebar entry is the target
         rules_tab = self.page.locator("p:text-is('Rules')").first
         rules_tab.wait_for(state="visible", timeout=10000)
         rules_tab.click()
-        self.page.wait_for_timeout(3000)
 
-        # Find mute notification icons on rules
+        # rule rows render async; the first mute icon is the signal,
+        # a miss routes to the skip below
         mute_icons = self.page.locator("img[aria-label='Mute Notification']")
-        self.page.wait_for_timeout(2000)
-
-        mute_count = mute_icons.count()
-        if mute_count == 0:
+        try:
+            mute_icons.first.wait_for(state="visible", timeout=10000)
+        # none within the bound means no rules carry the icon
+        except PlaywrightError:
+            pass
+        if mute_icons.count() == 0:
             pytest.skip("No mute notification icons found (no rules exist)")
 
         # Click the last mute icon (same as Selenium test)
         mute_icons.last.click()
-        self.page.wait_for_timeout(2000)
 
-        # Verify click succeeded - icon should still be present or toggled
+        # the icon set re-renders after the toggle; a visible
+        # mute/unmute icon reappearing is the applied signal (the
+        # raising wait carries the oracle)
         remaining_mute = self.page.locator(
-            "img[aria-label='Mute Notification'], img[aria-label='Unmute Notification']"
+            "img[aria-label='Mute Notification'], "
+            "img[aria-label='Unmute Notification']"
         )
-        assert remaining_mute.count() > 0, "Mute action failed - no mute/unmute icons found"
+        remaining_mute.first.wait_for(state="visible", timeout=10000)

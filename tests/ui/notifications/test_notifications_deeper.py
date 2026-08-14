@@ -4,7 +4,7 @@ Extends basic notification tests with panel content checks, mute/unmute
 round-trip, badge count, close behavior, and notification entry inspection.
 """
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Error as PlaywrightError, expect
 
 
 class TestNotificationsDeeper:
@@ -15,22 +15,30 @@ class TestNotificationsDeeper:
         self.page = authenticated_page
         self._header_icons = self.page.locator(".header-right-group .icon")
 
+    def _get_mute_button(self):
+        """The mute/unmute control - the panel-open marker.
+
+        The muted state's src is 'UnMuteNotification' (capital M),
+        which CONTAINS 'MuteNotification', so one substring matches
+        both states.
+        """
+        return self.page.locator("img[src*='MuteNotification']")
+
     def _open_notification_panel(self):
-        """Click the notification bell icon to open the panel."""
+        """Open the panel; the bell is a toggle, so only click when
+        the mute/unmute marker is absent."""
         self._header_icons.first.wait_for(state="visible", timeout=10000)
+        marker = self._get_mute_button()
+        if marker.count() and marker.first.is_visible():
+            return
         self._header_icons.nth(1).click()
-        self.page.wait_for_timeout(1000)
+        marker.first.wait_for(state="visible", timeout=10000)
 
     def _close_notification_panel(self):
-        """Close the notification panel by clicking the bell icon again."""
+        """Close the panel; the mute marker leaving is the signal."""
         self._header_icons.nth(1).click()
-        self.page.wait_for_timeout(500)
-
-    def _get_mute_button(self):
-        """Return the mute or unmute button locator (whichever is visible)."""
-        return self.page.locator(
-            "img[src*='media/MuteNotification'], "
-            "img[src*='media/UnmuteNotification']"
+        self._get_mute_button().first.wait_for(
+            state="hidden", timeout=5000
         )
 
     # --- Panel open/close ---
@@ -45,12 +53,10 @@ class TestNotificationsDeeper:
         mute_btn = self._get_mute_button()
         expect(mute_btn.first).to_be_visible(timeout=5000)
 
-        # Close panel
+        # Close panel; its own marker wait is the closed signal
         self._close_notification_panel()
-        self.page.wait_for_timeout(500)
 
-        # Mute button should no longer be visible (panel closed)
-        mute_btn_after = self.page.locator("img[src*='media/MuteNotification']")
+        mute_btn_after = self._get_mute_button()
         assert mute_btn_after.count() == 0 or not mute_btn_after.first.is_visible(), (
             "Notification panel should close after clicking bell again"
         )
@@ -65,7 +71,6 @@ class TestNotificationsDeeper:
         expect(mute_btn.first).to_be_visible(timeout=5000)
 
         self._close_notification_panel()
-        self.page.wait_for_timeout(500)
 
         # Reopen
         self._open_notification_panel()
@@ -105,34 +110,23 @@ class TestNotificationsDeeper:
         """
         self._open_notification_panel()
 
-        mute_btn = self.page.locator("img[src*='media/MuteNotification']")
-        unmute_btn = self.page.locator("img[src*='media/UnmuteNotification']")
+        # the control's src is the state (MuteNotification when
+        # unmuted, UnMuteNotification when muted)
+        initial_src = self._get_mute_button().first.get_attribute("src")
 
-        # Determine initial state
-        initial_is_muted = unmute_btn.count() > 0 and unmute_btn.first.is_visible()
-
-        # Click to toggle
-        btn = self._get_mute_button()
-        btn.first.click()
-        self.page.wait_for_timeout(1500)
-
-        # Reopen panel to check state
+        # Toggle; the toggle-safe reopen resolves whether the panel
+        # closed or stayed open, and the flipped src proves the change
+        self._get_mute_button().first.click()
         self._open_notification_panel()
-        self.page.wait_for_timeout(500)
+        expect(self._get_mute_button().first).not_to_have_attribute(
+            "src", initial_src, timeout=10000
+        )
 
-        # Toggle back
-        btn = self._get_mute_button()
-        if btn.count() > 0:
-            btn.first.click()
-            self.page.wait_for_timeout(1500)
-
-        # Reopen and verify we're back to original state
+        # Toggle back; the src returning proves the round trip
+        self._get_mute_button().first.click()
         self._open_notification_panel()
-        now_is_muted = unmute_btn.count() > 0 and unmute_btn.first.is_visible()
-
-        assert now_is_muted == initial_is_muted, (
-            f"Expected mute state to return to {initial_is_muted} "
-            f"after round-trip toggle, got {now_is_muted}"
+        expect(self._get_mute_button().first).to_have_attribute(
+            "src", initial_src, timeout=10000
         )
 
     # --- Panel content ---
@@ -148,14 +142,19 @@ class TestNotificationsDeeper:
         """
         self._open_notification_panel()
 
-        # Look for notification entries - typically text content within the panel
-        # Notification panel opens below the bell icon in the header area
+        # notification entries render async after the panel opens; a
+        # miss falls to the else branch below
         panel = self.page.locator(
             ".notification-panel, "
             "[class*='notification'], "
             "[class*='Notification']"
         )
-        self.page.wait_for_timeout(1000)
+        try:
+            panel.first.wait_for(state="visible", timeout=5000)
+        # no panel-classed container - the else branch checks the
+        # open marker instead
+        except PlaywrightError:
+            pass
 
         if panel.count() > 0:
             text = panel.first.inner_text().strip()
@@ -180,12 +179,9 @@ class TestNotificationsDeeper:
         expect(mute_btn.first).to_be_visible(timeout=5000)
         self._close_notification_panel()
 
-        # Navigate to Search page
-        search_link = self.page.locator("a[href*='search']")
-        search_link.click()
-        self.page.wait_for_timeout(3000)
-
-        # Reopen notification panel from Search page
+        # Navigate to Search; the reopened panel's own marker wait
+        # covers the page transition
+        self.page.locator("a[href*='search']").click()
         self._open_notification_panel()
         mute_btn = self._get_mute_button()
         expect(mute_btn.first).to_be_visible(timeout=5000)
@@ -195,8 +191,8 @@ class TestNotificationsDeeper:
     @pytest.mark.notifications_deeper
     def test_notification_panel_survives_page_refresh(self):
         """Verify notification icon is present after page refresh."""
+        # reload waits for the load event on its own
         self.page.reload()
-        self.page.wait_for_timeout(3000)
 
         self._header_icons.first.wait_for(state="visible", timeout=15000)
         bell = self._header_icons.nth(1)
@@ -216,10 +212,9 @@ class TestNotificationsDeeper:
         Views page has heavy video streaming - notification bell should
         still be accessible in the header.
         """
-        # Navigate to Views
+        # Navigate to Views; the header wait below is the arrival signal
         views_link = self.page.locator("text=Views").first
         views_link.click(force=True)
-        self.page.wait_for_timeout(3000)
 
         # Bell should still work
         self._header_icons.first.wait_for(state="visible", timeout=15000)

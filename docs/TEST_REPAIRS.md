@@ -292,6 +292,18 @@ functions' own control flow (refined 08/14/2026 - events_search's
 two were exactly that). Standing count: ZERO after the audit trail
 rebuild.
 
+notifications + notifications_deeper (were 10 + 11 sleeps)
+converted 08/14/2026, 12/12 green. The bell is a toggle like the
+chat icon, so the openers are toggle-safe on the mute/unmute
+marker. The muted state's icon src is 'UnMuteNotification' -
+capital M, so a lowercase 'Unmute' guess never matches (CSS src*=
+is case-sensitive), and since 'UnMuteNotification' CONTAINS
+'MuteNotification', the single substring img[src*='MuteNotification']
+matches both states. The mute toggle tests now use the src FLIP as
+the state-changed oracle and restore the shared account's state by
+toggling back; the mute state read as session-scoped in probing
+(a fresh login showed unmuted after a prior mute).
+
 admin_audit_trail (was 7 early-exits + 6 sleeps) REBUILT
 08/14/2026: the old setup clicked the Audit card TITLE (no-op) and
 every test probed the General cards page through over-broad
