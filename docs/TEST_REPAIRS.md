@@ -40,6 +40,27 @@ Worked top to bottom, the current list is:
 7. Tenant mop-up (manual, below): the site-group leftovers list, and
    one leaked 'AutoTest Playwright' user from 08/07 remains - the
    next test_delete_user run consumes it.
+8. [BLOCKED] APP DEFECT (report to the app team): Global Search is
+   down on vsaas-qa as of 08/14/2026 ~14:00. POST
+   /v-apiserver/REST/site/search returns HTTP 400 Bad Request with
+   an empty result for a contract-valid payload (siteId 16, channel
+   list, 7-day window, category PERSON, empty description filters -
+   captured via the real UI flow; note the response body says
+   message:'SUCCESS!' on a 400). Every search-family suite fails on
+   it (search_categories, search_deeper, search_drawing, and the
+   events_search four - 19 tests), serially reproduced, all green
+   on 08/11. Snap: reports/probe_shots/search_health_01.png. These
+   suites stay red until the app fix; do not chase them as test
+   bugs.
+
+Full-suite 4-worker baseline (08/14/2026, 819 tests): 383 passed,
+182 skipped, 6 reruns. Every failure/error is accounted for: 232 of
+254 are the c2c files without hardware attached (their own hold),
+19 are the live search defect above, and 3 were xdist contention
+singles that pass serially (chats icon-on-events, event wall camera
+checkboxes, insights Line_Person create). Outside those known
+factors the suite held together under 4 workers on the shared
+tenant.
 
 Standing quality gates, all at zero on 08/14/2026: no-oracle tests,
 early-exit passes, and uncommented test-file sleeps (outside the c2c
