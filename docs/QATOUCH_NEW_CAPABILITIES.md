@@ -93,19 +93,47 @@ it.
 call returning 8. Wired up as `list_all_test_cases(project_key, module_key=...)`.
 Use it any time the target is a module.
 
-### 5. QA Touch MCP integration (2026-06-11) - evaluate next
+### 5. QA Touch MCP integration (2026-06-11) - evaluated: adopt alongside, do not replace
 
-An official Model Context Protocol server that exposes the QA Touch workspace
-to AI assistants.
+`qatouch-mcp-server` on npm. Official (`github.com/qatouch/qatouch-mcp-server`),
+MIT, v1.1.6, 17 releases between 2026-06-03 and 2026-08-10, so it is actively
+maintained. Node 18+, run through `npx -y qatouch-mcp-server`, authenticated
+with the same `QATOUCH_DOMAIN` and API token we already hold. 45 tools.
 
-**Worth to us:** potentially high. We already run MCP servers, and a chunk of
-`tools/` exists purely to wrap the QA Touch API for scripted access. If the
-official server covers reads (cases, runs, results), it could replace some of
-that. Evaluate before building any new read tooling.
+**Verdict: use it for asking questions. Keep `tools/` for doing the work.**
 
-**Check before adopting:** whether it supports tag reads/writes (the public API
-does not), whether it works with a headless/CI token, and whether it exposes
-the same undocumented field names.
+What it covers well - reads and creates:
+
+| Area | Tools |
+|---|---|
+| Read | `list_projects`, `list_test_cases`, `search_test_cases`, `list_modules`, `list_test_runs`, `list_test_run_results`, `list_test_run_result_history`, `list_requirements`, `list_defects`, all the `count_*` |
+| Create | `create_test_case`, `create_bulk_test_cases`, `create_module`, `create_project`, `create_release`, `create_requirement`, `create_defect`, `create_test_run_with_modules`, `import_test_cases` (the CSV import from item 6) |
+| Results | `update_test_run_result_status`, `update_test_run_results_by_code` |
+
+Worth noting: it uses **`update_test_run_results_by_code`** - the same endpoint
+we independently moved the reporter onto. Independent confirmation that the
+code-based endpoint is the right one.
+
+**Why it cannot replace `tools/`:**
+
+1. **No tag tools. None.** The word "tag" does not appear in its tool list. Our
+   main QA Touch workflow - SMOKE/SANITY/REGRESSION suite membership and the
+   suite holds - is entirely tag work, and tags are browser-only anyway.
+2. **No case update.** It creates cases but cannot edit an existing one.
+3. **No run-membership lookup.** Nothing equivalent to
+   `getTestRunlist/{caseKey}`, which is how we find a case inside existing runs.
+4. **Wrong shape for automation.** It is a stdio server for an MCP client. Our
+   reporter is a pytest plugin and our tools are scripts; neither can call it.
+5. **It inherits the traps.** It talks to the same API that reports success for
+   writes it discards. Our tools read values back afterwards. Assume it does
+   not.
+
+**Adopt it for:** interactive work - asking what a module covers, searching
+cases and defects in natural language, checking run results without writing a
+script. That is real value and it costs nothing to add.
+
+**Do not:** rewrite any of `tools/` around it, or use it for suite tagging,
+holds, or result uploads from CI.
 
 ### 6. CSV Test Case Import API (2026-07-12) - replaces a manual step
 
@@ -157,7 +185,8 @@ extend the client method to post multipart when files are given, and pass
 2. **Add a field-name canary.** One scheduled check that asserts the case
    response still carries `module_name`, `Tags`, `case_key`. Cheap insurance
    against the next undocumented rename.
-3. **Evaluate the MCP server** before writing any new read tooling.
+3. ~~Evaluate the MCP server~~ - done. Adopt for interactive use only; it
+   has no tag tools, so it cannot take over the suite work.
 4. **Move the CSV import onto the public endpoint.**
 5. **Move non-tag case edits onto the public update API**, leaving only tag
    work on the browser path.
