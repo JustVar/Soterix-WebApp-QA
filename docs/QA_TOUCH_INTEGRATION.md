@@ -155,8 +155,10 @@ weeks. Used only for what the public API cannot do.
 
 - `POST /v1/case/edit/p/{project}/cid/{case}` - read a full case
 - `POST /v1/case/update/p/{project}/cid/{case}` - write a full case
-- **Tags are browser-only.** The public API has no tag read or write. Its only
-  `tags` reference is an input filter when creating a run.
+- **Tags are browser-only for EXISTING cases.** The public API has no tag read
+  or update endpoint. The one exception is creation: a `tags` column in the CSV
+  import sets tags on a new case (see below). Changing the tags on a case that
+  already exists needs this browser endpoint.
 
 ### Result status codes
 
@@ -188,6 +190,39 @@ rate-limits bursts with HTTP 429, so prefer the filter.
 
 `GET /api/v1/getTestRunlist/{caseKey}` returns every run holding a case, with
 its `resultKey` and current status.
+
+---
+
+## CSV import (public, create-only)
+
+`POST /api/v1/testCase/import?projectKey={key}`, multipart body, field `file`,
+up to 100 cases per request. Needs only the API key.
+
+Every column below is mandatory - the controller indexes the row without
+checking, so one missing column fails the row with `Undefined index: <column>`:
+
+```
+module_name, title, test_case_title, description, precondition, test_data,
+steps, expected_result, tags, type, priority, mode, estimate, reference,
+test_suite
+```
+
+These are NOT the column names our own converter emits. `tools/qa_xlsx_to_qatouch_csv.py`
+targets the browser import wizard and uses `section_name` and `newtags`;
+this endpoint wants `module_name` and `tags`.
+
+The reply is honest, unlike the rest of this API:
+
+```
+{"success": true, "total": 34, "imported": 34, "failed": 0, "errors": []}
+```
+
+A rejected row creates nothing and names the column and row number, so probing
+it is free.
+
+**Create-only.** A `case_key` column is ignored - it creates a duplicate rather
+than updating. Tags DO land on create, which is the only way to set a tag
+through the public API.
 
 ---
 

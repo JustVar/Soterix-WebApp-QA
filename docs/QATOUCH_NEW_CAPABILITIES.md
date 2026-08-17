@@ -135,14 +135,50 @@ script. That is real value and it costs nothing to add.
 **Do not:** rewrite any of `tools/` around it, or use it for suite tagging,
 holds, or result uploads from CI.
 
-### 6. CSV Test Case Import API (2026-07-12) - replaces a manual step
+### 6. CSV Test Case Import API (2026-07-12) - tested, adopt for new cases
 
-`POST /api/v1/testCase/import?projectKey=...`, up to 100 cases per request.
+`POST /api/v1/testCase/import?projectKey=...`, multipart `file`, up to 100
+cases per request. Tested live against K5kB on 2026-08-17.
 
-**Worth to us:** `docs/qa_import_pipeline.md` currently drives the browser's
-internal import endpoints, reverse-engineered by live probe. A supported
-public endpoint is a straight upgrade: no browser, no session, no probing.
-Chunk our CSVs at 100 rows and the import becomes a scriptable step.
+**It is create-only.** A `case_key` column is ignored and a duplicate case is
+created instead. It cannot update anything.
+
+**It sets tags on create.** This is the surprise. There is no tag endpoint in
+the whole public API, yet a `tags` column in the import CSV lands correctly -
+verified, the probe case came back with `Tags: ["regression"]`. So tags can be
+written through the public API when a case is *created*. Changing an existing
+case's tags still needs the browser session, which is why the suite hold tool
+still asks for a login.
+
+**The schema is not the one our converter emits.** The public endpoint wants
+different column names from the browser import wizard, and every column is
+mandatory - the controller indexes the row without checking, so a missing
+column throws `Undefined index` and the whole row fails.
+
+Required columns, in any order:
+
+```
+module_name, title, test_case_title, description, precondition, test_data,
+steps, expected_result, tags, type, priority, mode, estimate, reference,
+test_suite
+```
+
+Note `module_name` (not the wizard's `section_name`), `tags` (not `newtags`),
+and that both `title` and `test_case_title` are required.
+
+**Failures cost nothing.** A rejected row reports
+`{"imported": 0, "failed": N, "errors": [...]}` and creates nothing, and the
+error names the offending column and row. That makes it safe to iterate, and
+it is by far the best-behaved endpoint in this API - it reports what actually
+happened instead of claiming success.
+
+**Worth to us:** a real upgrade for creating cases. `docs/qa_import_pipeline.md`
+drives the browser's internal import endpoints, reverse-engineered by probe and
+dependent on a session that expires. This needs only the API key. The work is a
+column-name mapping from our canonical CSV, plus chunking at 100 rows.
+
+**Caveat:** only for new cases. The existing pipeline's update and backfill
+phases have no public equivalent.
 
 ### 7. Playwright integration 2.0 (2026-03-25) - check our reporter
 
@@ -187,7 +223,8 @@ extend the client method to post multipart when files are given, and pass
    against the next undocumented rename.
 3. ~~Evaluate the MCP server~~ - done. Adopt for interactive use only; it
    has no tag tools, so it cannot take over the suite work.
-4. **Move the CSV import onto the public endpoint.**
+4. ~~Move the CSV import onto the public endpoint~~ - tested and specified.
+   Create-only, needs a column-name mapping. Worth doing for new-case imports.
 5. **Move non-tag case edits onto the public update API**, leaving only tag
    work on the browser path.
 
