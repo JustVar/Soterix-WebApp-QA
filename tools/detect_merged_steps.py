@@ -42,7 +42,7 @@ use different auth:
       headers: X-XSRF-TOKEN + Cookie
       Loaded from tools/.qatouch_creds.json (same shape as
       tools/run_partner_admin_backfill.py). Refresh with:
-          python tools/qatouch_api_mode_update.py test
+          python tools/qatouch_norun_update.py test
 
 Both must be valid. The pre-flight does a lightweight GET /v2 against the
 internal-auth domain and a single REST page-1 list against the REST creds
@@ -135,7 +135,7 @@ MERGED_THRESHOLD = 3
 REFRESH_INSTRUCTIONS = (
     "QA Touch internal-auth appears stale (verify GET returned 401/403).\n"
     "Refresh it with:\n"
-    "    python tools/qatouch_api_mode_update.py test\n"
+    "    python tools/qatouch_norun_update.py test\n"
     "That drives a logged-in browser, refreshes tools/.qatouch_auth_state.json,\n"
     "and rewrites tools/.qatouch_creds.json. Then re-run this script."
 )
@@ -158,7 +158,7 @@ class AuthCreds:
             print(
                 f"Auth creds file not found: {path}\n"
                 "Generate it with:\n"
-                "    python tools/qatouch_api_mode_update.py test",
+                "    python tools/qatouch_norun_update.py test",
                 file=sys.stderr,
             )
             raise SystemExit(2)

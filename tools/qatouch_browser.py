@@ -5,7 +5,7 @@ DEPRECATED COMMANDS (03/12/2026 - use internal API instead):
   set-mode, set-tags, set-type, set-priority, bulk-update
   The internal API POST /v1/case/update/p/{pid}/cid/{key} can update any case
   field at ~0.2s/case vs ~3-5s/case with browser automation.
-  See: qatouch_api_mode_update.py for the working pattern.
+  See: tools/archive/qatouch_api_mode_update.py for the working pattern.
 
 ACTIVE COMMANDS (no API alternative - browser required):
   sync-steps, sync-unfound, rename-modules, check-duplicates, audit-steps,
@@ -4309,7 +4309,7 @@ def main():
             return
         operations.append({'action': 'set-priority', 'value': value})
     elif cmd == 'delete':
-        print('  Delete not yet implemented in new script - use qatouch_set_mode.py')
+        print('  Delete not yet implemented in new script - use tools/archive/qatouch_set_mode.py --delete (UI-driven; no delete API exists)')
         return
     elif cmd == 'bulk-update':
         # Each row in CSV can have: mode, tags, type, priority columns

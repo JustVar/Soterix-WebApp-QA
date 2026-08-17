@@ -20,6 +20,10 @@ For the live contract read `docs/QA_TOUCH_INTEGRATION.md`.
 | `_build_feature_inventory.py` | One-time build of feature_inventory.json | 2026-02 |
 | `qatouch_api_discovery.py` | Probed the internal API surface; output is `config/audit_reports/api_endpoint_discovery.json` | 2026-02 |
 | `cleanup_ota_steps.py` | Earlier OTA step cleanup | 2026-06 |
+| `qatouch_set_mode.py` | Set Mode=Automation by driving the QA Touch UI. Also the only scripted **delete** we have (`--delete`, UI-driven, fragile) - there is no delete API | 2026-02 |
+| `qatouch_api_mode_update.py` | Set blank-mode cases to Manual via the internal API. Job done: 0 blank-mode cases remain | 2026-03 |
+
+Mode work now lives in `tools/qatouch_mode.py` on the public API.
 
 To bring one back: copy it up to `tools/`, fix the field names against the
 current client, and read the API traps in `docs/QA_TOUCH_INTEGRATION.md`

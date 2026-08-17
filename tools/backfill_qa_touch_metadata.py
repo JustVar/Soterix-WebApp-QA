@@ -2,7 +2,7 @@
 """Reusable QA Touch metadata backfill via the internal /v1/case/update endpoint.
 
 Generalizes the OTA backfill pattern (build_ota_update_payloads_v2.py +
-qatouch_api_mode_update.py) so it works for ANY project + module + case set:
+tools/archive/qatouch_api_mode_update.py) so it works for ANY project + module + case set:
 
   - Reads a canonical CSV (one row per test case)
   - Matches CSV rows to live QA Touch cases by Test Case Title (paginated
@@ -433,7 +433,7 @@ def build_update_payload(
     if it is missing. (Original code stripped it based on an unverified
     hypothesis; the Partner Admin backfill 2026-06-24 proved this wrong:
     stripping caseStep -> 422 on all 422 cases; preserving it -> 420 OK,
-    1 known-empty-steps failure. See also qatouch_api_mode_update.py:cmd_test
+    1 known-empty-steps failure. See also tools/archive/qatouch_api_mode_update.py:cmd_test
     which echoes the full edit-form body including caseStep and succeeds.)
 
     Steps are still NOT mutated by this function - we just pass the

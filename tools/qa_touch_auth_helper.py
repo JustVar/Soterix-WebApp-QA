@@ -8,7 +8,7 @@ the XSRF token and the Cookie header string needed by
 
 This decouples the headless API caller from Playwright entirely - once the
 auth-state has been written by a browser login (see tools/qatouch_browser.py
-or tools/qatouch_api_mode_update.py), this helper produces a tiny credentials
+or tools/qatouch_norun_update.py), this helper produces a tiny credentials
 file that any plain HTTP client can use.
 
 Output JSON shape:
@@ -45,7 +45,7 @@ How to refresh a stale auth state:
     1. Run any of the browser-based tools that prompt for login, e.g.:
            python tools/qatouch_browser.py explore --case <key>
        or
-           python tools/qatouch_api_mode_update.py test
+           python tools/qatouch_norun_update.py test
     2. Log in manually when the browser opens.
     3. The tool saves a fresh tools/.qatouch_auth_state.json.
     4. Re-run this helper to produce a fresh creds file.
@@ -84,7 +84,7 @@ To refresh:
   1. Run a browser-based QA Touch tool that prompts for login,
      e.g. one of these:
 
-         python tools/qatouch_api_mode_update.py test
+         python tools/qatouch_norun_update.py test
          python tools/qatouch_browser.py explore --case 0rzJ8Q
 
   2. When the Chromium window opens, log in to QA Touch manually.
@@ -146,7 +146,7 @@ def extract_xsrf_and_cookie_header(
 
     The XSRF token value is URL-decoded - QA Touch URL-encodes the cookie value
     on the wire, and the X-XSRF-TOKEN header expects the decoded form (this is
-    exactly what the in-browser fetch in qatouch_api_mode_update.py does via
+    exactly what the in-browser fetch in tools/qatouch_norun_update.py does via
     `decodeURIComponent`).
     """
     cookies = cookies_for_domain(state, domain)
@@ -181,7 +181,7 @@ def extract_xsrf_and_cookie_header(
 
     # Decode the token value for the X-XSRF-TOKEN header. Laravel/QA Touch
     # URL-encodes the value when setting the cookie; the in-page JS in
-    # qatouch_api_mode_update.py does the same `decodeURIComponent` step.
+    # tools/qatouch_norun_update.py does the same `decodeURIComponent` step.
     xsrf_decoded = urllib.parse.unquote(xsrf_raw)
 
     cookie_header = "; ".join(parts)

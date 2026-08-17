@@ -26,7 +26,7 @@ drift between detect and split.
 Auth model
 ----------
 Same as tools/run_partner_admin_backfill.py: read cookie+XSRF from
-tools/.qatouch_creds.json (refresh via `python tools/qatouch_api_mode_update.py test`)
+tools/.qatouch_creds.json (refresh via `python tools/qatouch_norun_update.py test`)
 and confirm with a lightweight GET /v2 ahead of any mutation.
 
 Idempotency (4 layers - see CLI --help for full rationale)
@@ -123,7 +123,7 @@ RATE_LIMIT_PAUSE = 20.0
 REFRESH_INSTRUCTIONS = (
     "QA Touch internal-auth appears stale (verify GET returned 401/403).\n"
     "Refresh it with:\n"
-    "    python tools/qatouch_api_mode_update.py test\n"
+    "    python tools/qatouch_norun_update.py test\n"
     "That drives a logged-in browser, refreshes tools/.qatouch_auth_state.json,\n"
     "and rewrites tools/.qatouch_creds.json. Then re-run this script."
 )
@@ -144,7 +144,7 @@ class AuthCreds:
             print(
                 f"Auth creds file not found: {path}\n"
                 "Generate it with:\n"
-                "    python tools/qatouch_api_mode_update.py test",
+                "    python tools/qatouch_norun_update.py test",
                 file=sys.stderr,
             )
             raise SystemExit(2)

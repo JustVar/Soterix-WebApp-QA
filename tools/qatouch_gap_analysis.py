@@ -863,7 +863,7 @@ def cmd_regression(args):
             "candidates": selected,
         }, f, indent=2)
     print(f"\nCandidates saved: {output_path.name}")
-    print("Review the file, then use qatouch_api_mode_update.py pattern to apply tags via API.")
+    print("Review the file, then use tools/qatouch_suite_hold.py to apply tags (browser session).")
 
 
 def cmd_inventory(args):
