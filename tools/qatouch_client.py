@@ -50,11 +50,54 @@ from typing import Any
 import requests
 
 # QA Touch status codes for test run results
+# Verified against GET /api/v1/testRuns/getAvailableStatuses on 2026-08-17.
 STATUS_PASSED = 1
 STATUS_UNTESTED = 2
 STATUS_BLOCKED = 3   # also used for skipped
 STATUS_RETEST = 4
 STATUS_FAILED = 5
+STATUS_NOT_APPLICABLE = 6
+STATUS_IN_PROGRESS = 7
+STATUS_HOLD = 8
+
+# QA Touch spells the same status two ways depending on the endpoint:
+#   getAvailableStatuses  -> "Not-Applicable", "In-Progress"  (hyphens)
+#   test run result reads -> "Not Applicable", "In Progress"  (spaces)
+# Measured 2026-08-17. Compare statuses through normalize_status_name(), never
+# with ==, or the comparison is right only by luck.
+STATUS_NAMES = {
+    1: 'Passed', 2: 'Untested', 3: 'Blocked', 4: 'Retest',
+    5: 'Failed', 6: 'Not Applicable', 7: 'In Progress', 8: 'Hold',
+}
+
+
+def normalize_status_name(status: str) -> str:
+    """Fold a status name to one comparable form.
+
+    "Not-Applicable", "Not Applicable" and "not applicable" all become
+    "not applicable".
+    """
+    return str(status or '').replace('-', ' ').strip().lower()
+
+
+def status_code_for(status: str) -> int | None:
+    """Return the numeric code for a status name in either spelling."""
+    wanted = normalize_status_name(status)
+    for code, name in STATUS_NAMES.items():
+        if normalize_status_name(name) == wanted:
+            return code
+    return None
+
+
+def case_code_to_ref(case_code: str) -> str:
+    """Convert a QA Touch case code to the ref the results API expects.
+
+    "TR0262" -> "262". The API wants the numeric part with no prefix and no
+    leading zeros. See update_test_run_results for why this matters.
+    """
+    digits = ''.join(ch for ch in str(case_code) if ch.isdigit())
+    return digits.lstrip('0') or '0'
+
 
 PYTEST_TO_QATOUCH = {
     'passed': STATUS_PASSED,
@@ -65,6 +108,47 @@ PYTEST_TO_QATOUCH = {
 
 class QATouchError(Exception):
     pass
+
+
+# QA Touch renamed the test-case fields in its public API some time after
+# 2026-03-27. The old names are still in every snapshot under
+# config/qatouch_snapshots/ and in the tools that read them, so a rename
+# would silently break every one of those tools - they would read a missing
+# key and quietly fall back to "Unknown". Rather than chase the rename
+# through each tool, every case record carries both names.
+#
+# The rename is NOT in the public API docs - doc.qatouch.com/openapi.yaml
+# documents no test-case response fields at all - so only a live check
+# catches the next one.
+#
+# Old name -> new name.
+LEGACY_CASE_FIELDS = {
+    'module name': 'module_name',
+    'created by': 'created_by',
+    'created date': 'created_date',
+    'updated date': 'updated_date',
+}
+
+
+def add_legacy_case_aliases(case: dict[str, Any]) -> dict[str, Any]:
+    """Add the pre-rename field names to a test case record.
+
+    Leaves any name the API already supplies untouched.
+    """
+    for old_name, new_name in LEGACY_CASE_FIELDS.items():
+        if old_name not in case and new_name in case:
+            case[old_name] = case[new_name]
+
+    # Tags moved from a comma-joined string ("NewTags") to a list ("Tags").
+    if 'NewTags' not in case:
+        tags = case.get('Tags')
+        if isinstance(tags, list):
+            case['NewTags'] = ', '.join(str(t) for t in tags)
+        elif isinstance(tags, str):
+            case['NewTags'] = tags
+        else:
+            case['NewTags'] = ''
+    return case
 
 
 class QATouchClient:
@@ -104,10 +188,22 @@ class QATouchClient:
             raise QATouchError(f'list_projects failed: {resp.status_code} {resp.text}')
         return resp.json()
 
-    def create_project(self, name: str, code: str, description: str = '') -> dict[str, Any]:
-        url = self._url('/api/v1/projects')
-        payload = {'name': name, 'code': code, 'description': description}
-        resp = self.session.post(url, json=payload, timeout=self.timeout)
+    def create_project(self, name: str, code: str = '',  # noqa: ARG002 - kept for callers
+                       description: str = '') -> dict[str, Any]:  # noqa: ARG002
+        """Create a project.
+
+        POST /api/v1/project?name={name}
+
+        The public API takes the project name as a query parameter and nothing
+        else, so `code` and `description` are accepted for backward
+        compatibility but are not sent. Set them in the QA Touch UI.
+
+        Was previously POST /api/v1/projects with a JSON body. That path does
+        not exist - it returns 404 - so this call never worked. Untested
+        against live QA Touch, because testing it creates a real project.
+        """
+        url = self._url('/api/v1/project')
+        resp = self.session.post(url, params={'name': name}, timeout=self.timeout)
         if resp.status_code not in (200, 201):
             raise QATouchError(f'create_project failed: {resp.status_code} {resp.text}')
         return resp.json()
@@ -116,12 +212,25 @@ class QATouchClient:
     #  Modules
     # ------------------------------------------------------------------ #
 
-    def create_module(self, project_id: int, name: str, parent_id: int | None = None) -> dict[str, Any]:
-        url = self._url('/api/v1/modules')
-        payload = {'project_id': project_id, 'name': name}
-        if parent_id:
-            payload['parent_id'] = parent_id
-        resp = self.session.post(url, json=payload, timeout=self.timeout)
+    def create_module(self, project_key: str, name: str,
+                      parent_key: str | None = None) -> dict[str, Any]:
+        """Create a module, optionally under a parent module.
+
+        POST /api/v1/module?projectKey={key}&moduleName={name}[&parentKey={key}]
+
+        Takes a project KEY (e.g. 'JlW1'), not a numeric id, and a parent
+        module KEY for sub-modules.
+
+        Was previously POST /api/v1/modules with a JSON body and numeric ids.
+        That path does not exist - it returns 404 - so this call never worked.
+        tools/migrate_pp_cases_phase_a.py carries a local workaround built on
+        the same query-parameter form used here.
+        """
+        params = {'projectKey': project_key, 'moduleName': name}
+        if parent_key:
+            params['parentKey'] = parent_key
+        url = self._url('/api/v1/module')
+        resp = self.session.post(url, params=params, json={}, timeout=self.timeout)
         if resp.status_code not in (200, 201):
             raise QATouchError(f'create_module failed: {resp.status_code} {resp.text}')
         return resp.json()
@@ -225,31 +334,70 @@ class QATouchClient:
                     return case
         return None
 
-    def list_test_cases(self, project_key: str, page: int = 1) -> dict[str, Any]:
+    def list_test_cases(self, project_key: str, page: int = 1,
+                        module_key: str | None = None) -> dict[str, Any]:
         """Return one page (50 items) of test cases.
 
         Response: {"link": ..., "meta": {"total": N, ...}, "data": [...]}
-        Each case has: case_title, case_key, module_key, module name,
-        Priority, Type, NewTags, created date, etc.
+        Each case has: case_title, case_key, module_key, module_name,
+        Priority, Type, Tags, created_date, etc.
+
+        Every case also carries the legacy key names ("module name", "NewTags",
+        "created date", ...). See add_legacy_case_aliases for why.
+
+        module_key filters server-side, which is far cheaper than pulling
+        every page and filtering here. The API rate-limits bursts.
         """
         url = self._url(f'/api/v1/getAllTestCases/{project_key}?page={page}')
+        if module_key:
+            url += f'&moduleKey={module_key}'
         resp = self.session.get(url, timeout=self.timeout)
         if resp.status_code != 200:
             raise QATouchError(f'list_test_cases failed: {resp.status_code} {resp.text}')
-        return resp.json()
+        payload = resp.json()
+        payload['data'] = [add_legacy_case_aliases(c) for c in payload.get('data', [])]
+        return payload
 
-    def list_all_test_cases(self, project_key: str) -> list[dict[str, Any]]:
-        """Paginate through ALL test cases in the project. Returns flat list."""
+    def list_all_test_cases(self, project_key: str,
+                            module_key: str | None = None) -> list[dict[str, Any]]:
+        """Paginate through ALL test cases in the project. Returns flat list.
+
+        Pass module_key to fetch one module only.
+        """
         all_cases: list[dict[str, Any]] = []
         page = 1
         while True:
-            data = self.list_test_cases(project_key, page=page)
+            data = self.list_test_cases(project_key, page=page, module_key=module_key)
             batch = data.get('data', [])
             if not batch:
                 break
             all_cases.extend(batch)
             page += 1
         return all_cases
+
+    def get_case_test_runs(self, case_key: str) -> list[dict[str, Any]]:
+        """Return every test run that contains this test case.
+
+        GET /api/v1/getTestRunlist/{caseKey}
+
+        Each entry carries testrunkey, resultKey, name, status and
+        Assigned_To. resultKey is what the run-result status endpoints need,
+        so this is the cheap way to find a case inside existing runs - one
+        call per case instead of paging every run's results.
+        """
+        url = self._url(f'/api/v1/getTestRunlist/{case_key}')
+        resp = self.session.get(url, timeout=self.timeout)
+        if resp.status_code != 200:
+            raise QATouchError(f'get_case_test_runs failed: {resp.status_code} {resp.text}')
+        detail = resp.json().get('testrundetail') or []
+        # The API nests this list one level deeper than the other endpoints.
+        flat: list[dict[str, Any]] = []
+        for entry in detail:
+            if isinstance(entry, list):
+                flat.extend(entry)
+            elif isinstance(entry, dict):
+                flat.append(entry)
+        return flat
 
     # ------------------------------------------------------------------ #
     #  Users
@@ -535,6 +683,56 @@ class QATouchClient:
     #  Test run result updates
     # ------------------------------------------------------------------ #
 
+    def update_test_run_results_by_code(
+        self,
+        project_key: str,
+        test_run_key: str,
+        results: list[dict[str, Any]],
+        comments: str = '',
+    ) -> dict[str, Any]:
+        """Set test run result statuses, keyed by full case CODE.
+
+        POST /api/v1/testRunResults/testrun/code
+
+        Args:
+            project_key: e.g. "JlW1"
+            test_run_key: e.g. "vaQly"
+            results: list of {"case": "TR0263", "status": <int>} - the FULL
+                     case code including the "TR" prefix.
+            comments: optional comment applied to the update
+
+        Prefer this over update_test_run_results(). Two reasons:
+
+        1. It takes the readable full case code, not the stripped numeric
+           form, so the payload matches what the mapping and CSV exports hold.
+        2. Its response names the case it changed -
+           {"success": true, "msg": "TR0263 - Updated Successfully"} - so a
+           no-op is visible. The status/multiple endpoint returns the same
+           generic success whether or not anything changed.
+
+        Verified against the live API 2026-08-17.
+        """
+        payload = {str(i): r for i, r in enumerate(results)}
+        params = {
+            'project': project_key,
+            'test_run': test_run_key,
+            'result': _json.dumps(payload),
+        }
+        if comments:
+            params['comments'] = comments
+        url = self._url('/api/v1/testRunResults/testrun/code')
+        resp = self.session.post(url, params=params, timeout=self.timeout)
+        if resp.status_code != 200:
+            raise QATouchError(
+                f'update_test_run_results_by_code failed: {resp.status_code} {resp.text}'
+            )
+        data = resp.json()
+        if not data.get('success', True):
+            raise QATouchError(
+                f'update_test_run_results_by_code API error: {data.get("error_msg", data)}'
+            )
+        return data
+
     def update_test_run_results(
         self,
         project_key: str,
@@ -547,12 +745,24 @@ class QATouchClient:
         Args:
             project_key: e.g. "JlW1"
             test_run_key: e.g. "vaXdn"
-            results: list of {"case": "<case_key>", "status": <int>}
+            results: list of {"case": "<case ref>", "status": <int>}
+                     The case ref is the CASE CODE with the "TR" prefix and
+                     leading zeros removed - TR0262 becomes "262". Use
+                     case_code_to_ref() to build it.
                      Status codes: 1=passed, 2=untested, 3=blocked/skipped,
-                                   4=retest, 5=failed
+                                   4=retest, 5=failed, 6=not applicable,
+                                   7=in progress, 8=hold
             comment: optional comment to attach
 
         Uses: PATCH /api/v1/testRunResults/status/multiple
+
+        WARNING - this endpoint fails silently. It answers
+        {"success": true, "msg": "Updated Test Run's status"} even when the
+        case ref matches nothing and no status changes. Measured 2026-08-17:
+        the case key ("B869bm"), the full case code ("TR0262") and the
+        per-run result key ("w5BNkb") were all accepted and all did nothing.
+        Only the stripped code ("262") actually moved the status.
+        Always read the status back to confirm a write landed.
         """
         url = self._url('/api/v1/testRunResults/status/multiple')
         params = {
