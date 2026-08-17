@@ -150,7 +150,7 @@ def cmd_scan():
     # Group cases by module
     cases_by_module: dict[str, list[dict]] = {}
     for case in all_cases:
-        mod = case.get('module', 'Unknown')
+        mod = case.get('module name', 'Unknown')
         cases_by_module.setdefault(mod, []).append(case)
 
     # Also build a flat lookup by case_key
@@ -246,7 +246,7 @@ def cmd_fix(threshold: float = 0.35):
 
     cases_by_module: dict[str, list[dict]] = {}
     for case in all_cases:
-        mod = case.get('module', 'Unknown')
+        mod = case.get('module name', 'Unknown')
         cases_by_module.setdefault(mod, []).append(case)
 
     case_by_key = {c['case_key']: c for c in all_cases if 'case_key' in c}

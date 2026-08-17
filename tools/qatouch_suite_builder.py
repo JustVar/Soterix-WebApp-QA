@@ -164,6 +164,23 @@ SMOKE_MODULES = {
 }
 
 # ---------------------------------------------------------------------------
+# Suite holds
+#
+# Modules listed here stay out of every suite this tool builds, whatever the
+# module config above says. A hold is temporary. Remove the entry to put the
+# module back in the suites.
+#
+# Match is a case-insensitive substring of the module name.
+# See docs/QA_TOUCH_TEAM_GUIDE.md, section "Suite Holds", for the live holds
+# in QA Touch itself and the tool that applies them.
+# ---------------------------------------------------------------------------
+
+SUITE_HOLD_MODULES = [
+    'PTZ',   # On hold from 2026-08-17 until further notice
+]
+
+
+# ---------------------------------------------------------------------------
 # SANITY suite: SMOKE + deeper happy-path testing per module
 #   ~200 cases covering primary workflows
 # ---------------------------------------------------------------------------
@@ -421,13 +438,26 @@ def fetch_all_cases() -> list[dict]:
     return cases
 
 
+def is_on_hold(module_name: str) -> bool:
+    """Return True when the module is on suite hold."""
+    lowered = (module_name or '').lower()
+    return any(h.lower() in lowered for h in SUITE_HOLD_MODULES)
+
+
 def match_cases(cases: list[dict], module_config: dict) -> list[dict]:
-    """Select test cases matching the module config criteria."""
+    """Select test cases matching the module config criteria.
+
+    Modules named in SUITE_HOLD_MODULES are skipped.
+    """
     selected = []
     module_counts = defaultdict(int)
+    held = 0
 
     for case in cases:
         mod_name = case.get('module name', '')
+        if is_on_hold(mod_name):
+            held += 1
+            continue
         title = case.get('case_title', '').lower()
         case_key = case.get('case_key', '')
 
@@ -455,6 +485,9 @@ def match_cases(cases: list[dict], module_config: dict) -> list[dict]:
                 'priority': case.get('Priority', ''),
             })
             module_counts[target_module] += 1
+
+    if held:
+        print(f'  Suite hold: skipped {held} case(s) in modules {SUITE_HOLD_MODULES}')
 
     return selected
 
