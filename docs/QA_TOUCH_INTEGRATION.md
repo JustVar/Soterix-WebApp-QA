@@ -253,6 +253,52 @@ the import. The live runbook for new imports is `docs/qa_import_pipeline.md`.
 
 ---
 
+## MCP server (for asking questions, not for automation)
+
+The official `qatouch-mcp-server` is wired into this repo. Your MCP client
+starts it automatically from `.mcp.json` - nothing to configure if your `.env`
+already works for the other QA Touch tools.
+
+```
+.mcp.json  ->  python tools/qatouch_mcp_launch.py  ->  npx -y qatouch-mcp-server
+```
+
+`tools/qatouch_mcp_launch.py` exists because the server wants
+`QATOUCH_API_TOKEN` in its environment while our credentials sit in the
+gitignored `.env` under `QATOUCH_API_KEY`. The launcher bridges the two so
+`.mcp.json` never holds a token and can be committed safely. It is stdlib-only
+on purpose - the MCP client may not use the repo venv - so do not add imports
+that need installing.
+
+To check it starts:
+
+```bash
+python tools/qatouch_mcp_launch.py     # waits on stdin = healthy, Ctrl+C to stop
+```
+
+Needs Node.js 18 or newer on PATH.
+
+**Use it for** asking what a module covers, searching cases and defects,
+checking run results without writing a script. 49 tools, all reads and creates.
+
+**Do not use it for** suite tagging, holds, or CI result uploads. It has no tag
+tools at all, cannot update an existing case, and is a stdio server that a
+pytest plugin cannot call. Those stay in `tools/`. Full reasoning in
+`QATOUCH_NEW_CAPABILITIES.md`.
+
+**Two things to know:**
+
+- **It sends usage analytics to QA Touch.** Every tool call posts to
+  `api.qatouch.com/api/v1/mcp/usage` with the tool name, status, duration,
+  your domain and a masked token. Nothing secret leaves, but the vendor sees
+  which tools you use and when.
+- **Its count disagrees with pagination.** `count_test_cases` reported 3,108
+  for `JlW1` on 2026-08-17 while paging every case yielded 3,096. Twelve cases
+  of difference, unexplained. Trust the paginated list when the number matters.
+- Arguments are camelCase (`projectKey`), not snake_case.
+
+---
+
 ## Contract canary
 
 QA Touch changes its API without telling anyone. The March 2026 field rename

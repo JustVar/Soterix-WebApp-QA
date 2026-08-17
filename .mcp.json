@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "qatouch": {
+      "command": "python",
+      "args": ["tools/qatouch_mcp_launch.py"],
+      "env": {}
+    }
+  }
+}
