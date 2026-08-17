@@ -1,0 +1,50 @@
+{
+  "case_fields": [
+    "ApprovalStatus",
+    "Description",
+    "NewTags",
+    "Precondition",
+    "Priority",
+    "References",
+    "Steps",
+    "Tags",
+    "Template",
+    "TestSuites",
+    "Testdata",
+    "Testplan",
+    "Type",
+    "case_code",
+    "case_key",
+    "case_title",
+    "created by",
+    "created date",
+    "created_by",
+    "created_date",
+    "email",
+    "module name",
+    "module_key",
+    "module_name",
+    "updated date",
+    "updated_By",
+    "updated_date"
+  ],
+  "endpoint_status_codes": {
+    "getAllModules": 200,
+    "getAllTestCases": 200,
+    "getAllTestRuns": 200,
+    "getAvailableStatuses": 200,
+    "getTestRunlist": 200
+  },
+  "project_key": "JlW1",
+  "recorded": "2026-08-17 12:21:58",
+  "statuses": {
+    "1": "Passed",
+    "2": "Untested",
+    "3": "Blocked",
+    "4": "Retest",
+    "5": "Failed",
+    "6": "Not-Applicable",
+    "7": "In-Progress",
+    "8": "Hold"
+  }
+}
