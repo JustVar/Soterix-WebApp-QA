@@ -46,10 +46,22 @@ API (`/v1/case/update`) through a Playwright login that expires every few
 weeks. Anything on that list could move to the public API and run headless -
 in CI, on a schedule, with no browser.
 
-**The gap: tags are not supported.** The only `tags` reference in the entire
-public spec is an input filter when creating a run. So suite tagging - the
-SMOKE/SANITY/REGRESSION work - still needs the browser path. That is why
-`qatouch_suite_hold.py apply` still asks for a login.
+**Tested 2026-08-17.** It is a true partial update - send one field, the rest
+survive. `QATouchClient.update_test_case()` wraps it.
+
+**Two gaps, both bigger than they look:**
+
+- **Tags are not supported.** The only `tags` reference in the entire public
+  spec is an input filter when creating a run. Suite tagging still needs the
+  browser, which is why `qatouch_suite_hold.py apply` asks for a login.
+- **Module moves are not supported**, despite `sectionKey` being documented.
+  It is accepted, answers success, and the case does not move. Verified by
+  moving a case between two PTZ modules and reading it back.
+
+So this covers plain metadata only. Of the tools that write through the
+browser today, exactly one (`qatouch_api_mode_update.py`) can move over
+wholesale; two can move half their work; the rest cannot. Full table in
+`QA_TOUCH_INTEGRATION.md`.
 
 ### 2. Test-case-level and module-level bulk updates (2026-03-25) - already in use
 
@@ -234,8 +246,10 @@ extend the client method to post multipart when files are given, and pass
    has no tag tools, so it cannot take over the suite work.
 4. ~~Move the CSV import onto the public endpoint~~ - tested and specified.
    Create-only, needs a column-name mapping. Worth doing for new-case imports.
-5. **Move non-tag case edits onto the public update API**, leaving only tag
-   work on the browser path.
+5. ~~Move non-tag case edits onto the public update API~~ - assessed. Smaller
+   win than hoped: metadata edits only. Tags AND module moves both stay on the
+   browser path, so the login remains. `qatouch_api_mode_update.py` is the one
+   clean candidate for a full migration.
 
 ---
 

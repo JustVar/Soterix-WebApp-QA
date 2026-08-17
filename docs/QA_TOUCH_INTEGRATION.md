@@ -193,6 +193,47 @@ its `resultKey` and current status.
 
 ---
 
+## Updating an existing case
+
+`POST /api/v1/testcase/update` via `QATouchClient.update_test_case()`.
+
+**It is a partial update.** Send only the fields you want changed; the rest
+keep their values. Measured 2026-08-17 - changing `precondition` left the
+title, description, type, priority, module and tags untouched. That makes it
+much safer than the browser endpoint, which needs the whole case echoed back
+and silently drops whatever you forget.
+
+| Field | Public API |
+|---|---|
+| title, description, precondition | yes |
+| reference, estimate | yes |
+| type, priority, mode | yes |
+| **module (sectionKey)** | **no - accepted, answers success, does not move the case** |
+| **tags** | **no - no parameter exists** |
+| steps, BDD | separate endpoints, different semantics |
+
+The `sectionKey` no-op is the same silent-success pattern as the other traps:
+verified by moving a case between two PTZ modules and reading it back - it
+never left. `update_test_case()` refuses the field rather than pretend.
+
+### What this does and does not buy us
+
+It removes the browser dependency for **plain metadata edits only**. The three
+things our tooling actually does most still need a logged-in session:
+
+| Tool | Writes | Can it move to the public API? |
+|---|---|---|
+| `qatouch_api_mode_update.py` | mode | **Yes, fully** |
+| `backfill_qa_touch_metadata.py` | metadata + tags + steps | Partly - the metadata half |
+| `qatouch_norun_update.py` | precondition + NO_RUN tag | Partly - the precondition half |
+| `reorganize_ldap_cases.py` | module moves | No |
+| `split_merged_steps.py`, `detect_merged_steps.py`, `qa_post_import_split_and_position.py` | surgical step edits | No |
+| `qatouch_api_tag_update.py`, `qatouch_suite_hold.py` | tags | No |
+
+So the QA Touch login is not going away. It gets needed less often.
+
+---
+
 ## CSV import (public, create-only)
 
 `POST /api/v1/testCase/import?projectKey={key}`, multipart body, field `file`,

@@ -683,6 +683,72 @@ class QATouchClient:
     #  Test run result updates
     # ------------------------------------------------------------------ #
 
+    # Field name -> the query parameter the update endpoint expects.
+    CASE_UPDATE_FIELDS = {
+        'title': 'caseTitle',
+        'caseTitle': 'caseTitle',
+        'description': 'description',
+        'precondition': 'precondition',
+        'reference': 'reference',
+        'estimate': 'estimate',
+        'type': 'type',
+        'priority': 'priority',
+        'mode': 'mode',
+        # sectionKey is deliberately absent. The endpoint documents it, accepts
+        # it and answers {"success": true} - and the case does not move.
+        # Measured 2026-08-17 by moving a case between two PTZ modules and
+        # reading it back: it never left the source module. Module moves have
+        # to go through the browser endpoint. See tools/reorganize_ldap_cases.py.
+    }
+
+    def update_test_case(self, project_key: str, case_key: str,
+                         **fields: Any) -> dict[str, Any]:
+        """Update fields on an existing test case through the public API.
+
+        POST /api/v1/testcase/update
+
+        Accepts title, description, precondition, reference, estimate, type,
+        priority and mode.
+
+        This is a PARTIAL update - measured 2026-08-17. Fields you leave out
+        keep their values; only what you send changes. That is unlike the
+        browser endpoint /v1/case/update, which needs the whole case echoed
+        back and silently drops anything you forget.
+
+        MODULE MOVES ARE NOT SUPPORTED either, whatever the docs imply - the
+        sectionKey parameter is accepted and ignored.
+
+        TAGS ARE NOT SUPPORTED. The public API has no way to change the tags
+        on a case that already exists. Use tools/qatouch_suite_hold.py, which
+        drives the browser session, for anything tag-related.
+
+        Steps and BDD scripts have their own endpoints
+        (/api/v1/testcase/steps/update and /api/v1/testcase/bdd/update) and
+        are not handled here.
+        """
+        unknown = [k for k in fields if k not in self.CASE_UPDATE_FIELDS]
+        if unknown:
+            raise QATouchError(
+                f'update_test_case: unsupported field(s) {unknown}. '
+                f'Supported: {sorted(set(self.CASE_UPDATE_FIELDS))}. '
+                f'Tags cannot be changed through the public API.')
+        if not fields:
+            raise QATouchError('update_test_case: nothing to update')
+
+        params = {'projectKey': project_key, 'caseKey': case_key}
+        for name, value in fields.items():
+            params[self.CASE_UPDATE_FIELDS[name]] = value
+
+        url = self._url('/api/v1/testcase/update')
+        resp = self.session.post(url, params=params, timeout=self.timeout)
+        if resp.status_code != 200:
+            raise QATouchError(
+                f'update_test_case failed: {resp.status_code} {resp.text[:300]}')
+        data = resp.json()
+        if not data.get('success', True):
+            raise QATouchError(f'update_test_case API error: {data}')
+        return data
+
     def update_test_run_results_by_code(
         self,
         project_key: str,
