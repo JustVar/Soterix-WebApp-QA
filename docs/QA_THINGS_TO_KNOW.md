@@ -282,7 +282,8 @@ it on later runs. A full login costs about 65 seconds. A cache load costs 2
 to 3 seconds.
 
 Details, history, and measured numbers:
-[SESSION_CACHING_IMPLEMENTATION.md](SESSION_CACHING_IMPLEMENTATION.md).
+[SESSION_CACHING_IMPLEMENTATION.md](archive/SESSION_CACHING_IMPLEMENTATION.md)
+(archived - the live behaviour is in `docs/CONVENTIONS.md`, "Session caching").
 
 **When to clear the cache:** after a password change, on unexpected auth
 errors, or when switching accounts.

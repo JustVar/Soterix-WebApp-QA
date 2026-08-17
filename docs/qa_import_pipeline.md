@@ -8,7 +8,7 @@ canonical CSV in the middle and per-step rows at the end.
 described in `qa_xlsx_import_template.md` - they just fill the spreadsheet.
 
 **Why it has 5 phases:** the QA Touch CSV importer silently drops or rewrites
-several fields (see `qa_touch_integration.md:339-347`). Each phase has a clear
+several fields (see `docs/local/qa_touch_integration.md:339-347`). Each phase has a clear
 owner, a single command, and a verifiable artifact. Skipping a phase leaves a
 specific, named gap that the next phase repairs - nothing is hidden.
 
@@ -55,7 +55,7 @@ reversible by re-running.
 **Owner:** Ops. **Frequency:** once per new QA Touch project.
 
 **Why:** the QA Touch CSV importer matches tags by exact label-string against
-the project's tag dictionary (`qa_touch_integration.md:342-343`). Tags that do
+the project's tag dictionary (`docs/local/qa_touch_integration.md:342-343`). Tags that do
 not exist in the dictionary are silently dropped at import - losing them from
 the row entirely. We pre-create the four canonical tags so the importer accepts
 them. The metadata backfill (phase 4) re-applies them anyway as defense in
@@ -197,7 +197,7 @@ VENDOR-CANONICAL slugs (including routing `Description` -> `test_description`)
 so the description silent-drop is no longer possible. The auto-map "the
 wizard auto-fills dropdowns when headers match" claim made in an earlier
 2026-06-26 revision of this doc was wrong (verified empirically - see
-§7.A.1 of `qa_touch_integration.md` "auto-map is a myth"); the wizard always
+§7.A.1 of `docs/local/qa_touch_integration.md` "auto-map is a myth"); the wizard always
 defaults dropdowns to Skip and the operator (or a script) must select each.
 The QA-facing author template was restored to friendly headers (v2,
 2026-06-26) since the auto-map benefit was never real.
@@ -301,7 +301,7 @@ CSV and are correctly unmapped.
 
 What you'll see: a green ✓ summary in the Console. The wizard's
 dropdown chips may continue to visually show "Skip" - that's a Vue
-display lag we documented in `qa_touch_integration.md` §7.A.1. **The
+display lag we documented in `docs/local/qa_touch_integration.md` §7.A.1. **The
 form's underlying values are correct** - verified by capturing the
 multipart POST body on the 2026-06-26 312-case Partner Portal import.
 Just click Import; the right mappings get posted.
@@ -517,12 +517,12 @@ from document.cookie and sent as X-XSRF-TOKEN header. Auth state cached at
 | Multi-row Steps collapsed | Phase 2 + 5 | Converter emits merged-cell format intentionally; step splitter breaks into per-step rows |
 | NewTags -> Tags vendor rename (in the public API only) | Phase 4 | Backfill is the only API caller; pipe-delimited string in CSV stays stable |
 | /v1/case/update returns 500 with status:true | Phase 4 | ok_500_quirk handler treats body status:true as success |
-| /v1/case/update returns 422 `"Please add some steps"` when caseStep stripped | Phase 4 | Backfill carries caseStep through verbatim (see qa_touch_integration.md §7.B.1) |
+| /v1/case/update returns 422 `"Please add some steps"` when caseStep stripped | Phase 4 | Backfill carries caseStep through verbatim (see docs/local/qa_touch_integration.md §7.B.1) |
 | /v1/steps/save 429 rate limit | Phase 5 | 15s pause + retry once |
 | QA renames a header column | Phase 2 | Header auto-detect needs >=3 required fields; FAIL LOUD with seen-headers list |
 | LDAP rows-73..82 type/severity column shift | Phase 2 | SEVERITY_TOKENS vs TESTING_TYPE_TOKENS membership check + auto-swap |
 | Both Expected + Acceptance columns present | Phase 2 | Converter merges with `\n\n` separator; never drops either |
 | Legacy CSVs use friendly headers (Test Case Title, Description, Reference, ...) | Phase 4 + 5 | Backfill and step splitter both alias-read the legacy + vendor-canonical names |
 
-See `qa_touch_integration.md` for the underlying API behavior and
+See `docs/local/qa_touch_integration.md` for the underlying API behavior and
 `build_partner_admin_backfill.py` for the enc_id reference tables.

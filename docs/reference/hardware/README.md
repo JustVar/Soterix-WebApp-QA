@@ -26,4 +26,4 @@ Based on these docs, key testable components include:
 ## Related
 
 - [Triple-Helix Methodology](../../TRIPLE_HELIX_METHODOLOGY.md) - Testing approach
-- [Future Roadmap](../../FUTURE_ROADMAP.md) - Hardware testing plans
+- [Future Roadmap] in the sibling soterix-internal-dashboards repo (docs/FUTURE_ROADMAP.md) - Hardware testing plans

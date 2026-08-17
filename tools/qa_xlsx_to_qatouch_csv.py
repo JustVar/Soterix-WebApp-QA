@@ -23,7 +23,7 @@ converter produce the auto-mapped format.
 Why this script exists
 ----------------------
 QA Touch's CSV importer has a half-dozen silent-data-loss quirks documented in
-docs/qa_touch_integration.md:
+docs/local/qa_touch_integration.md:
 
   - Unknown `test_type` values are silently rewritten to `Regression` (§4).
   - `reference` (refLink) is silently dropped on import (§4) - Phase 4 backfill
@@ -111,7 +111,7 @@ except ImportError as exc:  # pragma: no cover
 # `test_description` populates the case detail's Description field. Without
 # realizing it, the 5-phase pipeline was compensating via Phase 4 backfill.
 # Renamed 2026-06-26 after the live import-API probe captured the canonical
-# 17 slugs - see docs/qa_touch_integration.md §7.A.1.
+# 17 slugs - see docs/local/qa_touch_integration.md §7.A.1.
 #
 # Vendor's 2 unused slugs (intentionally omitted):
 #   - description - silently dropped (use test_description instead)
@@ -921,7 +921,7 @@ def convert(
                 # rows of the most-recent case and creates them pre-split (each
                 # CSV step-row becomes its own step row with its own
                 # expected_result - no post-import step splitter needed; see
-                # docs/qa_touch_integration.md §7.A.2).
+                # docs/local/qa_touch_integration.md §7.A.2).
                 for rec in all_records:
                     n_steps = len(rec.steps_list)
                     if n_steps == 0:
@@ -1015,7 +1015,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "row per case + one continuation row per additional step, for "
              "the Data Migration wizard at /v2/case/migration/import/p/{pid} "
              "(steps land pre-split, no Phase 5 splitter needed). See "
-             "docs/qa_touch_integration.md §7.A.2 for the Format B contract.",
+             "docs/local/qa_touch_integration.md §7.A.2 for the Format B contract.",
     )
     return p.parse_args(argv)
 

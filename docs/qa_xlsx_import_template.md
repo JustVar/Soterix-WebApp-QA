@@ -78,7 +78,7 @@ uses friendly Title-Case names that map 1:1 to those logical fields.
 > as a hidden internal field and silently drops it. Only the `test_description`
 > slug populates the user-visible Description on the case detail page (verified
 > by live probe upload to project 60w8 on 2026-06-26 - see
-> `qa_touch_integration.md` §7.A.1). The converter sidesteps the trap by
+> `docs/local/qa_touch_integration.md` §7.A.1). The converter sidesteps the trap by
 > emitting `test_description` regardless of which alias the QA author used.
 
 ### Enum value reference

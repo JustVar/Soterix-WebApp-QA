@@ -13,6 +13,7 @@ None of these reflect current behavior or active workflows - see the top-level
 | QA Touch onboarding/migration | `QA_TOUCH_COMPARISON_GUIDE.md`, `QA_TOUCH_IMPORT_PLAN.md`, `QATOUCH_API_INTEGRATION_PLAN.md` |
 | Selenium migration | `SELENIUM_TO_PLAYWRIGHT_MIGRATION.md` (44 KB log - migration complete) |
 | Out-of-scope plans | `MAC_JUSTIFICATION_FOR_IOS_TESTING.md`, `RECAPTCHA_BYPASS_PLAN.md` |
+| Completed implementation write-ups | `SESSION_CACHING_IMPLEMENTATION.md` (archived 2026-08-17 - live behaviour is in `docs/CONVENTIONS.md`) |
 
 ## When to look in here
 

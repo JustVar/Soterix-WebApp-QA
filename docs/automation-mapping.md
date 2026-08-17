@@ -124,7 +124,7 @@ Run locally: `python qa/check_doc_ids.py` (warn-only) or `python qa/check_doc_id
 | Section | Type prefix | Where tests live | Notes |
 |---|---|---|---|
 | I. API | `QA-API-*` | `tests/smoke/` in Soterix-API-QA | One Doc # per `test_*_apis.py` file |
-| II. Simulation | `QA-SIM-*` | `tests/simulation/` (mix of automated + manual) | Manual ones live as runbooks in `qa/runbooks/<doc_id>.md` |
+| II. Simulation | `QA-SIM-*` | `tests/simulation/` (mix of automated + manual) | Manual ones live as runbooks in `qa/runbooks/<doc_id>.md (planned - the folder does not exist yet)` |
 | III. Planned | `QA-PLN-*` | path = (to be created) until built | Keep in registry with `status: planned` |
 | Ref. UI E2E | `QA-REF-UI-*` | `tests/ui/<area>/` | Feature coverage - not part of main automation rollup but tracked for completeness |
 
@@ -154,6 +154,6 @@ Read paths flow downward. Nothing flows upward. The xlsx and CSV are sinks, not 
 
 ## Related
 
-- [API_ENDPOINTS.md](./API_ENDPOINTS.md) - endpoint catalog (orthogonal to Doc #s; tracks endpoints, not tests)
-- [BRUNO_GUIDE.md](./BRUNO_GUIDE.md) - Bruno collection for human-driven API exploration
+- [API_ENDPOINTS.md](./API_ENDPOINTS.md) - pointer only. The endpoint catalog moved to the Soterix-API-QA repo on 2026-08-07.
+- [BRUNO_GUIDE.md](./BRUNO_GUIDE.md) - pointer only. The Bruno collection moved to the Soterix-API-QA repo on 2026-08-07.
 - [qa/README.md](../qa/README.md) - entry point for the `qa/` directory

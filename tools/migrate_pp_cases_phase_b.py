@@ -11,7 +11,7 @@ What "delete" actually does
 QA Touch's /v1/case/delete endpoint MOVES THE CASE TO AN ARCHIVE, not a hard
 purge. The case can be recovered from the project's Archive view in the UI
 (workspace-admin can permanently delete from there; that endpoint is not yet
-captured - see qa_touch_integration.md section 8). This script is therefore
+captured - see docs/local/qa_touch_integration.md section 8). This script is therefore
 safe-by-default: an accidental delete is recoverable.
 
 Endpoint

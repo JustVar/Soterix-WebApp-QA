@@ -8,7 +8,7 @@ The Triple-Helix Testing Methodology is a QA approach for AI-powered Video Surve
 
 | Strand | Progress | Tests |
 |--------|----------|-------|
-| Software (Web/API) | 🟢 Active | 26 tests passing |
+| Software (Web) | 🟢 Active | 383 passing, 182 skipped (08/14/2026, 4 workers) |
 | Hardware | 🟡 Planned | Documentation ready |
 | AI/ML | 🟡 Planned | Requirements defined |
 
@@ -248,8 +248,9 @@ GPU Utilization        Inference Speed        Response Time
 
 ## Related Documents
 
-- [Implementation Roadmap](IMPLEMENTATION_ROADMAP.md)
-- [Selenium Migration Status](SELENIUM_TO_PLAYWRIGHT_MIGRATION.md)
-- QA Roadmap: `dashboards/soterix-internal-dashboards/docs/QA_ROADMAP.md` (workspace-level)
+- [Implementation Roadmap](archive/IMPLEMENTATION_ROADMAP.md) (archived)
+- [Selenium Migration Status](archive/SELENIUM_TO_PLAYWRIGHT_MIGRATION.md) (archived - migration complete)
+- QA Roadmap: `QA_ROADMAP.md` in the sibling **soterix-internal-dashboards**
+  repo (workspace-level, not in this repo)
 - [Hardware Reference](reference/hardware/README.md)
-- [Original Methodology](reference/archive/Optimized_Triple-Helix_Testing.txt)
+- [Original Methodology](reference/archive/Optimized%20Triple-Helix%20Testing.txt)

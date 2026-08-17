@@ -267,7 +267,7 @@ gates before every commit.
 - `docs/STYLE.md` - writing style for docs, comments, and commit messages
 - `docs/CREDENTIALS_SETUP.md` - credential configuration walkthrough
 - `MAINTENANCE_REMINDERS.md` - OAuth expirations, recurring tasks
-- `docs/SESSION_CACHING_IMPLEMENTATION.md` - auth state cache details
+- `docs/CONVENTIONS.md` - auth state cache behaviour (the original write-up is archived at `docs/archive/SESSION_CACHING_IMPLEMENTATION.md`)
 - `docs/VERIFICATION_WORKFLOW.md` - QA review flow for verification mode
 - `docs/EMAIL_REPORTS.md` - emailing the HTML run report via Microsoft Graph
 - `docs/API_ENDPOINTS.md` - REST endpoint catalog + coverage status

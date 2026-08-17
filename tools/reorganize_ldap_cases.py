@@ -542,7 +542,7 @@ def build_section_update_payload(current: dict, new_section_key: str) -> dict:
     """Clone current edit-form state, set the 5 section-key aliases, return.
 
     QA Touch's case payload uses several section-key aliases that different
-    code paths read on update (per docs/qa_touch_integration.md §7.B.1, proven
+    code paths read on update (per docs/local/qa_touch_integration.md §7.B.1, proven
     on the 2026-06-26 LDAP re-org of 175/175 cases via chrome-devtools eval).
     Setting all five removes drift across the UI (module breadcrumbs, filters).
 
