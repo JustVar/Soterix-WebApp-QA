@@ -184,9 +184,16 @@ Config: `config/qatouch_tag_ids.json`
 ### Useful filters
 
 `getAllTestCases` accepts `moduleKey`, `mode`, `approvalstatus`,
-`requirementKey`, `view=count|list` - one at a time. Filtering server-side
-turned a 3,096-case paginated pull into one call returning 8. The API
-rate-limits bursts with HTTP 429, so prefer the filter.
+`requirementKey`, `view=count|list` - one at a time (`mode` may pair with
+`view` or `page`). Filtering server-side turned a 3,096-case paginated pull
+into one call returning 8. The API rate-limits bursts with HTTP 429, so
+prefer the filter.
+
+Three quirks of the `mode` filter, measured 2026-08-17: the value is
+case-sensitive (`Automation` / `Manual`; the documented lowercase returns
+"Provided Mode not found"); a filtered response reports `meta.last_page = 1`
+whatever the total; and its `link.next` drops the filter. Page by computing
+`total / per_page`. `tools/qatouch_mode.py` does this.
 
 `GET /api/v1/getTestRunlist/{caseKey}` returns every run holding a case, with
 its `resultKey` and current status.
@@ -223,7 +230,7 @@ things our tooling actually does most still need a logged-in session:
 
 | Tool | Writes | Can it move to the public API? |
 |---|---|---|
-| `qatouch_api_mode_update.py` | mode | **Yes, fully** |
+| `qatouch_mode.py` (was `qatouch_api_mode_update.py` + `qatouch_set_mode.py`) | mode | **Done - on the public API, with read-back** |
 | `backfill_qa_touch_metadata.py` | metadata + tags + steps | Partly - the metadata half |
 | `qatouch_norun_update.py` | precondition + NO_RUN tag | Partly - the precondition half |
 | `archive/reorganize_ldap_cases.py` (finished one-off) | module moves | No - browser only |
@@ -286,23 +293,47 @@ has to go through the manual DELETE-REQUEST process.
 
 ## Result upload pipeline
 
-```bash
-# Automatic upload from a pytest run
-pytest tests/ --qatouch-upload --qatouch-run <RUN_KEY>
+One command runs a suite into a fresh QA Touch run and proves the results
+landed:
 
-# From a saved JSON report
-python tools/qatouch_run_manager.py upload <RUN_KEY> report.json
-python tools/qatouch_run_manager.py dry-run report.json     # preview
-python tools/qatouch_run_manager.py list                    # list runs
+```bash
+python tools/run_suite.py tests/ui/views --env qa --version 1.8.0
+python tools/run_suite.py tests/ui/admin/test_admin_general.py --dry-run   # plan only
 ```
 
-For the JSON path install `pytest-json-report` (it sits in
-`requirements_legacy.txt`, not the active requirements) and add
-`--json-report --json-report-file=report.json`.
+It collects the tests, maps them to cases through
+`config/qatouch_case_mapping.json`, creates a run holding exactly those
+cases (so nothing sits Untested for want of a test), runs pytest with
+`--qatouch-upload`, then reads the run back and reconciles it case by case
+against `logs/last_run_results.json`. Needs `QATOUCH_ASSIGN_TO` and
+`QATOUCH_MILESTONE_KEY` in `.env` (see `qatouch_run_manager.py users` /
+`milestone`).
 
-Components: `plugins/qatouch_reporter.py` (pytest plugin),
-`tools/qatouch_client.py` (API client), `config/qatouch_case_mapping.json`
-(test to case mapping), `tools/qatouch_mapper.py` (rebuilds the mapping).
+The pieces, each usable on its own:
+
+| Tool | Does |
+|---|---|
+| `plugins/qatouch_reporter.py` | pytest plugin. Resolves case codes from the run, uploads via the code endpoint, reads back and fails loudly if a status did not land |
+| `tools/validate_run.py <RUN_KEY>` | Reconciles the run against the last local results, case by case. This is what catches an upload the API accepted and discarded |
+| `tools/retry_uploads.py` | Replays `logs/upload_failures.json`, verifies each retry, quarantines entries that can never land |
+| `tools/qatouch_mode.py sync` | Compares the Playwright mapping with the cases marked Mode=Automation and reports both mismatch directions; `--apply` fixes the safe one |
+| `tools/qatouch_run_manager.py` | Runs, milestones, users, manual JSON upload |
+| `tools/qatouch_mapper.py` | Rebuilds the test-to-case mapping |
+
+**Mode=Automation is the source of truth for "this case is automated".** The
+mapping is the link between a test and a case; the case's Mode is the
+status the whole team can see. `qatouch_mode.py sync` is what keeps them
+aligned. As of 2026-08-17: 275 mapped, 271 Automation, 264 aligned, 11
+mapped-but-Manual, 7 Automation-but-unmapped.
+
+The `smoke` / `sanity` pytest markers are **not** the same thing as the QA
+Touch SMOKE / SANITY suites. `-m smoke` collects the 132 C2C hardware tests,
+none of which map to a case. Target directories or files, not markers, until
+that is redesigned.
+
+Bug filing to Jira happens only when `--file-bugs` is passed AND
+`BUG_CREATION_ENABLED=true` - failures going straight to Jira is not the
+intended end state.
 
 ---
 
