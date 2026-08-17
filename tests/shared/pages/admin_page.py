@@ -65,6 +65,10 @@ class AdminPage:
             "input.input-search-bar[placeholder*='Rule Type']"
         )
         self.rule_edit_icons = page.locator("img[aria-label='Edit']")
+        # the drawer the Edit icon opens (read-only details, see edit_rule)
+        self.rule_details_panel = page.locator(
+            "[class*='modal' i], .customMuiModal, [role='dialog']"
+        ).filter(has_text="Details").first
         self.rule_delete_icons = page.locator("img[aria-label='Delete']")
         self.rule_delete_confirm = page.locator(
             "button.btn-primary:has-text('Delete')"
@@ -288,8 +292,25 @@ class AdminPage:
         else:
             switch = self.user_switch.first
         switch.wait_for(state="visible", timeout=10000)
+        # a switch mid-server-reconcile reports not-enabled for a while
+        # (measured on half-created users, 08/17/2026): give it a
+        # bounded chance to become usable, then fail loud - a click that
+        # never lands is a real failure, not a settle
+        checkbox = switch.locator("input[type='checkbox']").first
+        try:
+            expect(checkbox).to_be_enabled(timeout=15000)
+        except AssertionError:
+            raise AssertionError(
+                f"The status switch for {user_text or 'the first user'} "
+                "stayed disabled for 15s - the account is not toggleable"
+            ) from None
+        before = checkbox.is_checked()
         switch.click()
-        self.page.wait_for_timeout(1000)  # server ack has no DOM signal
+        # the checked state flipping is the applied signal
+        if before:
+            expect(checkbox).not_to_be_checked(timeout=10000)
+        else:
+            expect(checkbox).to_be_checked(timeout=10000)
 
     # --- Role filter ---
 
@@ -395,8 +416,12 @@ class AdminPage:
         target = count + index if index < 0 else index
         self.rule_edit_icons.nth(target).scroll_into_view_if_needed()
         self.rule_edit_icons.nth(target).click()
-        # The modal's primary button is the signal that it opened
-        self.update_and_close_button.wait_for(state="visible", timeout=15000)
+        # The 'Edit' icon opens a read-only rule DETAILS drawer (devices,
+        # schedules, created/modified audit) since the 08/2026 rules
+        # redesign - measured 08/17/2026; there is no edit form or
+        # Update & Close anymore. The drawer's Details heading is the
+        # opened signal.
+        self.rule_details_panel.wait_for(state="visible", timeout=15000)
 
     def click_notification_tab(self):
         """Switch to the Notification tab in the rule edit modal."""

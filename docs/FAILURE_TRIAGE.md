@@ -128,3 +128,12 @@ Oracles
   conversion, A/B the file against HEAD in the same window before
   touching the code - the search endpoint's second 400 outage cost
   two hours of chasing a conversion that was neutral.
+- Probe harness logins hit a fresh-login window where the sidebar
+  anchors carry pointer-events:none for a variable stretch (30s+
+  seen); tests never see it because authenticated_page uses the
+  cached session. Probe via a throwaway pytest test on the cached
+  session when timing matters.
+- When a newly un-swallowed oracle fires, capture the write responses
+  (page.on('response') for non-GET /REST/ calls) BEFORE blaming the
+  test: on 08/17 both admin_users failures were the server answering
+  400 with an empty UI alert.

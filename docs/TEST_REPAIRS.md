@@ -24,9 +24,9 @@ Status: [REDO] rebuild, [INVESTIGATE] feature moved or died?,
 | 6 | QA Touch gap analysis (coverage vs case mapping) | deferred | After the above, per Justin. Note: mapping metadata says 352 tests, collection says 819. |
 | 7 | Tenant mop-up | manual | Site detail > Groups: delete "AutoTest Group *", "Edited Group *", "2026*AutomationEdited *". One leaked "AutoTest Playwright" user self-consumes on the next delete-user run. |
 
-Quality gates, all zero as of 08/14/2026 and enforced by the checker
-on every commit: no-oracle tests, early-exit passes, uncommented
-test-file sleeps (outside the c2c hold).
+Quality gates, all zero as of 08/17/2026 and enforced by the checker
+on every commit: no-oracle tests, early-exit passes, except-swallow
+blocks, uncommented test-file sleeps (outside the c2c hold).
 
 ## Done - rebuilds and repairs (08/09-08/14/2026)
 
@@ -50,6 +50,7 @@ test-file sleeps (outside the c2c hold).
 | media_operations (non-destructive) | Rebuilt 08/12; inline-input names, toast = server ack. | Known app behavior (stale page state) |
 | Oracle debt (33 no-oracle tests) | Cleared to zero 08/13. Notables: delete-user footgun (server-side filter race), insights report on the download event, license dedup on whole rows. | FAILURE_TRIAGE (filter races the action) |
 | Early-exit passes (11) | Cleared to zero 08/13-14 with the new checker rule. | checker rule early-exit-pass |
+| Except-swallow blocks (96) | Cleared to zero 08/17: each classified best-effort (why-comment), swallowed oracle (now raises), or redundant guard (removed), every site adversarially verified. The new raises immediately surfaced two app defects (users undeletable/unsuspendable, rule edit form gone) and rebuilt two vacuous lpr_views tests. | FAILURE_TRIAGE |
 | Section C verify runs (views bookmarks/share/fullscreen/playback, insights widgets, lpr camera selection, headed parity) | All green 08/13; one fix (player failure overlay self-heal). | FAILURE_TRIAGE |
 | Test-file sleep debt (~380) | Cleared 08/13-14 across every module; c2c hold and a few commented signal-less settles remain. Page-object sleeps are open item 3. | CONVENTIONS (Waits) |
 | Tenant data (Driver Site, Hanwha) | Config-driven since 08/09; in effect. | - |
@@ -84,6 +85,20 @@ singles that pass serially, and the 08/14 search outage below).
 
 ## App defects (reported)
 
+- 08/17/2026 users created via Admin > Users > Add New User cannot be
+  suspended or deleted: POST /REST/central/user/suspend and
+  /REST/central/user/remove both answer 400 for them (a real user
+  answers 200), and the UI shows nothing (empty alert). Three
+  'AutoTest Playwright' users are on the tenant as evidence
+  (testuser_2026_08_17_*@example.com). test_toggle_user_status and
+  test_delete_user now fail loud on exactly this; they stay red until
+  the app fix. Report to the app team; needs a manual delete of the
+  three users by an app admin if the API refuses everyone.
+- 08/17/2026 the rules 'Edit' icon opens a read-only details drawer
+  (devices, schedules, audit) - the notification-edit form is gone
+  since the rules redesign. test_edit_rule_notification holds as an
+  explicit skip with a tripwire. Confirm with the app team whether
+  notification editing moved or was removed.
 - 08/14/2026 ~19:30 search endpoint 400 AGAIN (probe-confirmed after the 17:00 recovery). Reopen with the app team: the fix was partial or the fault recurs. Search-family suites stay red until it holds.
 - 08/14/2026 search outage ~13:45-17:00: POST /REST/site/search
   returned 400 (body message:'SUCCESS!') for valid payloads, taking

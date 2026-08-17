@@ -105,7 +105,17 @@ class TestAdminRules:
     @pytest.mark.admin
     @pytest.mark.admin_rules
     def test_edit_rule_notification(self):
-        """Verify editing a rule's notification settings (popUp + push)."""
+        """The rule 'Edit' icon opens the details drawer; the notification
+        edit form is gone.
+
+        Measured 08/17/2026: since the rules redesign the row's Edit
+        icon opens a read-only details drawer (devices, schedules,
+        created/modified audit) with delete/mute/close icons only - no
+        Notification tab, no Update & Close. The old flow had been
+        skipping silently on 'Notification tab not found' behind a
+        swallowed wait. Holds as an explicit skip; fails loud if a
+        notification-edit form ever reappears so the flow gets rebuilt.
+        """
         self._navigate_to_rules()
 
         # Wait for the list to render before deciding to skip
@@ -114,20 +124,22 @@ class TestAdminRules:
         except Exception:
             pytest.skip("No rules with edit icons found")
 
+        # oracle: edit_rule raises unless the details drawer opens
         self.admin.edit_rule(index=-1)
 
-        # Switch to Notification tab (may not exist for all rule types)
-        if self.admin.notification_tab.count() == 0:
-            pytest.skip("Notification tab not found in edit modal")
-
-        self.admin.click_notification_tab()
-
-        # Toggle popUp and push notification checkboxes
-        self.admin.toggle_popup_notification()
-        self.admin.toggle_push_notification()
-
-        # Click Update & Close
-        self.admin.click_update_and_close()
+        # tripwire on the form's controls reappearing (a state read)
+        form_back = self.admin.notification_tab.or_(
+            self.admin.update_and_close_button
+        )
+        if form_back.count() and form_back.first.is_visible():
+            pytest.fail(
+                "A notification-edit form is back in the rule drawer - "
+                "rebuild the notification edit flow against it"
+            )
+        pytest.skip(
+            "The rule Edit icon opens a read-only details drawer "
+            "(measured 08/17/2026); notification editing has no UI"
+        )
 
     @pytest.mark.ui
     @pytest.mark.admin

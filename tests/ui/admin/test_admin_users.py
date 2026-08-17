@@ -24,6 +24,13 @@ class TestAdminUsers:
                     # scoped to the created user's card: if the filter
                     # is still running, this can never grab a stranger
                     self.admin.delete_user(match_text=search_text)
+                    # a rejected delete leaks the user onto the shared
+                    # tenant; say so instead of hiding it (measured
+                    # 08/17/2026: user/remove answers 400 for users this
+                    # very form created)
+                    if self._user_row_appears(timeout=3000):
+                        print(f"Cleanup: the app refused to delete "
+                              f"'{search_text}' - user left on the tenant")
             # teardown: a failed delete must not mask the test result;
             # test_delete_user owns the delete oracle
             except Exception as e:
@@ -110,6 +117,8 @@ class TestAdminUsers:
         except Exception:
             pytest.skip("No users found with switch toggle")
 
+        # oracle: toggle_user_status raises unless the switch flips
+        # (and fails loud when the switch never becomes usable)
         self.admin.toggle_user_status("AutoTest")
 
         # Toggle back to restore original state
@@ -163,6 +172,17 @@ class TestAdminUsers:
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 
+        # Capture the server's answer to the delete before anything is
+        # clicked: the UI shows no error when the server rejects it
+        # (measured 08/17/2026 - /REST/central/user/remove answered 400
+        # with an empty alert), so the response is the only place the
+        # rejection is visible
+        removes = []
+        self.page.on(
+            "response",
+            lambda r: removes.append(r.status) if "user/remove" in r.url else None,
+        )
+
         # Unfiltered baseline first: the search filter is server-side
         # and the pre-filter rows stay visible while it runs, so only
         # the count moving off this baseline proves the filter applied
@@ -188,10 +208,16 @@ class TestAdminUsers:
         except Exception as e:
             pytest.skip(f"Delete confirmation dialog not found: {e}")
 
-        # Check for app error (e.g., "Can't delete the user")
-        error_msg = self.page.locator("text=Can't delete")
-        if error_msg.count() > 0:
-            pytest.skip("App returned 'Can't delete the user' error")
+        # An app-side refusal shown to the user is a legitimate skip
+        error_msg = self.page.locator("text=/can.?t delete/i")
+        if error_msg.count() > 0 and error_msg.first.is_visible():
+            pytest.skip("App refused the delete and told the user")
+
+        # A silent server rejection is a defect, not a skip
+        assert not any(s >= 400 for s in removes), (
+            f"user/remove was rejected ({removes}) with no error shown "
+            "to the user - the delete silently failed"
+        )
 
         # The deletion is only real when the filtered list shrinks -
         # the old version ended here and passed on a silent no-op
