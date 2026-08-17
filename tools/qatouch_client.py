@@ -75,9 +75,9 @@ def normalize_status_name(status: str) -> str:
     """Fold a status name to one comparable form.
 
     "Not-Applicable", "Not Applicable" and "not applicable" all become
-    "not applicable".
+    "not applicable". Runs of whitespace collapse to one space.
     """
-    return str(status or '').replace('-', ' ').strip().lower()
+    return ' '.join(str(status or '').replace('-', ' ').split()).lower()
 
 
 def status_code_for(status: str) -> int | None:

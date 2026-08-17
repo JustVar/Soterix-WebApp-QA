@@ -134,3 +134,77 @@ def test_group_results_by_project_splits_by_marker(monkeypatch):
 def test_upload_path_used_defaults_to_none():
     r = qr.QATouchReporter(run_key='rk1')
     assert r._upload_path_used == '(none)'
+
+
+# ---------------------------------------------------------------------------
+# Upload path - pins for the 2026-08-17 silent-no-op fix
+#
+# The results API accepts a case key or a per-run result key, answers
+# {"success": true}, and writes nothing. Only the case CODE lands. These
+# tests make sure the reporter resolves codes, never sends a form the API
+# ignores, and verifies by read-back after every upload.
+# ---------------------------------------------------------------------------
+
+def _reporter(monkeypatch):
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+    r = qr.QATouchReporter(run_key='RUN1')
+    r.project_key = 'JlW1'
+    return r
+
+
+def test_run_key_mapping_resolves_case_codes_not_result_keys(monkeypatch):
+    r = _reporter(monkeypatch)
+    client = MagicMock()
+    client.get_all_test_run_results.return_value = [
+        {'case_id': 'B869bm', 'run_key': 'w5BNkb', 'code': 'TR0262', 'status': 'Untested'},
+        {'case_id': '8V1vw1', 'run_key': 'y5MNkx', 'code': 'TR0263', 'status': 'Untested'},
+    ]
+    r._build_run_key_mapping(client)
+    # The value must be the case CODE - the per-run result key is a silent no-op.
+    assert r.case_to_run_key == {'B869bm': 'TR0262', '8V1vw1': 'TR0263'}
+    assert 'w5BNkb' not in r.case_to_run_key.values()
+
+
+def test_build_payload_uses_codes_and_skips_unresolved(monkeypatch):
+    r = _reporter(monkeypatch)
+    r.results = {'B869bm': 1, '8V1vw1': 5, 'NOMAP1': 1}
+    r.case_to_run_key = {'B869bm': 'TR0262', '8V1vw1': 'TR0263'}
+    payload = r._build_payload(['B869bm', '8V1vw1', 'NOMAP1'])
+    assert payload == [{'case': 'TR0262', 'status': 1}, {'case': 'TR0263', 'status': 5}]
+    # An unresolved case must be dropped, not sent as a case key the API ignores.
+    assert all(e['case'].startswith('TR') for e in payload)
+
+
+def test_verify_upload_uses_shared_client_check_and_fails_on_mismatch(monkeypatch):
+    r = _reporter(monkeypatch)
+    client = MagicMock()
+    client.verify_results_landed.return_value = {
+        'checked': 2, 'landed': ['TR0262'], 'mismatched': ['TR0263: sent Failed, run shows Untested'],
+        'missing': []}
+    ok = r._verify_upload(client, [{'case': 'TR0262', 'status': 1}, {'case': 'TR0263', 'status': 5}])
+    assert ok is False
+    client.verify_results_landed.assert_called_once_with(
+        'JlW1', 'RUN1', [{'case': 'TR0262', 'status': 1}, {'case': 'TR0263', 'status': 5}])
+
+
+def test_verify_upload_passes_when_everything_landed(monkeypatch):
+    r = _reporter(monkeypatch)
+    client = MagicMock()
+    client.verify_results_landed.return_value = {
+        'checked': 1, 'landed': ['TR0262'], 'mismatched': [], 'missing': []}
+    assert r._verify_upload(client, [{'case': 'TR0262', 'status': 1}]) is True
+
+
+def test_verify_upload_does_not_fail_the_run_on_readback_error(monkeypatch):
+    """A read-back problem is not evidence the upload failed - warn, do not block."""
+    r = _reporter(monkeypatch)
+    client = MagicMock()
+    client.verify_results_landed.side_effect = RuntimeError('429')
+    assert r._verify_upload(client, [{'case': 'TR0262', 'status': 1}]) is True
+
+
+def test_client_has_no_update_playwright_results():
+    """The playwright branch used to call a method that never existed."""
+    from tools.qatouch_client import QATouchClient
+    assert not hasattr(QATouchClient, 'update_playwright_results')
+    assert hasattr(QATouchClient, 'update_test_run_results_by_code')
