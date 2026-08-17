@@ -40,24 +40,21 @@ Worked top to bottom, the current list is:
 7. Tenant mop-up (manual, below): the site-group leftovers list, and
    one leaked 'AutoTest Playwright' user from 08/07 remains - the
    next test_delete_user run consumes it.
-8. [BLOCKED] APP DEFECT (Justin is filing it): search is down
-   GLOBALLY on vsaas-qa as of 08/14/2026 ~13:45-14:00. The single
-   dispatch endpoint POST /v-apiserver/REST/site/search returns
-   HTTP 400 Bad Request with an empty result for contract-valid
-   payloads (captured via the real UI flows; the response body says
-   message:'SUCCESS!' on a 400 - flag that too). All three UI
-   surfaces post to it and all fail: the Global Search page, the
-   in-camera player search (Views > camera > fullscreen > search -
-   covered by test_incamera_search.py, 2/2 green at ~13:30 and
-   failing by ~15:00, which time-boxes the break), and the Events
-   tab search (confirmed by probe - it dispatches to the same
-   endpoint, not a separate event API). 21 tests cover the outage
-   across search_categories, search_deeper, search_drawing,
-   events_search, and incamera_search; all were green on 08/11 and
-   serially reproduce the failure. Snaps:
+8. [DONE - app side] Search outage 08/14/2026 ~13:45-17:00: the
+   single dispatch endpoint POST /v-apiserver/REST/site/search
+   returned HTTP 400 Bad Request (body message:'SUCCESS!') for
+   contract-valid payloads, taking down all three UI surfaces
+   (Global Search page, in-camera player search, Events tab search
+   - probe-confirmed same endpoint) and the 21 tests across
+   search_categories, search_deeper, search_drawing, events_search,
+   and incamera_search that cover them. Justin filed the bug and
+   confirmed searches working again by ~17:00; a verification rerun
+   during that window was invalidated by a workstation connection
+   drop, so the next scheduled run of those five suites is the
+   green confirmation. Kept as the reference case for 'suite goes
+   red = check the app before the tests': evidence in
    reports/probe_shots/search_health_01.png and
-   event_search_health_01.png. These suites stay red until the app
-   fix; do not chase them as test bugs.
+   event_search_health_01.png.
 
 Full-suite 4-worker baseline (08/14/2026, 819 tests): 383 passed,
 182 skipped, 6 reruns. Every failure/error is accounted for: 232 of
