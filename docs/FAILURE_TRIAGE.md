@@ -57,3 +57,62 @@ command showed the site list in the picker. The site was renamed from
 `--screenshot=only-on-failure` in `pytest.ini` saves a screenshot for failed
 tests that use the plugin's `page` fixture. For `authenticated_page` tests, use
 the trace instead. The trace contains a screenshot of every action.
+
+## Traps this app has taught us (check these before blaming timing)
+
+Measured mechanisms from the 08/2026 rebuilds. Each one cost at least
+one diagnosis round; check the list before opening a trace.
+
+Locators
+- `get_by_text` matches substrings by default. On the Admin > General
+  cards it clicked the Audit blurb ("...re-VIEW all activities")
+  instead of the View button. Use `exact=True` for short labels.
+- Attribute matching is case-sensitive: the muted-notification icon
+  is `UnMuteNotification` (capital M); `src*='MuteNotification'`
+  matches both states.
+- Several inputs share one class (chat panel: four
+  `input.chat-search-input`). Scope by placeholder + visibility,
+  never by the shared class alone.
+- Hidden mounted copies: `.first`/`.last` on a union can resolve to a
+  hidden element in another container. Filter by visibility or scope
+  to the container.
+- Page-wide checkbox locators inside an open modal resolve to
+  switches BEHIND the modal; the backdrop intercepts the click for
+  the full timeout. Scope to the modal panel.
+
+Waits and signals
+- Empty video tiles keep placeholder spinners alive forever - never
+  wait for CircularProgress hidden on tile grids; a new `video`
+  element past the baseline is the played signal.
+- Rows that re-render continuously (camera rows refresh their
+  snapshot) never pass Playwright's stability check; use a bounded
+  pointer click with a JS-click fallback (on the inner input for MUI
+  checkboxes, on the element itself for custom ones).
+- Toggle controls (chat icon, notification bell, LPR panel header,
+  view tabs): open only when the open marker is absent, or the
+  "open" click closes it.
+- The chat search drops a lone programmatic input event after open;
+  type key by key (`press_sequentially`) and retype once.
+- Search filters run server-side and the pre-filter rows stay
+  visible while they run: wait for the count to LEAVE the unfiltered
+  baseline before acting on "filtered" rows (the delete-user
+  near-miss).
+- Tables render a placeholder row ("No data available") and empty
+  spacer rows while fetching; the first-record wait filters past
+  both.
+- Card-page View clicks during hydration are silently dropped; retry
+  once.
+- Unforced drags can complete without landing anything; retry once
+  forced. Drop on the LAST empty tile when a panel floats over the
+  left ones.
+- The live player intermittently shows "The camera failed to load"
+  over a rendering frame; click its refresh link once
+  (`recover_stream_if_failed`).
+
+Oracles
+- A test that `return`s early passes with its asserts unreachable;
+  the checker's early-exit-pass rule flags bare returns.
+- `expect.soft` IS an oracle (pytest-playwright raises collected soft
+  failures at test end).
+- Toast waits that swallow their own timeout let failed actions pass;
+  prefer the browser download event, the row count, or the src flip.
