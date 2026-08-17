@@ -24,6 +24,8 @@ class TestAdminUsers:
                     # scoped to the created user's card: if the filter
                     # is still running, this can never grab a stranger
                     self.admin.delete_user(match_text=search_text)
+            # teardown: a failed delete must not mask the test result;
+            # test_delete_user owns the delete oracle
             except Exception as e:
                 print(f"Cleanup: failed to delete user '{search_text}': {e}")
 
@@ -133,12 +135,9 @@ class TestAdminUsers:
                 f"Expected role '{expected}' not found in {roles}"
             )
 
-        # Close dropdown by pressing Escape; wait for it to close
+        # close the dropdown; the context is discarded at teardown, so
+        # nothing after this depends on it being closed
         self.page.keyboard.press("Escape")
-        try:
-            self.admin.role_options.first.wait_for(state="hidden", timeout=3000)
-        except Exception:
-            pass
 
     @pytest.mark.ui
     @pytest.mark.admin

@@ -19,6 +19,8 @@ class TestViewsDragDrop:
         for name in reversed(self._saved_view_names):
             try:
                 self._delete_saved_view_safe(name)
+            # cleanup only: a leftover saved view must not fail a test that
+            # already passed - the failure is logged
             except Exception as e:
                 print(f"Cleanup: failed to delete view '{name}': {e}")
         # Cleanup: close extra view tabs (only the first should
@@ -38,6 +40,8 @@ class TestViewsDragDrop:
                 # the tab leaving is the closed signal; a timeout
                 # raises into the cleanup except below
                 expect(tabs).to_have_count(before - 1, timeout=10000)
+        # cleanup only: an unclosed tab must not fail a test that already
+        # passed - the failure is logged
         except Exception as e:
             print(f"Cleanup: failed to close extra tabs: {e}")
 
@@ -294,14 +298,6 @@ class TestViewsDragDrop:
                 target_tile = self.views.drag_drop_tiles.first
                 map_thumbnail.drag_to(target_tile)
             self._wait_tile_consumed(initial_tile_count)
-
-            # Step 5: Wait for map to load (may show circular progress)
-            try:
-                loader = self.page.locator("[class*='CircularProgress']")
-                if loader.count() > 0 and loader.first.is_visible():
-                    loader.wait_for(state="hidden", timeout=60000)
-            except Exception:
-                pass  # Loader may not appear for cached maps
 
             # Verify: tile count should decrease or map content visible
             new_tile_count = self.views.get_available_tile_count()

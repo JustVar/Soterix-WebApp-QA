@@ -97,6 +97,8 @@ def load_steps_by_case_key(case_key: str) -> list[dict[str, Any]] | None:
         try:
             with open(json_path, encoding='utf-8') as f:
                 data = json.load(f)
+        # one unreadable sidecar must not hide the others; the scan
+        # continues and returns none when no file has the key
         except (json.JSONDecodeError, OSError):
             continue
 

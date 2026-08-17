@@ -144,8 +144,11 @@ class MapsPage:
         try:
             if self.loader.count() > 0 and self.loader.first.is_visible():
                 self.loader.first.wait_for(state="hidden", timeout=60000)
-        except Exception:
-            pass
+        except PlaywrightError:
+            raise AssertionError(
+                "Map camera stream loader still visible 60s after clicking "
+                "the camera icon: the stream never started"
+            ) from None
         # a stream that starts has no DOM signal past the loader
         # leaving (the player renders before the frames arrive); the
         # settle lets a failed-to-load overlay appear before callers

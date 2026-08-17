@@ -50,6 +50,8 @@ class TestCameraSequences:
                 except Exception as e:
                     print(f"Cleanup: failed to delete sequence: {e}")
                     break
+        # teardown: a failed navigate must not mask the test result;
+        # leaked sequences keep their automation names for manual cleanup
         except Exception as e:
             print(f"Cleanup: failed to navigate for sequence cleanup: {e}")
 
@@ -78,6 +80,8 @@ class TestCameraSequences:
             # own markers
             except PlaywrightError:
                 pass
+        # optional overlay: no notification panel is a valid state; the
+        # tests fail on their own page markers if it blocked anything
         except Exception:
             pass  # Non-critical - notifications may not be present
 

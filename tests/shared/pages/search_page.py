@@ -66,6 +66,8 @@ class SearchPage:
         try:
             if self.loader.count() > 0 and self.loader.first.is_visible():
                 self.loader.first.wait_for(state="hidden", timeout=30000)
+        # the category label above is the loaded signal; a lingering
+        # spinner is only a settle before the filter waits
         except Exception:
             pass
 
@@ -127,15 +129,7 @@ class SearchPage:
         # an empty list, which callers treat as no options
         items = self.dropdown_items
         self._appears(items.first, timeout=10000)
-        count = items.count()
-        texts = []
-        for i in range(count):
-            try:
-                text = items.nth(i).inner_text().strip()
-                if text:
-                    texts.append(text)
-            except Exception:
-                continue
+        texts = [t.strip() for t in items.all_inner_texts() if t.strip()]
 
         # the list leaving is the closed signal
         self.page.keyboard.press("Escape")
@@ -614,9 +608,13 @@ class SearchPage:
         """Wait for the CircularProgress loader to appear then disappear."""
         try:
             self.loader.first.wait_for(state="visible", timeout=5000)
+        # the loader may never show on a fast load; the caller's canvas
+        # or replay wait is the oracle
         except Exception:
             pass
         try:
             self.loader.first.wait_for(state="hidden", timeout=timeout)
+        # a lingering spinner is a settle; callers wait on the canvas or
+        # assert the replay icon
         except Exception:
             pass

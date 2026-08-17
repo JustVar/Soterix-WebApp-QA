@@ -59,6 +59,8 @@ class TestInsightsWidgetCreate:
         for name in reversed(self._created_widgets):
             try:
                 self.insights.delete_widget(name)
+            # teardown: a failed delete must not mask the test result;
+            # test_widget_delete owns the delete oracle
             except Exception as e:
                 print(f"Cleanup: failed to delete widget '{name}': {e}")
 
@@ -95,6 +97,8 @@ class TestInsightsWidgetOperations:
         for name in reversed(self._created_widgets):
             try:
                 self.insights.delete_widget(name)
+            # teardown: a failed delete must not mask the test result;
+            # test_widget_delete owns the delete oracle
             except Exception as e:
                 print(f"Cleanup: failed to delete widget '{name}': {e}")
 

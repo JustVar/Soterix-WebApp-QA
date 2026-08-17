@@ -103,13 +103,6 @@ class MediaPage:
 
     def navigate(self):
         """Navigate to the Media page via the nav link."""
-        # Wait for any MUI overlay to clear before clicking (e.g. after page reload)
-        try:
-            self.page.locator(".MuiBox-root").filter(
-                has_text=""
-            ).first.wait_for(state="hidden", timeout=3000)
-        except Exception:
-            pass
         self.media_nav_link.click(force=True)
         self._wait_for_page_ready()
 

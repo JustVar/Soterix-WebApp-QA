@@ -123,6 +123,11 @@ class ViewsPage:
         def _accept(dialog):
             try:
                 dialog.accept()
+            # accept() raises only if another listener already handled
+            # this dialog or the page is gone; either way the dialog no
+            # longer blocks the test, and playwright-python would
+            # otherwise re-raise the listener error at the test's next
+            # unrelated API call, blaming the wrong step
             except Exception:
                 pass
 
@@ -356,6 +361,8 @@ class ViewsPage:
         try:
             if self.loader.count() > 0 and self.loader.first.is_visible():
                 self.loader.wait_for(state="hidden", timeout=timeout)
+        # quick settle only: tile placeholder spinners can stay alive;
+        # every caller waits on its own next element
         except Exception:
             pass  # Loader may not exist or may have already hidden
 
@@ -595,13 +602,9 @@ class ViewsPage:
         target_tile = self.drag_drop_tiles.nth(tile_index)
 
         before_tiles = self.drag_drop_tiles.count()
-        try:
-            map_element.drag_to(target_tile)
-            # A successful drop consumes the empty tile
-            self._tile_count_changed(before_tiles, "map drag")
-        except Exception:
-            # Maps may need special handling
-            pass
+        map_element.drag_to(target_tile)
+        # A successful drop consumes the empty tile
+        self._tile_count_changed(before_tiles, "map drag")
 
     def is_streaming_working(self, expected_failures: int = 0) -> bool:
         """Check if streaming is working (failures <= expected offline cameras)."""
@@ -905,9 +908,12 @@ class ViewsPage:
         copy_button = self.page.locator("span:text-is('Copy')")
         try:
             copy_button.wait_for(state="visible", timeout=10000)
-            copy_button.click()
-        except Exception:
-            pass
+        except PlaywrightError:
+            raise AssertionError(
+                "No Copy button appeared within 10s of clicking Share: "
+                "the share did not complete"
+            ) from None
+        copy_button.click()
 
         # Close the share dialog if it is still open
         cancel_btn = share_container.locator(".cancel_button_share_live")

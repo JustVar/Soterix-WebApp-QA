@@ -42,6 +42,8 @@ class TestViewsSubtabs:
         for name in reversed(self._saved_view_names):
             try:
                 self._delete_saved_view(name)
+            # cleanup only: a leftover saved view must not fail a test that
+            # already passed - the failure is logged
             except Exception as e:
                 print(f"Cleanup: failed to delete view '{name}': {e}")
         # Cleanup: close extra tabs (only first tab should remain)
@@ -58,6 +60,8 @@ class TestViewsSubtabs:
                     break
                 close_icon.click()
                 expect(tabs).to_have_count(before - 1, timeout=5000)
+        # cleanup only: an unclosed tab must not fail a test that already
+        # passed - the failure is logged
         except Exception as e:
             print(f"Cleanup: failed to close extra tabs: {e}")
 
@@ -605,21 +609,18 @@ class TestViewsSubtabs:
 
     def _delete_saved_view(self, view_name: str):
         """Helper: Delete a saved view by name."""
+        self.page.locator("img[src*='myviews']").click()
+        saved_view = self.page.locator(f"span[title='{view_name}']")
         try:
-            self.page.locator("img[src*='myviews']").click()
-            saved_view = self.page.locator(f"span[title='{view_name}']")
-            try:
-                saved_view.wait_for(state="visible", timeout=5000)
-            except Exception:
-                return  # View not present - nothing to delete
-            saved_view.hover()
-            self.page.locator("img[src*='delete-icon']").click()
-            self.page.locator("button:has-text('Delete')").click()
-            self.page.locator("text=Successfully deleted").wait_for(
-                state="visible", timeout=60000
-            )
-        except Exception as e:
-            print(f"Cleanup: failed to delete view '{view_name}': {e}")
+            saved_view.wait_for(state="visible", timeout=5000)
+        except Exception:
+            return  # View not present - nothing to delete
+        saved_view.hover()
+        self.page.locator("img[src*='delete-icon']").click()
+        self.page.locator("button:has-text('Delete')").click()
+        self.page.locator("text=Successfully deleted").wait_for(
+            state="visible", timeout=60000
+        )
 
     def _visible_drag(self, source, target, force: bool = False):
         """Helper: Perform a visible drag operation with highlights.
@@ -639,6 +640,8 @@ class TestViewsSubtabs:
         # Highlight source (red border - what we're dragging)
         try:
             source.evaluate("el => { el.style.outline = '4px solid red'; el.style.outlineOffset = '2px'; }")
+        # the outline is headed-mode pacing only; drag_to below is the
+        # real action and raises on its own
         except Exception:
             pass  # Visual highlight is non-essential
         self.page.wait_for_timeout(400)  # visual pacing
@@ -646,6 +649,8 @@ class TestViewsSubtabs:
         # Highlight target (green border - where we're dropping)
         try:
             target.evaluate("el => { el.style.outline = '4px solid lime'; el.style.outlineOffset = '2px'; }")
+        # the outline is headed-mode pacing only; drag_to below is the
+        # real action and raises on its own
         except Exception:
             pass  # Visual highlight is non-essential
         self.page.wait_for_timeout(400)  # visual pacing
@@ -656,9 +661,13 @@ class TestViewsSubtabs:
         # Remove highlights
         try:
             source.evaluate("el => { el.style.outline = ''; el.style.outlineOffset = ''; }")
+        # post-drop outline removal; the dragged thumbnail may have
+        # re-rendered, and the caller's oracle follows
         except Exception:
             pass  # Element may have been detached after drag
         try:
             target.evaluate("el => { el.style.outline = ''; el.style.outlineOffset = ''; }")
+        # post-drop outline removal; a filled tile replaces the empty
+        # target, and the caller's oracle follows
         except Exception:
             pass  # Element may have been detached after drag

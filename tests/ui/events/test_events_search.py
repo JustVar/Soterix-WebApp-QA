@@ -217,6 +217,9 @@ class TestEventsSearch:
             try:
                 for block in response.json().get("result", []):
                     seen_events.extend(block.get("eventList", []))
+            # listener sees every search response; a non-json or
+            # off-shape body is skipped and the channel check below
+            # decides
             except (ValueError, KeyError, TypeError, AttributeError):
                 pass
 
@@ -266,6 +269,9 @@ class TestEventsSearch:
                 for block in response.json().get("result", []):
                     totals.append(block.get("totalEvent", 0))
                     filtered_events.extend(block.get("eventList", []))
+            # listener sees every search response; a non-json or
+            # off-shape body is skipped and the asserts below own the
+            # oracle
             except (ValueError, KeyError, TypeError, AttributeError):
                 pass
 

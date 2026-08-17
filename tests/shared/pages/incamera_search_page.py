@@ -112,10 +112,14 @@ class InCameraSearchPage:
         # real signal.
         try:
             self.loader.first.wait_for(state="visible", timeout=5000)
+        # the loader may never show on a fast search; the results wait
+        # below is the oracle
         except Exception:
             pass
         try:
             self.loader.first.wait_for(state="hidden", timeout=15000)
+        # tile placeholder spinners never stop; the results wait below
+        # is the oracle
         except Exception:
             pass
 

@@ -291,6 +291,8 @@ class LprPage:
             site_rows.first.wait_for(state="visible", timeout=2000)
             print("[LPR] Locations & Cameras panel already open")
             return
+        # probe of the already-open state; the click path below waits for a
+        # site row and raises
         except PlaywrightError:
             pass
 
@@ -410,6 +412,8 @@ class LprPage:
                 self.page.keyboard.press("Escape")
                 backdrop.first.wait_for(state="hidden", timeout=10000)
                 print("[LPR] Backdrop dismissed")
+        # best-effort overlay dismissal: escape may not close every backdrop,
+        # and the caller asserts no visible backdrop remains
         except Exception as e:
             print(f"[LPR] No backdrop to dismiss: {e}")
 
@@ -494,6 +498,8 @@ class LprPage:
         try:
             tile.wait_for(state="visible", timeout=5000)
             return tile
+        # probe for a free tile; when none shows the clear-all path below
+        # waits again and raises
         except PlaywrightError:
             pass
         self.clear_all_tiles()
@@ -510,6 +516,11 @@ class LprPage:
                     # Clearing re-renders the tiles with no other signal
                     self.page.wait_for_timeout(1500)
                     return
+            # best-effort clear: a click that fails mid-rerender (button
+            # detached or covered) falls through to the next label; every test
+            # caller runs this after its oracle as trailing cleanup, and
+            # _empty_tile waits for a free tile and raises when the clear did
+            # not land
             except PlaywrightError:
                 continue
 
@@ -649,6 +660,8 @@ class LprPage:
             if marker.is_visible():
                 print("[LPR] Already on Views page")
                 return
+        # probe of the already-there state; the tab click below waits for the
+        # marker and raises
         except PlaywrightError:
             pass
 
@@ -671,6 +684,8 @@ class LprPage:
         try:
             # reload() waits for the load event on its own
             self.page.reload()
+        # recovery helper: a failed reload still falls through to the views
+        # click, and the caller asserts the views marker
         except Exception:
             pass
 
@@ -683,12 +698,16 @@ class LprPage:
                 self.page.locator(".viewTabs").first.wait_for(
                     state="visible", timeout=15000
                 )
+        # recovery helper: the views click is one attempt, and the caller
+        # asserts the .viewTabs marker
         except Exception:
             print("[LPR] Views button not found, continuing")
 
         # Remove any overlay
         try:
             self.page.locator("body").first.click()
+        # the body click only clears a stray overlay; the caller asserts the
+        # views marker
         except Exception:
             pass
 

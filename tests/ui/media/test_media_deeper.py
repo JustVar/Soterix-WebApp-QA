@@ -85,6 +85,8 @@ class TestMediaDeeper:
             self.page.locator(
                 "img[src*='icon-grid'], img[src*='icon-list']"
             ).first.wait_for(state="visible", timeout=10000)
+        # bounded render wait only; the assert below owns the oracle and
+        # names the failure
         except Exception:
             pass
 

@@ -96,6 +96,8 @@ class EventsPage:
         try:
             if self.loader.count() > 0 and self.loader.first.is_visible():
                 self.loader.first.wait_for(state="hidden", timeout=30000)
+        # the loader is optional and page-global; the container wait above is
+        # the arrival signal and every caller waits on its own next element
         except Exception:
             pass
 
@@ -259,6 +261,9 @@ class EventsPage:
                     loc.click()
                     clicked = True
                     break
+            # each label is one guess at the current dropdown text; a miss
+            # tries the next, and the listbox wait below raises when nothing
+            # opened
             except Exception:
                 continue
         if not clicked:
@@ -573,6 +578,10 @@ class EventsPage:
         try:
             if counter.is_visible():
                 return counter.inner_text().strip()
+        # probe: the counter hides at zero pins and can detach mid-read;
+        # '' only means "no change seen yet" to pin_event's before/after
+        # poll, which re-reads on the next tick and reports if the counter
+        # never moves
         except PlaywrightError:
             pass
         return ""
@@ -583,10 +592,13 @@ class EventsPage:
             # Short appear grace: instant responses show no loader at
             # all, and burning 5s on every fast search adds up
             self.loader.first.wait_for(state="visible", timeout=2000)
+        # instant responses show no loader at all; its absence is not a failure
         except Exception:
             pass  # Loader may have already finished
         try:
             self.loader.first.wait_for(state="hidden", timeout=timeout)
+        # the loader locator is page-global and a stray spinner can stay
+        # visible; callers wait on the results or player as the real signal
         except Exception:
             pass  # Some loaders may not fully disappear
 

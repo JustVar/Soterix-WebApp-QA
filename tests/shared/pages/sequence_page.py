@@ -73,6 +73,8 @@ class SequencePage:
                 # Try clicking outside or pressing Escape to dismiss
                 self.page.keyboard.press("Escape")
                 self._appears_hidden(header.first, timeout=2000)
+        # the secondaryheader overlay is optional; the icon click below falls
+        # back to a js click when it still intercepts
         except Exception:
             pass
         try:
@@ -86,6 +88,11 @@ class SequencePage:
             self.page.locator(
                 "input[name='selectAllCameras'], input.modalFormInput, input[placeholder='Search']"
             ).first.wait_for(state="visible", timeout=10000)
+        # arrival is the callers' oracle: _navigate_and_verify
+        # (test_camera_sequences.py) expects this same marker union,
+        # select_first_camera's retry waits on the camera list after this,
+        # and _cleanup_sequences calls this in teardown where a miss is only
+        # logged
         except Exception:
             pass  # Page may have different layout depending on existing sequences
 
@@ -198,12 +205,6 @@ class SequencePage:
 
             if not dropdown_open:
                 # Only click Sequences if no dropdown is open
-                # Try to scroll into view first
-                try:
-                    self.sequences_title.scroll_into_view_if_needed()
-                except Exception:
-                    pass
-
                 # Wait with extended timeout for element to appear
                 self.sequences_title.wait_for(state="visible", timeout=15000)
 
@@ -356,6 +357,8 @@ class SequencePage:
                     # The option list closes once the selection applies
                     self._appears_hidden(option, timeout=5000)
                     return
+                # each option selector is one guess; a miss falls to the next
+                # and the loop ends in pytest.skip, never a silent pass
                 except Exception:
                     continue
 
@@ -434,6 +437,8 @@ class SequencePage:
                 # The dialog leaves the DOM with the clicked button
                 self._appears_hidden(confirm, timeout=10000)
                 return
+            # cleanup path: each confirm label is one guess; a miss falls to
+            # the next, and test teardown tolerates a leftover sequence
             except Exception:
                 continue
         # If no confirmation dialog found, the delete completed directly

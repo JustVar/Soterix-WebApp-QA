@@ -27,18 +27,12 @@ class TestLprViews:
         assert self.lpr.create_list_button.count() > 0, "Not on LPR Lists page"
 
         self.step_capture.mark(3, "Navigate to Views page")
-        try:
-            # Look for Views tab/link on LPR page
-            views_element = self.page.locator("span:has-text('Views'), a[href*='views'], button:has-text('Views')").first
-            if views_element.count() > 0:
-                views_element.click()
-                # a titled view tab is the Views-page arrival signal
-                self.page.locator("div.tabInner[title]").first.wait_for(
-                    state="visible", timeout=15000
-                )
-                print("[STEP 3] Navigated to Views page")
-        except Exception as e:
-            print(f"[INFO] Could not navigate to Views: {e}")
+        self.lpr.go_to_views_page()
+        # a titled view tab is the Views-page arrival signal
+        expect(
+            self.page.locator("div.tabInner[title]").first
+        ).to_be_visible(timeout=15000)
+        print("[STEP 3] Navigated to Views page")
 
         self.step_capture.mark(4, "Navigation test completed")
         print("[PASS] LPR navigation successful")
@@ -51,47 +45,21 @@ class TestLprViews:
         self.step_capture.mark(1, "Navigate to LPR page first")
         self.lpr.navigate_to_lpr()
 
-        self.step_capture.mark(2, "Look for Views page navigation")
-        # Try to find and navigate to Views page
-        try:
-            views_link = self.page.locator("span:has-text('Views'), a[href*='views'], button:has-text('Views')").first
-            if views_link.count() > 0:
-                views_link.click()
-                # a titled view tab is the Views-page arrival signal
-                self.page.locator("div.tabInner[title]").first.wait_for(
-                    state="visible", timeout=15000
-                )
-                print("[STEP 2] Navigated to Views page")
-        except Exception as e:
-            print(f"[INFO] Could not navigate to Views: {e}")
+        self.step_capture.mark(2, "Navigate to Views page")
+        self.lpr.go_to_views_page()
 
-        self.step_capture.mark(3, "Find view add button")
-        # Try different selectors for the add button
-        view_button = self.page.locator("button.tabTitleAddIcon").first
-        if view_button.count() == 0:
-            view_button = self.page.locator("button[class*='tabTitleAddIcon']").first
-        if view_button.count() == 0:
-            view_button = self.page.locator("button[class*='add']").first
+        self.step_capture.mark(3, "Find view add (+) tab")
+        tabs = self.page.locator("div.tabInner[title]")
+        tabs.first.wait_for(state="visible", timeout=30000)
+        add_tab = self.page.locator("div.tabInner:not([title])").first
+        expect(add_tab).to_be_visible(timeout=10000)
 
-        if view_button.count() > 0:
-            try:
-                view_button.wait_for(state="visible", timeout=30000)
+        self.step_capture.mark(4, "Click the add (+) tab")
+        before = tabs.count()
+        add_tab.click()
 
-                self.step_capture.mark(4, "Click view button")
-                view_button.click()
-                # a second titled tab is the view-added signal
-                self.page.locator("div.tabInner[title]").nth(1).wait_for(
-                    state="visible", timeout=10000
-                )
-                print("[STEP 4] Clicked view button")
-
-                self.step_capture.mark(5, "Verify view tabs created")
-                print("[PASS] View button clicked successfully")
-            except Exception as e:
-                print(f"[INFO] Could not click button: {e}")
-        else:
-            self.step_capture.mark(4, "View button not found")
-            print("[INFO] View add button not found on page")
+        self.step_capture.mark(5, "Verify a new view tab was created")
+        expect(tabs).to_have_count(before + 1, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin

@@ -77,6 +77,8 @@ class FullScreenPage:
         """Wait for the CircularProgress loader to disappear."""
         try:
             self.loader.first.wait_for(state="visible", timeout=5000)
+        # the loader may already have cleared; the count-zero expect
+        # below is the oracle
         except Exception:
             pass  # Loader may have already finished
         # every spinner must clear: a bare wait on the union is a

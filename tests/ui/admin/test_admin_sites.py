@@ -27,6 +27,8 @@ class TestAdminSites:
                 self.admin.open_groups_dropdown()
                 if not self.admin.delete_camera_group_by_name(group_name):
                     print(f"Cleanup: group '{group_name}' not found")
+            # teardown: a failed delete must not mask the test result;
+            # the dropdown may already be closed after a mid-flow failure
             except Exception as e:
                 print(f"Cleanup: could not delete '{group_name}': {e}")
 

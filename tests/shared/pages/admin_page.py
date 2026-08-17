@@ -307,6 +307,8 @@ class AdminPage:
                 "() => document.querySelectorAll('li.MuiMenuItem-root').length > 1",
                 timeout=10000,
             )
+        # best effort settle wait: the caller asserts on the returned
+        # role names, so an unfilled list fails there
         except Exception:
             pass
 
@@ -339,6 +341,8 @@ class AdminPage:
             # The Add button is the signal that the Rules content rendered
             self.add_new_rule_button.wait_for(state="visible", timeout=10000)
             return
+        # layout probe: the older-build fallback below reaches Rules via
+        # the General card and its final wait raises if neither renders
         except Exception:
             pass
         # Fallback: older layout reaches Rules through the General card
@@ -392,10 +396,7 @@ class AdminPage:
         self.rule_edit_icons.nth(target).scroll_into_view_if_needed()
         self.rule_edit_icons.nth(target).click()
         # The modal's primary button is the signal that it opened
-        try:
-            self.update_and_close_button.wait_for(state="visible", timeout=15000)
-        except Exception:
-            pass
+        self.update_and_close_button.wait_for(state="visible", timeout=15000)
 
     def click_notification_tab(self):
         """Switch to the Notification tab in the rule edit modal."""
@@ -403,10 +404,7 @@ class AdminPage:
         self.notification_tab.scroll_into_view_if_needed()
         self.notification_tab.click()
         # The notification checkboxes are the signal that the tab rendered
-        try:
-            self.popup_checkbox.wait_for(state="attached", timeout=10000)
-        except Exception:
-            pass
+        self.popup_checkbox.wait_for(state="attached", timeout=10000)
 
     def toggle_popup_notification(self):
         """Toggle the popUp notification checkbox."""
@@ -425,10 +423,7 @@ class AdminPage:
         )
         self.update_and_close_button.click()
         # The modal closing is the signal that the update was accepted
-        try:
-            self.update_and_close_button.wait_for(state="hidden", timeout=15000)
-        except Exception:
-            pass
+        self.update_and_close_button.wait_for(state="hidden", timeout=15000)
 
     def delete_rule_by_name(self, name: str) -> bool:
         """Delete the rule with the given name; False when not found.
@@ -466,6 +461,8 @@ class AdminPage:
         # The confirm button disappearing is the signal the delete ran
         try:
             self.rule_delete_confirm.wait_for(state="hidden", timeout=15000)
+        # best effort settle wait: the test caller asserts the row count
+        # and the other caller is fixture cleanup
         except Exception:
             pass
 
@@ -505,20 +502,14 @@ class AdminPage:
         self.list_view_toggle.wait_for(state="visible", timeout=10000)
         self.list_view_toggle.click()
         # The opposite toggle appearing is the signal the view switched
-        try:
-            self.grid_view_toggle.wait_for(state="visible", timeout=5000)
-        except Exception:
-            pass
+        self.grid_view_toggle.wait_for(state="visible", timeout=5000)
 
     def toggle_to_grid_view(self):
         """Switch to grid view on the Sites page."""
         self.grid_view_toggle.wait_for(state="visible", timeout=10000)
         self.grid_view_toggle.click()
         # The opposite toggle appearing is the signal the view switched
-        try:
-            self.list_view_toggle.wait_for(state="visible", timeout=5000)
-        except Exception:
-            pass
+        self.list_view_toggle.wait_for(state="visible", timeout=5000)
 
     def get_site_statuses(self) -> list[dict]:
         """Return a list of {name, status} for all visible site cards.
@@ -650,6 +641,8 @@ class AdminPage:
                 state="visible", timeout=2000
             )
             return  # already open
+        # probe for an already-open dropdown: the click below opens it
+        # and its wait raises if it never does
         except Exception:
             pass
         trigger = self.page.get_by_text("Groups:", exact=False).first
@@ -672,12 +665,16 @@ class AdminPage:
         self.camera_search_input.fill(camera_search)
 
         # Wait for the filtered camera to appear instead of sleeping; a
-        # zero-match search legitimately times out and skips the click
+        # zero-match search means the group would be created empty
         try:
             self.camera_checkbox.first.wait_for(state="attached", timeout=5000)
             self.camera_checkbox.first.click(force=True)
         except Exception:
-            pass
+            raise AssertionError(
+                f"No camera matched '{camera_search}' in the group form "
+                f"(or its checkbox could not be clicked); update "
+                f"test_camera_name in config/env/ if the tenant renamed it"
+            ) from None
 
         self.create_button.wait_for(state="visible", timeout=10000)
         try:
@@ -803,10 +800,17 @@ class AdminPage:
         # Checked state is the applied signal
         self.page.wait_for_timeout(500)  # state propagates, no DOM signal
         try:
-            if not box.is_checked():
-                print("[ADMIN] Wizard camera checkbox did not register")
+            checked = box.is_checked()
         except Exception:
-            pass
+            raise RuntimeError(
+                f"Wizard camera checkbox for '{camera}' could not be read "
+                f"after the click"
+            ) from None
+        if not checked:
+            raise RuntimeError(
+                f"Wizard camera checkbox for '{camera}' did not register: "
+                f"the rule would be created against no device"
+            )
 
     def _draw_wizard_region(self):
         """Draw a region on the Set Rule canvas and confirm with Done.
@@ -839,7 +843,10 @@ class AdminPage:
                 done.click()
                 self.page.wait_for_timeout(1000)  # commit, no signal
         except Exception:
-            pass
+            raise AssertionError(
+                "Set Rule Done was visible but the click failed - the "
+                "drawn region was not confirmed"
+            ) from None
 
     def complete_rule_wizard(
         self, rule_type: str, site_name: str, rule_name: str | None = None
@@ -961,6 +968,9 @@ class AdminPage:
                 try:
                     if name_input.is_visible() and not name_input.input_value():
                         name_input.fill(rule_name)
+                # probe of an optional per-step name input: the Name the
+                # Rule prompt fill raises and the caller asserts the row
+                # by name
                 except Exception:
                     pass
 

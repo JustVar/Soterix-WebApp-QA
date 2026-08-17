@@ -35,6 +35,8 @@ class TestAdminRules:
             try:
                 if not self.admin.delete_rule_by_name(rule_name):
                     print(f"Cleanup: rule '{rule_name}' not found")
+            # teardown: a failed delete must not mask the test result;
+            # leaked rules keep their timestamped names for manual cleanup
             except Exception as e:
                 print(f"Cleanup: could not delete '{rule_name}': {e}")
 

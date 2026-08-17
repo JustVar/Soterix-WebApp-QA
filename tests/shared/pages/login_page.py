@@ -66,6 +66,9 @@ class LoginPage:
                 locator = self.page.locator(s)
                 if locator.count() and locator.first.is_visible():
                     return locator.first
+            # selector-fallback probe: a bad candidate is a miss, the caller
+            # fills the returned or fallback locator and raises if the field
+            # never exists
             except Exception:
                 continue
         return None
@@ -83,6 +86,12 @@ class LoginPage:
         self.page.goto(self.base_url + path)
         try:
             self.page.wait_for_load_state("networkidle")
+        # networkidle is a settle hint, not a readiness check: the app holds
+        # persistent connections (see login() below and the conftest.py auth
+        # fixture) so it may never fire, and a timeout here means the full
+        # wait budget was already spent - swallowing it never shortens the
+        # settle. callers that need the form prove it themselves: login()'s
+        # fill() auto-waits and raises
         except Exception:
             pass
         return self
@@ -108,6 +117,14 @@ class LoginPage:
                 if btn.is_visible(timeout=SHORT_WAIT):
                     btn.click()
                     return True
+            # submit-button fallback probe: an absent candidate never reaches
+            # this except (is_visible() ignores its timeout and returns False
+            # without raising); it only covers a click that failed on a
+            # visible candidate (disabled, obscured, detached mid-navigation)
+            # or a torn-down page. the miss is reported as False and login()
+            # takes its own direct-submit / Enter fallback; every login()
+            # caller asserts is_logged_in()/is_login_page()/
+            # get_error_message() itself
             except Exception:
                 continue
 
@@ -116,6 +133,8 @@ class LoginPage:
             if p.get_by_role("button", name="Login").count():
                 p.get_by_role("button", name="Login").click()
                 return True
+        # last-candidate probe: on failure the method returns False and
+        # login() falls back to a direct submit click
         except Exception:
             pass
 
@@ -133,17 +152,11 @@ class LoginPage:
                 anchor = frame_loc.locator("#recaptcha-anchor")
                 if not anchor.count():
                     return True
-                try:
-                    anchor.wait_for(state="visible", timeout=SHORT_WAIT)
-                except Exception:
-                    continue
+                anchor.wait_for(state="visible", timeout=SHORT_WAIT)
                 # reCAPTCHA iframe pacing: the anchor becomes clickable
                 # a beat after it renders, with no DOM signal
                 p.wait_for_timeout(SHORT_WAIT)
-                try:
-                    anchor.click()
-                except Exception:
-                    continue
+                anchor.click()
                 try:
                     p.wait_for_function(
                         "() => { const r = document.querySelector('textarea.g-recaptcha-response'); return r && r.value && r.value.length > 0; }",
@@ -155,6 +168,14 @@ class LoginPage:
                     # frame candidate
                     p.wait_for_timeout(SHORT_WAIT)
                     continue
+            # best-effort recaptcha retry: any failure on this attempt (frame
+            # probe during navigation, anchor absent/invisible/unclickable,
+            # no token) counts as a failed attempt and moves to the next one;
+            # after max_retries the method returns False. safe to swallow:
+            # the recaptcha click never gates submit - login(), the only
+            # caller, ignores the return value and submits anyway, and every
+            # login() caller asserts the outcome itself (is_logged_in /
+            # get_error_message / wait_for_url)
             except Exception:
                 continue
         return False
@@ -171,16 +192,9 @@ class LoginPage:
         self.enter_email(email)
         self.enter_password(password)
 
-        try:
-            self._handle_recaptcha()
-        except Exception:
-            pass
+        self._handle_recaptcha()
 
-        clicked = False
-        try:
-            clicked = self.click_login_button()
-        except Exception:
-            pass
+        clicked = self.click_login_button()
 
         if not clicked:
             try:
@@ -188,8 +202,11 @@ class LoginPage:
             except Exception:
                 try:
                     self.page.keyboard.press('Enter')
-                except Exception:
-                    pass
+                except Exception as exc:
+                    raise AssertionError(
+                        "login form was not submitted: no submit button "
+                        "matched and pressing Enter failed"
+                    ) from exc
 
         try:
             # Success signal: the app leaves the login page. The landing URL
@@ -198,6 +215,9 @@ class LoginPage:
             # usable here - the app holds persistent connections.
             self.page.wait_for_url(lambda url: '/auth/login' not in url, timeout=LOGIN_WAIT)
             self.page.wait_for_load_state('domcontentloaded', timeout=LOGIN_WAIT)
+        # login() also drives negative attempts that must stay on
+        # /auth/login; every caller asserts is_logged_in() or the error
+        # message afterwards
         except Exception:
             pass
 
@@ -208,6 +228,8 @@ class LoginPage:
         try:
             if self.page.locator("text=Drag & Drop Camera here").count():
                 return self.page.locator("text=Drag & Drop Camera here").first.is_visible()
+        # dashboard-marker probe is optional; on failure the url check below
+        # decides and callers assert the returned bool
         except Exception:
             pass
         return "/auth/login" not in self.page.url
@@ -217,6 +239,8 @@ class LoginPage:
         # Give the page a moment to settle after redirect
         try:
             self.page.wait_for_load_state('domcontentloaded', timeout=5000)
+        # settle wait only; the url and form checks below run either way and
+        # callers assert the returned bool
         except Exception:
             pass
         url = (self.page.url or "").lower()
@@ -238,6 +262,8 @@ class LoginPage:
             has_password = any(self.page.locator(s).count() > 0 for s in password_selectors)
             if has_login and has_password:
                 return True
+        # form-field probe: a locator error means no login form was
+        # detected, the method returns False and callers assert it
         except Exception:
             pass
         return False
@@ -249,12 +275,17 @@ class LoginPage:
                 loc = self.page.locator(s)
                 try:
                     loc.first.wait_for(state="visible", timeout=SHORT_WAIT)
+                # visibility wait is a settle hint per candidate; the
+                # count/text check below still runs and callers assert the
+                # returned message
                 except Exception:
                     pass
                 if loc.count():
                     txt = loc.first.text_content()
                     if txt:
                         return txt.strip()
+            # error-selector fallback probe: a failing candidate is a miss,
+            # the method returns None and callers assert the message
             except Exception:
                 continue
         return None
@@ -272,6 +303,8 @@ class LoginPage:
                 loc = self.page.locator(s)
                 if loc.count() > 0 and loc.first.is_visible():
                     return True
+            # optional-ui probe: a failing selector is a miss, the method
+            # returns False and the caller has its own assertion
             except Exception:
                 continue
         return False
@@ -284,6 +317,8 @@ class LoginPage:
                 loc = self.page.locator(f"text=/{term}/i")
                 if loc.count() > 0 and loc.first.is_visible():
                     return True
+            # optional-ui probe: a failing text locator is a miss, the method
+            # returns False and the caller has its own assertion
             except Exception:
                 continue
         return False
@@ -307,6 +342,8 @@ class LoginPage:
                 loc = self.page.locator(s)
                 if loc.count() > 0 and loc.first.is_visible():
                     return loc.first.text_content().strip()
+            # optional-link probe: a failing candidate is a miss, the method
+            # returns None and the caller decides what to assert
             except Exception:
                 continue
         return None
@@ -357,6 +394,8 @@ class LoginPage:
                                 items.append(txt.strip())
                         if items:
                             return items
+            # popover fallback probe: a failing candidate is a miss, the
+            # method returns the collected list for the caller to assert on
             except Exception:
                 continue
         return items
@@ -375,6 +414,8 @@ class LoginPage:
                 if loc.is_visible(timeout=SHORT_WAIT):
                     loc.click()
                     return self
+            # sign-out selector fallback: a missed candidate continues, the
+            # raise after the loop reports the failure if none matched
             except Exception:
                 continue
         raise Exception("Could not find 'Sign out' button in profile menu")

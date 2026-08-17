@@ -21,6 +21,8 @@ class TestViewsBasic:
         for name in reversed(self._saved_view_names):
             try:
                 self._delete_saved_view_safe(name)
+            # cleanup only: a leftover saved view must not fail a test that
+            # already passed - the failure is logged
             except Exception as e:
                 print(f"Cleanup: failed to delete view '{name}': {e}")
         # Cleanup: close extra tabs (only first tab should remain)
@@ -38,6 +40,11 @@ class TestViewsBasic:
                     break
                 close_icon.click()
                 expect(tabs).to_have_count(before - 1, timeout=5000)
+        # cleanup only: page and context are per-test (authenticated_page
+        # closes both right after teardown), so a tab left open cannot leak
+        # into another test; this except also ends the loop when a close
+        # does not drop the count, so a passed test is not turned into a
+        # teardown ERROR - the failure is logged
         except Exception as e:
             print(f"Cleanup: failed to close extra tabs: {e}")
 

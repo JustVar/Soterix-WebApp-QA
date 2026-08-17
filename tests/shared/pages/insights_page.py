@@ -96,6 +96,8 @@ class InsightsPage:
             try:
                 self.close_tab_icon.click()
                 self._appears_hidden(self.close_tab_icon, timeout=5000)
+            # no open sub-tab means nothing to close; callers wait on
+            # their own next element
             except Exception:
                 pass
             return
@@ -150,11 +152,8 @@ class InsightsPage:
 
     def close_tab(self):
         """Close the currently open sub-tab (System Status, widget view, etc.)."""
-        try:
-            self.close_tab_icon.click()
-            self._appears_hidden(self.close_tab_icon, timeout=5000)
-        except Exception:
-            pass
+        self.close_tab_icon.click(timeout=10000)
+        expect(self.close_tab_icon).to_be_hidden(timeout=5000)
 
     # --- Widgets tab ---
 
@@ -525,10 +524,14 @@ class InsightsPage:
         try:
             # Short appear grace: instant responses show no loader at all
             self.loader.first.wait_for(state="visible", timeout=2000)
+        # an instant response shows no loader at all; the hidden wait
+        # below covers the slow case
         except Exception:
             pass
         try:
             self.loader.first.wait_for(state="hidden", timeout=timeout)
+        # a lingering spinner is a settle, not the oracle; every caller
+        # waits on its own next element
         except Exception:
             pass
 
