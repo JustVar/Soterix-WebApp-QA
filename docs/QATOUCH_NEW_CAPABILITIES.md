@@ -177,6 +177,15 @@ drives the browser's internal import endpoints, reverse-engineered by probe and
 dependent on a session that expires. This needs only the API key. The work is a
 column-name mapping from our canonical CSV, plus chunking at 100 rows.
 
+**Adopted.** `tools/qatouch_csv_import.py` does the mapping, folds our
+one-step-per-row continuation rows into one case, chunks at 100 and prints the
+per-row errors. Verified end to end against NexiaQ-Mobile: case created, module
+assigned, and both steps landed as separate step rows.
+
+**Bonus finding:** multi-line steps split themselves. The browser pipeline
+needed a post-import step splitter (§5 of the import runbook); the public
+endpoint does not.
+
 **Caveat:** only for new cases. The existing pipeline's update and backfill
 phases have no public equivalent.
 

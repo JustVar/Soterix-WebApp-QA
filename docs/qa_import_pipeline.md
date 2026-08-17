@@ -1,5 +1,13 @@
 # QA Touch Import Pipeline - Operator Runbook
 
+> **For NEW cases there is now a public API path.** QA Touch shipped
+> `POST /api/v1/testCase/import` in July 2026. `tools/qatouch_csv_import.py`
+> uses it: no browser, no session that expires, and multi-line steps split
+> themselves so the step-splitter phase below is not needed. It is create-only,
+> so the update and backfill phases here still apply. See
+> `docs/QA_TOUCH_INTEGRATION.md`.
+
+
 This is the Ops-facing runbook for the 5-phase pipeline that converts a
 QA-authored xlsx into fully-populated QA Touch test cases with one quoted
 canonical CSV in the middle and per-step rows at the end.

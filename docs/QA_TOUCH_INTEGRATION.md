@@ -224,6 +224,23 @@ it is free.
 than updating. Tags DO land on create, which is the only way to set a tag
 through the public API.
 
+**Multi-line steps split themselves.** Newline-separated `steps` and
+`expected_result` cells arrive as separate step rows, each with its own
+expected result. The browser pipeline needed a post-import step splitter for
+this; the public endpoint does not.
+
+Use `tools/qatouch_csv_import.py`. It takes our canonical CSV, translates the
+column names, folds our one-step-per-row continuation rows into a single case,
+and chunks at 100:
+
+```bash
+python tools/qatouch_csv_import.py preview cases.csv --project JlW1
+python tools/qatouch_csv_import.py import  cases.csv --project JlW1
+```
+
+Preview first, every time. There is no delete API - a case created by mistake
+has to go through the manual DELETE-REQUEST process.
+
 ---
 
 ## Result upload pipeline

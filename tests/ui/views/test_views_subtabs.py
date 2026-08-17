@@ -608,7 +608,17 @@ class TestViewsSubtabs:
         )
 
     def _delete_saved_view(self, view_name: str):
-        """Helper: Delete a saved view by name."""
+        """Helper: Delete a saved view by name.
+
+        The img[src*=...] locators below trip the convention checker's
+        img-src-locator rule, which advises preferring a data-testid. Checked
+        against the test_delete_user trace on 2026-08-17: this app ships no
+        data-testid attributes at all, and the icons are Next.js static assets
+        (_next/static/media/delete-icon.415ce726.svg) rendered as plain <img>.
+        The substring match is also required, not lazy - that filename carries
+        a content hash that changes on every rebuild. Revisit if the app moves
+        to MUI icon components.
+        """
         self.page.locator("img[src*='myviews']").click()
         saved_view = self.page.locator(f"span[title='{view_name}']")
         try:
