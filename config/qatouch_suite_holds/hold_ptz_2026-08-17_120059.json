@@ -1,0 +1,339 @@
+{
+  "created": "2026-08-17_120059",
+  "project_key": "JlW1",
+  "label": "ptz",
+  "modules": "PTZ",
+  "keys": "",
+  "suites": "sanity,regression",
+  "reason": "PTZ out of Sanity/Regression until further notice (2026-08-17)",
+  "tag_ids": {
+    "smoke": "99GQ",
+    "sanity": "X1zZ",
+    "regression": "MW0N"
+  },
+  "cases": [
+    {
+      "case_key": "B869bm",
+      "case_code": "TR0262",
+      "module": "PTZ Controls",
+      "title": "Verify PTZ Controls icon is visible for PTZ camera",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "8V1vw1",
+      "case_code": "TR0263",
+      "module": "PTZ Controls",
+      "title": "Verify PTZ Controls icon is not visible for non-PTZ camera",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "M73wqX",
+      "case_code": "TR0264",
+      "module": "PTZ Controls",
+      "title": "Verify camera name is displayed for non-PTZ camera",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "Drd9RP",
+      "case_code": "TR0265",
+      "module": "PTZ Controls",
+      "title": "Verify PTZ label is displayed for PTZ camera",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "eJqX7p",
+      "case_code": "TR0266",
+      "module": "PTZ Controls",
+      "title": "Verify switching from PTZ to non-PTZ camera updates PTZ controls visibility",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "vanZbp",
+      "case_code": "TR0267",
+      "module": "PTZ Controls",
+      "title": "Verify clicking PTZ Controls icon opens PTZ Controls menu",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "3gjBKX",
+      "case_code": "TR0281",
+      "module": "PTZ Presets",
+      "title": "Verify clicking Presets opens Presets list panel",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "zvnVxe",
+      "case_code": "TR0282",
+      "module": "PTZ Presets",
+      "title": "Verify Presets list displays available saved presets",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "mBdXg7",
+      "case_code": "TR0283",
+      "module": "PTZ Presets",
+      "title": "Verify back navigation returns from Presets list to PTZ menu",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "pDp8Bw",
+      "case_code": "TR0294",
+      "module": "PTZ Presets",
+      "title": "Verify Presets option is accessible from PTZ Controls menu",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "LD3X9v",
+      "case_code": "TR0295",
+      "module": "PTZ Presets",
+      "title": "Verify Create New Preset screen opens when + icon is clicked",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "wmjRZp",
+      "case_code": "TR0296",
+      "module": "PTZ Presets",
+      "title": "Verify PTZ preset can be saved successfully",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "yaWxdb",
+      "case_code": "TR0297",
+      "module": "PTZ Presets",
+      "title": "Verify presets do not allow adding multiple stops",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "0rzJKQ",
+      "case_code": "TR0298",
+      "module": "PTZ Presets",
+      "title": "Verify discard confirmation dialog appears when discarding preset",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "WEnQN1",
+      "case_code": "TR0305",
+      "module": "PTZ Presets",
+      "title": "Verify Presets list displays saved PTZ presets",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "B8693m",
+      "case_code": "TR0306",
+      "module": "PTZ Presets",
+      "title": "Verify selecting a preset highlights it in the Presets list",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "8V1vd1",
+      "case_code": "TR0307",
+      "module": "PTZ Presets",
+      "title": "Verify applying a PTZ preset moves camera to saved position",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "M73w2X",
+      "case_code": "TR0308",
+      "module": "PTZ Presets",
+      "title": "Verify applying another preset updates camera position accordingly",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "Drd9mP",
+      "case_code": "TR0309",
+      "module": "PTZ Presets",
+      "title": "Verify Restore Previous returns camera to position before preset application",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    },
+    {
+      "case_key": "Z8xQNp",
+      "case_code": "TR0313",
+      "module": "PTZ Tours & Presets",
+      "title": "Verify PTZ Tours and Presets lists persist after page refresh",
+      "tags_before": [
+        "regression"
+      ],
+      "remove": [
+        "regression"
+      ],
+      "removed_ids": [
+        "MW0N"
+      ],
+      "result": "Removed regression (verified via /v1/case/edit read-back)"
+    }
+  ],
+  "applied": "2026-08-17",
+  "applied_via": "browser internal API through an authenticated Chrome session",
+  "note": "All 20 cases held only the regression tag, so newtags was cleared with [\"\"]. Verified independently through the public API: PTZ tag state is now empty for all 52 cases and project-wide regression fell 584 -> 564."
+}

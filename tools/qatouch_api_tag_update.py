@@ -155,7 +155,10 @@ def update_case_newtags(page, case_key: str, case_data: dict, newtags: list[str]
     newtags: list of tag hash IDs, e.g. ["99GQ", "MW0N"]
     """
     payload = dict(case_data)
-    payload["newtags"] = newtags
+    # An empty list is silently ignored by QA Touch - [""] is the explicit
+    # "clear all tags" signal. See tools/qatouch_suite_hold.py for the
+    # measurement. Always read the tags back; HTTP 200 proves nothing here.
+    payload["newtags"] = list(newtags) if newtags else [""]
     for field in ["checkedRequirements", "gitlabcheckedRequirements", "detailArray"]:
         if field not in payload:
             payload[field] = []
