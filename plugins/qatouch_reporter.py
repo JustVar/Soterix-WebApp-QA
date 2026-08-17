@@ -154,23 +154,33 @@ class QATouchReporter:
         return {nodeid: info['case_key'] for nodeid, info in mappings.items()}
 
     def _build_run_key_mapping(self, client) -> None:
-        """Build case_key -> run_key mapping for API-created runs.
+        """Build case_key -> full case CODE (e.g. "TR0263") for this run.
 
-        API-created runs require run_key (per-result key) instead of case_key
-        for result uploads. This fetches the run results and builds the lookup.
+        The results API identifies a case by its case code, NOT by the case
+        key and NOT by the per-result run_key. Measured 2026-08-17: sending
+        either of those returns {"success": true} and changes nothing, so a
+        broken upload is indistinguishable from a working one. This mapping
+        is what makes an upload actually land.
+
+        The run's own result rows carry the code, so this needs no extra call.
         """
         try:
             all_results = client.get_all_test_run_results(
                 self.project_key, self.run_key)
             for r in all_results:
                 case_id = r.get('case_id', '')
-                run_key = r.get('run_key', '')
-                if case_id and run_key:
-                    self.case_to_run_key[case_id] = run_key
+                code = r.get('code', '')
+                if case_id and code:
+                    self.case_to_run_key[case_id] = code
             if self.case_to_run_key:
-                log.info(f'QA Touch: Built run_key mapping for {len(self.case_to_run_key)} cases')
+                log.info(f'QA Touch: Resolved case codes for {len(self.case_to_run_key)} cases '
+                         f'in run {self.run_key}')
+            else:
+                log.error('QA Touch: Could not resolve any case codes for this run. '
+                          'Uploads would silently do nothing, so they will be skipped.')
         except Exception as e:
-            log.debug(f'QA Touch: Could not build run_key mapping: {e}')
+            log.error(f'QA Touch: Could not build the case-code mapping: {e}. '
+                      f'Uploads would silently do nothing, so they will be skipped.')
 
     def _nodeid_variants(self, nodeid: str) -> list[str]:
         """Generate nodeid variants for flexible matching.
@@ -349,6 +359,38 @@ class QATouchReporter:
                     log.error(f'QA Touch: Upload failed after {MAX_RETRIES} attempts: {last_error}')
         return False
 
+    def _verify_upload(self, client, results_payload: list) -> bool:
+        """Read the run back and confirm the statuses actually changed.
+
+        QA Touch reports success for uploads it silently discards, so an
+        upload is not done until the run agrees. Returns True if every
+        uploaded case now carries the status we sent.
+        """
+        try:
+            rows = client.get_all_test_run_results(self.project_key, self.run_key)
+        except Exception as e:
+            log.warning(f'QA Touch: could not verify the upload: {e}')
+            return True  # do not fail the run over a read-back problem
+
+        # QA Touch returns "Not Applicable" here but "Not-Applicable" from
+        # getAvailableStatuses, so compare through the normaliser.
+        from tools.qatouch_client import STATUS_NAMES, normalize_status_name
+
+        by_code = {r.get('code'): r.get('status') for r in rows}
+        mismatched = []
+        for entry in results_payload:
+            want = STATUS_NAMES.get(entry['status'])
+            got = by_code.get(entry['case'])
+            if want and got and normalize_status_name(got) != normalize_status_name(want):
+                mismatched.append(f"{entry['case']} expected {want}, run shows {got}")
+
+        if mismatched:
+            log.error(f'QA Touch: {len(mismatched)} result(s) did not land. '
+                      f'First few: {mismatched[:5]}')
+            return False
+        log.info(f'QA Touch: verified {len(results_payload)} result(s) in the run.')
+        return True
+
     def _save_failed_results(self, results_payload: list, comment: str, error: str) -> None:
         """Save failed upload results to JSON for later retry."""
         try:
@@ -433,12 +475,14 @@ class QATouchReporter:
         translated = 0
         for case_key in case_keys:
             status = self.results[case_key]
-            upload_key = case_key
-            if self.case_to_run_key:
-                mapped_run_key = self.case_to_run_key.get(case_key)
-                if mapped_run_key:
-                    upload_key = mapped_run_key
-                    translated += 1
+            upload_key = self.case_to_run_key.get(case_key)
+            if not upload_key:
+                # Sending the case key instead would be accepted and ignored.
+                log.warning(f'QA Touch: no case code for {case_key} in run '
+                            f'{self.run_key} - skipping it rather than sending '
+                            f'an identifier the API ignores.')
+                continue
+            translated += 1
             entry = {'case': upload_key, 'status': status}
             if self.use_playwright_endpoint:
                 duration = self.durations.get(case_key)
@@ -521,23 +565,37 @@ class QATouchReporter:
         self._upload_path_used = endpoint_label
 
         # Pick the right uploader based on the opt-in env var
+        # Both paths use the case-code endpoint. It is the only one measured
+        # to actually apply a status, and its response names the case it
+        # changed. QATouchClient.update_playwright_results has never existed -
+        # the playwright branch used to raise AttributeError on every attempt.
+        def _do_upload():
+            client.update_test_run_results_by_code(
+                project_key=self.project_key,
+                test_run_key=self.run_key,
+                results=[{'case': r['case'], 'status': r['status']}
+                         for r in results_payload],
+                comments=comment,
+            )
+
         if self.use_playwright_endpoint:
-            def _do_upload():
-                client.update_playwright_results(
-                    project_key=self.project_key,
-                    test_run_key=self.run_key,
-                    results=results_payload,
-                )
-        else:
-            def _do_upload():
-                client.update_test_run_results(
-                    project_key=self.project_key,
-                    test_run_key=self.run_key,
-                    results=results_payload,
-                    comment=comment,
-                )
+            # TODO: send screenshots and timing with the result.
+            # POST /api/v1/testRunResults/testrun/code accepts multipart
+            # file[] attachments (png/pdf/jpg/jpeg/gif/xls/xlsx/doc/docx/csv/
+            # log, 2 MB each). The reporter already collects both:
+            #   self.screenshots[case_key]  - failure PNG path
+            #   self.durations[case_key]    - runtime, formatted by
+            #                                 _format_duration into "1.2s"
+            # Needed: extend update_test_run_results_by_code() to post
+            # multipart when files are supplied, and pass execution_time and
+            # comments per result. Until then both are dropped.
+            log.warning('QA Touch: screenshot and timing attachments are not '
+                        'implemented yet (see TODO above). Statuses upload '
+                        'normally; attachments are dropped.')
 
         success = self._upload_with_retry(_do_upload)
+        if success:
+            success = self._verify_upload(client, results_payload)
 
         if success:
             self.stats['uploaded'] = len(results_payload)
