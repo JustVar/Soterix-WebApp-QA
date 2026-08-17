@@ -1,19 +1,25 @@
+#!/usr/bin/env python3
 """Post-run result validator - compare local results vs QA Touch.
 
-After a test run with QA Touch upload, this script verifies that the
-uploaded results match what was collected locally. Catches:
+After a test run with QA Touch upload, this verifies that what QA Touch
+shows matches what pytest recorded locally. Catches:
+  - Uploads that reported success but wrote nothing (the API does this)
   - Partial uploads (network dropped mid-upload)
-  - Mismatched counts (mapping issues)
-  - Failed uploads (results saved to failure log but never uploaded)
+  - Mapping gaps (tests that ran but had no case to report into)
+  - Failed uploads sitting in the retry log
 
 Usage:
-  python tools/validate_run.py <RUN_KEY>                  # validate specific run
-  python tools/validate_run.py <RUN_KEY> --local-count 45 # compare against known count
-  python tools/validate_run.py --check-failures           # check for pending retry uploads
+  python tools/validate_run.py <RUN_KEY>                  # validate a run
+  python tools/validate_run.py <RUN_KEY> --local-count 45 # also compare a known count
+  python tools/validate_run.py --check-failures           # pending retry uploads only
+
+When logs/last_run_results.json exists and belongs to the same run, every
+recorded test is reconciled case by case against the run. That is the check
+that matters: it is how a silent no-op upload gets caught.
 
 Exit codes:
-  0 - validation passed (counts match or within tolerance)
-  1 - validation failed (mismatch detected)
+  0 - validation passed
+  1 - validation failed (mismatch or missing results)
   2 - unable to validate (API error, missing data)
 """
 from __future__ import annotations
@@ -22,21 +28,79 @@ import argparse
 import json
 import os
 import sys
+from collections import Counter
 from pathlib import Path
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(os.path.join(ROOT, '.env'))
 
+from tools.qatouch_client import (  # noqa: E402
+    PYTEST_TO_QATOUCH,
+    STATUS_NAMES,
+    normalize_status_name,
+)
+
 FAILURE_LOG_PATH = Path(ROOT) / 'logs' / 'upload_failures.json'
+RUN_RESULTS_PATH = Path(ROOT) / 'logs' / 'last_run_results.json'
 
 PASS = '\033[92mPASS\033[0m'
 FAIL = '\033[91mFAIL\033[0m'
 WARN = '\033[93mWARN\033[0m'
+
+# Statuses that mean somebody ran the case. Not Applicable is a deliberate
+# exclusion, not an execution; In Progress and Hold are not finished.
+EXECUTED = {'passed', 'failed', 'blocked', 'retest'}
+
+
+def _count_statuses(rows: list[dict]) -> Counter:
+    return Counter(normalize_status_name(r.get('status')) for r in rows)
+
+
+def _reconcile_local(rows: list[dict], run_key: str) -> tuple[int, list[str]]:
+    """Compare last_run_results.json against the run, case by case.
+
+    Returns (records_checked, problems). Empty problems = every recorded
+    test that mapped to a case shows the status pytest produced.
+    """
+    if not RUN_RESULTS_PATH.exists():
+        return 0, []
+    try:
+        local = json.loads(RUN_RESULTS_PATH.read_text(encoding='utf-8'))
+    except (json.JSONDecodeError, ValueError):
+        return 0, [f'{RUN_RESULTS_PATH.name} is malformed']
+    if local.get('run_key') != run_key:
+        print(f'  [{WARN}] {RUN_RESULTS_PATH.name} is for run {local.get("run_key")}, '
+              f'not {run_key} - skipping per-case reconciliation')
+        return 0, []
+
+    by_case = {r.get('case_id'): normalize_status_name(r.get('status')) for r in rows}
+    problems: list[str] = []
+    checked = 0
+    unmapped = 0
+    for rec in local.get('results') or []:
+        outcome = rec.get('outcome')
+        case_key = rec.get('case_key')
+        if outcome not in PYTEST_TO_QATOUCH:
+            continue
+        if not case_key:
+            unmapped += 1
+            continue
+        checked += 1
+        want = normalize_status_name(STATUS_NAMES[PYTEST_TO_QATOUCH[outcome]])
+        got = by_case.get(case_key)
+        if got is None:
+            problems.append(f'{case_key}: ran locally ({outcome}) but is not in the run')
+        elif got != want:
+            problems.append(f'{case_key}: local {outcome} -> expected {want}, run shows {got}')
+    if unmapped:
+        print(f'  [{WARN}] {unmapped} local result(s) had no QA Touch case - '
+              f'nothing was uploaded for them (mapping gap)')
+    return checked, problems
 
 
 def validate_run(run_key: str, project_key: str, local_count: int | None = None) -> int:
@@ -53,35 +117,38 @@ def validate_run(run_key: str, project_key: str, local_count: int | None = None)
     print(f'  Project:     {project_key}')
     print()
 
-    # Fetch all results from QA Touch
     try:
-        all_results = client.get_all_test_run_results(project_key, run_key)
+        rows = client.get_all_test_run_results(project_key, run_key)
     except Exception as e:
         print(f'  [{FAIL}] Failed to fetch run results: {e}')
         return 2
 
-    total = len(all_results)
-    passed = sum(1 for r in all_results if r.get('status') == '1' or r.get('code') == 'pass')
-    failed = sum(1 for r in all_results if r.get('status') == '5' or r.get('code') == 'fail')
-    blocked = sum(1 for r in all_results if r.get('status') == '3' or r.get('code') == 'blocked')
-    untested = sum(1 for r in all_results if r.get('status') == '2' or r.get('code') == 'untested')
-    executed = passed + failed + blocked
+    counts = _count_statuses(rows)
+    total = len(rows)
+    executed = sum(n for st, n in counts.items() if st in EXECUTED)
+    not_applicable = counts.get('not applicable', 0)
+    untested = counts.get('untested', 0)
 
     print('  QA Touch results:')
-    print(f'    Total cases:  {total}')
-    print(f'    Executed:     {executed} (passed={passed}, failed={failed}, blocked={blocked})')
-    print(f'    Untested:     {untested}')
+    print(f'    Total cases:    {total}')
+    print(f'    Executed:       {executed}  ('
+          + ', '.join(f'{st}={counts.get(st, 0)}' for st in ('passed', 'failed', 'blocked', 'retest'))
+          + ')')
+    print(f'    Untested:       {untested}')
+    print(f'    Not Applicable: {not_applicable}')
+    other = {st: n for st, n in counts.items()
+             if st not in EXECUTED and st not in ('untested', 'not applicable')}
+    if other:
+        print(f'    Other:          {dict(other)}')
     print()
 
     exit_code = 0
 
-    # Compare against local count if provided
     if local_count is not None:
         diff = abs(executed - local_count)
         if diff == 0:
             print(f'  [{PASS}] Count match: local={local_count}, uploaded={executed}')
         elif diff <= 2:
-            # Small tolerance for timing/skip differences
             print(f'  [{WARN}] Minor mismatch: local={local_count}, uploaded={executed} '
                   f'(diff={diff}, within tolerance)')
         else:
@@ -89,83 +156,75 @@ def validate_run(run_key: str, project_key: str, local_count: int | None = None)
                   f'(diff={diff})')
             exit_code = 1
 
-    # Check for zero uploads (likely upload failure)
-    if executed == 0 and total > 0:
-        print(f'  [{FAIL}] No results uploaded - {total} cases all untested')
+    # The check that catches a silent no-op upload.
+    checked, problems = _reconcile_local(rows, run_key)
+    if checked:
+        if problems:
+            print(f'  [{FAIL}] {len(problems)} of {checked} local result(s) do not match the run:')
+            for p in problems[:10]:
+                print(f'          {p}')
+            if len(problems) > 10:
+                print(f'          ... and {len(problems) - 10} more')
+            exit_code = 1
+        else:
+            print(f'  [{PASS}] All {checked} local result(s) reconcile with the run')
+
+    if executed == 0 and (total - not_applicable) > 0:
+        print(f'  [{FAIL}] No results uploaded - {total - not_applicable} runnable cases all untested')
         exit_code = 1
 
-    # Check for pending failure retries
     if FAILURE_LOG_PATH.exists():
         try:
-            with open(FAILURE_LOG_PATH) as f:
-                failures = json.load(f)
+            failures = json.loads(FAILURE_LOG_PATH.read_text(encoding='utf-8'))
             pending = [f for f in failures if f.get('run_key') == run_key]
             if pending:
-                total_failed_results = sum(f.get('result_count', 0) for f in pending)
+                n = sum(f.get('result_count', 0) for f in pending)
                 print(f'  [{WARN}] {len(pending)} failed upload(s) pending retry '
-                      f'({total_failed_results} results in {FAILURE_LOG_PATH})')
+                      f'({n} results in {FAILURE_LOG_PATH.name}) - run tools/retry_uploads.py')
                 exit_code = max(exit_code, 1)
         except (json.JSONDecodeError, ValueError):
             pass
 
     print()
-    if exit_code == 0:
-        print('  Validation: \033[92mPASSED\033[0m')
-    else:
-        print('  Validation: \033[91mFAILED\033[0m')
-
+    print('  Validation: ' + ('\033[92mPASSED\033[0m' if exit_code == 0 else '\033[91mFAILED\033[0m'))
     return exit_code
 
 
 def check_failures() -> int:
-    """Check for any pending upload failures across all runs."""
-    print('\n=== Upload Failure Check ===')
-
+    """Report pending upload failures without validating a run."""
     if not FAILURE_LOG_PATH.exists():
-        print(f'  [{PASS}] No failure log found - all uploads succeeded')
+        print('No pending upload failures.')
         return 0
-
     try:
-        with open(FAILURE_LOG_PATH) as f:
-            failures = json.load(f)
+        failures = json.loads(FAILURE_LOG_PATH.read_text(encoding='utf-8'))
     except (json.JSONDecodeError, ValueError):
-        print(f'  [{WARN}] Failure log exists but is malformed: {FAILURE_LOG_PATH}')
+        print(f'Failure log is malformed: {FAILURE_LOG_PATH}')
         return 2
-
     if not failures:
-        print(f'  [{PASS}] Failure log is empty - all retries completed')
+        print('No pending upload failures.')
         return 0
-
-    print(f'  [{FAIL}] {len(failures)} pending upload failure(s):')
+    print(f'\n  {len(failures)} pending upload failure(s):')
     for i, f in enumerate(failures, 1):
-        print(f'    {i}. Run {f.get("run_key", "?")} - '
-              f'{f.get("result_count", "?")} results - '
+        print(f'    {i}. run {f.get("run_key", "?")} - {f.get("result_count", "?")} results - '
               f'{f.get("timestamp", "?")}')
-        print(f'       Error: {f.get("error", "unknown")}')
-
-    print('\n  To retry: python tools/retry_uploads.py')
-    print(f'  To clear: rm {FAILURE_LOG_PATH}')
+    print('\n  Retry with: python tools/retry_uploads.py')
     return 1
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Post-run result validator')
-    parser.add_argument('run_key', nargs='?', default=None,
-                        help='QA Touch test run key to validate')
-    parser.add_argument('--project', default=os.environ.get('QATOUCH_PROJECT_ID', 'JlW1'),
-                        help='QA Touch project key (default: from env)')
+    parser = argparse.ArgumentParser(description='Validate QA Touch upload results')
+    parser.add_argument('run_key', nargs='?', help='QA Touch test run key')
+    parser.add_argument('--project', default=os.environ.get('QATOUCH_PROJECT_ID', 'JlW1'))
     parser.add_argument('--local-count', type=int, default=None,
-                        help='Expected number of executed tests from local run')
+                        help='Number of results uploaded locally, for a count check')
     parser.add_argument('--check-failures', action='store_true',
-                        help='Check for pending upload failures (no run_key needed)')
+                        help='Only report pending upload failures')
     args = parser.parse_args()
 
     if args.check_failures:
         return check_failures()
-
     if not args.run_key:
-        parser.error('run_key is required (or use --check-failures)')
-
+        parser.error('run_key is required unless --check-failures is given')
     return validate_run(args.run_key, args.project, args.local_count)
 
 

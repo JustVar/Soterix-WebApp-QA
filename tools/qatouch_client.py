@@ -749,6 +749,37 @@ class QATouchClient:
             raise QATouchError(f'update_test_case API error: {data}')
         return data
 
+    def verify_results_landed(self, project_key: str, test_run_key: str,
+                              results: list[dict[str, Any]]) -> dict[str, Any]:
+        """Read a run back and check that each result carries the status we sent.
+
+        results: the same list handed to update_test_run_results_by_code -
+                 [{"case": "TR0263", "status": 1}, ...]
+
+        Returns {"checked": n, "landed": [...codes], "mismatched": [...],
+                 "missing": [...codes not in the run]}.
+
+        This exists because the results endpoints answer success for writes
+        they discard. Every uploader in the repo calls this after writing;
+        an upload is not done until the run agrees. Status names are compared
+        through normalize_status_name because QA Touch spells them two ways.
+        """
+        rows = self.get_all_test_run_results(project_key, test_run_key)
+        by_code = {r.get('code'): r.get('status') for r in rows}
+        landed, mismatched, missing = [], [], []
+        for entry in results:
+            code = str(entry.get('case', ''))
+            want = STATUS_NAMES.get(int(entry.get('status', 0)))
+            got = by_code.get(code)
+            if got is None:
+                missing.append(code)
+            elif want and normalize_status_name(got) != normalize_status_name(want):
+                mismatched.append(f'{code}: sent {want}, run shows {got}')
+            else:
+                landed.append(code)
+        return {'checked': len(results), 'landed': landed,
+                'mismatched': mismatched, 'missing': missing}
+
     def update_test_run_results_by_code(
         self,
         project_key: str,

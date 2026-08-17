@@ -367,28 +367,19 @@ class QATouchReporter:
         uploaded case now carries the status we sent.
         """
         try:
-            rows = client.get_all_test_run_results(self.project_key, self.run_key)
+            report = client.verify_results_landed(
+                self.project_key, self.run_key,
+                [{'case': r['case'], 'status': r['status']} for r in results_payload])
         except Exception as e:
             log.warning(f'QA Touch: could not verify the upload: {e}')
             return True  # do not fail the run over a read-back problem
 
-        # QA Touch returns "Not Applicable" here but "Not-Applicable" from
-        # getAvailableStatuses, so compare through the normaliser.
-        from tools.qatouch_client import STATUS_NAMES, normalize_status_name
-
-        by_code = {r.get('code'): r.get('status') for r in rows}
-        mismatched = []
-        for entry in results_payload:
-            want = STATUS_NAMES.get(entry['status'])
-            got = by_code.get(entry['case'])
-            if want and got and normalize_status_name(got) != normalize_status_name(want):
-                mismatched.append(f"{entry['case']} expected {want}, run shows {got}")
-
-        if mismatched:
-            log.error(f'QA Touch: {len(mismatched)} result(s) did not land. '
-                      f'First few: {mismatched[:5]}')
+        problems = report['mismatched'] + [f'{c}: not in run' for c in report['missing']]
+        if problems:
+            log.error(f'QA Touch: {len(problems)} result(s) did not land. '
+                      f'First few: {problems[:5]}')
             return False
-        log.info(f'QA Touch: verified {len(results_payload)} result(s) in the run.')
+        log.info(f'QA Touch: verified {len(report["landed"])} result(s) in the run.')
         return True
 
     def _save_failed_results(self, results_payload: list, comment: str, error: str) -> None:

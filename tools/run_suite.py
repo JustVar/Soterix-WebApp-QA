@@ -1,40 +1,49 @@
-"""Run a Playwright suite into a freshly cloned QA Touch run.
+#!/usr/bin/env python3
+"""Run a Playwright suite and land the results in a fresh QA Touch run.
 
-Each invocation clones a template QA Touch run (smoke or sanity), gets a fresh
-run key, then invokes pytest with --qatouch-upload --qatouch-run <new_key>.
-Result: every execution lands in its own QA Touch run record, history is
-preserved, and operators never need to know what the template keys are.
+One command. It works out which QA Touch cases the tests map to, creates a
+run holding exactly those cases, runs pytest with upload switched on, then
+reads the run back and reconciles it against what pytest recorded.
 
-After pytest exits, this wrapper also:
-  1. Updates `flaky_tests.json` from the per-nodeid records the reporter dumps
-     to `logs/last_run_results.json` so failure-rate / last-failure history
-     stays current for downstream tooling.
-  2. Walks failed nodeids and files a Jira bug for each via
-     `smart_jira_bug_creator.multi_gate_validation()`. The review queue is
-     disabled - failures go straight to Jira, with RTM linkage back to the
-     QA Touch case. Whole step gated by `BUG_CREATION_ENABLED=true` in `.env`
-     (dry-run until explicitly enabled).
+    python tools/run_suite.py smoke --env qa --version 1.8.0
+    python tools/run_suite.py tests/ui/views --env qa
+    python tools/run_suite.py smoke -k login --headed          # extra args go to pytest
+    python tools/run_suite.py smoke --run-key vaQly            # reuse an existing run
+    python tools/run_suite.py smoke --dry-run                  # plan only, no run created
 
-Usage:
-  python tools/run_suite.py smoke
-  python tools/run_suite.py sanity --env stage
-  python tools/run_suite.py smoke -- -k test_login --headed   # pass-through pytest args
-  python tools/run_suite.py smoke --no-bug-filing            # skip post-run bug step
+The target is either a suite name (smoke, sanity, regression - a pytest
+marker) or anything pytest accepts as a target: a path, a file, a node id.
 
-Flags:
-  --env qa|stage|prod      Target environment (default: $ENV or qa)
-  --name "<name>"          Override the auto-generated run name
-  --run-key <KEY>          Skip clone and reuse this existing run key
-  --dry-run                Print the pytest command without cloning or executing
-  --no-bug-filing          Skip the post-run history-update + bug-filer step
+Why the run is built from the mapping, not cloned from a template
+    A cloned template drags in whatever cases the template had. Building the
+    run from the cases the collected tests actually map to means the run
+    holds exactly what is about to execute - nothing lands Untested because
+    no test exists for it, and pass rates mean something.
 
-Templates resolved from env vars (with built-in fallbacks):
-  QATOUCH_SMOKE_TEMPLATE_KEY  (default: vaXdn)
-  QATOUCH_SANITY_TEMPLATE_KEY (default: zvXPw)
+Needs (see docs/QA_TOUCH_INTEGRATION.md)
+    QATOUCH_API_KEY, QATOUCH_DOMAIN, QATOUCH_PROJECT_ID   in .env
+    QATOUCH_ASSIGN_TO      user key the run is assigned to   (or --assign)
+    QATOUCH_MILESTONE_KEY  release the run belongs to        (or --milestone)
+    Find them:  python tools/qatouch_run_manager.py users
+                python tools/qatouch_run_manager.py milestone <NAME>
+
+After pytest
+    1. validate - reads the run back and reconciles every local result against
+       it. QA Touch reports success for uploads it discards, so this is the
+       step that proves the results are really there.
+    2. flaky history - logs/last_run_results.json feeds flaky_tests.json.
+    3. bug filing - OFF unless BOTH --file-bugs is passed AND
+       BUG_CREATION_ENABLED=true in .env. Failures going straight to Jira is
+       not the intended end state; the plan is a review queue first. Until
+       that exists this stays a deliberate, double-opted-in action.
+
+Exit code is pytest's exit code, or 1 if validation failed, or 2 for setup
+problems (missing keys, nothing mapped).
 """
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import os
 import subprocess
@@ -42,249 +51,279 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+_print = print
+print = functools.partial(_print, flush=True)
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(ROOT / '.env')
 
-from tools.qatouch_client import QATouchClient
-from tools.qatouch_run_manager import _extract_run_key
+from tools.qatouch_client import QATouchClient  # noqa: E402
+from tools.qatouch_run_manager import _extract_run_key  # noqa: E402
 
 PROJECT_KEY = os.environ.get('QATOUCH_PROJECT_ID', 'JlW1')
+MAPPING_PATH = ROOT / 'config' / 'qatouch_case_mapping.json'
 RUN_RESULTS_PATH = ROOT / 'logs' / 'last_run_results.json'
+
+# Suite name -> pytest marker. Anything else is passed to pytest as a target.
+SUITE_MARKERS = {'smoke': 'smoke', 'sanity': 'sanity', 'regression': 'regression'}
 
 # pytest outcome name -> flaky_tests.json result keyword
 _OUTCOME_TO_RESULT = {'passed': 'pass', 'failed': 'fail', 'skipped': 'skip'}
 
-SUITES = {
-    'smoke': {
-        'template_env': 'QATOUCH_SMOKE_TEMPLATE_KEY',
-        'template_default': 'vaXdn',
-        'marker': 'smoke',
-    },
-    'sanity': {
-        'template_env': 'QATOUCH_SANITY_TEMPLATE_KEY',
-        'template_default': 'zvXPw',
-        'marker': 'sanity',
-    },
-}
+
+# ---------------------------------------------------------------- planning
+
+def _pytest_target_args(target: str) -> list[str]:
+    """Turn the CLI target into pytest arguments."""
+    if target in SUITE_MARKERS:
+        return ['-m', SUITE_MARKERS[target]]
+    return [target]
 
 
-def _resolve_template_key(suite: str) -> str:
-    cfg = SUITES[suite]
-    return os.environ.get(cfg['template_env'], cfg['template_default'])
+def _collect_nodeids(target_args: list[str], extra: list[str]) -> list[str]:
+    """Ask pytest which tests it would run. No browser is started."""
+    # pytest.ini already carries -q, which prints one node id per line. Adding
+    # another -q would make it -qq and print per-file counts instead.
+    cmd = [sys.executable, '-m', 'pytest', '--collect-only',
+           '-p', 'no:cacheprovider', *target_args, *extra]
+    proc = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True)
+    nodeids = []
+    for line in proc.stdout.splitlines():
+        line = line.strip()
+        # Collected node ids look like tests/ui/x.py::Class::test[chromium].
+        if '::' in line and not line.startswith(('=', '-', 'ERROR', 'WARN')):
+            nodeids.append(line)
+    if proc.returncode not in (0, 5) and not nodeids:  # 5 = nothing collected
+        print(proc.stdout[-1500:], file=sys.stderr)
+        print(proc.stderr[-1500:], file=sys.stderr)
+        raise SystemExit(f'pytest --collect-only failed (exit {proc.returncode})')
+    return nodeids
 
 
-def _build_run_name(suite: str, env: str) -> str:
-    stamp = datetime.now(UTC).strftime('%Y-%m-%dT%H:%MZ')
-    return f'{suite.capitalize()} - {env} - {stamp}'
+def _load_mapping() -> dict[str, str]:
+    """nodeid -> case_key from config/qatouch_case_mapping.json."""
+    if not MAPPING_PATH.exists():
+        raise SystemExit(f'Mapping file missing: {MAPPING_PATH}\n'
+                         f'  Build it: python tools/qatouch_mapper.py build')
+    data = json.loads(MAPPING_PATH.read_text(encoding='utf-8'))
+    return {nodeid: info['case_key'] for nodeid, info in data.get('mappings', {}).items()}
 
 
-def _clone(suite: str, run_name: str) -> str:
-    template_key = _resolve_template_key(suite)
-    print(f'Cloning template run [{template_key}] -> "{run_name}"...')
+def _map_nodeids(nodeids: list[str], mapping: dict[str, str]) -> tuple[dict[str, str], list[str]]:
+    """Resolve each nodeid to a case key the way the reporter does.
 
-    client = QATouchClient()
-    result = client.clone_test_run(
-        project_key=PROJECT_KEY,
-        source_run_key=template_key,
-        new_name=run_name,
-    )
-    new_key = _extract_run_key(result)
-    if new_key == '?':
-        msg = result.get('msg', '')
-        raise SystemExit(
-            f'Could not parse new run key from QA Touch response: {msg!r}\n'
-            f'  Full response: {result}'
-        )
-    print(f'  New run key: {new_key}')
-    return new_key
-
-
-def _build_pytest_cmd(marker: str, run_key: str, extra: list[str]) -> list[str]:
-    return [
-        sys.executable, '-m', 'pytest',
-        '-m', marker,
-        '--qatouch-upload',
-        '--qatouch-run', run_key,
-        *extra,
-    ]
-
-
-def _resolve_env_base_url(env_name: str) -> str | None:
-    """Best-effort base_url lookup for the env-health gate in the bug filer.
-
-    Returns None when config can't be loaded - the bug creator treats None as
-    "skip the env-health check" so this stays non-fatal.
+    Exact match first, then with the [chromium] / [param] suffix stripped.
+    Returns (mapped {nodeid: case_key}, unmapped [nodeid]).
     """
-    prev_env = os.environ.get('ENV')
-    os.environ['ENV'] = env_name
-    try:
-        from config.base_config import load_config
-        cfg = load_config()
-        return getattr(cfg, 'base_url', None) or (
-            cfg.get('base_url') if isinstance(cfg, dict) else None)
-    except Exception:
-        return None
-    finally:
-        if prev_env is None:
-            os.environ.pop('ENV', None)
+    mapped: dict[str, str] = {}
+    unmapped: list[str] = []
+    for nodeid in nodeids:
+        candidates = [nodeid]
+        if '[' in nodeid:
+            candidates.append(nodeid.split('[')[0])
+        for c in candidates:
+            if c in mapping:
+                mapped[nodeid] = mapping[c]
+                break
         else:
-            os.environ['ENV'] = prev_env
+            unmapped.append(nodeid)
+    return mapped, unmapped
 
 
-def _post_run_bug_filing(suite: str, env_name: str) -> None:
-    """Read last_run_results.json, update flaky history, file Jira bugs for failures.
+def _build_run_name(target: str, env: str, version: str | None) -> str:
+    """Follow the team convention: [Type] - [Env] - [Version] - [Date]."""
+    label = target.capitalize() if target in SUITE_MARKERS else Path(target).name or target
+    stamp = datetime.now(UTC).strftime('%Y-%m-%d %H:%M')
+    parts = [f'Automation {label}', env.upper()]
+    if version:
+        parts.append(version)
+    parts.append(stamp)
+    return ' - '.join(parts)
 
-    Every failure becomes a bug directly (review queue disabled). The only
-    suppression is the env-health gate in the bug creator - a dead env skips
-    filing to avoid floods. Whole step is gated by BUG_CREATION_ENABLED in
-    .env (dry-run until explicitly enabled).
-    """
+
+def _create_run(name: str, case_keys: list[str], assign_to: str, milestone: str) -> str:
+    client = QATouchClient()
+    result = client.create_test_run(
+        project_key=PROJECT_KEY, name=name, assign_to=assign_to,
+        milestone_key=milestone, case_ids=case_keys)
+    key = _extract_run_key(result)
+    if key == '?':
+        raise SystemExit(f'Could not read the new run key from QA Touch: {result}')
+    return key
+
+
+# ---------------------------------------------------------------- post-run
+
+def _update_flaky_history(env_name: str) -> None:
+    """Feed the per-nodeid outcomes into flaky_tests.json."""
     if not RUN_RESULTS_PATH.exists():
-        print(f'[post-run] No {RUN_RESULTS_PATH.name} found - skipping bug filing.')
+        print(f'[post-run] No {RUN_RESULTS_PATH.name} - skipping flaky history.')
         return
-
     try:
-        with open(RUN_RESULTS_PATH, encoding='utf-8') as f:
-            payload = json.load(f)
+        payload = json.loads(RUN_RESULTS_PATH.read_text(encoding='utf-8'))
     except Exception as e:
-        print(f'[post-run] Failed to read run results: {e}', file=sys.stderr)
+        print(f'[post-run] Could not read run results: {e}', file=sys.stderr)
         return
-
-    records = payload.get('results') or []
-    if not records:
-        print('[post-run] Run results file has no entries - skipping bug filing.')
-        return
-
-    # 1. Update flaky_tests.json so the bug creator's confidence/consecutive
-    #    gates see the latest run in history.
     from tools.update_failure_history import load_db, save_db, update_history
     ts = datetime.now(UTC).isoformat()
-    history_input = {}
-    for rec in records:
-        nodeid = rec.get('nodeid')
-        outcome = rec.get('outcome')
-        if not nodeid or outcome not in _OUTCOME_TO_RESULT:
-            continue
-        history_input[nodeid] = {
-            'result': _OUTCOME_TO_RESULT[outcome],
-            'ts': ts,
-            'env': env_name,
-        }
-    db = load_db()
-    db = update_history(db, history_input)
+    history = {}
+    for rec in payload.get('results') or []:
+        nodeid, outcome = rec.get('nodeid'), rec.get('outcome')
+        if nodeid and outcome in _OUTCOME_TO_RESULT:
+            history[nodeid] = {'result': _OUTCOME_TO_RESULT[outcome], 'ts': ts, 'env': env_name}
+    db = update_history(load_db(), history)
     save_db(db)
-    print(f'[post-run] Updated flaky_tests.json with {len(history_input)} outcomes.')
+    print(f'[post-run] flaky_tests.json updated with {len(history)} outcome(s).')
 
-    # 2. Walk failures through the multi-gate validator.
-    failed_nodeids = [r['nodeid'] for r in records if r.get('outcome') == 'failed']
-    if not failed_nodeids:
-        print('[post-run] No failures - skipping bug filer.')
+
+def _file_bugs() -> None:
+    """Walk failures through the Jira bug filer. Double-gated - see module doc."""
+    enabled = os.environ.get('BUG_CREATION_ENABLED', 'false').lower() in ('1', 'true', 'yes')
+    if not enabled:
+        print('[post-run] --file-bugs given but BUG_CREATION_ENABLED is not true in .env - '
+              'not filing.')
         return
-
-    base_url = _resolve_env_base_url(env_name)
-    bug_enabled = os.environ.get('BUG_CREATION_ENABLED', 'false').lower() in ('1', 'true', 'yes')
-    print(f'[post-run] Processing {len(failed_nodeids)} failure(s) through bug filer '
-          f'(BUG_CREATION_ENABLED={bug_enabled}).')
-
+    if not RUN_RESULTS_PATH.exists():
+        return
+    payload = json.loads(RUN_RESULTS_PATH.read_text(encoding='utf-8'))
+    failed = [r['nodeid'] for r in payload.get('results') or [] if r.get('outcome') == 'failed']
+    if not failed:
+        print('[post-run] No failures - nothing to file.')
+        return
     from tools.smart_jira_bug_creator import multi_gate_validation
-    actions: dict[str, int] = {}
-    for nodeid in failed_nodeids:
+    print(f'[post-run] Filing {len(failed)} failure(s) through the bug filer...')
+    summary: dict[str, int] = {}
+    for nodeid in failed:
         try:
-            # auto_create=True (default) -> direct Jira bug creation; review
-            # queue is intentionally disabled.
-            result = multi_gate_validation(
-                nodeid,
-                env_base_url=base_url,
-            )
+            result = multi_gate_validation(nodeid)
+            action = result.get('action', 'unknown')
         except Exception as e:
-            print(f'[post-run]   {nodeid}: bug filer error: {e}', file=sys.stderr)
-            actions['error'] = actions.get('error', 0) + 1
-            continue
-        action = result.get('action', 'unknown')
-        actions[action] = actions.get(action, 0) + 1
-        details = result.get('details') or {}
-        reason = details.get('reason', '')
-        print(f'[post-run]   {nodeid}: {action}'
-              + (f' ({reason})' if reason else ''))
+            action = 'error'
+            print(f'[post-run]   {nodeid}: {e}', file=sys.stderr)
+        summary[action] = summary.get(action, 0) + 1
+        print(f'[post-run]   {nodeid}: {action}')
+    print(f'[post-run] Bug filer summary: {summary}')
 
-    print(f'[post-run] Bug-filer summary: {dict(actions)}')
 
+# ---------------------------------------------------------------- main
 
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog='run_suite',
-        description='Clone a QA Touch run and execute the matching pytest suite.',
+        description='Run a Playwright suite into a fresh QA Touch run and verify the results landed.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__.split('Why the run')[0].split('One command.')[-1],
     )
-    parser.add_argument('suite', choices=sorted(SUITES.keys()),
-                        help='Which suite to run (drives both pytest marker and template).')
+    parser.add_argument('target',
+                        help='Suite name (smoke, sanity, regression) or any pytest target')
     parser.add_argument('--env', default=os.environ.get('ENV', 'qa'),
-                        choices=['qa', 'stage', 'prod'],
-                        help='Target environment (default: $ENV or qa).')
-    parser.add_argument('--name', default=None,
-                        help='Override the auto-generated run name.')
-    parser.add_argument('--run-key', default=None,
-                        help='Skip clone and use this existing run key instead.')
+                        choices=['qa', 'stage', 'prod'])
+    parser.add_argument('--version', default=None, help='Release version for the run name')
+    parser.add_argument('--name', default=None, help='Override the run name')
+    parser.add_argument('--run-key', default=None, help='Reuse this run instead of creating one')
+    parser.add_argument('--assign', default=os.environ.get('QATOUCH_ASSIGN_TO'),
+                        help='User key to assign the run to (default: $QATOUCH_ASSIGN_TO)')
+    parser.add_argument('--milestone', default=os.environ.get('QATOUCH_MILESTONE_KEY'),
+                        help='Release key for the run (default: $QATOUCH_MILESTONE_KEY)')
     parser.add_argument('--dry-run', action='store_true',
-                        help='Print the pytest command without cloning or executing.')
-    parser.add_argument('--no-bug-filing', action='store_true',
-                        help='Skip the post-run history-update and bug-filer step.')
-
-    # parse_known_args puts unrecognized flags into `pytest_extra` so we can
-    # forward arbitrary pytest args (-k, --headed, etc.) without an explicit `--`.
+                        help='Show the plan and the pytest command; create and run nothing')
+    parser.add_argument('--file-bugs', action='store_true',
+                        help='After the run, file Jira bugs for failures (also needs '
+                             'BUG_CREATION_ENABLED=true)')
+    parser.add_argument('--no-validate', action='store_true',
+                        help='Skip the post-run read-back check (not recommended)')
     args, pytest_extra = parser.parse_known_args()
 
-    # Validate creds upfront so we fail before pytest spins up
+    extra = [a for a in pytest_extra if a != '--']
+
     if not os.environ.get('QATOUCH_API_KEY') or not os.environ.get('QATOUCH_DOMAIN'):
-        print('ERROR: QATOUCH_API_KEY and QATOUCH_DOMAIN must be set (see .env).',
-              file=sys.stderr)
+        print('ERROR: QATOUCH_API_KEY and QATOUCH_DOMAIN must be set in .env', file=sys.stderr)
         return 2
 
+    target_args = _pytest_target_args(args.target)
+
+    # 1. Plan: which tests, which cases.
+    print(f'Collecting tests for target: {args.target} ...')
+    nodeids = _collect_nodeids(target_args, extra)
+    mapped, unmapped = _map_nodeids(nodeids, _load_mapping())
+    case_keys = sorted(set(mapped.values()))
+    print(f'  {len(nodeids)} test(s) collected, {len(mapped)} mapped to '
+          f'{len(case_keys)} QA Touch case(s), {len(unmapped)} unmapped')
+    if unmapped:
+        print('  Unmapped tests will run but nothing is uploaded for them:')
+        for n in unmapped[:8]:
+            print(f'    - {n}')
+        if len(unmapped) > 8:
+            print(f'    ... and {len(unmapped) - 8} more')
+        print('  Map them: python tools/qatouch_mapper.py build')
+    if not case_keys and not args.run_key:
+        print('ERROR: none of the collected tests map to a QA Touch case - '
+              'a run would be empty. Nothing created.', file=sys.stderr)
+        return 2
+
+    # 2. Run record.
+    run_name = args.name or _build_run_name(args.target, args.env, args.version)
     if args.run_key:
         run_key = args.run_key
-        print(f'Reusing existing run key: {run_key}')
+        print(f'  Reusing run: {run_key}')
     elif args.dry_run:
-        # Don't create a real QA Touch run record during a dry-run - print what
-        # would be cloned and use a placeholder key in the pytest command.
-        template_key = _resolve_template_key(args.suite)
-        run_name = args.name or _build_run_name(args.suite, args.env)
-        print(f'[dry-run] Would clone template [{template_key}] -> "{run_name}"')
         run_key = '<NEW_KEY>'
+        print(f'  [dry-run] would create run "{run_name}" with {len(case_keys)} case(s)')
     else:
-        run_name = args.name or _build_run_name(args.suite, args.env)
-        run_key = _clone(args.suite, run_name)
+        if not args.assign or not args.milestone:
+            print('ERROR: a run needs an assignee and a milestone.\n'
+                  '  Set QATOUCH_ASSIGN_TO and QATOUCH_MILESTONE_KEY in .env, or pass\n'
+                  '  --assign <USER_KEY> --milestone <RELEASE_KEY>.\n'
+                  '  Find them: python tools/qatouch_run_manager.py users\n'
+                  '             python tools/qatouch_run_manager.py milestone <NAME>',
+                  file=sys.stderr)
+            return 2
+        print(f'  Creating run "{run_name}" with {len(case_keys)} case(s)...')
+        run_key = _create_run(run_name, case_keys, args.assign, args.milestone)
+        print(f'  Run key: {run_key}')
 
-    # Strip a leading '--' (some shells/users still pass it explicitly)
-    extra = list(pytest_extra)
-    if extra and extra[0] == '--':
-        extra = extra[1:]
-
-    cmd = _build_pytest_cmd(SUITES[args.suite]['marker'], run_key, extra)
+    # 3. Execute.
+    cmd = [sys.executable, '-m', 'pytest', *target_args,
+           '--qatouch-upload', '--qatouch-run', run_key, *extra]
     pretty = ' '.join(c if ' ' not in c else f'"{c}"' for c in cmd)
-
     print()
-    print(f'Suite:     {args.suite}')
+    print(f'Target:    {args.target}')
     print(f'Env:       {args.env}')
-    print(f'Run key:   {run_key}')
+    print(f'Run:       {run_key}  "{run_name}"')
     print(f'Command:   {pretty}')
     print()
-
     if args.dry_run:
-        print('[dry-run - not executing pytest]')
+        print('[dry-run - nothing executed]')
         return 0
 
     env = dict(os.environ)
     env['ENV'] = args.env
     completed = subprocess.run(cmd, cwd=str(ROOT), env=env)
+    rc = completed.returncode
 
-    if not args.no_bug_filing:
+    # 4. Prove the results are really in QA Touch.
+    if not args.no_validate:
         print()
-        _post_run_bug_filing(args.suite, args.env)
+        from tools.validate_run import validate_run
+        vrc = validate_run(run_key, PROJECT_KEY, local_count=None)
+        if vrc != 0:
+            print('[post-run] Validation FAILED - the run does not match the local results. '
+                  'Check logs/upload_failures.json and run tools/retry_uploads.py.')
+            rc = rc or 1
 
-    return completed.returncode
+    # 5. History and (opt-in) bugs.
+    print()
+    _update_flaky_history(args.env)
+    if args.file_bugs:
+        _file_bugs()
+
+    print()
+    print(f'Done. Run {run_key}: "{run_name}"')
+    return rc
 
 
 if __name__ == '__main__':
