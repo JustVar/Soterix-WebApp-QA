@@ -533,4 +533,4 @@ from document.cookie and sent as X-XSRF-TOKEN header. Auth state cached at
 | Legacy CSVs use friendly headers (Test Case Title, Description, Reference, ...) | Phase 4 + 5 | Backfill and step splitter both alias-read the legacy + vendor-canonical names |
 
 See `docs/local/qa_touch_integration.md` for the underlying API behavior and
-`build_partner_admin_backfill.py` for the enc_id reference tables.
+`tools/archive/build_partner_admin_backfill.py` (a finished one-off, kept for its enc_id reference tables).

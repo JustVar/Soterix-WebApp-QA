@@ -698,7 +698,8 @@ class QATouchClient:
         # it and answers {"success": true} - and the case does not move.
         # Measured 2026-08-17 by moving a case between two PTZ modules and
         # reading it back: it never left the source module. Module moves have
-        # to go through the browser endpoint. See tools/reorganize_ldap_cases.py.
+        # to go through the browser endpoint. tools/archive/reorganize_ldap_cases.py
+        # is a worked example.
     }
 
     def update_test_case(self, project_key: str, case_key: str,

@@ -250,7 +250,15 @@ def compute_delta(older: dict, newer: dict) -> dict:
         new = new_cases[key]
         changes = {}
         for field in ['case_title', 'module name', 'Type', 'NewTags', 'Priority']:
-            if str(old.get(field, '')) != str(new.get(field, '')):
+            # Pre-2026-08 snapshots hold None for an untagged case; newer ones
+            # hold ''. Both mean "no value" - do not report that as a change.
+            before = str(old.get(field) or '').strip()
+            after = str(new.get(field) or '').strip()
+            if field == 'NewTags':
+                # Tags are a set. "sanity, smoke" and "smoke, sanity" are the same.
+                before = ', '.join(sorted(t.strip().lower() for t in before.split(',') if t.strip()))
+                after = ', '.join(sorted(t.strip().lower() for t in after.split(',') if t.strip()))
+            if before != after:
                 changes[field] = {'old': old.get(field, ''), 'new': new.get(field, '')}
         if changes:
             modified.append({'case_key': key, 'title': new.get('case_title', ''), 'changes': changes})

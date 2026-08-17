@@ -226,7 +226,7 @@ things our tooling actually does most still need a logged-in session:
 | `qatouch_api_mode_update.py` | mode | **Yes, fully** |
 | `backfill_qa_touch_metadata.py` | metadata + tags + steps | Partly - the metadata half |
 | `qatouch_norun_update.py` | precondition + NO_RUN tag | Partly - the precondition half |
-| `reorganize_ldap_cases.py` | module moves | No |
+| `archive/reorganize_ldap_cases.py` (finished one-off) | module moves | No - browser only |
 | `split_merged_steps.py`, `detect_merged_steps.py`, `qa_post_import_split_and_position.py` | surgical step edits | No |
 | `qatouch_api_tag_update.py`, `qatouch_suite_hold.py` | tags | No |
 

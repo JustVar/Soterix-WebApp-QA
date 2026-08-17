@@ -60,13 +60,39 @@ BASE_URL = 'https://soterixsystems.qatouch.com'
 PROJECT_KEY = 'JlW1'
 AUTH_STATE_FILE = str(ROOT / 'tools' / '.qatouch_auth_state.json')
 REPORT_DIR = ROOT / 'config' / 'audit_reports'
-SNAPSHOT_FILE = ROOT / 'config' / 'qatouch_snapshots' / 'snapshot_2026-03-02.json'
+SNAPSHOT_DIR = ROOT / 'config' / 'qatouch_snapshots'
 
+
+def latest_snapshot_path():
+    """Newest snapshot_*.json, or None. Refresh with qatouch_analytics.py snapshot."""
+    if not SNAPSHOT_DIR.exists():
+        return None
+    files = sorted(SNAPSHOT_DIR.glob('snapshot_*.json'))
+    return files[-1] if files else None
+
+
+# Set from --snapshot in main(); defaults to the newest snapshot on disk.
+# Was hard-coded to snapshot_2026-03-02.json, which froze the audit in March.
+SNAPSHOT_FILE = latest_snapshot_path()
+
+# This audit was written to verify the February 2026 bulk-update import
+# against its three source CSVs. Every one of the seven passes reads that
+# CSV data - even the ones whose docstrings say "snapshot vs live". The
+# CSVs no longer exist on disk, so without --csv there is nothing to audit.
+#
+# For the ongoing question "has QA Touch drifted from what we think" use:
+#   python tools/qatouch_analytics.py snapshot && python tools/qatouch_analytics.py report
+#       (added / removed / changed cases vs the previous snapshot)
+#   python tools/qatouch_contract_check.py
+#       (API response shape, statuses, tag IDs, endpoints)
+#   python tools/validate_run.py <RUN_KEY>
+#       (uploaded results vs local results)
 CSV_FILES = [
     os.path.expanduser('~/Downloads/QATouch_BulkUpdate_Part1.csv'),
     os.path.expanduser('~/Downloads/QATouch_BulkUpdate_Part2.csv'),
     os.path.expanduser('~/Downloads/QATouch_BulkUpdate_Part3.csv'),
 ]
+CSV_AUDITS = {1, 2, 3, 4, 5, 6, 7}
 
 INTER_CALL_DELAY = 0.15
 BURST_PAUSE = 10.0
@@ -126,9 +152,11 @@ def load_csv_full() -> dict[str, dict]:
 
 def load_snapshot() -> dict[str, dict]:
     """Load snapshot data keyed by case_key."""
-    if not os.path.exists(SNAPSHOT_FILE):
+    if not SNAPSHOT_FILE or not os.path.exists(SNAPSHOT_FILE):
         print(f'  WARNING: Snapshot not found: {SNAPSHOT_FILE}')
+        print('           Take one: python tools/qatouch_analytics.py snapshot')
         return {}
+    print(f'  Snapshot file: {Path(SNAPSHOT_FILE).name}')
     with open(SNAPSHOT_FILE, encoding='utf-8') as f:
         data = json.load(f)
     return {c['case_key']: c for c in data.get('cases', [])}
@@ -788,12 +816,31 @@ def main():
                        help='Comma-separated audit numbers (1-7) or "all"')
     parser.add_argument('--content-sample', type=int, default=50,
                        help='Sample size for content audit (default: 50)')
+    parser.add_argument('--snapshot', type=str, default=None,
+                       help='Snapshot JSON to audit against (default: newest in '
+                            'config/qatouch_snapshots/)')
+    parser.add_argument('--csv', type=str, default=None,
+                       help='Comma-separated bulk-update CSV paths for audits 1,2,3,5,7')
     args = parser.parse_args()
+
+    global SNAPSHOT_FILE, CSV_FILES
+    if args.snapshot:
+        SNAPSHOT_FILE = Path(args.snapshot)
+    if args.csv:
+        CSV_FILES = [c.strip() for c in args.csv.split(',') if c.strip()]
 
     if args.audit == 'all':
         audits_to_run = [1, 2, 3, 4, 5, 6, 7]
     else:
         audits_to_run = [int(x.strip()) for x in args.audit.split(',')]
+
+    if not any(os.path.exists(c) for c in CSV_FILES):
+        print('  No bulk-update CSV found. Every audit here compares the February import')
+        print('  CSVs against QA Touch, so there is nothing to run. Pass --csv to point at')
+        print('  the CSVs, or use the drift tools listed at the top of this file:')
+        print('    python tools/qatouch_analytics.py snapshot ; python tools/qatouch_analytics.py report')
+        print('    python tools/qatouch_contract_check.py')
+        return
 
     print(f'\n{"=" * 60}')
     print(f'  QA TOUCH FULL AUDIT - {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
