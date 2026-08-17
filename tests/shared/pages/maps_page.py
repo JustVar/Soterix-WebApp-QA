@@ -3,7 +3,9 @@
 Models the standalone Maps page (sidebar nav link), including site selection,
 map card grid, camera overlay, and online camera playback.
 """
-from playwright.sync_api import Page, expect
+import re
+
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class MapsPage:
@@ -47,36 +49,34 @@ class MapsPage:
         """Wait for the site dropdown to finish loading sites."""
         self.dropdown_text.wait_for(state="visible", timeout=15000)
 
-        # Poll until dropdown text no longer says "sites" (loading state)
-        for _ in range(20):
-            title = self.dropdown_text.get_attribute("title") or ""
-            if "sites" not in title.lower():
-                break
-            self.page.wait_for_timeout(3000)
-
-        self.page.wait_for_timeout(1000)
+        # The dropdown title reads "...sites" while the site list
+        # loads; it flipping to a real value is the loaded signal
+        # (the retrying expect replaces the old 3s poll loop)
+        expect(self.dropdown_text).not_to_have_attribute(
+            "title", re.compile(r"sites", re.IGNORECASE), timeout=60000
+        )
 
     # --- Site selection ---
 
     def select_site(self, site_name: str):
         """Open dropdown and select a site by name."""
         self.site_dropdown.click()
-        self.page.wait_for_timeout(1000)
 
+        # the options container's own wait is the opened signal
         self.dropdown_options.wait_for(state="visible", timeout=10000)
         site_option = self.dropdown_options.locator(f"text={site_name}")
         site_option.scroll_into_view_if_needed()
         site_option.click()
 
-        # Wait for map cards to appear
+        # the first card is the loaded signal; the grid populates in
+        # one render, so no further settle
         self.map_cards.first.wait_for(state="visible", timeout=60000)
-        self.page.wait_for_timeout(1000)
 
     def get_site_options(self) -> list:
         """Open dropdown and return available site names."""
         self.site_dropdown.click()
-        self.page.wait_for_timeout(1000)
 
+        # the options container's own wait is the opened signal
         self.dropdown_options.wait_for(state="visible", timeout=10000)
         options = self.dropdown_options.locator("p, div, span")
         texts = []
@@ -86,9 +86,14 @@ class MapsPage:
             if text and text not in texts:
                 texts.append(text)
 
-        # Close by toggling the dropdown (Escape may navigate away in some SPAs)
+        # Close by toggling the dropdown (Escape may navigate away in
+        # some SPAs); the options leaving is the closed signal
         self.site_dropdown.click()
-        self.page.wait_for_timeout(500)
+        try:
+            self.dropdown_options.wait_for(state="hidden", timeout=5000)
+        # a lingering list is harmless here - the texts are already read
+        except PlaywrightError:
+            pass
         return texts
 
     def get_selected_site_text(self) -> str:
@@ -122,8 +127,8 @@ class MapsPage:
     def open_map(self, map_card):
         """Click a map card to open it and wait for camera icons to appear."""
         map_card.click()
+        # the first camera icon is the opened signal
         self.camera_icons.first.wait_for(state="visible", timeout=60000)
-        self.page.wait_for_timeout(1000)
 
     def get_online_camera_count(self) -> int:
         """Return the number of online (green) camera icons on the open map."""
@@ -141,6 +146,10 @@ class MapsPage:
                 self.loader.first.wait_for(state="hidden", timeout=60000)
         except Exception:
             pass
+        # a stream that starts has no DOM signal past the loader
+        # leaving (the player renders before the frames arrive); the
+        # settle lets a failed-to-load overlay appear before callers
+        # read is_stream_failed
         self.page.wait_for_timeout(2000)
 
     def is_stream_failed(self) -> bool:

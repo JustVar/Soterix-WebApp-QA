@@ -18,7 +18,7 @@ Status: [REDO] rebuild, [INVESTIGATE] feature moved or died?,
 |---|------|--------|-------|
 | 1 | Event Wall display suite (tests/ui/event_wall/test_event_wall_display.py) | [BLOCKED] | Local-access wall user (Justin creating). Then: its own env vars in config/env, probe login + site-select, build the wall's markers. |
 | 2 | Media destructive set (clip/folder delete, grouping, move) | [INVESTIGATE] | Answer: does deleting a folder delete the clips grouped into it? Or a disposable measurement. |
-| 3 | Page-object sleeps: ~53 across search_page (15), incamera_search_page (10), camera_hardware_page (9, likely c2c hold), fullscreen_page (8), maps_page (8), login_page (3) | open | Convert file by file, verify consumers, commit per file. |
+| 3 | Page-object sleeps | mostly [DONE] | Converted 08/14: search_page, incamera_search_page, fullscreen_page, maps_page, login_page (53 -> 8 commented signal-less settles). Verified: maps 5/5, fullscreen 5/5, bookmarks 8/9 (setup flake), playback 9/10; search consumers verified NEUTRAL by A/B against HEAD (6 vs 7 fails on the same suite in the same window - the search endpoint was 400 again, see defects). camera_hardware_page (9) joins the c2c hold. |
 | 4 | c2c sleeps (3) | [BLOCKED] | Hardware session to verify a conversion. |
 | 5 | Sidecar step files: maps, media_operations, chats, events_search | [ARTIFACT] | Regenerate at next sidecar sync (case keys kept); events_search corrected steps need Justin's manual push to live QA Touch. |
 | 6 | QA Touch gap analysis (coverage vs case mapping) | deferred | After the above, per Justin. Note: mapping metadata says 352 tests, collection says 819. |
@@ -84,6 +84,7 @@ singles that pass serially, and the 08/14 search outage below).
 
 ## App defects (reported)
 
+- 08/14/2026 ~19:30 search endpoint 400 AGAIN (probe-confirmed after the 17:00 recovery). Reopen with the app team: the fix was partial or the fault recurs. Search-family suites stay red until it holds.
 - 08/14/2026 search outage ~13:45-17:00: POST /REST/site/search
   returned 400 (body message:'SUCCESS!') for valid payloads, taking
   down Global Search, in-camera search, and Events tab search (same

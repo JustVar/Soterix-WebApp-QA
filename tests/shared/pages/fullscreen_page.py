@@ -7,7 +7,7 @@ dialogs.
 import datetime
 import re
 
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class FullScreenPage:
@@ -79,7 +79,10 @@ class FullScreenPage:
             self.loader.first.wait_for(state="visible", timeout=5000)
         except Exception:
             pass  # Loader may have already finished
-        self.loader.wait_for(state="hidden", timeout=timeout)
+        # every spinner must clear: a bare wait on the union is a
+        # strict-mode violation when two spinners overlap (a tile
+        # placeholder plus the player's), so wait on the count
+        expect(self.loader).to_have_count(0, timeout=timeout)
 
     def is_streaming(self) -> bool:
         """Return True if video appears to be streaming (no loader, no error)."""
@@ -126,14 +129,32 @@ class FullScreenPage:
     # --- Bookmarks panel methods ---
 
     def open_bookmarks_panel(self):
-        """Open the bookmarks panel via the dots icon."""
+        """Open the bookmarks panel via the dots icon.
+
+        The dots icon is a toggle: only click when no bookmark row is
+        showing, or an open panel closes. The panel has no marker of
+        its own besides its rows, and an empty panel is legitimate,
+        so a bounded first-row wait is the open signal (a miss is not
+        an error - callers check has_bookmarks).
+        """
+        if self.bookmark_items.count() and self.bookmark_items.first.is_visible():
+            return
         self.bookmarks_toggle.click()
-        self.page.wait_for_timeout(1000)
+        try:
+            self.bookmark_items.first.wait_for(state="visible", timeout=5000)
+        # an empty panel renders no rows; callers decide via has_bookmarks
+        except PlaywrightError:
+            pass
 
     def close_bookmarks_panel(self):
-        """Close the bookmarks panel via the dots icon (toggle)."""
+        """Close the bookmarks panel via the dots icon (toggle); the
+        rows leaving is the closed signal when any were showing."""
+        # state read for the close signal: any visible row now
+        first_row = self.bookmark_items.first
+        had_rows = first_row.is_visible() if first_row.count() else False
         self.bookmarks_toggle.click()
-        self.page.wait_for_timeout(500)
+        if had_rows:
+            self.bookmark_items.first.wait_for(state="hidden", timeout=5000)
 
     def get_bookmark_count(self) -> int:
         """Return the number of bookmark items visible in the panel."""
@@ -149,9 +170,8 @@ class FullScreenPage:
         Flow: Click bookmark -> Navigate to timestamp -> Wait for stream to load
         """
         self.bookmark_items.nth(index).click()
-        self.page.wait_for_timeout(1500)
 
-        # Wait for the stream to load at the bookmark's position
+        # the stream-loaded wait is the navigated signal
         self.wait_for_stream_loaded(timeout=30000)
 
     def open_bookmark_options(self, index: int = 0):
@@ -169,8 +189,8 @@ class FullScreenPage:
 
         self.open_bookmark_options(index)
         self.bookmark_options.nth(1).click()
-        self.page.wait_for_timeout(1000)
 
+        # the popup's own visible wait is the opened signal
         self.export_popup.wait_for(state="visible", timeout=10000)
         self.export_filename_input.fill(filename)
         self.export_save_to_media_toggle.click()
@@ -187,8 +207,8 @@ class FullScreenPage:
 
         self.open_bookmark_options(index)
         self.bookmark_options.nth(2).click()
-        self.page.wait_for_timeout(1000)
 
+        # the popup's own visible wait is the opened signal
         self.share_popup.wait_for(state="visible", timeout=10000)
         self.share_email_input.fill(email)
         self.share_filename_input.fill(filename)
@@ -204,22 +224,24 @@ class FullScreenPage:
 
         self.open_bookmark_options(index)
         self.bookmark_options.nth(0).click()
-        self.page.wait_for_timeout(500)
 
-        self.rename_input.wait_for(state="visible", timeout=5000)
+        # the rename input's own visible wait is the opened signal
+        self.rename_input.wait_for(state="visible", timeout=10000)
         self.rename_input.fill("")
         self.rename_input.fill(new_name)
         self.save_button.click()
 
-        self.page.wait_for_timeout(2000)
+        # the input leaving is the saved signal
+        self.rename_input.wait_for(state="hidden", timeout=10000)
         return new_name
 
     def delete_bookmark(self, index: int = 0):
         """Delete a bookmark via the options menu with confirmation."""
         self.open_bookmark_options(index)
         self.bookmark_options.nth(3).click()
-        self.page.wait_for_timeout(500)
 
+        # the confirm control's own wait is the dialog-open signal
+        self.delete_confirm_button.wait_for(state="visible", timeout=10000)
         self.delete_confirm_button.click()
 
     def verify_bookmark_deleted(self, bookmark_name: str, timeout: int = 10000):

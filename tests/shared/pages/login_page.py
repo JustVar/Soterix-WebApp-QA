@@ -137,6 +137,8 @@ class LoginPage:
                     anchor.wait_for(state="visible", timeout=SHORT_WAIT)
                 except Exception:
                     continue
+                # reCAPTCHA iframe pacing: the anchor becomes clickable
+                # a beat after it renders, with no DOM signal
                 p.wait_for_timeout(SHORT_WAIT)
                 try:
                     anchor.click()
@@ -149,6 +151,8 @@ class LoginPage:
                     )
                     return True
                 except Exception:
+                    # reCAPTCHA challenge polling beat before the next
+                    # frame candidate
                     p.wait_for_timeout(SHORT_WAIT)
                     continue
             except Exception:
@@ -382,12 +386,16 @@ class LoginPage:
         try:
             self.page.wait_for_url('**/auth/login**', timeout=LOGIN_WAIT)
         except Exception:
-            # Some app versions redirect to root or a different auth URL
+            # Some app versions redirect to root or a different auth URL;
+            # the URL wait missed, so give the redirect a beat before
+            # checking the login form
             self.page.wait_for_timeout(5000)
             # Verify we're actually logged out by checking for login form
             if not self.is_login_page():
                 # Try navigating to login page directly
                 self.page.goto(f"{self.base_url}/auth/login", wait_until="domcontentloaded")
+                # the login form hydrates after domcontentloaded with no
+                # marker of its own; the return value is checked by callers
                 self.page.wait_for_timeout(2000)
         return self
 

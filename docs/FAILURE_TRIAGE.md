@@ -116,3 +116,15 @@ Oracles
   failures at test end).
 - Toast waits that swallow their own timeout let failed actions pass;
   prefer the browser download event, the row count, or the src flip.
+- Search results stream in and the grid reflows as cards land;
+  `SearchPage._results_settled` waits for two seconds of unchanged
+  count before anyone hovers a result.
+- Search dropdown picks apply on the same tick (value text flips off
+  'Select', item unmounts); no settle is needed after a pick.
+- Verify page-object conversions on a QUIET tenant: a timed-out run
+  leaves orphaned Chrome processes holding sessions (33 found on
+  08/14), and every batch after it fails at setup. `taskkill /IM
+  chrome.exe` before re-verifying. When a whole family fails after a
+  conversion, A/B the file against HEAD in the same window before
+  touching the code - the search endpoint's second 400 outage cost
+  two hours of chasing a conversion that was neutral.

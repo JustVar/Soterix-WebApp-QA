@@ -4,7 +4,7 @@ Models the in-camera forensic search that opens from within a video tile's
 player controls. Allows searching for Person/Vehicle events within a specific
 camera's feed using category, description, and duration filters.
 """
-from playwright.sync_api import Page
+from playwright.sync_api import Error as PlaywrightError, Page
 
 
 class InCameraSearchPage:
@@ -45,7 +45,8 @@ class InCameraSearchPage:
         """Open the in-camera search overlay from the video player controls."""
         self.search_icon.wait_for(state="visible", timeout=10000)
         self.search_icon.click()
-        self.page.wait_for_timeout(2000)
+        # the filter containers rendering is the overlay-open signal
+        self.filter_containers.first.wait_for(state="visible", timeout=10000)
 
     # --- Filters ---
 
@@ -56,9 +57,12 @@ class InCameraSearchPage:
             text = containers.nth(i).inner_text()
             if "Category" in text:
                 containers.nth(i).click()
-                self.page.wait_for_timeout(1000)
-                self.dropdown_items.nth(index).click()
-                self.page.wait_for_timeout(1000)
+                # the item's visible wait is the opened signal; the item
+                # hiding again is the selection-applied signal
+                item = self.dropdown_items.nth(index)
+                item.wait_for(state="visible", timeout=10000)
+                item.click()
+                self._appears_hidden(item, timeout=5000)
                 return
 
     def select_description_gender(self, gender: str = "Male"):
@@ -68,13 +72,16 @@ class InCameraSearchPage:
             text = containers.nth(i).inner_text()
             if "Description" in text:
                 containers.nth(i).click()
-                self.page.wait_for_timeout(1000)
+                # the gender container rendering is the opened signal
+                self.gender_container.wait_for(state="visible", timeout=10000)
                 gender_option = self.gender_container.locator(
                     f"p:text-is('{gender}')"
                 )
                 if gender_option.count() > 0:
                     gender_option.click()
-                self.page.wait_for_timeout(1000)
+                # a gender pick has no DOM signal of its own; the next
+                # section open is the natural next wait
+                self.page.wait_for_timeout(500)
                 return
 
     def select_duration(self, index: int = 4):
@@ -84,10 +91,13 @@ class InCameraSearchPage:
             text = containers.nth(i).inner_text()
             if "Category" not in text and "Description" not in text:
                 containers.nth(i).click()
-                self.page.wait_for_timeout(1000)
+                # the first item rendering is the opened signal
+                self._appears(self.dropdown_items.first, timeout=10000)
                 if self.dropdown_items.count() > index:
-                    self.dropdown_items.nth(index).click()
-                self.page.wait_for_timeout(1000)
+                    item = self.dropdown_items.nth(index)
+                    item.click()
+                    # the item hiding is the selection-applied signal
+                    self._appears_hidden(item, timeout=5000)
                 return
 
     # --- Search & Results ---
@@ -95,7 +105,6 @@ class InCameraSearchPage:
     def execute_search(self, timeout: int = 60000):
         """Click the search button and wait for results."""
         self.search_button.click()
-        self.page.wait_for_timeout(1000)
 
         # Wait for loader to finish. Bounded and non-fatal: the page
         # keeps several CircularProgress spinners alive (tile
@@ -125,15 +134,33 @@ class InCameraSearchPage:
         """Hover a result and click the play button."""
         result = self.result_images.nth(index)
         result.hover()
-        self.page.wait_for_timeout(500)
 
+        # the hover-rendered play icon: a bounded wait, then click it,
+        # falling back to the result itself when it never shows
         play_btn = result.locator("img[src*='media/video-player-icon']")
-        if play_btn.count() > 0:
-            play_btn.click()
+        if self._appears(play_btn.first, timeout=3000):
+            play_btn.first.click()
         else:
             # Fallback: click the result itself
             result.click()
-        self.page.wait_for_timeout(2000)
 
-        # Wait for the play button to appear (video loaded)
+        # the player's play button appearing is the video-loaded signal
         self.play_button.first.wait_for(state="visible", timeout=timeout)
+
+    @staticmethod
+    def _appears(locator, timeout: int = 5000) -> bool:
+        """True when the element shows within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="visible", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
+
+    @staticmethod
+    def _appears_hidden(locator, timeout: int = 5000) -> bool:
+        """True when the element hides within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="hidden", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False

@@ -4,6 +4,8 @@ Models the Global Search page including category selection, description
 filters, locations/cameras picker, duration, zone/line drawing on canvas,
 search execution, and result playback.
 """
+import time
+
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
@@ -85,22 +87,35 @@ class SearchPage:
         return None
 
     def _select_dropdown_item(self, dropdown, item_index: int = 0):
-        """Click a dropdown and select an item by index."""
+        """Click a dropdown and select an item by index.
+
+        The item's own visible wait is the opened signal. The applied
+        signal is the dropdown's value text leaving 'Select' (the
+        control renders 'CategorySelect' until a pick lands, then
+        'CategoryEvent'); an item click during the list's open
+        animation is silently dropped, so one retry click self-heals.
+        """
         dropdown.click()
-        self.page.wait_for_timeout(1000)
-        items = self.dropdown_items
-        items.nth(item_index).wait_for(state="visible", timeout=5000)
-        items.nth(item_index).click()
-        self.page.wait_for_timeout(500)
+        item = self.dropdown_items.nth(item_index)
+        item.wait_for(state="visible", timeout=10000)
+        item.click()
+        self._dropdown_applied(dropdown, item)
 
     def _select_dropdown_item_by_text(self, dropdown, text: str):
-        """Click a dropdown and select an item by text."""
+        """Click a dropdown and select an item by text (same signals
+        as the index variant)."""
         dropdown.click()
-        self.page.wait_for_timeout(1000)
         item = self.page.locator(f".dropdownItem:has-text('{text}')").first
-        item.wait_for(state="visible", timeout=5000)
+        item.wait_for(state="visible", timeout=10000)
         item.click()
-        self.page.wait_for_timeout(500)
+        self._dropdown_applied(dropdown, item)
+
+    def _dropdown_applied(self, dropdown, item):
+        """The pick applies at once: the value text flips off 'Select'
+        and the item unmounts on the same tick (measured 08/14/2026 on
+        Category and Duration). The retrying expect just absorbs any
+        render lag."""
+        expect(dropdown).not_to_contain_text("Select", timeout=10000)
 
     def _get_dropdown_options(self, label_text: str) -> list:
         """Open a dropdown by label, read all item texts, then close it."""
@@ -108,9 +123,10 @@ class SearchPage:
         if dropdown is None:
             return []
         dropdown.click()
-        self.page.wait_for_timeout(1000)
-
+        # the first item rendering is the opened signal; a miss reads
+        # an empty list, which callers treat as no options
         items = self.dropdown_items
+        self._appears(items.first, timeout=10000)
         count = items.count()
         texts = []
         for i in range(count):
@@ -121,8 +137,9 @@ class SearchPage:
             except Exception:
                 continue
 
+        # the list leaving is the closed signal
         self.page.keyboard.press("Escape")
-        self.page.wait_for_timeout(500)
+        self._appears_hidden(items.first, timeout=5000)
         return texts
 
     def get_category_options(self) -> list:
@@ -143,7 +160,7 @@ class SearchPage:
         self.search_button.click()
         try:
             self.result_images.first.wait_for(state="visible", timeout=timeout)
-            self.page.wait_for_timeout(2000)
+            self._results_settled()
             return True
         except Exception:
             return False
@@ -208,13 +225,15 @@ class SearchPage:
         if dropdown is None:
             return
         dropdown.click()
-        self.page.wait_for_timeout(1000)
 
-        self.gender_container.wait_for(state="visible", timeout=5000)
+        # the gender container rendering is the opened signal
+        self.gender_container.wait_for(state="visible", timeout=10000)
         gender_option = self.gender_container.locator(
             f"p:has-text('{gender}')"
         ).first
         gender_option.click()
+        # a selection has no DOM signal of its own beyond the click
+        # landing; the next section open is the natural next wait
         self.page.wait_for_timeout(500)
 
     def _open_section(self, label: str):
@@ -399,6 +418,8 @@ class SearchPage:
         ]
         for x, y in points:
             self.page.mouse.click(x, y)
+            # canvas vertex pacing: the fabric canvas registers points
+            # from discrete clicks with no DOM signal between them
             self.page.wait_for_timeout(300)
 
     def draw_line(self):
@@ -415,9 +436,9 @@ class SearchPage:
 
         # Two points for a line
         self.page.mouse.click(cx - w, cy - h)
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(300)  # canvas vertex pacing, no DOM signal
         self.page.mouse.click(cx + w, cy + h)
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_timeout(300)  # canvas vertex pacing, no DOM signal
 
     def click_done(self):
         """Click the Done/Save button after drawing a zone or line."""
@@ -428,7 +449,8 @@ class SearchPage:
             # Retry drawing with smaller offsets
             self.draw_zone()
         self.done_button.click()
-        self.page.wait_for_timeout(2000)
+        # the Done control leaving is the drawing-committed signal
+        self._appears_hidden(self.done_button, timeout=10000)
 
     # --- Search execution ---
 
@@ -436,7 +458,29 @@ class SearchPage:
         """Click the search button and wait for results to load."""
         self.search_button.click()
         self.result_images.first.wait_for(state="visible", timeout=timeout)
-        self.page.wait_for_timeout(2000)
+        self._results_settled()
+
+    def _results_settled(self, timeout_s: float = 8.0):
+        """Wait for the result grid to hold still for two seconds.
+
+        Results stream in from the async search job, so the first
+        image is not the whole set, and the grid reflows as cards
+        land - a hover on nth(0) mid-stream loses the play overlay
+        (measured 08/14/2026: play tests failed with a one-second
+        window and passed with the old two-second settle). Two
+        seconds of unchanged count is the settled signal, and it
+        never returns sooner than the old fixed settle did.
+        """
+        deadline = time.monotonic() + timeout_s
+        last = -1
+        stable = 0
+        while time.monotonic() < deadline:
+            current = self.result_images.count()
+            stable = stable + 1 if current == last else 0
+            if stable >= 8:
+                return
+            last = current
+            self.page.wait_for_timeout(250)  # poll tick for result stream
 
     def get_result_count(self) -> int:
         """Return the number of search result images."""
@@ -462,10 +506,10 @@ class SearchPage:
         """
         result = self.result_images.nth(index)
         result.hover()
-        self.page.wait_for_timeout(500)
 
+        # the hover-rendered play icon's own wait is the signal
         play = self.play_clip_icon.first
-        play.wait_for(state="visible", timeout=5000)
+        play.wait_for(state="visible", timeout=10000)
         play.click()
         self._wait_for_loader_finish(timeout)
 
@@ -547,6 +591,24 @@ class SearchPage:
         raise AssertionError(
             f"Camera '{camera_name}' not found in camera containers"
         )
+
+    @staticmethod
+    def _appears(locator, timeout: int = 5000) -> bool:
+        """True when the element shows within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="visible", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
+
+    @staticmethod
+    def _appears_hidden(locator, timeout: int = 5000) -> bool:
+        """True when the element hides within timeout, False otherwise."""
+        try:
+            locator.wait_for(state="hidden", timeout=timeout)
+            return True
+        except PlaywrightError:
+            return False
 
     def _wait_for_loader_finish(self, timeout: int = 60000):
         """Wait for the CircularProgress loader to appear then disappear."""
