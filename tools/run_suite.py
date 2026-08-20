@@ -88,9 +88,20 @@ def _collect_nodeids(target_args: list[str], extra: list[str]) -> list[str]:
     """Ask pytest which tests it would run. No browser is started."""
     # pytest.ini already carries -q, which prints one node id per line. Adding
     # another -q would make it -qq and print per-file counts instead.
+    #
+    # pytest.ini also carries --html=reports/report.html, and pytest-html
+    # writes unconditionally - so without an override this planning pass
+    # replaces the last real report with an empty "0 tests" one (audit S6).
+    # The later --html wins, so point it at a scratch file under logs/.
+    # SEND_TEST_REPORT is stripped so conftest's mailer can never fire on a
+    # collect run.
     cmd = [sys.executable, '-m', 'pytest', '--collect-only',
-           '-p', 'no:cacheprovider', *target_args, *extra]
-    proc = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True)
+           '-p', 'no:cacheprovider',
+           '--html', str(ROOT / 'logs' / 'collect_scratch.html'),
+           *target_args, *extra]
+    collect_env = {k: v for k, v in os.environ.items() if k != 'SEND_TEST_REPORT'}
+    proc = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True,
+                          env=collect_env)
     nodeids = []
     for line in proc.stdout.splitlines():
         line = line.strip()
