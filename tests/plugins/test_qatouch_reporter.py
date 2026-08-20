@@ -196,11 +196,17 @@ def test_verify_upload_passes_when_everything_landed(monkeypatch):
 
 
 def test_verify_upload_does_not_fail_the_run_on_readback_error(monkeypatch):
-    """A read-back problem is not evidence the upload failed - warn, do not block."""
+    """A read-back problem is not evidence the upload failed - warn, do not block.
+
+    A 429 is retried (sleep no-oped here) and then conceded; the retries are
+    exhausted and the upload still counts as unverified-but-not-failed.
+    """
+    monkeypatch.setattr(qr.time, 'sleep', lambda _s: None)
     r = _reporter(monkeypatch)
     client = MagicMock()
     client.verify_results_landed.side_effect = RuntimeError('429')
     assert r._verify_upload(client, [{'case': 'TR0262', 'status': 1}]) is True
+    assert client.verify_results_landed.call_count == 3  # retried before conceding
 
 
 def test_client_has_no_update_playwright_results():
@@ -208,3 +214,67 @@ def test_client_has_no_update_playwright_results():
     from tools.qatouch_client import QATouchClient
     assert not hasattr(QATouchClient, 'update_playwright_results')
     assert hasattr(QATouchClient, 'update_test_run_results_by_code')
+
+
+# ---------------------------------------------------------------------------
+# M1 pin (2026-08-20): "no case codes resolved" is a FAILURE, not an empty
+# success. Before this pin the reporter POSTed an empty payload, verified
+# trivially, and printed "Successfully uploaded 0 results" with no failure-log
+# entry - the silent-no-op class, on the edge the main fix missed.
+# ---------------------------------------------------------------------------
+
+def _wire_tmp_paths(monkeypatch, tmp_path):
+    monkeypatch.setattr(qr, 'FAILURE_LOG_DIR', tmp_path)
+    monkeypatch.setattr(qr, 'FAILURE_LOG_PATH', tmp_path / 'upload_failures.json')
+    monkeypatch.setattr(qr, 'RUN_RESULTS_PATH', tmp_path / 'last_run_results.json')
+    # The 429 backoff sleeps 30s per attempt; a unit test must not.
+    monkeypatch.setattr(qr.time, 'sleep', lambda _s: None)
+
+
+def test_sessionfinish_with_unresolvable_codes_fails_loud(monkeypatch, tmp_path):
+    import json as _json
+
+    import tools.qatouch_client as tqc
+
+    _wire_tmp_paths(monkeypatch, tmp_path)
+    fake_client = MagicMock()
+    fake_client.get_all_test_run_results.side_effect = RuntimeError('HTTP 429')
+    monkeypatch.setattr(tqc, 'QATouchClient', MagicMock(return_value=fake_client))
+
+    r = _reporter(monkeypatch)
+    r.results = {'B869bm': 1, '8V1vw1': 5}
+    r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    # Nothing was sent in a form the API would ignore, and nothing "succeeded".
+    fake_client.update_test_run_results_by_code.assert_not_called()
+    assert r.stats['errors'] == 1
+    assert r.stats['uploaded'] == 0
+
+    # The failure log carries the case keys so retry_uploads can resolve them.
+    saved = _json.loads((tmp_path / 'upload_failures.json').read_text())
+    assert len(saved) == 1
+    assert {e['case'] for e in saved[0]['results']} == {'B869bm', '8V1vw1'}
+    assert 'No case codes resolved' in saved[0]['error']
+
+
+def test_sessionfinish_uploads_normally_when_codes_resolve(monkeypatch, tmp_path):
+    import tools.qatouch_client as tqc
+
+    _wire_tmp_paths(monkeypatch, tmp_path)
+    fake_client = MagicMock()
+    fake_client.get_all_test_run_results.return_value = [
+        {'case_id': 'B869bm', 'code': 'TR0262', 'status': 'Untested'}]
+    fake_client.verify_results_landed.return_value = {
+        'checked': 1, 'landed': ['TR0262'], 'mismatched': [], 'missing': []}
+    monkeypatch.setattr(tqc, 'QATouchClient', MagicMock(return_value=fake_client))
+
+    r = _reporter(monkeypatch)
+    r.results = {'B869bm': 1}
+    r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    fake_client.update_test_run_results_by_code.assert_called_once()
+    sent = fake_client.update_test_run_results_by_code.call_args.kwargs['results']
+    assert sent == [{'case': 'TR0262', 'status': 1}]
+    assert r.stats['uploaded'] == 1
+    assert r.stats['errors'] == 0
+    assert not (tmp_path / 'upload_failures.json').exists()

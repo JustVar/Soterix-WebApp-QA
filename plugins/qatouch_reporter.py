@@ -165,8 +165,21 @@ class QATouchReporter:
         The run's own result rows carry the code, so this needs no extra call.
         """
         try:
-            all_results = client.get_all_test_run_results(
-                self.project_key, self.run_key)
+            all_results = None
+            for attempt in range(3):
+                try:
+                    all_results = client.get_all_test_run_results(
+                        self.project_key, self.run_key)
+                    break
+                except Exception as e:
+                    # The public API rate-limits bursts; a 429 here would
+                    # otherwise turn the whole upload into a silent no-op.
+                    if '429' in str(e) and attempt < 2:
+                        log.warning(f'QA Touch: rate limited reading the run - '
+                                    f'waiting 30s (attempt {attempt + 1}/3)')
+                        time.sleep(30)
+                        continue
+                    raise
             for r in all_results:
                 case_id = r.get('case_id', '')
                 code = r.get('code', '')
@@ -366,13 +379,21 @@ class QATouchReporter:
         upload is not done until the run agrees. Returns True if every
         uploaded case now carries the status we sent.
         """
-        try:
-            report = client.verify_results_landed(
-                self.project_key, self.run_key,
-                [{'case': r['case'], 'status': r['status']} for r in results_payload])
-        except Exception as e:
-            log.warning(f'QA Touch: could not verify the upload: {e}')
-            return True  # do not fail the run over a read-back problem
+        report = None
+        for attempt in range(3):
+            try:
+                report = client.verify_results_landed(
+                    self.project_key, self.run_key,
+                    [{'case': r['case'], 'status': r['status']} for r in results_payload])
+                break
+            except Exception as e:
+                if '429' in str(e) and attempt < 2:
+                    log.warning(f'QA Touch: rate limited during verify - '
+                                f'waiting 30s (attempt {attempt + 1}/3)')
+                    time.sleep(30)
+                    continue
+                log.warning(f'QA Touch: could not verify the upload: {e}')
+                return True  # do not fail the run over a read-back problem
 
         problems = report['mismatched'] + [f'{c}: not in run' for c in report['missing']]
         if problems:
@@ -550,6 +571,25 @@ class QATouchReporter:
 
         results_payload = self._build_payload(case_keys)
 
+        if not results_payload:
+            # Every mapped result failed to resolve to a case CODE. Sending
+            # case keys instead would be accepted and ignored (trap 3), and
+            # an empty POST would "verify" trivially - either way the summary
+            # would claim success while nothing was written. That is the
+            # silent-no-op class this reporter exists to prevent, so this is
+            # an upload FAILURE, saved for retry, not an empty success.
+            self.stats['errors'] += 1
+            self._save_failed_results(
+                [{'case': k, 'status': self.results[k]} for k in case_keys],
+                comment,
+                'No case codes resolved for this run - nothing was sent. '
+                'tools/retry_uploads.py resolves the keys and replays.')
+            log.error(f'QA Touch: could not resolve ANY of the {len(case_keys)} '
+                      f'mapped case(s) to case codes for run {self.run_key}. '
+                      f'NOTHING was uploaded. Saved to the failure log.')
+            self._upload_path_used = 'failed (no case codes)'
+            return
+
         endpoint_label = 'playwright' if self.use_playwright_endpoint else 'legacy'
         log.info(f'QA Touch: Uploading {len(results_payload)} results to run '
                  f'{self.run_key} via {endpoint_label} endpoint...')
@@ -585,8 +625,12 @@ class QATouchReporter:
                         'normally; attachments are dropped.')
 
         success = self._upload_with_retry(_do_upload)
+        failure_reason = f'Upload failed after {MAX_RETRIES} attempts'
         if success:
             success = self._verify_upload(client, results_payload)
+            if not success:
+                failure_reason = ('Upload reported success but the read-back '
+                                  'shows the statuses did not land')
 
         if success:
             self.stats['uploaded'] = len(results_payload)
@@ -594,9 +638,7 @@ class QATouchReporter:
         else:
             self.stats['errors'] += 1
             # Save to failure log for later retry
-            self._save_failed_results(
-                results_payload, comment,
-                f'Failed after {MAX_RETRIES} attempts')
+            self._save_failed_results(results_payload, comment, failure_reason)
 
     def pytest_terminal_summary(self, terminalreporter: Any, exitstatus: int) -> None:
         """Print QA Touch upload summary in the terminal."""

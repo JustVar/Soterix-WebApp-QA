@@ -13,11 +13,12 @@ Every retry is read back from the run afterwards. QA Touch answers success
 for uploads it silently discards, so an entry only leaves the log when the
 run actually shows the status we sent.
 
-Entries whose case identifiers are not case codes (TR0263) cannot be
-replayed - the results API ignores case keys and per-run result keys and
-reports success anyway. Those come from the reporter before 2026-08-17.
-They are moved to logs/upload_failures_unreplayable.json rather than
-silently "succeeding".
+Entries whose case identifiers are KEYS rather than codes (TR0263) are
+resolved first: the reporter saves keys when the run was unreachable at
+session end, and the run's own rows carry key -> code once it answers.
+What still cannot be resolved is moved to
+logs/upload_failures_unreplayable.json rather than silently "succeeding" -
+the results API ignores case keys and reports success anyway.
 """
 from __future__ import annotations
 
@@ -49,6 +50,29 @@ WARN = '\033[93mWARN\033[0m'
 def _replayable(entry: dict) -> bool:
     """True when every result identifies its case by code (TR0263)."""
     return all(CASE_CODE_RE.match(str(r.get('case', ''))) for r in entry.get('results', []))
+
+
+def translate_keys_to_codes(entry: dict, run_rows: list[dict]) -> tuple[bool, list[dict]]:
+    """Rewrite an entry's case KEYS to case CODES using the run's own rows.
+
+    The reporter saves case keys when it cannot reach the run to resolve
+    codes (e.g. a 429 at session end). The run's result rows carry both
+    (case_id = key, code = TR0263), so once the run is reachable the entry
+    becomes replayable. Returns (all_translated, results_with_codes).
+    """
+    by_key = {r.get('case_id'): r.get('code') for r in run_rows
+              if r.get('case_id') and r.get('code')}
+    out = []
+    complete = True
+    for r in entry.get('results', []):
+        case = str(r.get('case', ''))
+        if CASE_CODE_RE.match(case):
+            out.append({'case': case, 'status': r['status']})
+        elif case in by_key:
+            out.append({'case': by_key[case], 'status': r['status']})
+        else:
+            complete = False
+    return complete, out
 
 
 def main():
@@ -85,6 +109,33 @@ def main():
 
     replayable = [e for e in failures if _replayable(e)]
     stale = [e for e in failures if not _replayable(e)]
+
+    # Key-based entries (saved when the run was unreachable) become
+    # replayable once the run answers: resolve keys -> codes from its rows.
+    if stale and not args.dry_run:
+        try:
+            from tools.qatouch_client import QATouchClient
+            _client = QATouchClient()
+            still_stale = []
+            for entry in stale:
+                try:
+                    rows = _client.get_all_test_run_results(
+                        entry.get('project_key', 'JlW1'), entry.get('run_key', ''))
+                except Exception:
+                    still_stale.append(entry)
+                    continue
+                complete, translated = translate_keys_to_codes(entry, rows)
+                if complete and translated:
+                    entry['results'] = translated
+                    entry['result_count'] = len(translated)
+                    replayable.append(entry)
+                    print(f'  Resolved {len(translated)} case key(s) to codes for '
+                          f'run {entry.get("run_key", "?")} - replaying.')
+                else:
+                    still_stale.append(entry)
+            stale = still_stale
+        except Exception as e:
+            print(f'  [{WARN}] could not resolve key-based entries: {e}')
 
     if args.dry_run:
         for i, entry in enumerate(failures, 1):
