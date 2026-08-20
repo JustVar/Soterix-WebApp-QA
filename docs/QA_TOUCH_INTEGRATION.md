@@ -434,6 +434,9 @@ python tools/qatouch_contract_check.py --verbose  # show every check
 python tools/qatouch_contract_check.py --update   # re-record after an intended change
 ```
 
+It runs nightly in CI - `.github/workflows/qa-nightly.yml`, see `docs/CI.md`
+for the schedule, the double-burn guard and the secrets it needs.
+
 It checks the case response fields, our legacy aliases, the status codes, the
 tag IDs and the endpoints we depend on, all against
 `config/qatouch_contract_baseline.json`.
