@@ -116,12 +116,20 @@ def _collect_nodeids(target_args: list[str], extra: list[str]) -> list[str]:
 
 
 def _load_mapping() -> dict[str, str]:
-    """nodeid -> case_key from config/qatouch_case_mapping.json."""
-    if not MAPPING_PATH.exists():
-        raise SystemExit(f'Mapping file missing: {MAPPING_PATH}\n'
-                         f'  Build it: python tools/qatouch_mapper.py build')
-    data = json.loads(MAPPING_PATH.read_text(encoding='utf-8'))
-    return {nodeid: info['case_key'] for nodeid, info in data.get('mappings', {}).items()}
+    """nodeid -> case_key for REVIEWED rows only - unreviewed rows are
+    proposals and must not put a case into a run (see tools/qatouch_mapping.py)."""
+    from tools.qatouch_mapping import orphaned_nodeids, reviewed_lookup
+    reviewed, counts = reviewed_lookup(MAPPING_PATH)
+    if counts['unreviewed']:
+        print(f'  Mapping gate: {counts["unreviewed"]} unreviewed row(s) held back '
+              f'(review: python tools/qatouch_mapping.py list-unreviewed)')
+    orphans = orphaned_nodeids(MAPPING_PATH)
+    if orphans:
+        print(f'  RENAME GUARD: {len(orphans)} mapped test(s) no longer exist - '
+              f'their cases silently receive nothing. Fix before trusting runs:')
+        for n in orphans[:5]:
+            print(f'    {n}')
+    return reviewed
 
 
 def _map_nodeids(nodeids: list[str], mapping: dict[str, str]) -> tuple[dict[str, str], list[str]]:

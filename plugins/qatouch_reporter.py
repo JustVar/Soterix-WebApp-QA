@@ -140,18 +140,31 @@ class QATouchReporter:
         self._upload_path_used: str = '(none)'
 
     def _load_mapping(self) -> dict[str, str]:
-        """Load nodeid -> case_key mapping from JSON file."""
+        """Load nodeid -> case_key for REVIEWED mapping rows only.
+
+        Most mapping rows were auto-matched by word overlap - proposals, not
+        links. Uploading through an unreviewed guess writes a real status
+        onto a case no test verifies, so unreviewed rows are skipped and the
+        skip is counted out loud. Review flow: tools/qatouch_mapping.py.
+        """
         if not MAPPING_PATH.exists():
             log.warning(f'Mapping file not found: {MAPPING_PATH}')
             log.warning('Run: python tools/qatouch_mapper.py build')
             return {}
 
-        with open(MAPPING_PATH) as f:
-            data = json.load(f)
+        try:
+            from tools.qatouch_mapping import reviewed_lookup
+            reviewed, counts = reviewed_lookup(MAPPING_PATH)
+        except Exception as e:
+            log.error(f'QA Touch: could not load the mapping review gate: {e}. '
+                      f'No results will be uploaded.')
+            return {}
 
-        # Build nodeid -> case_key lookup
-        mappings = data.get('mappings', {})
-        return {nodeid: info['case_key'] for nodeid, info in mappings.items()}
+        if counts['unreviewed']:
+            log.warning(f'QA Touch: {counts["unreviewed"]} of {counts["total"]} mapping '
+                        f'row(s) are unreviewed proposals - tests on them run but do '
+                        f'NOT upload. Review: python tools/qatouch_mapping.py list-unreviewed')
+        return reviewed
 
     def _build_run_key_mapping(self, client) -> None:
         """Build case_key -> full case CODE (e.g. "TR0263") for this run.

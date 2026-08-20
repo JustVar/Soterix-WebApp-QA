@@ -35,7 +35,7 @@ Read live. Do not hand-maintain a copy of this table anywhere else.
 | Test cases (NexaiQ-Core, `JlW1`) | 3,096 | live API, 08/17/2026 |
 | Modules | 448 | live API, 08/17/2026 |
 | Cases with steps | 3,096 (100%) | live API, 08/17/2026 |
-| Playwright tests mapped | 378 mappings across 352 tests | `config/qatouch_case_mapping.json` |
+| Playwright tests mapped | 378 rows, of which **134 reviewed** (usable) - the rest are held proposals | `config/qatouch_case_mapping.json` + `tools/qatouch_mapping.py status` |
 
 ```bash
 python tools/qatouch_run_manager.py list                    # open test runs
@@ -318,7 +318,17 @@ The pieces, each usable on its own:
 | `tools/retry_uploads.py` | Replays `logs/upload_failures.json`, verifies each retry, quarantines entries that can never land |
 | `tools/qatouch_mode.py sync` | Compares the Playwright mapping with the cases marked Mode=Automation and reports both mismatch directions; `--apply` fixes the safe one |
 | `tools/qatouch_run_manager.py` | Runs, milestones, users, manual JSON upload |
-| `tools/qatouch_mapper.py` | Rebuilds the test-to-case mapping |
+| `tools/qatouch_mapper.py` | Rebuilds the test-to-case mapping. New matches enter as **unreviewed proposals** (floor 0.75, already-claimed cases refused) |
+| `tools/qatouch_mapping.py` | The review gate and rename guard. `status`, `check` (exit 1 on renamed/deleted mapped tests), `list-unreviewed`, `mark-reviewed` |
+
+**A mapping row is a proposal until a human reviews it.** 330 of the 378
+rows were auto-matched by word overlap - guesses. The reporter, run_suite
+and mode sync use only rows with `"reviewed": true`; everything else is
+held back and the skip is printed, never silent. Bootstrap (2026-08-20)
+marked the 48 manual rows and 86 clean score-1.0 rows reviewed; 244 await
+review via `python tools/qatouch_mapping.py list-unreviewed`, and marking a
+row reviewed means you checked the test really verifies that case. Renamed
+tests are caught by `python tools/qatouch_mapping.py check`.
 
 **Mode=Automation is the source of truth for "this case is automated".** The
 mapping is the link between a test and a case; the case's Mode is the

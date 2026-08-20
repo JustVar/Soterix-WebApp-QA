@@ -211,11 +211,24 @@ def cmd_build():
     existing = load_mapping()
     existing_mappings = existing.get('mappings', {})
 
-    # Auto-match new tests only (don't overwrite manual mappings)
+    # Auto-match new tests only (don't overwrite manual mappings).
+    # Floor raised 0.5 -> 0.75 (08/20): at 0.5 a third of the repo was
+    # word-overlap guesses. New matches are PROPOSALS (reviewed=False) and a
+    # case already claimed by an existing row is refused - one case, one
+    # test function. tools/qatouch_mapping.py is the review flow.
     unmatched_tests = [t for t in tests if t['nodeid'] not in existing_mappings]
     print(f'\nAuto-matching {len(unmatched_tests)} unmapped tests...')
-    new_matches = auto_match(unmatched_tests, qt_cases, threshold=0.5)
-    print(f'  Auto-matched: {len(new_matches)}')
+    new_matches = auto_match(unmatched_tests, qt_cases, threshold=0.75)
+    claimed = {e['case_key'] for e in existing_mappings.values()}
+    refused = {n: m for n, m in new_matches.items() if m['case_key'] in claimed}
+    new_matches = {n: m for n, m in new_matches.items() if m['case_key'] not in claimed}
+    for m in new_matches.values():
+        m['reviewed'] = False
+    print(f'  Auto-matched (as unreviewed proposals): {len(new_matches)}')
+    if refused:
+        print(f'  Refused {len(refused)} match(es) whose case is already claimed:')
+        for n, m in list(refused.items())[:8]:
+            print(f'    {m["case_key"]} <- {n}')
 
     # Merge
     merged = {**existing_mappings, **new_matches}

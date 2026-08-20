@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+"""The test-to-case mapping, with a review gate and a rename guard.
+
+config/qatouch_case_mapping.json links pytest nodeids to QA Touch cases.
+Most of its rows were AUTO-MATCHED by word overlap - guesses, not links.
+Now that uploads actually land (08/17), an unreviewed guess writes real
+Pass/Fail onto a case no test verifies. So:
+
+  A mapping row is a PROPOSAL until a human marks it reviewed.
+  Only reviewed rows are used by the reporter, run_suite and mode sync.
+
+Rows also break silently on rename: the mapping is keyed by nodeid, so
+renaming a test orphans its row and the case quietly stops receiving
+results. `check` finds those statically (no pytest start-up).
+
+    python tools/qatouch_mapping.py status              # counts
+    python tools/qatouch_mapping.py check               # exit 1 on orphaned rows
+    python tools/qatouch_mapping.py list-unreviewed     # what needs review
+    python tools/qatouch_mapping.py mark-reviewed --file tests/ui/views/test_views_basic.py
+    python tools/qatouch_mapping.py mark-reviewed --nodeid <nodeid>
+    python tools/qatouch_mapping.py unmark --nodeid <nodeid>
+
+Marking reviewed is a statement that YOU checked the test really verifies
+that case. Mark a whole file only after reading its rows.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+MAPPING_PATH = ROOT / 'config' / 'qatouch_case_mapping.json'
+
+_PARAM_RE = re.compile(r'\[.*\]$')
+
+
+def load_raw(path: Path = MAPPING_PATH) -> dict:
+    """The whole mapping file, as stored."""
+    if not path.exists():
+        raise FileNotFoundError(
+            f'Mapping file missing: {path}. Build it: python tools/qatouch_mapper.py build')
+    return json.loads(path.read_text(encoding='utf-8'))
+
+
+def save_raw(data: dict, path: Path = MAPPING_PATH) -> None:
+    mappings = data.get('mappings', {})
+    data['total_mapped'] = len(mappings)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
+
+
+def reviewed_lookup(path: Path = MAPPING_PATH) -> tuple[dict[str, str], dict[str, int]]:
+    """nodeid -> case_key for REVIEWED rows only, plus counts for reporting.
+
+    counts: {'total', 'reviewed', 'unreviewed'} - print them wherever the
+    lookup is used, so skipped rows are never silent.
+    """
+    mappings = load_raw(path).get('mappings', {})
+    reviewed = {n: e['case_key'] for n, e in mappings.items() if e.get('reviewed') is True}
+    return reviewed, {
+        'total': len(mappings),
+        'reviewed': len(reviewed),
+        'unreviewed': len(mappings) - len(reviewed),
+    }
+
+
+def function_base(nodeid: str) -> str:
+    """Strip the [param] suffix: file::Class::test_x[chromium] -> file::Class::test_x."""
+    return _PARAM_RE.sub('', nodeid)
+
+
+def orphaned_nodeids(path: Path = MAPPING_PATH, root: Path = ROOT) -> list[str]:
+    """Mapping rows whose test no longer exists, found WITHOUT running pytest.
+
+    A nodeid names a file and a test function. If the file is gone or no
+    `def <function>` (or async def) appears in it, the row is orphaned - a
+    rename or delete happened and the case silently stops receiving results.
+    Static text check on purpose: it runs in a pre-commit-sized budget.
+    """
+    mappings = load_raw(path).get('mappings', {})
+    orphans = []
+    file_cache: dict[str, str | None] = {}
+    for nodeid in mappings:
+        file_part = nodeid.split('::')[0]
+        func = function_base(nodeid).split('::')[-1]
+        if file_part not in file_cache:
+            fp = root / file_part
+            file_cache[file_part] = fp.read_text(encoding='utf-8', errors='replace') \
+                if fp.exists() else None
+        text = file_cache[file_part]
+        if text is None or not re.search(rf'\bdef {re.escape(func)}\b', text):
+            orphans.append(nodeid)
+    return orphans
+
+
+def shared_across_functions(mappings: dict) -> dict[str, list[str]]:
+    """case_key -> nodeids, for keys claimed by MORE THAN ONE test function.
+
+    Params of one function sharing a case is normal; different functions
+    (worse, different files) sharing one case means at least one row is a
+    bad guess - the case's result would be overwritten by an unrelated test.
+    """
+    by_key: dict[str, set[str]] = {}
+    rows: dict[str, list[str]] = {}
+    for nodeid, e in mappings.items():
+        k = e['case_key']
+        by_key.setdefault(k, set()).add(function_base(nodeid))
+        rows.setdefault(k, []).append(nodeid)
+    return {k: rows[k] for k, bases in by_key.items() if len(bases) > 1}
+
+
+# ---------------------------------------------------------------- commands
+
+def cmd_status(_args) -> int:
+    data = load_raw()
+    mappings = data.get('mappings', {})
+    _, counts = reviewed_lookup()
+    shared = shared_across_functions(mappings)
+    orphans = orphaned_nodeids()
+    print(f'\n  Rows:                {counts["total"]}')
+    print(f'  Reviewed (usable):   {counts["reviewed"]}')
+    print(f'  Unreviewed:          {counts["unreviewed"]}   <- proposals; nothing uploads for these')
+    print(f'  Orphaned (renamed):  {len(orphans)}')
+    print(f'  Cases shared across different test functions: {len(shared)}')
+    if orphans:
+        print('\n  Orphaned rows (fix the nodeid or delete the row):')
+        for n in orphans[:10]:
+            print(f'    {n}')
+    return 0
+
+
+def cmd_check(_args) -> int:
+    """Exit 1 when a mapped test no longer exists. For hooks and run_suite."""
+    orphans = orphaned_nodeids()
+    if orphans:
+        print(f'MAPPING RENAME GUARD: {len(orphans)} mapped test(s) no longer exist. '
+              f'A renamed test silently stops reporting to its case.')
+        for n in orphans:
+            print(f'  {n}')
+        print('Fix: update the nodeid in config/qatouch_case_mapping.json, or delete the row.')
+        return 1
+    print('Mapping rename guard: all mapped tests exist.')
+    return 0
+
+
+def cmd_list_unreviewed(_args) -> int:
+    mappings = load_raw().get('mappings', {})
+    rows = [(n, e) for n, e in sorted(mappings.items()) if e.get('reviewed') is not True]
+    print(f'\n  {len(rows)} unreviewed row(s). Review = confirm the test really '
+          f'verifies the case, then mark-reviewed.\n')
+    for n, e in rows:
+        print(f'  {e["case_key"]}  score={e.get("score", "?"):<5} {n}')
+        print(f'      -> {e.get("case_title", "?")[:75]}')
+    return 0
+
+
+def _mark(nodeids: list[str], value: bool) -> int:
+    data = load_raw()
+    mappings = data.get('mappings', {})
+    missing = [n for n in nodeids if n not in mappings]
+    if missing:
+        print('Not in the mapping:')
+        for n in missing:
+            print(f'  {n}')
+        return 2
+    for n in nodeids:
+        mappings[n]['reviewed'] = value
+    save_raw(data)
+    print(f'{"Marked" if value else "Unmarked"} {len(nodeids)} row(s).')
+    return 0
+
+
+def cmd_mark(args) -> int:
+    mappings = load_raw().get('mappings', {})
+    if args.nodeid:
+        return _mark([args.nodeid], True)
+    if args.file:
+        prefix = args.file.replace('\\', '/')
+        hits = [n for n in mappings if n.replace('\\', '/').startswith(prefix)]
+        if not hits:
+            print(f'No mapping rows under {prefix}')
+            return 2
+        print(f'Marking {len(hits)} row(s) under {prefix} as reviewed.')
+        return _mark(hits, True)
+    print('Give --nodeid or --file.')
+    return 2
+
+
+def cmd_unmark(args) -> int:
+    return _mark([args.nodeid], False)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description='Review gate and rename guard for the test-to-case mapping')
+    sub = parser.add_subparsers(dest='command')
+    sub.add_parser('status', help='Counts: reviewed / unreviewed / orphaned / shared')
+    sub.add_parser('check', help='Exit 1 when a mapped test no longer exists')
+    sub.add_parser('list-unreviewed', help='Rows waiting for human review')
+    m = sub.add_parser('mark-reviewed', help='Mark rows reviewed after checking them')
+    m.add_argument('--nodeid', default='', help='One exact nodeid')
+    m.add_argument('--file', default='', help='Every row whose nodeid starts with this path')
+    u = sub.add_parser('unmark', help='Return a row to proposal status')
+    u.add_argument('--nodeid', required=True)
+    args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        return 0
+    return {'status': cmd_status, 'check': cmd_check,
+            'list-unreviewed': cmd_list_unreviewed,
+            'mark-reviewed': cmd_mark, 'unmark': cmd_unmark}[args.command](args)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

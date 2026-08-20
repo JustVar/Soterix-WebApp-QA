@@ -131,13 +131,19 @@ def keys_in_mode(client, mode: str) -> dict[str, dict]:
 
 
 def load_mapped_keys() -> dict[str, list[str]]:
-    """case_key -> [nodeids] from the Playwright mapping."""
-    if not MAPPING_PATH.exists():
-        raise SystemExit(f'Mapping file missing: {MAPPING_PATH}')
-    data = json.loads(MAPPING_PATH.read_text(encoding='utf-8'))
+    """case_key -> [nodeids] from REVIEWED mapping rows only.
+
+    Mode=Automation is the team-visible signal that a case is automated.
+    An unreviewed word-overlap guess must not set it (sync --apply flips
+    mapped-but-Manual cases), so proposals are excluded here.
+    """
+    from tools.qatouch_mapping import reviewed_lookup
+    reviewed, counts = reviewed_lookup(MAPPING_PATH)
+    if counts['unreviewed']:
+        print(f'  (mapping gate: {counts["unreviewed"]} unreviewed proposal(s) excluded)')
     out: dict[str, list[str]] = {}
-    for nodeid, info in data.get('mappings', {}).items():
-        out.setdefault(info['case_key'], []).append(nodeid)
+    for nodeid, case_key in reviewed.items():
+        out.setdefault(case_key, []).append(nodeid)
     return out
 
 
