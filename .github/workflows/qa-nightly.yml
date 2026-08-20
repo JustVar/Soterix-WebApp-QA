@@ -28,8 +28,12 @@
 name: QA nightly
 
 on:
-  schedule:
-    - cron: '0 9 * * *'   # 09:00 UTC = 04:00 America/Chicago
+  # Schedule PAUSED 2026-08-18: automations are not fully built/in use yet,
+  # so a nightly canary would watch an API nobody is writing to. Re-enable
+  # by uncommenting when scheduled runs begin - the double-burn guard below
+  # already covers it.
+  # schedule:
+  #   - cron: '0 9 * * *'   # 09:00 UTC = 04:00 America/Chicago
   workflow_dispatch:
     inputs:
       target:
@@ -47,7 +51,8 @@ concurrency:
 jobs:
   canary:
     name: QA Touch API contract canary
-    # Double-burn guard: scheduled runs only in the company org.
+    # Double-burn guard: scheduled runs only in the company org. (Schedule is
+    # currently paused; the guard stays so re-enabling it is safe by default.)
     if: github.event_name != 'schedule' || github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
     runs-on: ubuntu-latest
     timeout-minutes: 10

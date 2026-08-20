@@ -3,10 +3,16 @@
 One workflow: `.github/workflows/qa-nightly.yml`. It is the scheduler for
 everything that must not depend on one laptop. Two jobs:
 
+**Everything is manual for now (decided 2026-08-18).** Tests run by hand, and
+the canary's nightly cron is commented out in the workflow - automations are
+not fully built or in use yet, so a schedule would watch an API nobody is
+writing to. The workflow stays in the repo so the run button, the guards and
+the secrets story are ready the day scheduling starts.
+
 | Job | When | What |
 |---|---|---|
-| `canary` | Nightly 04:00 Chicago + manual | `tools/qatouch_contract_check.py` - fails the run the day QA Touch changes its API again |
-| `smoke` | Manual only, for now | Reachability probe + a pytest target. Exists to answer whether a hosted runner can reach the QA tenant and log in (reCAPTCHA from datacenter IPs is the risk). Promote to the schedule only after it passes by hand |
+| `canary` | Manual (schedule paused) | `tools/qatouch_contract_check.py` - fails the run the day QA Touch changes its API again. Run it by hand before any QA Touch session after a gap |
+| `smoke` | Manual | Reachability probe + a pytest target. Exists to answer whether a hosted runner can reach the QA tenant and log in (reCAPTCHA from datacenter IPs is the risk) |
 
 ## The double-burn guard
 
@@ -25,7 +31,8 @@ Manual runs work from either org on purpose. Do not remove the guard.
 The Soterix-Systems org is on the free plan: **2,000 Linux minutes and 500 MB
 of artifact storage per month, shared across every repo in the org**, reset
 monthly. When they run out, jobs are blocked (no surprise bill). The canary
-costs about 30 minutes/month. A nightly full suite would not fit
+would cost about 30 minutes/month once its schedule is re-enabled. A
+nightly full suite would not fit
 (~2,700-4,500 min/month estimated); nightly smoke + weekly full (~1,350)
 would. Check usage: org Settings > Billing.
 
@@ -81,5 +88,6 @@ and re-run; nothing else to rebuild.
 3. Actions > QA nightly > Run workflow (the `smoke` job) - read the
    reachability probe line and the login result. That answers the open
    hosted-runner question from the 2026-08-18 grounding research.
-4. If green: leave the canary on its schedule; decide smoke cadence.
+4. If green: nothing further until scheduled automation is real - then
+   uncomment the canary's cron in the workflow and decide smoke cadence.
    If blocked: register a self-hosted runner (above) and re-run.
