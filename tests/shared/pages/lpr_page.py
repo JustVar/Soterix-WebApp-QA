@@ -377,6 +377,13 @@ class LprPage:
         try:
             expect(empty_tiles).to_have_count(before - 1, timeout=10000)
         except AssertionError:
+            # greppable trace of the healed no-op: the forced retry
+            # keeps the run green, so without this line the unforced
+            # flake never shows in logs
+            print(
+                "[LPR] drop_widget_on_tile: drag landed nothing "
+                f"(still {before} empty tiles), retrying with force"
+            )
             card.first.drag_to(tile, force=True)
             expect(empty_tiles).to_have_count(before - 1, timeout=15000)
 
@@ -590,6 +597,12 @@ class LprPage:
                     f"Stream failed to load for "
                     f"'{camera_name or group_name}'"
                 ) from None
+            # greppable trace: no failure tile appeared either, so the
+            # drag itself landed nothing
+            print(
+                "[LPR] play_camera: drag landed nothing "
+                f"(video count stayed at {before})"
+            )
             raise AssertionError(
                 f"No new stream appeared after dropping "
                 f"'{camera_name or group_name}' (had {before} videos)"
