@@ -121,7 +121,8 @@ it changed:
 ```
 
 That makes a no-op visible, which `status/multiple` does not. It also accepts
-file attachments (png/pdf/jpg/csv/log, 2 MB) for screenshots - not wired up yet.
+file attachments (png/pdf/jpg/csv/log, 2 MB) for screenshots - see
+[Attachments on result uploads](#attachments-on-result-uploads).
 
 `QATouchClient.update_test_run_results_by_code()` implements it.
 
@@ -344,6 +345,41 @@ that is redesigned.
 Bug filing to Jira happens only when `--file-bugs` is passed AND
 `BUG_CREATION_ENABLED=true` - failures going straight to Jira is not the
 intended end state.
+
+### Attachments on result uploads
+
+`POST /api/v1/testRunResults/testrun/code` also accepts multipart `file[]`
+parts (png/pdf/jpg/csv/log, 2 MB per file) alongside the `comments` field.
+`QATouchClient.update_test_run_results_by_code()` takes an optional
+`attachments` list of `(filename, bytes, content_type)` and posts multipart
+when one is given. With no attachments the request is identical to the plain
+status upload.
+
+The reporter uses this on the playwright endpoint path
+(`QATOUCH_USE_PLAYWRIGHT_ENDPOINT=1`):
+
+- A failed case with a captured screenshot uploads it as
+  `<case code>-failure.png`.
+- The upload comment carries execution times for the attached cases, one
+  line per file: `TR0263 execution: 1.2s`. The comment travels in the URL
+  query string, so it stays bounded by the failure count. A line for every
+  uploaded case would grow the URL with the run size.
+- A screenshot over the 2 MB cap is skipped whole, with a warning in the
+  log. Nothing is truncated - a cut PNG uploads fine and opens broken.
+- A failed multipart request does not fail the upload. The reporter logs the
+  error and re-sends the plain status upload without attachments.
+- The same degrade covers a multipart request that answers success without
+  applying the statuses (the accepted-but-ignored class above). The
+  read-back catches it, and the reporter re-sends the plain request and
+  reads back again before anything goes to the failure log.
+- With no screenshots captured, the request is byte-identical to the plain
+  status upload.
+
+**The multipart path has not run against the live API yet.** The next
+`--qatouch-upload` run with a failure is the verification: open the run and
+confirm the file landed. On any failure the reporter falls back to exactly
+the pre-attachment request with a log line, so statuses are unaffected
+either way.
 
 ---
 

@@ -49,6 +49,13 @@ RUN_RESULTS_PATH = FAILURE_LOG_DIR / 'last_run_results.json'
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2  # seconds, doubles each attempt
 
+# Per-file limit for result attachments. The code endpoint accepts multipart
+# file[] parts (png/pdf/jpg/csv/log) up to 2 MB each - see
+# docs/QA_TOUCH_INTEGRATION.md. Enforced here before anything is sent: an
+# oversized file is skipped whole, never truncated, because a cut PNG uploads
+# fine and opens broken - worse than absent.
+MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024
+
 # QA Touch status codes
 STATUS_PASSED = 1
 STATUS_BLOCKED = 3
@@ -531,6 +538,61 @@ class QATouchReporter:
                 '(API-created run)')
         return results_payload
 
+    def _collect_attachment_parts(self, case_keys: list[str]) -> dict[str, tuple[str, bytes, str]]:
+        """Build multipart file parts for failed cases with captured screenshots.
+
+        Returns {case_key: (filename, content, content_type)} with the tuple
+        in the shape QATouchClient.update_test_run_results_by_code takes.
+        Keyed by case_key so the caller knows which cases actually ride -
+        the timing comment covers exactly those. Files are named by case
+        CODE (TR0263-failure.png) because the run UI shows codes, so a
+        reader can match a file to its case without the mapping.
+
+        A file over MAX_ATTACHMENT_BYTES is skipped whole with a log line.
+        A case with no resolved code is skipped too - _build_payload already
+        dropped its result, so there is nothing for a file to hang on.
+        """
+        parts: dict[str, tuple[str, bytes, str]] = {}
+        for case_key in case_keys:
+            png = self.screenshots.get(case_key)
+            if not png:
+                continue
+            if self.results.get(case_key) != STATUS_FAILED:
+                # Screenshots are captured on a failed call phase; if a rerun
+                # later improved the recorded status, the picture no longer
+                # matches the result being uploaded.
+                continue
+            code = self.case_to_run_key.get(case_key)
+            if not code:
+                continue
+            if len(png) > MAX_ATTACHMENT_BYTES:
+                log.warning(f'QA Touch: screenshot for {code} is {len(png)} '
+                            f'bytes, over the 2 MB attachment cap - skipping '
+                            f'it (never truncated).')
+                continue
+            parts[case_key] = (f'{code}-failure.png', png, 'image/png')
+        return parts
+
+    def _timing_comment_lines(self, case_keys: list[str]) -> list[str]:
+        """Per-case execution times for the upload comment.
+
+        One line per given case with a recorded duration, e.g.
+        "TR0263 execution: 1.2s". The comments field is the only documented
+        place for timing on the code endpoint - the result JSON carries
+        case and status alone. The client sends comments in the URL query
+        string, so the caller passes only the attached cases: a line for
+        every uploaded case would grow the URL with run size and risk
+        rejection on exactly the large runs attachments target.
+        """
+        lines: list[str] = []
+        for case_key in case_keys:
+            duration = self.durations.get(case_key)
+            code = self.case_to_run_key.get(case_key)
+            if duration is None or not code:
+                continue
+            lines.append(f'{code} execution: {_format_duration(duration)}')
+        return lines
+
     def pytest_sessionfinish(self, session: Any, exitstatus: int) -> None:
         """Upload collected results to QA Touch."""
         # Write per-nodeid results JSON for the post-run bug filer first - this
@@ -608,39 +670,84 @@ class QATouchReporter:
                  f'{self.run_key} via {endpoint_label} endpoint...')
         self._upload_path_used = endpoint_label
 
-        # Pick the right uploader based on the opt-in env var
+        plain_results = [{'case': r['case'], 'status': r['status']}
+                         for r in results_payload]
+
+        # The playwright path also sends what the run captured: failure
+        # screenshots as multipart file[] parts, and execution times for
+        # the ATTACHED cases in the comment. The comment rides the URL
+        # query string, so timing stays bounded by failure count - a line
+        # per uploaded case would grow the URL with run size. Both ride
+        # only when a screenshot survived the cap - with none, the request
+        # stays byte-identical to the plain status upload. The legacy path
+        # is status-only as before.
+        attachment_parts: list[tuple[str, bytes, str]] = []
+        upload_comment = comment
+        if self.use_playwright_endpoint:
+            parts_by_case = self._collect_attachment_parts(case_keys)
+            attachment_parts = list(parts_by_case.values())
+            if attachment_parts:
+                upload_comment = '\n'.join(
+                    [comment, *self._timing_comment_lines(list(parts_by_case))])
+                log.info(f'QA Touch: attaching {len(attachment_parts)} '
+                         f'failure screenshot(s) to the upload.')
+
         # Both paths use the case-code endpoint. It is the only one measured
         # to actually apply a status, and its response names the case it
         # changed. QATouchClient.update_playwright_results has never existed -
         # the playwright branch used to raise AttributeError on every attempt.
-        def _do_upload():
+        def _plain_upload():
+            # The exact pre-attachment request - the degrade target for
+            # both attachment failure shapes below.
             client.update_test_run_results_by_code(
                 project_key=self.project_key,
                 test_run_key=self.run_key,
-                results=[{'case': r['case'], 'status': r['status']}
-                         for r in results_payload],
+                results=plain_results,
                 comments=comment,
             )
 
-        if self.use_playwright_endpoint:
-            # TODO: send screenshots and timing with the result.
-            # POST /api/v1/testRunResults/testrun/code accepts multipart
-            # file[] attachments (png/pdf/jpg/jpeg/gif/xls/xlsx/doc/docx/csv/
-            # log, 2 MB each). The reporter already collects both:
-            #   self.screenshots[case_key]  - failure PNG path
-            #   self.durations[case_key]    - runtime, formatted by
-            #                                 _format_duration into "1.2s"
-            # Needed: extend update_test_run_results_by_code() to post
-            # multipart when files are supplied, and pass execution_time and
-            # comments per result. Until then both are dropped.
-            log.warning('QA Touch: screenshot and timing attachments are not '
-                        'implemented yet (see TODO above). Statuses upload '
-                        'normally; attachments are dropped.')
+        # True when the attempt that succeeded carried the multipart body.
+        # The verify step needs it: this API accepts requests it ignores,
+        # so a multipart "success" is not proof the statuses applied.
+        sent_attachments = False
+
+        def _do_upload():
+            nonlocal sent_attachments
+            if attachment_parts:
+                try:
+                    client.update_test_run_results_by_code(
+                        project_key=self.project_key,
+                        test_run_key=self.run_key,
+                        results=plain_results,
+                        comments=upload_comment,
+                        attachments=attachment_parts,
+                    )
+                    sent_attachments = True
+                    return
+                except Exception as e:  # noqa: BLE001 - statuses must never be hostage to a screenshot
+                    log.warning(f'QA Touch: upload with attachments failed '
+                                f'({e}). Sending the statuses without '
+                                f'attachments.')
+            sent_attachments = False
+            _plain_upload()
 
         success = self._upload_with_retry(_do_upload)
         failure_reason = f'Upload failed after {MAX_RETRIES} attempts'
         if success:
             success = self._verify_upload(client, results_payload)
+            if not success and sent_attachments:
+                # The raising fallback in _do_upload cannot see this API's
+                # other failure shape: a multipart request answered with
+                # success while the statuses never applied (the accepted-
+                # but-ignored class, measured 2026-08-17). Degrade the same
+                # way - re-send the plain pre-attachment request and read
+                # back once more before conceding to the failure log.
+                log.warning('QA Touch: the upload with attachments was '
+                            'accepted but the read-back shows the statuses '
+                            'did not land. Re-sending the statuses without '
+                            'attachments.')
+                if self._upload_with_retry(_plain_upload):
+                    success = self._verify_upload(client, results_payload)
             if not success:
                 failure_reason = ('Upload reported success but the read-back '
                                   'shows the statuses did not land')

@@ -787,6 +787,7 @@ class QATouchClient:
         test_run_key: str,
         results: list[dict[str, Any]],
         comments: str = '',
+        attachments: list[tuple[str, bytes, str]] | None = None,
     ) -> dict[str, Any]:
         """Set test run result statuses, keyed by full case CODE.
 
@@ -798,6 +799,10 @@ class QATouchClient:
             results: list of {"case": "TR0263", "status": <int>} - the FULL
                      case code including the "TR" prefix.
             comments: optional comment applied to the update
+            attachments: optional list of (filename, content, content_type)
+                     sent as multipart "file[]" parts. The endpoint accepts
+                     png/pdf/jpg/csv/log up to 2 MB per file. Callers enforce
+                     the cap - nothing is checked or truncated here.
 
         Prefer this over update_test_run_results(). Two reasons:
 
@@ -808,7 +813,9 @@ class QATouchClient:
            no-op is visible. The status/multiple endpoint returns the same
            generic success whether or not anything changed.
 
-        Verified against the live API 2026-08-17.
+        Verified against the live API 2026-08-17. The attachment path has
+        NOT run against the live API yet - the next real upload with a
+        failure is the verification.
         """
         payload = {str(i): r for i, r in enumerate(results)}
         params = {
@@ -819,7 +826,20 @@ class QATouchClient:
         if comments:
             params['comments'] = comments
         url = self._url('/api/v1/testRunResults/testrun/code')
-        resp = self.session.post(url, params=params, timeout=self.timeout)
+        if attachments:
+            files = [('file[]', (name, content, content_type))
+                     for name, content, content_type in attachments]
+            # The session pins Content-Type: application/json for the JSON
+            # endpoints. A multipart body must carry the boundary header
+            # requests generates instead, so the session value is dropped
+            # for this one request (a None header value removes it on merge).
+            resp = self.session.post(url, params=params, files=files,
+                                     headers={'Content-Type': None},
+                                     timeout=self.timeout)
+        else:
+            # No attachments: this request is byte-identical to the
+            # pre-attachment client, so plain status uploads cannot drift.
+            resp = self.session.post(url, params=params, timeout=self.timeout)
         if resp.status_code != 200:
             raise QATouchError(
                 f'update_test_run_results_by_code failed: {resp.status_code} {resp.text}'

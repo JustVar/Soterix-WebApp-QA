@@ -11,6 +11,7 @@ do not require playwright, network, or QA Touch credentials.
 """
 from __future__ import annotations
 
+import logging
 import sys
 import types
 from pathlib import Path
@@ -278,3 +279,240 @@ def test_sessionfinish_uploads_normally_when_codes_resolve(monkeypatch, tmp_path
     assert r.stats['uploaded'] == 1
     assert r.stats['errors'] == 0
     assert not (tmp_path / 'upload_failures.json').exists()
+
+
+# ---------------------------------------------------------------------------
+# Attachments (2026-08-21): failure screenshots and timing ride on the result
+# upload as multipart file[] + comments. Pins: the multipart request shape,
+# the 2 MB whole-file skip, byte-compatible plain requests when nothing was
+# captured, timing lines bounded to the attached cases, and degrade-to-plain
+# when the multipart request fails - by raising OR by being accepted and
+# ignored (the read-back catches the second shape).
+# ---------------------------------------------------------------------------
+
+def _client_with_mock_session():
+    """QATouchClient with a mocked requests session - no network, ever."""
+    from tools.qatouch_client import QATouchClient
+    c = QATouchClient(api_key='k', domain='d')
+    c.session = MagicMock()
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.json.return_value = {'success': True, 'msg': 'TR0262 - Updated Successfully'}
+    c.session.post.return_value = resp
+    return c
+
+
+def test_client_plain_upload_request_shape_unchanged():
+    """No attachments => the exact pre-attachment request: no files, no
+    per-request headers. This is the byte-compatibility pin."""
+    c = _client_with_mock_session()
+    c.update_test_run_results_by_code(
+        'JlW1', 'RUN1', [{'case': 'TR0262', 'status': 1}], comments='hello')
+    args, kwargs = c.session.post.call_args
+    assert args == ('https://api.qatouch.com/api/v1/testRunResults/testrun/code',)
+    assert set(kwargs) == {'params', 'timeout'}
+    assert kwargs['params']['project'] == 'JlW1'
+    assert kwargs['params']['test_run'] == 'RUN1'
+    assert kwargs['params']['comments'] == 'hello'
+
+
+def test_client_attachment_upload_posts_multipart_file_parts():
+    c = _client_with_mock_session()
+    png = b'\x89PNG-bytes'
+    c.update_test_run_results_by_code(
+        'JlW1', 'RUN1', [{'case': 'TR0262', 'status': 5}],
+        comments='TR0262 execution: 1.2s',
+        attachments=[('TR0262-failure.png', png, 'image/png')])
+    kwargs = c.session.post.call_args.kwargs
+    assert kwargs['files'] == [('file[]', ('TR0262-failure.png', png, 'image/png'))]
+    # The session pins Content-Type: application/json; a multipart body needs
+    # the boundary header requests generates, so the JSON one must be dropped.
+    assert kwargs['headers'] == {'Content-Type': None}
+    assert kwargs['params']['comments'] == 'TR0262 execution: 1.2s'
+
+
+def _playwright_session(monkeypatch, tmp_path):
+    """Reporter on the playwright path + a fake client with one resolvable case."""
+    import tools.qatouch_client as tqc
+
+    _wire_tmp_paths(monkeypatch, tmp_path)
+    fake_client = MagicMock()
+    fake_client.get_all_test_run_results.return_value = [
+        {'case_id': 'B869bm', 'code': 'TR0262', 'status': 'Untested'}]
+    fake_client.verify_results_landed.return_value = {
+        'checked': 1, 'landed': ['TR0262'], 'mismatched': [], 'missing': []}
+    monkeypatch.setattr(tqc, 'QATouchClient', MagicMock(return_value=fake_client))
+
+    r = _reporter(monkeypatch)
+    r.use_playwright_endpoint = True
+    return r, fake_client
+
+
+def test_sessionfinish_attaches_screenshot_and_timing(monkeypatch, tmp_path):
+    r, fake_client = _playwright_session(monkeypatch, tmp_path)
+    r.results = {'B869bm': qr.STATUS_FAILED}
+    r.durations = {'B869bm': 1.23}
+    r.screenshots = {'B869bm': b'\x89PNG-bytes'}
+    r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    fake_client.update_test_run_results_by_code.assert_called_once()
+    kwargs = fake_client.update_test_run_results_by_code.call_args.kwargs
+    assert kwargs['results'] == [{'case': 'TR0262', 'status': 5}]
+    # File is named by case CODE so a reader of the run can match it.
+    assert kwargs['attachments'] == [('TR0262-failure.png', b'\x89PNG-bytes', 'image/png')]
+    assert 'TR0262 execution: 1.2s' in kwargs['comments']
+    assert r.stats['uploaded'] == 1
+    assert r.stats['errors'] == 0
+
+
+def test_sessionfinish_skips_oversized_screenshot_whole(monkeypatch, tmp_path, caplog):
+    r, fake_client = _playwright_session(monkeypatch, tmp_path)
+    r.results = {'B869bm': qr.STATUS_FAILED}
+    r.screenshots = {'B869bm': b'x' * (qr.MAX_ATTACHMENT_BYTES + 1)}
+    with caplog.at_level(logging.WARNING, logger='qatouch_reporter'):
+        r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    # Skipped whole, with a log line - and with nothing left to attach the
+    # request falls back to the plain shape (no attachments kwarg at all).
+    assert 'over the 2 MB attachment cap' in caplog.text
+    fake_client.update_test_run_results_by_code.assert_called_once()
+    kwargs = fake_client.update_test_run_results_by_code.call_args.kwargs
+    assert 'attachments' not in kwargs
+    assert 'execution' not in kwargs['comments']
+    assert r.stats['uploaded'] == 1
+
+
+def test_sessionfinish_without_screenshots_sends_plain_request(monkeypatch, tmp_path):
+    """Timing rides only with attachments - a run with durations but no
+    screenshots must produce the same request as before this feature."""
+    r, fake_client = _playwright_session(monkeypatch, tmp_path)
+    r.results = {'B869bm': qr.STATUS_PASSED}
+    r.durations = {'B869bm': 0.45}
+    r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    fake_client.update_test_run_results_by_code.assert_called_once()
+    kwargs = fake_client.update_test_run_results_by_code.call_args.kwargs
+    assert 'attachments' not in kwargs
+    assert kwargs['comments'].startswith('Automated upload from Playwright run at')
+    assert 'execution' not in kwargs['comments']
+
+
+def test_sessionfinish_attachment_failure_degrades_to_plain_upload(monkeypatch, tmp_path):
+    r, fake_client = _playwright_session(monkeypatch, tmp_path)
+    calls = []
+
+    def fake_update(**kwargs):
+        calls.append(kwargs)
+        if kwargs.get('attachments'):
+            raise RuntimeError('multipart rejected')
+        return {'success': True}
+
+    fake_client.update_test_run_results_by_code.side_effect = fake_update
+    r.results = {'B869bm': qr.STATUS_FAILED}
+    r.screenshots = {'B869bm': b'\x89PNG-bytes'}
+    r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    # First try carried the attachment; the fallback is today's plain request
+    # and the statuses still land - never hostage to a screenshot.
+    assert len(calls) == 2
+    assert calls[0].get('attachments')
+    assert 'attachments' not in calls[1]
+    assert calls[1]['results'] == [{'case': 'TR0262', 'status': 5}]
+    assert calls[1]['comments'].startswith('Automated upload from Playwright run at')
+    assert r.stats['uploaded'] == 1
+    assert r.stats['errors'] == 0
+
+
+def test_collect_attachment_parts_skips_unresolved_and_non_failed(monkeypatch):
+    """No file for a case whose result was dropped (no code) or is not FAILED -
+    an attachment with no uploaded result has nothing to hang on. Keyed by
+    case_key so the timing comment can cover exactly the attached cases."""
+    r = _reporter(monkeypatch)
+    r.results = {'B869bm': qr.STATUS_FAILED, '8V1vw1': qr.STATUS_PASSED,
+                 'NOMAP1': qr.STATUS_FAILED}
+    r.screenshots = {'B869bm': b'ok', '8V1vw1': b'passed-anyway', 'NOMAP1': b'no-code'}
+    r.case_to_run_key = {'B869bm': 'TR0262', '8V1vw1': 'TR0263'}
+    parts = r._collect_attachment_parts(['B869bm', '8V1vw1', 'NOMAP1'])
+    assert parts == {'B869bm': ('TR0262-failure.png', b'ok', 'image/png')}
+
+
+def test_timing_lines_cover_only_attached_cases(monkeypatch, tmp_path):
+    """The comment rides the URL query string, so a timing line for every
+    uploaded case would grow the URL with run size - the most likely part of
+    the feature to be rejected on exactly the large runs it targets. Only
+    the attached (failed) cases get a line."""
+    import tools.qatouch_client as tqc
+
+    _wire_tmp_paths(monkeypatch, tmp_path)
+    fake_client = MagicMock()
+    fake_client.get_all_test_run_results.return_value = [
+        {'case_id': 'B869bm', 'code': 'TR0262', 'status': 'Untested'},
+        {'case_id': '8V1vw1', 'code': 'TR0263', 'status': 'Untested'},
+    ]
+    fake_client.verify_results_landed.return_value = {
+        'checked': 2, 'landed': ['TR0262', 'TR0263'], 'mismatched': [], 'missing': []}
+    monkeypatch.setattr(tqc, 'QATouchClient', MagicMock(return_value=fake_client))
+
+    r = _reporter(monkeypatch)
+    r.use_playwright_endpoint = True
+    r.results = {'B869bm': qr.STATUS_FAILED, '8V1vw1': qr.STATUS_PASSED}
+    r.durations = {'B869bm': 1.23, '8V1vw1': 0.45}
+    r.screenshots = {'B869bm': b'\x89PNG-bytes'}
+    r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    kwargs = fake_client.update_test_run_results_by_code.call_args.kwargs
+    assert 'TR0262 execution: 1.2s' in kwargs['comments']
+    # The passed case uploaded a status but no attachment - no timing line.
+    assert 'TR0263' not in kwargs['comments']
+    assert {e['case'] for e in kwargs['results']} == {'TR0262', 'TR0263'}
+
+
+def test_sessionfinish_accepted_but_ignored_multipart_degrades_to_plain(monkeypatch, tmp_path):
+    """The API's measured failure class: the multipart request answers
+    {"success": true} but the statuses never apply. The read-back catches
+    it, and the reporter re-sends the plain pre-attachment request
+    in-session instead of conceding to the failure log."""
+    r, fake_client = _playwright_session(monkeypatch, tmp_path)
+    calls = []
+
+    def fake_update(**kwargs):
+        calls.append(kwargs)
+        return {'success': True, 'msg': 'TR0262 - Updated Successfully'}
+
+    fake_client.update_test_run_results_by_code.side_effect = fake_update
+    # First read-back: nothing landed (multipart accepted-but-ignored).
+    # Second read-back, after the plain re-send: landed.
+    fake_client.verify_results_landed.side_effect = [
+        {'checked': 1, 'landed': [],
+         'mismatched': ['TR0262: sent Failed, run shows Untested'], 'missing': []},
+        {'checked': 1, 'landed': ['TR0262'], 'mismatched': [], 'missing': []},
+    ]
+    r.results = {'B869bm': qr.STATUS_FAILED}
+    r.screenshots = {'B869bm': b'\x89PNG-bytes'}
+    r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    # First try carried the attachment; the re-send is today's plain request.
+    assert len(calls) == 2
+    assert calls[0].get('attachments')
+    assert 'attachments' not in calls[1]
+    assert calls[1]['results'] == [{'case': 'TR0262', 'status': 5}]
+    assert calls[1]['comments'].startswith('Automated upload from Playwright run at')
+    assert r.stats['uploaded'] == 1
+    assert r.stats['errors'] == 0
+    assert not (tmp_path / 'upload_failures.json').exists()
+
+
+def test_sessionfinish_plain_verify_failure_still_saves_for_retry(monkeypatch, tmp_path):
+    """The degrade loop must not spin: when the plain request itself does not
+    land (no attachments were sent), the failure goes to the log for
+    tools/retry_uploads.py - one plain send, no re-send."""
+    r, fake_client = _playwright_session(monkeypatch, tmp_path)
+    fake_client.verify_results_landed.return_value = {
+        'checked': 1, 'landed': [],
+        'mismatched': ['TR0262: sent Passed, run shows Untested'], 'missing': []}
+    r.results = {'B869bm': qr.STATUS_PASSED}  # no screenshot => plain upload
+    r.pytest_sessionfinish(session=None, exitstatus=0)
+
+    fake_client.update_test_run_results_by_code.assert_called_once()
+    assert r.stats['errors'] == 1
+    assert (tmp_path / 'upload_failures.json').exists()
