@@ -237,16 +237,17 @@ class FullScreenPage:
             self.page.wait_for_timeout(250)  # poll tick for bar-hidden or toast
 
         elapsed = time.monotonic() - started
-        try:
-            bar_visible = (self.export_progress_bar.count() > 0
-                           and self.export_progress_bar.first.is_visible())
-        # probe: the bar can detach between the count and visibility
-        # reads; report that as not visible
-        except PlaywrightError:
-            bar_visible = False
+        # one last read closes the final-tick race: a completion landing
+        # during the last poll sleep must not read as a timeout - and the
+        # diagnostic below derives from this same read, so the message
+        # can never contradict the decision
+        signal = self._export_completion_signal()
+        if signal:
+            print(f"[EXPORT] completed in {elapsed:.0f}s ({signal})")
+            return
         raise TimeoutError(
-            f"[EXPORT] no completion signal after {elapsed:.0f}s (progress bar "
-            f"{'still visible' if bar_visible else 'not visible'}, no success toast)"
+            f"[EXPORT] no completion signal after {elapsed:.0f}s "
+            "(progress bar still visible or unreadable, no success toast)"
         )
 
     def _export_completion_signal(self) -> str:
@@ -270,6 +271,9 @@ class FullScreenPage:
                     and self.export_success_toast.first.is_visible()):
                 return "success toast"
             return "progress bar hidden"
+        # best-effort probe: either element can detach between the count
+        # and visibility reads; '' only means "not complete yet" and the
+        # caller's poll re-reads on the next tick
         except PlaywrightError:
             pass
         return ""

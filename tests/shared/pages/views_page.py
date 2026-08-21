@@ -168,7 +168,10 @@ class ViewsPage:
         handle = source.locator(
             "xpath=ancestor-or-self::*[@draggable='true'][1]"
         )
-        if handle.count() > 0:
+        # grip decision, not an oracle: no draggable ancestor means the
+        # app never wired drag here - keep the caller's element and let
+        # the ladder's landed-check decide the outcome
+        if handle.count():
             source = handle.first
         source.hover()
         self.page.mouse.down()
