@@ -87,19 +87,30 @@ class ViewsPage:
             return False
 
     def _tile_count_changed(self, before: int, action: str,
-                            timeout_s: float = 10.0):
+                            timeout_s: float = 10.0,
+                            extra_signal=None) -> bool:
         """Wait for the empty-tile count to move off a pre-action baseline.
 
         Dropping content consumes a tile; loading a saved view redraws
         the grid. Both change the count of 'Drag & Drop' placeholders.
+        Some outcomes never move the count (a drop can land a stream
+        the count misses; a dropped view can open as its own tab), so
+        extra_signal lets a caller poll a second success sign alongside
+        the count.
+
+        Returns True as soon as either signal lands; logs and returns
+        False on timeout so the caller owns the verdict.
         """
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
             if self.drag_drop_tiles.count() != before:
-                return
+                return True
+            if extra_signal is not None and extra_signal():
+                return True
             self.page.wait_for_timeout(250)  # poll tick for tile change
         print(f"[VIEWS] {action} finished but the empty-tile count "
               f"stayed at {before} for {timeout_s:.0f}s")
+        return False
 
     def rename_tab(self, tab_index: int, new_name: str):
         """Rename a tab by index (0-based)."""
@@ -134,10 +145,103 @@ class ViewsPage:
         # Register the dialog handler
         self.page.on("dialog", _accept)
 
+    def mouse_drag(self, source, target, steps: int = 12):
+        """Drag source onto target with a stepped manual mouse gesture.
+
+        drag_to jumps the pointer to the target in one move, which the
+        app's drag layer reads as nothing at all - observed live, the
+        press-move only text-selects the source label. The intermediate
+        move events are the signal the drag layer needs to recognize a
+        drag in progress.
+
+        The app wires HTML5 drag onto specific elements (draggable="true"
+        - camera wrappers, site rows, and an unclassed div four levels
+        above a saved view's name span). Pressing anywhere else - the
+        name label a caller naturally locates by - starts a text
+        selection instead of a drag, so the grip is re-aimed at the
+        nearest draggable ancestor when one exists.
+
+        While the pointer dwells over the target, one frame is stashed
+        on page._drag_captures; the report_media plugin files it with
+        the test's evidence as <test>__<suffix>__mid-drag-<n>.png.
+        """
+        handle = source.locator(
+            "xpath=ancestor-or-self::*[@draggable='true'][1]"
+        )
+        if handle.count() > 0:
+            source = handle.first
+        source.hover()
+        self.page.mouse.down()
+        try:
+            src_box = source.bounding_box()
+            tgt_box = target.bounding_box()
+            if src_box is None or tgt_box is None:
+                missing = "source" if src_box is None else "target"
+                raise RuntimeError(
+                    f"mouse_drag: the {missing} element has no bounding "
+                    "box (hidden or detached), so the drag cannot be aimed"
+                )
+            self.page.mouse.move(
+                tgt_box["x"] + tgt_box["width"] / 2,
+                tgt_box["y"] + tgt_box["height"] / 2,
+                steps=steps,
+            )
+            # dwell over the target so its dragover state registers
+            # before the release
+            self.page.wait_for_timeout(200)
+            # This dwell is the only moment the drag is visibly in
+            # flight: pointer down, the target's dragover styling
+            # applied, and any caller-drawn outlines (the subtabs
+            # tests' red source / green target borders) still on
+            # screen. The end-of-test screenshot can never show that
+            # state, so stash one frame here for report_media to file
+            # with the test's evidence.
+            try:
+                stash = getattr(self.page, "_drag_captures", None)
+                if stash is None:
+                    stash = []
+                    self.page._drag_captures = stash
+                # timeout=3000: a wedged capture must not stretch the
+                # dwell by the 30s screenshot default while the mouse
+                # button is still down
+                stash.append(("mid-drag",
+                              self.page.screenshot(timeout=3000)))
+            # capture is evidence, not testing: a failed screenshot is
+            # logged but must not disturb the drag or the release in
+            # the finally
+            except Exception as e:  # noqa: BLE001
+                print(f"[VIEWS] mid-drag capture failed: {e}")
+        finally:
+            # the button must never stay pressed into the next action
+            # on the shared page
+            self.page.mouse.up()
+
     def drag_camera_to_tile(self, camera_locator, tile_index: int = 0):
-        """Drag a camera thumbnail to a specific tile."""
+        """Drag a camera thumbnail to a specific tile.
+
+        Native mouse drag first; a drag that raises or consumes no
+        tile falls back to the JS DataTransfer simulation. A stalled
+        tile count is logged, never raised - some drops land streams
+        without changing the counted tiles, so callers keep the
+        verdict with their own oracles. Only a fallback that cannot
+        even dispatch raises.
+        """
         target_tile = self.drag_drop_tiles.nth(tile_index)
-        camera_locator.drag_to(target_tile)
+        before_tiles = self.drag_drop_tiles.count()
+        try:
+            self.mouse_drag(camera_locator, target_tile)
+            # A successful drop consumes the empty tile
+            landed = self._tile_count_changed(before_tiles, "camera drag")
+        # RuntimeError is mouse_drag's no-bounding-box failure; the
+        # geometry-free JS simulation still works there
+        except (RuntimeError, PlaywrightError):
+            landed = False
+        if not landed:
+            print("[VIEWS] camera drag: mouse drag did not consume a tile; "
+                  "trying JS DataTransfer fallback")
+            # the JS simulation finds the camera by its visible name
+            camera_name = camera_locator.inner_text().split("\n")[0]
+            self._simulate_camera_drag_via_js(camera_name, tile_index)
 
     def add_camera_via_checkbox(self, camera_name: str):
         """Select a camera by revealing its checkbox and clicking it.
@@ -377,28 +481,59 @@ class ViewsPage:
         self.success_message.wait_for(state="visible", timeout=60000)
 
     def drag_view_to_tile(self, view_name: str, tile_index: int = 0):
-        """Drag a saved view to a tile."""
-        view_selector = f"span[title='{view_name}']"
-        try:
-            # Try Playwright's high-level drag first
-            view_element = self.page.locator(view_selector)
-            target_tile = self.drag_drop_tiles.nth(tile_index)
-            view_element.drag_to(target_tile)
-            return
-        except Exception:
-            # Fall back to JS-driven DataTransfer-based drag/drop simulation
-            self._simulate_drag_via_js(view_selector, tile_index)
+        """Drag a saved view to a tile.
 
-    def _simulate_drag_via_js(self, view_selector: str, tile_index: int = 0):
+        Native mouse drag first; a drag that raises or lands nothing
+        falls back to the JS DataTransfer simulation. A stalled tile
+        count is logged, never raised - a dropped view can open as its
+        own tab or redraw the grid to the same count, so callers keep
+        the verdict with their own oracles. Only a fallback that
+        cannot even dispatch raises.
+        """
+        view_selector = f"span[title='{view_name}']"
+        view_element = self.page.locator(view_selector)
+        target_tile = self.drag_drop_tiles.nth(tile_index)
+        # A drop can open the view as its own tab whose grid holds the
+        # same number of placeholders; the tab appearing is that
+        # outcome's landed signal, and without it a second drop would
+        # be fired at a view that already opened
+        view_tab = self.page.locator(
+            f"button.tabItem:has(div[title='{view_name}'])"
+        )
+        tabs_before = view_tab.count()
+
+        def tab_opened():
+            return view_tab.count() > tabs_before
+
+        before_tiles = self.drag_drop_tiles.count()
+        try:
+            self.mouse_drag(view_element, target_tile)
+            landed = self._tile_count_changed(before_tiles, "view drag",
+                                              extra_signal=tab_opened)
+        # RuntimeError is mouse_drag's no-bounding-box failure; the
+        # geometry-free JS simulation still works there
+        except (RuntimeError, PlaywrightError):
+            landed = False
+        if not landed:
+            print("[VIEWS] view drag: mouse drag did not consume a tile; "
+                  "trying JS DataTransfer fallback")
+            self._simulate_drag_via_js(view_selector, tile_index,
+                                       extra_signal=tab_opened)
+
+    def _simulate_drag_via_js(self, view_selector: str, tile_index: int = 0,
+                              extra_signal=None):
         """Simulate HTML5 drag-and-drop using DataTransfer via page.evaluate.
 
         This is a fallback when Playwright's native drag doesn't trigger the
         application's drop handlers (common with React drag libraries).
         """
         script = r"""
-        (viewSelector, tileIndex) => {
-            const src = document.querySelector(viewSelector);
-            if (!src) return {ok:false, reason: 'source-not-found'};
+        ([viewSelector, tileIndex]) => {
+            // The dragstart listener sits on the draggable ancestor,
+            // not the name label the selector finds
+            const label = document.querySelector(viewSelector);
+            if (!label) return {ok:false, reason: 'source-not-found'};
+            const src = label.closest('[draggable="true"]') || label;
 
             // Find tiles by text content to match Playwright locator
             const allDivs = Array.from(document.querySelectorAll('div'));
@@ -425,7 +560,18 @@ class ViewsPage:
         }
         """
 
-        result = self.page.evaluate(script, view_selector, tile_index)
+        before_tiles = self.drag_drop_tiles.count()
+        # evaluate carries one serializable arg, so both go in a list
+        result = self.page.evaluate(script, [view_selector, tile_index])
+        if not result.get("ok"):
+            raise RuntimeError(
+                f"JS view drag could not dispatch: {result.get('reason')}"
+            )
+        # React applies the simulated drop async; a consumed tile (or
+        # the caller's extra signal) is the applied sign - logged, not
+        # raised, when neither lands: the caller's oracle decides
+        self._tile_count_changed(before_tiles, "JS view drag",
+                                 extra_signal=extra_signal)
         return result
 
     def get_available_tiles(self) -> list:
@@ -447,6 +593,13 @@ class ViewsPage:
     def drag_camera_to_tile_by_name(self, camera_name: str, tile_index: int = 0):
         """Drag a camera thumbnail to a specific tile by camera name.
 
+        Native mouse drag first; a drag that raises or consumes no
+        tile falls back to the JS DataTransfer simulation. A stalled
+        tile count is logged, never raised - some drops land streams
+        without changing the counted tiles, so callers keep the
+        verdict with their own oracles. Only a fallback that cannot
+        even dispatch raises.
+
         Args:
             camera_name: The visible name of the camera to drag.
             tile_index: Target tile index (0-based). Default is first tile.
@@ -460,12 +613,16 @@ class ViewsPage:
 
         before_tiles = self.drag_drop_tiles.count()
         try:
-            # Try Playwright's high-level drag first
-            camera.drag_to(target_tile)
+            self.mouse_drag(camera, target_tile)
             # A successful drop consumes the empty tile
-            self._tile_count_changed(before_tiles, "camera drag")
-        except Exception:
-            # Fall back to JS-driven DataTransfer-based drag/drop simulation
+            landed = self._tile_count_changed(before_tiles, "camera drag")
+        # RuntimeError is mouse_drag's no-bounding-box failure; the
+        # geometry-free JS simulation still works there
+        except (RuntimeError, PlaywrightError):
+            landed = False
+        if not landed:
+            print("[VIEWS] camera drag: mouse drag did not consume a tile; "
+                  "trying JS DataTransfer fallback")
             self._simulate_camera_drag_via_js(camera_name, tile_index)
 
     def _simulate_camera_drag_via_js(self, camera_name: str, tile_index: int = 0):
@@ -475,7 +632,7 @@ class ViewsPage:
         application's drop handlers (common with React drag libraries).
         """
         script = r"""
-        (cameraName, tileIndex) => {
+        ([cameraName, tileIndex]) => {
             // Find camera by text content
             const thumbnails = Array.from(document.querySelectorAll('.cameraThumbnailWrapper'));
             const src = thumbnails.find(t => t.textContent && t.textContent.includes(cameraName));
@@ -506,15 +663,27 @@ class ViewsPage:
         }
         """
         before_tiles = self.drag_drop_tiles.count()
-        result = self.page.evaluate(script, camera_name, tile_index)
-        if result.get("ok"):
-            # React applies the simulated drop async; a consumed tile is
-            # the applied signal
-            self._tile_count_changed(before_tiles, "JS camera drag")
+        # evaluate carries one serializable arg, so both go in a list
+        result = self.page.evaluate(script, [camera_name, tile_index])
+        if not result.get("ok"):
+            raise RuntimeError(
+                f"JS camera drag could not dispatch: {result.get('reason')}"
+            )
+        # React applies the simulated drop async; a consumed tile is
+        # the applied sign - logged, not raised, when it never moves:
+        # the caller's oracle decides
+        self._tile_count_changed(before_tiles, "JS camera drag")
         return result
 
     def drag_location_to_tile(self, location_name: str, tile_index: int = 0):
         """Drag a location/site from the left panel to a tile.
+
+        Native mouse drag first; a drag that raises or consumes no
+        tile falls back to the JS DataTransfer simulation. A stalled
+        tile count is logged, never raised - some drops land streams
+        without changing the counted tiles, so callers keep the
+        verdict with their own oracles. Only a fallback that cannot
+        even dispatch raises.
 
         Args:
             location_name: The visible name of the location/site to drag.
@@ -529,25 +698,32 @@ class ViewsPage:
 
         before_tiles = self.drag_drop_tiles.count()
         try:
-            # Try Playwright's high-level drag first
-            location.drag_to(target_tile)
+            self.mouse_drag(location, target_tile)
             # A successful drop consumes the empty tile
-            self._tile_count_changed(before_tiles, "location drag")
-        except Exception:
-            # Fall back to JS simulation
+            landed = self._tile_count_changed(before_tiles, "location drag")
+        # RuntimeError is mouse_drag's no-bounding-box failure; the
+        # geometry-free JS simulation still works there
+        except (RuntimeError, PlaywrightError):
+            landed = False
+        if not landed:
+            print("[VIEWS] location drag: mouse drag did not consume a tile; "
+                  "trying JS DataTransfer fallback")
             self._simulate_location_drag_via_js(location_name, tile_index)
 
     def _simulate_location_drag_via_js(self, location_name: str, tile_index: int = 0):
         """Simulate drag-and-drop for location using DataTransfer via page.evaluate."""
         script = r"""
-        (locationName, tileIndex) => {
+        ([locationName, tileIndex]) => {
             // Find location element by text
             const allElements = Array.from(document.querySelectorAll('*'));
-            const src = allElements.find(el =>
+            const found = allElements.find(el =>
                 el.textContent === locationName ||
                 (el.innerText && el.innerText.trim() === locationName)
             );
-            if (!src) return {ok:false, reason: 'location-not-found'};
+            if (!found) return {ok:false, reason: 'location-not-found'};
+            // The dragstart listener sits on the draggable ancestor
+            // (the site row), not the text node the hunt lands on
+            const src = found.closest('[draggable="true"]') || found;
 
             // Find tiles
             const allDivs = Array.from(document.querySelectorAll('div'));
@@ -573,15 +749,27 @@ class ViewsPage:
         }
         """
         before_tiles = self.drag_drop_tiles.count()
-        result = self.page.evaluate(script, location_name, tile_index)
-        if result.get("ok"):
-            # React applies the simulated drop async; a consumed tile is
-            # the applied signal
-            self._tile_count_changed(before_tiles, "JS location drag")
+        # evaluate carries one serializable arg, so both go in a list
+        result = self.page.evaluate(script, [location_name, tile_index])
+        if not result.get("ok"):
+            raise RuntimeError(
+                f"JS location drag could not dispatch: {result.get('reason')}"
+            )
+        # React applies the simulated drop async; a consumed tile is
+        # the applied sign - logged, not raised, when it never moves:
+        # the caller's oracle decides
+        self._tile_count_changed(before_tiles, "JS location drag")
         return result
 
     def drag_map_to_tile(self, map_name: str = None, tile_index: int = 0):
         """Drag a map element to a tile.
+
+        Native mouse drag first; a drag that raises or consumes no
+        tile falls back to the JS DataTransfer simulation. A stalled
+        tile count is logged, never raised - some drops land content
+        without changing the counted tiles, so callers keep the
+        verdict with their own oracles. Only a fallback that cannot
+        even dispatch raises.
 
         Args:
             map_name: The name of the map to drag. If None, drags the first map.
@@ -602,14 +790,81 @@ class ViewsPage:
         target_tile = self.drag_drop_tiles.nth(tile_index)
 
         before_tiles = self.drag_drop_tiles.count()
-        map_element.drag_to(target_tile)
-        # A successful drop consumes the empty tile
-        self._tile_count_changed(before_tiles, "map drag")
+        try:
+            self.mouse_drag(map_element, target_tile)
+            # A successful drop consumes the empty tile
+            landed = self._tile_count_changed(before_tiles, "map drag")
+        # RuntimeError is mouse_drag's no-bounding-box failure; the
+        # geometry-free JS simulation still works there
+        except (RuntimeError, PlaywrightError):
+            landed = False
+        if not landed:
+            print("[VIEWS] map drag: mouse drag did not consume a tile; "
+                  "trying JS DataTransfer fallback")
+            # Maps have no dedicated simulation; the location one matches
+            # its source by exact text, which the map's visible name
+            # satisfies. An unlabeled map gives it nothing to find, so
+            # there is no fallback left to try.
+            label = map_name or map_element.inner_text().strip().split("\n")[0]
+            if not label:
+                raise RuntimeError(
+                    "map drag landed nothing and the map has no visible "
+                    "name for the JS fallback to search by"
+                )
+            self._simulate_location_drag_via_js(label, tile_index)
 
     def is_streaming_working(self, expected_failures: int = 0) -> bool:
         """Check if streaming is working (failures <= expected offline cameras)."""
         failure_count = self.streaming_failed.count()
         return failure_count <= expected_failures
+
+    def content_health_snapshot(self) -> dict | None:
+        """Count broken images and stream-failure tiles, page-wide.
+
+        The pre-action baseline for log_new_content_issues. Raw counts
+        prove nothing on their own - the tenant's legitimately offline
+        cameras always show the app's stream-failure state - so only
+        growth across an action means anything. One evaluate for the
+        images plus one locator count keeps it cheap and read-only.
+        """
+        # Advisory only: a snapshot that cannot be taken (page mid-crash,
+        # context torn down) returns None and the logger stands down -
+        # observability must never decide a test's outcome
+        try:
+            broken_images = self.page.evaluate(
+                "() => Array.from(document.images)"
+                ".filter(img => img.complete && img.naturalWidth === 0).length"
+            )
+            return {
+                "broken_images": broken_images,
+                "stream_failures": self.streaming_failed.count(),
+            }
+        except Exception as e:  # noqa: BLE001 - advisory layer, log and stand down
+            print(f"[VIEWS] content health snapshot failed: {e}")
+            return None
+
+    def log_new_content_issues(self, before: dict, action: str):
+        """Print one greppable line when an action grew either count.
+
+        Advisory only, never an assertion: a drop can succeed
+        mechanically (tile consumed) while the tile renders a broken
+        image or a dead stream - observed live on a channel drop. The
+        offline-camera baseline makes asserting here a flake trap, so
+        the signal is a log line for grepping run output, printed only
+        when something grew past the caller's pre-action snapshot.
+        """
+        try:
+            after = self.content_health_snapshot()
+            if before is None or after is None:
+                return
+            broken_delta = after["broken_images"] - before["broken_images"]
+            stream_delta = after["stream_failures"] - before["stream_failures"]
+            if broken_delta > 0 or stream_delta > 0:
+                print(f"[VIEWS] content health after {action}: "
+                      f"{broken_delta:+d} broken image(s), "
+                      f"{stream_delta:+d} stream failure(s)")
+        except Exception as e:  # noqa: BLE001 - advisory layer, log and stand down
+            print(f"[VIEWS] content health check failed: {e}")
 
     def get_tab_count(self) -> int:
         """Return the number of tabs currently open."""

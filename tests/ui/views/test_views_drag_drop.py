@@ -106,17 +106,25 @@ class TestViewsDragDrop:
         # Get camera name for verification
         camera_name = camera.inner_text().split("\n")[0] if camera.inner_text() else "Camera"
 
-        # Drag the camera to the first empty tile
-        target_tile = self.views.drag_drop_tiles.first
-        camera.drag_to(target_tile)
+        # Sidebar previews match [class*='video'] page-wide, so only
+        # growth over this pre-drag baseline counts as drop evidence
+        video_elements = self.page.locator("video, canvas, [class*='video'], [class*='stream']")
+        video_baseline = video_elements.count()
+
+        # advisory content-health baseline: a drop can consume the tile
+        # yet render a broken image or a dead stream (observed live)
+        health = self.views.content_health_snapshot()
+        # Drag the camera to the first empty tile through the page
+        # object, which retries a no-op drag via the JS fallback
+        self.views.drag_camera_to_tile(camera)
         self._wait_tile_consumed(initial_tile_count)
+        self.views.log_new_content_issues(health, "camera drag")
 
         # Verify: either tile count decreased OR video element appeared
         new_tile_count = self.views.get_available_tile_count()
 
-        # Check for video/stream element or reduced empty tile count
-        video_elements = self.page.locator("video, canvas, [class*='video'], [class*='stream']")
-        stream_loaded = video_elements.count() > 0 or new_tile_count < initial_tile_count
+        stream_loaded = (video_elements.count() > video_baseline or
+                         new_tile_count < initial_tile_count)
 
         assert stream_loaded, f"Camera drag failed - tiles before: {initial_tile_count}, after: {new_tile_count}"
 
@@ -142,16 +150,22 @@ class TestViewsDragDrop:
         if camera_name:
             initial_tile_count = self.views.get_available_tile_count()
 
+            # Sidebar previews match [class*='video'] page-wide, so only
+            # growth over this pre-drag baseline counts as drop evidence
+            video_elements = self.page.locator("video, canvas, [class*='video']")
+            video_baseline = video_elements.count()
+
             # Use the helper method to drag by name
+            health = self.views.content_health_snapshot()
             self.views.drag_camera_to_tile_by_name(camera_name, tile_index=0)
             self._wait_tile_consumed(initial_tile_count)
+            self.views.log_new_content_issues(health, "camera drag")
 
             # Verify drag worked
             new_tile_count = self.views.get_available_tile_count()
-            video_elements = self.page.locator("video, canvas, [class*='video']")
 
             assert (new_tile_count < initial_tile_count or
-                    video_elements.count() > 0), f"Camera '{camera_name}' drag failed"
+                    video_elements.count() > video_baseline), f"Camera '{camera_name}' drag failed"
         else:
             pytest.skip("Could not determine camera name for test")
 
@@ -204,26 +218,37 @@ class TestViewsDragDrop:
         tab.locator("img[src*='closeIcon']").click()
         expect(view_tabs).to_have_count(baseline_tabs, timeout=10000)
 
-        # Open My Views; the saved view appearing is the signal
-        self.page.locator("img[src*='myviews']").click()
+        # Reload, then open the My Views SUBTAB (not the side-panel
+        # icon): a live-inserted card lists by name but only gets its
+        # drag wiring on a fresh load, and only the subtab surface
+        # drops onto tiles - measured 08/21/2026, the sibling subtabs
+        # test documents the same refresh requirement
+        self.page.reload()
+        self.views.open_my_views()
         saved_view = self.page.locator(f"span[title='{view_name}']")
         saved_view.wait_for(state="visible", timeout=20000)
 
         # Get initial tile count
         initial_tile_count = self.views.get_available_tile_count()
 
+        # Sidebar previews match [class*='video'] page-wide, so only
+        # growth over this pre-drag baseline counts as drop evidence
+        video_elements = self.page.locator("video, canvas, [class*='video']")
+        video_baseline = video_elements.count()
+
         # Attempt to drag the saved view to a tile
+        health = self.views.content_health_snapshot()
         self.views.drag_view_to_tile(view_name, tile_index=0)
         self._wait_tile_consumed(initial_tile_count)
+        self.views.log_new_content_issues(health, "view drag")
 
         # Verify: check for new tab or video content
         new_tile_count = self.views.get_available_tile_count()
         tab_exists = self.page.locator(f"button.tabItem:has(div[title='{view_name}'])").count() > 0
-        video_elements = self.page.locator("video, canvas, [class*='video']")
 
         assert (new_tile_count < initial_tile_count or
                 tab_exists or
-                video_elements.count() > 0), "Saved view drag-and-drop failed"
+                video_elements.count() > video_baseline), "Saved view drag-and-drop failed"
 
     @pytest.mark.ui
     @pytest.mark.dragdrop
@@ -233,19 +258,28 @@ class TestViewsDragDrop:
         initial_tile_count = self.views.get_available_tile_count()
         assert initial_tile_count > 0, "No empty tiles available"
 
-        # Find and drag a location/site to a tile
+        # Sidebar previews match [class*='video'] page-wide, so only
+        # growth over this pre-drag baseline counts as drop evidence
+        video_elements = self.page.locator("video, canvas, [class*='video']")
+        video_baseline = video_elements.count()
+
+        # Find and drag a location/site to a tile; the helper raises
+        # only when the JS fallback cannot dispatch, which routes into
+        # the skip - a drop that lands nothing falls through to the
+        # count check below
+        health = self.views.content_health_snapshot()
         try:
             self.views.drag_location_to_tile(None, tile_index=0)
             self._wait_tile_consumed(initial_tile_count)
         except Exception as e:
             pytest.skip(f"Location drag not supported or failed: {e}")
+        self.views.log_new_content_issues(health, "location drag")
 
         # Verify: tile count should decrease or video content should appear
         new_tile_count = self.views.get_available_tile_count()
-        video_elements = self.page.locator("video, canvas, [class*='video']")
 
         # Location drag may load multiple cameras at once
-        if new_tile_count >= initial_tile_count and video_elements.count() == 0:
+        if new_tile_count >= initial_tile_count and video_elements.count() <= video_baseline:
             pytest.skip("Location drag-to-tile feature may not be supported in current app version")
 
     @pytest.mark.ui
@@ -288,6 +322,12 @@ class TestViewsDragDrop:
             map_thumbnail = map_thumbnails.first
             map_thumbnail.hover()
 
+            # Sidebar previews match content selectors page-wide, so only
+            # growth over this pre-add baseline counts as drop evidence
+            map_content = self.page.locator("[class*='leaflet'], iframe, [class*='map-container']")
+            map_baseline = map_content.count()
+
+            health = self.views.content_health_snapshot()
             checkbox = map_thumbnail.locator(".sidebar-custom-checkbox")
             if checkbox.count() > 0:
                 print("Using checkbox to add map")
@@ -298,16 +338,16 @@ class TestViewsDragDrop:
                 target_tile = self.views.drag_drop_tiles.first
                 map_thumbnail.drag_to(target_tile)
             self._wait_tile_consumed(initial_tile_count)
+            self.views.log_new_content_issues(health, "map add")
 
             # Verify: tile count should decrease or map content visible
             new_tile_count = self.views.get_available_tile_count()
-            map_content = self.page.locator("[class*='leaflet'], iframe, [class*='map-container']")
 
             print(f"Tiles before: {initial_tile_count}, after: {new_tile_count}")
             print(f"Map content elements: {map_content.count()}")
 
             assert (new_tile_count < initial_tile_count or
-                    map_content.count() > 0), "Map was not added to tile"
+                    map_content.count() > map_baseline), "Map was not added to tile"
 
         except Exception as e:
             pytest.skip(f"Map drag test failed: {e}")
@@ -363,6 +403,12 @@ class TestViewsDragDrop:
             # actionability wait covers the hover render
             channel_element.hover()
 
+            # Sidebar previews match [class*='video'] page-wide, so only
+            # growth over this pre-add baseline counts as drop evidence
+            video_elements = self.page.locator("video, canvas, [class*='video']")
+            video_baseline = video_elements.count()
+
+            health = self.views.content_health_snapshot()
             checkbox = channel_element.locator(".sidebar-custom-checkbox")
             if checkbox.count() > 0:
                 print("Using checkbox to add channel")
@@ -373,15 +419,15 @@ class TestViewsDragDrop:
                 target_tile = self.views.drag_drop_tiles.first
                 channel_element.drag_to(target_tile)
             self._wait_tile_consumed(initial_tile_count)
+            self.views.log_new_content_issues(health, "channel add")
 
             # Verify
             new_tile_count = self.views.get_available_tile_count()
-            video_elements = self.page.locator("video, canvas, [class*='video']")
 
             print(f"Tiles before: {initial_tile_count}, after: {new_tile_count}")
             print(f"Video elements: {video_elements.count()}")
 
-            if new_tile_count < initial_tile_count or video_elements.count() > 0:
+            if new_tile_count < initial_tile_count or video_elements.count() > video_baseline:
                 print("Channel successfully added to tile!")
             else:
                 pytest.skip("Channel add feature may work differently in this app version")
@@ -406,6 +452,11 @@ class TestViewsDragDrop:
         assert camera_count >= 2, f"Need at least 2 cameras, found {camera_count}"
         assert initial_tile_count >= 2, f"Need at least 2 tiles, found {initial_tile_count}"
 
+        # Sidebar previews match [class*='video'] page-wide, so only
+        # growth over this pre-add baseline counts as add evidence
+        video_elements = self.page.locator("video, canvas, [class*='video']")
+        video_baseline = video_elements.count()
+
         # Add first camera via checkbox; a consumed tile is the
         # added signal
         self.views.add_first_camera_via_checkbox()
@@ -422,7 +473,6 @@ class TestViewsDragDrop:
 
         # Verify at least one camera was added
         final_tile_count = self.views.get_available_tile_count()
-        video_elements = self.page.locator("video, canvas, [class*='video']")
 
         assert (final_tile_count < initial_tile_count or
-                video_elements.count() > 0), "Failed to add cameras to tiles"
+                video_elements.count() > video_baseline), "Failed to add cameras to tiles"

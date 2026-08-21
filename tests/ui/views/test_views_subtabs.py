@@ -173,10 +173,14 @@ class TestViewsSubtabs:
         # Perform visible drag using explicit mouse movements
         content_sel = "video, canvas, [class*='video']"
         baseline = self._content_baseline(content_sel)
+        # advisory content-health baseline: a drop can consume the tile
+        # yet render a broken image or a dead stream (observed live)
+        health = self.views.content_health_snapshot()
         self._visible_drag(camera, target_tile)
 
         assert self._content_added(initial_tiles, content_sel, baseline), \
             f"Drag failed. Tiles: {initial_tiles} -> {self.views.get_available_tile_count()}"
+        self.views.log_new_content_issues(health, "camera drag")
 
     # =========================================================================
     # MY VIEWS SUBTAB - Saved views
@@ -264,6 +268,14 @@ class TestViewsSubtabs:
         # Attempt drag with visible highlight - views may open as tabs rather than filling tiles
         content_sel = "video, canvas"
         baseline = self._content_baseline(content_sel)
+        # The creation tab can survive the reload, so only a tab the
+        # drop itself opens counts - measure against a pre-drag baseline
+        tab_locators = (
+            self.page.locator(f"input.tabTitle[value='{view_name}']"),
+            self.page.locator(f"button.tabItem:has-text('{view_name}')"),
+        )
+        tabs_before = [loc.count() for loc in tab_locators]
+        health = self.views.content_health_snapshot()
         try:
             self._visible_drag(saved_view, target_tile)
         except Exception as e:
@@ -272,14 +284,15 @@ class TestViewsSubtabs:
         # Give the drop a bounded window to land as either a tile or a tab
         filled = self._content_added(initial_tiles, content_sel, baseline, timeout_s=8.0)
 
-        tab_found = (
-            self.page.locator(f"input.tabTitle[value='{view_name}']").count() > 0 or
-            self.page.locator(f"button.tabItem:has-text('{view_name}')").count() > 0
+        tab_found = any(
+            loc.count() > before
+            for loc, before in zip(tab_locators, tabs_before, strict=True)
         )
 
         # View drag may not work - skip if neither tile nor tab changed
         if not filled and not tab_found:
             pytest.skip("View drag-to-tile not supported - use checkbox method instead")
+        self.views.log_new_content_issues(health, "view drag")
 
     # =========================================================================
     # MAPS SUBTAB - Map thumbnails under sites
@@ -353,10 +366,12 @@ class TestViewsSubtabs:
         # Visible drag with animation
         content_sel = "[class*='leaflet'], iframe"
         baseline = self._content_baseline(content_sel)
+        health = self.views.content_health_snapshot()
         self._visible_drag(map_thumb, target_tile)
 
         assert self._content_added(initial_tiles, content_sel, baseline), \
             "Map drag failed"
+        self.views.log_new_content_issues(health, "map drag")
 
     # =========================================================================
     # CHANNELS SUBTAB - Channel thumbnails
@@ -422,10 +437,12 @@ class TestViewsSubtabs:
         # Visible drag with animation
         content_sel = "video, canvas"
         baseline = self._content_baseline(content_sel)
+        health = self.views.content_health_snapshot()
         self._visible_drag(channel, target_tile)
 
         assert self._content_added(initial_tiles, content_sel, baseline), \
             "Channel drag failed"
+        self.views.log_new_content_issues(health, "channel drag")
 
     # =========================================================================
     # INSIGHTS SUBTAB - Analytics/Insight widget thumbnails
@@ -531,6 +548,7 @@ class TestViewsSubtabs:
         # Forced drag, measured working 08/12/2026; the unforced drag
         # completes without adding anything
         target_tile.scroll_into_view_if_needed()
+        health = self.views.content_health_snapshot()
         self._visible_drag(widget_card, target_tile, force=True)
 
         # Tile-count oracle only: the sidebar previews match any
@@ -539,6 +557,7 @@ class TestViewsSubtabs:
         expect(self.views.drag_drop_tiles).to_have_count(
             initial_tiles - 1, timeout=15000
         )
+        self.views.log_new_content_issues(health, "insight drag")
 
     # =========================================================================
     # HELPER METHODS
@@ -665,8 +684,15 @@ class TestViewsSubtabs:
             pass  # Visual highlight is non-essential
         self.page.wait_for_timeout(400)  # visual pacing
 
-        # Perform the drag
-        source.drag_to(target, force=force)
+        # Perform the drag. The forced path keeps drag_to: insights is
+        # its one caller and drag_to(force=True) is the measured-working
+        # path there (08/12/2026). The unforced path uses the stepped
+        # mouse drag - a single-jump drag_to reaches the app's drag
+        # layer as a text selection, not a drag.
+        if force:
+            source.drag_to(target, force=True)
+        else:
+            self.views.mouse_drag(source, target)
 
         # Remove highlights
         try:
