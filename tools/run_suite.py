@@ -284,65 +284,93 @@ def main() -> int:
               'a run would be empty. Nothing created.', file=sys.stderr)
         return 2
 
-    # 2. Run record.
-    run_name = args.name or _build_run_name(args.target, args.env, args.version)
-    if args.run_key:
-        run_key = args.run_key
-        print(f'  Reusing run: {run_key}')
-    elif args.dry_run:
-        run_key = '<NEW_KEY>'
-        print(f'  [dry-run] would create run "{run_name}" with {len(case_keys)} case(s)')
-    else:
-        if not args.assign or not args.milestone:
-            print('ERROR: a run needs an assignee and a milestone.\n'
-                  '  Set QATOUCH_ASSIGN_TO and QATOUCH_MILESTONE_KEY in .env, or pass\n'
-                  '  --assign <USER_KEY> --milestone <RELEASE_KEY>.\n'
-                  '  Find them: python tools/qatouch_run_manager.py users\n'
-                  '             python tools/qatouch_run_manager.py milestone <NAME>',
-                  file=sys.stderr)
+    # Everything from here mutates shared state - the QA Touch run,
+    # report.html, screenshots, logs/last_run_results.json - so it runs
+    # under the shared run lock (tools/run_lock.py). A second run_suite, or
+    # a bare pytest (which takes the same lock via
+    # plugins/single_run_guard.py), is refused instead of interleaving.
+    # Dry runs mutate nothing and stay lock-free.
+    lock_held = False
+    if not args.dry_run:
+        from tools.run_lock import acquire, release
+        if not acquire(args.env, run_type=f'run_suite:{args.target}'):
             return 2
-        print(f'  Creating run "{run_name}" with {len(case_keys)} case(s)...')
-        run_key = _create_run(run_name, case_keys, args.assign, args.milestone)
-        print(f'  Run key: {run_key}')
+        lock_held = True
+    try:
+        # 2. Run record.
+        run_name = args.name or _build_run_name(args.target, args.env, args.version)
+        if args.run_key:
+            run_key = args.run_key
+            print(f'  Reusing run: {run_key}')
+        elif args.dry_run:
+            run_key = '<NEW_KEY>'
+            print(f'  [dry-run] would create run "{run_name}" with {len(case_keys)} case(s)')
+        else:
+            if not args.assign or not args.milestone:
+                print('ERROR: a run needs an assignee and a milestone.\n'
+                      '  Set QATOUCH_ASSIGN_TO and QATOUCH_MILESTONE_KEY in .env, or pass\n'
+                      '  --assign <USER_KEY> --milestone <RELEASE_KEY>.\n'
+                      '  Find them: python tools/qatouch_run_manager.py users\n'
+                      '             python tools/qatouch_run_manager.py milestone <NAME>',
+                      file=sys.stderr)
+                return 2
+            print(f'  Creating run "{run_name}" with {len(case_keys)} case(s)...')
+            run_key = _create_run(run_name, case_keys, args.assign, args.milestone)
+            print(f'  Run key: {run_key}')
 
-    # 3. Execute.
-    cmd = [sys.executable, '-m', 'pytest', *target_args,
-           '--qatouch-upload', '--qatouch-run', run_key, *extra]
-    pretty = ' '.join(c if ' ' not in c else f'"{c}"' for c in cmd)
-    print()
-    print(f'Target:    {args.target}')
-    print(f'Env:       {args.env}')
-    print(f'Run:       {run_key}  "{run_name}"')
-    print(f'Command:   {pretty}')
-    print()
-    if args.dry_run:
-        print('[dry-run - nothing executed]')
-        return 0
-
-    env = dict(os.environ)
-    env['ENV'] = args.env
-    completed = subprocess.run(cmd, cwd=str(ROOT), env=env)
-    rc = completed.returncode
-
-    # 4. Prove the results are really in QA Touch.
-    if not args.no_validate:
+        # 3. Execute.
+        cmd = [sys.executable, '-m', 'pytest', *target_args,
+               '--qatouch-upload', '--qatouch-run', run_key, *extra]
+        pretty = ' '.join(c if ' ' not in c else f'"{c}"' for c in cmd)
         print()
-        from tools.validate_run import validate_run
-        vrc = validate_run(run_key, PROJECT_KEY, local_count=None)
-        if vrc != 0:
-            print('[post-run] Validation FAILED - the run does not match the local results. '
-                  'Check logs/upload_failures.json and run tools/retry_uploads.py.')
-            rc = rc or 1
+        print(f'Target:    {args.target}')
+        print(f'Env:       {args.env}')
+        print(f'Run:       {run_key}  "{run_name}"')
+        print(f'Command:   {pretty}')
+        print()
+        if args.dry_run:
+            print('[dry-run - nothing executed]')
+            return 0
 
-    # 5. History and (opt-in) bugs.
-    print()
-    _update_flaky_history(args.env)
-    if args.file_bugs:
-        _file_bugs()
+        env = dict(os.environ)
+        env['ENV'] = args.env
+        # This process holds the run lock, so the child pytest's
+        # single_run_guard would otherwise refuse to start on it. The marker
+        # says the lock over the child belongs to its own parent, not to a
+        # rival run (see plugins/single_run_guard.py).
+        if lock_held:
+            env['RUN_GUARD_HELD'] = str(os.getpid())
+        completed = subprocess.run(cmd, cwd=str(ROOT), env=env)
+        rc = completed.returncode
 
-    print()
-    print(f'Done. Run {run_key}: "{run_name}"')
-    return rc
+        # 4. Prove the results are really in QA Touch.
+        if not args.no_validate:
+            print()
+            from tools.validate_run import validate_run
+            vrc = validate_run(run_key, PROJECT_KEY, local_count=None)
+            if vrc != 0:
+                print('[post-run] Validation FAILED - the run does not match the local results. '
+                      'Check logs/upload_failures.json and run tools/retry_uploads.py.')
+                rc = rc or 1
+
+        # 5. History and (opt-in) bugs.
+        print()
+        _update_flaky_history(args.env)
+        if args.file_bugs:
+            _file_bugs()
+
+        print()
+        print(f'Done. Run {run_key}: "{run_name}"')
+        return rc
+    finally:
+        # Always drop the lock - pytest failures, validation failures, and
+        # KeyboardInterrupt all pass through here. release() is the
+        # ownership-checked path: after a --force release and a rival
+        # re-acquire, the lock records the rival's PID and a blind delete
+        # here would free a live run. A hard kill is covered by run_lock's
+        # dead-PID and staleness backstops.
+        if lock_held:
+            release(args.env)
 
 
 if __name__ == '__main__':

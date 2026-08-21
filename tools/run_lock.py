@@ -79,12 +79,61 @@ def _is_stale(lock_info: dict, timeout_hours: float) -> bool:
 
 
 def _pid_alive(pid: int) -> bool:
-    """Check if a process is still running."""
+    """Check if a process is still running.
+
+    Not os.kill(pid, 0) on Windows: there, signal 0 is CTRL_C_EVENT, so the
+    call can only see processes sharing this console - every other live
+    process reads as dead, and a same-console process group would actually
+    receive the Ctrl+C. Ask the kernel for the process object instead.
+    """
+    if sys.platform == 'win32':
+        return _pid_alive_windows(pid)
     try:
         os.kill(pid, 0)
         return True
     except (OSError, ProcessLookupError):
         return False
+
+
+def _pid_alive_windows(pid: int) -> bool:
+    """True while the kernel still tracks `pid` as a running process."""
+    import ctypes
+
+    process_query_limited_information = 0x1000
+    still_active = 259
+    error_access_denied = 5
+
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
+    if not handle:
+        # A pid we may not open (another user's, or a protected system
+        # process) still exists; a freed pid cannot be opened at all.
+        return ctypes.get_last_error() == error_access_denied
+    try:
+        code = ctypes.c_ulong()
+        if not kernel32.GetExitCodeProcess(handle, ctypes.byref(code)):
+            return True  # the object exists; unreadable state stays "alive"
+        # An open handle elsewhere keeps a finished process openable - the
+        # exit code is what tells finished from running.
+        return code.value == still_active
+    finally:
+        kernel32.CloseHandle(handle)
+
+
+def _holder_info(env: str, run_type: str) -> dict:
+    """The metadata a lock records about its holder.
+
+    Shared with plugins/single_run_guard.py so a lock looks the same to
+    status/acquire no matter which entry point wrote it.
+    """
+    return {
+        'env': env,
+        'pid': os.getpid(),
+        'user': os.environ.get('USER', os.environ.get('USERNAME', 'unknown')),
+        'run_type': run_type,
+        'acquired_at': datetime.now(UTC).isoformat(),
+        'hostname': os.environ.get('COMPUTERNAME', os.environ.get('HOSTNAME', 'unknown')),
+    }
 
 
 def acquire(env: str, timeout_hours: float = DEFAULT_TIMEOUT_HOURS,
@@ -114,15 +163,7 @@ def acquire(env: str, timeout_hours: float = DEFAULT_TIMEOUT_HOURS,
             print(f'    To force: python tools/run_lock.py release --env {env} --force')
             return False
 
-    lock_info = {
-        'env': env,
-        'pid': os.getpid(),
-        'user': os.environ.get('USER', os.environ.get('USERNAME', 'unknown')),
-        'run_type': run_type,
-        'acquired_at': datetime.now(UTC).isoformat(),
-        'hostname': os.environ.get('COMPUTERNAME', os.environ.get('HOSTNAME', 'unknown')),
-    }
-    _write_lock(env, lock_info)
+    _write_lock(env, _holder_info(env, run_type))
     print(f'  Lock acquired for env={env} (PID {os.getpid()})')
     return True
 

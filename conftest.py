@@ -12,7 +12,8 @@ import pytest
 from config.base_config import config  # dict resolved from ENV
 
 # Register plugins
-pytest_plugins = ['plugins.qatouch_reporter', 'plugins.verification_runner']
+pytest_plugins = ['plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
+                  'plugins.run_archive', 'plugins.single_run_guard']
 
 # Logging (env/tenant resolution)
 LOG_FILE = os.path.join("logs", "env_config.log")
@@ -317,6 +318,16 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
     context.close()
 
 
+# Graph's sendMail call carries the whole message in one request with a
+# documented cap of about 4 MB, and base64 inflates the attachment by 4/3.
+# Inline only reports small enough that body + encoded attachment still
+# fit; past the attach cap even the attachment would sink the send, so the
+# body carries a pointer to the per-run archive instead (reports/runs/
+# keeps every run's full report).
+REPORT_INLINE_MAX_BYTES = int(1.5 * 1024 * 1024)
+REPORT_ATTACH_MAX_BYTES = int(2.5 * 1024 * 1024)
+
+
 def pytest_sessionfinish(session, exitstatus):
     """Email the HTML report after the session finishes, when opted in.
 
@@ -340,7 +351,17 @@ def pytest_sessionfinish(session, exitstatus):
             print(f"\n[WARNING] No report at {report_path} - nothing to send.")
             return
 
-        html = report_path.read_text(encoding="utf-8", errors="replace")
+        size = report_path.stat().st_size
+        attachments = [str(report_path)]
+        if size <= REPORT_INLINE_MAX_BYTES:
+            html = report_path.read_text(encoding="utf-8", errors="replace")
+        elif size <= REPORT_ATTACH_MAX_BYTES:
+            html = "<p>Report too large to inline - see the attached file.</p>"
+        else:
+            attachments = []
+            html = ("<p>Report too large to send by email - open the "
+                    "archived copy under reports/runs/ (index.html lists "
+                    "runs newest first).</p>")
         status = "PASSED" if exitstatus == 0 else "FAILED"
 
         body = f"""
@@ -356,7 +377,7 @@ def pytest_sessionfinish(session, exitstatus):
             to=recipient,
             subject=f"Test Report - {status}",
             body_html=body,
-            attachments=[str(report_path)],
+            attachments=attachments,
         )
         print(f"\n[SUCCESS] Test report sent to {recipient}")
     except Exception as e:
