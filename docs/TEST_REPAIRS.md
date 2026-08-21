@@ -23,6 +23,7 @@ Status: [REDO] rebuild, [INVESTIGATE] feature moved or died?,
 | 5 | Sidecar step files: maps, media_operations, chats, events_search | [ARTIFACT] | Regenerate at next sidecar sync (case keys kept); events_search corrected steps need Justin's manual push to live QA Touch. |
 | 6 | QA Touch gap analysis (coverage vs case mapping) | deferred | After the above, per Justin. Note: mapping metadata says 352 tests, collection says 819. |
 | 7 | Tenant mop-up | manual | Site detail > Groups: delete "AutoTest Group *", "Edited Group *", "2026*AutomationEdited *". One leaked "AutoTest Playwright" user self-consumes on the next delete-user run. |
+| 8 | views bookmark export (test_export_bookmark) | [DONE] | Was intermittent in-suite, not a hang (passed standalone 71s; manual export works). Fixed 08/21 PM: completion accepts bar-hidden OR success toast (toast corroborated by the bar being gone), bound raised to 180s, greppable "[EXPORT] completed in Ns" line so a recurrence produces data. Watch the elapsed line in the next full views run. |
 
 Quality gates, all zero as of 08/17/2026 and enforced by the checker
 on every commit: no-oracle tests, early-exit passes, except-swallow
@@ -32,6 +33,7 @@ blocks, uncommented test-file sleeps (outside the c2c hold).
 
 | Test / suite | Done | Lesson home |
 |--------------|------|-------------|
+| views drag-and-drop (drag_drop + subtabs, 11 tests) | Repaired 08/21. Drags gripped text labels and silently text-selected; grip re-aimed at the draggable ancestor (app is plain HTML5 DnD) and oracles made baseline-relative. The JS fallbacks had never run (evaluate two-arg bug). Saved-view drag additionally needs a reload + the My Views subtab surface. | views_page.mouse_drag docstring |
 | views_favorites add/remove | Rebuilt 08/09; camera tree self-collapses, toggle re-expands. | FAILURE_TRIAGE |
 | admin_sites group CRUD + search inside site + site detail | Rebuilt 08/11-12 for the redesigned detail; sorting keeps an honest skip (no sort control). | - |
 | admin_rules wizard (6 types) | Rebuilt 08/12, all types create end to end; rules self-delete at teardown. | FAILURE_TRIAGE (canvas vs full-view types, JS-click armed Done) |
