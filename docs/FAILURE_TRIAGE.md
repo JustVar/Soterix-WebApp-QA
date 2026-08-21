@@ -20,6 +20,20 @@ also saves a trace, named `<test-id>-login-failure-trace.zip`.
 **Each pytest run clears `reports/artifacts/` at start.** Copy a trace out of
 the folder before you start the next run if you want to keep it.
 
+## Where run outputs live
+
+The live outputs hold only the latest run. Each run overwrites
+`reports/report.html`, empties `reports/screenshots/`, and wipes
+`reports/artifacts/`.
+
+The archive keeps the evidence of past runs. After every run,
+`plugins/run_archive.py` copies the report, the screenshots, the traces, and
+the results JSON to `reports/runs/<start-time>__<target>/`. Open
+`reports/runs/index.html` to browse the archived runs, newest first. The
+archive keeps the newest 20 runs of each target, and 100 runs in total, so
+repeated runs of one test do not push out a full-suite archive. Set
+`RUN_ARCHIVE=off` to disable it.
+
 ## View a trace in the GUI
 
 ```
