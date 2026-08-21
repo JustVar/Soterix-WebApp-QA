@@ -6,6 +6,7 @@ dialogs.
 """
 import datetime
 import re
+import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 
@@ -60,6 +61,12 @@ class FullScreenPage:
         )
         self.export_button = page.locator(".save_button_export")
         self.export_progress_bar = page.locator(".export-progress-bar")
+        # export completion toast: the same .successfull-container the
+        # share flow raises (share_success below); the export text filter
+        # keeps an unrelated success toast from reading as completion
+        self.export_success_toast = page.locator(".successfull-container").filter(
+            has_text=re.compile(r"export", re.IGNORECASE)
+        )
 
         # Share dialog
         self.share_popup = page.locator(".share_main_container")
@@ -185,7 +192,18 @@ class FullScreenPage:
     # --- Bookmark operations ---
 
     def export_bookmark(self, index: int = 0, filename: str = None):
-        """Export a bookmark via the options menu."""
+        """Export a bookmark via the options menu.
+
+        Completion is the export progress bar no longer visible; the
+        success toast up at the same time is reported as the stronger
+        signal. The toast alone never completes the wait: its text
+        filter is a substring match, so a toast that only acknowledges
+        the export request would read as completion while the bar still
+        runs. In-suite tenant load made a 120s bar wait flaky (bar
+        visible the full 120s on 08/21/2026 while manual export and a
+        standalone run passed), so the wait polls up to 180s and prints
+        the signal that fired and the elapsed time.
+        """
         if filename is None:
             filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
@@ -197,9 +215,64 @@ class FullScreenPage:
         self.export_filename_input.fill(filename)
         self.export_save_to_media_toggle.click()
         self.export_button.click()
+        started = time.monotonic()
 
-        self.export_progress_bar.wait_for(state="visible", timeout=10000)
-        self.export_progress_bar.wait_for(state="hidden", timeout=120000)
+        # the bar appearing proves the export started; an export can
+        # finish before this wait samples the bar, so the success toast
+        # already up also counts - bar-hidden alone does not, because a
+        # bar that never appeared means the export never started
+        try:
+            self.export_progress_bar.wait_for(state="visible", timeout=10000)
+        except PlaywrightError:
+            if self._export_completion_signal() != "success toast":
+                raise
+
+        deadline = time.monotonic() + 180.0
+        while time.monotonic() < deadline:
+            signal = self._export_completion_signal()
+            if signal:
+                print(f"[EXPORT] completed in "
+                      f"{time.monotonic() - started:.0f}s ({signal})")
+                return
+            self.page.wait_for_timeout(250)  # poll tick for bar-hidden or toast
+
+        elapsed = time.monotonic() - started
+        try:
+            bar_visible = (self.export_progress_bar.count() > 0
+                           and self.export_progress_bar.first.is_visible())
+        # probe: the bar can detach between the count and visibility
+        # reads; report that as not visible
+        except PlaywrightError:
+            bar_visible = False
+        raise TimeoutError(
+            f"[EXPORT] no completion signal after {elapsed:.0f}s (progress bar "
+            f"{'still visible' if bar_visible else 'not visible'}, no success toast)"
+        )
+
+    def _export_completion_signal(self) -> str:
+        """Return the export completion signal that is up, or ''.
+
+        The bar no longer visible is the completion signal; the toast
+        up at the same time upgrades the label. The toast never counts
+        while the bar is still visible: its text filter is a substring
+        match, so a toast that only acknowledges the export request
+        would otherwise complete the poll mid-export. The probe
+        swallows Playwright errors because either element can detach
+        between the count and visibility reads; '' only means "not
+        complete yet" to export_bookmark's poll, which re-reads on the
+        next tick.
+        """
+        try:
+            if (self.export_progress_bar.count()
+                    and self.export_progress_bar.first.is_visible()):
+                return ""
+            if (self.export_success_toast.count()
+                    and self.export_success_toast.first.is_visible()):
+                return "success toast"
+            return "progress bar hidden"
+        except PlaywrightError:
+            pass
+        return ""
 
     def share_bookmark(self, index: int = 0, email: str = "test@example.com",
                        filename: str = None):
