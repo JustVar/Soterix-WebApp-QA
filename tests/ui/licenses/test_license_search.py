@@ -144,7 +144,9 @@ class TestLicenseExport:
 
         download_btn = self.page.locator(
             "button:has-text('CSV'), button:has-text('Export'), "
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "button:has-text('Download'), img[src*='download'], "
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='export'], img[alt*='Download'], img[alt*='Export']"
         ).first
         expect(download_btn).to_be_visible(timeout=10000)
@@ -157,6 +159,7 @@ class TestLicenseExport:
 
         # Look for download image or button
         download_elem = self.page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='downloadLicense'], img[src*='download'], img[alt='Download'], "
             "button:has-text('CSV'), button:has-text('Export'), button:has-text('Download')"
         ).first

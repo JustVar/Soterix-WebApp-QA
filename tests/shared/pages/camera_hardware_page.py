@@ -86,6 +86,7 @@ class CameraHardwarePage:
 
     def is_soterix_branded(self) -> bool:
         """Check if the Soterix Systems branding is visible."""
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         return self.page.locator("img[src*='logo'], text='SOTERIX'").first.is_visible()
 
     # ------------------------------------------------------------------ #

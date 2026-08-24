@@ -50,6 +50,7 @@ class LicensePage:
 
         # CSV export
         self.csv_download_button = page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='downloadLicense'], img[src*='download'], img[alt='Download'], "
             "button:has-text('CSV'), button:has-text('Export'), button:has-text('Download')"
         ).first
@@ -86,7 +87,9 @@ class LicensePage:
 
         # Three-dot menu actions
         self.options_icons = page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='optionIcon'], img[src*='option'], "
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "button[class*='more'], img[src*='three-dot']"
         )
         self.suspend_option = page.locator(

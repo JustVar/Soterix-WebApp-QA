@@ -30,6 +30,7 @@ class MapsPage:
 
         # Camera icons on opened map
         self.camera_icons = page.locator("img[src*='media/cameraIcon']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.online_camera_icons = page.locator("img[src*='media/cameraIconGreen']")
 
         # Loader

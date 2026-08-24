@@ -55,6 +55,7 @@ class SequencePage:
             "div.MuiListItemButton-root.sidebarlist-item-button"
         )
         self.sequences_title = page.locator("span[title='Sequences']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.three_dot_menu = page.locator("img[src*='3-dot']")
 
     # --- Navigation ---
@@ -269,6 +270,7 @@ class SequencePage:
 
         # Click 3-dot menu scoped to the last sidebar item
         last_item = self.sidebar_items.last
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         three_dot = last_item.locator("img[src*='3-dot']")
         three_dot.wait_for(state="visible", timeout=10000)
         three_dot.click()

@@ -42,6 +42,7 @@ class AdminPage:
 
         # User row actions
         self.options_icon = page.locator("img[src*='optionIcon']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.delete_icon = page.locator("img[src*='delete-icon']")
         self.delete_confirm = page.locator(
             "button:has-text('Delete'), div.MuiBox-root:text-is('Delete')"
@@ -92,12 +93,16 @@ class AdminPage:
 
         # Sites management
         self.list_view_toggle = page.locator("img[alt='tableIcon']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.grid_view_toggle = page.locator("img[src*='icon-grid']")
         self.online_status_icons = page.locator("img[alt='Online']")
         self.offline_status_icons = page.locator("img[alt='Offline']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.sort_az_icon = page.locator("img[src*='a-to-z-sort']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.sort_za_icon = page.locator("img[src*='z-to-a-sort']")
         self.accordion_icon = page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='downAccordionIcon']"
         )
         # Exact text node: a :has-text MuiBox union matches ancestor
@@ -234,6 +239,7 @@ class AdminPage:
             # assets on this page (probed), not MUI svg icons
             icon = self.page.locator(
                 ".MuiPaper-root", has_text=match_text
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             ).locator("img[src*='optionIcon']").first
         else:
             icon = self.options_icon.first

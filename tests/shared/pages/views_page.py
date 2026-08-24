@@ -17,7 +17,9 @@ class ViewsPage:
         # Locators - Tabs
         self.add_tab_button = page.locator("img[src*='media/addIcon']")
         self.tab_titles = page.locator(".tabTitle")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.tab_close_buttons = page.locator("img[src*='closeIcon']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.tab_edit_buttons = page.locator("img[src*='media/editIcon']")
         
         # Locators - Views subtab buttons (inside .viewTabs container, NOT left nav)
@@ -28,6 +30,7 @@ class ViewsPage:
         self.insights_button = self.view_tabs_container.locator(".viewTabItem:has(img[alt='Insights'])")
         self.maps_button = self.view_tabs_container.locator(".viewTabItem:has(img[alt='Maps'])")
         self.channels_button = self.view_tabs_container.locator(".viewTabItem:has(img[alt='Channels'])")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.save_view_button = page.locator("img[src*='media/saveIcon']")
 
         # Locators - Left Panel Navigation
@@ -1097,6 +1100,7 @@ class ViewsPage:
 
         # Click the bookmark icon
         print(f"DEBUG add_bookmark_on_tile: Clicking bookmark icon...")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         bookmark_icon = fs.video_container.locator("img[src*='Bookmark']")
         bookmark_icon.click()
         # The bookmark save shows no confirmation on the timeline
@@ -1142,6 +1146,7 @@ class ViewsPage:
         # The tile renders two share imgs (controls bar + timeline
         # overlay): click the one the hover revealed.
         share_icon = video_tile.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='media/icon-share']:visible"
         ).first
         share_icon.click()
@@ -1217,12 +1222,14 @@ class ViewsPage:
             self.expand_site_and_show_cameras(None)
             row_anchor.wait_for(state="visible", timeout=10000)
         filled_icon = row_anchor.locator("xpath=../..").locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='media/favoriteIconFilled']"
         )
         return filled_icon.count() > 0
 
     def open_favorites_panel(self):
         """Open the favorites panel by clicking the favorites icon."""
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
         fav_icon.click()
         # The panel slide-in has no known DOM signal
@@ -1230,6 +1237,7 @@ class ViewsPage:
 
     def close_favorites_panel(self):
         """Close the favorites panel by clicking the favorites icon again."""
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
         fav_icon.click()
         # The panel slide-out has no known DOM signal

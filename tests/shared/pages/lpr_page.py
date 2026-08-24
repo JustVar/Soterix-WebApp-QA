@@ -434,6 +434,7 @@ class LprPage:
         (measured 08/12/2026).
         """
         print("[LPR] Opening Playback Timeout popup")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         timeout_icon = self.page.locator("img[src='/icons/timer.svg']").last
         timeout_icon.wait_for(state="visible", timeout=30000)
         timeout_icon.click()
@@ -450,6 +451,7 @@ class LprPage:
         be playing, and 'Set Timeout Duration' is the popup title.
         """
         print("[LPR] Opening LPR Playback Timeout popup")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         timeout_icon = self.page.locator("img[src='/icons/timer.svg']").last
         timeout_icon.wait_for(state="visible", timeout=30000)
         timeout_icon.click()

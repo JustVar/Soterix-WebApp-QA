@@ -35,11 +35,13 @@ class SearchPage:
         # changes to search_icon.svg when filters are set.
         # Located inside the search panel container, not the nav sidebar.
         self.search_button = page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             ".search_container_search img[src*='search']"
         ).first
 
         # Search results
         self.result_images = page.locator(".global-imageResults")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.play_clip_icon = page.locator("img[src*='media/playClip']")
         self.replay_icon = page.locator("img[alt='Replay']")
 

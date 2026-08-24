@@ -61,6 +61,7 @@ class InsightsPage:
         self.form_dropdowns = page.locator(".MuiPaper-root")
         self.dropdown_items = page.locator(".dropdownItem")
         self.accordion_arrows = page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='media/downAccordionIcon']"
         )
 
@@ -69,6 +70,7 @@ class InsightsPage:
 
         # Widget operations
         self.three_dots = page.locator("img[src*='media/three-dots']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.back_arrow = page.locator("img[src*='media/backIconArrow']")
         self.report_download_button = page.locator(".save_button")
         self.report_success_msg = page.locator(
@@ -80,6 +82,7 @@ class InsightsPage:
 
         # Close tab icon
         self.close_tab_icon = page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='media/closeIcon']"
         ).first
 
@@ -285,6 +288,7 @@ class InsightsPage:
                 if car.count() > 0:
                     car.click()
                 bike = self.page.locator(
+                    # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
                     "img[src*='media/motorcycleIcon']"
                 ).first
                 if bike.count() > 0:

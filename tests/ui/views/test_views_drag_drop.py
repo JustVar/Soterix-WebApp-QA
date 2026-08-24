@@ -33,6 +33,7 @@ class TestViewsDragDrop:
                 before = tabs.count()
                 last_tab = tabs.last
                 last_tab.hover()
+                # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
                 close_icon = last_tab.locator("img[src*='closeIcon']")
                 if close_icon.count() == 0:
                     break
@@ -52,6 +53,7 @@ class TestViewsDragDrop:
 
     def _delete_saved_view_safe(self, view_name):
         """Delete a saved view from the My Views panel."""
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.page.locator("img[src*='myviews']").click()
         saved_view = self.page.locator(f"span[title='{view_name}']")
         try:
@@ -191,6 +193,7 @@ class TestViewsDragDrop:
         # Rename the tab; the click's own actionability wait covers
         # the hover-rendered edit icon
         tab.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         tab.locator("img[src*='editIcon']").click()
 
         tab_input = tab.locator("input.tabTitle")
@@ -215,6 +218,7 @@ class TestViewsDragDrop:
         # Close the tab; the view-tab count returning to baseline is
         # the closed signal (the untitled + tab never counts)
         tab.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         tab.locator("img[src*='closeIcon']").click()
         expect(view_tabs).to_have_count(baseline_tabs, timeout=10000)
 

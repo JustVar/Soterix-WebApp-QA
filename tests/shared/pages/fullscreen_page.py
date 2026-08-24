@@ -19,26 +19,34 @@ class FullScreenPage:
 
         # Player controls
         self.video_container = page.locator("[class*='video_container'][class*='new_video_player']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.fullscreen_button = page.locator("img[src*='media/Zoom.']")
         # exitFullScreen appears twice in DOM - hidden one in sidebar, visible one in .top_container
         self.exit_fullscreen_button = page.locator(".top_container img[src*='exitFullScreen']")
         self.loader = page.locator(".MuiCircularProgress-root")
         self.streaming_failed = page.locator("text=failed to load")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.live_indicator = page.locator("img[src*='media/Live.']")
 
         # Timeline/playback controls (different icons in live vs archive mode)
         # In LIVE mode: pause-disable-mode icons (disabled)
         # In ARCHIVE mode: play/pause icons (active)
         self.pause_icon_live = page.locator("img[src*='media/pause-disable-mode']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.pause_icon_archive = page.locator("img[src*='media/pause-icon']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.play_icon = page.locator("img[src*='media/play']").first
 
         # Bottom control bar
         self.control_container = page.locator(".control_Container")
         self.bottom_controls = page.locator(".bottom-control-group")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.volume_control = page.locator("img[src*='media/volumn']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.share_icon = page.locator(".bottom-control-group img[src*='media/icon-share']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.settings_icon = page.locator("img[src*='media/Setting']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.overlays_icon = page.locator("img[src*='media/overlays']")
 
         # Bookmarks panel
@@ -191,6 +199,7 @@ class FullScreenPage:
 
     def open_bookmark_options(self, index: int = 0):
         """Open the 3-dot options menu on a specific bookmark."""
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         option_icon = self.bookmark_items.nth(index).locator("img[src*='media/optionIcon']")
         option_icon.click()
         self.bookmark_options.first.wait_for(state="visible", timeout=5000)

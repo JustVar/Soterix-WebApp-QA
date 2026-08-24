@@ -23,6 +23,7 @@ class MediaPage:
 
         # View toggle (grid/list)
         self.grid_view_button = page.locator("img[src*='icon-grid']").first
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.list_view_button = page.locator("img[src*='icon-list']").first
 
         # Tabs
@@ -210,6 +211,7 @@ class MediaPage:
 
         If index > 0, clicks the nth options icon.
         """
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         icons = self.page.locator("img[src*='icon-options']")
         icons.nth(index).click()
         # The context menu popover carries the item actions. :visible
@@ -278,6 +280,7 @@ class MediaPage:
         toast = self.page.get_by_text("File name updated successfully")
         toast.first.wait_for(state="hidden", timeout=10000)
         row = self.item_row(current)
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         row.locator("img[src*='icon-options']").first.click()
         self.click_menu_item("Rename")
         handle = row.locator("input[type='text']").first.element_handle()
@@ -311,6 +314,7 @@ class MediaPage:
         and Cancel/Create (measured 08/12/2026).
         """
         row = self.item_row(name)
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         row.locator("img[src*='icon-options']").first.click()
         self.click_menu_item("Create Link")
         self.page.get_by_text("Add Link Name").first.wait_for(

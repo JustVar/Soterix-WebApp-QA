@@ -33,6 +33,7 @@ class TestViewsBasic:
                 before = tabs.count()
                 last_tab = tabs.last
                 last_tab.hover()
+                # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
                 close_icon = last_tab.locator("img[src*='closeIcon']")
                 try:
                     close_icon.wait_for(state="visible", timeout=2000)
@@ -58,6 +59,7 @@ class TestViewsBasic:
 
     def _delete_saved_view_safe(self, view_name):
         """Delete a saved view from the My Views panel."""
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.page.locator("img[src*='myviews']").click()
         saved_view = self.page.locator(f"span[title='{view_name}']")
         try:
@@ -65,6 +67,7 @@ class TestViewsBasic:
         except Exception:
             return  # View not present - nothing to delete
         saved_view.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.page.locator("img[src*='delete-icon']").click()
         self.page.locator("button:has-text('Delete')").click()
         self.page.locator("text=Successfully deleted").wait_for(
@@ -145,6 +148,7 @@ class TestViewsBasic:
         # Rename it to a stable name
         tab = self.page.locator("button.tabItem").nth(1)
         tab.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         tab.locator("img[src*='editIcon']").click()
         tab_input = self.page.locator("input.tabTitle").nth(1)
         tab_input.fill(view_name)
@@ -177,6 +181,7 @@ class TestViewsBasic:
         saved_view = self.page.locator(f"span[title='{view_name}']")
         saved_view.wait_for(state="visible", timeout=20000)
         saved_view.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.page.locator("img[src*='delete-icon']").click()
         self.page.locator("button:has-text('Delete')").click()
         deleted_msg = self.page.locator("text=Successfully deleted")
@@ -213,6 +218,7 @@ class TestViewsBasic:
 
         tab = self.page.locator("button.tabItem").nth(1)
         tab.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         tab.locator("img[src*='editIcon']").click()
 
         tab_input = self.page.locator("input.tabTitle").nth(1)
@@ -279,6 +285,7 @@ class TestViewsBasic:
 
         tab = self.page.locator("button.tabItem").nth(1)
         tab.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         tab.locator("img[src*='editIcon']").click()
 
         tab_input = self.page.locator("input.tabTitle").nth(1)

@@ -83,6 +83,7 @@ class TestMediaDeeper:
         # Wait for buttons to render (count() is immediate; expect() waits)
         try:
             self.page.locator(
+                # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
                 "img[src*='icon-grid'], img[src*='icon-list']"
             ).first.wait_for(state="visible", timeout=10000)
         # bounded render wait only; the assert below owns the oracle and
@@ -90,7 +91,9 @@ class TestMediaDeeper:
         except Exception:
             pass
 
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         grid_visible = self.page.locator("img[src*='icon-grid']").count() > 0
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         list_visible = self.page.locator("img[src*='icon-list']").count() > 0
 
         assert grid_visible or list_visible, \

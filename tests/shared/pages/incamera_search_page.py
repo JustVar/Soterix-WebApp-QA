@@ -15,6 +15,7 @@ class InCameraSearchPage:
 
         # Search trigger (from video player controls)
         self.search_icon = page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='videoplayer/Search']"
         )
 
@@ -34,6 +35,7 @@ class InCameraSearchPage:
 
         # Playback
         self.play_icon = page.locator("img[src*='media/video-player-icon']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.play_button = page.locator("img[src*='media/play']")
 
         # Loader

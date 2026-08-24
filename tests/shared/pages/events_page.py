@@ -42,6 +42,7 @@ class EventsPage:
 
         # Event results
         self.event_results = page.locator("img[alt='videoImg1']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.pin_icon = page.locator("img[src*='media/roundPinIcon']")
         self.pinned_counter = page.locator(".pinnedClip_text")
         self.review_pinned_button = page.locator(
@@ -408,6 +409,7 @@ class EventsPage:
         # Pin icon appears on hover within the overlay
         # Find pin icon within the hovered event's container, not globally
         event_container = event_img.locator("xpath=ancestor::div[1]")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         pin = event_container.locator("img[src*='roundPinIcon']")
         pin.wait_for(state="visible", timeout=5000)
 

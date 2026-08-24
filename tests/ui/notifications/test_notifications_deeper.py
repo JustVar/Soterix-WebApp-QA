@@ -22,6 +22,7 @@ class TestNotificationsDeeper:
         which CONTAINS 'MuteNotification', so one substring matches
         both states.
         """
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         return self.page.locator("img[src*='MuteNotification']")
 
     def _open_notification_panel(self):

@@ -110,6 +110,7 @@ class TestC2CSoterixCloud:
 
         self.step_capture.mark(2, "Verify Soterix Cloud Connect page loads with branding")
         expect(self.page.locator("text='SOTERIX CLOUD CONNECT'")).to_be_visible(timeout=10000)
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         expect(self.page.locator("img[alt*='Soterix'], img[src*='logo']").first).to_be_visible()
 
         self.step_capture.mark(3, "Wait for cloud status to load and verify registration")

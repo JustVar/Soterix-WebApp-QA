@@ -14,6 +14,7 @@ class TestNotifications:
         # state's src is 'UnMuteNotification' (capital M), which
         # CONTAINS 'MuteNotification', so one substring matches both
         self.mute_union = self.page.locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='MuteNotification']"
         )
 

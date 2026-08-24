@@ -53,6 +53,7 @@ class TestViewsSubtabs:
                 before = tabs.count()
                 last_tab = tabs.last
                 last_tab.hover()
+                # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
                 close_icon = last_tab.locator("img[src*='closeIcon']")
                 try:
                     close_icon.wait_for(state="visible", timeout=2000)
@@ -591,6 +592,7 @@ class TestViewsSubtabs:
         # Rename tab (clicks auto-wait for the hover-revealed icon)
         tab = self.page.locator("button.tabItem").nth(1)
         tab.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         tab.locator("img[src*='editIcon']").click()
 
         tab_input = self.page.locator("input.tabTitle").nth(1)
@@ -638,6 +640,7 @@ class TestViewsSubtabs:
         a content hash that changes on every rebuild. Revisit if the app moves
         to MUI icon components.
         """
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.page.locator("img[src*='myviews']").click()
         saved_view = self.page.locator(f"span[title='{view_name}']")
         try:
@@ -645,6 +648,7 @@ class TestViewsSubtabs:
         except Exception:
             return  # View not present - nothing to delete
         saved_view.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.page.locator("img[src*='delete-icon']").click()
         self.page.locator("button:has-text('Delete')").click()
         self.page.locator("text=Successfully deleted").wait_for(
