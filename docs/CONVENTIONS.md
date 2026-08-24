@@ -62,11 +62,21 @@ once independently in the wait conversion (August 2026). Use them:
   card, find the row by its text and locate the control inside it. A page
   -global `.first` can pick another row's control while a filter or hover
   is still applying (`events_page` pin fix, `admin_page.toggle_user_status`).
-- **MUI ships data-testid on icons.** `svg[data-testid='ExpandMoreIcon']`,
-  `SearchIcon`, `CloseIcon` work today, no frontend change needed - prefer
-  them over `img[src*=...]` guesses for MUI icon buttons. The login form
-  also has custom test ids (`[data-testid='email']`). Check for a test id
-  before writing a CSS guess.
+- **Two kinds of icon, two locators.** Where the app renders a MUI icon
+  (Events, Admin), `svg[data-testid='ExpandMoreIcon']`, `SearchIcon`,
+  `RefreshIcon` exist - use them. The Views surface and the player use
+  Next.js image assets instead, and their alt text is unreliable
+  (measured 08/24/2026: empty on closeIcon, editIcon, addIcon,
+  favoriteIcon, Zoom; wrong on editIcon, alt="delete Icon"). For those,
+  `img[src*='media/<basename>']` is the sanctioned locator - never
+  `img[alt=...]` without probing the live page - and the line carries a
+  why-comment, which the checker accepts the same way it accepts a
+  commented sleep. The login form has custom test ids
+  (`[data-testid='email']`). Check for a test id before a CSS guess.
+- **MUI controls by role.** Select is `role=combobox` with `role=option`
+  items in a `listbox`; Menu items are `menuitem`; Switch is
+  `role=switch`; Checkbox `role=checkbox`; Dialog `role=dialog`. Prefer
+  `get_by_role` over `.MuiSwitch-root`-style class selectors.
 - **Counting oracles compare against a baseline** taken before the action
   (`expanded_rows > initial_rows`, `_content_added`). An absolute
   `count() > 0` passes on pre-existing elements and can never fail.

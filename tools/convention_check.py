@@ -59,10 +59,15 @@ ORACLE_RE = re.compile(
 )
 
 
-def line_is_excused(lines: list[str], idx: int) -> bool:
-    """A sleep is excused by a why-comment: inline, or on the line above."""
+def line_is_excused(lines: list[str], idx: int, pattern=SLEEP_RE) -> bool:
+    """A finding is excused by a why-comment: inline, or on the line above.
+
+    Shared by the sleep rule and the img-src rule: both mark a thing that
+    is sometimes the only honest option, and the comment is the proof
+    that someone checked.
+    """
     line = lines[idx]
-    code_start = SLEEP_RE.search(line)
+    code_start = pattern.search(line)
     if code_start and "#" in line[code_start.end():]:
         return True
     if idx > 0:
@@ -98,11 +103,14 @@ def check_line(path: str, lines: list[str], idx: int) -> list[dict]:
                    "against a baseline taken before the action, or use "
                    "expect(...).to_have_count().",
         })
-    if IMG_SRC_RE.search(line):
+    if IMG_SRC_RE.search(line) and not line_is_excused(lines, idx, IMG_SRC_RE):
         findings.append({
             "sev": "MEDIUM", "rule": "img-src-locator",
-            "msg": "check for a data-testid before an img[src] guess. MUI "
-                   "icons ship svg[data-testid='...Icon'] today.",
+            "msg": "is this a MUI icon? then use svg[data-testid='...Icon'] "
+                   "(present on Events/Admin). A Next.js img asset keeps its "
+                   "src basename - its alt text is empty or wrong on this "
+                   "app (measured 08/24/2026) - and says so in a why-comment "
+                   "(CONVENTIONS.md > Locators).",
         })
     if TENANT_NAME_RE.search(line):
         findings.append({
