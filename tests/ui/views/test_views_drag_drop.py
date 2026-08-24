@@ -1,6 +1,8 @@
 """Views drag-and-drop tests - dragging cameras, views, locations to tiles."""
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
+
+from config.base_config import config
 from tests.shared.pages.views_page import ViewsPage
 
 
@@ -273,7 +275,9 @@ class TestViewsDragDrop:
         # count check below
         health = self.views.content_health_snapshot()
         try:
-            self.views.drag_location_to_tile(None, tile_index=0)
+            # the configured site row is the drag source; None made the
+            # locator 'text=None', so this test had only ever skipped
+            self.views.drag_location_to_tile(config.get("test_site_name"), tile_index=0)
             self._wait_tile_consumed(initial_tile_count)
         except Exception as e:
             pytest.skip(f"Location drag not supported or failed: {e}")
