@@ -454,6 +454,173 @@ def test_headline_takes_the_first_error_block():
 
 
 # ---------------------------------------------------------------------------
+# Titles, modules, change chips
+# ---------------------------------------------------------------------------
+
+def test_readable_title_takes_the_docstring_first_line():
+    doc = '\n    Verify the view opens.\n\n    Longer text nobody needs in a list.\n    '
+    assert rr.readable_title(NODEID, doc) == 'Verify the view opens.'
+
+
+@pytest.mark.parametrize(('nodeid', 'title'), [
+    (NODEID, 'Open'),
+    ('tests/ui/x.py::test_drag_camera_to_tile', 'Drag camera to tile'),
+    ('tests/ui/x.py::TestA::test_open_my_views[chromium-site-3]', 'Open my views'),
+    ('tests/ui/x.py::testSomething', 'Something'),
+])
+def test_readable_title_falls_back_to_the_function_name(nodeid, title):
+    assert rr.readable_title(nodeid) == title
+    assert rr.readable_title(nodeid, '   \n\n') == title  # a blank docstring is no title
+
+
+def test_module_of_is_the_path_under_tests():
+    assert rr.module_of(NODEID) == 'ui/views/test_views_basic.py'
+    assert rr.module_of('tests\\ui\\x.py::test_a') == 'ui/x.py'
+    assert rr.module_of('other/y.py::test_b') == 'other/y.py'
+    assert rr.module_of(SAFE) == SAFE  # a file-name stand-in has no path to strip
+
+
+def test_format_seconds():
+    assert rr.format_seconds(12.34) == '12.3 s'
+    assert rr.format_seconds(0) == '0.0 s'
+    assert rr.format_seconds(101.8) == '1 min 42 s'
+
+
+def test_compute_deltas_labels_every_change():
+    previous = {'a': 'passed', 'b': 'failed', 'c': 'failed', 'd': 'skipped',
+                'e': 'passed', 'f': 'error', 'h': 'skipped'}
+    current = {'a': 'failed', 'b': 'passed', 'c': 'error', 'd': 'failed',
+               'e': 'passed', 'f': 'skipped', 'g': 'passed', 'h': 'passed'}
+    assert rr.compute_deltas(current, previous) == {
+        'a': 'new failure', 'b': 'fixed', 'c': 'still failing',
+        'd': 'new failure', 'g': 'new test'}
+
+
+def test_compute_deltas_without_a_previous_run():
+    assert rr.compute_deltas({'a': 'failed'}, None) == {}
+    assert rr.compute_deltas({}, {'a': 'failed'}) == {}
+
+
+def test_find_previous_run_wants_the_same_slug_and_an_earlier_start(tmp_path):
+    for name in ('2026-08-01_10-00-00__views', '2026-08-02_10-00-00__views',
+                 '2026-08-03_10-00-00__views', '2026-08-02_12-00-00__media', 'notes'):
+        (tmp_path / name).mkdir()
+    (tmp_path / '2026-08-02_11-00-00__views').write_text('a file, not a run', encoding='utf-8')
+    assert rr.find_previous_run(tmp_path / '2026-08-03_10-00-00__views') == \
+        tmp_path / '2026-08-02_10-00-00__views'
+    assert rr.find_previous_run(tmp_path / '2026-08-01_10-00-00__views') is None
+    assert rr.find_previous_run(tmp_path / '2026-08-02_12-00-00__media') is None
+    assert rr.find_previous_run(tmp_path / 'notes') is None
+    assert rr.find_previous_run(tmp_path / 'missing' / '2026-08-03_10-00-00__views') is None
+
+
+def test_load_previous_outcomes_prefers_the_summary_records(tmp_path):
+    prev = tmp_path / '2026-08-01_10-00-00__views'
+    prev.mkdir()
+    (prev / 'summary.json').write_text(json.dumps({'tests': [
+        {'nodeid': NODEID, 'outcome': 'failed'}, {'nodeid': TWIN_A, 'outcome': 'passed'}]}),
+        encoding='utf-8')
+    assert rr.load_previous_outcomes(prev) == {NODEID: 'failed', TWIN_A: 'passed'}
+    # An older archive without records still answers from its report.
+    (prev / 'summary.json').unlink()
+    (prev / 'report.html').write_text(_report_html({TWIN_B: [_row('Passed')]}), encoding='utf-8')
+    assert rr.load_previous_outcomes(prev) == {TWIN_B: 'passed'}
+    assert rr.load_previous_outcomes(tmp_path / 'empty') == {}
+
+
+def test_summary_tests_tolerates_odd_shapes():
+    assert rr.summary_tests({}) == []
+    assert rr.summary_tests({'tests': 'nope'}) == []
+    assert rr.summary_tests({'tests': [{'nodeid': 'a'}, {'x': 1}, 'str', {'nodeid': ''}]}) == \
+        [{'nodeid': 'a'}]
+
+
+def _summary_test_rows() -> list[dict]:
+    """summary.json "tests" rows as run_archive writes them."""
+    return [
+        {'nodeid': NODEID, 'module': 'ui/views/test_views_basic.py',
+         'title': 'Verify the view opens.', 'case_key': 'VK1', 'case_title': 'Open a view',
+         'outcome': 'failed', 'duration_s': 101.2, 'phases': {'setup': 1.2, 'call': 100.0},
+         'log_file': f'log/{SAFE}.log'},
+        {'nodeid': TWIN_A, 'module': 'ui/c2c/test_cams.py', 'title': 'Reboot a camera',
+         'case_key': None, 'case_title': None, 'outcome': 'passed', 'duration_s': 7.5,
+         'phases': {'call': 7.5}, 'log_file': None},
+        {'nodeid': TWIN_B, 'module': 'ui/c2c/test_cams.py', 'title': 'Reboot a camera',
+         'case_key': None, 'case_title': None, 'outcome': 'skipped', 'duration_s': 0.4,
+         'phases': {'setup': 0.4}, 'log_file': None},
+    ]
+
+
+def _add_summary_tests(run: Path, rows: list[dict], provenance: dict | None = None) -> None:
+    summary = json.loads((run / 'summary.json').read_text(encoding='utf-8'))
+    summary['tests'] = rows
+    if provenance:
+        summary['provenance'] = provenance
+    (run / 'summary.json').write_text(json.dumps(summary), encoding='utf-8')
+
+
+def test_build_run_report_shows_titles_facts_and_change_chips(tmp_path):
+    run = _make_run(tmp_path)
+    _add_summary_tests(run, _summary_test_rows(), {
+        'env': 'qa', 'base_url_host': 'app.example.com', 'git_commit': 'abc1234',
+        'playwright': '1.62.0', 'pytest_playwright': '0.9.0',
+        'browser': 'chromium', 'browser_channel': 'chrome'})
+    # The previous run of this target: NODEID passed, TWIN_A failed, TWIN_B absent.
+    prev = tmp_path / '2026-08-23_10-00-00__tests-ui-views'
+    prev.mkdir()
+    (prev / 'summary.json').write_text(json.dumps({'tests': [
+        {'nodeid': NODEID, 'outcome': 'passed'}, {'nodeid': TWIN_A, 'outcome': 'failed'}]}),
+        encoding='utf-8')
+    page = rr.build_run_report(run)
+
+    card = page[page.index('<div class="card failed"'):page.index('id="advisories"')]
+    # Title first, QA Touch case second, node id beneath; never a renamed test.
+    assert (card.index('Verify the view opens.') < card.index('QA Touch VK1: Open a view')
+            < card.index(f'<div class="nodeid">{NODEID}</div>'))
+    assert '<span class="chip delta new-failure">new failure</span>' in card
+    assert '1 min 41 s' in card
+    assert f'href="log/{SAFE}.log"' in card
+    key = re.search(r'<div class="card failed"[^>]*data-test="([^"]*)"', page).group(1)
+    assert 'verify the view opens.' in key
+    assert NODEID.lower() in key
+    assert 'vk1' in key
+    # The passed twin was fixed; the skipped twin is new.
+    assert 'chip delta fixed">fixed<' in page
+    assert 'chip delta new-test">new test<' in page
+    assert '<h4 class="module">ui/c2c/test_cams.py (1)</h4>' in page
+    # Header provenance and the compared-against link.
+    for fact in ('ENV: <code>qa</code>', 'app.example.com', 'abc1234', 'chromium / chrome',
+                 'playwright 1.62.0, pytest-playwright 0.9.0'):
+        assert fact in page
+    assert '2026-08-23_10-00-00__tests-ui-views/run.html' in page
+    # Slowest sits between advisories and passed, longest first.
+    assert page.index('id="advisories"') < page.index('id="slowest"') < page.index('id="passed"')
+    slow = page[page.index('id="slowest"'):page.index('id="passed"')]
+    assert slow.index('1 min 41 s') < slow.index('7.5 s') < slow.index('0.4 s')
+    # The filter box and its script ship with the page.
+    assert 'id="filter"' in page
+    assert "getElementById('filter')" in page
+
+
+def test_build_run_report_without_a_previous_run_has_no_chips(tmp_path):
+    run = _make_run(tmp_path)
+    _add_summary_tests(run, _summary_test_rows())
+    page = rr.build_run_report(run)
+    assert 'chip delta' not in page
+    assert 'No earlier run of this target to compare with.' in page
+
+
+def test_build_run_report_falls_back_on_an_older_archive(tmp_path):
+    """No "tests" records: titles come from the node ids, timing from
+    pytest-html, and the slowest block says why it is empty."""
+    run = _make_run(tmp_path)
+    page = rr.build_run_report(run)
+    assert '<h3 class="title">Open</h3>' in page
+    assert 'No per-test timing in this run.' in page
+    assert '00:01:41' in page
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 

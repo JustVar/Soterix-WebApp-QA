@@ -7,6 +7,8 @@
     python run.py rerun latest                # the failed tests of the newest archived run
     python run.py open latest                 # that run's run.html in the browser
     python run.py list                        # the last 10 archived runs
+    python run.py health                      # pass rates, flaky candidates, slowest tests
+                                              # over the newest 20 runs of each target (or: health 50)
 
 Anything after `--` goes to pytest unchanged:
 
@@ -159,6 +161,14 @@ def _list() -> int:
     return 0
 
 
+def _health(last: str | None) -> int:
+    """Aggregate the archived runs into reports/runs/health.html."""
+    from tools.health_summary import main as health_main
+    if last is not None and not last.isdigit():
+        sys.exit(f'health takes a number of runs per target, not {last!r}.')
+    return health_main(['--last', last] if last else [])
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     extra: list[str] = []
@@ -168,9 +178,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog='run.py', formatter_class=argparse.RawDescriptionHelpFormatter,
         description=__doc__.split('\n\n', 1)[1])
-    parser.add_argument('verb', choices=['smoke', 'module', 'test', 'rerun', 'open', 'list'])
+    parser.add_argument('verb', choices=['smoke', 'module', 'test', 'rerun', 'open', 'list', 'health'])
     parser.add_argument('target', nargs='?',
-                        help='module name, test node id or path, or a run folder (default latest)')
+                        help='module name, test node id or path, a run folder (default latest), '
+                             'or for health the runs per target (default 20)')
     parser.add_argument('--check', action='store_true',
                         help='run tools/pre_run_check.py against the target environment first')
     args = parser.parse_args(argv)
@@ -180,6 +191,8 @@ def main(argv: list[str] | None = None) -> int:
     os.chdir(ROOT)  # the plugins address reports/ and tests/ from the repo root
     if args.verb == 'list':
         return _list()
+    if args.verb == 'health':
+        return _health(args.target)
     if args.verb == 'open':
         return _open(args.target or 'latest')
     return _run(_pytest_target(args), extra, args.check)

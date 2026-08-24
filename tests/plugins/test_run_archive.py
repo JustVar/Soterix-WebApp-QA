@@ -13,6 +13,8 @@ do not require playwright, a browser, or network.
 """
 from __future__ import annotations
 
+import json
+import logging
 import os
 import re
 import sys
@@ -237,8 +239,11 @@ def test_summary_shape():
                                 report_file='report.html')
     assert set(summary) == {'schema_version', 'started', 'ended', 'duration_s',
                             'exitstatus', 'counts', 'target', 'markexpr',
-                            'keyword', 'report_file', 'advisories'}
-    assert summary['schema_version'] == 1
+                            'keyword', 'report_file', 'advisories', 'tests',
+                            'provenance'}
+    assert summary['schema_version'] == 2
+    assert summary['tests'] == []
+    assert summary['provenance'] == {}
     assert summary['duration_s'] == 90.5
     assert summary['exitstatus'] == 1
     assert summary['counts'] == counts
@@ -548,3 +553,264 @@ class TestAdvisories:
         assert '<th>Advisories</th>' in html
         assert '<td>2</td>' in html
         assert html.index('__a') < html.index('__b')
+
+
+# ---------------------------------------------------------------- per-test facts
+
+class _FakePhaseReport:
+    """Just enough of a pytest TestReport for record_phase."""
+
+    def __init__(self, nodeid, when, outcome, duration=1.0, stdout='', stderr='',
+                 longrepr=''):
+        self.nodeid = nodeid
+        self.when = when
+        self.outcome = outcome
+        self.duration = duration
+        self.capstdout = stdout
+        self.capstderr = stderr
+        self.longreprtext = longrepr
+
+
+MAPPED = 'tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_tabs[chromium]'
+
+
+def _write_mapping(tmp_path, mappings) -> Path:
+    path = tmp_path / 'mapping.json'
+    path.write_text(json.dumps({'version': 1, 'mappings': mappings}), encoding='utf-8')
+    return path
+
+
+class TestCaseMapping:
+    """QA Touch case titles ride along when the node id is mapped."""
+
+    def test_load_reads_key_and_title(self, tmp_path):
+        path = _write_mapping(tmp_path, {
+            MAPPED: {'case_key': 'VKbBPP', 'case_title': 'Verify the tabs', 'reviewed': True},
+            'tests/x.py::test_no_key': {'case_title': 'orphan'},
+            'tests/x.py::test_odd': 'not a row',
+        })
+        assert ra.load_case_mapping(path) == {
+            MAPPED: {'case_key': 'VKbBPP', 'case_title': 'Verify the tabs'}}
+
+    def test_load_tolerates_missing_and_malformed_files(self, tmp_path):
+        assert ra.load_case_mapping(tmp_path / 'nope.json') == {}
+        bad = tmp_path / 'bad.json'
+        bad.write_text('{not json', encoding='utf-8')
+        assert ra.load_case_mapping(bad) == {}
+        bad.write_text(json.dumps({'mappings': ['a', 'b']}), encoding='utf-8')
+        assert ra.load_case_mapping(bad) == {}
+
+    def test_lookup_exact_then_bare_then_none(self):
+        mapping = {MAPPED: {'case_key': 'K1', 'case_title': 'T1'},
+                   'tests/y.py::test_bare': {'case_key': 'K2', 'case_title': ''}}
+        assert ra.lookup_case(mapping, MAPPED) == {'case_key': 'K1', 'case_title': 'T1'}
+        # A mapping keyed on the bare function still names the [chromium] variant.
+        assert ra.lookup_case(mapping, 'tests/y.py::test_bare[chromium]') == {
+            'case_key': 'K2', 'case_title': None}
+        assert ra.lookup_case(mapping, 'tests/z.py::test_other') == {
+            'case_key': None, 'case_title': None}
+        assert ra.lookup_case({}, MAPPED) == {'case_key': None, 'case_title': None}
+
+
+class TestLogFileName:
+    def test_sanitizes_like_the_screenshot_stem(self):
+        nodeid = 'tests/ui/views/test_views_basic.py::TestViews::test_open[chromium]'
+        assert ra.log_file_name(nodeid) == \
+            'tests-ui-views-test_views_basic.py-TestViews-test_open-chromium.log'
+
+    def test_caps_the_stem(self):
+        name = ra.log_file_name('tests/' + 'x' * 300)
+        assert name.endswith('.log')
+        assert len(name) == ra.LOG_NAME_MAX + len('.log')
+        assert ra.LOG_NAME_MAX == 120
+
+
+class TestRecordPhase:
+    NODEID = 'tests/ui/views/test_views_drag_drop.py::TestDrag::test_drag_camera_to_tile[chromium]'
+
+    def _state(self):
+        state = ra._RunState()
+        state.mapping = {self.NODEID: {'case_key': 'K9', 'case_title': 'Drag a camera'}}
+        return state
+
+    def test_builds_the_record_across_phases(self):
+        state = self._state()
+        phases = [
+            _FakePhaseReport(self.NODEID, 'setup', 'passed', 0.5, stdout='[AUTH] cached\n'),
+            _FakePhaseReport(self.NODEID, 'call', 'failed', 12.25, stdout='[VIEWS] fallback\n',
+                             stderr='warn\n', longrepr='E   assert False'),
+            _FakePhaseReport(self.NODEID, 'teardown', 'passed', 0.25),
+        ]
+        for report in phases:
+            ra.record_phase(state, report, doc='Verify a camera can be dragged.\n\n    More.',
+                            mapping=state.mapping)
+        rec = state.tests[self.NODEID]
+        assert rec['title'] == 'Verify a camera can be dragged.'
+        assert rec['module'] == 'ui/views/test_views_drag_drop.py'
+        assert rec['case_key'] == 'K9'
+        assert rec['case_title'] == 'Drag a camera'
+        assert rec['outcome'] == 'failed'
+        assert rec['phases'] == {'setup': 0.5, 'call': 12.25, 'teardown': 0.25}
+        assert rec['duration_s'] == 13.0
+        assert rec['log_file'] is None
+        captured = state.captured[self.NODEID]
+        assert [c['phase'] for c in captured] == ['setup', 'call', 'teardown']
+        assert captured[1]['stderr'] == 'warn\n'
+        assert captured[1]['error'] == 'E   assert False'
+        assert captured[0]['error'] == ''  # only a failed phase keeps its traceback
+
+    @pytest.mark.parametrize(('when', 'outcome', 'expected'), [
+        ('setup', 'failed', 'error'),
+        ('setup', 'skipped', 'skipped'),
+        ('call', 'passed', 'passed'),
+        ('call', 'skipped', 'skipped'),
+    ])
+    def test_outcome_vocabulary(self, when, outcome, expected):
+        state = self._state()
+        ra.record_phase(state, _FakePhaseReport(self.NODEID, when, outcome))
+        assert state.tests[self.NODEID]['outcome'] == expected
+
+    def test_title_falls_back_to_the_function_name(self):
+        state = ra._RunState()
+        state.mapping = {}
+        ra.record_phase(state, _FakePhaseReport(self.NODEID, 'setup', 'passed'), doc=None)
+        assert state.tests[self.NODEID]['title'] == 'Drag camera to tile'
+        assert state.tests[self.NODEID]['case_key'] is None
+
+    def test_capture_reads_the_phase_section_only(self):
+        """pytest accumulates sections across phases, so capstdout on the
+        call report repeats setup's output; the phase's section does not."""
+        report = _FakePhaseReport(self.NODEID, 'call', 'passed', 1.0,
+                                  stdout='[AUTH] cached\n[VIEWS] drag\n')
+        report.sections = [('Captured stdout setup', '[AUTH] cached\n'),
+                           ('Captured stdout call', '[VIEWS] drag\n'),
+                           ('Captured stderr call', 'warn\n')]
+        assert ra.phase_capture(report, 'stdout') == '[VIEWS] drag\n'
+        assert ra.phase_capture(report, 'stderr') == 'warn\n'
+        report.when = 'teardown'
+        assert ra.phase_capture(report, 'stdout') == ''
+        # No sections at all: the joined attribute is the only source.
+        plain = _FakePhaseReport(self.NODEID, 'call', 'passed', stdout='x\n')
+        assert ra.phase_capture(plain, 'stdout') == 'x\n'
+        assert ra.phase_capture(plain, 'stderr') == ''
+
+    def test_rerun_attempts_are_not_final(self):
+        state = self._state()
+        ra.record_phase(state, _FakePhaseReport(self.NODEID, 'call', 'rerun', 30.0))
+        assert state.tests[self.NODEID]['outcome'] is None
+        assert state.tests[self.NODEID]['phases'] == {}
+        assert self.NODEID not in state.captured
+        ra.record_phase(state, _FakePhaseReport(self.NODEID, 'call', 'passed', 8.0))
+        assert state.tests[self.NODEID]['outcome'] == 'passed'
+        assert state.tests[self.NODEID]['duration_s'] == 8.0
+
+    def test_summary_copies_the_records(self):
+        state = self._state()
+        ra.record_phase(state, _FakePhaseReport(self.NODEID, 'call', 'passed', 2.0))
+        summary = ra._build_summary(started=0.0, ended=5.0, exitstatus=0, counts={},
+                                    target=[], markexpr='', keyword='', report_file=None,
+                                    tests=list(state.tests.values()),
+                                    provenance={'env': 'qa'})
+        assert summary['tests'][0]['nodeid'] == self.NODEID
+        assert summary['provenance'] == {'env': 'qa'}
+        state.tests[self.NODEID]['phases']['teardown'] = 1.0
+        assert 'teardown' not in summary['tests'][0]['phases']
+
+
+class TestTestLog:
+    """One file per test: every phase's captured output, in order."""
+
+    def test_format_lists_each_phase(self):
+        rec = {'nodeid': 't/x.py::test_a', 'title': 'Do a thing', 'case_key': 'K1',
+               'case_title': 'Case one'}
+        phases = [
+            {'phase': 'setup', 'outcome': 'passed', 'duration': 0.5, 'stdout': '[AUTH] ok\n'},
+            {'phase': 'call', 'outcome': 'failed', 'duration': 3.0, 'stdout': '',
+             'stderr': 'boom\n', 'error': 'E   assert 1 == 2'},
+            {'phase': 'teardown', 'outcome': 'passed', 'duration': 0.1},
+        ]
+        text = ra.format_test_log(rec, phases)
+        assert text.startswith('t/x.py::test_a\nDo a thing\nQA Touch K1: Case one\n')
+        assert '=== setup: passed (0.50 s) ===\n--- stdout ---\n[AUTH] ok\n' in text
+        assert '=== call: failed (3.00 s) ===\n--- stderr ---\nboom\n--- error ---\nE   assert 1 == 2' in text
+        assert '=== teardown: passed (0.10 s) ===\n(no output)\n' in text
+
+    def test_format_without_a_case_or_phases(self):
+        text = ra.format_test_log({'nodeid': 't::a', 'title': 'A', 'case_key': None}, [])
+        assert text == 't::a\nA\n'
+
+    def test_archive_writes_the_log_folder(self, tmp_path, monkeypatch):
+        """log/<test>.log per test plus the session's run.log, and the
+        summary record points at the file."""
+        monkeypatch.setattr(ra, 'RUNS_DIR', tmp_path / 'runs')
+        monkeypatch.setattr(ra, 'SCREENSHOT_DIR', tmp_path / 'shots')
+        monkeypatch.setattr(ra, 'TRACE_DIR', tmp_path / 'artifacts')
+        monkeypatch.setattr(ra, 'RESULTS_JSON', tmp_path / 'none.json')
+        state = ra._RunState()
+        state.mapping = {}
+        state.started, state.ended, state.exitstatus = 1_700_000_000.0, 1_700_000_010.0, 0
+        state.counts['passed'] = 1
+        nodeid = 't/x.py::test_a[chromium]'
+        ra.record_phase(state, _FakePhaseReport(nodeid, 'setup', 'passed', 0.5, stdout='hi\n'))
+        ra.record_phase(state, _FakePhaseReport(nodeid, 'call', 'passed', 2.0, stdout='[LPR] x\n'))
+        state.run_log.attach(tmp_path / 'live' / 'run.log')
+        logging.getLogger('views_page').info('opened the page')
+        state.run_log.detach()
+
+        ra._archive_run(_FakeConfig(args=['t/x.py']), state)
+        dest = next(p for p in (tmp_path / 'runs').iterdir() if p.is_dir())
+        test_log = dest / 'log' / 't-x.py-test_a-chromium.log'
+        assert test_log.is_file()
+        body = test_log.read_text(encoding='utf-8')
+        assert 'hi\n' in body
+        assert '[LPR] x' in body
+        assert 'opened the page' in (dest / 'log' / 'run.log').read_text(encoding='utf-8')
+        summary = json.loads((dest / 'summary.json').read_text(encoding='utf-8'))
+        assert summary['tests'][0]['log_file'] == 'log/t-x.py-test_a-chromium.log'
+        assert summary['tests'][0]['title'] == 'A'
+        assert set(summary['provenance']) == {'env', 'base_url_host', 'git_commit', 'playwright',
+                                              'pytest_playwright', 'browser', 'browser_channel'}
+        page = (dest / 'run.html').read_text(encoding='utf-8')
+        assert 'href="log/t-x.py-test_a-chromium.log"' in page
+        assert 'href="log/run.log"' in page
+
+
+class TestRunLog:
+    def test_attach_writes_info_records_and_detach_restores(self, tmp_path):
+        root = logging.getLogger()
+        before_level = root.level
+        before_handlers = list(root.handlers)
+        run_log = ra._RunLog()
+        run_log.attach(tmp_path / 'run.log')
+        try:
+            assert root.getEffectiveLevel() <= logging.INFO
+            logging.getLogger('report_media').info('cleared 3 screenshots')
+            logging.getLogger('report_media').debug('not at INFO')
+        finally:
+            run_log.detach()
+        text = (tmp_path / 'run.log').read_text(encoding='utf-8')
+        assert 'INFO report_media: cleared 3 screenshots' in text
+        assert 'not at INFO' not in text
+        assert root.level == before_level
+        assert root.handlers == before_handlers
+        run_log.detach()  # a second detach is harmless
+
+    def test_unit_test_runs_never_start_a_run_log(self):
+        """Same guard as the archive: the repo's own tests leave no evidence."""
+        assert ra._process_may_archive(_FakeConfig(args=['tests/plugins']), {}) is False
+        assert ra._process_may_archive(_FakeConfig(collect_only=True), {}) is False
+        assert ra._process_may_archive(_FakeConfig(), {'PYTEST_XDIST_WORKER': 'gw0'}) is False
+        assert ra._process_may_archive(_FakeConfig(), {}) is True
+
+
+def test_index_links_health_only_when_it_exists(tmp_path):
+    entries = [_entry('2026-08-01_10-00-00__a')]
+    assert 'href="health.html"' not in ra._render_index(entries)
+    assert 'run.py health' in ra._render_index(entries)
+    assert 'href="health.html"' in ra._render_index(entries, has_health=True)
+    (tmp_path / '2026-08-01_10-00-00__a').mkdir()
+    ra._write_index(tmp_path)
+    assert 'href="health.html"' not in (tmp_path / 'index.html').read_text(encoding='utf-8')
+    (tmp_path / 'health.html').write_text('x', encoding='utf-8')
+    ra._write_index(tmp_path)
+    assert 'href="health.html"' in (tmp_path / 'index.html').read_text(encoding='utf-8')

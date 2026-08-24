@@ -43,8 +43,21 @@ failure shows the error message, the failing Playwright action with its call
 log, the 15 actions before it, the console errors, every screenshot of the
 test (final and mid-drag), the video clip, and the exact `show-trace`
 command for its trace. Passed and skipped tests sit below in collapsed lists
-with their screenshots. `python -m plugins.run_report latest` rebuilds the
-page for the newest run, or pass a run folder.
+with their screenshots, grouped by module. Every test shows its readable
+title, its QA Touch case when the node id is mapped, its duration, and a
+chip that says what changed since the previous run of the same target (new
+failure, fixed, still failing, new test). The filter box at the top narrows
+the page to the tests that match a word. `python -m plugins.run_report
+latest` rebuilds the page for the newest run, or pass a run folder.
+
+The run's `log/` folder holds one file per test with the output pytest
+captured in every phase, and `run.log` with the session's logging. When a
+page object printed something a screenshot cannot show, it is there.
+
+`python run.py health` builds `reports/runs/health.html` from the archived
+summaries: pass rate and mean duration per target and per module, flaky
+candidates (tests that both passed and failed), newly failing tests, and
+the slowest tests. Check it before you call a failure new.
 
 ## View a trace in the GUI
 

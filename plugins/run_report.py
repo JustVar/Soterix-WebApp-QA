@@ -7,22 +7,38 @@ puts every piece of the run's evidence one click away, failures first.
     python -m plugins.run_report reports/runs/<start>__<target>
 
 What the page shows, in order:
-  - Header: target, start time, duration, outcome counts, exit status, and
-    links to the pytest-html report and the archive index.
+  - Header: target, start time, duration, outcome counts, exit status,
+    provenance (ENV, host, git commit, browser, Playwright versions), and
+    links to the pytest-html report, the archive index, and the run that
+    the change chips compare against.
+  - A filter box: type part of a title, node id, case key, module, or
+    outcome and only the matching tests stay visible.
   - Failures: one card per failed or errored test with the error message,
     the failing Playwright action and its call log, the actions that led
     up to it, console errors, every screenshot of the test (final plus
     mid-drag frames, click for full size), the video clip when one was
     kept, and the exact show-trace command for the trace zip.
   - Advisories: the [VIEWS] / [LPR] / [EXPORT] lines from summary.json.
-  - Passed and Skipped: collapsed lists with each test's thumbnails.
+  - Slowest 5: the longest tests of the run.
+  - Passed and Skipped: collapsed lists grouped by module, each test with
+    its thumbnails and its advisory lines.
+
+Every test shows its readable title first (the docstring's first line, or
+the function name as words), the QA Touch case title beneath it when the
+test is mapped, and the node id smaller under both. The node id stays the
+join key for the QA Touch mapping and the archive history, so the page
+never renames a test. Each test also carries its duration, a link to its
+captured output under log/, and a change chip against the previous run of
+the same target: new failure, fixed, still failing, or new test.
 
 Where the facts come from, most reliable first:
-  1. report.html - pytest-html embeds every test's outcome, duration, and
+  1. summary.json "tests" - run_archive's own per-test record: title,
+     module, QA Touch case, outcome, per-phase timing, log file.
+  2. report.html - pytest-html embeds every test's outcome, duration, and
      captured log (the traceback) as JSON in a data-jsonblob attribute.
-  2. last_run_results.json - qatouch_reporter's per-nodeid outcomes. Only
+  3. last_run_results.json - qatouch_reporter's per-nodeid outcomes. Only
      present when that reporter ran (--qatouch-upload), so never assumed.
-  3. The file names themselves - a __FAILED screenshot or a -trace.zip
+  4. The file names themselves - a __FAILED screenshot or a -trace.zip
      names its test even when neither file above exists.
   Files attach to tests through the same sanitizer report_media and
   conftest use to name them. Names that run_archive shortened to fit the
@@ -43,7 +59,7 @@ import os
 import re
 import sys
 import zipfile
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from html import escape
 from pathlib import Path
@@ -55,8 +71,22 @@ from urllib.parse import quote
 SAFE_NAME_MAX = 120
 TRACE_NAME_MAX = 150
 
+# Run folders are named <session-start>__<slug>. Defined here, not in
+# run_archive, because that module imports this one and the previous-run
+# lookup below needs the pattern too.
+RUN_DIR_RE = re.compile(r'^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}__')
+
 # How many actions before the failing one the failure card lists.
 LAST_ACTIONS = 15
+
+# How many of the run's longest tests the "Slowest" block lists.
+SLOWEST_COUNT = 5
+
+# Change chips against the previous run of the same target.
+DELTA_NEW_FAILURE = 'new failure'
+DELTA_FIXED = 'fixed'
+DELTA_STILL_FAILING = 'still failing'
+DELTA_NEW_TEST = 'new test'
 
 # Error lines pytest prefixes with 'E ' in a longrepr; the first block of
 # them is the headline a reader wants before the full traceback.
@@ -98,6 +128,14 @@ class TestRecord:
     traces: list[str] = field(default_factory=list)
     videos: list[str] = field(default_factory=list)
     advisories: list[str] = field(default_factory=list)
+    # From summary.json "tests" (run_archive); empty on older archives.
+    title: str = ''
+    module: str = ''
+    case_key: str = ''
+    case_title: str = ''
+    log_file: str = ''
+    seconds: float | None = None
+    delta: str = ''
 
     @property
     def safe(self) -> str:
@@ -107,12 +145,58 @@ class TestRecord:
     def safe_trace(self) -> str:
         return _safe_name(self.nodeid, TRACE_NAME_MAX)
 
+    @property
+    def display_title(self) -> str:
+        return self.title or readable_title(self.nodeid)
+
+    @property
+    def module_name(self) -> str:
+        return self.module or module_of(self.nodeid)
+
+    @property
+    def duration_text(self) -> str:
+        """Seconds from the archive when known, else pytest-html's text."""
+        return format_seconds(self.seconds) if self.seconds is not None else self.duration
+
 
 # ---------------------------------------------------------------- names
 
 def _safe_name(nodeid: str, cap: int) -> str:
     """The filesystem stem the plugins derive from a node id."""
     return re.sub(r'[^\w.-]+', '-', nodeid).strip('-')[:cap]
+
+
+def readable_title(nodeid: str, doc: str | None = None) -> str:
+    """The title a reader sees for a test.
+
+    The first non-empty line of the docstring when there is one, else the
+    function name as words: test_drag_camera_to_tile[chromium] reads
+    "Drag camera to tile". Display only - the node id stays the key.
+    """
+    for line in (doc or '').splitlines():
+        text = line.strip()
+        if text:
+            return text
+    name = nodeid.rsplit('::', 1)[-1]
+    name = re.sub(r'\[.*\]$', '', name)
+    name = re.sub(r'^test_?', '', name)
+    words = name.replace('_', ' ').strip()
+    return (words[:1].upper() + words[1:]) if words else nodeid
+
+
+def module_of(nodeid: str) -> str:
+    """The test file's path under tests/ - the grouping key of the page and
+    the health summary. A path outside tests/ is kept whole."""
+    path = nodeid.split('::', 1)[0].replace('\\', '/')
+    return path[len('tests/'):] if path.startswith('tests/') else path
+
+
+def format_seconds(seconds: float) -> str:
+    """12.3 s under a minute, else 1 min 41 s."""
+    if seconds < 60:
+        return f'{seconds:.1f} s'
+    minutes, rest = divmod(seconds, 60)
+    return f'{int(minutes)} min {rest:.0f} s'
 
 
 def _loose(text: str) -> str:
@@ -229,6 +313,73 @@ def load_summary(run_dir: Path) -> dict:
     """summary.json as a dict; empty when missing or unreadable."""
     loaded = _read_json(run_dir / 'summary.json')
     return loaded if isinstance(loaded, dict) else {}
+
+
+def summary_tests(summary: Mapping) -> list[dict]:
+    """The per-test records of a summary.json, keyed rows only.
+
+    Archives written before the "tests" key existed have none; the page
+    then falls back to report.html and the file names as before.
+    """
+    rows = summary.get('tests')
+    if not isinstance(rows, list):
+        return []
+    return [r for r in rows if isinstance(r, dict) and r.get('nodeid')]
+
+
+def find_previous_run(run_dir: Path) -> Path | None:
+    """The newest earlier archive of the same target, or None.
+
+    Same target means the same folder slug: the part after '__'. Only
+    folders that sort before this run count, so rebuilding an old run's
+    page compares it with its own past, not with a later run.
+    """
+    slug = run_dir.name.partition('__')[2]
+    parent = run_dir.parent
+    if not slug or not parent.is_dir():
+        return None
+    earlier = sorted(p for p in parent.iterdir()
+                     if p.is_dir() and RUN_DIR_RE.match(p.name)
+                     and p.name < run_dir.name and p.name.partition('__')[2] == slug)
+    return earlier[-1] if earlier else None
+
+
+def load_previous_outcomes(prev_dir: Path) -> dict[str, str]:
+    """Node id -> outcome for an earlier run, from its summary "tests" when
+    present, else from its report and file names (older archives)."""
+    rows = summary_tests(load_summary(prev_dir))
+    if rows:
+        return {str(r['nodeid']): str(r.get('outcome') or 'unknown') for r in rows}
+    records, _unattached = collect_tests(prev_dir)
+    return {nodeid: rec.outcome for nodeid, rec in records.items()}
+
+
+def compute_deltas(current: Mapping[str, str],
+                   previous: Mapping[str, str] | None) -> dict[str, str]:
+    """The change chip of each test since the previous run of this target.
+
+    No previous run means no chips at all - nothing to compare with.
+    A test absent from the previous run is 'new test'. Failing both
+    times is 'still failing'; failing now after a pass or a skip is
+    'new failure'; passing now after a failure is 'fixed'. Every other
+    pair (pass then pass, skip either side) gets no chip.
+    """
+    if previous is None:
+        return {}
+    chips: dict[str, str] = {}
+    for nodeid, outcome in current.items():
+        failing = outcome in FAILURE_OUTCOMES
+        if nodeid not in previous:
+            chips[nodeid] = DELTA_NEW_TEST
+            continue
+        was_failing = previous[nodeid] in FAILURE_OUTCOMES
+        if failing and was_failing:
+            chips[nodeid] = DELTA_STILL_FAILING
+        elif failing:
+            chips[nodeid] = DELTA_NEW_FAILURE
+        elif was_failing and outcome in PASSED_OUTCOMES:
+            chips[nodeid] = DELTA_FIXED
+    return chips
 
 
 def load_report_results(run_dir: Path) -> dict[str, dict]:
@@ -416,14 +567,31 @@ def collect_tests(run_dir: Path) -> tuple[dict[str, TestRecord], list[str]]:
     that matched no test (shown at the end of the page rather than lost).
     """
     tests: dict[str, TestRecord] = {}
+    summary = load_summary(run_dir)
 
+    for row in summary_tests(summary):
+        nodeid = str(row['nodeid'])
+        rec = tests.setdefault(nodeid, TestRecord(nodeid))
+        rec.title = str(row.get('title') or '')
+        rec.module = str(row.get('module') or '')
+        rec.case_key = str(row.get('case_key') or '')
+        rec.case_title = str(row.get('case_title') or '')
+        rec.log_file = str(row.get('log_file') or '')
+        if isinstance(row.get('duration_s'), (int, float)):
+            rec.seconds = float(row['duration_s'])
+        outcome = _HTML_OUTCOMES.get(str(row.get('outcome') or '').lower())
+        if outcome and _worse(outcome, rec.outcome):
+            rec.outcome = outcome
     for nodeid, row in load_report_results(run_dir).items():
-        tests[nodeid] = TestRecord(nodeid, row['outcome'], row['duration'], row['log'])
+        rec = tests.setdefault(nodeid, TestRecord(nodeid))
+        rec.duration, rec.log = row['duration'], row['log']
+        if _worse(row['outcome'], rec.outcome):
+            rec.outcome = row['outcome']
     for nodeid, outcome in load_results_json(run_dir).items():
         rec = tests.setdefault(nodeid, TestRecord(nodeid))
         if _worse(outcome, rec.outcome):
             rec.outcome = outcome
-    for item in load_summary(run_dir).get('advisories') or []:
+    for item in summary.get('advisories') or []:
         if not isinstance(item, dict):
             continue
         nodeid, line = str(item.get('test', '')), str(item.get('line', ''))
@@ -488,7 +656,7 @@ def collect_tests(run_dir: Path) -> tuple[dict[str, TestRecord], list[str]]:
 
 # ---------------------------------------------------------------- render
 
-_CSS = '''
+PAGE_CSS = '''
 :root { color-scheme: light dark;
   --bg: #fafafa; --fg: #1b1b1b; --muted: #5f6368; --card: #ffffff; --line: #d9d9d9;
   --fail: #b3261e; --fail-bg: #fdecea; --pass: #1e7d34; --pass-bg: #e8f5e9;
@@ -531,11 +699,48 @@ details { margin: .5rem 0; }
 summary { cursor: pointer; font-weight: 600; }
 details.section > summary { font-size: 1.05rem; }
 .row { padding: .5rem 0; border-bottom: 1px solid var(--line); }
-.row .name { word-break: break-all; }
 .row .shots figure { max-width: 200px; }
 .dur { color: var(--muted); font-size: .85rem; margin-left: .5rem; }
 ul.plain { margin: .25rem 0; padding-left: 1.25rem; }
 .empty { color: var(--muted); font-style: italic; }
+.title { font-weight: 600; word-break: break-word; }
+h3.title { margin: 0; }
+.case { color: var(--muted); font-size: .9rem; }
+.nodeid { color: var(--muted); font-size: .78rem; font-family: ui-monospace, Consolas, monospace; word-break: break-all; }
+.facts { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin: .35rem 0; font-size: .85rem; color: var(--muted); }
+.chip.delta { font-size: .78rem; padding: .05rem .55rem; }
+.chip.new-failure, .chip.still-failing { color: var(--fail); background: var(--fail-bg); border-color: var(--fail); }
+.chip.fixed { color: var(--pass); background: var(--pass-bg); border-color: var(--pass); }
+.chip.new-test { color: var(--link); border-color: var(--link); }
+h4.module { margin-top: 1.25rem; text-transform: none; letter-spacing: 0; font-family: ui-monospace, Consolas, monospace; }
+input#filter { width: min(100%, 36rem); padding: .45rem .7rem; font: inherit; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); }
+#filter-count { color: var(--muted); margin-left: .75rem; font-size: .9rem; }
+table.facts-table { border-collapse: collapse; width: 100%; max-width: 60rem; }
+table.facts-table th, table.facts-table td { text-align: left; padding: .35rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.facts-table th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+table.facts-table td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+'''
+
+_FILTER_JS = '''
+(function () {
+  var box = document.getElementById('filter');
+  var count = document.getElementById('filter-count');
+  if (!box) { return; }
+  var items = document.querySelectorAll('[data-test]');
+  var sections = document.querySelectorAll('details.section');
+  box.addEventListener('input', function () {
+    var q = box.value.trim().toLowerCase();
+    var shown = 0;
+    for (var i = 0; i < items.length; i++) {
+      var hit = !q || items[i].getAttribute('data-test').indexOf(q) !== -1;
+      items[i].style.display = hit ? '' : 'none';
+      if (hit) { shown++; }
+    }
+    // A match hidden inside a collapsed list is no match at all.
+    for (var j = 0; j < sections.length && q; j++) { sections[j].open = true; }
+    count.textContent = q ? shown + ' of ' + items.length + ' tests match' : '';
+  });
+})();
 '''
 
 
@@ -585,10 +790,47 @@ def _render_actions(digest: dict) -> str:
     return '<ul class="actions">' + ''.join(items) + '</ul>' if items else ''
 
 
+def _filter_key(rec: TestRecord) -> str:
+    """What the filter box matches against: every name the test goes by."""
+    words = (rec.display_title, rec.nodeid, rec.case_key, rec.case_title,
+             rec.module_name, rec.outcome, rec.delta)
+    return escape(' '.join(w for w in words if w).lower(), quote=True)
+
+
+def _delta_chip(rec: TestRecord) -> str:
+    if not rec.delta:
+        return ''
+    return (f'<span class="chip delta {escape(rec.delta.replace(" ", "-"))}">'
+            f'{escape(rec.delta)}</span>')
+
+
+def _render_identity(rec: TestRecord, heading: str) -> str:
+    """Title first, QA Touch case second, node id smaller beneath."""
+    parts = [f'<{heading} class="title">{escape(rec.display_title)}</{heading}>']
+    if rec.case_key or rec.case_title:
+        case = f'QA Touch {rec.case_key}'.rstrip() + (f': {rec.case_title}' if rec.case_title else '')
+        parts.append(f'<div class="case">{escape(case)}</div>')
+    parts.append(f'<div class="nodeid">{escape(rec.nodeid)}</div>')
+    return ''.join(parts)
+
+
+def _render_facts(rec: TestRecord, with_outcome: bool = False) -> str:
+    facts = []
+    if with_outcome:
+        facts.append(f'<span class="chip {escape(rec.outcome)}">{escape(rec.outcome)}</span>')
+    if rec.duration_text:
+        facts.append(f'<span>{escape(rec.duration_text)}</span>')
+    facts.append(_delta_chip(rec))
+    facts.append(f'<span>{escape(rec.module_name)}</span>')
+    if rec.log_file:
+        facts.append(f'<a href="{_href(rec.log_file)}">captured output</a>')
+    return '<div class="facts">' + ''.join(f for f in facts if f) + '</div>'
+
+
 def _render_failure(rec: TestRecord, run_dir: Path) -> str:
-    parts = [f'<div class="card {escape(rec.outcome)}" id="{escape(rec.safe, quote=True)}">',
-             f'<h3>{escape(rec.nodeid)}<span class="dur">{escape(rec.outcome)}'
-             f"{' / ' + escape(rec.duration) if rec.duration else ''}</span></h3>"]
+    parts = [f'<div class="card {escape(rec.outcome)}" id="{escape(rec.safe, quote=True)}" '
+             f'data-test="{_filter_key(rec)}">',
+             _render_identity(rec, 'h3'), _render_facts(rec, with_outcome=True)]
     digest = None
     trace_zips = [rel for rel in rec.traces if rel.lower().endswith('.zip')]
     if trace_zips:
@@ -648,25 +890,62 @@ def _render_failure(rec: TestRecord, run_dir: Path) -> str:
 
 
 def _render_row(rec: TestRecord) -> str:
-    dur = f'<span class="dur">{escape(rec.duration)}</span>' if rec.duration else ''
     extras = ''
     if rec.advisories:
         extras += '<ul class="plain">' + ''.join(
             f'<li>{escape(a)}</li>' for a in rec.advisories) + '</ul>'
-    return (f'<div class="row"><div class="name">{escape(rec.nodeid)}{dur}</div>'
+    return (f'<div class="row" data-test="{_filter_key(rec)}">'
+            f'{_render_identity(rec, "div")}{_render_facts(rec)}'
             f'{extras}{_render_shots(rec)}</div>')
 
 
 def _render_collapsed(title: str, records: list[TestRecord]) -> str:
-    body = ''.join(_render_row(r) for r in records) if records else '<p class="empty">None.</p>'
+    """A collapsed list, its tests grouped under their module."""
+    if records:
+        groups: dict[str, list[TestRecord]] = {}
+        for rec in records:
+            groups.setdefault(rec.module_name, []).append(rec)
+        body = ''.join(
+            f'<h4 class="module">{escape(module)} ({len(group)})</h4>'
+            + ''.join(_render_row(r) for r in group)
+            for module, group in sorted(groups.items()))
+    else:
+        body = '<p class="empty">None.</p>'
     return (f'<details class="section"><summary>{escape(title)} ({len(records)})</summary>'
             f'{body}</details>')
 
 
+def _render_slowest(records: list[TestRecord], count: int = SLOWEST_COUNT) -> str:
+    timed = sorted((r for r in records if r.seconds is not None),
+                   key=lambda r: r.seconds or 0.0, reverse=True)[:count]
+    if not timed:
+        return '<p class="empty">No per-test timing in this run.</p>'
+    rows = ''.join(
+        f'<tr><td class="num">{escape(format_seconds(r.seconds or 0.0))}</td>'
+        f'<td>{escape(r.display_title)}<div class="nodeid">{escape(r.nodeid)}</div></td>'
+        f'<td>{escape(r.outcome)}</td></tr>' for r in timed)
+    return ('<table class="facts-table"><tr><th>Duration</th><th>Test</th><th>Outcome</th></tr>'
+            + rows + '</table>')
+
+
+def _render_provenance(summary: dict) -> str:
+    prov = summary.get('provenance') if isinstance(summary.get('provenance'), dict) else {}
+    browser = ' / '.join(str(v) for v in (prov.get('browser'), prov.get('browser_channel')) if v)
+    versions = ', '.join(
+        f'{label} {prov[key]}' for label, key in
+        (('playwright', 'playwright'), ('pytest-playwright', 'pytest_playwright')) if prov.get(key))
+    facts = (('ENV', prov.get('env')), ('Host', prov.get('base_url_host')),
+             ('Commit', prov.get('git_commit')), ('Browser', browser), ('Versions', versions))
+    spans = [f'<span>{label}: <code>{escape(str(value))}</code></span>'
+             for label, value in facts if value]
+    return '<div class="meta">' + ''.join(spans) + '</div>' if spans else ''
+
+
 def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord],
-                      unattached: list[str]) -> str:
+                      unattached: list[str], previous: str | None = None) -> str:
     """Render the page from already-collected facts. Pure - no disk reads
-    beyond the trace digest in the failure cards."""
+    beyond the trace digest in the failure cards. `previous` names the
+    run folder the change chips were computed against, when there is one."""
     counts = summary.get('counts') if isinstance(summary.get('counts'), dict) else {}
     target = ' '.join(str(t) for t in (summary.get('target') or [])) or run_dir.name.partition('__')[2]
     started = summary.get('started') or run_dir.name.partition('__')[0].replace('_', ' ')
@@ -674,7 +953,8 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
     exitstatus = summary.get('exitstatus')
 
     def by_outcome(names: tuple[str, ...]) -> list[TestRecord]:
-        return sorted((t for t in tests.values() if t.outcome in names), key=lambda t: t.nodeid)
+        return sorted((t for t in tests.values() if t.outcome in names),
+                      key=lambda t: (t.module_name, t.nodeid))
 
     failures = by_outcome(FAILURE_OUTCOMES)
     passed = by_outcome(PASSED_OUTCOMES)
@@ -689,7 +969,13 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
         links.insert(0, '<a href="report.html">pytest-html report</a>')
     if (run_dir / 'advisories.txt').is_file():
         links.append('<a href="advisories.txt">advisories.txt</a>')
+    if (run_dir / 'log' / 'run.log').is_file():
+        links.append('<a href="log/run.log">run.log</a>')
+    if previous:
+        links.append(f'<a href="../{_href(previous)}/run.html">previous run of this target</a>')
     links.append('<a href="./">folder</a>')
+    compared = (f'<p class="case">Change chips compare against <code>{escape(previous)}</code>.</p>'
+                if previous else '<p class="case">No earlier run of this target to compare with.</p>')
 
     advisories = [a for a in (summary.get('advisories') or []) if isinstance(a, dict)]
     if advisories:
@@ -717,7 +1003,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Run {escape(run_dir.name)}</title>
-<style>{_CSS}</style>
+<style>{PAGE_CSS}</style>
 </head>
 <body>
 <h1>Test run {escape(str(started))}</h1>
@@ -727,8 +1013,12 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 <span>Exit status: {escape(str(exitstatus)) if exitstatus is not None else '-'}</span>
 <span>Folder: <code>{escape(run_dir.name)}</code></span>
 </div>
+{_render_provenance(summary)}
 <div class="chips">{chips}</div>
 <div class="meta">{' | '.join(links)}</div>
+{compared}
+<p><input id="filter" type="search" placeholder="Filter tests: title, node id, case key, module, outcome"
+ aria-label="Filter tests"><span id="filter-count"></span></p>
 
 <h2 id="failures">Failures ({len(failures)})</h2>
 {failure_body}
@@ -736,12 +1026,16 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 <h2 id="advisories">Advisories ({len(advisories)})</h2>
 {adv_body}
 
+<h2 id="slowest">Slowest {SLOWEST_COUNT}</h2>
+{_render_slowest(list(tests.values()))}
+
 <h2 id="passed">Passed</h2>
 {_render_collapsed('Passed', passed)}
 
 <h2 id="skipped">Skipped</h2>
 {_render_collapsed('Skipped', skipped)}
 {extra_sections}
+<script>{_FILTER_JS}</script>
 </body>
 </html>
 '''
@@ -751,7 +1045,13 @@ def build_run_report(run_dir: Path) -> str:
     """Build the run.html for one archived run folder and return it."""
     run_dir = Path(run_dir)
     tests, unattached = collect_tests(run_dir)
-    return render_run_report(run_dir, load_summary(run_dir), tests, unattached)
+    previous = find_previous_run(run_dir)
+    chips = compute_deltas({nodeid: rec.outcome for nodeid, rec in tests.items()},
+                           load_previous_outcomes(previous) if previous else None)
+    for nodeid, chip in chips.items():
+        tests[nodeid].delta = chip
+    return render_run_report(run_dir, load_summary(run_dir), tests, unattached,
+                             previous=previous.name if previous else None)
 
 
 # ---------------------------------------------------------------- CLI
@@ -761,7 +1061,7 @@ def _resolve_run_dir(arg: str) -> Path | None:
     if arg != 'latest':
         path = Path(arg)
         return path if path.is_dir() else None
-    from plugins.run_archive import RUN_DIR_RE, RUNS_DIR
+    from plugins.run_archive import RUNS_DIR
     if not RUNS_DIR.is_dir():
         return None
     runs = sorted(p for p in RUNS_DIR.iterdir() if p.is_dir() and RUN_DIR_RE.match(p.name))

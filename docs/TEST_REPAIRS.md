@@ -131,6 +131,12 @@ in run output (its premise is wrong):
 
 - `tools/explore_app.py` - probe harness (REPL or script, `snap()` in
   scope). Use it for rebuilds instead of guessing selectors.
+- `run.py health` (`tools/health_summary.py`) - pass rates, flaky
+  candidates, newly failing, and slowest tests over the archived runs
+  (`reports/runs/health.html`). Run folders carry `log/` (captured
+  output per test, `run.log`) and per-test records in `summary.json`
+  (title, QA Touch case, timing); `run.html` shows titles and change
+  chips against the previous run of the same target.
 - `tools/convention_check.py` - runs on every commit; `--all` for
   standing debt. Rules: uncommented sleeps, no-oracle tests,
   early-exit passes, except-swallows, absolute counts, union picks,

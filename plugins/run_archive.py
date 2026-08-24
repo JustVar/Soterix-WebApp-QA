@@ -14,8 +14,17 @@ What lands in reports/runs/<start-time>__<target>/:
     pytest-playwright's per-test artifact dirs.
   - last_run_results.json: the per-nodeid outcomes from qatouch_reporter,
     when that reporter ran.
-  - summary.json: timing, counts, exit status, the invocation target, and
-    the advisories below.
+  - log/: one file per test with the stdout and stderr pytest captured in
+    every phase (plus the traceback of a failed phase), and run.log with
+    every INFO-or-higher logging record of the session. Page-object
+    prints land in the per-test files, logging in run.log.
+  - summary.json: timing, counts, exit status, the invocation target,
+    provenance (ENV, base_url host, git commit, browser, Playwright
+    versions), the advisories below, and one record per test: node id,
+    module, readable title (the docstring's first line, else the function
+    name as words), the QA Touch case from config/qatouch_case_mapping.json
+    when the node id is mapped, outcome, per-phase timing, and its log
+    file. The node id is the key; the title is display only.
   - advisories.txt: every [VIEWS] / [LPR] / [EXPORT] marker line a test
     printed, grouped by test - the drag fallbacks, content-health deltas,
     and export timings the page objects report. They come from pytest's
@@ -24,9 +33,10 @@ What lands in reports/runs/<start-time>__<target>/:
     every run, so nobody has to grep for them.
 
 Start at reports/runs/index.html: one row per archived run, newest first,
-with links to each run's page, report, and folder. The index is rebuilt
-after every run from the folders' summary.json files, so hand-deleting a
-folder is safe.
+with links to each run's page, report, and folder, and to health.html
+(tools/health_summary.py, `python run.py health`) when that page exists.
+The index is rebuilt after every run from the folders' summary.json
+files, so hand-deleting a folder is safe.
 
 Runs whose every target sits under tests/plugins or tests/tools are not
 archived: those are the repo's own unit tests, and they leave no UI
@@ -49,20 +59,26 @@ and swallowed, so an archive problem can never change the run's exit code.
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import importlib.metadata
 import json
 import logging
 import os
 import re
 import shutil
+import subprocess
 import time
 from collections.abc import Mapping
 from datetime import datetime
 from html import escape
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
-from plugins.run_report import build_run_report
+import pytest
+
+from plugins.run_report import RUN_DIR_RE, build_run_report, module_of, readable_title
 
 log = logging.getLogger('run_archive')
 
@@ -70,8 +86,19 @@ RUNS_DIR = Path('reports') / 'runs'
 SCREENSHOT_DIR = Path('reports') / 'screenshots'
 TRACE_DIR = Path('reports') / 'artifacts'
 RESULTS_JSON = Path('logs') / 'last_run_results.json'
+# QA Touch case titles come from here. The file is Justin's workflow, not
+# the team's, so a missing file only costs the second title line.
+MAPPING_FILE = Path('config') / 'qatouch_case_mapping.json'
+# run.log is written here while the session runs (the run folder does not
+# exist yet) and copied into the archive at the end.
+RUN_LOG = Path('logs') / 'run.log'
 
-SCHEMA_VERSION = 1
+# 2: adds "tests" (per-test records) and "provenance".
+SCHEMA_VERSION = 2
+
+# Per-test log files use the screenshot sanitizer and cap: the archive's
+# names then sort together, and the path cap already fits them.
+LOG_NAME_MAX = 120
 
 # Marker tags the page objects print for things worth a human's eye that
 # never fail a test on their own. Add a tag here when a page object
@@ -109,9 +136,9 @@ _OFF_VALUES = ('off', '0', 'false', 'no')
 # screenshots, traces, or advisories - nothing an archive folder could hold.
 UNIT_TEST_ROOTS = ('tests/plugins', 'tests/tools')
 
-# Run folders are named <session-start>__<slug>; only names with this shape
-# are ever pruned, so index.html and hand-made folders can never be deleted.
-RUN_DIR_RE = re.compile(r'^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}__')
+# Run folders are named <session-start>__<slug> (RUN_DIR_RE, shared with
+# run_report); only names with this shape are ever pruned, so index.html
+# and hand-made folders can never be deleted.
 
 # pytest's terminal convention: the call phase carries the test's outcome,
 # a setup crash is an error (the test never ran), a setup skip is the
@@ -124,6 +151,54 @@ _PHASE_OUTCOME_COUNTER = {
     ('setup', 'skipped'): 'skipped',
 }
 
+# The same phases, in the per-test vocabulary run_report renders
+# (passed / failed / skipped / error).
+_PHASE_TEST_OUTCOME = {
+    ('call', 'passed'): 'passed',
+    ('call', 'failed'): 'failed',
+    ('call', 'skipped'): 'skipped',
+    ('setup', 'failed'): 'error',
+    ('setup', 'skipped'): 'skipped',
+}
+
+
+class _RunLog:
+    """The run.log handler: every INFO-or-higher record of the session.
+
+    Attached to the root logger so the page objects' and plugins' loggers
+    all reach it. The root logger's level is lowered to INFO for the
+    session when it sits above (a handler cannot see what its logger
+    drops) and restored on detach.
+    """
+
+    def __init__(self) -> None:
+        self.handler: logging.Handler | None = None
+        self.path: Path | None = None
+        self._previous_level: int | None = None
+
+    def attach(self, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        handler = logging.FileHandler(path, mode='w', encoding='utf-8')
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s'))
+        root = logging.getLogger()
+        if root.level == logging.NOTSET or root.level > logging.INFO:
+            self._previous_level = root.level
+            root.setLevel(logging.INFO)
+        root.addHandler(handler)
+        self.handler, self.path = handler, path
+
+    def detach(self) -> None:
+        if self.handler is None:
+            return
+        root = logging.getLogger()
+        root.removeHandler(self.handler)
+        self.handler.close()
+        self.handler = None
+        if self._previous_level is not None:
+            root.setLevel(self._previous_level)
+            self._previous_level = None
+
 
 class _RunState:
     """Facts collected across the session for the end-of-run archive."""
@@ -135,10 +210,25 @@ class _RunState:
         self.counts: dict[str, int] = {'passed': 0, 'failed': 0,
                                        'skipped': 0, 'errors': 0}
         self.advisories: list[dict] = []
+        # One record per test, in execution order, keyed by node id.
+        self.tests: dict[str, dict] = {}
+        # The captured output of every phase, for the log/ files. Kept
+        # apart from the records so summary.json stays small.
+        self.captured: dict[str, list[dict]] = {}
+        # Docstrings seen at makereport, where the item is in reach.
+        self.docs: dict[str, str] = {}
+        self.mapping: dict[str, dict] | None = None
+        self.run_log = _RunLog()
 
     @property
     def tests_run(self) -> int:
         return sum(self.counts.values())
+
+    def case_mapping(self) -> dict[str, dict]:
+        """The QA Touch mapping, read once per session."""
+        if self.mapping is None:
+            self.mapping = load_case_mapping(MAPPING_FILE)
+        return self.mapping
 
 
 _state = _RunState()
@@ -149,15 +239,13 @@ def _archive_disabled(environ: Mapping[str, str]) -> bool:
     return environ.get('RUN_ARCHIVE', '').strip().lower() in _OFF_VALUES
 
 
-def _should_archive(config: Any, environ: Mapping[str, str], tests_run: int) -> bool:
-    """Decide whether this process may archive the finished run.
+def _process_may_archive(config: Any, environ: Mapping[str, str]) -> bool:
+    """The guards known at session start: is this a process that archives?
 
     - --collect-only never archives: run_suite's planning pass collects
       before the real run, and its empty "run" would bury the real one.
     - xdist workers never archive: each worker starts its own session; the
       controller sees every result and archives once.
-    - Zero tests ran: nothing was produced, so there is nothing to keep,
-      and a folder per typo'd invocation would drown the real runs.
     - Every target is a unit-test root (tests/plugins, tests/tools): those
       runs leave no UI evidence, and a folder per plugin test run would
       bury the suite runs the archive exists for.
@@ -166,9 +254,17 @@ def _should_archive(config: Any, environ: Mapping[str, str], tests_run: int) -> 
         return False
     if environ.get('PYTEST_XDIST_WORKER'):
         return False
-    if _unit_tests_only(getattr(config, 'args', None) or []):
-        return False
-    return tests_run > 0
+    return not _unit_tests_only(getattr(config, 'args', None) or [])
+
+
+def _should_archive(config: Any, environ: Mapping[str, str], tests_run: int) -> bool:
+    """Decide whether this process may archive the finished run.
+
+    The session-start guards above, plus: zero tests ran means nothing
+    was produced, so there is nothing to keep, and a folder per typo'd
+    invocation would drown the real runs.
+    """
+    return _process_may_archive(config, environ) and tests_run > 0
 
 
 def _unit_tests_only(args: list[str]) -> bool:
@@ -371,10 +467,188 @@ def _format_advisories(advisories: list[dict]) -> str:
     return '\n'.join(out) + '\n'
 
 
+# ---------------------------------------------------------------- per-test facts
+
+def load_case_mapping(path: Path = MAPPING_FILE) -> dict[str, dict]:
+    """Node id -> {'case_key', 'case_title'} from the QA Touch mapping file.
+
+    Empty when the file is missing or not the expected shape: the case
+    title is a convenience line on the page, never a reason to fail.
+    """
+    try:
+        loaded = json.loads(Path(path).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return {}
+    mappings = loaded.get('mappings') if isinstance(loaded, dict) else None
+    if not isinstance(mappings, dict):
+        return {}
+    out: dict[str, dict] = {}
+    for nodeid, row in mappings.items():
+        if isinstance(row, dict) and row.get('case_key'):
+            out[str(nodeid)] = {'case_key': str(row['case_key']),
+                                'case_title': str(row.get('case_title') or '')}
+    return out
+
+
+def lookup_case(mapping: Mapping[str, dict], nodeid: str) -> dict:
+    """The mapped QA Touch case for a node id, or None fields when unmapped.
+
+    Exact id first. Then the id without its parameter part against the
+    keys without theirs: a mapping keyed on the bare function still
+    names the [chromium] variant pytest-playwright runs.
+    """
+    row = mapping.get(nodeid)
+    if row is None:
+        bare = re.sub(r'\[.*\]$', '', nodeid)
+        for key, candidate in mapping.items():
+            if re.sub(r'\[.*\]$', '', key) == bare:
+                row = candidate
+                break
+    if row is None:
+        return {'case_key': None, 'case_title': None}
+    return {'case_key': row.get('case_key'), 'case_title': row.get('case_title') or None}
+
+
+def log_file_name(nodeid: str) -> str:
+    """The per-test log file's name: the sanitized node id plus .log."""
+    return re.sub(r'[^\w.-]+', '-', nodeid).strip('-')[:LOG_NAME_MAX] + '.log'
+
+
+def phase_capture(report: Any, stream: str) -> str:
+    """The text pytest captured on `stream` (stdout or stderr) during this
+    phase alone.
+
+    A report's capstdout joins every section the item has collected so
+    far, so the call report repeats setup's output and teardown repeats
+    both (seen in the archived logs). The phase's own section, titled
+    'Captured stdout call', holds only its text. Reports without sections
+    (fakes, other plugins' objects) fall back to the joined attribute.
+    """
+    sections = getattr(report, 'sections', None)
+    if isinstance(sections, list):
+        wanted = f'Captured {stream} {report.when}'
+        return ''.join(str(text) for title, text in sections if title == wanted)
+    return getattr(report, f'cap{stream}', '') or ''
+
+
+def record_phase(state: _RunState, report: Any, doc: str | None = None,
+                 mapping: Mapping[str, dict] | None = None) -> None:
+    """Fold one phase report into the test's record and its captured output.
+
+    The first phase seen creates the record (title, module, case). Rerun
+    outcomes (pytest-rerunfailures) are not final and are ignored; the
+    attempt that ends the test overwrites the phases of the earlier ones.
+    """
+    nodeid = str(report.nodeid)
+    rec = state.tests.get(nodeid)
+    if rec is None:
+        case = lookup_case(mapping or {}, nodeid)
+        rec = state.tests[nodeid] = {
+            'nodeid': nodeid, 'module': module_of(nodeid),
+            'title': readable_title(nodeid, doc),
+            'case_key': case['case_key'], 'case_title': case['case_title'],
+            'outcome': None, 'duration_s': 0.0, 'phases': {}, 'log_file': None,
+        }
+    if report.outcome == 'rerun':
+        return
+    duration = float(getattr(report, 'duration', 0.0) or 0.0)
+    rec['phases'][report.when] = round(duration, 3)
+    rec['duration_s'] = round(sum(rec['phases'].values()), 3)
+    outcome = _PHASE_TEST_OUTCOME.get((report.when, report.outcome))
+    if outcome is not None:
+        rec['outcome'] = outcome
+    state.captured.setdefault(nodeid, []).append({
+        'phase': report.when, 'outcome': report.outcome, 'duration': duration,
+        'stdout': phase_capture(report, 'stdout'),
+        'stderr': phase_capture(report, 'stderr'),
+        'error': (getattr(report, 'longreprtext', '') or '') if report.outcome == 'failed' else '',
+    })
+
+
+def format_test_log(rec: Mapping[str, Any], phases: list[dict]) -> str:
+    """One test's log file: its names, then each phase's captured output."""
+    lines = [str(rec.get('nodeid', '')), str(rec.get('title', ''))]
+    if rec.get('case_key'):
+        lines.append(f"QA Touch {rec['case_key']}: {rec.get('case_title') or ''}".rstrip(': '))
+    for phase in phases:
+        lines.append('')
+        lines.append(f"=== {phase.get('phase')}: {phase.get('outcome')} "
+                     f"({float(phase.get('duration') or 0.0):.2f} s) ===")
+        wrote = False
+        for label in ('stdout', 'stderr', 'error'):
+            text = str(phase.get(label) or '')
+            if text.strip():
+                lines.append(f'--- {label} ---')
+                lines.append(text.rstrip())
+                wrote = True
+        if not wrote:
+            lines.append('(no output)')
+    return '\n'.join(lines) + '\n'
+
+
+def _write_logs(dest: Path, state: _RunState) -> None:
+    """Write log/<test>.log per test and copy the session's run.log."""
+    log_dir = dest / 'log'
+    for nodeid, rec in state.tests.items():
+        target = _fit_dest(log_dir / log_file_name(nodeid))
+        if target is None:
+            log.warning(f'run_archive: skipped the log of {nodeid}: its destination '
+                        f'directory leaves no room for a filename under the '
+                        f'{DEST_PATH_MAX}-char path cap')
+            continue
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(format_test_log(rec, state.captured.get(nodeid) or []),
+                              encoding='utf-8', errors='replace')
+            rec['log_file'] = (Path('log') / target.name).as_posix()
+        except OSError as e:
+            log.warning(f'run_archive: could not write the log of {nodeid}: {e}')
+    run_log = state.run_log.path
+    if run_log is not None and run_log.is_file():
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(run_log, log_dir / 'run.log')
+        except OSError as e:
+            log.warning(f'run_archive: could not copy {run_log}: {e}')
+
+
+def _provenance(config: Any, environ: Mapping[str, str]) -> dict:
+    """Where and with what the run happened. Every field tolerates absence."""
+    out: dict[str, Any] = {
+        'env': (environ.get('ENV') or 'qa').strip().lower(), 'base_url_host': None,
+        'git_commit': None, 'playwright': None, 'pytest_playwright': None,
+        'browser': None, 'browser_channel': None,
+    }
+    try:
+        from config.base_config import config as env_config
+        out['base_url_host'] = urlparse(str(env_config.get('base_url') or '')).netloc or None
+    except Exception as e:  # noqa: BLE001 - the env module needs .env and network names; the host is a label
+        log.debug(f'run_archive: no base_url host: {e}')
+    try:
+        result = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True,
+                                text=True, timeout=10, check=False)
+        if result.returncode == 0:
+            out['git_commit'] = result.stdout.strip() or None
+    except (OSError, subprocess.SubprocessError) as e:
+        log.debug(f'run_archive: no git commit: {e}')
+    for key, dist in (('playwright', 'playwright'), ('pytest_playwright', 'pytest-playwright')):
+        with contextlib.suppress(importlib.metadata.PackageNotFoundError):
+            out[key] = importlib.metadata.version(dist)
+    browsers = config.getoption('browser', default=None)
+    if isinstance(browsers, (list, tuple)):
+        browsers = ', '.join(str(b) for b in browsers)
+    out['browser'] = str(browsers) if browsers else None
+    channel = config.getoption('browser_channel', default=None)
+    out['browser_channel'] = str(channel) if channel else None
+    return out
+
+
 def _build_summary(*, started: float, ended: float, exitstatus: int | None,
                    counts: Mapping[str, int], target: list[str], markexpr: str,
                    keyword: str, report_file: str | None,
-                   advisories: list[dict] | None = None) -> dict:
+                   advisories: list[dict] | None = None,
+                   tests: list[dict] | None = None,
+                   provenance: Mapping[str, Any] | None = None) -> dict:
     """Build the summary.json payload. Fixed shape - the index renders it."""
     return {
         'schema_version': SCHEMA_VERSION,
@@ -388,7 +662,9 @@ def _build_summary(*, started: float, ended: float, exitstatus: int | None,
         'markexpr': markexpr or '',
         'keyword': keyword or '',
         'report_file': report_file,
+        'provenance': dict(provenance or {}),
         'advisories': [dict(a) for a in (advisories or [])],
+        'tests': [dict(t, phases=dict(t.get('phases') or {})) for t in (tests or [])],
     }
 
 
@@ -461,12 +737,13 @@ def _load_entries(runs_dir: Path) -> list[dict]:
     return entries
 
 
-def _render_index(entries: list[dict]) -> str:
+def _render_index(entries: list[dict], has_health: bool = False) -> str:
     """Render the archive index page, newest run first.
 
     Plain, self-contained HTML: the page is opened from disk, so it can
     depend on nothing but the run folders sitting next to it. Every summary
-    key is optional - a row shows '-' where a value is unknown.
+    key is optional - a row shows '-' where a value is unknown. The health
+    link only appears when health.html exists beside the index.
     """
     rows = []
     for entry in sorted(entries, key=lambda e: e.get('name', ''), reverse=True):
@@ -497,6 +774,10 @@ def _render_index(entries: list[dict]) -> str:
 
     body = '\n'.join(rows) if rows else ('<tr><td colspan="9">No archived runs '
                                          'yet. Run the suite once.</td></tr>')
+    health = ('<p><a href="health.html">Health summary</a>: pass rates, flaky '
+              'candidates, and the slowest tests across recent runs.</p>' if has_health
+              else '<p><code>python run.py health</code> builds health.html: pass rates, '
+                   'flaky candidates, and the slowest tests across recent runs.</p>')
     return f'''<!doctype html>
 <html lang="en">
 <head>
@@ -515,6 +796,7 @@ th {{ background: #f0f0f0; }}
 for its failures with their screenshots, video, and trace. The archive
 keeps the newest {KEEP_RUNS} runs of each target ({KEEP_RUNS_TOTAL} in
 total) and rebuilds this page after every run.</p>
+{health}
 <table>
 <tr><th>Started</th><th>Target</th><th>Passed</th><th>Failed</th>
 <th>Skipped</th><th>Errors</th><th>Exit</th><th>Advisories</th><th>Open</th></tr>
@@ -529,8 +811,9 @@ def _write_index(runs_dir: Path) -> None:
     """Regenerate index.html from whatever run folders exist right now."""
     if not runs_dir.is_dir():
         return
-    (runs_dir / 'index.html').write_text(_render_index(_load_entries(runs_dir)),
-                                         encoding='utf-8')
+    (runs_dir / 'index.html').write_text(
+        _render_index(_load_entries(runs_dir), has_health=(runs_dir / 'health.html').is_file()),
+        encoding='utf-8')
 
 
 def _archive_run(config: Any, state: _RunState) -> None:
@@ -545,6 +828,8 @@ def _archive_run(config: Any, state: _RunState) -> None:
     _copy_screenshots(state.started, dest)
     _copy_traces(dest)
     _copy_results_json(state.started, dest)
+    # Before the summary: writing the logs fills in each record's log_file.
+    _write_logs(dest, state)
 
     # A sessionfinish that never ran (crash before initstate 2) leaves ended
     # unset; the archive still records an honest end time.
@@ -553,7 +838,9 @@ def _archive_run(config: Any, state: _RunState) -> None:
                              exitstatus=state.exitstatus, counts=state.counts,
                              target=config.args, markexpr=markexpr,
                              keyword=keyword, report_file=report_file,
-                             advisories=state.advisories)
+                             advisories=state.advisories,
+                             tests=list(state.tests.values()),
+                             provenance=_provenance(config, os.environ))
     (dest / 'summary.json').write_text(json.dumps(summary, indent=2),
                                        encoding='utf-8')
     if state.advisories:
@@ -576,24 +863,58 @@ def _write_run_report(dest: Path) -> None:
         log.warning(f'run_archive: could not build run.html for {dest.name}: {e}')
 
 
-def pytest_sessionstart(session: Any) -> None:  # noqa: ARG001 - pytest fixes the hook signature
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionstart(session: Any) -> None:
     """Record the session start time - it names the archive folder, and any
-    report or results file older than it belongs to an earlier run."""
+    report or results file older than it belongs to an earlier run - and
+    start run.log in every process that will archive. First among the
+    sessionstart hooks, so the other plugins' start-up lines land in it."""
     _state.started = time.time()
+    if _archive_disabled(os.environ) or not _process_may_archive(session.config, os.environ):
+        return
+    try:
+        _state.run_log.attach(RUN_LOG)
+    except Exception as e:  # noqa: BLE001 - a lost run.log must never block the session
+        log.warning(f'run_archive: could not start {RUN_LOG}: {e}')
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item: Any, call: Any):  # noqa: ARG001 - pytest fixes the hook signature
+    """Remember the test's docstring while the item is in reach.
+
+    The phase itself is recorded in logreport below, which also fires on
+    the xdist controller (the process that archives) where this hook
+    does not.
+    """
+    yield
+    if item.nodeid in _state.docs:
+        return
+    try:
+        doc = getattr(getattr(item, 'obj', None), '__doc__', None)
+        _state.docs[item.nodeid] = doc if isinstance(doc, str) else ''
+    except Exception as e:  # noqa: BLE001 - a title fallback is cheaper than a broken run
+        log.debug(f'run_archive: no docstring for {item.nodeid}: {e}')
 
 
 def pytest_runtest_logreport(report: Any) -> None:
-    """Tally outcomes for summary.json and the zero-test guard, and keep
-    the advisory marker lines each phase printed."""
+    """Tally outcomes for summary.json and the zero-test guard, keep the
+    advisory marker lines each phase printed, and record the phase's
+    facts and captured output for the test's summary record and log."""
     counter = _classify(report.when, report.outcome)
     if counter is not None:
         _state.counts[counter] += 1
     if report.when in ('setup', 'call'):
-        captured = ((getattr(report, 'capstdout', '') or '') + '\n'
-                    + (getattr(report, 'capstderr', '') or ''))
+        # The phase's own capture: capstdout would repeat setup's lines
+        # under the call phase and file each advisory twice.
+        captured = phase_capture(report, 'stdout') + '\n' + phase_capture(report, 'stderr')
         for line in scan_advisories(captured):
             _state.advisories.append({'test': report.nodeid,
                                       'phase': report.when, 'line': line})
+    try:
+        record_phase(_state, report, doc=_state.docs.get(report.nodeid),
+                     mapping=_state.case_mapping())
+    except Exception as e:  # noqa: BLE001 - per-test facts are reporting, never a verdict
+        log.debug(f'run_archive: could not record {report.nodeid}: {e}')
 
 
 def pytest_sessionfinish(session: Any, exitstatus: int) -> None:  # noqa: ARG001 - pytest fixes the hook signature
@@ -633,6 +954,8 @@ def pytest_unconfigure(config: Any) -> None:
     during its own, so by unconfigure the report is complete and sent and
     the copies here always see the finished file.
     """
+    # Closed first so the archive copies a complete, flushed run.log.
+    _state.run_log.detach()
     if _archive_disabled(os.environ):
         return
     if not _should_archive(config, os.environ, _state.tests_run):

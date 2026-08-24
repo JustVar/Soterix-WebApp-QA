@@ -76,6 +76,7 @@ venv\Scripts\python.exe run.py test "tests/ui/views/test_views_basic.py::TestVie
 venv\Scripts\python.exe run.py rerun latest                         # the failed tests of the newest archived run
 venv\Scripts\python.exe run.py open latest                          # that run's run.html in your browser
 venv\Scripts\python.exe run.py list                                 # the last 10 archived runs
+venv\Scripts\python.exe run.py health                               # pass rates, flaky candidates, slowest tests (reports/runs/health.html)
 venv\Scripts\python.exe run.py module views -- --headed -s          # anything after -- goes to pytest
 venv\Scripts\python.exe run.py smoke --check                        # confirm the environment answers first
 ```
@@ -139,6 +140,10 @@ archived before the page existed):
 ```
 venv\Scripts\python.exe -m plugins.run_report latest
 ```
+
+Each run folder also holds `log/`: one file per test with the output
+pytest captured in every phase, and `run.log` with the session's logging.
+`run.html` links them from each test.
 
 `docs/FAILURE_TRIAGE.md` explains how to read a trace and lists the
 traps this app has taught us. Check that list before you blame timing.
