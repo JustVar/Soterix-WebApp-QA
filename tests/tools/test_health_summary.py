@@ -186,16 +186,19 @@ def test_aggregate_tolerates_nothing_and_odd_summaries():
     assert odd['targets'][0]['target'] == 'x'
 
 
-def test_render_health_has_every_section_and_run_links():
+def test_render_health_has_every_section_and_run_links(monkeypatch):
     """The health page shows every section, links each run and handles an empty archive."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
     page = hs.render_health(hs.aggregate(RUNS, 20), generated='2026-08-24T15:00:00')
     for heading in ('Targets (2)', 'Modules (2)', 'Tests to watch (2)'):
         assert heading in page
     for gone in ('Flaky candidates', 'Newly failing', 'Slowest tests'):
         assert gone not in page
-    # The verdict leads the page, one line per target.
+    # The verdict leads the page, one line per target, the product beside
+    # it (schema-2 summaries derive it from their node ids).
     assert page.index('<ul class="verdict">') < page.index('id="targets"')
-    assert '<li>Views: 80% pass rate over 4 runs, 2 tests to watch.</li>' in page
+    assert ('<li>Views: 80% pass rate over 4 runs, 2 tests to watch. '
+            '<span class="product">NexaiQ-Core</span></li>') in page
     assert 'href="2026-08-24_12-00-00__views/run.html"' in page
     assert '<td class="num">80%</td>' in page
     # The advisory count links the newest run's advisories; a zero count does not link.
@@ -221,19 +224,64 @@ def test_render_health_has_every_section_and_run_links():
     assert 'None: no test failed' not in old
 
 
-def test_format_table_is_compact():
+def test_format_table_is_compact(monkeypatch):
     """The terminal table shows the window, per-target rates and the verdict lists."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
     text = hs.format_table(hs.aggregate(RUNS, 20))
     lines = text.splitlines()
     assert lines[0].startswith('Health: newest 20 runs of each target, 5 runs')
-    assert lines[1:3] == ['Media: 100% pass rate over 1 run, 0 tests to watch.',
-                          'Views: 80% pass rate over 4 runs, 2 tests to watch.']
+    assert lines[1:3] == [
+        'Media: 100% pass rate over 1 run, 0 tests to watch. Product: NexaiQ-Core.',
+        'Views: 80% pass rate over 4 runs, 2 tests to watch. Product: NexaiQ-Core.']
     views = next(line for line in lines if line.startswith('tests/ui/views'))
     assert '80%' in views
     assert 'exit 1' in views
     assert f'Tests to watch (2):\n   33%  1/3 failed  last 2026-08-24T12-00-00  {A}' in text
     assert 'Slowest' not in text
     assert 'Flaky candidates' not in text
+
+
+def test_product_sits_beside_each_target_verdict():
+    """Each target names the product its runs tested, in the verdict list,
+    the targets table, and the terminal lines. Runs without one name none."""
+    runs = [
+        _run('2026-08-24_12-00-00__views', {'passed': 2}, tests=[_t(A, 'passed', 1)]),
+        _run('2026-08-23_12-00-00__views', {'passed': 2}, tests=[_t(A, 'passed', 1)]),
+        _run('2026-08-24_09-00-00__media', {'passed': 4}, target=['tests/ui/media']),
+    ]
+    runs[0]['summary']['provenance'] = {'env': 'qa', 'product': 'NexaiQ-Core'}
+    runs[1]['summary']['provenance'] = {'env': 'qa', 'product': 'NexaiQ-Camera 2 Cloud'}
+    agg = hs.aggregate(runs, 20)
+    assert {t['slug']: t['product'] for t in agg['targets']} == {
+        'views': 'NexaiQ-Core, NexaiQ-Camera 2 Cloud', 'media': ''}
+    page = hs.render_health(agg, generated='2026-08-24T15:00:00')
+    assert ('<li>Views: 100% pass rate over 2 runs, 0 tests to watch. '
+            '<span class="product">NexaiQ-Core, NexaiQ-Camera 2 Cloud</span></li>') in page
+    assert '<li>Media: 100% pass rate over 1 run, 0 tests to watch.</li>' in page
+    assert 'Views <span class="product">NexaiQ-Core, NexaiQ-Camera 2 Cloud</span>' in page
+    text = hs.format_table(agg)
+    assert 'Views: 100% pass rate over 2 runs, 0 tests to watch. Product: NexaiQ-Core, ' \
+           'NexaiQ-Camera 2 Cloud.' in text
+    assert 'Media: 100% pass rate over 1 run, 0 tests to watch.\n' in text
+    assert '<a href="index.html">Archive Index</a>' in page
+    assert 'all runs' not in page
+
+
+def test_run_links_open_what_each_folder_has(tmp_path):
+    """With the archive on disk, a run without run.html links its
+    report.html, and one with neither links its folder."""
+    runs = tmp_path / 'runs'
+    for run in RUNS:
+        (runs / run['name']).mkdir(parents=True)
+    (runs / '2026-08-24_12-00-00__views' / 'report.html').write_text('x', encoding='utf-8')
+    (runs / '2026-08-22_12-00-00__views' / 'run.html').write_text('x', encoding='utf-8')
+    page = hs.render_health(hs.aggregate(RUNS, 20), generated='x', runs_dir=runs)
+    assert 'href="2026-08-24_12-00-00__views/report.html#advisories"' in page
+    assert '<a href="2026-08-24_12-00-00__views/report.html">2026-08-24_12-00-00__views</a>' in page
+    assert 'class="blk failed" href="2026-08-24_12-00-00__views/report.html"' in page
+    assert '<a href="2026-08-22_12-00-00__views/run.html">Aug 22, 12:00 PM</a>' in page
+    assert 'href="2026-08-23_12-00-00__views/"' in page
+    assert 'href="2026-08-24_12-00-00__views/run.html"' not in page
 
 
 def test_cli_writes_health_html_and_links_it_from_the_index(tmp_path, capsys):

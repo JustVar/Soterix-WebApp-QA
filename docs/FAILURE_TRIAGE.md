@@ -63,7 +63,8 @@ the test was present in. The change label compares with the previous run
 of these tests, named by date under the header: New failure, Fixed, Still
 failing, or New test. The filter box at the top narrows the page to the
 tests that match a word. `python -m plugins.run_report latest` rebuilds
-the page for the newest run, or pass a run folder.
+the page for the newest run, or pass a run folder. `--all` builds the
+page of every archived run that has none.
 
 The run's `log/` folder holds `run.log`, with the session's logging and
 then the output pytest captured for every passed and skipped test, one

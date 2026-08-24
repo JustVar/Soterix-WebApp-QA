@@ -121,7 +121,7 @@ a message that names the run that holds the lock.
 | Where | What |
 |-------|------|
 | `reports/runs/<start>__<target>/run.html` | Start here for a run. A one-sentence verdict, then the failures, grouped when they share an error, each with its error, call log, screenshots, video, and the show-trace command. Then advisories, the slowest 5, passed, and skipped. Every test carries a strip of its last 20 outcomes and a label for what changed since the previous run |
-| `reports/runs/index.html` | One row per run, newest first, with counts, advisories, and a `run report` link |
+| `reports/runs/index.html` | One row per run, newest first, with counts, advisories, and three links: `Run Report` (run.html), `Raw pytest-html` (report.html), `Folder` |
 | `reports/runs/<start>__<target>/` | That run's report, screenshots, traces, videos, results JSON, and `advisories.txt` |
 | `reports/report.html` | The latest run's report (failures show their screenshot and a trace link) |
 | `reports/screenshots/<test>__PASSED.png` | The latest run's labeled end-state screenshots; drags also keep a `__mid-drag-1.png` frame |
@@ -134,11 +134,12 @@ Open a trace:
 venv\Scripts\python.exe -m playwright show-trace reports\artifacts\<name>-trace.zip
 ```
 
-Rebuild a run's page (after a hand edit of its folder, or for a run
-archived before the page existed):
+Rebuild a run's page (after a hand edit of its folder), or build the page
+of every run archived before the page existed:
 
 ```
 venv\Scripts\python.exe -m plugins.run_report latest
+venv\Scripts\python.exe -m plugins.run_report --all
 ```
 
 Each run folder also holds `log/`. `run.log` has the session's logging

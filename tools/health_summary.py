@@ -9,10 +9,11 @@ Reads every reports/runs/*/summary.json (see plugins/run_archive.py),
 writes reports/runs/health.html, and prints a compact table. The page
 shows, over the window:
   - Verdict: one line per target in plain words, e.g. "Views: 96% pass
-    rate over 20 runs, 1 test to watch."
-  - Targets: one row per invocation target (the run folder's slug): runs,
-    pass rate, mean run duration, advisory count (linked to the newest
-    run's advisories), newest run and its exit status.
+    rate over 20 runs, 1 test to watch.", with the product the target's
+    runs tested beside it (from summary.json provenance, schema 4 on).
+  - Targets: one row per invocation target (the run folder's slug): its
+    product, runs, pass rate, mean run duration, advisory count (linked
+    to the newest run's advisories), newest run and its exit status.
   - Modules: one row per test file under tests/: tests seen, results, pass
     rate, mean test duration.
   - Tests to watch: every test that failed at least once in the window,
@@ -28,8 +29,10 @@ per-run page (run.html) lists a run's slowest tests. This page keeps the
 mean test duration per module.
 
 Summaries written before schema 2 carry no per-test records: they count
-toward the target rows only. Stdlib only, and read-only on the archive
-except for health.html and the index link to it.
+toward the target rows only. Every link to a run goes through
+run_report.run_href, so a run archived without a run.html opens its
+report.html or its folder instead of a missing file. Stdlib only, and
+read-only on the archive except for health.html and the index link to it.
 """
 from __future__ import annotations
 
@@ -53,6 +56,7 @@ from plugins.run_report import (  # noqa: E402
     PAGE_CSS,
     PASSED_OUTCOMES,
     RUN_DIR_RE,
+    RunLinks,
     format_seconds,
     friendly_time,
     history_facts,
@@ -60,7 +64,9 @@ from plugins.run_report import (  # noqa: E402
     plural,
     readable_title,
     render_strip,
+    run_href,
     run_started,
+    summary_product,
     summary_tests,
 )
 
@@ -168,9 +174,13 @@ def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
             'slug': slug, 'target': _target_label(summary, slug), 'runs': 0, 'passed': 0,
             'failed': 0, 'durations': [], 'advisories': 0, 'runs_without_records': 0,
             'newest_run': name, 'newest_started': started,
-            'newest_exit': summary.get('exitstatus'),
+            'newest_exit': summary.get('exitstatus'), 'products': [],
         })
         target['runs'] += 1
+        # The products the target's runs tested, newest first, each once.
+        product = summary_product(summary)
+        if product and product not in target['products']:
+            target['products'].append(product)
         target['passed'] += int(counts.get('passed', 0) or 0)
         target['failed'] += int(counts.get('failed', 0) or 0) + int(counts.get('errors', 0) or 0)
         target['advisories'] += len(advisories)
@@ -227,6 +237,7 @@ def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
             'runs_without_records': target['runs_without_records'],
             'newest_run': target['newest_run'], 'newest_started': target['newest_started'],
             'newest_exit': target['newest_exit'],
+            'product': ', '.join(target['products']),
         })
 
     module_rows = []
@@ -280,8 +291,13 @@ def _secs(seconds: float | None) -> str:
     return '-' if seconds is None else format_seconds(seconds)
 
 
-def _run_link(name: str) -> str:
-    return f'<a href="{escape(name, quote=True)}/run.html">{escape(name)}</a>'
+def _run_link(name: str, runs_dir: Path | None = None) -> str:
+    return f'<a href="{run_href(name, runs_dir)}">{escape(name)}</a>'
+
+
+def _product_chip(product: str) -> str:
+    """The product beside a target's verdict, '' when its runs named none."""
+    return f' <span class="product">{escape(product)}</span>' if product else ''
 
 
 def _test_cell(row: dict) -> str:
@@ -298,10 +314,10 @@ def _rate_cell(facts: dict) -> str:
     return f'<td class="num">{text}</td>'
 
 
-def _failure_link(block: dict | None) -> str:
+def _failure_link(block: dict | None, runs_dir: Path | None = None) -> str:
     if not block:
         return '-'
-    return (f'<a href="{escape(str(block["run"]), quote=True)}/run.html">'
+    return (f'<a href="{run_href(block["run"], runs_dir)}">'
             f'{escape(friendly_time(block.get("started")))}</a>')
 
 
@@ -321,19 +337,23 @@ def _cell(inner: str) -> str:
     return f'<td>{inner}</td>'
 
 
-def render_health(agg: dict, generated: str | None = None) -> str:
-    """The health.html page from aggregate()'s facts. Pure."""
+def render_health(agg: dict, generated: str | None = None,
+                  runs_dir: Path | None = None) -> str:
+    """The health.html page from aggregate()'s facts. `runs_dir` is the
+    archive on disk, for run_href to check which page each run has.
+    Without it every run links its run.html."""
     window = agg['window']
     generated = generated or datetime.now().isoformat(timespec='seconds')
     target_rows = [[
-        _cell(f"{escape(t['name'])}<div class=\"nodeid\">{escape(t['target'])}</div>"),
+        _cell(f"{escape(t['name'])}{_product_chip(t['product'])}"
+              f"<div class=\"nodeid\">{escape(t['target'])}</div>"),
         _num(str(t['runs'])), _num(_pct(t['pass_rate'])),
         _num(f"{t['passed']} / {t['failed']}"), _num(_secs(t['mean_duration_s'])),
         # The count spans the window. The link opens the newest run's lines.
         _num(str(t['advisories'])) if not t['advisories'] else
-        f'<td class="num"><a href="{escape(t["newest_run"], quote=True)}/run.html#advisories">'
+        f'<td class="num"><a href="{run_href(t["newest_run"], runs_dir)}#advisories">'
         f'{t["advisories"]}</a></td>',
-        _cell(f"{_run_link(t['newest_run'])}<div class=\"case\">exit "
+        _cell(f"{_run_link(t['newest_run'], runs_dir)}<div class=\"case\">exit "
               f"{escape(str(t['newest_exit'])) if t['newest_exit'] is not None else '-'}</div>"),
     ] for t in agg['targets']]
     module_rows = [[
@@ -343,10 +363,14 @@ def render_health(agg: dict, generated: str | None = None) -> str:
     ] for m in agg['modules']]
     watch_rows = [[
         _cell(_test_cell(w)), _cell(f'<code>{escape(w["module"])}</code>'),
-        _cell(render_strip(w['facts'], '', with_text=False)),
-        _rate_cell(w['facts']), _cell(_failure_link(w['facts']['last_failure'])),
+        _cell(render_strip(w['facts'], '', with_text=False, links=RunLinks(runs_dir))),
+        _rate_cell(w['facts']), _cell(_failure_link(w['facts']['last_failure'], runs_dir)),
     ] for w in agg['watch']]
-    verdict = ''.join(f'<li>{escape(line)}</li>' for line in health_verdict(agg))
+    verdict = ''.join(
+        f'<li>{escape(line)}{_product_chip(t["product"])}</li>'
+        for line, t in zip(health_verdict(agg), agg['targets'], strict=False))
+    if not agg['targets']:
+        verdict = f'<li>{escape(health_verdict(agg)[0])}</li>'
     # An empty table must not claim a clean window when the failures sit
     # in runs that carry no per-test records.
     unnamed = sum(t['runs_without_records'] for t in agg['targets']
@@ -377,7 +401,7 @@ def render_health(agg: dict, generated: str | None = None) -> str:
 <p class="case">The newest {window['last_n']} runs of each target, from the run archive.{span}
 Pass rate is passed / (passed + failed + errors); skips do not count.
 Generated {escape(generated)}. Rebuild with <code>python run.py health</code>.</p>
-<div class="meta"><a href="index.html">all runs</a></div>
+<div class="meta"><a href="index.html">Archive Index</a></div>
 
 <h2 id="targets">Targets ({len(agg['targets'])})</h2>
 {_table(['Target', 'Runs', 'Pass rate', 'Passed / failed', 'Mean run', 'Advisories', 'Newest run'],
@@ -402,7 +426,11 @@ def format_table(agg: dict) -> str:
     """The terminal view: the verdict, targets, modules, then the tests to watch."""
     window = agg['window']
     out = [f"Health: newest {window['last_n']} runs of each target, {window['runs']} runs in the window."]
-    out.extend(health_verdict(agg))
+    if agg['targets']:
+        out.extend(f"{line} Product: {t['product']}." if t['product'] else line
+                   for line, t in zip(health_verdict(agg), agg['targets'], strict=False))
+    else:
+        out.extend(health_verdict(agg))
 
     def cut(text: str) -> str:
         return text if len(text) <= NAME_WIDTH else text[:NAME_WIDTH - 3] + '...'
@@ -453,7 +481,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f'\nNo archived runs under {args.runs_dir}. Run the suite once.')
         return 0
     page = args.runs_dir / 'health.html'
-    page.write_text(render_health(agg), encoding='utf-8')
+    page.write_text(render_health(agg, runs_dir=args.runs_dir), encoding='utf-8')
     # The index links health.html once it exists.
     _write_index(args.runs_dir)
     print(f'\nHealth page: {page.resolve()}')

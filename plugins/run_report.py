@@ -5,15 +5,19 @@ puts every piece of the run's evidence one click away, failures first.
 
     python -m plugins.run_report latest
     python -m plugins.run_report reports/runs/<start>__<target>
+    python -m plugins.run_report --all      # every archived run without a run.html
 
 What the page shows, in order:
   - Verdict: one sentence in plain words, e.g. "3 of 49 tests failed - 2
     new failures, 1 still failing; 1 test skipped." or "All 49 tests
     passed."
-  - Header: target, start time, duration, outcome counts, exit status,
-    provenance (ENV, host, git commit, browser, Playwright versions), and
-    links to the pytest-html report, the archive index, and the previous
-    run of these tests, which the change labels compare against.
+  - Header: the product under test (plugins/products.py: also the page
+    title's prefix, "NexaiQ-Core - Test run ..."), target, start time,
+    duration, outcome counts, exit status, provenance (ENV, host, git
+    commit, browser, Playwright versions), and links: Raw pytest-html,
+    Archive Index, Health when health.html exists, the previous run of
+    these tests (which the change labels compare against), and Folder.
+    When a run mixes products, every test shows its own.
   - A filter box: type part of a title, node id, case key, module, or
     outcome and only the matching tests stay visible.
   - Failures: one card per failed or errored test with the error message,
@@ -59,9 +63,17 @@ Where the facts come from, most reliable first:
   recomputed from the expected name, with a longest-common-prefix
   fallback for names cut by an older layout.
 
+Links to other runs (the history strips, the seen-before and previous-run
+notes) go through run_href, which looks in the target folder: run.html
+when it has one, else report.html, else the folder. An archive written
+before run.html existed then opens something instead of a missing file.
+`--all` builds the missing pages once, so those links reach run.html too.
+
 Stdlib only, no browser, and read-only on the run folder except for the
 run.html it writes. Every input is optional: a missing file or key
-renders as '-' or an empty section, never as an error.
+renders as '-' or an empty section, never as an error. An archive
+written before schema 4 carries no product; the page then derives it
+from the node ids the same way, less the marker the archive did not keep.
 """
 from __future__ import annotations
 
@@ -80,6 +92,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from plugins.branding import favicon_link, header_logo
+from plugins.products import is_mixed, product_for, product_name, run_product
 
 # Same sanitizer and caps as report_media._safe_name (screenshots) and
 # conftest._trace_path (traces, videos): the archive names are those
@@ -174,6 +187,7 @@ class TestRecord:
     module: str = ''
     case_key: str = ''
     case_title: str = ''
+    product: str = ''
     log_file: str = ''
     seconds: float | None = None
     delta: str = ''
@@ -829,6 +843,7 @@ def collect_tests(run_dir: Path) -> tuple[dict[str, TestRecord], list[str]]:
         rec.module = str(row.get('module') or '')
         rec.case_key = str(row.get('case_key') or '')
         rec.case_title = str(row.get('case_title') or '')
+        rec.product = str(row.get('product') or '')
         rec.log_file = str(row.get('log_file') or '')
         if isinstance(row.get('duration_s'), (int, float)):
             rec.seconds = float(row['duration_s'])
@@ -970,6 +985,8 @@ h3.title { margin: 0; }
 .chip.flaky { color: var(--skip); background: var(--skip-bg); border-color: var(--skip); }
 .verdict { font-size: 1.1rem; font-weight: 600; margin: .25rem 0 .75rem; }
 ul.verdict { padding-left: 1.25rem; }
+.product { font-weight: 600; color: var(--fg); }
+ul.verdict .product { font-weight: 400; color: var(--muted); margin-left: .5rem; font-size: .95rem; }
 .history { display: inline-flex; align-items: center; gap: .5rem; }
 .strip { display: inline-flex; gap: 2px; }
 .blk { width: 9px; height: 14px; border-radius: 2px; background: var(--line); display: inline-block; }
@@ -1013,6 +1030,44 @@ _FILTER_JS = '''
 
 def _href(rel: str) -> str:
     return quote(rel, safe='/')
+
+
+def run_page(name: str, runs_dir: Path | None) -> str:
+    """The file a link to an archived run should open, relative to its
+    folder: 'run.html' when the folder has one, else 'report.html', else
+    '' for the folder itself. Without a runs_dir to look in (pure
+    rendering), or for a folder that is not there, run.html: the page
+    every archive gets."""
+    if runs_dir is None:
+        return 'run.html'
+    folder = Path(runs_dir) / name
+    if not folder.is_dir() or (folder / 'run.html').is_file():
+        return 'run.html'
+    if (folder / 'report.html').is_file():
+        return 'report.html'
+    return ''
+
+
+def run_href(name: str, runs_dir: Path | None = None, prefix: str = '') -> str:
+    """The href of an archived run from a page that reaches the runs
+    folder through `prefix` ('../' from a run folder, '' from the folder
+    itself). See run_page for which file it opens."""
+    return f'{prefix}{_href(str(name))}/{run_page(str(name), runs_dir)}'
+
+
+@dataclass(frozen=True)
+class RunLinks:
+    """How a page links archived runs: the runs folder on disk, and the
+    run whose page is being built. That run's run.html is not on disk
+    until the builder's caller writes it, so it always links run.html."""
+
+    runs_dir: Path | None = None
+    current: str | None = None
+
+    def href(self, name: str, prefix: str = '') -> str:
+        if str(name) == self.current:
+            return f'{prefix}{_href(str(name))}/run.html'
+        return run_href(name, self.runs_dir, prefix)
 
 
 def _headline(log: str) -> str:
@@ -1065,7 +1120,7 @@ def _render_actions(digest: dict) -> str:
 def _filter_key(rec: TestRecord) -> str:
     """What the filter box matches against: every name the test goes by."""
     words = (rec.display_title, rec.nodeid, rec.case_key, rec.case_title,
-             rec.module_name, rec.outcome, rec.delta)
+             rec.module_name, rec.outcome, rec.delta, rec.product)
     return escape(' '.join(w for w in words if w).lower(), quote=True)
 
 
@@ -1076,7 +1131,7 @@ def _delta_chip(rec: TestRecord) -> str:
             f'{escape(rec.delta)}</span>')
 
 
-def _seen_chip(rec: TestRecord) -> str:
+def _seen_chip(rec: TestRecord, links: RunLinks | None = None) -> str:
     """New error, or Seen before with the newest earlier run that showed
     the same error signature, linked."""
     if rec.outcome not in FAILURE_OUTCOMES or not rec.signature:
@@ -1084,20 +1139,24 @@ def _seen_chip(rec: TestRecord) -> str:
     if rec.seen is None:
         return '<span class="chip delta new-error">New error</span>'
     when = friendly_time(rec.seen.get('started'))
+    href = (links or RunLinks()).href(rec.seen['run'], '../')
     return (f'<span class="chip delta seen-before">Seen before (last on '
-            f'<a href="../{_href(str(rec.seen["run"]))}/run.html">{escape(when)}</a>)</span>')
+            f'<a href="{href}">{escape(when)}</a>)</span>')
 
 
-def render_strip(facts: Mapping, href_prefix: str = '', with_text: bool = True) -> str:
+def render_strip(facts: Mapping, href_prefix: str = '', with_text: bool = True,
+                 links: RunLinks | None = None) -> str:
     """The history strip: one block per run, oldest left and newest right,
     each a link to that run's page with the date and outcome as its
     tooltip. With `with_text`, "passed 17/20" follows, then the flaky
     label with the flaky rate when the window holds both outcomes.
-    `href_prefix` is the path from the page to the runs folder."""
+    `href_prefix` is the path from the page to the runs folder, and
+    `links` says which file each run has to open."""
     if not facts or not facts.get('runs'):
         return ''
+    links = links or RunLinks()
     blocks = ''.join(
-        f'<a class="blk {escape(str(b["outcome"]))}" href="{href_prefix}{_href(str(b["run"]))}/run.html" '
+        f'<a class="blk {escape(str(b["outcome"]))}" href="{links.href(b["run"], href_prefix)}" '
         f'title="{escape(friendly_time(b.get("started")))}: {escape(str(b["outcome"]))}"></a>'
         for b in facts['blocks'])
     parts = [f'<span class="strip" title="the last {facts["runs"]} runs of these tests, '
@@ -1119,7 +1178,11 @@ def _render_identity(rec: TestRecord, heading: str) -> str:
     return ''.join(parts)
 
 
-def _render_facts(rec: TestRecord, with_outcome: bool = False, with_seen: bool = True) -> str:
+def _render_facts(rec: TestRecord, with_outcome: bool = False, with_seen: bool = True,
+                  links: RunLinks | None = None, with_product: bool = False) -> str:
+    """The fact line under a test's names. `with_product` is on when the
+    run mixes products: the header then names no single one, so each
+    test names its own."""
     facts = []
     if with_outcome:
         facts.append(f'<span class="chip {escape(rec.outcome)}">{escape(rec.outcome)}</span>')
@@ -1127,11 +1190,13 @@ def _render_facts(rec: TestRecord, with_outcome: bool = False, with_seen: bool =
         facts.append(f'<span>{escape(rec.duration_text)}</span>')
     facts.append(_delta_chip(rec))
     if with_seen:
-        facts.append(_seen_chip(rec))
+        facts.append(_seen_chip(rec, links))
+    if with_product and rec.product:
+        facts.append(f'<span class="product">Product: {escape(rec.product)}</span>')
     facts.append(f'<span>{escape(rec.module_name)}</span>')
     if rec.log_file:
         facts.append(f'<a href="{_href(rec.log_file)}">captured output</a>')
-    facts.append(render_strip(rec.history, '../'))
+    facts.append(render_strip(rec.history, '../', links=links))
     return '<div class="facts">' + ''.join(f for f in facts if f) + '</div>'
 
 
@@ -1149,10 +1214,13 @@ def failure_headline(rec: TestRecord, digest: dict | None) -> str:
     return headline
 
 
-def _render_failure(rec: TestRecord, run_dir: Path, with_seen: bool = True) -> str:
+def _render_failure(rec: TestRecord, run_dir: Path, with_seen: bool = True,
+                    with_product: bool = False, links: RunLinks | None = None) -> str:
     parts = [f'<div class="card {escape(rec.outcome)}" id="{escape(rec.safe, quote=True)}" '
              f'data-test="{_filter_key(rec)}">',
-             _render_identity(rec, 'h3'), _render_facts(rec, with_outcome=True, with_seen=with_seen)]
+             _render_identity(rec, 'h3'),
+             _render_facts(rec, with_outcome=True, with_seen=with_seen,
+                           links=links, with_product=with_product)]
     # build_run_report fills these in. A caller that skipped it still gets a card.
     digest = rec.digest if rec.digest is not None else failure_digest(rec, run_dir)
     headline = rec.headline or failure_headline(rec, digest)
@@ -1206,31 +1274,36 @@ def _render_failure(rec: TestRecord, run_dir: Path, with_seen: bool = True) -> s
     return '\n'.join(parts)
 
 
-def _render_group(group: list[TestRecord], run_dir: Path) -> str:
+def _render_group(group: list[TestRecord], run_dir: Path, with_product: bool = False,
+                  links: RunLinks | None = None) -> str:
     """One failure renders as its card. Several with one error signature
     share a frame that says so, with the error and its new/seen label
     once at the top instead of on every card."""
     if len(group) == 1:
-        return _render_failure(group[0], run_dir)
+        return _render_failure(group[0], run_dir, with_product=with_product, links=links)
     lead = group[0]
     head = (f'<div class="group-head"><b>{len(group)} tests share this error</b>'
-            f'{_seen_chip(lead)}'
+            f'{_seen_chip(lead, links)}'
             f'<pre class="headline">{escape(first_line(lead.headline))}</pre></div>')
-    cards = '\n'.join(_render_failure(r, run_dir, with_seen=False) for r in group)
+    cards = '\n'.join(_render_failure(r, run_dir, with_seen=False, with_product=with_product,
+                                      links=links) for r in group)
     return f'<div class="group">{head}\n{cards}\n</div>'
 
 
-def _render_row(rec: TestRecord) -> str:
+def _render_row(rec: TestRecord, links: RunLinks | None = None,
+                with_product: bool = False) -> str:
     extras = ''
     if rec.advisories:
         extras += '<ul class="plain">' + ''.join(
             f'<li>{escape(a)}</li>' for a in rec.advisories) + '</ul>'
     return (f'<div class="row" data-test="{_filter_key(rec)}">'
-            f'{_render_identity(rec, "div")}{_render_facts(rec)}'
+            f'{_render_identity(rec, "div")}'
+            f'{_render_facts(rec, links=links, with_product=with_product)}'
             f'{extras}{_render_shots(rec)}</div>')
 
 
-def _render_collapsed(title: str, records: list[TestRecord]) -> str:
+def _render_collapsed(title: str, records: list[TestRecord], links: RunLinks | None = None,
+                      with_product: bool = False) -> str:
     """A collapsed list, its tests grouped under their module."""
     if records:
         groups: dict[str, list[TestRecord]] = {}
@@ -1238,7 +1311,7 @@ def _render_collapsed(title: str, records: list[TestRecord]) -> str:
             groups.setdefault(rec.module_name, []).append(rec)
         body = ''.join(
             f'<h4 class="module">{escape(module)} ({len(group)})</h4>'
-            + ''.join(_render_row(r) for r in group)
+            + ''.join(_render_row(r, links, with_product) for r in group)
             for module, group in sorted(groups.items()))
     else:
         body = '<p class="empty">None.</p>'
@@ -1259,7 +1332,21 @@ def _render_slowest(records: list[TestRecord], count: int = SLOWEST_COUNT) -> st
             + rows + '</table>')
 
 
-def _render_provenance(summary: dict) -> str:
+def summary_product(summary: Mapping) -> str:
+    """The run's product from summary.json: provenance's label, else (an
+    archive before schema 4) the label its per-test records' node ids
+    derive, less any marker, else '' (no records either)."""
+    prov = summary.get('provenance') if isinstance(summary.get('provenance'), dict) else {}
+    recorded = str(prov.get('product') or '')
+    if recorded:
+        return recorded
+    return run_product(str(r.get('product') or '') or product_name(product_for(str(r['nodeid'])))
+                       for r in summary_tests(summary))
+
+
+def _render_provenance(summary: dict, product: str = '') -> str:
+    """The provenance line: the product first, as a name, then the
+    machine facts in code."""
     prov = summary.get('provenance') if isinstance(summary.get('provenance'), dict) else {}
     browser = ' / '.join(str(v) for v in (prov.get('browser'), prov.get('browser_channel')) if v)
     versions = ', '.join(
@@ -1267,23 +1354,31 @@ def _render_provenance(summary: dict) -> str:
         (('playwright', 'playwright'), ('pytest-playwright', 'pytest_playwright')) if prov.get(key))
     facts = (('ENV', prov.get('env')), ('Host', prov.get('base_url_host')),
              ('Commit', prov.get('git_commit')), ('Browser', browser), ('Versions', versions))
-    spans = [f'<span>{label}: <code>{escape(str(value))}</code></span>'
-             for label, value in facts if value]
+    spans = [f'<span class="product">Product: {escape(product)}</span>'] if product else []
+    spans += [f'<span>{label}: <code>{escape(str(value))}</code></span>'
+              for label, value in facts if value]
     return '<div class="meta">' + ''.join(spans) + '</div>' if spans else ''
 
 
 def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord],
                       unattached: list[str], previous: Mapping | None = None,
-                      verdict: str = '') -> str:
-    """Render the page from already-collected facts. Pure - no disk reads
-    beyond a failure card whose digest build_run_report did not fill.
+                      verdict: str = '', product: str = '') -> str:
+    """Render the page from already-collected facts. Disk reads stop at
+    which files the run folder and its neighbours hold (for the links)
+    and a failure card whose digest build_run_report did not fill.
     `previous` is the run the change labels were computed against
-    ({'name', 'started'}), when there is one."""
+    ({'name', 'started'}), when there is one. `product` is the run's
+    product label: one name, or "Mixed: A, B", or ''."""
     counts = summary.get('counts') if isinstance(summary.get('counts'), dict) else {}
     target = ' '.join(str(t) for t in (summary.get('target') or [])) or run_dir.name.partition('__')[2]
     started = summary.get('started') or run_dir.name.partition('__')[0].replace('_', ' ')
     duration = summary.get('duration_s')
     exitstatus = summary.get('exitstatus')
+    runs_dir = run_dir.parent
+    run_links = RunLinks(runs_dir, run_dir.name)
+    # A mixed run's header names no single product, so every test names its own.
+    with_product = is_mixed(product)
+    title = f'{product} - Test run {started}' if product else f'Test run {started}'
 
     def by_outcome(names: tuple[str, ...]) -> list[TestRecord]:
         return sorted((t for t in tests.values() if t.outcome in names),
@@ -1297,21 +1392,24 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
     chips = ''.join(
         f'<span class="chip {key}">{escape(key)}: {escape(str(counts.get(key, "-")))}</span>'
         for key in ('passed', 'failed', 'skipped', 'errors'))
-    links = ['<a href="../index.html">all runs</a>']
+    links = ['<a href="../index.html">Archive Index</a>']
     if (run_dir / 'report.html').is_file():
-        links.insert(0, '<a href="report.html">pytest-html report</a>')
+        links.insert(0, '<a href="report.html">Raw pytest-html</a>')
+    if (runs_dir / 'health.html').is_file():
+        links.append('<a href="../health.html">Health</a>')
     if (run_dir / 'advisories.txt').is_file():
         links.append('<a href="advisories.txt">advisories.txt</a>')
     has_run_log = (run_dir / 'log' / 'run.log').is_file()
     if has_run_log:
         links.append('<a href="log/run.log">run.log</a>')
     if previous:
-        links.append(f'<a href="../{_href(str(previous["name"]))}/run.html">previous run of these tests</a>')
-    links.append('<a href="./">folder</a>')
+        links.append(f'<a href="{run_href(previous["name"], runs_dir, "../")}">'
+                     'Previous run of these tests</a>')
+    links.append('<a href="./">Folder</a>')
 
     if previous:
         def link(label: str) -> str:
-            return f'<a href="../{_href(str(previous["name"]))}/run.html">{escape(label)}</a>'
+            return f'<a href="{run_href(previous["name"], runs_dir, "../")}">{escape(label)}</a>'
         compared = (f'<p class="case">{delta_wording(previous, link)}. Each changed test carries '
                     f'a label: {DELTA_NEW_FAILURE}, {DELTA_FIXED}, {DELTA_STILL_FAILING}, '
                     f'or {DELTA_NEW_TEST}.</p>')
@@ -1327,7 +1425,8 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
     else:
         adv_body = '<p class="empty">None.</p>'
 
-    failure_body = ('\n'.join(_render_group(g, run_dir) for g in group_failures(failures))
+    failure_body = ('\n'.join(_render_group(g, run_dir, with_product, run_links)
+                              for g in group_failures(failures))
                     if failures else '<p class="empty">No failures in this run.</p>')
     passed_note = ('<p class="case">The captured output of passed and skipped tests is in '
                    '<a href="log/run.log">log/run.log</a>, one section per test.</p>'
@@ -1335,7 +1434,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 
     extra_sections = ''
     if unknown:
-        extra_sections += _render_collapsed('Outcome unknown', unknown)
+        extra_sections += _render_collapsed('Outcome unknown', unknown, run_links, with_product)
     if unattached:
         extra_sections += ('<details class="section"><summary>Files not matched to a test '
                            f'({len(unattached)})</summary><ul class="plain">'
@@ -1347,7 +1446,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Run {escape(run_dir.name)}</title>
+<title>{escape(title)}</title>
 {favicon_link()}
 <style>
 .brand-row {{ display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }}
@@ -1363,7 +1462,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 <span>Exit status: {escape(str(exitstatus)) if exitstatus is not None else '-'}</span>
 <span>Folder: <code>{escape(run_dir.name)}</code></span>
 </div>
-{_render_provenance(summary)}
+{_render_provenance(summary, product)}
 <div class="chips">{chips}</div>
 <div class="meta">{' | '.join(links)}</div>
 {compared}
@@ -1381,10 +1480,10 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 
 <h2 id="passed">Passed</h2>
 {passed_note}
-{_render_collapsed('Passed', passed)}
+{_render_collapsed('Passed', passed, run_links, with_product)}
 
 <h2 id="skipped">Skipped</h2>
-{_render_collapsed('Skipped', skipped)}
+{_render_collapsed('Skipped', skipped, run_links, with_product)}
 {extra_sections}
 <script>{_FILTER_JS}</script>
 </body>
@@ -1402,6 +1501,12 @@ def build_run_report(run_dir: Path) -> str:
     run_dir = Path(run_dir)
     summary = load_summary(run_dir)
     tests, unattached = collect_tests(run_dir)
+    # Archives before schema 4 recorded no product. The node id still
+    # answers (path rule, environment, default), less any marker.
+    for rec in tests.values():
+        if not rec.product:
+            rec.product = product_name(product_for(rec.nodeid))
+    product = summary_product(summary) or run_product(r.product for r in tests.values())
     outcomes = {nodeid: rec.outcome for nodeid, rec in tests.items()}
     history = load_history(run_dir)
     previous = history[0] if history else None
@@ -1435,10 +1540,17 @@ def build_run_report(run_dir: Path) -> str:
         skipped = sum(1 for o in outcomes.values() if o in SKIPPED_OUTCOMES)
     verdict = run_verdict(passed, failed, skipped, chips)
     return render_run_report(run_dir, summary, tests, unattached, previous=previous,
-                             verdict=verdict)
+                             verdict=verdict, product=product)
 
 
 # ---------------------------------------------------------------- CLI
+
+def _run_dirs(runs_dir: Path) -> list[Path]:
+    """The run folders under runs_dir, oldest first."""
+    if not runs_dir.is_dir():
+        return []
+    return sorted(p for p in runs_dir.iterdir() if p.is_dir() and RUN_DIR_RE.match(p.name))
+
 
 def _resolve_run_dir(arg: str) -> Path | None:
     """'latest' is the newest run folder under reports/runs; else the path."""
@@ -1446,17 +1558,53 @@ def _resolve_run_dir(arg: str) -> Path | None:
         path = Path(arg)
         return path if path.is_dir() else None
     from plugins.run_archive import RUNS_DIR
-    if not RUNS_DIR.is_dir():
-        return None
-    runs = sorted(p for p in RUNS_DIR.iterdir() if p.is_dir() and RUN_DIR_RE.match(p.name))
+    runs = _run_dirs(RUNS_DIR)
     return runs[-1] if runs else None
+
+
+def backfill_run_reports(runs_dir: Path, out=None) -> tuple[list[Path], list[Path]]:
+    """Write run.html for every archived run under runs_dir that has none.
+
+    Oldest first, so each page's history sees the pages before it. A
+    folder whose page cannot be built is reported and skipped: one
+    broken archive must not stop the rest. Returns the folders written
+    and the folders that failed.
+    """
+    out = out or sys.stdout
+    written: list[Path] = []
+    failed: list[Path] = []
+    for run_dir in _run_dirs(runs_dir):
+        page = run_dir / 'run.html'
+        if page.is_file():
+            continue
+        try:
+            page.write_text(build_run_report(run_dir), encoding='utf-8')
+        except Exception as e:  # noqa: BLE001 - the other folders still get their pages
+            failed.append(run_dir)
+            out.write(f'could not build {page}: {e}\n')
+            continue
+        written.append(run_dir)
+        out.write(f'{page}\n')
+    return written, failed
+
+
+def _backfill_all() -> int:
+    """`--all`: the missing pages, then the index, which flags who has one."""
+    from plugins.run_archive import RUNS_DIR, _write_index
+    written, failed = backfill_run_reports(RUNS_DIR)
+    _write_index(RUNS_DIR)
+    sys.stdout.write(f'{len(written)} run.html written, {len(failed)} failed, '
+                     f'{len(_run_dirs(RUNS_DIR)) - len(written) - len(failed)} already had one\n')
+    return 1 if failed else 0
 
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if len(argv) != 1 or argv[0] in ('-h', '--help'):
-        sys.stderr.write('usage: python -m plugins.run_report <run-dir|latest>\n')
+        sys.stderr.write('usage: python -m plugins.run_report <run-dir|latest|--all>\n')
         return 2
+    if argv[0] == '--all':
+        return _backfill_all()
     run_dir = _resolve_run_dir(argv[0])
     if run_dir is None:
         sys.stderr.write(f'No run folder at {argv[0]}. Archived runs live under reports/runs/.\n')

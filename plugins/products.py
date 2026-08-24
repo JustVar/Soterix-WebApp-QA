@@ -1,0 +1,88 @@
+"""QA Touch project keys and the product each one stands for.
+
+The table copies the "QA Touch projects" table of
+docs/QA_TOUCH_INTEGRATION.md. Change the doc first, then this table.
+
+A test belongs to one product. `product_for` names its project key, in
+this order, first hit wins:
+  1. An explicit `qatouch_project` marker on the test.
+  2. A path rule: tests under tests/ui/c2c/ belong to Camera 2 Cloud.
+  3. The mapping file's top-level project_key (the caller reads it).
+  4. The QATOUCH_PROJECT_ID environment variable.
+  5. NexaiQ-Core (JlW1), the project every other tool defaults to.
+
+The archive records the product name per test and once per run, and the
+run and health pages show it. Stdlib only.
+"""
+from __future__ import annotations
+
+import os
+from collections.abc import Iterable
+
+PRODUCTS = {
+    'JlW1': 'NexaiQ-Core',
+    'P0BK': 'NexaiQ-Neurosen',
+    '60w8': 'NexaiQ-Technician App',
+    '70l1': 'NexaiQ-Partner Admin Tool',
+    'K5kB': 'NexiaQ-Mobile',
+    '60W5': 'NexaiQ-Camera 2 Cloud',
+}
+
+DEFAULT_KEY = 'JlW1'
+ENV_VAR = 'QATOUCH_PROJECT_ID'
+
+# (path prefix under the repo, project key). The prefix matches the node
+# id's file part with forward slashes. First match wins.
+PATH_RULES = (
+    ('tests/ui/c2c/', '60W5'),
+)
+
+MIXED_PREFIX = 'Mixed: '
+
+
+def product_name(key: str | None) -> str:
+    """The product a project key stands for.
+
+    An unknown key comes back as itself, so a page never hides a key it
+    cannot name. None or an empty key is ''.
+    """
+    if not key:
+        return ''
+    return PRODUCTS.get(str(key), str(key))
+
+
+def product_for(nodeid: str, marker_project: str | None = None,
+                default_key: str | None = None) -> str:
+    """The project key of a test, by the precedence in the module docstring.
+
+    `marker_project` is the qatouch_project marker's value when the test
+    carries one. `default_key` is the mapping file's top-level
+    project_key when the caller could read it.
+    """
+    if marker_project:
+        return str(marker_project)
+    path = str(nodeid or '').split('::', 1)[0].replace('\\', '/').lstrip('/')
+    for prefix, key in PATH_RULES:
+        if path.startswith(prefix):
+            return key
+    if default_key:
+        return str(default_key)
+    return os.environ.get(ENV_VAR, '').strip() or DEFAULT_KEY
+
+
+def run_product(names: Iterable[str]) -> str:
+    """One label for a run from its tests' product names.
+
+    The single name when every test agrees, else "Mixed: A, B" with the
+    names sorted, so two runs of one mix read the same. '' for no names.
+    """
+    distinct = sorted({str(n) for n in names if n})
+    if not distinct:
+        return ''
+    if len(distinct) == 1:
+        return distinct[0]
+    return MIXED_PREFIX + ', '.join(distinct)
+
+
+def is_mixed(product: str | None) -> bool:
+    return str(product or '').startswith(MIXED_PREFIX)

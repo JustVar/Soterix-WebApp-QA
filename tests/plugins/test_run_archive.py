@@ -245,7 +245,7 @@ def test_copy_screenshots_caps_the_destination_path(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_summary_shape():
-    """The summary carries exactly the schema-2 keys with the run's facts."""
+    """The summary carries exactly the schema keys with the run's facts."""
     counts = {'passed': 3, 'failed': 1, 'skipped': 2, 'errors': 0}
     summary = ra._build_summary(started=1000.0, ended=1090.5, exitstatus=1,
                                 counts=counts, target=['tests/ui/views'],
@@ -255,7 +255,7 @@ def test_summary_shape():
                             'exitstatus', 'counts', 'target', 'markexpr',
                             'keyword', 'report_file', 'advisories', 'tests',
                             'provenance'}
-    assert summary['schema_version'] == 3
+    assert summary['schema_version'] == 4
     assert summary['tests'] == []
     assert summary['provenance'] == {}
     assert summary['duration_s'] == 90.5
@@ -304,22 +304,42 @@ def test_index_links_report_only_when_present():
         _entry('2026-08-01_10-00-00__a', has_report=True),
         _entry('2026-08-02_10-00-00__b', has_report=False),
     ])
-    assert '2026-08-01_10-00-00__a/report.html' in html
+    assert '<a href="2026-08-01_10-00-00__a/report.html">Raw pytest-html</a>' in html
     assert '2026-08-02_10-00-00__b/report.html' not in html
     # The folder link is always there - traces have no report to link.
-    assert '2026-08-02_10-00-00__b/' in html
+    assert '<a href="2026-08-02_10-00-00__b/">Folder</a>' in html
 
 
 def test_index_links_the_run_report_first_when_present():
-    """run.html is where a reader starts, so its link leads the Open cell."""
+    """run.html is where a reader starts, so its chip leads the Open cell,
+    and the three chips carry three distinct labels."""
     html = ra._render_index([
         {'name': '2026-08-01_10-00-00__a', 'summary': {}, 'has_report': True,
          'has_run_report': True},
         {'name': '2026-08-02_10-00-00__b', 'summary': {}, 'has_report': True},
     ])
-    cell_a = html[html.index('2026-08-01_10-00-00__a/run.html'):]
-    assert cell_a.index('run report') < cell_a.index('>report<') < cell_a.index('folder')
+    cell_a = html[html.index('<span class="open"><a href="2026-08-01_10-00-00__a/run.html">'):]
+    cell_a = cell_a[:cell_a.index('</span>')]
+    assert cell_a.index('>Run Report<') < cell_a.index('>Raw pytest-html<') < cell_a.index('>Folder<')
+    assert cell_a.count('<a ') == 3
+    assert (ra.INDEX_LINK_RUN_REPORT, ra.INDEX_LINK_RAW_REPORT, ra.INDEX_LINK_FOLDER) == \
+        ('Run Report', 'Raw pytest-html', 'Folder')
     assert '2026-08-02_10-00-00__b/run.html' not in html
+    # The chips are boxed and spaced by CSS, not by words run together.
+    assert '.open a { border:' in html
+    assert 'gap: 0.4rem' in html
+
+
+def test_index_wording_is_title_case():
+    """The title, the heading, and the column headers read in Title Case."""
+    html = ra._render_index([_entry('2026-08-01_10-00-00__a')])
+    assert '<title>Test Run Archive</title>' in html
+    assert '<h1>Test Run Archive</h1>' in html
+    assert 'Test run archive' not in html
+    headers = re.findall(r'<th>([^<]+)</th>', html)
+    assert headers == ['Started', 'Target', 'Passed', 'Failed', 'Skipped', 'Errors', 'Exit',
+                       'Advisories', 'Open']
+    assert all(h == h[:1].upper() + h[1:] for h in headers)
 
 
 def test_load_entries_flags_the_run_report(tmp_path):
@@ -650,6 +670,85 @@ class TestCaseMapping:
         assert ra.lookup_case({}, MAPPED) == {'case_key': None, 'case_title': None}
 
 
+class TestProduct:
+    """Each record names its product, and the run names one or a mix."""
+
+    C2C = 'tests/ui/c2c/test_c2c_camera.py::TestCamera::test_reboot[chromium]'
+    CORE = 'tests/ui/views/test_views_basic.py::TestViews::test_open[chromium]'
+
+    def test_load_project_key_reads_the_top_level_key(self, tmp_path):
+        """The mapping file's project_key loads; a missing file or key is None."""
+        path = tmp_path / 'mapping.json'
+        path.write_text(json.dumps({'version': 1, 'project_key': 'K5kB', 'mappings': {}}),
+                        encoding='utf-8')
+        assert ra.load_project_key(path) == 'K5kB'
+        path.write_text(json.dumps({'version': 1, 'mappings': {}}), encoding='utf-8')
+        assert ra.load_project_key(path) is None
+        assert ra.load_project_key(tmp_path / 'nope.json') is None
+        path.write_text('[1, 2]', encoding='utf-8')
+        assert ra.load_project_key(path) is None
+
+    def test_record_phase_names_the_product_by_precedence(self, monkeypatch):
+        """Marker first, then the c2c path, then the mapping default."""
+        monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+        state = ra._RunState()
+        ra.record_phase(state, _FakePhaseReport(self.C2C, 'call', 'passed'),
+                        marker_project='P0BK', project_key='K5kB')
+        assert state.tests[self.C2C]['product'] == 'NexaiQ-Neurosen'
+        state = ra._RunState()
+        ra.record_phase(state, _FakePhaseReport(self.C2C, 'call', 'passed'), project_key='K5kB')
+        assert state.tests[self.C2C]['product'] == 'NexaiQ-Camera 2 Cloud'
+        ra.record_phase(state, _FakePhaseReport(self.CORE, 'call', 'passed'), project_key='K5kB')
+        assert state.tests[self.CORE]['product'] == 'NexiaQ-Mobile'
+        state = ra._RunState()
+        ra.record_phase(state, _FakePhaseReport(self.CORE, 'call', 'passed'))
+        assert state.tests[self.CORE]['product'] == 'NexaiQ-Core'
+
+    def test_marker_project_reads_the_item(self):
+        """The qatouch_project marker's first argument, or None without one."""
+        class Item:
+            def __init__(self, marker):
+                self.marker = marker
+
+            def get_closest_marker(self, name):
+                return self.marker if name == 'qatouch_project' else None
+
+        class Marker:
+            args = ('60w8',)
+
+        assert ra.marker_project(Item(Marker())) == '60w8'
+        assert ra.marker_project(Item(None)) is None
+        assert ra.marker_project(object()) is None
+
+    def test_archive_records_one_product_or_a_mix(self, tmp_path, monkeypatch):
+        """Provenance carries the single product, or "Mixed: A, B" sorted."""
+        monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+        monkeypatch.setattr(ra, 'RUNS_DIR', tmp_path / 'runs')
+        monkeypatch.setattr(ra, 'SCREENSHOT_DIR', tmp_path / 'shots')
+        monkeypatch.setattr(ra, 'TRACE_DIR', tmp_path / 'artifacts')
+        monkeypatch.setattr(ra, 'RESULTS_JSON', tmp_path / 'none.json')
+        monkeypatch.setattr(ra, 'MAPPING_FILE', tmp_path / 'no-mapping.json')
+
+        def archive(nodeids):
+            state = ra._RunState()
+            state.mapping = {}
+            state.started, state.ended, state.exitstatus = 1_700_000_000.0, 1_700_000_010.0, 0
+            for nodeid in nodeids:
+                ra.record_phase(state, _FakePhaseReport(nodeid, 'call', 'passed'),
+                                project_key=state.project_key())
+            state.counts['passed'] = len(nodeids)
+            ra._archive_run(_FakeConfig(args=['tests/ui']), state)
+            dest = max(p for p in (tmp_path / 'runs').iterdir() if p.is_dir())
+            return json.loads((dest / 'summary.json').read_text(encoding='utf-8'))
+
+        single = archive([self.CORE])
+        assert single['provenance']['product'] == 'NexaiQ-Core'
+        assert single['tests'][0]['product'] == 'NexaiQ-Core'
+        mixed = archive([self.CORE, self.C2C])
+        assert mixed['provenance']['product'] == 'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core'
+        assert [t['product'] for t in mixed['tests']] == ['NexaiQ-Core', 'NexaiQ-Camera 2 Cloud']
+
+
 class TestLogFileName:
     def test_sanitizes_like_the_screenshot_stem(self):
         """The log file name is the screenshot stem plus .log."""
@@ -868,7 +967,8 @@ class TestTestLog:
         assert by_id[failed]['log_file'] == 'log/t-x.py-test_b-chromium.log'
         assert by_id[failed]['error'] == 'assert 1 == 2'
         assert set(summary['provenance']) == {'env', 'base_url_host', 'git_commit', 'playwright',
-                                              'pytest_playwright', 'browser', 'browser_channel'}
+                                              'pytest_playwright', 'browser', 'browser_channel',
+                                              'product'}
         page = (dest / 'run.html').read_text(encoding='utf-8')
         assert 'href="log/t-x.py-test_b-chromium.log"' in page
         assert 'href="log/t-x.py-test_a-chromium.log"' not in page
@@ -923,11 +1023,14 @@ class TestRunLog:
 
 
 def test_index_links_health_only_when_it_exists(tmp_path):
-    """The index links health.html only when the file exists."""
+    """The index links health.html only when the file exists, as a chip
+    labelled Health in the same style as the Open column."""
     entries = [_entry('2026-08-01_10-00-00__a')]
     assert 'href="health.html"' not in ra._render_index(entries)
     assert 'run.py health' in ra._render_index(entries)
-    assert 'href="health.html"' in ra._render_index(entries, has_health=True)
+    with_health = ra._render_index(entries, has_health=True)
+    assert '<span class="open"><a href="health.html">Health</a></span>' in with_health
+    assert 'Health summary' not in with_health
     (tmp_path / '2026-08-01_10-00-00__a').mkdir()
     ra._write_index(tmp_path)
     assert 'href="health.html"' not in (tmp_path / 'index.html').read_text(encoding='utf-8')

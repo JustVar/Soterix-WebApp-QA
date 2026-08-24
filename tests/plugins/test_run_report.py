@@ -411,9 +411,14 @@ def test_build_run_report_orders_sections_and_links_evidence(tmp_path):
     assert (page.index('id="failures"') < page.index('id="advisories"')
             < page.index('id="passed"') < page.index('id="skipped"'))
     assert 'Failures (1)' in page
-    # Header facts and links.
-    for fact in ('tests/ui/views', '101.8', 'report.html', '../index.html'):
+    # Header facts and links, the link text capitalized like the index's.
+    for fact in ('tests/ui/views', '101.8', '<a href="report.html">Raw pytest-html</a>',
+                 '<a href="../index.html">Archive Index</a>', '<a href="./">Folder</a>'):
         assert fact in page
+    assert 'all runs' not in page
+    assert 'href="../health.html"' not in page  # no health.html beside the runs
+    (tmp_path / 'health.html').write_text('x', encoding='utf-8')
+    assert '<a href="../health.html">Health</a>' in rr.build_run_report(run)
     for key, value in (('passed', '1'), ('failed', '1'), ('skipped', '1'), ('errors', '0')):
         assert f'class="chip {key}">{key}: {value}</span>' in page
     # The failure card: message, call log, actions, console, evidence.
@@ -616,6 +621,7 @@ def test_build_run_report_shows_titles_facts_and_change_chips(tmp_path):
     (prev / 'summary.json').write_text(json.dumps({'tests': [
         {'nodeid': NODEID, 'outcome': 'passed'}, {'nodeid': TWIN_A, 'outcome': 'failed'}]}),
         encoding='utf-8')
+    (prev / 'run.html').write_text('x', encoding='utf-8')
     page = rr.build_run_report(run)
 
     card = page[page.index('<div class="card failed"'):page.index('id="advisories"')]
@@ -838,6 +844,7 @@ def test_failures_with_one_error_share_a_group_and_say_seen_before(tmp_path):
     (prev / 'summary.json').write_text(json.dumps({'started': '2026-08-23T10:00:00', 'tests': [
         {'nodeid': TWIN_B, 'outcome': 'failed', 'error': 'assert 5 == 6'},
         {'nodeid': NODEID, 'outcome': 'passed', 'error': None}]}), encoding='utf-8')
+    (prev / 'run.html').write_text('x', encoding='utf-8')
     page = rr.build_run_report(run)
     assert 'Failures (3)' in page
     group = page[page.index('<div class="group">'):page.index('</div>\n</div>') + 12]
@@ -970,6 +977,128 @@ def test_build_run_report_falls_back_on_an_older_archive(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Product
+# ---------------------------------------------------------------------------
+
+def test_page_names_the_product_in_title_and_header(tmp_path, monkeypatch):
+    """The provenance product leads the header and prefixes the page title.
+    One product: no per-test product line."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+    run = _make_run(tmp_path)
+    rows = [dict(r, product='NexaiQ-Neurosen') for r in _summary_test_rows()]
+    _add_summary_tests(run, rows, {'env': 'qa', 'product': 'NexaiQ-Neurosen'})
+    page = rr.build_run_report(run)
+    assert '<title>NexaiQ-Neurosen - Test run 2026-08-24T10:00:00</title>' in page
+    header = page[page.index('<body>'):page.index('id="failures"')]
+    assert '<span class="product">Product: NexaiQ-Neurosen</span>' in header
+    assert header.index('Product: NexaiQ-Neurosen') < header.index('ENV: <code>qa</code>')
+    assert page.count('Product: ') == 1
+    # The product is a word the filter box matches.
+    assert 'nexaiq-neurosen' in re.search(r'data-test="([^"]*)"', page).group(1)
+
+
+def test_mixed_run_names_the_product_on_every_test(tmp_path):
+    """A "Mixed:" run has no single product, so each card and row shows its own."""
+    run = _make_run(tmp_path)
+    rows = _summary_test_rows()
+    rows[0]['product'] = 'NexaiQ-Core'
+    rows[1]['product'] = rows[2]['product'] = 'NexaiQ-Camera 2 Cloud'
+    _add_summary_tests(run, rows, {'product': 'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core'})
+    page = rr.build_run_report(run)
+    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test run' in page
+    card = page[page.index('<div class="card failed"'):page.index('id="advisories"')]
+    assert '<span class="product">Product: NexaiQ-Core</span>' in card
+    rows_html = page[page.index('id="passed"'):]
+    assert rows_html.count('<span class="product">Product: NexaiQ-Camera 2 Cloud</span>') == 2
+
+
+def test_older_archive_derives_the_product_from_the_node_ids(tmp_path, monkeypatch):
+    """No product in the summary: the node ids answer (path rule, then the
+    environment, then NexaiQ-Core), and a mix of them reads as mixed."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+    run = _make_run(tmp_path)
+    page = rr.build_run_report(run)
+    # NODEID is a views test, the twins are c2c tests.
+    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test run' in page
+    assert 'Product: NexaiQ-Camera 2 Cloud</span>' in page
+    monkeypatch.setenv('QATOUCH_PROJECT_ID', 'P0BK')
+    later = tmp_path / '2026-08-25_10-00-00__tests-ui-views'
+    later.mkdir()
+    (later / 'report.html').write_text(_report_html({NODEID: [_row('Passed')]}), encoding='utf-8')
+    page = rr.build_run_report(later)
+    assert '<title>NexaiQ-Neurosen - Test run' in page
+    assert rr.summary_product({}) == ''
+    assert rr.summary_product({'provenance': 'no'}) == ''
+    assert rr.summary_product({'provenance': {'product': 'X'}}) == 'X'
+    # A schema 2 or 3 summary: its records' node ids derive the label.
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+    assert rr.summary_product({'tests': [{'nodeid': NODEID}, {'nodeid': TWIN_A}]}) == \
+        'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core'
+    assert rr.summary_product({'tests': [{'nodeid': NODEID, 'product': 'Given'}]}) == 'Given'
+
+
+# ---------------------------------------------------------------------------
+# Links to other runs
+# ---------------------------------------------------------------------------
+
+def test_run_href_opens_the_page_the_folder_has(tmp_path):
+    """run.html when present, else report.html, else the folder; run.html
+    without a folder to look in."""
+    for name, files in (('2026-08-01_10-00-00__a', ('run.html', 'report.html')),
+                        ('2026-08-02_10-00-00__b', ('report.html',)),
+                        ('2026-08-03_10-00-00__c', ())):
+        (tmp_path / name).mkdir()
+        for file in files:
+            (tmp_path / name / file).write_text('x', encoding='utf-8')
+    assert rr.run_href('2026-08-01_10-00-00__a', tmp_path, '../') == \
+        '../2026-08-01_10-00-00__a/run.html'
+    assert rr.run_href('2026-08-02_10-00-00__b', tmp_path, '../') == \
+        '../2026-08-02_10-00-00__b/report.html'
+    assert rr.run_href('2026-08-03_10-00-00__c', tmp_path) == '2026-08-03_10-00-00__c/'
+    assert rr.run_href('2026-08-04_10-00-00__missing', tmp_path) == \
+        '2026-08-04_10-00-00__missing/run.html'
+    assert rr.run_href('2026-08-02_10-00-00__b', None, '../') == '../2026-08-02_10-00-00__b/run.html'
+    assert rr.run_href('a b', tmp_path) == 'a%20b/run.html'
+    # The run being built has no page on disk yet: it links run.html anyway.
+    links = rr.RunLinks(tmp_path, '2026-08-03_10-00-00__c')
+    assert links.href('2026-08-03_10-00-00__c', '../') == '../2026-08-03_10-00-00__c/run.html'
+    assert links.href('2026-08-02_10-00-00__b', '../') == '../2026-08-02_10-00-00__b/report.html'
+    assert rr.RunLinks().href('2026-08-03_10-00-00__c') == '2026-08-03_10-00-00__c/run.html'
+
+
+def test_history_and_delta_links_open_what_the_older_run_has(tmp_path):
+    """Strips, the seen-before note, and the previous-run note link the
+    older run's report.html when it has no run.html, and its folder when
+    it has neither."""
+    run = _make_run(tmp_path)
+    _add_summary_tests(run, _summary_test_rows())
+    prev = tmp_path / '2026-08-23_10-00-00__tests-ui-views'
+    prev.mkdir()
+    (prev / 'summary.json').write_text(json.dumps({'started': '2026-08-23T10:00:00', 'tests': [
+        {'nodeid': NODEID, 'outcome': 'failed', 'error': 'playwright._impl._errors.TimeoutError: '
+                                                          'Locator.click: Timeout 5ms exceeded.'},
+        {'nodeid': TWIN_A, 'outcome': 'passed'}]}), encoding='utf-8')
+    (prev / 'report.html').write_text('x', encoding='utf-8')
+    older = tmp_path / '2026-08-22_10-00-00__tests-ui-views'
+    older.mkdir()
+    (older / 'summary.json').write_text(json.dumps({'started': '2026-08-22T10:00:00', 'tests': [
+        {'nodeid': NODEID, 'outcome': 'passed'}]}), encoding='utf-8')
+    page = rr.build_run_report(run)
+    assert '../2026-08-23_10-00-00__tests-ui-views/run.html' not in page
+    assert ('<a href="../2026-08-23_10-00-00__tests-ui-views/report.html">'
+            'Previous run of these tests</a>') in page
+    assert ('Changes since the <a href="../2026-08-23_10-00-00__tests-ui-views/report.html">'
+            'previous run of these tests (Aug 23, 10:00 AM)</a>') in page
+    assert ('class="blk failed" href="../2026-08-23_10-00-00__tests-ui-views/report.html" '
+            'title="Aug 23, 10:00 AM: failed"') in page
+    assert 'class="blk passed" href="../2026-08-22_10-00-00__tests-ui-views/" ' in page
+    assert ('Seen before (last on <a href="../2026-08-23_10-00-00__tests-ui-views/report.html">'
+            'Aug 23, 10:00 AM</a>)') in page
+    # This run's own block links its run.html: the page being written.
+    assert 'href="../2026-08-24_10-00-00__tests-ui-views/run.html"' in page
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -999,3 +1128,43 @@ def test_cli_rejects_missing_folder_and_bad_usage(tmp_path, capsys):
     assert 'No run folder' in capsys.readouterr().err
     assert rr.main([]) == 2
     assert rr.main(['a', 'b']) == 2
+    assert rr.main(['--all', 'x']) == 2
+
+
+def test_cli_all_backfills_every_run_without_a_page(tmp_path, monkeypatch, capsys):
+    """--all writes run.html where it is missing, leaves existing pages
+    alone, tolerates a pre-schema summary and a folder that cannot be
+    read, and rebuilds the index so it links the new pages."""
+    from plugins import run_archive as ra
+    runs = tmp_path / 'runs'
+    monkeypatch.setattr(ra, 'RUNS_DIR', runs)
+    old = runs / '2026-08-01_10-00-00__tests-ui-views'
+    old.mkdir(parents=True)
+    (old / 'summary.json').write_text(json.dumps({
+        'schema_version': 1, 'started': '2026-08-01T10:00:00', 'exitstatus': 0,
+        'counts': {'passed': 1, 'failed': 0, 'skipped': 0, 'errors': 0},
+        'target': ['tests/ui/views'], 'report_file': 'report.html'}), encoding='utf-8')
+    (old / 'report.html').write_text(_report_html({NODEID: [_row('Passed')]}), encoding='utf-8')
+    done = runs / '2026-08-02_10-00-00__tests-ui-views'
+    done.mkdir()
+    (done / 'run.html').write_text('already built', encoding='utf-8')
+    (runs / '2026-08-03_10-00-00__tests-ui-views').mkdir()  # bare folder, still gets a page
+    (runs / 'not-a-run').mkdir()
+    broken = runs / '2026-08-04_10-00-00__broken'
+    broken.mkdir()
+    (broken / 'run.html').mkdir()  # a folder in the page's place: the write fails
+
+    assert rr.main(['--all']) == 1
+    out = capsys.readouterr().out
+    assert (old / 'run.html').is_file()
+    assert '<h3 class="title">Open</h3>' not in (old / 'run.html').read_text(encoding='utf-8')
+    assert 'Passed (1)' in (old / 'run.html').read_text(encoding='utf-8')
+    assert (done / 'run.html').read_text(encoding='utf-8') == 'already built'
+    assert (runs / '2026-08-03_10-00-00__tests-ui-views' / 'run.html').is_file()
+    assert not (runs / 'not-a-run' / 'run.html').exists()
+    assert 'could not build' in out
+    assert '2 run.html written, 1 failed, 1 already had one' in out
+    index = (runs / 'index.html').read_text(encoding='utf-8')
+    assert '2026-08-01_10-00-00__tests-ui-views/run.html' in index
+    # A second pass has nothing left to write.
+    assert rr.backfill_run_reports(runs) == ([], [broken])

@@ -22,12 +22,15 @@ What lands in reports/runs/<start-time>__<target>/:
     opens, and one file per passing test buried them.
   - summary.json: timing, counts, exit status, the invocation target,
     provenance (ENV, base_url host, git commit, browser, Playwright
-    versions), the advisories below, and one record per test: node id,
-    module, readable title (the docstring's first line, else the function
-    name as words), the QA Touch case from config/qatouch_case_mapping.json
-    when the node id is mapped, outcome, per-phase timing, its log file
-    (failures only), and the error line of a failure. The node id is the
-    key. The title is display only.
+    versions, and the run's product: one name, or "Mixed: A, B"), the
+    advisories below, and one record per test: node id, module, readable
+    title (the docstring's first line, else the function name as words),
+    the QA Touch case from config/qatouch_case_mapping.json when the node
+    id is mapped, the product (plugins/products.py: marker, then path
+    rule, then the mapping file's project_key, then the environment),
+    outcome, per-phase timing, its log file (failures only), and the
+    error line of a failure. The node id is the key. The title is
+    display only.
   - advisories.txt: every [VIEWS] / [LPR] / [EXPORT] marker line a test
     printed, grouped by test - the drag fallbacks, content-health deltas,
     and export timings the page objects report. They come from pytest's
@@ -36,8 +39,9 @@ What lands in reports/runs/<start-time>__<target>/:
     every run, so nobody has to grep for them.
 
 Start at reports/runs/index.html: one row per archived run, newest first,
-with links to each run's page, report, and folder, and to health.html
-(tools/health_summary.py, `python run.py health`) when that page exists.
+with links to each run's page (Run Report), its pytest-html file (Raw
+pytest-html), and its folder, and to health.html (tools/health_summary.py,
+`python run.py health`) when that page exists.
 The index is rebuilt after every run from the folders' summary.json
 files, so hand-deleting a folder is safe.
 
@@ -82,6 +86,7 @@ from urllib.parse import urlparse
 import pytest
 
 from plugins.branding import favicon_link, header_logo
+from plugins.products import product_for, product_name, run_product
 from plugins.run_report import (
     FAILURE_OUTCOMES,
     RUN_DIR_RE,
@@ -107,7 +112,9 @@ RUN_LOG = Path('logs') / 'run.log'
 # 2: adds "tests" (per-test records) and "provenance".
 # 3: each test record carries "error" (the failure's first error line,
 #    None when it did not fail). "log_file" is set for failures only.
-SCHEMA_VERSION = 3
+# 4: each test record carries "product" (the name, see plugins/products)
+#    and provenance carries the run's "product".
+SCHEMA_VERSION = 4
 
 # Per-test log files use the screenshot sanitizer and cap: the archive's
 # names then sort together, and the path cap already fits them.
@@ -148,6 +155,12 @@ FIT_TAIL = 20
 
 # Same off-values parsing as report_media so one convention covers both.
 _OFF_VALUES = ('off', '0', 'false', 'no')
+
+# The index's Open column, one chip per link. Three distinct labels: the
+# old "run report" / "report" pair read as one thing.
+INDEX_LINK_RUN_REPORT = 'Run Report'
+INDEX_LINK_RAW_REPORT = 'Raw pytest-html'
+INDEX_LINK_FOLDER = 'Folder'
 
 # The repo's own unit tests. A run aimed only at these produces no
 # screenshots, traces, or advisories - nothing an archive folder could hold.
@@ -232,9 +245,13 @@ class _RunState:
         # The captured output of every phase, for the log/ files. Kept
         # apart from the records so summary.json stays small.
         self.captured: dict[str, list[dict]] = {}
-        # Docstrings seen at makereport, where the item is in reach.
+        # Docstrings and qatouch_project markers seen at makereport, where
+        # the item is in reach.
         self.docs: dict[str, str] = {}
+        self.projects: dict[str, str | None] = {}
         self.mapping: dict[str, dict] | None = None
+        self.mapping_project: str | None = None
+        self.mapping_project_read = False
         self.run_log = _RunLog()
 
     @property
@@ -246,6 +263,13 @@ class _RunState:
         if self.mapping is None:
             self.mapping = load_case_mapping(MAPPING_FILE)
         return self.mapping
+
+    def project_key(self) -> str | None:
+        """The mapping file's top-level project_key, read once per session."""
+        if not self.mapping_project_read:
+            self.mapping_project = load_project_key(MAPPING_FILE)
+            self.mapping_project_read = True
+        return self.mapping_project
 
 
 _state = _RunState()
@@ -507,6 +531,18 @@ def load_case_mapping(path: Path = MAPPING_FILE) -> dict[str, dict]:
     return out
 
 
+def load_project_key(path: Path = MAPPING_FILE) -> str | None:
+    """The mapping file's top-level project_key, or None when the file is
+    missing, unreadable, or has no such key. The products module then
+    falls through to the environment and its default."""
+    try:
+        loaded = json.loads(Path(path).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    key = loaded.get('project_key') if isinstance(loaded, dict) else None
+    return str(key) if key else None
+
+
 def lookup_case(mapping: Mapping[str, dict], nodeid: str) -> dict:
     """The mapped QA Touch case for a node id, or None fields when unmapped.
 
@@ -549,10 +585,14 @@ def phase_capture(report: Any, stream: str) -> str:
 
 
 def record_phase(state: _RunState, report: Any, doc: str | None = None,
-                 mapping: Mapping[str, dict] | None = None) -> None:
+                 mapping: Mapping[str, dict] | None = None,
+                 marker_project: str | None = None,
+                 project_key: str | None = None) -> None:
     """Fold one phase report into the test's record and its captured output.
 
-    The first phase seen creates the record (title, module, case). Rerun
+    The first phase seen creates the record (title, module, case,
+    product). `marker_project` is the test's qatouch_project marker value
+    and `project_key` the mapping file's default, both optional. Rerun
     outcomes (pytest-rerunfailures) are not final and are ignored; the
     attempt that ends the test overwrites the phases of the earlier ones.
     """
@@ -564,6 +604,7 @@ def record_phase(state: _RunState, report: Any, doc: str | None = None,
             'nodeid': nodeid, 'module': module_of(nodeid),
             'title': readable_title(nodeid, doc),
             'case_key': case['case_key'], 'case_title': case['case_title'],
+            'product': product_name(product_for(nodeid, marker_project, project_key)),
             'outcome': None, 'duration_s': 0.0, 'phases': {}, 'log_file': None,
             'error': None,
         }
@@ -668,12 +709,13 @@ def _write_logs(dest: Path, state: _RunState) -> None:
         log.warning(f'run_archive: could not write run.log: {e}')
 
 
-def _provenance(config: Any, environ: Mapping[str, str]) -> dict:
-    """Where and with what the run happened. Every field tolerates absence."""
+def _provenance(config: Any, environ: Mapping[str, str], product: str = '') -> dict:
+    """Where and with what the run happened, and which product it tested.
+    Every field tolerates absence."""
     out: dict[str, Any] = {
         'env': (environ.get('ENV') or 'qa').strip().lower(), 'base_url_host': None,
         'git_commit': None, 'playwright': None, 'pytest_playwright': None,
-        'browser': None, 'browser_channel': None,
+        'browser': None, 'browser_channel': None, 'product': product or None,
     }
     try:
         from config.base_config import config as env_config
@@ -798,8 +840,10 @@ def _render_index(entries: list[dict], has_health: bool = False) -> str:
 
     Plain, self-contained HTML: the page is opened from disk, so it can
     depend on nothing but the run folders sitting next to it. Every summary
-    key is optional - a row shows '-' where a value is unknown. The health
-    link only appears when health.html exists beside the index.
+    key is optional - a row shows '-' where a value is unknown. The Open
+    cell holds one link chip per file the folder has: Run Report
+    (run.html), Raw pytest-html (report.html), and always Folder. The
+    Health chip only appears when health.html exists beside the index.
     """
     rows = []
     for entry in sorted(entries, key=lambda e: e.get('name', ''), reverse=True):
@@ -812,11 +856,13 @@ def _render_index(entries: list[dict], has_health: bool = False) -> str:
         exitstatus = summary.get('exitstatus')
         advisories = summary.get('advisories')
         advisory_count = len(advisories) if isinstance(advisories, list) else '-'
-        links = [f'<a href="{escape(name, quote=True)}/">folder</a>']
-        if entry.get('has_report'):
-            links.insert(0, f'<a href="{escape(name, quote=True)}/report.html">report</a>')
+        folder = escape(name, quote=True)
+        links = []
         if entry.get('has_run_report'):
-            links.insert(0, f'<a href="{escape(name, quote=True)}/run.html">run report</a>')
+            links.append(f'<a href="{folder}/run.html">{INDEX_LINK_RUN_REPORT}</a>')
+        if entry.get('has_report'):
+            links.append(f'<a href="{folder}/report.html">{INDEX_LINK_RAW_REPORT}</a>')
+        links.append(f'<a href="{folder}/">{INDEX_LINK_FOLDER}</a>')
         cells = [
             escape(str(started)),
             escape(str(target)),
@@ -824,21 +870,22 @@ def _render_index(entries: list[dict], has_health: bool = False) -> str:
               for key in ('passed', 'failed', 'skipped', 'errors')],
             '-' if exitstatus is None else escape(str(exitstatus)),
             escape(str(advisory_count)),
-            ' '.join(links),
+            '<span class="open">' + ''.join(links) + '</span>',
         ]
         rows.append('<tr>' + ''.join(f'<td>{cell}</td>' for cell in cells) + '</tr>')
 
     body = '\n'.join(rows) if rows else ('<tr><td colspan="9">No archived runs '
                                          'yet. Run the suite once.</td></tr>')
-    health = ('<p><a href="health.html">Health summary</a>: pass rates per target and '
-              'module, and the tests to watch, across recent runs.</p>' if has_health
+    health = ('<p><span class="open"><a href="health.html">Health</a></span> pass rates '
+              'per target and module, and the tests to watch, across recent runs.</p>'
+              if has_health
               else '<p><code>python run.py health</code> builds health.html: pass rates per '
                    'target and module, and the tests to watch, across recent runs.</p>')
     return f'''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Test run archive</title>
+<title>Test Run Archive</title>
 {favicon_link()}
 <style>
 .brand-row {{ display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }}
@@ -848,14 +895,18 @@ body {{ font-family: system-ui, sans-serif; margin: 2rem; }}
 table {{ border-collapse: collapse; }}
 th, td {{ border: 1px solid #ccc; padding: 0.35rem 0.7rem; text-align: left; }}
 th {{ background: #f0f0f0; }}
+.open {{ display: inline-flex; flex-wrap: wrap; gap: 0.4rem; vertical-align: middle; }}
+.open a {{ border: 1px solid #9a9a9a; border-radius: 4px; padding: 0.1rem 0.5rem;
+  font-size: 0.85rem; text-decoration: none; white-space: nowrap; }}
+.open a:hover {{ background: #eef3ff; }}
 </style>
 </head>
 <body>
-<div class="brand-row">{header_logo()}<h1>Test run archive</h1></div>
-<p>One folder per test run, newest first. Open a run's <b>run report</b>
-for its failures with their screenshots, video, and trace. The archive
-keeps the newest {KEEP_RUNS} runs of each target ({KEEP_RUNS_TOTAL} in
-total) and rebuilds this page after every run.</p>
+<div class="brand-row">{header_logo()}<h1>Test Run Archive</h1></div>
+<p>One folder per test run, newest first. Open a run's <b>{INDEX_LINK_RUN_REPORT}</b>
+for its failures with their screenshots, video, and trace. <b>{INDEX_LINK_RAW_REPORT}</b>
+is the report file pytest wrote. The archive keeps the newest {KEEP_RUNS} runs of each
+target ({KEEP_RUNS_TOTAL} in total) and rebuilds this page after every run.</p>
 {health}
 <table>
 <tr><th>Started</th><th>Target</th><th>Passed</th><th>Failed</th>
@@ -894,13 +945,17 @@ def _archive_run(config: Any, state: _RunState) -> None:
     # A sessionfinish that never ran (crash before initstate 2) leaves ended
     # unset; the archive still records an honest end time.
     ended = state.ended if state.ended is not None else time.time()
+    # The run's product from its tests. A run with records but no product
+    # (none resolved) falls back to what a test of it would resolve to.
+    product = (run_product(t.get('product') for t in state.tests.values())
+               or product_name(product_for('', None, state.project_key())))
     summary = _build_summary(started=state.started, ended=ended,
                              exitstatus=state.exitstatus, counts=state.counts,
                              target=config.args, markexpr=markexpr,
                              keyword=keyword, report_file=report_file,
                              advisories=state.advisories,
                              tests=list(state.tests.values()),
-                             provenance=_provenance(config, os.environ))
+                             provenance=_provenance(config, os.environ, product))
     (dest / 'summary.json').write_text(json.dumps(summary, indent=2),
                                        encoding='utf-8')
     if state.advisories:
@@ -940,7 +995,8 @@ def pytest_sessionstart(session: Any) -> None:
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item: Any, call: Any):  # noqa: ARG001 - pytest fixes the hook signature
-    """Remember the test's docstring while the item is in reach.
+    """Remember the test's docstring and qatouch_project marker while the
+    item is in reach.
 
     The phase itself is recorded in logreport below, which also fires on
     the xdist controller (the process that archives) where this hook
@@ -952,8 +1008,17 @@ def pytest_runtest_makereport(item: Any, call: Any):  # noqa: ARG001 - pytest fi
     try:
         doc = getattr(getattr(item, 'obj', None), '__doc__', None)
         _state.docs[item.nodeid] = doc if isinstance(doc, str) else ''
+        _state.projects[item.nodeid] = marker_project(item)
     except Exception as e:  # noqa: BLE001 - a title fallback is cheaper than a broken run
         log.debug(f'run_archive: no docstring for {item.nodeid}: {e}')
+
+
+def marker_project(item: Any) -> str | None:
+    """The value of the test's qatouch_project marker, or None without one."""
+    get_marker = getattr(item, 'get_closest_marker', None)
+    marker = get_marker('qatouch_project') if callable(get_marker) else None
+    args = getattr(marker, 'args', None) if marker is not None else None
+    return str(args[0]) if args else None
 
 
 def pytest_runtest_logreport(report: Any) -> None:
@@ -972,7 +1037,9 @@ def pytest_runtest_logreport(report: Any) -> None:
                                       'phase': report.when, 'line': line})
     try:
         record_phase(_state, report, doc=_state.docs.get(report.nodeid),
-                     mapping=_state.case_mapping())
+                     mapping=_state.case_mapping(),
+                     marker_project=_state.projects.get(report.nodeid),
+                     project_key=_state.project_key())
     except Exception as e:  # noqa: BLE001 - per-test facts are reporting, never a verdict
         log.debug(f'run_archive: could not record {report.nodeid}: {e}')
 
