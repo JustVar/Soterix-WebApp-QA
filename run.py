@@ -31,6 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+from plugins.paths import long_root_warning  # noqa: E402
 from plugins.run_archive import RUN_DIR_RE, RUNS_DIR  # noqa: E402
 from plugins.run_report import (  # noqa: E402
     FAILURE_OUTCOMES,
@@ -189,6 +190,11 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f'{args.verb} needs a target')
 
     os.chdir(ROOT)  # the plugins address reports/ and tests/ from the repo root
+    # A deep checkout makes the evidence names shorten on every run, and
+    # past the cap Windows refuses the write. Said once, before any output.
+    warning = long_root_warning(ROOT)
+    if warning:
+        print(warning)
     if args.verb == 'list':
         return _list()
     if args.verb == 'health':

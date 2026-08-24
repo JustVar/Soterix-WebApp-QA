@@ -55,6 +55,8 @@ from typing import Any
 
 import pytest
 
+from plugins.paths import fit_name
+
 try:
     from pytest_html import extras
 except ImportError:
@@ -73,9 +75,9 @@ TRACE_DIR = Path('reports') / 'artifacts'
 TRACE_NAME_MAX = 150
 
 # Shorter cap than the trace path's 150: the screenshot name also carries a
-# __SETUP_FAILED suffix (plus __mid-drag-<n> on in-flight frames), and the
-# absolute path has to stay under Windows' 260-char limit even from a deep
-# checkout.
+# __SETUP_FAILED suffix (plus __mid-drag-<n> on in-flight frames). The stem
+# cap is the first step. fit_name then keeps the absolute path within the
+# Windows cap on a deep checkout, where the stem cap alone is not enough.
 SAFE_NAME_MAX = 120
 
 # At most this many in-flight drag frames get filed per test: a drag-heavy
@@ -128,9 +130,20 @@ def _capture_filename(nodeid: str, suffix: str, label: str, index: int) -> str:
     Same stem and suffix as the test's final screenshot so the frames sort
     directly next to it; the 1-based index keeps a multi-drag test's frames
     in the order the drags happened. (A skipped test files no final shot;
-    its frames carry the SKIPPED suffix on their own.)
+    its frames carry the SKIPPED suffix on their own.) Fitted to the path
+    cap like the final shot, so a deep checkout never loses a frame.
     """
-    return f'{_safe_name(nodeid)}__{suffix}__{_safe_name(label)}-{index}.png'
+    return fit_name(SCREENSHOT_DIR,
+                    f'{_safe_name(nodeid)}__{suffix}__{_safe_name(label)}-{index}', '.png')
+
+
+def _final_filename(nodeid: str, suffix: str) -> str:
+    """Filename for the test's final screenshot, e.g. <safe>__FAILED.png.
+
+    The stem cap is the first step. fit_name then keeps the absolute path
+    within the Windows cap: past it the write fails and the shot is lost.
+    """
+    return fit_name(SCREENSHOT_DIR, f'{_safe_name(nodeid)}__{suffix}', '.png')
 
 
 def _drain_drag_captures(page: Any, cap: int = DRAG_CAPTURE_MAX) -> list:
@@ -175,10 +188,10 @@ def _expected_trace_path(nodeid: str) -> Path:
 
     The zip is written at fixture teardown, after this report is built, so
     the link has to point at where the file WILL land - same sanitizer, same
-    150-char cap, same directory.
+    150-char cap, same directory, same path fit.
     """
     safe = re.sub(r'[^\w.-]+', '-', nodeid).strip('-')[:TRACE_NAME_MAX]
-    return TRACE_DIR / f'{safe}-trace.zip'
+    return TRACE_DIR / fit_name(TRACE_DIR, f'{safe}-trace', '.zip')
 
 
 def _should_clean(config: Any, environ: Mapping[str, str]) -> bool:
@@ -290,7 +303,7 @@ def _attach_media(item: Any, report: Any) -> None:
             # Viewport-only (not full_page) keeps payload size reasonable -
             # the self-contained report inlines every image.
             png = page.screenshot()
-            (SCREENSHOT_DIR / f'{_safe_name(item.nodeid)}__{suffix}.png').write_bytes(png)
+            (SCREENSHOT_DIR / _final_filename(item.nodeid, suffix)).write_bytes(png)
             if embed:
                 report.extras = [*getattr(report, 'extras', []),
                                  extras.png(base64.b64encode(png).decode('ascii'),

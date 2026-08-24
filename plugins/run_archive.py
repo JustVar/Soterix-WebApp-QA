@@ -71,7 +71,6 @@ and swallowed, so an archive problem can never change the run's exit code.
 from __future__ import annotations
 
 import contextlib
-import hashlib
 import importlib.metadata
 import json
 import logging
@@ -90,6 +89,7 @@ from urllib.parse import urlparse
 import pytest
 
 from plugins.branding import favicon_link, header_logo
+from plugins.paths import PATH_MAX, fit_name
 from plugins.products import product_for, product_name, run_product, target_product
 from plugins.run_report import (
     FAILURE_OUTCOMES,
@@ -154,13 +154,9 @@ SLUG_MAX = 40
 
 # Copies nest the already-long trace names one folder deeper than the
 # originals, which can cross Windows' 260-char MAX_PATH on a deep checkout.
-# Capping the absolute destination at 250 leaves margin for the drive root.
-DEST_PATH_MAX = 250
-
-# When a filename must be cut to fit the path cap, the shortened stem keeps
-# this many of its trailing chars: the tail is where near-twin names differ
-# (parametrized camera ids, the PASSED/FAILED label).
-FIT_TAIL = 20
+# The same cap the live writes use (plugins/paths.py), so a copy shortens
+# exactly the way its source would have.
+DEST_PATH_MAX = PATH_MAX
 
 # Same off-values parsing as report_media so one convention covers both.
 _OFF_VALUES = ('off', '0', 'false', 'no')
@@ -374,21 +370,16 @@ def _fit_dest(dest: Path, limit: int = DEST_PATH_MAX) -> Path | None:
     derived names often differ only past it (parametrized camera ids in
     a suite that runs the same test per camera), and two sources fitted
     to one name would make the later copy silently overwrite the earlier.
-    The shortened stem keeps its head and tail around a digest of the full
-    stem, so distinct sources stay distinct. None when the directory
-    leaves no room for a usable filename.
+    fit_name (plugins/paths.py) keeps the stem's head and tail around a
+    digest of the full stem, so distinct sources stay distinct. None when
+    the directory leaves no room for a usable filename.
     """
     absolute = Path(os.path.abspath(dest))
     if len(str(absolute)) <= limit:
         return dest
-    digest = hashlib.sha256(absolute.stem.encode('utf-8')).hexdigest()[:8]
-    room = limit - len(str(absolute.parent)) - len(absolute.suffix) - 1
-    keep = room - len(digest) - 2  # the two '-' joiners
-    if keep < 2:
+    fitted = absolute.parent / fit_name(absolute.parent, absolute.stem, absolute.suffix, limit)
+    if len(str(fitted)) > limit:
         return None
-    tail = min(FIT_TAIL, keep // 2)
-    fitted = absolute.parent / (f'{absolute.stem[:keep - tail]}-{digest}'
-                                f'-{absolute.stem[-tail:]}{absolute.suffix}')
     log.warning(f'run_archive: shortened {dest.name} to {fitted.name} '
                 f'to fit the {limit}-char path cap')
     return fitted

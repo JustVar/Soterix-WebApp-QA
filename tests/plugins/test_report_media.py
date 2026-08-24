@@ -15,6 +15,7 @@ do not require playwright, a browser, or network.
 from __future__ import annotations
 
 import base64
+import os
 import re
 import sys
 from pathlib import Path
@@ -27,7 +28,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from plugins import report_media as rm  # noqa: E402
+import conftest  # noqa: E402
+from plugins import report_media as rm, run_report as rr  # noqa: E402
+
+
+def _deep_dir(tmp_path: Path, length: int = 190) -> Path:
+    """A folder whose absolute path is `length` chars: a stand-in for a
+    deep checkout, where the stem caps alone no longer keep a name under
+    the path cap. 190 leaves the 20-char tail intact after the cut."""
+    return tmp_path / ('d' * max(1, length - len(os.path.abspath(tmp_path)) - 1))
 
 # ---------------------------------------------------------------------------
 # Name sanitizing + capping
@@ -104,6 +113,55 @@ def test_expected_trace_path_keeps_the_150_cap():
     path = rm._expected_trace_path('y' * 300)
     stem = path.name.removesuffix('-trace.zip')
     assert len(stem) == 150
+
+
+def test_expected_trace_path_matches_conftest_on_a_deep_checkout(tmp_path, monkeypatch):
+    """On a deep checkout the fixture shortens the trace name to fit the
+    path cap. The report's link must name that same shortened file."""
+    deep = _deep_dir(tmp_path)
+    monkeypatch.setattr(conftest, 'TRACE_DIR', deep)
+    monkeypatch.setattr(rm, 'TRACE_DIR', deep)
+    nodeid = 'tests/ui/' + 'n' * 200 + '.py::TestT::test_t[chromium]'
+    expected = rm._expected_trace_path(nodeid)
+    assert expected == conftest._trace_path(nodeid)
+    assert expected.name != re.sub(r'[^\w.-]+', '-', nodeid)[:150] + '-trace.zip'
+    assert expected.name.endswith('-trace.zip')
+    assert len(os.path.abspath(expected)) <= 250
+
+
+def test_conftest_video_path_fits_the_cap_on_a_deep_checkout(tmp_path, monkeypatch):
+    """The kept video shortens the same way, so Playwright's save_as
+    never sees a path Windows refuses."""
+    monkeypatch.setattr(conftest, 'TRACE_DIR', _deep_dir(tmp_path))
+    path = conftest._video_path('tests/ui/' + 'n' * 200 + '.py::TestT::test_t[chromium]')
+    assert path.name.endswith('-video.webm')
+    assert len(os.path.abspath(path)) <= 250
+
+
+def test_live_shortened_screenshot_name_matches_its_test(tmp_path, monkeypatch):
+    """On a deep checkout the final shot's name shortens as it is written.
+    run_report must still attach the file to the right parametrized twin,
+    and a shortened mid-drag frame to its test."""
+    monkeypatch.setattr(rm, 'SCREENSHOT_DIR', _deep_dir(tmp_path))
+    twins = ['tests/ui/c2c/test_cams.py::TestCams::test_reboot[camera-3]',
+             'tests/ui/c2c/test_cams.py::TestCams::test_reboot[camera-4]']
+    safes = {rr._safe_name(n, rr.SAFE_NAME_MAX): n for n in twins}
+    for nodeid in twins:
+        name = rm._final_filename(nodeid, 'FAILED')
+        assert name != f'{rm._safe_name(nodeid)}__FAILED.png'
+        assert len(os.path.abspath(rm.SCREENSHOT_DIR / name)) <= 250
+        parsed = rr.parse_screenshot_name(Path(name).stem)
+        assert parsed is not None
+        assert rr.match_test(parsed['test'], safes,
+                             lambda safe, s=parsed['suffix']: f'{safe}__{s}') == nodeid
+    frame = rm._capture_filename(twins[1], 'FAILED', 'mid-drag', 2)
+    assert frame != f'{rm._safe_name(twins[1])}__FAILED__mid-drag-2.png'
+    parsed = rr.parse_screenshot_name(Path(frame).stem)
+    assert parsed is not None
+    assert (parsed['label'], parsed['index']) == ('mid-drag', '2')
+    tail = f"__{parsed['label']}-{parsed['index']}"
+    assert rr.match_test(parsed['test'], safes,
+                         lambda safe, s=parsed['suffix'], f=tail: f'{safe}__{s}{f}') == twins[1]
 
 
 # ---------------------------------------------------------------------------

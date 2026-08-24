@@ -191,6 +191,7 @@ finding blocks the commit. Read `docs/CONVENTIONS.md` for the rules and
 | No tests collected | The file must be under `tests/` and be named `test_*.py`; hardware tests need `--run-destructive` |
 | A site or camera name is not found | The shared tenant renamed it. Update `config/env/qa.py`; see `docs/FAILURE_TRIAGE.md` |
 | `reports/report.html` looks stale | The run used `--html=<other path>`; the archive under `reports/runs/` has every run |
+| `[TRACE] Could not finalize trace` or `[VIDEO] Could not finalize video`, or a failed test has no trace, video, or screenshot | The file path is too long. Windows refuses a path past 260 characters unless long paths are on. Enable them (registry key `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem`, value `LongPathsEnabled` = 1, needs admin) or clone the repo closer to the drive root. The reports shorten file names on their own past 250 characters, so only a very deep checkout hits this |
 
 ## 10. Read next
 

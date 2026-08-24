@@ -10,6 +10,7 @@ from typing import Dict
 import pytest
 
 from config.base_config import config  # dict resolved from ENV
+from plugins.paths import fit_name
 
 # Register plugins
 pytest_plugins = ['plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
@@ -212,6 +213,10 @@ AUTH_STATE_FILE = ".auth_state.json"
 
 TRACE_DIR = Path("reports") / "artifacts"
 
+# Stem cap for trace and video names. plugins/report_media.py predicts the
+# trace name with the same sanitizer and cap, so change both together.
+TRACE_NAME_MAX = 150
+
 # Video clips record under the trace dir so pytest-playwright's session-start
 # wipe of reports/artifacts/ clears them and run_archive's copy keeps them.
 # A kept clip moves up next to its trace as <test>-video.webm.
@@ -234,19 +239,27 @@ def pytest_runtest_makereport(item, call):
     setattr(item, f"rep_{rep.when}", rep)
 
 
+def _artifact_path(name: str, kind: str, suffix: str) -> Path:
+    """reports/artifacts/<safe>-<kind><suffix> for a test node id.
+
+    The stem is capped first. fit_name then keeps the absolute path within
+    the Windows path cap: past it Playwright's save fails, the failure
+    shows only as a printed line, and the evidence is lost.
+    """
+    safe = re.sub(r"[^\w.-]+", "-", name).strip("-")[:TRACE_NAME_MAX]
+    TRACE_DIR.mkdir(parents=True, exist_ok=True)
+    return TRACE_DIR / fit_name(TRACE_DIR, f"{safe}-{kind}", suffix)
+
+
 def _trace_path(name: str) -> Path:
     """Build a filesystem-safe trace path from a test node id."""
-    safe = re.sub(r"[^\w.-]+", "-", name).strip("-")[:150]
-    TRACE_DIR.mkdir(parents=True, exist_ok=True)
-    return TRACE_DIR / f"{safe}-trace.zip"
+    return _artifact_path(name, "trace", ".zip")
 
 
 def _video_path(name: str) -> Path:
     """Build a filesystem-safe video path from a test node id (same
     sanitizer and cap as _trace_path, so the clip sorts next to its trace)."""
-    safe = re.sub(r"[^\w.-]+", "-", name).strip("-")[:150]
-    TRACE_DIR.mkdir(parents=True, exist_ok=True)
-    return TRACE_DIR / f"{safe}-video.webm"
+    return _artifact_path(name, "video", ".webm")
 
 
 def _video_context_args() -> dict:
