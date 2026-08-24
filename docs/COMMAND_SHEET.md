@@ -132,6 +132,7 @@ Set these in `.env` or in the shell for one run.
 | `RUN_GUARD` | `off` | Disables the one-run-at-a-time guard |
 | `SEND_TEST_REPORT` + `REPORT_RECIPIENT` | `1` + an address | Emails the report after the run |
 | `PWDEBUG` | `1` | Opens the Playwright Inspector and steps through the test |
+| `TEST_SITE_ID` | a site id | Site that API-built test data goes to. Must be the site that `test_site_name` in `config/env/` names. When they differ, the `api` fixture skips and its message gives the right id |
 
 ## 8. Before you commit
 

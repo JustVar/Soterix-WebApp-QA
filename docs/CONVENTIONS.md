@@ -114,6 +114,43 @@ once independently in the wait conversion (August 2026). Use them:
 - The config dict holds `base_url`, `api_base_url`, `default_user`,
   `default_password`, `allow_write`, `allow_delete`.
 
+## Test data through the API
+
+Build the data a test needs but does not prove through the internal API,
+not through the browser. `test_delete_camera_group` gets its group from
+the API and proves only the delete. `test_create_camera_group` keeps the
+UI path because the create is what it proves.
+
+The client and fixtures live in `tests/shared/api/`. `conftest.py`
+registers them. They need `QA_USER`, `QA_PASSWORD` and `TEST_SITE_ID` in
+`.env`. The API test repo is a separate project. Never import from it.
+
+- `api`: a logged-in session for the test site. It skips when a variable
+  is missing, and when `TEST_SITE_ID` is not the site that
+  `test_site_name` names (the skip message gives the right id).
+- `api_camera_group`: `make(name=None, channel_ids=None)` returns the
+  created group. The default holds the configured test camera.
+- `api_bookmark`: `make(comment=None, camera_id=None, ...)` returns the
+  created bookmark.
+
+Rules for any new fixture:
+
+1. Every name starts with `AutoTest ` so a leftover on the shared tenant
+   is recognisable. The fixtures refuse other names.
+2. Verify the write with a read before the test gets it. The envelope
+   text is not a signal: `addgroup` answers "Successfully Retrieved!",
+   and a bookmark `DELETE` answers "Successfully deleted!" while the row
+   stays in the list with `deletedAt` above 0 (a live row holds -1).
+   Check `code`, then confirm in `location/tree` or the list.
+3. The fixture deletes what it made at teardown and confirms the
+   removal. A survivor fails the test with its id.
+4. Read what the UI reads. A camera group in Admin > Sites is a
+   *location* in the API (`site/config/{site}/location`,
+   `location/tree`, `deletelocation`). The API's groups (`addgroup`,
+   `grouptree`) are a different entity the Admin UI never shows.
+5. Create the data before the page renders so the UI shows it without a
+   reload, and open the site the API wrote to by name.
+
 ## Markers
 
 Defined in `pytest.ini`. The main groups:

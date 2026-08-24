@@ -27,6 +27,7 @@ Status: [REDO] rebuild, [INVESTIGATE] feature moved or died?,
 | 9 | Sequence edit flow (sequence_page.change_timing / open_edit_dialog) | [INVESTIGATE] | Dead paths since the sidebar redesign: select_last_sequence hits a strict-mode violation, the sequence page's own modalBackdrop blocks open_sequences_panel, and the edit dialog shows no combobox/select at all. No test calls them (probed 08/24). |
 | 10 | license_page.feature_rows / feature_toggle_switches | [INVESTIGATE] | Match nothing on the current expanded-site layout (nested switch rows are tr.parentRow > td > MuiBox); no caller. Rebuild or delete. |
 | 11 | Leaked "AutoTest" users | [BLOCKED] | Each test_add_user run leaves one more (3 -> 4 on 08/24) because the tenant rejects user/remove (the 08/17 app defect). tools/tenant_cleanup.py will clear them once the app fix lands. |
+| 12 | TEST_SITE_ID pointed at the wrong site | [DONE] | `.env` had 17 ("Example Corporate Office"); the configured test site "Newtown Action Area" is 16. Corrected 08/24; the `api` fixture skips with both values on a mismatch. Check any teammate `.env` copied from the old template. |
 
 Quality gates, all zero as of 08/17/2026 and enforced by the checker
 on every commit: no-oracle tests, early-exit passes, except-swallow

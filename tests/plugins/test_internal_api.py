@@ -1,0 +1,193 @@
+"""Unit tests for tests/shared/api/client.py and the grouptree helpers
+in tests/shared/api/fixtures.py.
+
+No network, no credentials, no browser: the HTTP session is a mock and
+each test asserts on the exact request the client sends or the exact
+way it reads the envelope. The envelope shapes are the ones QA answered
+on 2026-08-24 (see the fixture docstrings).
+
+Living under tests/plugins/ so the default discovery picks them up.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tests.shared.api.client import ApiError, InternalApi  # noqa: E402
+from tests.shared.api.fixtures import (  # noqa: E402
+    bookmark_deleted,
+    channel_id,
+    find_location,
+)
+
+# ---------------------------------------------------------------- helpers
+
+def _resp(payload, status=200):
+    """A fake requests.Response with the bits the client reads."""
+    r = MagicMock()
+    r.status_code = status
+    r.json.return_value = payload
+    r.text = json.dumps(payload)
+    return r
+
+
+def _client(payload, status=200):
+    session = MagicMock()
+    session.headers = {}
+    session.request.return_value = _resp(payload, status)
+    return InternalApi("https://qa.example/", 16, session=session), session
+
+
+def _sent(session):
+    call = session.request.call_args
+    return call.args[0], call.args[1], call.kwargs
+
+
+# location/tree shape: a camera can sit in several locations
+LOCATION_TREE = [
+    {"location": {"id": 1, "name": "All Cameras"},
+     "channel": [{"id": 89, "name": "Lift Lobby"}, {"id": 97, "name": "main gate"},
+                 {"id": 108, "name": "corridor"}]},
+    {"location": {"id": 140, "name": "AutoTest Group 125709"},
+     "channel": [{"id": 97, "name": "main gate"}]},
+    {"location": {"id": 146, "name": "AutoTest Group 125709"},
+     "channel": [{"id": 108, "name": "corridor"}]},
+    {"location": {"id": 73, "name": "empty"}},
+]
+
+# ----------------------------------------------------------------- client
+
+def test_login_hashes_the_password_and_keeps_the_cookie():
+    client, session = _client(
+        {"status": 2002, "code": 200, "message": "Login Successful!",
+         "result": [{"JSESSIONID": "abc123"}]}
+    )
+    token = client.login("user@example.com", "secret")
+
+    method, url, kwargs = _sent(session)
+    assert token == "abc123"
+    assert (method, url) == ("POST", "https://qa.example/v-apiserver/REST/central/user/login")
+    assert kwargs["json"] == {
+        "accountid": "user@example.com",
+        "username": "Example Label",
+        "password": hashlib.sha512(b"secret").hexdigest(),
+    }
+    assert session.headers["Cookie"] == "JSESSIONID=abc123"
+    assert client.user == "user@example.com"
+
+
+def test_code_decides_success_not_status():
+    # The login answers status 2002 and a create 2005, both with code 200
+    client, _ = _client({"status": 2005, "code": 200, "message": "Successfully created!",
+                         "result": [{"bookmarkId": 1200}]})
+    assert client.post("/REST/clipbookmark", params={"siteId": 16}) == [{"bookmarkId": 1200}]
+
+
+def test_success_text_is_not_a_signal():
+    # A soft delete answers "Successfully deleted!" while the row stays.
+    # The client returns the result; the caller confirms with a read.
+    client, _ = _client({"status": 2006, "code": 200, "message": "Successfully deleted!",
+                         "result": []})
+    assert client.delete("/REST/clipbookmark/1200") == []
+
+
+def test_error_envelope_raises_api_error_with_the_fields():
+    client, _ = _client(
+        {"status": 400, "code": 1006, "message": "Database: no record found!", "result": None},
+        status=400,
+    )
+    with pytest.raises(ApiError) as exc:
+        client.get("/REST/site/16/deletegroup/2")
+    err = exc.value
+    assert (err.status, err.code, err.message) == (400, 1006, "Database: no record found!")
+    assert err.path == "/REST/site/16/deletegroup/2"
+    assert "1006" in str(err)
+    assert err.path in str(err)
+
+
+def test_non_json_body_raises_with_the_http_status():
+    client, session = _client({})
+    bad = session.request.return_value
+    bad.status_code = 502
+    bad.text = "<html>Bad Gateway</html>"
+    bad.json.side_effect = ValueError("no json")
+    with pytest.raises(ApiError) as exc:
+        client.get("/REST/site")
+    assert (exc.value.status, exc.value.code) == (502, None)
+    assert "Bad Gateway" in exc.value.message
+
+
+def test_null_result_becomes_an_empty_list():
+    client, _ = _client({"status": 2000, "code": 200, "result": None})
+    assert client.get("/REST/site/16/grouptree") == []
+
+
+def test_methods_paths_and_passthrough_arguments():
+    client, session = _client({"code": 200, "result": [1]})
+    client.get("/REST/site", params={"a": 1})
+    assert _sent(session)[:2] == ("GET", "https://qa.example/v-apiserver/REST/site")
+    assert _sent(session)[2]["params"] == {"a": 1}
+
+    files = {"snap": ("snap.png", b"\x89PNG", "image/png")}
+    client.post("/REST/clipbookmark", params={"siteId": 16}, files=files)
+    method, url, kwargs = _sent(session)
+    assert (method, url) == ("POST", "https://qa.example/v-apiserver/REST/clipbookmark")
+    assert kwargs["params"] == {"siteId": 16}
+    assert kwargs["files"] is files
+    assert kwargs["json"] is None
+
+    client.delete("/REST/clipbookmark/1200")
+    assert _sent(session)[:2] == ("DELETE", "https://qa.example/v-apiserver/REST/clipbookmark/1200")
+    assert all(c.kwargs["timeout"] == 30 for c in session.request.call_args_list)
+
+
+def test_session_verify_follows_the_flag():
+    _, session = _client({"code": 200, "result": []})
+    assert session.verify is False
+    verified = MagicMock()
+    verified.headers = {}
+    InternalApi("https://qa.example", 16, session=verified, verify=True)
+    assert verified.verify is True
+
+# ----------------------------------------------------------- tree helpers
+
+def test_find_location_by_exact_name_newest_wins():
+    # Two same-named nodes (a stale leftover): the highest id is the
+    # one the fixture just made
+    assert find_location(LOCATION_TREE, "AutoTest Group 125709")["location"]["id"] == 146
+    assert find_location(LOCATION_TREE, "empty")["location"]["id"] == 73
+    assert find_location(LOCATION_TREE, "autotest group 125709") is None
+    assert find_location([], "All Cameras") is None
+
+
+def test_channel_id_matches_case_insensitively():
+    assert channel_id(LOCATION_TREE, "Main Gate") == 97
+    assert channel_id(LOCATION_TREE, " corridor ") == 108
+
+
+def test_bookmark_deleted_reads_minus_one_as_live():
+    # A live row holds deletedAt -1; a truthiness check read that as
+    # deleted and a teardown left a live bookmark behind (2026-08-24)
+    assert bookmark_deleted({"deletedAt": 1787594233624}) is True
+    assert bookmark_deleted({"deletedAt": -1}) is False
+    assert bookmark_deleted({"deletedAt": 0}) is False
+    assert bookmark_deleted({"deletedAt": None}) is False
+    assert bookmark_deleted({}) is False
+
+
+def test_channel_id_missing_camera_names_the_fix():
+    with pytest.raises(LookupError) as exc:
+        channel_id(LOCATION_TREE, "lobby")
+    text = str(exc.value)
+    assert "'lobby'" in text
+    assert "main gate" in text
+    assert "test_camera_name" in text

@@ -13,7 +13,8 @@ from config.base_config import config  # dict resolved from ENV
 
 # Register plugins
 pytest_plugins = ['plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
-                  'plugins.run_archive', 'plugins.single_run_guard']
+                  'plugins.run_archive', 'plugins.single_run_guard',
+                  'tests.shared.api.fixtures']
 
 # Logging (env/tenant resolution)
 LOG_FILE = os.path.join("logs", "env_config.log")

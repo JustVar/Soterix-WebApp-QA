@@ -285,31 +285,35 @@ class TestAdminSites:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_sites
-    def test_delete_camera_group(self):
-        """Verify deleting a camera group with Yes confirmation."""
+    def test_delete_camera_group(self, api_camera_group):
+        """Verify deleting a camera group with Yes confirmation.
+
+        The group comes from the API (tests/shared/api/fixtures.py):
+        this test proves the UI delete, and test_create_camera_group
+        proves the UI create. Deleting our own group, never the last
+        existing one, keeps team-owned data on the shared tenant safe.
+        """
+        # Created before the page renders, so the Groups dropdown
+        # loads it with the site detail and no reload is needed
+        group = api_camera_group()
+
         self._navigate_to_sites()
-        self._open_first_site()
+        # The API wrote to TEST_SITE_ID, so open that site by name
+        # instead of the first card
+        self.admin.search_site(group["site_name"])
+        self.admin.click_site(group["site_name"])
 
         # Group management lives in the Groups dropdown since 2026-08.
         # click_site already failed loud if the detail (and its Groups
         # label) never rendered, so no skip guard belongs here.
         self.admin.open_groups_dropdown()
-
-        # Create our own group and delete THAT: deleting the last
-        # existing group destroys team-owned data on the shared tenant
-        timestamp = datetime.datetime.now().strftime("%H%M%S")
-        group_name = f"AutoTest Group {timestamp}"
-        camera_search = config.get("test_camera_name", "camera")
-        self.admin.create_camera_group(group_name, camera_search=camera_search)
-
-        self.admin.open_groups_dropdown()
-        assert self.admin.delete_camera_group_by_name(group_name), (
-            f"Created group '{group_name}' not found for delete"
+        assert self.admin.delete_camera_group_by_name(group["name"]), (
+            f"API-created group '{group['name']}' not found for delete"
         )
 
         # The named row leaving the list is the delete signal
         expect(
-            self.page.get_by_text(group_name, exact=True)
+            self.page.get_by_text(group["name"], exact=True)
         ).to_have_count(0, timeout=10000)
 
     @pytest.mark.ui
