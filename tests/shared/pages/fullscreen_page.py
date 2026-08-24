@@ -148,6 +148,12 @@ class FullScreenPage:
         """
         if self.bookmark_items.count() and self.bookmark_items.first.is_visible():
             return
+        # The failure overlay ('The camera failed to load') sits over
+        # the controls and intercepts the toggle click - two runs on
+        # 08/24/2026 died exactly there. Its refresh link is the
+        # user-path recovery; a stream that stays failed raises a
+        # clear error instead of a click timeout.
+        self.recover_stream_if_failed()
         self.bookmarks_toggle.click()
         try:
             self.bookmark_items.first.wait_for(state="visible", timeout=5000)
