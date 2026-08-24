@@ -156,7 +156,6 @@ Rules for any new fixture:
 Defined in `pytest.ini`. The main groups:
 
 - **Type:** `smoke`, `sanity`, `regression`, `ui`
-- **Environment:** `env_qa`, `env_stage`, `env_preprod`, `env_prod`
 - **Feature:** `admin`, `views_devices`, `events`, `search`, `media`, `maps`,
   `chats`, `licenses`, and the rest
 - **Meta:** `slow` (over 30 s), `flaky` (intermittent), `wip` (skip in CI)

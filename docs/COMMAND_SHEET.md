@@ -65,11 +65,29 @@ files.
 
 ## 5. Run tests
 
+`run.py` is the recommended entry point. It runs pytest for you, prints
+the command it used, and ends with the path of the run's `run.html` and
+of the archive index.
+
+```
+venv\Scripts\python.exe run.py smoke                                # every test marked smoke
+venv\Scripts\python.exe run.py module views                         # tests/ui/views
+venv\Scripts\python.exe run.py test "tests/ui/views/test_views_basic.py::TestViewsBasic::test_open_my_views[chromium]"
+venv\Scripts\python.exe run.py rerun latest                         # the failed tests of the newest archived run
+venv\Scripts\python.exe run.py open latest                          # that run's run.html in your browser
+venv\Scripts\python.exe run.py list                                 # the last 10 archived runs
+venv\Scripts\python.exe run.py module views -- --headed -s          # anything after -- goes to pytest
+venv\Scripts\python.exe run.py smoke --check                        # confirm the environment answers first
+```
+
+`rerun` and `open` also take a run folder name from `run.py list`. The
+raw pytest forms below do the same work without the wrapper:
+
 ```
 venv\Scripts\python.exe -m pytest tests/ui/views                 # one module
 venv\Scripts\python.exe -m pytest tests/ui/views/test_views_basic.py
 venv\Scripts\python.exe -m pytest "tests/ui/views/test_views_basic.py::TestViewsBasic::test_open_my_views[chromium]"
-venv\Scripts\python.exe -m pytest -m smoke                        # by marker (69 in pytest.ini)
+venv\Scripts\python.exe -m pytest -m smoke                        # by marker (65 in pytest.ini)
 venv\Scripts\python.exe -m pytest -m dragdrop tests/ui/views      # marker inside a module
 venv\Scripts\python.exe -m pytest -k "bookmark"                   # by name pattern
 venv\Scripts\python.exe -m pytest tests/ui/views --headed         # watch the browser
@@ -80,6 +98,12 @@ venv\Scripts\python.exe -m pytest --collect-only -q tests/ui      # list tests, 
 ```
 
 Hardware-disrupting tests skip unless you pass `--run-destructive`.
+The environment adds its own skips: `config/env/<env>.py` carries
+`allow_write` and `allow_delete`. Where `allow_delete` is False (stage,
+prod), tests marked `destructive` or `mutating` skip. Where `allow_write`
+is False (prod), the create and delete suites (`admin_users`,
+`admin_rules`, `admin_sites`, `bookmark`, `sequences`) skip too. The skip
+reason names the environment and the flag. No flag lifts these.
 
 To upload results to QA Touch, use the runner instead of bare pytest:
 

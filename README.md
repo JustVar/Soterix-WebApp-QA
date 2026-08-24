@@ -1,6 +1,6 @@
 # Soterix WebApp QA
 
-**Start here:** [docs/COMMAND_SHEET.md](docs/COMMAND_SHEET.md) - every command to install, run, and read results, on one page.
+**Start here:** `python run.py smoke` runs the smoke suite and prints where the report is. [docs/COMMAND_SHEET.md](docs/COMMAND_SHEET.md) has every command to install, run, and read results, on one page.
 
 End-to-end UI test suite for **NexaiQ-Core** (Soterix's cloud video platform).
 The repo was renamed from `playwright-soterix-qa` on 2026-08-07; the local
@@ -111,7 +111,7 @@ pytest --headed --slowmo 300 --verify-mode -k "test_export_clip"
 
 ```
 conftest.py                # Root fixtures (browser, auth, env, API clients)
-pytest.ini                 # 62 markers; norecursedirs excludes legacy
+pytest.ini                 # 65 markers; norecursedirs excludes legacy
 .env / .env.template       # Per-user secrets (gitignored) / template
 config/
 ├── base_config.py         # ENV resolution + APP_TYPE
@@ -197,15 +197,14 @@ Tests may opt into the `step_capture` fixture to mark logical steps (one `.mark(
 
 Convention details + examples: `docs/CONVENTIONS.md` under Step capture.
 
-## Markers (69 defined in `pytest.ini`)
+## Markers (65 defined in `pytest.ini`)
 
 - **Type:** `smoke`, `sanity`, `regression`, `api`, `ui`
-- **Environment:** `env_qa`, `env_stage`, `env_preprod`, `env_prod`
 - **Feature:** `admin`, `views_devices`, `events`, `search`, `media`, `maps`, `chats`, `licenses`, `insights`, `notifications`, `sequences`, etc.
 - **Meta:** `slow` (>30s), `flaky` (intermittent), `wip` (skip in CI)
 - **Mapping:** `qatouch(case_key)` / `qatouch_project(project_key)` - recognised by the reporter but intentionally unused in the shared test files; keep mappings in `config/qatouch_case_mapping.json` instead
 
-Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`, `pytest -m "regression and env_stage"`.
+Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`.
 
 ## Auth & Session Caching
 

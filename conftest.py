@@ -33,21 +33,55 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_collection_modifyitems(config, items):
-    """Skip destructive tests unless they were explicitly asked for.
+# Markers whose tests change hardware or tenant data, grouped by the
+# config/env/ flag that must be True for them to run (prod: both False).
+DELETE_MARKERS = ("destructive", "mutating")
+WRITE_MARKERS = ("admin_users", "admin_rules", "admin_sites", "bookmark", "sequences")
 
-    A plain `pytest tests/ui/c2c/` parametrises over every enabled camera in
-    the registry, so an unguarded reboot test takes out the whole lab fleet.
-    Running it has to be a deliberate act, not the default.
+# The collection hook receives pytest's own `config`, which shadows the
+# env dict imported above. This alias keeps the dict reachable there.
+ENV_SETTINGS = config
+
+
+def env_skip_reason(keywords, settings, env_name: str) -> str | None:
+    """Why the active environment refuses this test, or None to let it run.
+
+    A missing flag counts as False, the same default base_config's
+    is_write_allowed and is_delete_allowed use: an env file that says
+    nothing about writes gets none.
     """
-    if config.getoption("--run-destructive"):
-        return
-    skip = pytest.mark.skip(
+    for flag, markers in (("allow_delete", DELETE_MARKERS), ("allow_write", WRITE_MARKERS)):
+        if settings.get(flag, False):
+            continue
+        for marker in markers:
+            if marker in keywords:
+                return (f"env {env_name}: {flag} is False in config/env/, so tests "
+                        f"marked '{marker}' do not run here")
+    return None
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip what this run may not execute.
+
+    Destructive tests need --run-destructive: a plain `pytest tests/ui/c2c/`
+    parametrises over every enabled camera in the registry, so an unguarded
+    reboot test takes out the whole lab fleet. Running it has to be a
+    deliberate act, not the default.
+
+    The env guard has no opt-in flag. Prod is read-only by config, and
+    --run-destructive does not lift that.
+    """
+    run_destructive = config.getoption("--run-destructive")
+    destructive_skip = pytest.mark.skip(
         reason="destructive: disrupts real hardware. Pass --run-destructive to run it."
     )
+    env_name = (os.environ.get("ENV") or "qa").strip().lower()
     for item in items:
-        if "destructive" in item.keywords:
-            item.add_marker(skip)
+        if not run_destructive and "destructive" in item.keywords:
+            item.add_marker(destructive_skip)
+        reason = env_skip_reason(item.keywords, ENV_SETTINGS, env_name)
+        if reason:
+            item.add_marker(pytest.mark.skip(reason=reason))
 
 
 def _from_env_or_config(env_key: str, cfg_key: str, default: str = "") -> str:

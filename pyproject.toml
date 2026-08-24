@@ -71,6 +71,9 @@ ignore = [
     "T201",   # CLI tools legitimately use print() for output
     "BLE001", # tools may catch broad Exception when reporting to operator
 ]
+"run.py" = [
+    "T201",   # the front-door CLI prints its command and result paths
+]
 "plugins/**/*.py" = [
     "ARG002", # pytest plugin hooks have many unused-arg signatures
 ]
