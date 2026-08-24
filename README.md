@@ -273,5 +273,4 @@ gates before every commit.
 - `docs/EMAIL_REPORTS.md` - emailing the HTML run report via Microsoft Graph
 - `docs/API_ENDPOINTS.md` - REST endpoint catalog + coverage status
 - `docs/BRUNO_GUIDE.md` - interactive API exploration with Bruno
-- `docs/automation-mapping.md` - QA Automation Doc # ↔ test mapping
 - QA roadmap: `dashboards/soterix-internal-dashboards/docs/QA_ROADMAP.md` (single source of truth for all QA work; split from the old unified roadmap 2026-08-08)

@@ -68,7 +68,7 @@ The Triple-Helix Testing Methodology is a QA approach for AI-powered Video Surve
 - Page Object Model pattern
 - Multi-environment support (QA, Staging, Prod)
 
-**Reference Docs:** See `docs/SELENIUM_TO_PLAYWRIGHT_MIGRATION.md`
+**Reference Docs:** See `docs/archive/SELENIUM_TO_PLAYWRIGHT_MIGRATION.md`
 
 ---
 
