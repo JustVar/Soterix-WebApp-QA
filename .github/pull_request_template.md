@@ -10,9 +10,7 @@
 
 ## QA mapping
 
-<!-- See docs/automation-mapping.md. Registry is the source of truth. -->
 
-- Doc #(s) touched:
 - Updated `qa/doc_registry.yaml`? [ ] yes / [ ] n/a
 - Ran `python qa/check_doc_ids.py` and it passes? [ ] yes / [ ] n/a
 - Ran `python qa/export_registry.py --csv` and committed the refreshed `qa/Automation_QA.csv`? [ ] yes / [ ] n/a
