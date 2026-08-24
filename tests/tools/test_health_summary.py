@@ -56,6 +56,7 @@ RUNS = [
 
 
 def test_window_keeps_the_newest_n_of_each_target():
+    """The window keeps the newest N runs of each target, ordered newest first."""
     window = hs.select_window(RUNS, 2)
     assert [r['name'] for r in window] == [
         '2026-08-24_12-00-00__views', '2026-08-24_09-00-00__media', '2026-08-23_12-00-00__views']
@@ -64,6 +65,7 @@ def test_window_keeps_the_newest_n_of_each_target():
 
 
 def test_targets_aggregate_counts_including_old_summaries():
+    """Per-target totals include runs from summaries without per-test records."""
     agg = hs.aggregate(RUNS, 20)
     by_slug = {t['slug']: t for t in agg['targets']}
     views = by_slug['views']
@@ -82,6 +84,7 @@ def test_targets_aggregate_counts_including_old_summaries():
 
 
 def test_modules_aggregate_per_test_records():
+    """Per-module totals count only runs that carry per-test records."""
     agg = hs.aggregate(RUNS, 20)
     by_name = {m['module']: m for m in agg['modules']}
     views = by_name['ui/views/test_a.py']
@@ -96,6 +99,7 @@ def test_modules_aggregate_per_test_records():
 
 
 def test_flaky_newly_failing_and_slowest():
+    """Aggregation finds flaky candidates, newly failing tests and the slowest tests."""
     agg = hs.aggregate(RUNS, 20)
     flaky = [(f['nodeid'], f['passed'], f['failed']) for f in agg['flaky']]
     assert flaky == [(A, 2, 1), (B, 2, 1)]
@@ -115,6 +119,7 @@ def test_window_changes_the_verdicts():
 
 
 def test_aggregate_tolerates_nothing_and_odd_summaries():
+    """Aggregation returns empty results for no runs and None rates for malformed summaries."""
     empty = hs.aggregate([], 20)
     assert empty['targets'] == []
     assert empty['modules'] == []
@@ -127,6 +132,7 @@ def test_aggregate_tolerates_nothing_and_odd_summaries():
 
 
 def test_render_health_has_every_section_and_run_links():
+    """The health page shows every section, links each run and handles an empty archive."""
     page = hs.render_health(hs.aggregate(RUNS, 20), generated='2026-08-24T15:00:00')
     for heading in ('Targets (2)', 'Modules (2)', 'Flaky candidates (2)', 'Newly failing (1)',
                     'Slowest tests (4)'):
@@ -140,6 +146,7 @@ def test_render_health_has_every_section_and_run_links():
 
 
 def test_format_table_is_compact():
+    """The terminal table shows the window, per-target rates and the verdict lists."""
     text = hs.format_table(hs.aggregate(RUNS, 20))
     lines = text.splitlines()
     assert lines[0].startswith('Health: newest 20 runs of each target, 5 runs')
@@ -152,6 +159,7 @@ def test_format_table_is_compact():
 
 
 def test_cli_writes_health_html_and_links_it_from_the_index(tmp_path, capsys):
+    """The CLI writes health.html into the archive and links it from index.html."""
     runs = tmp_path / 'runs'
     for run in RUNS:
         folder = runs / run['name']
@@ -167,6 +175,7 @@ def test_cli_writes_health_html_and_links_it_from_the_index(tmp_path, capsys):
 
 
 def test_cli_without_runs_writes_nothing(tmp_path, capsys):
+    """The CLI writes no health page when the archive has no runs."""
     assert hs.main(['--runs-dir', str(tmp_path / 'none')]) == 0
     assert 'No archived runs' in capsys.readouterr().out
     assert not (tmp_path / 'none' / 'health.html').exists()

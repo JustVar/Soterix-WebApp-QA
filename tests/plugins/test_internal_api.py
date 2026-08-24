@@ -67,6 +67,7 @@ LOCATION_TREE = [
 # ----------------------------------------------------------------- client
 
 def test_login_hashes_the_password_and_keeps_the_cookie():
+    """Login sends the SHA-512 password and keeps the JSESSIONID cookie."""
     client, session = _client(
         {"status": 2002, "code": 200, "message": "Login Successful!",
          "result": [{"JSESSIONID": "abc123"}]}
@@ -86,6 +87,7 @@ def test_login_hashes_the_password_and_keeps_the_cookie():
 
 
 def test_code_decides_success_not_status():
+    """A response's code, not its status, decides success."""
     # The login answers status 2002 and a create 2005, both with code 200
     client, _ = _client({"status": 2005, "code": 200, "message": "Successfully created!",
                          "result": [{"bookmarkId": 1200}]})
@@ -93,6 +95,7 @@ def test_code_decides_success_not_status():
 
 
 def test_success_text_is_not_a_signal():
+    """A success message is returned as data, not treated as proof of deletion."""
     # A soft delete answers "Successfully deleted!" while the row stays.
     # The client returns the result; the caller confirms with a read.
     client, _ = _client({"status": 2006, "code": 200, "message": "Successfully deleted!",
@@ -101,6 +104,7 @@ def test_success_text_is_not_a_signal():
 
 
 def test_error_envelope_raises_api_error_with_the_fields():
+    """An error envelope raises ApiError carrying status, code, message, and path."""
     client, _ = _client(
         {"status": 400, "code": 1006, "message": "Database: no record found!", "result": None},
         status=400,
@@ -115,6 +119,7 @@ def test_error_envelope_raises_api_error_with_the_fields():
 
 
 def test_non_json_body_raises_with_the_http_status():
+    """A non-JSON body raises ApiError with the HTTP status and the body text."""
     client, session = _client({})
     bad = session.request.return_value
     bad.status_code = 502
@@ -127,11 +132,13 @@ def test_non_json_body_raises_with_the_http_status():
 
 
 def test_null_result_becomes_an_empty_list():
+    """A null result in the envelope reads as an empty list."""
     client, _ = _client({"status": 2000, "code": 200, "result": None})
     assert client.get("/REST/site/16/grouptree") == []
 
 
 def test_methods_paths_and_passthrough_arguments():
+    """get, post, and delete hit the right URL and pass params, files, and timeout."""
     client, session = _client({"code": 200, "result": [1]})
     client.get("/REST/site", params={"a": 1})
     assert _sent(session)[:2] == ("GET", "https://qa.example/v-apiserver/REST/site")
@@ -151,6 +158,7 @@ def test_methods_paths_and_passthrough_arguments():
 
 
 def test_session_verify_follows_the_flag():
+    """The session's TLS verify follows the client's verify flag."""
     _, session = _client({"code": 200, "result": []})
     assert session.verify is False
     verified = MagicMock()
@@ -161,6 +169,7 @@ def test_session_verify_follows_the_flag():
 # ----------------------------------------------------------- tree helpers
 
 def test_find_location_by_exact_name_newest_wins():
+    """An exact location name match returns the highest id; case must match."""
     # Two same-named nodes (a stale leftover): the highest id is the
     # one the fixture just made
     assert find_location(LOCATION_TREE, "AutoTest Group 125709")["location"]["id"] == 146
@@ -170,11 +179,13 @@ def test_find_location_by_exact_name_newest_wins():
 
 
 def test_channel_id_matches_case_insensitively():
+    """A camera name resolves to its channel id ignoring case and padding."""
     assert channel_id(LOCATION_TREE, "Main Gate") == 97
     assert channel_id(LOCATION_TREE, " corridor ") == 108
 
 
 def test_bookmark_deleted_reads_minus_one_as_live():
+    """A deletedAt of -1, 0, or null reads as a live bookmark."""
     # A live row holds deletedAt -1; a truthiness check read that as
     # deleted and a teardown left a live bookmark behind (2026-08-24)
     assert bookmark_deleted({"deletedAt": 1787594233624}) is True
@@ -185,6 +196,7 @@ def test_bookmark_deleted_reads_minus_one_as_live():
 
 
 def test_channel_id_missing_camera_names_the_fix():
+    """A missing camera raises LookupError naming the camera, the tree, and the fix."""
     with pytest.raises(LookupError) as exc:
         channel_id(LOCATION_TREE, "lobby")
     text = str(exc.value)

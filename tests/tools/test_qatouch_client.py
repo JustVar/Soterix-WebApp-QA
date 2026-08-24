@@ -61,16 +61,19 @@ def test_legacy_aliases_added_for_renamed_fields():
 
 
 def test_legacy_aliases_do_not_clobber_existing_old_names():
+    """An old-name field already on a case keeps its value when aliases are added."""
     case = {'module name': 'KEEP', 'module_name': 'new'}
     assert qc.add_legacy_case_aliases(dict(case))['module name'] == 'KEEP'
 
 
 def test_newtags_alias_is_empty_string_when_no_tags():
+    """A case with no tags gets an empty NewTags alias rather than a missing key."""
     assert qc.add_legacy_case_aliases({'Tags': []})['NewTags'] == ''
     assert qc.add_legacy_case_aliases({})['NewTags'] == ''
 
 
 def test_list_test_cases_applies_aliases_to_every_row(client):
+    """Every row from list_test_cases carries the legacy field aliases."""
     client.session.get.return_value = _resp({'data': [
         {'case_key': 'A', 'module_name': 'M1', 'Tags': ['smoke']},
         {'case_key': 'B', 'module_name': 'M2', 'Tags': []},
@@ -116,6 +119,7 @@ def test_update_by_code_sends_full_codes_as_indexed_dict(client):
 
 
 def test_update_by_code_raises_on_success_false(client):
+    """A success:false reply from testrun/code raises QATouchError instead of passing silently."""
     client.session.post.return_value = _resp({'success': False, 'error_msg': 'nope'})
     with pytest.raises(qc.QATouchError):
         client.update_test_run_results_by_code('JlW1', 'vaQly', [{'case': 'TR1', 'status': 1}])
@@ -133,6 +137,7 @@ def test_status_spellings_normalise_to_one_form(spelling):
 
 
 def test_status_names_cover_all_eight_codes():
+    """The status table covers all eight QA Touch codes with the right constants."""
     assert set(qc.STATUS_NAMES) == {1, 2, 3, 4, 5, 6, 7, 8}
     assert qc.STATUS_NOT_APPLICABLE == 6
     assert qc.STATUS_IN_PROGRESS == 7
@@ -152,6 +157,7 @@ def _paged(rows):
 
 
 def test_verify_results_landed_reports_landed_missing_and_mismatched(client):
+    """Read-back verification sorts sent results into landed, missing and mismatched."""
     client.session.get.side_effect = _paged(_run_rows(
         ('TR0001', 'Passed'), ('TR0002', 'Untested'), ('TR0004', 'Not-Applicable')))
     report = client.verify_results_landed('JlW1', 'vaQly', [
@@ -168,6 +174,7 @@ def test_verify_results_landed_reports_landed_missing_and_mismatched(client):
 
 
 def test_verify_treats_hyphen_and_space_spellings_as_equal(client):
+    """Read-back verification accepts a hyphenated status spelling as a match."""
     client.session.get.side_effect = _paged(_run_rows(('TR0009', 'In-Progress')))
     report = client.verify_results_landed('JlW1', 'r', [{'case': 'TR0009', 'status': 7}])
     assert report['mismatched'] == []
@@ -196,6 +203,7 @@ def test_update_test_case_refuses_fields_the_api_silently_ignores(client, field)
 
 
 def test_update_test_case_refuses_empty_update(client):
+    """A case update with no fields to change raises QATouchError."""
     with pytest.raises(qc.QATouchError):
         client.update_test_case('JlW1', 'B869bm')
 
@@ -226,6 +234,7 @@ def test_create_module_uses_singular_path_and_query_params(client):
 
 
 def test_create_project_uses_singular_path(client):
+    """create_project posts to the singular /api/v1/project path with the name as a query."""
     client.session.post.return_value = _resp({'success': True})
     client.create_project('Probe')
     call = client.session.post.call_args

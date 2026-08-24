@@ -35,20 +35,24 @@ from plugins import run_archive as ra  # noqa: E402
 # ---------------------------------------------------------------------------
 
 def test_slug_flattens_path_separators():
+    """Path separators in a target flatten to dashes in the run slug."""
     assert ra._build_slug(['tests/ui/views']) == 'tests-ui-views'
 
 
 def test_slug_joins_multiple_targets():
+    """Several targets join into one dash-separated slug."""
     assert ra._build_slug(['tests/ui/media', 'tests/ui/maps']) == \
         'tests-ui-media-tests-ui-maps'
 
 
 def test_slug_appends_the_markexpr():
+    """The -m expression rides on the end of the run slug."""
     assert ra._build_slug(['tests/ui'], 'smoke and not slow') == \
         'tests-ui-smoke-and-not-slow'
 
 
 def test_slug_empty_invocation_becomes_all():
+    """A bare invocation with no target or markexpr is slugged as 'all'."""
     assert ra._build_slug([]) == 'all'
     assert ra._build_slug([], '') == 'all'
 
@@ -59,6 +63,7 @@ def test_slug_all_junk_becomes_all():
 
 
 def test_slug_caps_at_40():
+    """The run slug is cut at 40 characters."""
     assert len(ra._build_slug(['x' * 200])) == 40
     assert ra.SLUG_MAX == 40
 
@@ -75,10 +80,12 @@ def test_slug_matches_the_report_media_sanitizer():
 # ---------------------------------------------------------------------------
 
 def test_unique_dir_returns_the_base_name_when_free(tmp_path):
+    """A free run folder name is used as is, with no suffix."""
     assert ra._unique_dir(tmp_path, 'run') == tmp_path / 'run'
 
 
 def test_unique_dir_appends_2_then_3(tmp_path):
+    """A taken run folder name gets -2, then -3, on collision."""
     (tmp_path / 'run').mkdir()
     assert ra._unique_dir(tmp_path, 'run') == tmp_path / 'run-2'
     (tmp_path / 'run-2').mkdir()
@@ -94,6 +101,7 @@ def _run_name(i: int) -> str:
 
 
 def test_prune_keeps_the_newest_20():
+    """Pruning keeps the newest 20 runs and lists the oldest first to go."""
     names = [_run_name(i) for i in range(1, 26)]  # 25 runs, day 25 newest
     prunable = ra._select_prunable(names)
     assert prunable == [_run_name(i) for i in range(5, 0, -1)]
@@ -101,6 +109,7 @@ def test_prune_keeps_the_newest_20():
 
 
 def test_prune_nothing_at_or_under_the_cap():
+    """At or under the cap, nothing is pruned."""
     assert ra._select_prunable([_run_name(i) for i in range(1, 21)]) == []
     assert ra._select_prunable([]) == []
 
@@ -114,6 +123,7 @@ def test_prune_ignores_non_run_names():
 
 
 def test_prune_pattern_requires_the_double_underscore():
+    """Only names with the double underscore before the slug count as runs."""
     assert ra.RUN_DIR_RE.match('2026-08-01_10-00-00__views')
     assert not ra.RUN_DIR_RE.match('2026-08-01_10-00-00')
     assert not ra.RUN_DIR_RE.match('2026-08-01_10-00-00_views')
@@ -144,11 +154,13 @@ def test_prune_total_cap_spans_targets():
 # ---------------------------------------------------------------------------
 
 def test_fit_dest_passes_short_paths_through(tmp_path):
+    """A destination path under the cap is returned untouched."""
     dest = tmp_path / 'traces' / 'short-trace.zip'
     assert ra._fit_dest(dest) is dest
 
 
 def test_fit_dest_truncates_the_stem_to_fit(tmp_path):
+    """An overlong destination is cut to the cap, keeping folder and suffix."""
     dest = tmp_path / ('t' * 300 + '.zip')
     fitted = ra._fit_dest(dest)
     assert fitted is not None
@@ -158,6 +170,7 @@ def test_fit_dest_truncates_the_stem_to_fit(tmp_path):
 
 
 def test_fit_dest_none_when_the_directory_alone_is_too_long(tmp_path):
+    """No destination fits when the folder alone is past the path cap."""
     deep = tmp_path / ('d' * 300)
     assert ra._fit_dest(deep / 'f.zip') is None
 
@@ -232,6 +245,7 @@ def test_copy_screenshots_caps_the_destination_path(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_summary_shape():
+    """The summary carries exactly the schema-2 keys with the run's facts."""
     counts = {'passed': 3, 'failed': 1, 'skipped': 2, 'errors': 0}
     summary = ra._build_summary(started=1000.0, ended=1090.5, exitstatus=1,
                                 counts=counts, target=['tests/ui/views'],
@@ -275,6 +289,7 @@ def _entry(name, summary=None, has_report=False):
 
 
 def test_index_orders_newest_first():
+    """The index lists runs newest first regardless of input order."""
     html = ra._render_index([
         _entry('2026-08-01_10-00-00__old'),
         _entry('2026-08-03_10-00-00__new'),
@@ -284,6 +299,7 @@ def test_index_orders_newest_first():
 
 
 def test_index_links_report_only_when_present():
+    """The index links report.html only for runs that have one; the folder always."""
     html = ra._render_index([
         _entry('2026-08-01_10-00-00__a', has_report=True),
         _entry('2026-08-02_10-00-00__b', has_report=False),
@@ -307,6 +323,7 @@ def test_index_links_the_run_report_first_when_present():
 
 
 def test_load_entries_flags_the_run_report(tmp_path):
+    """Loaded entries flag whether the run folder holds a run.html."""
     (tmp_path / '2026-08-01_10-00-00__a').mkdir()
     (tmp_path / '2026-08-01_10-00-00__a' / 'run.html').write_text('x', encoding='utf-8')
     (tmp_path / '2026-08-02_10-00-00__b').mkdir()
@@ -324,6 +341,7 @@ def test_index_tolerates_an_empty_summary():
 
 
 def test_index_renders_summary_values():
+    """The index shows the summary's start time, target, and counts."""
     summary = {'started': '2026-08-01T10:00:00', 'exitstatus': 0,
                'counts': {'passed': 7, 'failed': 1, 'skipped': 2, 'errors': 0},
                'target': ['tests/ui/media']}
@@ -335,6 +353,7 @@ def test_index_renders_summary_values():
 
 
 def test_index_has_a_caption_and_survives_no_runs():
+    """An empty archive still renders the caption and a no-runs notice."""
     html = ra._render_index([])
     assert 'newest first' in html
     assert 'No archived runs' in html
@@ -352,6 +371,7 @@ def test_index_has_a_caption_and_survives_no_runs():
     ('setup', 'skipped', 'skipped'),
 ])
 def test_classify_counted_phases(when, outcome, counter):
+    """Call outcomes and setup failures land in the matching counter."""
     assert ra._classify(when, outcome) == counter
 
 
@@ -362,6 +382,7 @@ def test_classify_counted_phases(when, outcome, counter):
     ('call', 'rerun'),        # rerun outcomes are not final
 ])
 def test_classify_ignored_phases(when, outcome):
+    """Setup passes, teardown reports, and reruns count toward nothing."""
     assert ra._classify(when, outcome) is None
 
 
@@ -371,15 +392,18 @@ def test_classify_ignored_phases(when, outcome):
 
 @pytest.mark.parametrize('value', ['off', 'OFF', 'Off', '0', 'false', 'no', ' off '])
 def test_kill_switch_off_values(value):
+    """RUN_ARCHIVE=off, in any spelling, disables the archive."""
     assert ra._archive_disabled({'RUN_ARCHIVE': value}) is True
 
 
 @pytest.mark.parametrize('value', ['', 'on', '1', 'true', 'anything-else'])
 def test_kill_switch_on_values(value):
+    """Any RUN_ARCHIVE value other than an off word leaves the archive on."""
     assert ra._archive_disabled({'RUN_ARCHIVE': value}) is False
 
 
 def test_kill_switch_defaults_to_on():
+    """With RUN_ARCHIVE unset, the archive is on."""
     assert ra._archive_disabled({}) is False
 
 
@@ -405,6 +429,7 @@ class _FakeConfig:
 
 
 def test_should_archive_in_a_plain_run():
+    """A plain run with tests executed is archived."""
     assert ra._should_archive(_FakeConfig(), {}, tests_run=5) is True
 
 
@@ -414,15 +439,18 @@ def test_should_not_archive_during_collect_only():
 
 
 def test_should_not_archive_in_xdist_worker():
+    """An xdist worker never archives; the controller does."""
     env = {'PYTEST_XDIST_WORKER': 'gw0'}
     assert ra._should_archive(_FakeConfig(), env, tests_run=5) is False
 
 
 def test_should_not_archive_when_zero_tests_ran():
+    """A run that executed no tests is not archived."""
     assert ra._should_archive(_FakeConfig(), {}, tests_run=0) is False
 
 
 def test_should_not_archive_when_every_guard_trips():
+    """Collect-only, an xdist worker, and zero tests together still refuse."""
     env = {'PYTEST_XDIST_WORKER': 'gw1'}
     assert ra._should_archive(_FakeConfig(collect_only=True), env, tests_run=0) is False
 
@@ -451,6 +479,7 @@ def test_should_not_archive_a_unit_test_only_run(args):
     ['tests/ui/plugins_page/test_x.py'],  # a UI folder that merely contains the word
 ])
 def test_should_archive_when_any_target_is_not_a_unit_test(args):
+    """One UI target in the invocation is enough to keep the archive."""
     assert ra._unit_tests_only(args) is False
     assert ra._should_archive(_FakeConfig(args=args), {}, tests_run=5) is True
 
@@ -479,6 +508,7 @@ def _archive_on_temp(tmp_path, monkeypatch):
 
 
 def test_archive_writes_the_run_report(tmp_path, monkeypatch):
+    """The archive writes run.html with failures, screenshots, and advisories."""
     dest = _archive_on_temp(tmp_path, monkeypatch)
     page = (dest / 'run.html').read_text(encoding='utf-8')
     assert (dest / 'summary.json').is_file()
@@ -516,6 +546,7 @@ class TestAdvisories:
     )
 
     def test_scan_keeps_only_tagged_lines_in_order(self):
+        """Only tagged lines with text survive the advisory scan, in order."""
         assert ra.scan_advisories(self.CAPTURED) == [
             "[VIEWS] view drag: mouse drag did not consume a tile; trying JS fallback",
             "[EXPORT] completed in 14s (progress bar hidden)",
@@ -523,10 +554,12 @@ class TestAdvisories:
         ]
 
     def test_scan_tolerates_empty_and_none(self):
+        """Scanning empty or missing output yields no advisories."""
         assert ra.scan_advisories('') == []
         assert ra.scan_advisories(None) == []
 
     def test_summary_carries_advisories_and_defaults_empty(self):
+        """The summary copies the advisory list and defaults it to empty."""
         base = dict(started=1000.0, ended=1010.0, exitstatus=0,
                     counts={'passed': 1}, target=['t'], markexpr='',
                     keyword='', report_file=None)
@@ -537,6 +570,7 @@ class TestAdvisories:
         assert out['advisories'] is not items  # a copy, never the live list
 
     def test_format_groups_lines_under_their_test(self):
+        """advisories.txt groups each test's lines under its node id."""
         text = ra._format_advisories([
             {'test': 't::a', 'line': '[VIEWS] one'},
             {'test': 't::a', 'line': '[VIEWS] two'},
@@ -545,6 +579,7 @@ class TestAdvisories:
         assert text == 't::a\n  [VIEWS] one\n  [VIEWS] two\nt::b\n  [LPR] three\n'
 
     def test_index_shows_the_count_and_tolerates_missing_key(self):
+        """The index shows each run's advisory count and blanks a missing key."""
         html = ra._render_index([
             {'name': '2026-08-21_10-00-00__a', 'has_report': False,
              'summary': {'advisories': [{'line': '[LPR] x'}, {'line': '[VIEWS] y'}]}},
@@ -584,6 +619,7 @@ class TestCaseMapping:
     """QA Touch case titles ride along when the node id is mapped."""
 
     def test_load_reads_key_and_title(self, tmp_path):
+        """Loading the mapping keeps only rows with a case key, as key plus title."""
         path = _write_mapping(tmp_path, {
             MAPPED: {'case_key': 'VKbBPP', 'case_title': 'Verify the tabs', 'reviewed': True},
             'tests/x.py::test_no_key': {'case_title': 'orphan'},
@@ -593,6 +629,7 @@ class TestCaseMapping:
             MAPPED: {'case_key': 'VKbBPP', 'case_title': 'Verify the tabs'}}
 
     def test_load_tolerates_missing_and_malformed_files(self, tmp_path):
+        """A missing or malformed mapping file loads as empty."""
         assert ra.load_case_mapping(tmp_path / 'nope.json') == {}
         bad = tmp_path / 'bad.json'
         bad.write_text('{not json', encoding='utf-8')
@@ -601,6 +638,7 @@ class TestCaseMapping:
         assert ra.load_case_mapping(bad) == {}
 
     def test_lookup_exact_then_bare_then_none(self):
+        """Lookup tries the exact node id, then the bare function, then gives up."""
         mapping = {MAPPED: {'case_key': 'K1', 'case_title': 'T1'},
                    'tests/y.py::test_bare': {'case_key': 'K2', 'case_title': ''}}
         assert ra.lookup_case(mapping, MAPPED) == {'case_key': 'K1', 'case_title': 'T1'}
@@ -614,11 +652,13 @@ class TestCaseMapping:
 
 class TestLogFileName:
     def test_sanitizes_like_the_screenshot_stem(self):
+        """The log file name is the screenshot stem plus .log."""
         nodeid = 'tests/ui/views/test_views_basic.py::TestViews::test_open[chromium]'
         assert ra.log_file_name(nodeid) == \
             'tests-ui-views-test_views_basic.py-TestViews-test_open-chromium.log'
 
     def test_caps_the_stem(self):
+        """The log file stem is cut at 120 characters."""
         name = ra.log_file_name('tests/' + 'x' * 300)
         assert name.endswith('.log')
         assert len(name) == ra.LOG_NAME_MAX + len('.log')
@@ -634,6 +674,7 @@ class TestRecordPhase:
         return state
 
     def test_builds_the_record_across_phases(self):
+        """Phase reports build one record with title, case, outcome, and timings."""
         state = self._state()
         phases = [
             _FakePhaseReport(self.NODEID, 'setup', 'passed', 0.5, stdout='[AUTH] cached\n'),
@@ -666,11 +707,13 @@ class TestRecordPhase:
         ('call', 'skipped', 'skipped'),
     ])
     def test_outcome_vocabulary(self, when, outcome, expected):
+        """A setup failure records as error; skips and passes keep their names."""
         state = self._state()
         ra.record_phase(state, _FakePhaseReport(self.NODEID, when, outcome))
         assert state.tests[self.NODEID]['outcome'] == expected
 
     def test_title_falls_back_to_the_function_name(self):
+        """Without a docstring, the record's title comes from the function name."""
         state = ra._RunState()
         state.mapping = {}
         ra.record_phase(state, _FakePhaseReport(self.NODEID, 'setup', 'passed'), doc=None)
@@ -695,6 +738,7 @@ class TestRecordPhase:
         assert ra.phase_capture(plain, 'stderr') == ''
 
     def test_rerun_attempts_are_not_final(self):
+        """A rerun attempt leaves no outcome; the final attempt sets it."""
         state = self._state()
         ra.record_phase(state, _FakePhaseReport(self.NODEID, 'call', 'rerun', 30.0))
         assert state.tests[self.NODEID]['outcome'] is None
@@ -705,6 +749,7 @@ class TestRecordPhase:
         assert state.tests[self.NODEID]['duration_s'] == 8.0
 
     def test_summary_copies_the_records(self):
+        """The summary snapshots the test records so later edits do not leak in."""
         state = self._state()
         ra.record_phase(state, _FakePhaseReport(self.NODEID, 'call', 'passed', 2.0))
         summary = ra._build_summary(started=0.0, ended=5.0, exitstatus=0, counts={},
@@ -721,6 +766,7 @@ class TestTestLog:
     """One file per test: every phase's captured output, in order."""
 
     def test_format_lists_each_phase(self):
+        """The test log lists its header lines, then each phase's output in order."""
         rec = {'nodeid': 't/x.py::test_a', 'title': 'Do a thing', 'case_key': 'K1',
                'case_title': 'Case one'}
         phases = [
@@ -736,6 +782,7 @@ class TestTestLog:
         assert '=== teardown: passed (0.10 s) ===\n(no output)\n' in text
 
     def test_format_without_a_case_or_phases(self):
+        """A record with no case and no phases logs just its id and title."""
         text = ra.format_test_log({'nodeid': 't::a', 'title': 'A', 'case_key': None}, [])
         assert text == 't::a\nA\n'
 
@@ -777,6 +824,7 @@ class TestTestLog:
 
 class TestRunLog:
     def test_attach_writes_info_records_and_detach_restores(self, tmp_path):
+        """Attaching writes INFO records to run.log; detaching restores the root logger."""
         root = logging.getLogger()
         before_level = root.level
         before_handlers = list(root.handlers)
@@ -804,6 +852,7 @@ class TestRunLog:
 
 
 def test_index_links_health_only_when_it_exists(tmp_path):
+    """The index links health.html only when the file exists."""
     entries = [_entry('2026-08-01_10-00-00__a')]
     assert 'href="health.html"' not in ra._render_index(entries)
     assert 'run.py health' in ra._render_index(entries)

@@ -62,11 +62,13 @@ def _config(run_destructive: bool = False):
 
 @pytest.mark.parametrize('marker', DELETE_MARKERS + WRITE_MARKERS + READ_MARKERS)
 def test_qa_allows_everything(marker):
+    """On qa, every guarded marker runs."""
     assert conftest.env_skip_reason({marker: True}, QA, 'qa') is None
 
 
 @pytest.mark.parametrize('marker', DELETE_MARKERS)
 def test_prod_refuses_delete_markers_by_allow_delete(marker):
+    """On prod, delete markers are skipped and the reason names allow_delete."""
     reason = conftest.env_skip_reason({marker: True}, PROD, 'prod')
     assert reason is not None
     assert 'env prod' in reason
@@ -76,6 +78,7 @@ def test_prod_refuses_delete_markers_by_allow_delete(marker):
 
 @pytest.mark.parametrize('marker', WRITE_MARKERS)
 def test_prod_refuses_write_markers_by_allow_write(marker):
+    """On prod, write markers are skipped and the reason names allow_write."""
     reason = conftest.env_skip_reason({marker: True}, PROD, 'prod')
     assert reason is not None
     assert 'env prod' in reason
@@ -85,11 +88,13 @@ def test_prod_refuses_write_markers_by_allow_write(marker):
 
 @pytest.mark.parametrize('marker', READ_MARKERS)
 def test_prod_still_runs_read_only_tests(marker):
+    """On prod, read-only markers still run."""
     assert conftest.env_skip_reason({marker: True}, PROD, 'prod') is None
 
 
 @pytest.mark.parametrize('marker', DELETE_MARKERS)
 def test_stage_refuses_delete_markers(marker):
+    """On stage, delete markers are skipped by allow_delete."""
     reason = conftest.env_skip_reason({marker: True}, STAGE, 'stage')
     assert reason is not None
     assert 'allow_delete' in reason
@@ -97,21 +102,25 @@ def test_stage_refuses_delete_markers(marker):
 
 @pytest.mark.parametrize('marker', WRITE_MARKERS + READ_MARKERS)
 def test_stage_runs_write_and_read_tests(marker):
+    """On stage, write and read markers run."""
     assert conftest.env_skip_reason({marker: True}, STAGE, 'stage') is None
 
 
 @pytest.mark.parametrize('marker', DELETE_MARKERS + WRITE_MARKERS)
 def test_missing_flags_count_as_false(marker):
+    """A profile with no flags refuses write and delete markers."""
     # Same default as base_config.is_write_allowed / is_delete_allowed.
     assert conftest.env_skip_reason({marker: True}, PARTNER, 'qa') is not None
 
 
 def test_unmarked_test_runs_everywhere():
+    """An unmarked test runs on every profile."""
     for settings, env in ((QA, 'qa'), (STAGE, 'stage'), (PROD, 'prod'), (PARTNER, 'qa')):
         assert conftest.env_skip_reason({}, settings, env) is None
 
 
 def test_delete_flag_wins_when_a_test_carries_both_kinds():
+    """A test with both marker kinds is refused by allow_delete first."""
     reason = conftest.env_skip_reason({'destructive': True, 'admin_sites': True}, PROD, 'prod')
     assert 'allow_delete' in reason
 
@@ -121,6 +130,7 @@ def test_delete_flag_wins_when_a_test_carries_both_kinds():
 # ---------------------------------------------------------------------------
 
 def test_hook_skips_by_env_and_leaves_read_tests_alone(monkeypatch):
+    """The collection hook skips guarded tests on prod and leaves read tests alone."""
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', PROD)
     monkeypatch.setenv('ENV', 'prod')
     items = [FakeItem('admin_users'), FakeItem('mutating'), FakeItem('smoke'), FakeItem()]
@@ -134,6 +144,7 @@ def test_hook_skips_by_env_and_leaves_read_tests_alone(monkeypatch):
 
 
 def test_hook_run_destructive_does_not_lift_the_env_guard(monkeypatch):
+    """--run-destructive does not override the env's allow_delete refusal."""
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', PROD)
     monkeypatch.setenv('ENV', 'prod')
     item = FakeItem('destructive')
@@ -143,6 +154,7 @@ def test_hook_run_destructive_does_not_lift_the_env_guard(monkeypatch):
 
 
 def test_hook_keeps_the_destructive_opt_in_on_qa(monkeypatch):
+    """On qa, destructive tests still need --run-destructive to run."""
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', QA)
     monkeypatch.setenv('ENV', 'qa')
     item = FakeItem('destructive')
@@ -155,6 +167,7 @@ def test_hook_keeps_the_destructive_opt_in_on_qa(monkeypatch):
 
 
 def test_hook_names_the_env_alias_the_user_typed(monkeypatch):
+    """The skip reason names the ENV alias as the user typed it."""
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', PROD)
     monkeypatch.setenv('ENV', ' Production ')
     item = FakeItem('bookmark')
@@ -167,6 +180,7 @@ def test_hook_names_the_env_alias_the_user_typed(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_guarded_markers_are_registered_in_pytest_ini():
+    """Every guarded marker is registered in pytest.ini."""
     text = (REPO_ROOT / 'pytest.ini').read_text(encoding='utf-8')
     registered = set(re.findall(r'^\s+(\w+)(?:\(\w+\))?:', text, re.MULTILINE))
     missing = [m for m in conftest.DELETE_MARKERS + conftest.WRITE_MARKERS if m not in registered]

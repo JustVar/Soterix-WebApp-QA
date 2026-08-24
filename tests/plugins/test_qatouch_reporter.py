@@ -69,20 +69,24 @@ def _make_item(case_key=None, project_key=None):
 
 
 def test_get_marker_project_key_returns_marker_value():
+    """The qatouch_project marker's value is read off the item."""
     item = _make_item(case_key='ABCD', project_key='OTHER')
     assert qr.QATouchReporter._get_marker_project_key(item) == 'OTHER'
 
 
 def test_get_marker_project_key_returns_none_when_absent():
+    """An item without a qatouch_project marker yields no project key."""
     item = _make_item(case_key='ABCD')
     assert qr.QATouchReporter._get_marker_project_key(item) is None
 
 
 def test_get_marker_project_key_handles_none_item():
+    """A missing item yields no project key instead of an error."""
     assert qr.QATouchReporter._get_marker_project_key(None) is None
 
 
 def test_resolve_project_key_marker_wins(monkeypatch):
+    """A per-test project marker outranks the default project."""
     monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
     r = qr.QATouchReporter(run_key='rk1')
     item = _make_item(case_key='C1', project_key='PROJ_B')
@@ -90,6 +94,7 @@ def test_resolve_project_key_marker_wins(monkeypatch):
 
 
 def test_resolve_project_key_falls_back_to_default(monkeypatch):
+    """Without a marker or env override, the default project key applies."""
     monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
     r = qr.QATouchReporter(run_key='rk1')
     item = _make_item(case_key='C1')  # no project marker
@@ -97,6 +102,7 @@ def test_resolve_project_key_falls_back_to_default(monkeypatch):
 
 
 def test_resolve_project_key_falls_back_to_env(monkeypatch):
+    """QATOUCH_PROJECT_ID supplies the project key when no marker is set."""
     monkeypatch.setenv('QATOUCH_PROJECT_ID', 'ENV_PROJ')
     r = qr.QATouchReporter(run_key='rk1')
     item = _make_item(case_key='C1')
@@ -108,6 +114,7 @@ def test_resolve_project_key_falls_back_to_env(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_group_results_by_project_single_default(monkeypatch):
+    """Results with no project entries group under the default project."""
     monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
     r = qr.QATouchReporter(run_key='rk1')
     r.results = {'C1': qr.STATUS_PASSED, 'C2': qr.STATUS_FAILED}
@@ -118,6 +125,7 @@ def test_group_results_by_project_single_default(monkeypatch):
 
 
 def test_group_results_by_project_splits_by_marker(monkeypatch):
+    """Results split into one group per marked project."""
     monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
     r = qr.QATouchReporter(run_key='rk1')
     r.results = {'C1': qr.STATUS_PASSED, 'C2': qr.STATUS_FAILED, 'C3': qr.STATUS_PASSED}
@@ -133,6 +141,7 @@ def test_group_results_by_project_splits_by_marker(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_upload_path_used_defaults_to_none():
+    """Before any upload, the path label reads '(none)'."""
     r = qr.QATouchReporter(run_key='rk1')
     assert r._upload_path_used == '(none)'
 
@@ -154,6 +163,7 @@ def _reporter(monkeypatch):
 
 
 def test_run_key_mapping_resolves_case_codes_not_result_keys(monkeypatch):
+    """The run mapping stores case codes, never the per-run result keys."""
     r = _reporter(monkeypatch)
     client = MagicMock()
     client.get_all_test_run_results.return_value = [
@@ -167,6 +177,7 @@ def test_run_key_mapping_resolves_case_codes_not_result_keys(monkeypatch):
 
 
 def test_build_payload_uses_codes_and_skips_unresolved(monkeypatch):
+    """The payload carries case codes and drops cases with no code."""
     r = _reporter(monkeypatch)
     r.results = {'B869bm': 1, '8V1vw1': 5, 'NOMAP1': 1}
     r.case_to_run_key = {'B869bm': 'TR0262', '8V1vw1': 'TR0263'}
@@ -177,6 +188,7 @@ def test_build_payload_uses_codes_and_skips_unresolved(monkeypatch):
 
 
 def test_verify_upload_uses_shared_client_check_and_fails_on_mismatch(monkeypatch):
+    """A read-back mismatch fails the upload check through the shared client verify."""
     r = _reporter(monkeypatch)
     client = MagicMock()
     client.verify_results_landed.return_value = {
@@ -189,6 +201,7 @@ def test_verify_upload_uses_shared_client_check_and_fails_on_mismatch(monkeypatc
 
 
 def test_verify_upload_passes_when_everything_landed(monkeypatch):
+    """The upload check passes when read-back shows every result landed."""
     r = _reporter(monkeypatch)
     client = MagicMock()
     client.verify_results_landed.return_value = {
@@ -233,6 +246,7 @@ def _wire_tmp_paths(monkeypatch, tmp_path):
 
 
 def test_sessionfinish_with_unresolvable_codes_fails_loud(monkeypatch, tmp_path):
+    """No resolvable case codes counts as an error and lands in the failure log."""
     import json as _json
 
     import tools.qatouch_client as tqc
@@ -259,6 +273,7 @@ def test_sessionfinish_with_unresolvable_codes_fails_loud(monkeypatch, tmp_path)
 
 
 def test_sessionfinish_uploads_normally_when_codes_resolve(monkeypatch, tmp_path):
+    """With resolvable codes, session finish uploads once and logs no failure."""
     import tools.qatouch_client as tqc
 
     _wire_tmp_paths(monkeypatch, tmp_path)
@@ -317,6 +332,7 @@ def test_client_plain_upload_request_shape_unchanged():
 
 
 def test_client_attachment_upload_posts_multipart_file_parts():
+    """An attachment posts as a multipart file[] part with the JSON header dropped."""
     c = _client_with_mock_session()
     png = b'\x89PNG-bytes'
     c.update_test_run_results_by_code(
@@ -349,6 +365,7 @@ def _playwright_session(monkeypatch, tmp_path):
 
 
 def test_sessionfinish_attaches_screenshot_and_timing(monkeypatch, tmp_path):
+    """A failed case uploads with its screenshot named by code and a timing line."""
     r, fake_client = _playwright_session(monkeypatch, tmp_path)
     r.results = {'B869bm': qr.STATUS_FAILED}
     r.durations = {'B869bm': 1.23}
@@ -366,6 +383,7 @@ def test_sessionfinish_attaches_screenshot_and_timing(monkeypatch, tmp_path):
 
 
 def test_sessionfinish_skips_oversized_screenshot_whole(monkeypatch, tmp_path, caplog):
+    """A screenshot over 2 MB is skipped whole and the upload goes plain."""
     r, fake_client = _playwright_session(monkeypatch, tmp_path)
     r.results = {'B869bm': qr.STATUS_FAILED}
     r.screenshots = {'B869bm': b'x' * (qr.MAX_ATTACHMENT_BYTES + 1)}
@@ -398,6 +416,7 @@ def test_sessionfinish_without_screenshots_sends_plain_request(monkeypatch, tmp_
 
 
 def test_sessionfinish_attachment_failure_degrades_to_plain_upload(monkeypatch, tmp_path):
+    """A rejected multipart upload falls back to the plain request and still lands."""
     r, fake_client = _playwright_session(monkeypatch, tmp_path)
     calls = []
 

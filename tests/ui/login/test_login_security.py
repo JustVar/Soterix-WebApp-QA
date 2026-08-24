@@ -5,6 +5,7 @@ from tests.shared.pages.login_page import LoginPage
 
 @pytest.mark.ui
 def test_sql_injection_attempt(page, base_url):
+    """A SQL injection payload in the login form is rejected with an error."""
     lp = LoginPage(page, base_url)
     payload = "' OR 1=1 --"
     lp.login(payload, payload)
@@ -14,6 +15,7 @@ def test_sql_injection_attempt(page, base_url):
 
 @pytest.mark.ui
 def test_xss_attempt(page, base_url):
+    """A script-tag payload in the username is rejected with an error."""
     lp = LoginPage(page, base_url)
     payload = "<script>alert('XSS')</script>"
     lp.login(payload, "password123")
@@ -23,6 +25,7 @@ def test_xss_attempt(page, base_url):
 
 @pytest.mark.ui
 def test_password_too_short(page, base_url):
+    """A three-character password does not log the user in."""
     lp = LoginPage(page, base_url)
     lp.login("user@example.com", "123")
     assert not lp.is_logged_in(), "Short password should not grant access"

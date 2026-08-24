@@ -34,19 +34,23 @@ from plugins import report_media as rm  # noqa: E402
 # ---------------------------------------------------------------------------
 
 def test_safe_name_flattens_nodeid_separators():
+    """Node id separators flatten to dashes in the screenshot stem."""
     nodeid = 'tests/ui/views/test_views_basic.py::TestViews::test_open[chromium]'
     assert rm._safe_name(nodeid) == 'tests-ui-views-test_views_basic.py-TestViews-test_open-chromium'
 
 
 def test_safe_name_strips_edge_dashes():
+    """Leading and trailing dashes are stripped from the stem."""
     assert rm._safe_name('[weird]') == 'weird'
 
 
 def test_safe_name_keeps_word_chars_dots_and_hyphens():
+    """Word characters, dots, and hyphens pass through the stem untouched."""
     assert rm._safe_name('a.b_c-d') == 'a.b_c-d'
 
 
 def test_safe_name_caps_at_120():
+    """The screenshot stem is cut at 120 characters."""
     assert len(rm._safe_name('x' * 300)) == 120
     assert rm.SAFE_NAME_MAX == 120
 
@@ -68,6 +72,7 @@ def test_safe_name_matches_the_trace_sanitizer():
     ('setup', 'failed', 'SETUP_FAILED'),
 ])
 def test_suffix_for_captured_phases(when, outcome, suffix):
+    """Call passes, call failures, and setup failures map to their suffixes."""
     assert rm._suffix_for(when, outcome) == suffix
 
 
@@ -79,6 +84,7 @@ def test_suffix_for_captured_phases(when, outcome, suffix):
     ('teardown', 'passed'),
 ])
 def test_suffix_for_uncaptured_phases(when, outcome):
+    """Skips, setup passes, and teardown reports capture no final image."""
     assert rm._suffix_for(when, outcome) is None
 
 
@@ -87,6 +93,7 @@ def test_suffix_for_uncaptured_phases(when, outcome):
 # ---------------------------------------------------------------------------
 
 def test_expected_trace_path_shape():
+    """The expected trace path is reports/artifacts/<stem>-trace.zip."""
     nodeid = 'tests/ui/x.py::test_t[chromium]'
     assert rm._expected_trace_path(nodeid) == \
         Path('reports') / 'artifacts' / 'tests-ui-x.py-test_t-chromium-trace.zip'
@@ -127,6 +134,7 @@ class _FakeInstance:
 
 
 def test_resolve_page_prefers_class_instance_page():
+    """A class test's self.page wins over a page in funcargs."""
     inst_page, arg_page = _FakePage(), _FakePage()
     item = _FakeItem(instance=_FakeInstance(inst_page),
                      funcargs={'authenticated_page': arg_page})
@@ -142,18 +150,21 @@ def test_resolve_page_finds_instance_page_after_a_setup_crash():
 
 
 def test_resolve_page_falls_back_to_funcargs_for_function_tests():
+    """A function test's page comes from its fixture funcargs."""
     page = _FakePage()
     item = _FakeItem(funcargs={'authenticated_page': page})
     assert rm._resolve_page(item) is page
 
 
 def test_resolve_page_prefers_authenticated_page_over_page():
+    """authenticated_page wins over page when both are requested."""
     auth, plain = _FakePage(), _FakePage()
     item = _FakeItem(funcargs={'authenticated_page': auth, 'page': plain})
     assert rm._resolve_page(item) is auth
 
 
 def test_resolve_page_skips_closed_candidates():
+    """A closed page is passed over for a live one."""
     live = _FakePage()
     item = _FakeItem(instance=_FakeInstance(_FakePage(closed=True)),
                      funcargs={'page': live})
@@ -170,6 +181,7 @@ def test_resolve_page_skips_a_non_page_on_the_instance():
 
 
 def test_resolve_page_none_when_nothing_is_usable():
+    """With no page, or only a closed one, nothing resolves."""
     assert rm._resolve_page(_FakeItem()) is None
     assert rm._resolve_page(
         _FakeItem(funcargs={'page': _FakePage(closed=True)})) is None
@@ -180,6 +192,7 @@ def test_resolve_page_none_when_nothing_is_usable():
 # ---------------------------------------------------------------------------
 
 def test_drain_returns_frames_in_order_and_clears_in_place():
+    """Draining returns frames in drag order and empties the same list in place."""
     page = _FakePage()
     stash = [('mid-drag', b'one'), ('mid-drag', b'two')]
     page._drag_captures = stash
@@ -194,14 +207,17 @@ def test_drain_returns_frames_in_order_and_clears_in_place():
 
 
 def test_drain_without_a_stash_is_empty():
+    """A page with no drag stash drains to nothing."""
     assert rm._drain_drag_captures(_FakePage()) == []
 
 
 def test_drain_without_a_page_is_empty():
+    """Draining with no page at all yields nothing."""
     assert rm._drain_drag_captures(None) == []
 
 
 def test_drain_caps_at_8_and_still_clears_the_overflow():
+    """Draining keeps the first 8 frames and discards the rest from the stash."""
     page = _FakePage()
     page._drag_captures = [('mid-drag', bytes([i])) for i in range(12)]
 
@@ -227,6 +243,7 @@ def test_drain_twice_yields_nothing_the_second_time():
 # ---------------------------------------------------------------------------
 
 def test_capture_filename_shape():
+    """A mid-drag frame is named <stem>__<suffix>__mid-drag-<n>.png."""
     name = rm._capture_filename('tests/ui/x.py::test_t[chromium]',
                                 'FAILED', 'mid-drag', 1)
     assert name == 'tests-ui-x.py-test_t-chromium__FAILED__mid-drag-1.png'
@@ -246,6 +263,7 @@ def test_capture_filename_reuses_the_capped_safe_stem():
 
 @pytest.mark.parametrize('suffix', ['FAILED', 'SETUP_FAILED'])
 def test_failures_always_embed(suffix):
+    """Failed and setup-failed shots embed in the report whatever the env says."""
     assert rm._should_embed(suffix, {}) is True
     assert rm._should_embed(suffix, {'REPORT_SCREENSHOTS': 'all'}) is True
 
@@ -258,11 +276,13 @@ def test_passed_stays_out_of_the_report_by_default():
 
 @pytest.mark.parametrize('value', ['all', 'ALL', ' all '])
 def test_passed_embeds_when_opted_in(value):
+    """REPORT_SCREENSHOTS=all, in any case or padding, embeds passed shots."""
     assert rm._should_embed('PASSED', {'REPORT_SCREENSHOTS': value}) is True
 
 
 @pytest.mark.parametrize('value', ['on', '1', 'true', 'failures'])
 def test_passed_stays_out_for_other_values(value):
+    """REPORT_SCREENSHOTS values other than all leave passed shots out."""
     assert rm._should_embed('PASSED', {'REPORT_SCREENSHOTS': value}) is False
 
 
@@ -272,15 +292,18 @@ def test_passed_stays_out_for_other_values(value):
 
 @pytest.mark.parametrize('value', ['off', 'OFF', 'Off', '0', 'false', 'no', ' off '])
 def test_kill_switch_off_values(value):
+    """REPORT_SCREENSHOTS=off, in any spelling, disables capture."""
     assert rm._screenshots_disabled({'REPORT_SCREENSHOTS': value}) is True
 
 
 @pytest.mark.parametrize('value', ['', 'on', '1', 'true', 'anything-else'])
 def test_kill_switch_on_values(value):
+    """Any REPORT_SCREENSHOTS value other than an off word keeps capture on."""
     assert rm._screenshots_disabled({'REPORT_SCREENSHOTS': value}) is False
 
 
 def test_kill_switch_defaults_to_on():
+    """With REPORT_SCREENSHOTS unset, capture is on."""
     assert rm._screenshots_disabled({}) is False
 
 
@@ -311,6 +334,7 @@ def _stashed_item(*frames, **item_kwargs):
 
 
 def test_failed_test_files_and_embeds_its_mid_drag_frames(monkeypatch, tmp_path):
+    """A failed drag files its frames and final shot and embeds them in order."""
     monkeypatch.setattr(rm, 'SCREENSHOT_DIR', tmp_path)
     monkeypatch.delenv('REPORT_SCREENSHOTS', raising=False)
     item, page = _stashed_item(b'one', b'two',
@@ -351,6 +375,7 @@ def test_passed_frames_stay_on_disk_only_by_default(monkeypatch, tmp_path):
 
 
 def test_passed_frames_embed_when_the_final_shot_embeds(monkeypatch, tmp_path):
+    """With REPORT_SCREENSHOTS=all, passed frames embed ahead of the final shot."""
     monkeypatch.setattr(rm, 'SCREENSHOT_DIR', tmp_path)
     monkeypatch.setenv('REPORT_SCREENSHOTS', 'all')
     item, _ = _stashed_item(b'one')
@@ -450,6 +475,7 @@ class _FakeConfig:
 
 
 def test_should_clean_in_a_plain_run():
+    """A plain run wipes the screenshot folder at session start."""
     assert rm._should_clean(_FakeConfig(), {}) is True
 
 
@@ -459,10 +485,12 @@ def test_should_not_clean_during_collect_only():
 
 
 def test_should_not_clean_in_xdist_worker():
+    """An xdist worker never wipes the screenshot folder."""
     assert rm._should_clean(_FakeConfig(), {'PYTEST_XDIST_WORKER': 'gw0'}) is False
 
 
 def test_should_not_clean_when_both_guards_trip():
+    """Collect-only inside an xdist worker still does not wipe the folder."""
     env = {'PYTEST_XDIST_WORKER': 'gw1'}
     assert rm._should_clean(_FakeConfig(collect_only=True), env) is False
 
@@ -472,6 +500,7 @@ def test_should_not_clean_when_both_guards_trip():
 # ---------------------------------------------------------------------------
 
 def test_clean_deletes_only_top_level_pngs(tmp_path):
+    """Cleanup removes only top-level .png files, sparing other files and subfolders."""
     (tmp_path / 'a__PASSED.png').write_bytes(b'x')
     (tmp_path / 'b__FAILED.png').write_bytes(b'x')
     (tmp_path / 'notes.txt').write_text('keep me')
@@ -489,4 +518,5 @@ def test_clean_deletes_only_top_level_pngs(tmp_path):
 
 
 def test_clean_missing_dir_is_a_noop(tmp_path):
+    """Cleaning a folder that does not exist removes nothing."""
     assert rm._clean_screenshot_dir(tmp_path / 'never-created') == 0

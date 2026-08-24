@@ -47,6 +47,7 @@ def _shorten(stem: str, keep_head: int, tail: int = 20) -> str:
 # ---------------------------------------------------------------------------
 
 def test_safe_name_matches_the_report_media_sanitizer():
+    """The report's safe name matches report_media's sanitizer at both caps."""
     assert rr._safe_name(NODEID, rr.SAFE_NAME_MAX) == SAFE
     long = 'tests/' + 'x' * 300
     assert len(rr._safe_name(long, rr.SAFE_NAME_MAX)) == 120
@@ -62,11 +63,13 @@ def test_safe_name_matches_the_report_media_sanitizer():
     (f'{SAFE}__SKIPPED__mid-drag-1', 'SKIPPED', 'mid-drag', '1'),
 ])
 def test_parse_screenshot_name(stem, suffix, label, index):
+    """A screenshot stem parses into test, suffix, and an optional frame label."""
     parsed = rr.parse_screenshot_name(stem)
     assert parsed == {'test': SAFE, 'suffix': suffix, 'label': label, 'index': index}
 
 
 def test_parse_screenshot_name_rejects_unlabeled_stems():
+    """A stem without an outcome suffix is not a screenshot name."""
     assert rr.parse_screenshot_name('random-image') is None
     assert rr.parse_screenshot_name(SAFE) is None
 
@@ -81,10 +84,12 @@ def test_parse_screenshot_name_rejects_unlabeled_stems():
     ('some-dir/test-failed-1.png', 'some-dir', 'screenshot', True),
 ])
 def test_parse_artifact_name(relpath, test, kind, nested):
+    """Trace, video, and nested artifact paths parse into test and kind."""
     assert rr.parse_artifact_name(relpath) == {'test': test, 'kind': kind, 'nested': nested}
 
 
 def test_parse_artifact_name_rejects_other_files():
+    """Files that are not traces, videos, or screenshots do not parse."""
     assert rr.parse_artifact_name('notes.txt') is None
     assert rr.parse_artifact_name('plain.zip') is None
 
@@ -102,6 +107,7 @@ def _safes(*nodeids: str, cap: int = rr.SAFE_NAME_MAX) -> dict[str, str]:
 
 
 def test_match_exact():
+    """An exact safe-name match resolves straight to its node id."""
     assert rr.match_test(SAFE, _safes(NODEID, TWIN_A)) == NODEID
 
 
@@ -118,6 +124,7 @@ def test_match_digest_shortened_screenshot_tells_twins_apart():
 
 
 def test_match_digest_shortened_mid_drag_frame():
+    """A digest-shortened mid-drag frame still resolves to its test."""
     safes = _safes(NODEID)
     full = f'{SAFE}__PASSED__mid-drag-1'
     parsed = rr.parse_screenshot_name(_shorten(full, 40))
@@ -129,6 +136,7 @@ def test_match_digest_shortened_mid_drag_frame():
 
 
 def test_match_digest_shortened_trace():
+    """A digest-shortened trace name resolves to the right twin."""
     safes = _safes(TWIN_A, TWIN_B, cap=rr.TRACE_NAME_MAX)
     full = f'{rr._safe_name(TWIN_B, 150)}-trace'
     parsed = rr.parse_artifact_name(_shorten(full, 30) + '.zip')
@@ -144,6 +152,7 @@ def test_match_stale_digest_falls_back_to_head_and_tail():
 
 
 def test_match_longest_common_prefix():
+    """A truncated or extended stem resolves by longest common prefix."""
     safes = _safes(NODEID, TWIN_A)
     assert rr.match_test(SAFE[:40], safes) == NODEID
     assert rr.match_test(f'{SAFE}-extra-suffix', safes) == NODEID
@@ -156,6 +165,7 @@ def test_match_slugified_folder_name():
 
 
 def test_match_none_when_nothing_is_related():
+    """An unrelated stem, or an empty candidate set, matches nothing."""
     assert rr.match_test('zzz-unrelated', _safes(NODEID, TWIN_A)) is None
     assert rr.match_test('anything', {}) is None
 
@@ -195,6 +205,7 @@ def _write_trace_zip(path: Path, events: list[dict] | None = None) -> Path:
 
 
 def test_digest_trace_reads_a_synthetic_zip(tmp_path):
+    """The trace digest yields the URL, errors, console, and the failing action window."""
     digest = rr.digest_trace(_write_trace_zip(tmp_path / 't-trace.zip'))
     assert digest['files'] == 3
     assert digest['url'] == 'https://app.example/views'
@@ -212,6 +223,7 @@ def test_digest_trace_reads_a_synthetic_zip(tmp_path):
 
 
 def test_digest_trace_without_a_failure_keeps_the_last_actions(tmp_path):
+    """A trace with no failure digests to its last actions and no errors."""
     events = [e for e in _trace_events() if e.get('callId') != 'call@99']
     digest = rr.digest_trace(_write_trace_zip(tmp_path / 't-trace.zip', events))
     assert digest['errors'] == []
@@ -220,6 +232,7 @@ def test_digest_trace_without_a_failure_keeps_the_last_actions(tmp_path):
 
 
 def test_digest_trace_tolerates_a_bad_zip(tmp_path):
+    """A corrupt or missing trace digests to an error line, not a crash."""
     bad = tmp_path / 'bad-trace.zip'
     bad.write_bytes(b'not a zip')
     digest = rr.digest_trace(bad)
@@ -253,6 +266,7 @@ def _row(result: str, log: str = '', duration: str = '00:00:05') -> dict:
 
 
 def test_load_report_results_reads_the_jsonblob(tmp_path):
+    """Outcomes, durations, and logs are read from pytest-html's data-jsonblob."""
     (tmp_path / 'report.html').write_text(_report_html({
         NODEID: [_row('Failed', FAILED_LOG, '00:01:41')],
         TWIN_A: [_row('Passed')],
@@ -267,6 +281,7 @@ def test_load_report_results_reads_the_jsonblob(tmp_path):
 
 
 def test_load_report_results_tolerates_missing_or_odd_report(tmp_path):
+    """A missing, blob-less, or broken report.html loads as no results."""
     assert rr.load_report_results(tmp_path) == {}
     (tmp_path / 'report.html').write_text('<html>no blob</html>', encoding='utf-8')
     assert rr.load_report_results(tmp_path) == {}
@@ -275,6 +290,7 @@ def test_load_report_results_tolerates_missing_or_odd_report(tmp_path):
 
 
 def test_load_results_json_accepts_both_shapes(tmp_path):
+    """last_run_results.json loads from both the list shape and the dict shape."""
     (tmp_path / 'last_run_results.json').write_text(json.dumps({
         'results': [{'nodeid': NODEID, 'outcome': 'failed'},
                     {'nodeid': TWIN_A, 'outcome': 'passed'},
@@ -288,6 +304,7 @@ def test_load_results_json_accepts_both_shapes(tmp_path):
 
 
 def test_load_summary_tolerates_missing_file(tmp_path):
+    """A run without summary.json loads an empty summary."""
     assert rr.load_summary(tmp_path) == {}
 
 
@@ -330,6 +347,7 @@ def _make_run(tmp_path: Path, *, report: bool = True, results_json: bool = False
 
 
 def test_collect_attaches_every_file_to_its_test(tmp_path):
+    """Every screenshot, frame, trace, and video attaches to its test."""
     run = _make_run(tmp_path)
     tests, unattached = rr.collect_tests(run)
     assert unattached == []
@@ -351,6 +369,7 @@ def test_collect_attaches_every_file_to_its_test(tmp_path):
 
 
 def test_collect_falls_back_to_results_json(tmp_path):
+    """Without report.html, outcomes come from last_run_results.json."""
     run = _make_run(tmp_path, report=False, results_json=True)
     tests, _ = rr.collect_tests(run)
     assert {n: t.outcome for n, t in tests.items()} == {
@@ -371,6 +390,7 @@ def test_collect_derives_tests_from_file_names_alone(tmp_path):
 
 
 def test_collect_keeps_the_worse_outcome_and_lists_strays(tmp_path):
+    """A kept trace outranks a passed row, and unmatched files are listed."""
     run = _make_run(tmp_path)
     # report.html says passed, but a kept trace says the test failed.
     _write_trace_zip(run / 'traces' / f'{rr._safe_name(TWIN_A, 150)}-trace.zip')
@@ -382,6 +402,7 @@ def test_collect_keeps_the_worse_outcome_and_lists_strays(tmp_path):
 
 
 def test_build_run_report_orders_sections_and_links_evidence(tmp_path):
+    """run.html orders failures, advisories, passed, skipped and links the evidence."""
     run = _make_run(tmp_path)
     page = rr.build_run_report(run)
     # Failures first, then advisories, passed, skipped.
@@ -416,6 +437,7 @@ def test_build_run_report_orders_sections_and_links_evidence(tmp_path):
 
 
 def test_build_run_report_survives_an_empty_folder(tmp_path):
+    """An empty run folder still renders a page with zero counts."""
     run = tmp_path / '2026-08-24_10-00-00__all'
     run.mkdir()
     page = rr.build_run_report(run)
@@ -428,6 +450,7 @@ def test_build_run_report_survives_an_empty_folder(tmp_path):
 
 
 def test_build_run_report_escapes_test_names(tmp_path):
+    """Markup in a test name is escaped, never rendered."""
     run = _make_run(tmp_path)
     (run / 'report.html').write_text(_report_html({
         'tests/x.py::test_a[<b>bold</b>]': [_row('Failed', 'E   assert 1 == 2')]}),
@@ -438,6 +461,7 @@ def test_build_run_report_escapes_test_names(tmp_path):
 
 
 def test_failure_card_without_trace_or_video_says_so(tmp_path):
+    """A failure with no trace or video says so instead of linking nothing."""
     run = _make_run(tmp_path)
     (run / 'traces' / f'{SAFE}-trace.zip').unlink()
     (run / 'traces' / f'{SAFE}-video.webm').unlink()
@@ -448,6 +472,7 @@ def test_failure_card_without_trace_or_video_says_so(tmp_path):
 
 
 def test_headline_takes_the_first_error_block():
+    """The headline is the first E-line block of the log, or empty."""
     assert rr._headline(FAILED_LOG).splitlines()[0] == (
         'playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.')
     assert rr._headline('no error lines') == ''
@@ -458,6 +483,7 @@ def test_headline_takes_the_first_error_block():
 # ---------------------------------------------------------------------------
 
 def test_readable_title_takes_the_docstring_first_line():
+    """The readable title is the docstring's first non-blank line."""
     doc = '\n    Verify the view opens.\n\n    Longer text nobody needs in a list.\n    '
     assert rr.readable_title(NODEID, doc) == 'Verify the view opens.'
 
@@ -469,11 +495,13 @@ def test_readable_title_takes_the_docstring_first_line():
     ('tests/ui/x.py::testSomething', 'Something'),
 ])
 def test_readable_title_falls_back_to_the_function_name(nodeid, title):
+    """Without a docstring, the title is the function name made readable."""
     assert rr.readable_title(nodeid) == title
     assert rr.readable_title(nodeid, '   \n\n') == title  # a blank docstring is no title
 
 
 def test_module_of_is_the_path_under_tests():
+    """The module label is the file path under tests/, slashes normalized."""
     assert rr.module_of(NODEID) == 'ui/views/test_views_basic.py'
     assert rr.module_of('tests\\ui\\x.py::test_a') == 'ui/x.py'
     assert rr.module_of('other/y.py::test_b') == 'other/y.py'
@@ -481,12 +509,14 @@ def test_module_of_is_the_path_under_tests():
 
 
 def test_format_seconds():
+    """Durations render as seconds under a minute and as min/s above."""
     assert rr.format_seconds(12.34) == '12.3 s'
     assert rr.format_seconds(0) == '0.0 s'
     assert rr.format_seconds(101.8) == '1 min 42 s'
 
 
 def test_compute_deltas_labels_every_change():
+    """Deltas label new failures, fixes, still-failing, and new tests only."""
     previous = {'a': 'passed', 'b': 'failed', 'c': 'failed', 'd': 'skipped',
                 'e': 'passed', 'f': 'error', 'h': 'skipped'}
     current = {'a': 'failed', 'b': 'passed', 'c': 'error', 'd': 'failed',
@@ -497,11 +527,13 @@ def test_compute_deltas_labels_every_change():
 
 
 def test_compute_deltas_without_a_previous_run():
+    """With no previous run, or no current tests, there are no deltas."""
     assert rr.compute_deltas({'a': 'failed'}, None) == {}
     assert rr.compute_deltas({}, {'a': 'failed'}) == {}
 
 
 def test_find_previous_run_wants_the_same_slug_and_an_earlier_start(tmp_path):
+    """The previous run is the latest earlier folder with the same slug."""
     for name in ('2026-08-01_10-00-00__views', '2026-08-02_10-00-00__views',
                  '2026-08-03_10-00-00__views', '2026-08-02_12-00-00__media', 'notes'):
         (tmp_path / name).mkdir()
@@ -515,6 +547,7 @@ def test_find_previous_run_wants_the_same_slug_and_an_earlier_start(tmp_path):
 
 
 def test_load_previous_outcomes_prefers_the_summary_records(tmp_path):
+    """Previous outcomes come from summary.json, else report.html, else nothing."""
     prev = tmp_path / '2026-08-01_10-00-00__views'
     prev.mkdir()
     (prev / 'summary.json').write_text(json.dumps({'tests': [
@@ -529,6 +562,7 @@ def test_load_previous_outcomes_prefers_the_summary_records(tmp_path):
 
 
 def test_summary_tests_tolerates_odd_shapes():
+    """Only dict rows with a node id survive reading the summary's tests."""
     assert rr.summary_tests({}) == []
     assert rr.summary_tests({'tests': 'nope'}) == []
     assert rr.summary_tests({'tests': [{'nodeid': 'a'}, {'x': 1}, 'str', {'nodeid': ''}]}) == \
@@ -560,6 +594,7 @@ def _add_summary_tests(run: Path, rows: list[dict], provenance: dict | None = No
 
 
 def test_build_run_report_shows_titles_facts_and_change_chips(tmp_path):
+    """run.html shows titles, cases, provenance, delta chips, and the slowest list."""
     run = _make_run(tmp_path)
     _add_summary_tests(run, _summary_test_rows(), {
         'env': 'qa', 'base_url_host': 'app.example.com', 'git_commit': 'abc1234',
@@ -603,6 +638,7 @@ def test_build_run_report_shows_titles_facts_and_change_chips(tmp_path):
 
 
 def test_build_run_report_without_a_previous_run_has_no_chips(tmp_path):
+    """With no earlier run of the target, the page shows no delta chips."""
     run = _make_run(tmp_path)
     _add_summary_tests(run, _summary_test_rows())
     page = rr.build_run_report(run)
@@ -625,6 +661,7 @@ def test_build_run_report_falls_back_on_an_older_archive(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_cli_writes_run_html(tmp_path, capsys):
+    """The CLI writes run.html into the run folder and prints its path."""
     run = _make_run(tmp_path)
     assert rr.main([str(run)]) == 0
     assert (run / 'run.html').is_file()
@@ -632,6 +669,7 @@ def test_cli_writes_run_html(tmp_path, capsys):
 
 
 def test_cli_latest_picks_the_newest_run(tmp_path, monkeypatch):
+    """'latest' on the CLI builds the report for the newest run only."""
     from plugins import run_archive as ra
     runs = tmp_path / 'runs'
     for name in ('2026-08-01_10-00-00__a', '2026-08-03_10-00-00__c', 'index.html-not-a-run'):
@@ -643,6 +681,7 @@ def test_cli_latest_picks_the_newest_run(tmp_path, monkeypatch):
 
 
 def test_cli_rejects_missing_folder_and_bad_usage(tmp_path, capsys):
+    """The CLI exits 1 on a missing folder and 2 on bad arguments."""
     assert rr.main([str(tmp_path / 'nope')]) == 1
     assert 'No run folder' in capsys.readouterr().err
     assert rr.main([]) == 2

@@ -25,6 +25,7 @@ def _write_mapping(tmp_path, mappings):
 
 
 def test_reviewed_lookup_filters_proposals(tmp_path):
+    """Only rows with reviewed set to exactly True reach the reviewed lookup."""
     p = _write_mapping(tmp_path, {
         'tests/a.py::test_one': {'case_key': 'K1', 'reviewed': True},
         'tests/a.py::test_two': {'case_key': 'K2', 'reviewed': False},
@@ -37,6 +38,7 @@ def test_reviewed_lookup_filters_proposals(tmp_path):
 
 
 def test_orphaned_nodeids_catches_renames(tmp_path):
+    """A mapped test whose function or file is gone is reported as an orphan."""
     tdir = tmp_path / 'tests'
     tdir.mkdir()
     (tdir / 'a.py').write_text('def test_alive():\n    pass\n', encoding='utf-8')
@@ -50,6 +52,7 @@ def test_orphaned_nodeids_catches_renames(tmp_path):
 
 
 def test_shared_across_functions_ignores_params_of_one_function(tmp_path):
+    """A case key shared by two functions is flagged, but not one shared across params."""
     mappings = {
         'tests/a.py::test_x[chrome]': {'case_key': 'SHARED_OK'},
         'tests/a.py::test_x[firefox]': {'case_key': 'SHARED_OK'},   # same function - fine

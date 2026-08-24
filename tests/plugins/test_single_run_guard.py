@@ -77,10 +77,12 @@ def _decide(existing, environ=None, collect_only=False, pid_alive=_alive,
 # ---------------------------------------------------------------------------
 
 def test_free_lock_is_acquired():
+    """With no lock on disk, the run takes the lock."""
     assert _decide(None) == guard.ACQUIRE
 
 
 def test_live_rival_blocks():
+    """A lock held by a live rival process blocks the run."""
     assert _decide(_lock()) == guard.BLOCK
 
 
@@ -91,6 +93,7 @@ def test_stale_lock_is_reclaimed():
 
 
 def test_dead_holder_is_reclaimed():
+    """A lock whose holder is dead is reclaimed."""
     assert _decide(_lock(), pid_alive=_dead) == guard.ACQUIRE
 
 
@@ -133,11 +136,13 @@ def test_xdist_worker_skips_even_when_blocked():
 
 @pytest.mark.parametrize('value', ['off', 'OFF', 'Off', '0', 'false', 'no', ' off '])
 def test_kill_switch_off_values_skip_even_when_blocked(value):
+    """RUN_GUARD=off, in any spelling, stands the guard down even against a rival."""
     assert _decide(_lock(), environ={'RUN_GUARD': value}) == guard.SKIP
 
 
 @pytest.mark.parametrize('value', ['', 'on', '1', 'true', 'anything-else'])
 def test_kill_switch_on_values_leave_the_guard_active(value):
+    """Any RUN_GUARD value other than an off word leaves the guard active."""
     assert _decide(None, environ={'RUN_GUARD': value}) == guard.ACQUIRE
     assert _decide(_lock(), environ={'RUN_GUARD': value}) == guard.BLOCK
 
@@ -167,6 +172,7 @@ def test_real_staleness_check_is_the_default():
     ({'ENV': 'unknown-box'}, 'unknown-box'),  # unknown names pass through
 ])
 def test_lock_env_lands_on_run_locks_names(environ, expected):
+    """ENV aliases collapse to run_lock's env names; unknown names pass through."""
     assert guard._lock_env(environ) == expected
 
 
@@ -175,6 +181,7 @@ def test_lock_env_lands_on_run_locks_names(environ, expected):
 # ---------------------------------------------------------------------------
 
 def test_blocked_message_names_the_holder_and_the_way_out():
+    """The blocked message names the holder, its target, and how to release."""
     lock = _lock(target='-m smoke')
     msg = guard._blocked_message('qa', lock)
     assert 'Another test run is already active' in msg
@@ -187,12 +194,14 @@ def test_blocked_message_names_the_holder_and_the_way_out():
 
 
 def test_blocked_message_falls_back_to_run_type_for_the_target():
+    """Without a recorded target, the message shows the run type instead."""
     msg = guard._blocked_message('stage', _lock())
     assert 'Target:      manual' in msg
     assert '--env stage --force' in msg
 
 
 def test_blocked_message_survives_an_empty_lock():
+    """An empty lock still yields a blocked message, without a blank Target line."""
     msg = guard._blocked_message('qa', {})
     assert 'Another test run is already active' in msg
     assert 'Target:' not in msg  # nothing recorded, no empty line shown
@@ -253,6 +262,7 @@ def _lock_file(lock_dir: Path) -> Path:
 
 
 def test_sessionstart_takes_the_lock_when_free(lock_dir):
+    """Session start writes a lock with this pid, run type, and target."""
     config = _FakeConfig()
     guard.pytest_sessionstart(_session(config))
     written = json.loads(_lock_file(lock_dir).read_text())
@@ -263,6 +273,7 @@ def test_sessionstart_takes_the_lock_when_free(lock_dir):
 
 
 def test_unconfigure_releases_the_lock_it_took(lock_dir):
+    """Session end releases the lock this run took."""
     config = _FakeConfig()
     guard.pytest_sessionstart(_session(config))
     assert _lock_file(lock_dir).exists()
@@ -281,12 +292,14 @@ def test_unconfigure_leaves_a_rival_relock_alone(lock_dir):
 
 
 def test_unconfigure_without_an_acquisition_is_a_no_op(lock_dir):
+    """A run that never took the lock leaves the existing lock alone at exit."""
     run_lock._write_lock('qa', _lock())
     guard.pytest_unconfigure(_FakeConfig())
     assert _lock_file(lock_dir).exists()
 
 
 def test_sessionstart_blocks_on_a_live_rival(lock_dir, monkeypatch):
+    """Session start exits on a live rival and leaves its lock untouched."""
     monkeypatch.setattr(guard, '_pid_alive', _alive)
     run_lock._write_lock('qa', _lock(target='tests/ui/views'))
     config = _FakeConfig()
@@ -321,6 +334,7 @@ def test_a_blocked_run_mutes_the_html_report(lock_dir, monkeypatch):
 
 
 def test_sessionstart_reclaims_a_stale_lock(lock_dir, monkeypatch):
+    """Session start takes over a lock past the staleness timeout."""
     monkeypatch.setattr(guard, '_pid_alive', _alive)
     run_lock._write_lock('qa', _lock(age_hours=100))
     guard.pytest_sessionstart(_session())
@@ -349,6 +363,7 @@ def test_sessionstart_honors_the_parent_marker(lock_dir, monkeypatch):
 
 
 def test_sessionstart_skips_collect_only_runs(lock_dir, monkeypatch):
+    """A collect-only session neither blocks nor touches the rival's lock."""
     monkeypatch.setattr(guard, '_pid_alive', _alive)
     run_lock._write_lock('qa', _lock())
     guard.pytest_sessionstart(_session(_FakeConfig(collect_only=True)))
@@ -360,6 +375,7 @@ def test_sessionstart_skips_collect_only_runs(lock_dir, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_unreadable_lock_degrades_to_a_warning(lock_dir, monkeypatch, caplog):
+    """An unreadable lock file warns and lets the run proceed unguarded."""
     def _boom(env):
         raise PermissionError('lock file is locked by an antivirus scan')
     monkeypatch.setattr(guard, '_read_lock', _boom)
@@ -370,6 +386,7 @@ def test_unreadable_lock_degrades_to_a_warning(lock_dir, monkeypatch, caplog):
 
 
 def test_unwritable_lock_degrades_to_a_warning(lock_dir, monkeypatch, caplog):
+    """A lock that cannot be written warns and lets the run proceed unguarded."""
     def _boom(env, info):
         raise OSError('read-only logs directory')
     monkeypatch.setattr(guard, '_write_lock', _boom)
@@ -381,6 +398,7 @@ def test_unwritable_lock_degrades_to_a_warning(lock_dir, monkeypatch, caplog):
 
 
 def test_release_failure_degrades_to_a_warning(lock_dir, monkeypatch, caplog):
+    """A release failure at exit warns instead of raising."""
     config = _FakeConfig()
     guard.pytest_sessionstart(_session(config))
 
@@ -440,6 +458,7 @@ class TestCrossEnvRival:
             lock_envs=['stage'], pid_alive=pid_alive, is_stale=is_stale)
 
     def test_live_foreign_holder_is_a_rival(self):
+        """A live lock in another env is a rival, reported with its env and pid."""
         found = self._rival(_lock(pid=RIVAL_PID))
         assert found is not None
         env, lock = found
@@ -447,15 +466,19 @@ class TestCrossEnvRival:
         assert lock['pid'] == RIVAL_PID
 
     def test_stale_foreign_lock_is_not_a_rival(self):
+        """A stale foreign lock is not a rival."""
         assert self._rival(_lock(pid=RIVAL_PID), is_stale=_stale) is None
 
     def test_dead_foreign_holder_is_not_a_rival(self):
+        """A foreign lock whose holder is dead is not a rival."""
         assert self._rival(_lock(pid=RIVAL_PID), pid_alive=_dead) is None
 
     def test_parent_held_foreign_lock_is_not_a_rival(self):
+        """A foreign lock held by the parent process is not a rival."""
         assert self._rival(_lock(pid=PARENT_PID)) is None
 
     def test_no_foreign_locks_scans_clean(self):
+        """With no foreign locks, the cross-env scan finds no rival."""
         assert guard.cross_env_rival(
             'qa', environ={}, own_pid=OWN_PID, parent_pid=PARENT_PID,
             read_lock=lambda env: None, lock_envs=[]) is None

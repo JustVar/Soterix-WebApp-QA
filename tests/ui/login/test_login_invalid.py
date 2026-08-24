@@ -5,6 +5,7 @@ from tests.shared.pages.login_page import LoginPage
 
 @pytest.mark.ui
 def test_empty_fields(page, base_url):
+    """Submitting an empty username and password stays on the login page."""
     lp = LoginPage(page, base_url)
     lp.login("", "")
     assert not lp.is_logged_in()
@@ -13,6 +14,7 @@ def test_empty_fields(page, base_url):
 
 @pytest.mark.ui
 def test_empty_username(page, base_url):
+    """Submitting a password with no username stays on the login page."""
     lp = LoginPage(page, base_url)
     lp.login("", "somepassword")
     assert not lp.is_logged_in()
@@ -21,6 +23,7 @@ def test_empty_username(page, base_url):
 
 @pytest.mark.ui
 def test_empty_password(page, base_url):
+    """Submitting a username with no password stays on the login page."""
     lp = LoginPage(page, base_url)
     lp.login("user@example.com", "")
     assert not lp.is_logged_in()
@@ -29,6 +32,7 @@ def test_empty_password(page, base_url):
 
 @pytest.mark.ui
 def test_wrong_credentials(page, base_url):
+    """Wrong credentials show an error or keep the user on the login page."""
     lp = LoginPage(page, base_url)
     lp.login("invalid@example.com", "wrongpass")
     # Key assertion: user should not be logged in. Accept either an error
@@ -39,6 +43,7 @@ def test_wrong_credentials(page, base_url):
 
 @pytest.mark.ui
 def test_invalid_email_format(page, base_url):
+    """A malformed email address is rejected and stays on the login page."""
     lp = LoginPage(page, base_url)
     lp.login("not-an-email", "password123")
     assert not lp.is_logged_in()
