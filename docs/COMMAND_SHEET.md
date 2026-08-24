@@ -76,7 +76,7 @@ venv\Scripts\python.exe run.py test "tests/ui/views/test_views_basic.py::TestVie
 venv\Scripts\python.exe run.py rerun latest                         # the failed tests of the newest archived run
 venv\Scripts\python.exe run.py open latest                          # that run's run.html in your browser
 venv\Scripts\python.exe run.py list                                 # the last 10 archived runs
-venv\Scripts\python.exe run.py health                               # pass rates per target and module, tests to watch (reports/runs/health.html)
+venv\Scripts\python.exe run.py health                               # pass rates per product and module, tests to watch (reports/runs/health.html)
 venv\Scripts\python.exe run.py module views -- --headed -s          # anything after -- goes to pytest
 venv\Scripts\python.exe run.py smoke --check                        # confirm the environment answers first
 ```
@@ -122,6 +122,7 @@ a message that names the run that holds the lock.
 |-------|------|
 | `reports/runs/<start>__<target>/run.html` | Start here for a run. A one-sentence verdict, then the failures, grouped when they share an error, each with its error, call log, screenshots, video, and the show-trace command. Then the notes (the advisory lines), the slowest 5, passed, and skipped. Every test carries a strip of its last 20 outcomes and a label for what changed since the previous run |
 | `reports/runs/index.html` | One row per run, newest first, with its product, counts, outcome (Passed, Failed, Interrupted, Error, or No tests, the exit code in the tooltip), notes count, and three links: `Run Report` (run.html), `Raw pytest-html` (report.html), `Folder`. The filter box keeps the rows that hold the typed text |
+| `reports/runs/health.html` | Test Health, built by `run.py health`. One tile per product: runs, pass rate, tests to watch, modules, last run. Then one row per module (the folder under `tests/`: Views, Admin, Tools) with its runs, pass rate over test outcomes, passed and failed counts, mean full-module run, notes, and newest run as a date with its outcome. Every run of a module counts toward it, a run of 1 test included. `Show runs` under a module lists its runs: the date, what ran (whole module, a marker, or 1 test by its title), and the outcome. Then the tests to watch, each with its last 20 outcomes |
 | `reports/runs/<start>__<target>/` | That run's report, screenshots, traces, videos, results JSON, and `advisories.txt` |
 | `reports/report.html` | The latest run's report (failures show their screenshot and a trace link) |
 | `reports/screenshots/<test>__PASSED.png` | The latest run's labeled end-state screenshots; drags also keep a `__mid-drag-1.png` frame |

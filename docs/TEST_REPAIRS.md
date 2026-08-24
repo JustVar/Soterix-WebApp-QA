@@ -132,9 +132,10 @@ in run output (its premise is wrong):
 
 - `tools/explore_app.py` - probe harness (REPL or script, `snap()` in
   scope). Use it for rebuilds instead of guessing selectors.
-- `run.py health` (`tools/health_summary.py`) - a verdict line per
-  target, pass rates per target and module, and the tests to watch
-  (last-20 strip, flaky rate, last failure) over the archived runs
+- `run.py health` (`tools/health_summary.py`) - product tiles, a verdict
+  line and a row per module (the folder under `tests/`, every run of it
+  pooled, runs of 1 test included), and the tests to watch (last-20
+  strip, flaky rate, last failure) over the archived runs
   (`reports/runs/health.html`). Run folders carry `log/` (`run.log`
   with every test's output, a file per failed test) and per-test
   records in `summary.json` (title, QA Touch case, timing, error line).

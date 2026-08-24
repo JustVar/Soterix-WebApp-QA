@@ -754,6 +754,18 @@ def test_friendly_time(text, expected):
     assert rr.friendly_time(text) == expected
 
 
+@pytest.mark.parametrize(('text', 'with_year', 'expected'), [
+    ('2026-08-24T14:27:25', False, 'Aug 24'),
+    ('2026-08-24_14-27-25', True, 'Aug 24, 2026'),
+    ('2026-01-05T00:05:00', True, 'Jan 5, 2026'),
+    ('yesterday', True, 'yesterday'),
+    (None, False, '-'),
+])
+def test_friendly_date(text, with_year, expected):
+    """Start times read as 'Aug 24', with the year on request; anything else passes through."""
+    assert rr.friendly_date(text, with_year) == expected
+
+
 def test_run_started_prefers_the_summary(tmp_path):
     """The start time comes from summary.json, else from the folder stamp."""
     run = tmp_path / '2026-08-24_14-27-25__views'

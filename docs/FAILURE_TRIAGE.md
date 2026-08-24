@@ -74,17 +74,20 @@ screenshot cannot show, it is there.
 
 `python run.py health` builds `reports/runs/health.html` from the archived
 summaries. It opens with one tile per product: runs in the window, pass
-rate, tests to watch, and the last run, linked. The targets follow,
-grouped under their product. Each group opens with one verdict line per
-target ("Views: 96% pass rate over 20 runs, 1 test to watch."), then a
-table with the pass rate, mean duration, notes count (the advisory
-lines, linked to the newest run's), and the newest run with its outcome
-in words. Then pass rate and mean duration per module, and a "Tests to
-watch" table: every test that failed at least once in its last 20
-results, with its strip, its flaky rate, and the date of its last
-failure, sorted by flaky rate. Check it before you call a failure new.
-A run that recorded no product is named by its targets, so every line
-carries one.
+rate, tests to watch, modules, and the last run, linked. The modules
+follow, grouped under their product. A module is the folder under
+`tests/` (Views, Admin, Tools), and every run that touched it counts
+toward it, a run of 1 test included. Each group opens with one verdict
+line per module ("Views: 96% pass rate over 20 runs, 1 test to watch."),
+then a table with the pass rate over test outcomes, the mean duration of
+a full-module run, the notes count (the advisory lines, linked to the
+newest run's), and the newest run as a date with its outcome in words.
+"Show runs" under a module lists its runs: the date, what ran, and the
+outcome. Then a "Tests to watch" table: every test that failed at least
+once in its last 20 results, with its strip, its flaky rate, and the
+date of its last failure, sorted by flaky rate. Check it before you call
+a failure new. A run that recorded no product is named by its targets,
+so every line carries one.
 
 ## View a trace in the GUI
 

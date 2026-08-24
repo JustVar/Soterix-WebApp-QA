@@ -324,6 +324,17 @@ def friendly_time(text: str | None) -> str:
     return f'{_MONTHS[dt.month - 1]} {dt.day}, {hour}:{dt.minute:02d} {"AM" if dt.hour < 12 else "PM"}'
 
 
+def friendly_date(text: str | None, with_year: bool = False) -> str:
+    """Aug 24, or Aug 24, 2026 with the year: the day alone, for a span of
+    runs ("Aug 21 to Aug 24, 2026"). The raw text stands in when it does
+    not parse."""
+    dt = parse_started(text)
+    if dt is None:
+        return str(text or '-')
+    day = f'{_MONTHS[dt.month - 1]} {dt.day}'
+    return f'{day}, {dt.year}' if with_year else day
+
+
 def run_started(run_dir: Path, summary: Mapping | None = None) -> str:
     """When the run started: summary.json's value, else the folder stamp."""
     started = (summary or {}).get('started')

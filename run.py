@@ -7,8 +7,8 @@
     python run.py rerun latest                # the failed tests of the newest archived run
     python run.py open latest                 # that run's run.html in the browser
     python run.py list                        # the last 10 archived runs
-    python run.py health                      # pass rates per target and module, tests to watch
-                                              # over the newest 20 runs of each target (or: health 50)
+    python run.py health                      # pass rates per product and module, tests to watch
+                                              # over the newest 20 runs of each module (or: health 50)
 
 Anything after `--` goes to pytest unchanged:
 
@@ -165,7 +165,7 @@ def _health(last: str | None) -> int:
     """Aggregate the archived runs into reports/runs/health.html."""
     from tools.health_summary import main as health_main
     if last is not None and not last.isdigit():
-        sys.exit(f'health takes a number of runs per target, not {last!r}.')
+        sys.exit(f'health takes a number of runs per module, not {last!r}.')
     return health_main(['--last', last] if last else [])
 
 
@@ -181,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('verb', choices=['smoke', 'module', 'test', 'rerun', 'open', 'list', 'health'])
     parser.add_argument('target', nargs='?',
                         help='module name, test node id or path, a run folder (default latest), '
-                             'or for health the runs per target (default 20)')
+                             'or for health the runs per module (default 20)')
     parser.add_argument('--check', action='store_true',
                         help='run tools/pre_run_check.py against the target environment first')
     args = parser.parse_args(argv)
