@@ -562,6 +562,8 @@ def record_phase(state: _RunState, report: Any, doc: str | None = None,
         'stdout': phase_capture(report, 'stdout'),
         'stderr': phase_capture(report, 'stderr'),
         'error': (getattr(report, 'longreprtext', '') or '') if report.outcome == 'failed' else '',
+        # a skip's reason is the phase's whole story - keep it beside the output
+        'skip': (getattr(report, 'longreprtext', '') or '') if report.outcome == 'skipped' else '',
     })
 
 
@@ -575,7 +577,7 @@ def format_test_log(rec: Mapping[str, Any], phases: list[dict]) -> str:
         lines.append(f"=== {phase.get('phase')}: {phase.get('outcome')} "
                      f"({float(phase.get('duration') or 0.0):.2f} s) ===")
         wrote = False
-        for label in ('stdout', 'stderr', 'error'):
+        for label in ('stdout', 'stderr', 'error', 'skip'):
             text = str(phase.get(label) or '')
             if text.strip():
                 lines.append(f'--- {label} ---')

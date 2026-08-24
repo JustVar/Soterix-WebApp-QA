@@ -210,6 +210,16 @@ manually. Nothing below runs unless you opt in. Treat it as in development.
 
 ## Adding a test
 
+- **First line of every test is its title.** The run report (`run.html`)
+  shows the docstring's first line as the readable test name and the
+  QA Touch case title beneath it, with the node id smaller. Write one
+  sentence that says what the test proves ("Verify a saved view can be
+  dragged to an empty tile"), then map the node id in
+  config/qatouch_case_mapping.json. Never rename test functions for
+  readability: the node id is the join key for the mapping, the archive
+  history, and `run.py rerun`. The checker flags a test without a
+  docstring.
+
 1. Create the test file in `tests/ui/{module}/`.
 2. Add the relevant markers from `pytest.ini`.
 3. Use existing page objects, or create new ones in `tests/shared/pages/`.

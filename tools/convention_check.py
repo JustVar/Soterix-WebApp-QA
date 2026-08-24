@@ -85,6 +85,21 @@ def inside_triple_quote(lines: list[str], idx: int) -> bool:
     return opened % 2 == 1
 
 
+def test_has_title(lines: list[str], idx: int) -> bool:
+    """Whether the def at idx is followed by a docstring (the signature may
+    span lines; the first statement after the closing ':' must open a string)."""
+    j = idx
+    while j < len(lines) and not lines[j].rstrip().endswith(':'):
+        j += 1
+    j += 1
+    while j < len(lines) and not lines[j].strip():
+        j += 1
+    if j >= len(lines):
+        return False
+    first = lines[j].strip()
+    return first.startswith(('"', "'", 'r"', "r'"))
+
+
 def check_line(path: str, lines: list[str], idx: int) -> list[dict]:
     """Return findings for one line (0-based idx) of a file."""
     line = lines[idx]
@@ -123,6 +138,13 @@ def check_line(path: str, lines: list[str], idx: int) -> list[dict]:
                    "src basename - its alt text is empty or wrong on this "
                    "app (measured 08/24/2026) - and says so in a why-comment "
                    "(CONVENTIONS.md > Locators).",
+        })
+    if TEST_DEF_RE.match(line) and not test_has_title(lines, idx):
+        findings.append({
+            "sev": "MEDIUM", "rule": "test-without-title",
+            "msg": "no docstring: the run report shows a test's docstring first "
+                   "line as its readable title. Add one sentence that says what "
+                   "the test proves (CONVENTIONS.md > Adding a test).",
         })
     if TENANT_NAME_RE.search(line):
         findings.append({
