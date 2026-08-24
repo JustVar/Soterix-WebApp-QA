@@ -1,5 +1,7 @@
 # Soterix WebApp QA
 
+**Start here:** [docs/COMMAND_SHEET.md](docs/COMMAND_SHEET.md) - every command to install, run, and read results, on one page.
+
 End-to-end UI test suite for **NexaiQ-Core** (Soterix's cloud video platform).
 The repo was renamed from `playwright-soterix-qa` on 2026-08-07; the local
 folder name may still be the old one.
@@ -42,7 +44,7 @@ Copy the env template and fill in the automation credentials:
 
 ```powershell
 copy .env.template .env
-# edit .env: set AUTO_USER and AUTO_PASSWORD - that's all you need to run tests
+# edit .env: set QA_USER and QA_PASSWORD - that's all you need to run tests
 ```
 
 ## Environment Config
@@ -55,7 +57,7 @@ Only these are needed to run tests:
 |---|---|---|
 | `ENV` | yes | `qa` \| `stage` \| `prod` - selects `config/env/{name}.py` |
 | `APP_TYPE` | no | `customer` (default) \| `partner` - appends `_pat` to module path |
-| `AUTO_USER` / `AUTO_PASSWORD` | yes | Automation credentials |
+| `QA_USER` / `QA_PASSWORD` | yes | Automation credentials (the `login_data` fixture in conftest.py reads these) |
 
 The QA Touch and Jira variables (`QATOUCH_*`, `JIRA_*`, `BUG_CREATION_ENABLED`) are only
 read by the optional integrations and can be left unset - see
@@ -195,7 +197,7 @@ Tests may opt into the `step_capture` fixture to mark logical steps (one `.mark(
 
 Convention details + examples: `docs/CONVENTIONS.md` under Step capture.
 
-## Markers (62 defined in `pytest.ini`)
+## Markers (69 defined in `pytest.ini`)
 
 - **Type:** `smoke`, `sanity`, `regression`, `api`, `ui`
 - **Environment:** `env_qa`, `env_stage`, `env_preprod`, `env_prod`
@@ -253,7 +255,7 @@ gates before every commit.
 ## CI Notes
 
 - `python -m playwright install chromium` must run in CI before pytest.
-- Secrets (`AUTO_USER`, `AUTO_PASSWORD`) come from CI secrets, not `.env`.
+- Secrets (`QA_USER`, `QA_PASSWORD`) come from CI secrets, not `.env`.
 - Leave `BUG_CREATION_ENABLED` unset in CI - the bug filer is still WIP and must not file real bugs from an automated run.
 - Lab servers handle the actual smoke/sanity execution; CI is for syntax + smoke validation, not full runs.
 
