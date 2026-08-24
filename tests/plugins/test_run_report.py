@@ -448,6 +448,37 @@ def test_build_run_report_orders_sections_and_links_evidence(tmp_path):
     assert '<p class="verdict">1 of 3 tests failed; 1 test skipped.</p>' in page
 
 
+def test_exit_outcome_reads_as_a_word():
+    """pytest's exit status reads as a word a reader without pytest knows.
+    A code outside the table stays visible as 'Exit N', no status is '-'."""
+    words = [(0, 'Passed'), (1, 'Failed'), (2, 'Interrupted'), (3, 'Error'), (4, 'Error'),
+             (5, 'No tests'), ('1', 'Failed'), (9, 'Exit 9'), (None, '-'), ('odd', 'odd')]
+    assert [rr.exit_outcome(status) for status, _ in words] == [word for _, word in words]
+    assert rr.EXIT_OUTCOMES == {0: 'Passed', 1: 'Failed', 2: 'Interrupted', 3: 'Error',
+                                4: 'Error', 5: 'No tests'}
+
+
+def test_outcome_html_keeps_the_code_as_a_tooltip():
+    """The word shows and the numeric code sits in the tooltip."""
+    assert rr.outcome_html(1) == '<span title="exit code 1">Failed</span>'
+    assert rr.outcome_html(0) == '<span title="exit code 0">Passed</span>'
+    assert rr.outcome_html(None) == '-'
+
+
+def test_run_page_says_outcome_and_notes_in_words(tmp_path):
+    """The header reads Outcome, not Exit status, and the advisory section
+    reads Notes with its tooltip, under the anchor the health page links."""
+    page = rr.build_run_report(_make_run(tmp_path))
+    assert 'Outcome: <span title="exit code 1">Failed</span>' in page
+    assert 'Exit status' not in page
+    assert f'<h2 id="advisories" title="{rr.NOTES_TITLE}">Notes (1)</h2>' in page
+    assert 'Advisories (' not in page
+    assert '<h4>Advisories</h4>' not in page
+    # The filter script names what it counts, so the index can reuse it.
+    assert "' tests match'" in rr.filter_script()
+    assert "' runs match'" in rr.filter_script('runs')
+
+
 def test_build_run_report_survives_an_empty_folder(tmp_path):
     """An empty run folder still renders a page with zero counts."""
     run = tmp_path / '2026-08-24_10-00-00__all'
@@ -456,7 +487,7 @@ def test_build_run_report_survives_an_empty_folder(tmp_path):
     assert 'Failures (0)' in page
     assert 'No failures in this run.' in page
     assert 'Duration: - s' in page
-    assert 'Exit status: -' in page
+    assert 'Outcome: -' in page
     assert '<summary>Passed (0)</summary>' in page
     assert 'all' in page  # the target from the folder name
 

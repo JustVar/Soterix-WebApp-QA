@@ -11,8 +11,13 @@ this order, first hit wins:
   4. The QATOUCH_PROJECT_ID environment variable.
   5. NexaiQ-Core (JlW1), the project every other tool defaults to.
 
+`target_product` names a run's product from its invocation targets alone
+(steps 2 to 5, there is no marker to read), for archives that recorded no
+per-test product: a folder target under tests/ui/c2c is Camera 2 Cloud,
+anything else is the default.
+
 The archive records the product name per test and once per run, and the
-run and health pages show it. Stdlib only.
+run, health, and index pages show it. Stdlib only.
 """
 from __future__ import annotations
 
@@ -62,12 +67,24 @@ def product_for(nodeid: str, marker_project: str | None = None,
     if marker_project:
         return str(marker_project)
     path = str(nodeid or '').split('::', 1)[0].replace('\\', '/').lstrip('/')
+    # The rule's prefix ends in '/'. The folder itself ('tests/ui/c2c', a
+    # run target) must match too, so the path is compared as a folder.
     for prefix, key in PATH_RULES:
-        if path.startswith(prefix):
+        if f"{path.rstrip('/')}/".startswith(prefix):
             return key
     if default_key:
         return str(default_key)
     return os.environ.get(ENV_VAR, '').strip() or DEFAULT_KEY
+
+
+def target_product(targets: Iterable[str], default_key: str | None = None) -> str:
+    """The product a run's invocation targets name, as `run_product` labels
+    it: one name, or "Mixed: A, B" when the targets differ. No target
+    (the whole suite) is the default. Never '': a page that shows this
+    has no blank to fall back to."""
+    names = [product_name(product_for(t, None, default_key))
+             for t in targets if str(t or '').strip()]
+    return run_product(names) or product_name(product_for('', None, default_key))
 
 
 def run_product(names: Iterable[str]) -> str:

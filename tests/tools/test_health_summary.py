@@ -9,6 +9,7 @@ terminal table, and the CLI on a temp archive. No browser, no network.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -190,17 +191,26 @@ def test_render_health_has_every_section_and_run_links(monkeypatch):
     """The health page shows every section, links each run and handles an empty archive."""
     monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
     page = hs.render_health(hs.aggregate(RUNS, 20), generated='2026-08-24T15:00:00')
-    for heading in ('Targets (2)', 'Modules (2)', 'Tests to watch (2)'):
+    for heading in ('Products (1)', 'Targets (2)', 'Modules (2)', 'Tests to watch (2)'):
         assert heading in page
-    for gone in ('Flaky candidates', 'Newly failing', 'Slowest tests'):
+    for gone in ('Flaky candidates', 'Newly failing', 'Slowest tests', 'Test health', 'exit 1',
+                 'Advisories'):
         assert gone not in page
-    # The verdict leads the page, one line per target, the product beside
-    # it (schema-2 summaries derive it from their node ids).
-    assert page.index('<ul class="verdict">') < page.index('id="targets"')
+    assert '<title>Test Health</title>' in page
+    assert '<h1>Test Health</h1>' in page
+    # The tiles lead the page. The targets follow, grouped under their
+    # product, each group opening with one verdict line per target, the
+    # product beside it (schema-2 summaries derive it from their node ids).
+    assert (page.index('id="products"') < page.index('id="targets"')
+            < page.index('<h3 class="product-group">NexaiQ-Core (2 targets)</h3>')
+            < page.index('<ul class="verdict">'))
     assert ('<li>Views: 80% pass rate over 4 runs, 2 tests to watch. '
             '<span class="product">NexaiQ-Core</span></li>') in page
     assert 'href="2026-08-24_12-00-00__views/run.html"' in page
     assert '<td class="num">80%</td>' in page
+    # The notes header says what it counts. The newest run's outcome is a word.
+    assert f'<th title="{hs.NOTES_TITLE}">Notes</th>' in page
+    assert '<div class="case"><span title="exit code 1">Failed</span></div>' in page
     # The advisory count links the newest run's advisories; a zero count does not link.
     assert '<a href="2026-08-24_12-00-00__views/run.html#advisories">1</a>' in page
     assert '#advisories">0</a>' not in page
@@ -230,20 +240,27 @@ def test_format_table_is_compact(monkeypatch):
     text = hs.format_table(hs.aggregate(RUNS, 20))
     lines = text.splitlines()
     assert lines[0].startswith('Health: newest 20 runs of each target, 5 runs')
-    assert lines[1:3] == [
+    # One line per product tile, then one per target with its product.
+    assert lines[1] == ('NexaiQ-Core: 86% pass rate over 5 runs, 2 tests to watch, '
+                        'last run 2026-08-24T12-00-00.')
+    assert lines[2:4] == [
         'Media: 100% pass rate over 1 run, 0 tests to watch. Product: NexaiQ-Core.',
         'Views: 80% pass rate over 4 runs, 2 tests to watch. Product: NexaiQ-Core.']
     views = next(line for line in lines if line.startswith('tests/ui/views'))
     assert '80%' in views
-    assert 'exit 1' in views
+    assert views.endswith('Failed')
+    assert 'exit 1' not in text
+    assert 'NOTES' in text
     assert f'Tests to watch (2):\n   33%  1/3 failed  last 2026-08-24T12-00-00  {A}' in text
     assert 'Slowest' not in text
     assert 'Flaky candidates' not in text
 
 
-def test_product_sits_beside_each_target_verdict():
+def test_product_sits_beside_each_target_verdict(monkeypatch):
     """Each target names the product its runs tested, in the verdict list,
-    the targets table, and the terminal lines. Runs without one name none."""
+    the targets table, and the terminal lines. A run that recorded none
+    is named by its targets, so no target is blank."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
     runs = [
         _run('2026-08-24_12-00-00__views', {'passed': 2}, tests=[_t(A, 'passed', 1)]),
         _run('2026-08-23_12-00-00__views', {'passed': 2}, tests=[_t(A, 'passed', 1)]),
@@ -253,18 +270,113 @@ def test_product_sits_beside_each_target_verdict():
     runs[1]['summary']['provenance'] = {'env': 'qa', 'product': 'NexaiQ-Camera 2 Cloud'}
     agg = hs.aggregate(runs, 20)
     assert {t['slug']: t['product'] for t in agg['targets']} == {
-        'views': 'NexaiQ-Core, NexaiQ-Camera 2 Cloud', 'media': ''}
+        'views': 'NexaiQ-Core, NexaiQ-Camera 2 Cloud', 'media': 'NexaiQ-Core'}
     page = hs.render_health(agg, generated='2026-08-24T15:00:00')
     assert ('<li>Views: 100% pass rate over 2 runs, 0 tests to watch. '
             '<span class="product">NexaiQ-Core, NexaiQ-Camera 2 Cloud</span></li>') in page
-    assert '<li>Media: 100% pass rate over 1 run, 0 tests to watch.</li>' in page
+    assert ('<li>Media: 100% pass rate over 1 run, 0 tests to watch. '
+            '<span class="product">NexaiQ-Core</span></li>') in page
     assert 'Views <span class="product">NexaiQ-Core, NexaiQ-Camera 2 Cloud</span>' in page
+    assert '<span class="product"></span>' not in page
     text = hs.format_table(agg)
     assert 'Views: 100% pass rate over 2 runs, 0 tests to watch. Product: NexaiQ-Core, ' \
            'NexaiQ-Camera 2 Cloud.' in text
-    assert 'Media: 100% pass rate over 1 run, 0 tests to watch.\n' in text
+    assert 'Media: 100% pass rate over 1 run, 0 tests to watch. Product: NexaiQ-Core.\n' in text
     assert '<a href="index.html">Archive Index</a>' in page
     assert 'all runs' not in page
+
+
+C2C = 'tests/ui/c2c/test_c.py::test_c'
+
+
+def _c2c_runs() -> list[dict]:
+    """RUNS plus two Camera 2 Cloud runs of one target, one of them failing,
+    and a mixed run without records, so the tiles have three products."""
+    c2c = [
+        _run('2026-08-24_11-00-00__c2c', {'passed': 1, 'failed': 1},
+             tests=[_t(C2C, 'failed', 3, 'ui/c2c/test_c.py')], exitstatus=1, duration=10,
+             target=['tests/ui/c2c']),
+        _run('2026-08-23_11-00-00__c2c', {'passed': 2},
+             tests=[_t(C2C, 'passed', 3, 'ui/c2c/test_c.py')], duration=10,
+             target=['tests/ui/c2c']),
+        _run('2026-08-20_11-00-00__all', {'passed': 5, 'failed': 1}, target=['tests']),
+    ]
+    c2c[2]['summary']['provenance'] = {'product': 'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core'}
+    return [*RUNS, *c2c]
+
+
+def test_product_tiles_aggregate_the_runs_of_each_product(monkeypatch):
+    """One tile per product: runs in the window, pass rate over those
+    runs, tests to watch that failed in them, and the newest run linked.
+    Named products first in name order, then the mixed labels."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+    agg = hs.aggregate(_c2c_runs(), 20)
+    assert [p['product'] for p in agg['products']] == [
+        'NexaiQ-Camera 2 Cloud', 'NexaiQ-Core', 'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core']
+    camera, core, mixed = agg['products']
+    assert camera == {'product': 'NexaiQ-Camera 2 Cloud', 'runs': 2, 'targets': 1, 'passed': 3,
+                      'failed': 1, 'pass_rate': 0.75, 'watch': 1,
+                      'newest_run': '2026-08-24_11-00-00__c2c',
+                      'newest_started': '2026-08-24T11-00-00'}
+    assert (core['runs'], core['targets'], core['passed'], core['failed']) == (5, 2, 12, 2)
+    assert (core['pass_rate'], core['watch']) == (0.857, 2)
+    assert core['newest_run'] == '2026-08-24_12-00-00__views'
+    assert (mixed['runs'], mixed['pass_rate'], mixed['watch']) == (1, 0.833, 0)
+    page = hs.render_health(agg, generated='x')
+    tile = page[page.index('<div class="tile"><div class="tile-name">NexaiQ-Camera 2 Cloud</div>'):]
+    tile = tile[:tile.index('</div></div>')]
+    for fact in ('<span class="k">Runs in window</span><span class="v">2</span>',
+                 '<span class="k">Pass rate</span><span class="v">75%</span>',
+                 '<span class="k">Tests to watch</span><span class="v">1</span>',
+                 '<span class="k">Last run</span><span class="v">'
+                 '<a href="2026-08-24_11-00-00__c2c/run.html">Aug 24, 11:00 AM</a></span>'):
+        assert fact in tile
+    assert (page.index('tile-name">NexaiQ-Camera 2 Cloud') < page.index('tile-name">NexaiQ-Core')
+            < page.index('tile-name">Mixed:'))
+    assert 'NexaiQ-Camera 2 Cloud: 75% pass rate over 2 runs, 1 test to watch, ' \
+           'last run 2026-08-24T11-00-00.' in hs.format_table(agg)
+
+
+def test_targets_group_under_their_product_in_tile_order(monkeypatch):
+    """Targets sit under a heading per product, groups in the tiles'
+    order and targets in name order inside each. The page renders the
+    headings in that order with each target's row under its own."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+    agg = hs.aggregate(_c2c_runs(), 20)
+    assert [(g['product'], [t['slug'] for t in g['targets']]) for g in agg['groups']] == [
+        ('NexaiQ-Camera 2 Cloud', ['c2c']), ('NexaiQ-Core', ['media', 'views']),
+        ('Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core', ['all'])]
+    assert [t['slug'] for t in agg['targets']] == ['c2c', 'media', 'views', 'all']
+    page = hs.render_health(agg, generated='x')
+    heads = re.findall(r'<h3 class="product-group">([^<]+)</h3>', page)
+    assert heads == ['NexaiQ-Camera 2 Cloud (1 target)', 'NexaiQ-Core (2 targets)',
+                     'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core (1 target)']
+    assert (page.index(heads[0]) < page.index('<div class="nodeid">tests/ui/c2c</div>')
+            < page.index(heads[1]) < page.index('<div class="nodeid">tests/ui/media</div>')
+            < page.index('<div class="nodeid">tests/ui/views</div>')
+            < page.index(heads[2]) < page.index('<div class="nodeid">tests</div>'))
+
+
+def test_every_target_names_a_product(monkeypatch):
+    """A run archived without per-test records is named by its targets
+    (the c2c folder, else the mapping default), so no target, verdict
+    line, or tile is blank."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+    runs = [
+        _run('2026-08-24_10-00-00__c2c', {'passed': 1}, target=['tests/ui/c2c']),
+        _run('2026-08-24_09-00-00__media', {'passed': 1}, target=['tests/ui/media']),
+        {'name': '2026-08-24_08-00-00__bare', 'summary': {}},
+    ]
+    agg = hs.aggregate(runs, 20, default_key='K5kB')
+    assert {t['slug']: t['product'] for t in agg['targets']} == {
+        'c2c': 'NexaiQ-Camera 2 Cloud', 'media': 'NexiaQ-Mobile', 'bare': 'NexiaQ-Mobile'}
+    assert [p['product'] for p in agg['products']] == ['NexaiQ-Camera 2 Cloud', 'NexiaQ-Mobile']
+    assert all(t['product'] for t in hs.aggregate(runs, 20)['targets'])
+    page = hs.render_health(agg, generated='x')
+    assert '<span class="product"></span>' not in page
+    assert page.count('<li>') == 3
+    assert page.count('<span class="product">') == 6  # a verdict line and a table cell each
+    assert 'NexiaQ-Mobile.' in hs.format_table(agg)
 
 
 def test_run_links_open_what_each_folder_has(tmp_path):

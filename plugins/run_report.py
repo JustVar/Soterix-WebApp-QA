@@ -13,8 +13,10 @@ What the page shows, in order:
     passed."
   - Header: the product under test (plugins/products.py: also the page
     title's prefix, "NexaiQ-Core - Test run ..."), target, start time,
-    duration, outcome counts, exit status, provenance (ENV, host, git
-    commit, browser, Playwright versions), and links: Raw pytest-html,
+    duration, outcome counts, the run's outcome (pytest's exit status as
+    a word: Passed, Failed, Interrupted, Error, No tests, with the code
+    as a tooltip), provenance (ENV, host, git commit, browser, Playwright
+    versions), and links: Raw pytest-html,
     Archive Index, Health when health.html exists, the previous run of
     these tests (which the change labels compare against), and Folder.
     When a run mixes products, every test shows its own.
@@ -29,7 +31,9 @@ What the page shows, in order:
     addresses, and locator text reduced) sit together under "N tests
     share this error". Every failure says whether its error is new or
     was seen in one of the previous 20 runs of these tests, and when.
-  - Advisories: the [VIEWS] / [LPR] / [EXPORT] lines from summary.json.
+  - Notes: the [VIEWS] / [LPR] / [EXPORT] advisory lines from
+    summary.json. The heading keeps the id "advisories", which the health
+    page links.
   - Slowest 5: the longest tests of the run.
   - Passed and Skipped: collapsed lists grouped by module, each test with
     its final screenshot and its advisory lines. Mid-drag frames stay on
@@ -167,6 +171,39 @@ _OUTCOME_RANK = {'error': 5, 'failed': 4, 'xfailed': 3, 'skipped': 2,
 FAILURE_OUTCOMES = ('failed', 'error')
 PASSED_OUTCOMES = ('passed', 'xpassed')
 SKIPPED_OUTCOMES = ('skipped', 'xfailed')
+
+# pytest's exit codes (ExitCode in _pytest/config) as the words a reader
+# without pytest knows. 3 (internal error) and 4 (usage error) share a
+# word: both mean pytest stopped before the tests could answer.
+EXIT_OUTCOMES = {0: 'Passed', 1: 'Failed', 2: 'Interrupted', 3: 'Error',
+                 4: 'Error', 5: 'No tests'}
+
+# The tooltip of every "Notes" header (the index, health, run.html): the
+# column counts advisory lines, and the word alone does not say so.
+NOTES_TITLE = ('Warnings the page objects logged during the run '
+               '(drag fallbacks, content health, export timing)')
+
+
+def exit_outcome(exitstatus: object) -> str:
+    """The exit status in words: Passed (0), Failed (1), Interrupted (2),
+    Error (3 and 4), No tests (5). A code outside the table reads
+    'Exit N', so a new pytest code is never hidden. None reads '-'."""
+    if exitstatus is None:
+        return '-'
+    try:
+        code = int(exitstatus)
+    except (TypeError, ValueError):
+        return str(exitstatus)
+    return EXIT_OUTCOMES.get(code, f'Exit {code}')
+
+
+def outcome_html(exitstatus: object) -> str:
+    """The outcome word with the numeric code as its tooltip, for the
+    reader who does know pytest. '-' without a status."""
+    if exitstatus is None:
+        return '-'
+    return (f'<span title="exit code {escape(str(exitstatus))}">'
+            f'{escape(exit_outcome(exitstatus))}</span>')
 
 
 @dataclass
@@ -1005,7 +1042,14 @@ table.facts-table th { color: var(--muted); font-weight: 600; font-size: .85rem;
 table.facts-table td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 '''
 
-_FILTER_JS = '''
+
+
+def filter_script(noun: str = 'tests') -> str:
+    """The filter box's script: every element with a data-test attribute
+    stays visible while that attribute holds the typed text. `noun` is
+    the word of the match count ("3 of 49 tests match"). The archive
+    index reuses it for its run rows."""
+    return '''
 (function () {
   var box = document.getElementById('filter');
   var count = document.getElementById('filter-count');
@@ -1022,10 +1066,13 @@ _FILTER_JS = '''
     }
     // A match hidden inside a collapsed list is no match at all.
     for (var j = 0; j < sections.length && q; j++) { sections[j].open = true; }
-    count.textContent = q ? shown + ' of ' + items.length + ' tests match' : '';
+    count.textContent = q ? shown + ' of ' + items.length + ' ''' + noun + ''' match' : '';
   });
 })();
 '''
+
+
+_FILTER_JS = filter_script()
 
 
 def _href(rel: str) -> str:
@@ -1247,8 +1294,8 @@ def _render_failure(rec: TestRecord, run_dir: Path, with_seen: bool = True,
             parts.append('<p class="empty">None.</p>')
 
     if rec.advisories:
-        parts.append('<h4>Advisories</h4><ul class="plain">' + ''.join(
-            f'<li>{escape(a)}</li>' for a in rec.advisories) + '</ul>')
+        parts.append(f'<h4 title="{escape(NOTES_TITLE, quote=True)}">Notes</h4><ul class="plain">'
+                     + ''.join(f'<li>{escape(a)}</li>' for a in rec.advisories) + '</ul>')
 
     parts.append('<h4>Screenshots</h4>')
     parts.append(_render_shots(rec) or '<p class="empty">No screenshot for this test.</p>')
@@ -1459,7 +1506,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 <div class="meta">
 <span>Target: <code>{escape(target)}</code></span>
 <span>Duration: {escape(str(duration)) if duration is not None else '-'} s</span>
-<span>Exit status: {escape(str(exitstatus)) if exitstatus is not None else '-'}</span>
+<span>Outcome: {outcome_html(exitstatus)}</span>
 <span>Folder: <code>{escape(run_dir.name)}</code></span>
 </div>
 {_render_provenance(summary, product)}
@@ -1472,7 +1519,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 <h2 id="failures">Failures ({len(failures)})</h2>
 {failure_body}
 
-<h2 id="advisories">Advisories ({len(advisories)})</h2>
+<h2 id="advisories" title="{escape(NOTES_TITLE, quote=True)}">Notes ({len(advisories)})</h2>
 {adv_body}
 
 <h2 id="slowest">Slowest {SLOWEST_COUNT}</h2>

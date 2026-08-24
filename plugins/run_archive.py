@@ -38,10 +38,14 @@ What lands in reports/runs/<start-time>__<target>/:
     The same lines print as a 'run advisories' section at the end of
     every run, so nobody has to grep for them.
 
-Start at reports/runs/index.html: one row per archived run, newest first,
-with links to each run's page (Run Report), its pytest-html file (Raw
+Start at reports/runs/index.html: one row per archived run, newest first:
+when it started, its product (the run's, else derived from its targets,
+never blank), its target, the counts, its outcome (the exit status as a
+word, with the code as a tooltip), its notes count (the advisories), and
+links to each run's page (Run Report), its pytest-html file (Raw
 pytest-html), and its folder, and to health.html (tools/health_summary.py,
-`python run.py health`) when that page exists.
+`python run.py health`) when that page exists. A filter box narrows the
+rows to those that hold the typed text.
 The index is rebuilt after every run from the folders' summary.json
 files, so hand-deleting a folder is safe.
 
@@ -86,14 +90,19 @@ from urllib.parse import urlparse
 import pytest
 
 from plugins.branding import favicon_link, header_logo
-from plugins.products import product_for, product_name, run_product
+from plugins.products import product_for, product_name, run_product, target_product
 from plugins.run_report import (
     FAILURE_OUTCOMES,
+    NOTES_TITLE,
     RUN_DIR_RE,
     build_run_report,
     error_line,
+    exit_outcome,
+    filter_script,
     module_of,
+    outcome_html,
     readable_title,
+    summary_product,
 )
 
 log = logging.getLogger('run_archive')
@@ -835,15 +844,21 @@ def _load_entries(runs_dir: Path) -> list[dict]:
     return entries
 
 
-def _render_index(entries: list[dict], has_health: bool = False) -> str:
+def _render_index(entries: list[dict], has_health: bool = False,
+                  default_key: str | None = None) -> str:
     """Render the archive index page, newest run first.
 
     Plain, self-contained HTML: the page is opened from disk, so it can
     depend on nothing but the run folders sitting next to it. Every summary
-    key is optional - a row shows '-' where a value is unknown. The Open
-    cell holds one link chip per file the folder has: Run Report
-    (run.html), Raw pytest-html (report.html), and always Folder. The
-    Health chip only appears when health.html exists beside the index.
+    key is optional - a row shows '-' where a value is unknown, except the
+    product: a run that recorded none gets the one its targets name
+    (`default_key` is the mapping file's project_key, the fallback when
+    no target names one). The outcome is the exit status as a word, the
+    code in its tooltip. Notes is the advisory count. The Open cell holds
+    one link chip per file the folder has: Run Report (run.html), Raw
+    pytest-html (report.html), and always Folder. The Health chip only
+    appears when health.html exists beside the index. Each row carries
+    its visible words in data-test for the filter box.
     """
     rows = []
     for entry in sorted(entries, key=lambda e: e.get('name', ''), reverse=True):
@@ -853,6 +868,8 @@ def _render_index(entries: list[dict], has_health: bool = False) -> str:
         stamp, _, slug = name.partition('__')
         started = summary.get('started') or stamp.replace('_', ' ')
         target = ' '.join(summary.get('target') or []) or slug
+        product = (summary_product(summary)
+                   or target_product(summary.get('target') or [], default_key))
         exitstatus = summary.get('exitstatus')
         advisories = summary.get('advisories')
         advisory_count = len(advisories) if isinstance(advisories, list) else '-'
@@ -865,16 +882,19 @@ def _render_index(entries: list[dict], has_health: bool = False) -> str:
         links.append(f'<a href="{folder}/">{INDEX_LINK_FOLDER}</a>')
         cells = [
             escape(str(started)),
+            escape(product),
             escape(str(target)),
             *[escape(str(counts.get(key, '-')))
               for key in ('passed', 'failed', 'skipped', 'errors')],
-            '-' if exitstatus is None else escape(str(exitstatus)),
+            outcome_html(exitstatus),
             escape(str(advisory_count)),
             '<span class="open">' + ''.join(links) + '</span>',
         ]
-        rows.append('<tr>' + ''.join(f'<td>{cell}</td>' for cell in cells) + '</tr>')
+        words = ' '.join(str(w) for w in (started, product, target, exit_outcome(exitstatus), name))
+        rows.append(f'<tr data-test="{escape(words.lower(), quote=True)}">'
+                    + ''.join(f'<td>{cell}</td>' for cell in cells) + '</tr>')
 
-    body = '\n'.join(rows) if rows else ('<tr><td colspan="9">No archived runs '
+    body = '\n'.join(rows) if rows else ('<tr><td colspan="10">No archived runs '
                                          'yet. Run the suite once.</td></tr>')
     health = ('<p><span class="open"><a href="health.html">Health</a></span> pass rates '
               'per target and module, and the tests to watch, across recent runs.</p>'
@@ -895,6 +915,10 @@ body {{ font-family: system-ui, sans-serif; margin: 2rem; }}
 table {{ border-collapse: collapse; }}
 th, td {{ border: 1px solid #ccc; padding: 0.35rem 0.7rem; text-align: left; }}
 th {{ background: #f0f0f0; }}
+th[title] {{ text-decoration: underline dotted; cursor: help; }}
+input#filter {{ width: min(100%, 36rem); padding: 0.45rem 0.7rem; font: inherit;
+  border: 1px solid #9a9a9a; border-radius: 6px; }}
+#filter-count {{ color: #5f6368; margin-left: 0.75rem; font-size: 0.9rem; }}
 .open {{ display: inline-flex; flex-wrap: wrap; gap: 0.4rem; vertical-align: middle; }}
 .open a {{ border: 1px solid #9a9a9a; border-radius: 4px; padding: 0.1rem 0.5rem;
   font-size: 0.85rem; text-decoration: none; white-space: nowrap; }}
@@ -908,11 +932,15 @@ for its failures with their screenshots, video, and trace. <b>{INDEX_LINK_RAW_RE
 is the report file pytest wrote. The archive keeps the newest {KEEP_RUNS} runs of each
 target ({KEEP_RUNS_TOTAL} in total) and rebuilds this page after every run.</p>
 {health}
+<p><input id="filter" type="search" placeholder="Filter runs: product, target, outcome, date"
+ aria-label="Filter runs"><span id="filter-count"></span></p>
 <table>
-<tr><th>Started</th><th>Target</th><th>Passed</th><th>Failed</th>
-<th>Skipped</th><th>Errors</th><th>Exit</th><th>Advisories</th><th>Open</th></tr>
+<tr><th>Started</th><th>Product</th><th>Target</th><th>Passed</th><th>Failed</th>
+<th>Skipped</th><th>Errors</th><th>Outcome</th>
+<th title="{escape(NOTES_TITLE, quote=True)}">Notes</th><th>Open</th></tr>
 {body}
 </table>
+<script>{filter_script('runs')}</script>
 </body>
 </html>
 '''
@@ -923,7 +951,8 @@ def _write_index(runs_dir: Path) -> None:
     if not runs_dir.is_dir():
         return
     (runs_dir / 'index.html').write_text(
-        _render_index(_load_entries(runs_dir), has_health=(runs_dir / 'health.html').is_file()),
+        _render_index(_load_entries(runs_dir), has_health=(runs_dir / 'health.html').is_file(),
+                      default_key=load_project_key(MAPPING_FILE)),
         encoding='utf-8')
 
 

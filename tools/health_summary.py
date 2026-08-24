@@ -8,12 +8,15 @@
 Reads every reports/runs/*/summary.json (see plugins/run_archive.py),
 writes reports/runs/health.html, and prints a compact table. The page
 shows, over the window:
-  - Verdict: one line per target in plain words, e.g. "Views: 96% pass
-    rate over 20 runs, 1 test to watch.", with the product the target's
-    runs tested beside it (from summary.json provenance, schema 4 on).
-  - Targets: one row per invocation target (the run folder's slug): its
-    product, runs, pass rate, mean run duration, advisory count (linked
-    to the newest run's advisories), newest run and its exit status.
+  - Product tiles: one per product, with its runs in the window, its
+    pass rate, its tests to watch, and its last run (linked).
+  - Targets, grouped under a product heading. Each group opens with one
+    verdict line per target in plain words, e.g. "Views: 96% pass rate
+    over 20 runs, 1 test to watch.", then a table: one row per
+    invocation target (the run folder's slug) with its product, runs,
+    pass rate, mean run duration, notes count (the advisories, linked to
+    the newest run's lines), newest run and its outcome (the exit
+    status as a word).
   - Modules: one row per test file under tests/: tests seen, results, pass
     rate, mean test duration.
   - Tests to watch: every test that failed at least once in the window,
@@ -29,7 +32,10 @@ per-run page (run.html) lists a run's slowest tests. This page keeps the
 mean test duration per module.
 
 Summaries written before schema 2 carry no per-test records: they count
-toward the target rows only. Every link to a run goes through
+toward the target rows only. A run's product is the one it recorded
+(schema 4), else the one its per-test records' node ids derive, else the
+one its invocation targets name (plugins/products.target_product), so no
+row or tile is ever blank. Every link to a run goes through
 run_report.run_href, so a run archived without a run.html opens its
 report.html or its folder instead of a missing file. Stdlib only, and
 read-only on the archive except for health.html and the index link to it.
@@ -49,18 +55,22 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from plugins.branding import favicon_link, header_logo  # noqa: E402
-from plugins.run_archive import RUNS_DIR, _write_index  # noqa: E402
+from plugins.products import is_mixed, target_product  # noqa: E402
+from plugins.run_archive import MAPPING_FILE, RUNS_DIR, _write_index, load_project_key  # noqa: E402
 from plugins.run_report import (  # noqa: E402
     FAILURE_OUTCOMES,
     HISTORY_RUNS,
+    NOTES_TITLE,
     PAGE_CSS,
     PASSED_OUTCOMES,
     RUN_DIR_RE,
     RunLinks,
+    exit_outcome,
     format_seconds,
     friendly_time,
     history_facts,
     module_of,
+    outcome_html,
     plural,
     readable_title,
     render_strip,
@@ -155,11 +165,20 @@ def target_name(label: str) -> str:
     return f'{text} ({mark})' if mark else text
 
 
-def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
-    """Fold the window's summaries into the page's facts. Pure."""
+def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST,
+              default_key: str | None = None) -> dict:
+    """Fold the window's summaries into the page's facts. Pure.
+
+    `default_key` is the mapping file's project_key, the product a
+    target names when neither the run nor its targets name one.
+    """
     window = select_window(runs, last_n)
     targets: dict[str, dict] = {}
     modules: dict[str, dict] = {}
+    # product label -> its tile facts
+    products: dict[str, dict] = {}
+    # run name -> its product label, for the per-product watch counts
+    run_products: dict[str, str] = {}
     # nodeid -> its results, newest first:
     # {'run', 'started', 'outcome', 'seconds', 'title', 'module'}
     history: dict[str, list[dict]] = {}
@@ -170,6 +189,8 @@ def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
         counts = summary.get('counts') if isinstance(summary.get('counts'), dict) else {}
         advisories = summary.get('advisories') if isinstance(summary.get('advisories'), list) else []
         started = run_started(Path(name), summary)
+        passed = int(counts.get('passed', 0) or 0)
+        failed = int(counts.get('failed', 0) or 0) + int(counts.get('errors', 0) or 0)
         target = targets.setdefault(slug, {
             'slug': slug, 'target': _target_label(summary, slug), 'runs': 0, 'passed': 0,
             'failed': 0, 'durations': [], 'advisories': 0, 'runs_without_records': 0,
@@ -178,11 +199,22 @@ def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
         })
         target['runs'] += 1
         # The products the target's runs tested, newest first, each once.
-        product = summary_product(summary)
-        if product and product not in target['products']:
+        # A run that recorded none is named by its targets, never blank.
+        product = (summary_product(summary)
+                   or target_product(summary.get('target') or [], default_key))
+        run_products[name] = product
+        if product not in target['products']:
             target['products'].append(product)
-        target['passed'] += int(counts.get('passed', 0) or 0)
-        target['failed'] += int(counts.get('failed', 0) or 0) + int(counts.get('errors', 0) or 0)
+        # The window is newest first, so the first run seen is the tile's newest.
+        tile = products.setdefault(product, {
+            'product': product, 'runs': 0, 'passed': 0, 'failed': 0, 'targets': set(),
+            'newest_run': name, 'newest_started': started})
+        tile['runs'] += 1
+        tile['passed'] += passed
+        tile['failed'] += failed
+        tile['targets'].add(slug)
+        target['passed'] += passed
+        target['failed'] += failed
         target['advisories'] += len(advisories)
         if isinstance(summary.get('duration_s'), (int, float)):
             target['durations'].append(float(summary['duration_s']))
@@ -214,6 +246,7 @@ def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
     # the strip shows, and how many of them each target saw fail.
     watch = []
     watch_by_slug: dict[str, int] = {}
+    watch_by_product: dict[str, int] = {}
     for nodeid, results in history.items():
         facts = history_facts(results)
         if not facts['failed']:
@@ -221,12 +254,30 @@ def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
         newest = results[0]
         watch.append({'nodeid': nodeid, 'title': newest['title'], 'module': newest['module'],
                       'facts': facts})
-        for slug in {slug_of(b['run']) for b in facts['blocks'] if b['outcome'] in FAILURE_OUTCOMES}:
+        failing_runs = {b['run'] for b in facts['blocks'] if b['outcome'] in FAILURE_OUTCOMES}
+        for slug in {slug_of(run) for run in failing_runs}:
             watch_by_slug[slug] = watch_by_slug.get(slug, 0) + 1
+        for product in {run_products[run] for run in failing_runs if run in run_products}:
+            watch_by_product[product] = watch_by_product.get(product, 0) + 1
     watch.sort(key=lambda w: (-(w['facts']['rate'] or 0.0), -w['facts']['failed'], w['nodeid']))
 
+    # Named products first, in name order, then the "Mixed:" labels.
+    product_rows = []
+    for tile in sorted(products.values(), key=lambda t: (is_mixed(t['product']), t['product'])):
+        product_rows.append({
+            'product': tile['product'], 'runs': tile['runs'], 'targets': len(tile['targets']),
+            'passed': tile['passed'], 'failed': tile['failed'],
+            'pass_rate': _rate(tile['passed'], tile['failed']),
+            'watch': watch_by_product.get(tile['product'], 0),
+            'newest_run': tile['newest_run'], 'newest_started': tile['newest_started'],
+        })
+
+    # Targets sit under their product, groups in the tiles' order, and
+    # within a group in target order.
     target_rows = []
-    for target in sorted(targets.values(), key=lambda t: t['target']):
+    for target in sorted(targets.values(),
+                         key=lambda t: (is_mixed(t['products'][0]), ', '.join(t['products']),
+                                        t['target'])):
         target_rows.append({
             'slug': target['slug'], 'target': target['target'],
             'name': target_name(target['target']), 'runs': target['runs'],
@@ -239,6 +290,11 @@ def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
             'newest_exit': target['newest_exit'],
             'product': ', '.join(target['products']),
         })
+    groups: list[dict] = []
+    for row in target_rows:
+        if not groups or groups[-1]['product'] != row['product']:
+            groups.append({'product': row['product'], 'targets': []})
+        groups[-1]['targets'].append(row)
 
     module_rows = []
     for mod in sorted(modules.values(), key=lambda m: m['module']):
@@ -253,6 +309,7 @@ def aggregate(runs: Iterable[dict], last_n: int = DEFAULT_LAST) -> dict:
         'window': {'last_n': last_n, 'runs': len(window),
                    'newest': window[0]['name'] if window else None,
                    'oldest': window[-1]['name'] if window else None},
+        'products': product_rows, 'groups': groups,
         'targets': target_rows, 'modules': module_rows, 'watch': watch,
     }
 
@@ -263,22 +320,33 @@ def _module_row(modules: dict[str, dict], module: str) -> dict:
         'durations': []})
 
 
-def health_verdict(agg: dict) -> list[str]:
-    """One sentence per target in plain words, numbers exact:
-    "Views: 96% pass rate over 20 runs, 1 test to watch." A target whose
-    runs recorded no results reads "no results" in place of the rate. A
+def target_verdict(t: dict) -> str:
+    """One target's sentence in plain words, numbers exact: "Views: 96%
+    pass rate over 20 runs, 1 test to watch." A target whose runs
+    recorded no results reads "no results" in place of the rate. A
     target that failed only in runs archived before per-test records
     existed cannot name its tests, and says so instead of "0"."""
-    lines = []
-    for t in agg['targets']:
-        rate = f"{_pct(t['pass_rate'])} pass rate" if t['pass_rate'] is not None else 'no results'
-        if t['watch'] == 0 and t['failed'] and t['runs_without_records']:
-            watch = (f"tests to watch unknown ({plural(t['runs_without_records'], 'run', 'runs')} "
-                     f"without per-test records)")
-        else:
-            watch = plural(t['watch'], 'test to watch', 'tests to watch')
-        lines.append(f"{t['name']}: {rate} over {plural(t['runs'], 'run', 'runs')}, {watch}.")
-    return lines or ['No archived runs yet.']
+    rate = f"{_pct(t['pass_rate'])} pass rate" if t['pass_rate'] is not None else 'no results'
+    if t['watch'] == 0 and t['failed'] and t['runs_without_records']:
+        watch = (f"tests to watch unknown ({plural(t['runs_without_records'], 'run', 'runs')} "
+                 f"without per-test records)")
+    else:
+        watch = plural(t['watch'], 'test to watch', 'tests to watch')
+    return f"{t['name']}: {rate} over {plural(t['runs'], 'run', 'runs')}, {watch}."
+
+
+def health_verdict(agg: dict) -> list[str]:
+    """One sentence per target, in the targets' (grouped) order."""
+    return [target_verdict(t) for t in agg['targets']] or ['No archived runs yet.']
+
+
+def product_verdict(p: dict) -> str:
+    """One product's sentence: "NexaiQ-Core: 93% pass rate over 29 runs,
+    2 tests to watch, last run 2026-08-24T15:12:37." """
+    rate = f"{_pct(p['pass_rate'])} pass rate" if p['pass_rate'] is not None else 'no results'
+    return (f"{p['product']}: {rate} over {plural(p['runs'], 'run', 'runs')}, "
+            f"{plural(p['watch'], 'test to watch', 'tests to watch')}, "
+            f"last run {p['newest_started']}.")
 
 
 # ---------------------------------------------------------------- render
@@ -296,8 +364,20 @@ def _run_link(name: str, runs_dir: Path | None = None) -> str:
 
 
 def _product_chip(product: str) -> str:
-    """The product beside a target's verdict, '' when its runs named none."""
+    """The product beside a target's verdict and name."""
     return f' <span class="product">{escape(product)}</span>' if product else ''
+
+
+def _tile(p: dict, runs_dir: Path | None = None) -> str:
+    """One product's tile: its name, then runs, pass rate, tests to watch,
+    and the last run's date linked to that run."""
+    last = (f'<a href="{run_href(p["newest_run"], runs_dir)}">'
+            f'{escape(friendly_time(p["newest_started"]))}</a>')
+    facts = (('Runs in window', str(p['runs'])), ('Pass rate', _pct(p['pass_rate'])),
+             ('Tests to watch', str(p['watch'])), ('Last run', last))
+    body = ''.join(f'<div class="tile-fact"><span class="k">{escape(k)}</span>'
+                   f'<span class="v">{v}</span></div>' for k, v in facts)
+    return f'<div class="tile"><div class="tile-name">{escape(p["product"])}</div>{body}</div>'
 
 
 def _test_cell(row: dict) -> str:
@@ -321,10 +401,14 @@ def _failure_link(block: dict | None, runs_dir: Path | None = None) -> str:
             f'{escape(friendly_time(block.get("started")))}</a>')
 
 
-def _table(headers: list[str], rows: list[list[str]], empty: str) -> str:
+def _table(headers: list[str | tuple[str, str]], rows: list[list[str]], empty: str) -> str:
+    """A header is its label, or (label, tooltip) for a column whose
+    label alone does not say what it counts."""
     if not rows:
         return f'<p class="empty">{escape(empty)}</p>'
-    head = ''.join(f'<th>{escape(h)}</th>' for h in headers)
+    head = ''.join(
+        f'<th title="{escape(h[1], quote=True)}">{escape(h[0])}</th>' if isinstance(h, tuple)
+        else f'<th>{escape(h)}</th>' for h in headers)
     body = ''.join('<tr>' + ''.join(cells) + '</tr>' for cells in rows)
     return f'<table class="facts-table"><tr>{head}</tr>{body}</table>'
 
@@ -344,18 +428,40 @@ def render_health(agg: dict, generated: str | None = None,
     Without it every run links its run.html."""
     window = agg['window']
     generated = generated or datetime.now().isoformat(timespec='seconds')
-    target_rows = [[
-        _cell(f"{escape(t['name'])}{_product_chip(t['product'])}"
-              f"<div class=\"nodeid\">{escape(t['target'])}</div>"),
-        _num(str(t['runs'])), _num(_pct(t['pass_rate'])),
-        _num(f"{t['passed']} / {t['failed']}"), _num(_secs(t['mean_duration_s'])),
-        # The count spans the window. The link opens the newest run's lines.
-        _num(str(t['advisories'])) if not t['advisories'] else
-        f'<td class="num"><a href="{run_href(t["newest_run"], runs_dir)}#advisories">'
-        f'{t["advisories"]}</a></td>',
-        _cell(f"{_run_link(t['newest_run'], runs_dir)}<div class=\"case\">exit "
-              f"{escape(str(t['newest_exit'])) if t['newest_exit'] is not None else '-'}</div>"),
-    ] for t in agg['targets']]
+
+    def target_row(t: dict) -> list[str]:
+        return [
+            _cell(f"{escape(t['name'])}{_product_chip(t['product'])}"
+                  f"<div class=\"nodeid\">{escape(t['target'])}</div>"),
+            _num(str(t['runs'])), _num(_pct(t['pass_rate'])),
+            _num(f"{t['passed']} / {t['failed']}"), _num(_secs(t['mean_duration_s'])),
+            # The count spans the window. The link opens the newest run's lines.
+            _num(str(t['advisories'])) if not t['advisories'] else
+            f'<td class="num"><a href="{run_href(t["newest_run"], runs_dir)}#advisories">'
+            f'{t["advisories"]}</a></td>',
+            _cell(f"{_run_link(t['newest_run'], runs_dir)}"
+                  f"<div class=\"case\">{outcome_html(t['newest_exit'])}</div>"),
+        ]
+
+    target_headers = ['Target', 'Runs', 'Pass rate', 'Passed / failed', 'Mean run',
+                      ('Notes', NOTES_TITLE), 'Newest run']
+    # One block per product: its heading, the verdict lines of its
+    # targets, then their table.
+    groups = []
+    for group in agg['groups']:
+        verdict = ''.join(f'<li>{escape(target_verdict(t))}{_product_chip(t["product"])}</li>'
+                          for t in group['targets'])
+        groups.append(
+            f'<h3 class="product-group">{escape(group["product"])} '
+            f'({plural(len(group["targets"]), "target", "targets")})</h3>'
+            f'<ul class="verdict">{verdict}</ul>'
+            + _table(target_headers, [target_row(t) for t in group['targets']], ''))
+    if not agg['targets']:
+        groups.append(f'<ul class="verdict"><li>{escape(health_verdict(agg)[0])}</li></ul>'
+                      + _table(target_headers, [], 'No archived runs yet. Run the suite once.'))
+    tiles = ''.join(_tile(p, runs_dir) for p in agg['products'])
+    tiles_html = (f'<div class="tiles">{tiles}</div>' if tiles
+                  else '<p class="empty">No archived runs yet. Run the suite once.</p>')
     module_rows = [[
         _cell(f'<code>{escape(m["module"])}</code>'), _num(str(m['runs'])),
         _num(str(m['tests'])), _num(_pct(m['pass_rate'])),
@@ -366,11 +472,6 @@ def render_health(agg: dict, generated: str | None = None,
         _cell(render_strip(w['facts'], '', with_text=False, links=RunLinks(runs_dir))),
         _rate_cell(w['facts']), _cell(_failure_link(w['facts']['last_failure'], runs_dir)),
     ] for w in agg['watch']]
-    verdict = ''.join(
-        f'<li>{escape(line)}{_product_chip(t["product"])}</li>'
-        for line, t in zip(health_verdict(agg), agg['targets'], strict=False))
-    if not agg['targets']:
-        verdict = f'<li>{escape(health_verdict(agg)[0])}</li>'
     # An empty table must not claim a clean window when the failures sit
     # in runs that carry no per-test records.
     unnamed = sum(t['runs_without_records'] for t in agg['targets']
@@ -388,24 +489,35 @@ def render_health(agg: dict, generated: str | None = None,
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Test health</title>
+<title>Test Health</title>
 {favicon_link()}
 <style>
 .brand-row {{ display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }}
 .brand-row h1 {{ margin: 0; }}
-.brand {{ display: block; }}{PAGE_CSS}</style>
+.brand {{ display: block; }}{PAGE_CSS}
+.tiles {{ display: flex; flex-wrap: wrap; gap: .75rem; margin: .5rem 0 1rem; }}
+.tile {{ background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+  padding: .75rem 1rem; min-width: 15rem; }}
+.tile-name {{ font-weight: 600; font-size: 1.05rem; margin-bottom: .4rem; }}
+.tile-fact {{ display: flex; justify-content: space-between; gap: 1.5rem; font-size: .9rem; }}
+.tile-fact .k {{ color: var(--muted); }}
+.tile-fact .v {{ font-variant-numeric: tabular-nums; }}
+h3.product-group {{ font-size: 1.05rem; margin: 1.25rem 0 .25rem; }}
+th[title] {{ text-decoration: underline dotted; cursor: help; }}
+</style>
 </head>
 <body>
-<div class="brand-row">{header_logo()}<h1>Test health</h1></div>
-<ul class="verdict">{verdict}</ul>
+<div class="brand-row">{header_logo()}<h1>Test Health</h1></div>
 <p class="case">The newest {window['last_n']} runs of each target, from the run archive.{span}
 Pass rate is passed / (passed + failed + errors); skips do not count.
 Generated {escape(generated)}. Rebuild with <code>python run.py health</code>.</p>
 <div class="meta"><a href="index.html">Archive Index</a></div>
 
+<h2 id="products">Products ({len(agg['products'])})</h2>
+{tiles_html}
+
 <h2 id="targets">Targets ({len(agg['targets'])})</h2>
-{_table(['Target', 'Runs', 'Pass rate', 'Passed / failed', 'Mean run', 'Advisories', 'Newest run'],
-        target_rows, 'No archived runs yet. Run the suite once.')}
+{''.join(groups)}
 
 <h2 id="modules">Modules ({len(agg['modules'])})</h2>
 {_table(['Module', 'Runs', 'Tests', 'Pass rate', 'Passed / failed', 'Mean test'],
@@ -426,9 +538,9 @@ def format_table(agg: dict) -> str:
     """The terminal view: the verdict, targets, modules, then the tests to watch."""
     window = agg['window']
     out = [f"Health: newest {window['last_n']} runs of each target, {window['runs']} runs in the window."]
+    out.extend(product_verdict(p) for p in agg['products'])
     if agg['targets']:
-        out.extend(f"{line} Product: {t['product']}." if t['product'] else line
-                   for line, t in zip(health_verdict(agg), agg['targets'], strict=False))
+        out.extend(f"{target_verdict(t)} Product: {t['product']}." for t in agg['targets'])
     else:
         out.extend(health_verdict(agg))
 
@@ -436,11 +548,11 @@ def format_table(agg: dict) -> str:
         return text if len(text) <= NAME_WIDTH else text[:NAME_WIDTH - 3] + '...'
 
     out.append('')
-    out.append(f"{'TARGET':<{NAME_WIDTH}} {'RUNS':>4} {'PASS':>5} {'MEAN':>9} {'ADV':>4}  NEWEST")
+    out.append(f"{'TARGET':<{NAME_WIDTH}} {'RUNS':>4} {'PASS':>5} {'MEAN':>9} {'NOTES':>5}  NEWEST")
     for t in agg['targets']:
         out.append(f"{cut(t['target']):<{NAME_WIDTH}} {t['runs']:>4} {_pct(t['pass_rate']):>5} "
-                   f"{_secs(t['mean_duration_s']):>9} {t['advisories']:>4}  "
-                   f"{t['newest_started']} exit {t['newest_exit'] if t['newest_exit'] is not None else '-'}")
+                   f"{_secs(t['mean_duration_s']):>9} {t['advisories']:>5}  "
+                   f"{t['newest_started']} {exit_outcome(t['newest_exit'])}")
     if not agg['targets']:
         out.append('(no archived runs)')
     out.append('')
@@ -475,7 +587,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error('--last must be 1 or more')
 
     runs = load_runs(args.runs_dir)
-    agg = aggregate(runs, args.last)
+    # The mapping file's project_key: the product a run names when neither
+    # its records nor its targets do.
+    agg = aggregate(runs, args.last, default_key=load_project_key(MAPPING_FILE))
     print(format_table(agg))
     if not runs:
         print(f'\nNo archived runs under {args.runs_dir}. Run the suite once.')

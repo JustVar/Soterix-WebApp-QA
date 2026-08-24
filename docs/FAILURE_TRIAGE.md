@@ -73,13 +73,18 @@ captured output and traceback. When a page object printed something a
 screenshot cannot show, it is there.
 
 `python run.py health` builds `reports/runs/health.html` from the archived
-summaries. It opens with one verdict line per target ("Views: 96% pass
-rate over 20 runs, 1 test to watch."), then shows pass rate and mean
-duration per target and per module, the advisory count per target with a
-link to the newest run's lines, and a "Tests to watch" table: every test
-that failed at least once in its last 20 results, with its strip, its
-flaky rate, and the date of its last failure, sorted by flaky rate. Check
-it before you call a failure new.
+summaries. It opens with one tile per product: runs in the window, pass
+rate, tests to watch, and the last run, linked. The targets follow,
+grouped under their product. Each group opens with one verdict line per
+target ("Views: 96% pass rate over 20 runs, 1 test to watch."), then a
+table with the pass rate, mean duration, notes count (the advisory
+lines, linked to the newest run's), and the newest run with its outcome
+in words. Then pass rate and mean duration per module, and a "Tests to
+watch" table: every test that failed at least once in its last 20
+results, with its strip, its flaky rate, and the date of its last
+failure, sorted by flaky rate. Check it before you call a failure new.
+A run that recorded no product is named by its targets, so every line
+carries one.
 
 ## View a trace in the GUI
 

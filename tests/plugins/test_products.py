@@ -47,6 +47,8 @@ def test_product_name_known_unknown_and_empty():
     (C2C, 'P0BK', 'K5kB', '70l1', 'P0BK'),     # the marker beats everything
     (C2C, None, 'K5kB', '70l1', '60W5'),       # the path rule beats the mapping default
     ('tests\\ui\\c2c\\test_x.py::test_a', None, None, None, '60W5'),  # backslashes too
+    ('tests/ui/c2c', None, 'K5kB', None, '60W5'),   # the folder itself, a run target
+    ('tests/ui/c2c/', None, None, None, '60W5'),
     (CORE, None, 'K5kB', '70l1', 'K5kB'),      # the mapping default beats the environment
     (CORE, None, None, '70l1', '70l1'),        # the environment beats the built-in default
     (CORE, None, None, '  ', 'JlW1'),          # a blank environment value is no value
@@ -74,3 +76,21 @@ def test_run_product_single_mixed_and_none():
     assert not products.is_mixed('')
     assert products.run_product([]) == ''
     assert products.run_product(['', None]) == ''
+
+
+def test_target_product_names_a_run_from_its_targets(monkeypatch):
+    """A run that recorded no product is named by its targets: the c2c
+    folder or node id is Camera 2 Cloud, anything else the default, two
+    kinds a sorted mix, and no target the default. Never ''."""
+    monkeypatch.delenv(products.ENV_VAR, raising=False)
+    assert products.target_product(['tests/ui/c2c']) == 'NexaiQ-Camera 2 Cloud'
+    assert products.target_product([C2C]) == 'NexaiQ-Camera 2 Cloud'
+    assert products.target_product(['tests/ui/views']) == 'NexaiQ-Core'
+    assert products.target_product(['tests/ui/views', 'tests/ui/c2c']) == \
+        'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core'
+    assert products.target_product([]) == 'NexaiQ-Core'
+    assert products.target_product(['', '  ']) == 'NexaiQ-Core'
+    assert products.target_product([], 'K5kB') == 'NexiaQ-Mobile'
+    assert products.target_product(['tests/ui/c2c'], 'K5kB') == 'NexaiQ-Camera 2 Cloud'
+    monkeypatch.setenv(products.ENV_VAR, '70l1')
+    assert products.target_product(['tests/ui/views']) == 'NexaiQ-Partner Admin Tool'

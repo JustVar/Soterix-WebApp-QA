@@ -336,10 +336,39 @@ def test_index_wording_is_title_case():
     assert '<title>Test Run Archive</title>' in html
     assert '<h1>Test Run Archive</h1>' in html
     assert 'Test run archive' not in html
-    headers = re.findall(r'<th>([^<]+)</th>', html)
-    assert headers == ['Started', 'Target', 'Passed', 'Failed', 'Skipped', 'Errors', 'Exit',
-                       'Advisories', 'Open']
+    headers = re.findall(r'<th[^>]*>([^<]+)</th>', html)
+    assert headers == ['Started', 'Product', 'Target', 'Passed', 'Failed', 'Skipped', 'Errors',
+                       'Outcome', 'Notes', 'Open']
     assert all(h == h[:1].upper() + h[1:] for h in headers)
+    assert '>Exit<' not in html
+    assert 'Advisories' not in html
+
+
+def test_index_names_a_product_and_an_outcome_on_every_row(monkeypatch):
+    """Product sits first after Started and is never blank: the run's own,
+    else the one its targets name, else the mapping default. The outcome
+    is a word with the exit code as its tooltip. The filter box matches a
+    row on any of its words."""
+    monkeypatch.delenv('QATOUCH_PROJECT_ID', raising=False)
+    html = ra._render_index([
+        _entry('2026-08-04_10-00-00__c2c', {'target': ['tests/ui/c2c'], 'exitstatus': 2}),
+        _entry('2026-08-03_10-00-00__views', {'target': ['tests/ui/views'], 'exitstatus': 0,
+                                              'provenance': {'product': 'NexaiQ-Neurosen'}}),
+        _entry('2026-08-02_10-00-00__mix', {'target': ['tests/ui/views', 'tests/ui/c2c'],
+                                            'exitstatus': 5}),
+        _entry('2026-08-01_10-00-00__bare'),
+    ], default_key='K5kB')
+    rows = re.findall(r'<tr data-test="([^"]*)">(.*?)</tr>', html, flags=re.S)
+    cells = [re.findall(r'<td>(.*?)</td>', row, flags=re.S) for _, row in rows]
+    assert [c[1] for c in cells] == ['NexaiQ-Camera 2 Cloud', 'NexaiQ-Neurosen',
+                                     'Mixed: NexaiQ-Camera 2 Cloud, NexiaQ-Mobile', 'NexiaQ-Mobile']
+    assert [c[7] for c in cells] == ['<span title="exit code 2">Interrupted</span>',
+                                     '<span title="exit code 0">Passed</span>',
+                                     '<span title="exit code 5">No tests</span>', '-']
+    assert 'id="filter"' in html
+    assert "' runs match'" in html
+    assert 'nexaiq-camera 2 cloud tests/ui/c2c interrupted' in rows[0][0]
+    assert f'<th title="{ra.NOTES_TITLE}">Notes</th>' in html
 
 
 def test_load_entries_flags_the_run_report(tmp_path):
@@ -605,7 +634,7 @@ class TestAdvisories:
              'summary': {'advisories': [{'line': '[LPR] x'}, {'line': '[VIEWS] y'}]}},
             {'name': '2026-08-21_09-00-00__b', 'has_report': False, 'summary': {}},
         ])
-        assert '<th>Advisories</th>' in html
+        assert f'<th title="{ra.NOTES_TITLE}">Notes</th>' in html
         assert '<td>2</td>' in html
         assert html.index('__a') < html.index('__b')
 
