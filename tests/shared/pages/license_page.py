@@ -60,6 +60,9 @@ class LicensePage:
             "svg[data-testid='ExpandMoreIcon'], "
             "svg[class*='MuiSvgIcon-root']:has(path[d*='16.59'])"
         )
+        # Class, not get_by_role('switch'): this build's MUI Switch input
+        # carries no role attribute (a bare type=checkbox, probed
+        # 08/24/2026), so the role matches nothing
         self.site_toggle_switches = page.locator(".MuiSwitch-root")
 
         # Feature-level rows (inside expanded site)
@@ -67,6 +70,7 @@ class LicensePage:
             "div[class*='feature-row'], tr[class*='feature'], "
             "div[class*='nested'], div[class*='sub-row']"
         )
+        # Class-keyed for the same reason as site_toggle_switches
         self.feature_toggle_switches = page.locator(
             "div[class*='feature'] .MuiSwitch-root, "
             "div[class*='nested'] .MuiSwitch-root"

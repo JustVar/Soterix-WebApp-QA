@@ -47,12 +47,16 @@ class AdminPage:
             "button:has-text('Delete'), div.MuiBox-root:text-is('Delete')"
         )
 
-        # User status toggle
+        # User status toggle. Class, not get_by_role('switch'): this
+        # build's MUI Switch input carries no role attribute (a bare
+        # type=checkbox, probed 08/24/2026), so the role matches nothing
         self.user_switch = page.locator(".MuiSwitch-root")
 
         # Role filter
         self.role_filter_dropdown = page.locator("div[role='combobox']")
-        self.role_options = page.locator("li.MuiMenuItem-root")
+        # The filter is a MUI Select: its items render as role=option
+        # inside a role=listbox, not menuitems (probed 08/24/2026)
+        self.role_options = page.get_by_role("option")
 
         # Rules management
         self.add_new_rule_button = page.locator(
@@ -285,7 +289,8 @@ class AdminPage:
         """
         if user_text:
             # XPath ancestor hop: the nearest container around the matched
-            # text that holds a switch is that user's card
+            # text that holds a switch is that user's card. Class-keyed
+            # like user_switch: the switch input has no role to scope on
             switch = self.page.get_by_text(user_text).first.locator(
                 "xpath=ancestor::*[.//*[contains(@class,'MuiSwitch-root')]][1]"
             ).locator(".MuiSwitch-root").first
@@ -325,7 +330,7 @@ class AdminPage:
         # fetch fills it - wait for more than 1 entry before reading
         try:
             self.page.wait_for_function(
-                "() => document.querySelectorAll('li.MuiMenuItem-root').length > 1",
+                "() => document.querySelectorAll('[role=option]').length > 1",
                 timeout=10000,
             )
         # best effort settle wait: the caller asserts on the returned

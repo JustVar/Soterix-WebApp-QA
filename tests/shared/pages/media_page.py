@@ -213,9 +213,11 @@ class MediaPage:
         icons = self.page.locator("img[src*='icon-options']")
         icons.nth(index).click()
         # The context menu popover carries the item actions. :visible
-        # skips stale keepMounted menus left hidden in the DOM.
+        # skips stale keepMounted menus left hidden in the DOM. Role
+        # alone: the paper wraps a ul[role=menu], one visible open,
+        # none once closed (probed 08/24/2026)
         self.page.locator(
-            "[role='menu']:visible, .MuiMenu-paper:visible"
+            "[role='menu']:visible"
         ).first.wait_for(state="visible", timeout=10000)
 
     def click_menu_item(self, text: str):

@@ -309,7 +309,11 @@ class SequencePage:
         The edit dialog uses a custom modal (modalBackdrop), not MUI Dialog.
         The timing is typically a select/dropdown inside a form.
         """
-        # Try multiple strategies to find and click the timing dropdown
+        # Try multiple strategies to find and click the timing dropdown.
+        # No role locator applies: in the edit dialog (Views > Sequences
+        # panel > 3-dot > Edit, probed 08/24/2026) the timing renders as
+        # bare classless divs reading '5 Sec' - 0 combobox, 0
+        # .MuiSelect-select, 0 native select - so only the text guess lands
         timing_selectors = [
             f"[role='button']:has-text('{from_text}')",
             f".MuiSelect-select:has-text('{from_text}')",
@@ -326,7 +330,8 @@ class SequencePage:
                 break
 
         if not clicked:
-            # Fallback: find any select/dropdown element near the sequence name input
+            # Fallback: find any select/dropdown element near the sequence name
+            # input (class-keyed for the same reason as timing_selectors)
             select_elements = self.page.locator(
                 ".MuiSelect-select, select, [role='button'][aria-haspopup='listbox']"
             )
