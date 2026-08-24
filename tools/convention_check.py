@@ -75,11 +75,23 @@ def line_is_excused(lines: list[str], idx: int, pattern=SLEEP_RE) -> bool:
     return False
 
 
+def inside_triple_quote(lines: list[str], idx: int) -> bool:
+    """Whether line idx sits inside a multi-line string (docstring prose or
+    a JS block passed to evaluate): a locator pattern quoted there is not a
+    locator, and a why-comment cannot be placed inside it."""
+    opened = 0
+    for line in lines[:idx]:
+        opened += line.count('''"""''') + line.count("'''")
+    return opened % 2 == 1
+
+
 def check_line(path: str, lines: list[str], idx: int) -> list[dict]:
     """Return findings for one line (0-based idx) of a file."""
     line = lines[idx]
     stripped = line.strip()
     if stripped.startswith("#"):
+        return []
+    if inside_triple_quote(lines, idx):
         return []
     findings = []
 
