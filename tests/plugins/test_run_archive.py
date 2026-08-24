@@ -236,7 +236,7 @@ def test_summary_shape():
                                 report_file='report.html')
     assert set(summary) == {'schema_version', 'started', 'ended', 'duration_s',
                             'exitstatus', 'counts', 'target', 'markexpr',
-                            'keyword', 'report_file'}
+                            'keyword', 'report_file', 'advisories'}
     assert summary['schema_version'] == 1
     assert summary['duration_s'] == 90.5
     assert summary['exitstatus'] == 1
@@ -394,3 +394,59 @@ def test_should_not_archive_when_zero_tests_ran():
 def test_should_not_archive_when_every_guard_trips():
     env = {'PYTEST_XDIST_WORKER': 'gw1'}
     assert ra._should_archive(_FakeConfig(collect_only=True), env, tests_run=0) is False
+
+
+# ---------------------------------------------------------------- advisories
+
+class TestAdvisories:
+    """The [VIEWS]/[LPR]/[EXPORT] marker lines ride into the archive."""
+
+    CAPTURED = (
+        "[AUTH] Loading cached session from .auth_state.json\n"
+        "DEBUG expand_site_and_show_cameras: Clicked devices subtab\n"
+        "[VIEWS] view drag: mouse drag did not consume a tile; trying JS fallback\n"
+        "[VIEWS] view drag: mouse drag did not consume a tile; trying JS fallback\n"
+        "  [EXPORT] completed in 14s (progress bar hidden)\n"
+        "[LPR] play_camera: drag landed nothing\n"
+        "[TRACE] Saved failure trace to reports/artifacts/x-trace.zip\n"
+        "[VIEWS]\n"
+    )
+
+    def test_scan_keeps_only_tagged_lines_in_order(self):
+        assert ra.scan_advisories(self.CAPTURED) == [
+            "[VIEWS] view drag: mouse drag did not consume a tile; trying JS fallback",
+            "[EXPORT] completed in 14s (progress bar hidden)",
+            "[LPR] play_camera: drag landed nothing",
+        ]
+
+    def test_scan_tolerates_empty_and_none(self):
+        assert ra.scan_advisories('') == []
+        assert ra.scan_advisories(None) == []
+
+    def test_summary_carries_advisories_and_defaults_empty(self):
+        base = dict(started=1000.0, ended=1010.0, exitstatus=0,
+                    counts={'passed': 1}, target=['t'], markexpr='',
+                    keyword='', report_file=None)
+        assert ra._build_summary(**base)['advisories'] == []
+        items = [{'test': 't::a', 'phase': 'call', 'line': '[LPR] x'}]
+        out = ra._build_summary(**base, advisories=items)
+        assert out['advisories'] == items
+        assert out['advisories'] is not items  # a copy, never the live list
+
+    def test_format_groups_lines_under_their_test(self):
+        text = ra._format_advisories([
+            {'test': 't::a', 'line': '[VIEWS] one'},
+            {'test': 't::a', 'line': '[VIEWS] two'},
+            {'test': 't::b', 'line': '[LPR] three'},
+        ])
+        assert text == 't::a\n  [VIEWS] one\n  [VIEWS] two\nt::b\n  [LPR] three\n'
+
+    def test_index_shows_the_count_and_tolerates_missing_key(self):
+        html = ra._render_index([
+            {'name': '2026-08-21_10-00-00__a', 'has_report': False,
+             'summary': {'advisories': [{'line': '[LPR] x'}, {'line': '[VIEWS] y'}]}},
+            {'name': '2026-08-21_09-00-00__b', 'has_report': False, 'summary': {}},
+        ])
+        assert '<th>Advisories</th>' in html
+        assert '<td>2</td>' in html
+        assert html.index('__a') < html.index('__b')

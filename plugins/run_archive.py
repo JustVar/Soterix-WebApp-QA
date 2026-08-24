@@ -12,7 +12,14 @@ What lands in reports/runs/<start-time>__<target>/:
     pytest-playwright's per-test artifact dirs.
   - last_run_results.json: the per-nodeid outcomes from qatouch_reporter,
     when that reporter ran.
-  - summary.json: timing, counts, exit status, and the invocation target.
+  - summary.json: timing, counts, exit status, the invocation target, and
+    the advisories below.
+  - advisories.txt: every [VIEWS] / [LPR] / [EXPORT] marker line a test
+    printed, grouped by test - the drag fallbacks, content-health deltas,
+    and export timings the page objects report. They come from pytest's
+    captured output, so a -s run shows them live instead of filing them.
+    The same lines print as a 'run advisories' section at the end of
+    every run, so nobody has to grep for them.
 
 Start at reports/runs/index.html: one row per archived run, newest first,
 with links to each run's report and folder. The page is rebuilt after every
@@ -56,6 +63,13 @@ TRACE_DIR = Path('reports') / 'artifacts'
 RESULTS_JSON = Path('logs') / 'last_run_results.json'
 
 SCHEMA_VERSION = 1
+
+# Marker tags the page objects print for things worth a human's eye that
+# never fail a test on their own. Add a tag here when a page object
+# starts printing a new one.
+ADVISORY_TAGS = ('VIEWS', 'LPR', 'EXPORT')
+_ADVISORY_RE = re.compile(r'^\[(' + '|'.join(ADVISORY_TAGS) + r')\] \S')
+TERMINAL_ADVISORY_MAX = 40
 
 # Retention is per target: a run only competes with other runs of the same
 # slug, so repair workflows that rerun one file dozens of times a morning
@@ -107,6 +121,7 @@ class _RunState:
         self.exitstatus: int | None = None
         self.counts: dict[str, int] = {'passed': 0, 'failed': 0,
                                        'skipped': 0, 'errors': 0}
+        self.advisories: list[dict] = []
 
     @property
     def tests_run(self) -> int:
@@ -291,9 +306,40 @@ def _copy_results_json(started: float, dest: Path) -> None:
         log.warning(f'run_archive: could not copy {RESULTS_JSON}: {e}')
 
 
+def scan_advisories(text: str | None) -> list[str]:
+    """The advisory marker lines in a block of captured output, in order.
+
+    Only lines opening with one of ADVISORY_TAGS count; the [AUTH] and
+    DEBUG chatter every test prints is not an advisory. Duplicates within
+    one block collapse - a poll that prints the same warning each tick
+    is one advisory, not forty.
+    """
+    seen: set[str] = set()
+    lines = []
+    for raw in (text or '').splitlines():
+        line = raw.strip()
+        if _ADVISORY_RE.match(line) and line not in seen:
+            seen.add(line)
+            lines.append(line)
+    return lines
+
+
+def _format_advisories(advisories: list[dict]) -> str:
+    """advisories.txt body: one block per test, its lines indented."""
+    out = []
+    current = None
+    for item in advisories:
+        if item.get('test') != current:
+            current = item.get('test')
+            out.append(str(current))
+        out.append(f"  {item.get('line', '')}")
+    return '\n'.join(out) + '\n'
+
+
 def _build_summary(*, started: float, ended: float, exitstatus: int | None,
                    counts: Mapping[str, int], target: list[str], markexpr: str,
-                   keyword: str, report_file: str | None) -> dict:
+                   keyword: str, report_file: str | None,
+                   advisories: list[dict] | None = None) -> dict:
     """Build the summary.json payload. Fixed shape - the index renders it."""
     return {
         'schema_version': SCHEMA_VERSION,
@@ -307,6 +353,7 @@ def _build_summary(*, started: float, ended: float, exitstatus: int | None,
         'markexpr': markexpr or '',
         'keyword': keyword or '',
         'report_file': report_file,
+        'advisories': [dict(a) for a in (advisories or [])],
     }
 
 
@@ -394,6 +441,8 @@ def _render_index(entries: list[dict]) -> str:
         started = summary.get('started') or stamp.replace('_', ' ')
         target = ' '.join(summary.get('target') or []) or slug
         exitstatus = summary.get('exitstatus')
+        advisories = summary.get('advisories')
+        advisory_count = len(advisories) if isinstance(advisories, list) else '-'
         links = [f'<a href="{escape(name, quote=True)}/">folder</a>']
         if entry.get('has_report'):
             links.insert(0, f'<a href="{escape(name, quote=True)}/report.html">report</a>')
@@ -403,11 +452,12 @@ def _render_index(entries: list[dict]) -> str:
             *[escape(str(counts.get(key, '-')))
               for key in ('passed', 'failed', 'skipped', 'errors')],
             '-' if exitstatus is None else escape(str(exitstatus)),
+            escape(str(advisory_count)),
             ' '.join(links),
         ]
         rows.append('<tr>' + ''.join(f'<td>{cell}</td>' for cell in cells) + '</tr>')
 
-    body = '\n'.join(rows) if rows else ('<tr><td colspan="8">No archived runs '
+    body = '\n'.join(rows) if rows else ('<tr><td colspan="9">No archived runs '
                                          'yet. Run the suite once.</td></tr>')
     return f'''<!doctype html>
 <html lang="en">
@@ -428,7 +478,7 @@ th {{ background: #f0f0f0; }}
 this page after every run.</p>
 <table>
 <tr><th>Started</th><th>Target</th><th>Passed</th><th>Failed</th>
-<th>Skipped</th><th>Errors</th><th>Exit</th><th>Open</th></tr>
+<th>Skipped</th><th>Errors</th><th>Exit</th><th>Advisories</th><th>Open</th></tr>
 {body}
 </table>
 </body>
@@ -463,9 +513,13 @@ def _archive_run(config: Any, state: _RunState) -> None:
     summary = _build_summary(started=state.started, ended=ended,
                              exitstatus=state.exitstatus, counts=state.counts,
                              target=config.args, markexpr=markexpr,
-                             keyword=keyword, report_file=report_file)
+                             keyword=keyword, report_file=report_file,
+                             advisories=state.advisories)
     (dest / 'summary.json').write_text(json.dumps(summary, indent=2),
                                        encoding='utf-8')
+    if state.advisories:
+        (dest / 'advisories.txt').write_text(_format_advisories(state.advisories),
+                                             encoding='utf-8')
     log.info(f'run_archive: archived the run to {dest}')
 
 
@@ -476,16 +530,44 @@ def pytest_sessionstart(session: Any) -> None:  # noqa: ARG001 - pytest fixes th
 
 
 def pytest_runtest_logreport(report: Any) -> None:
-    """Tally outcomes for summary.json and the zero-test guard."""
+    """Tally outcomes for summary.json and the zero-test guard, and keep
+    the advisory marker lines each phase printed."""
     counter = _classify(report.when, report.outcome)
     if counter is not None:
         _state.counts[counter] += 1
+    if report.when in ('setup', 'call'):
+        captured = ((getattr(report, 'capstdout', '') or '') + '\n'
+                    + (getattr(report, 'capstderr', '') or ''))
+        for line in scan_advisories(captured):
+            _state.advisories.append({'test': report.nodeid,
+                                      'phase': report.when, 'line': line})
 
 
 def pytest_sessionfinish(session: Any, exitstatus: int) -> None:  # noqa: ARG001 - pytest fixes the hook signature
     """Record when the session ended and how it exited."""
     _state.ended = time.time()
     _state.exitstatus = int(exitstatus)
+
+
+def pytest_terminal_summary(terminalreporter: Any, exitstatus: int, config: Any) -> None:  # noqa: ARG001 - pytest fixes the hook signature
+    """Print the run's advisory lines where the team will actually see them.
+
+    Passing tests swallow their output, so the [VIEWS]/[LPR]/[EXPORT]
+    markers would otherwise only exist inside the archive.
+    """
+    advisories = _state.advisories
+    if not advisories:
+        return
+    try:
+        terminalreporter.section(f'run advisories ({len(advisories)})')
+        for item in advisories[:TERMINAL_ADVISORY_MAX]:
+            terminalreporter.write_line(f"{item['test']}: {item['line']}")
+        if len(advisories) > TERMINAL_ADVISORY_MAX:
+            terminalreporter.write_line(
+                f'... {len(advisories) - TERMINAL_ADVISORY_MAX} more in the '
+                f"run's advisories.txt under {RUNS_DIR}/")
+    except Exception as e:  # noqa: BLE001 - a summary must never fail the run
+        log.debug(f'run_archive: could not print advisories: {e}')
 
 
 def pytest_unconfigure(config: Any) -> None:
