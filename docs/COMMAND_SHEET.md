@@ -95,8 +95,9 @@ a message that names the run that holds the lock.
 
 | Where | What |
 |-------|------|
-| `reports/runs/index.html` | Start here. One row per run, newest first, with counts, advisories, and links |
-| `reports/runs/<start>__<target>/` | That run's report, screenshots, traces, results JSON, and `advisories.txt` |
+| `reports/runs/<start>__<target>/run.html` | Start here for a run. Failures first, each with its error, call log, screenshots, video, and the show-trace command. Then advisories, passed, and skipped |
+| `reports/runs/index.html` | One row per run, newest first, with counts, advisories, and a `run report` link |
+| `reports/runs/<start>__<target>/` | That run's report, screenshots, traces, videos, results JSON, and `advisories.txt` |
 | `reports/report.html` | The latest run's report (failures show their screenshot and a trace link) |
 | `reports/screenshots/<test>__PASSED.png` | The latest run's labeled end-state screenshots; drags also keep a `__mid-drag-1.png` frame |
 | `reports/artifacts/*-trace.zip` | The latest run's failure traces |
@@ -106,6 +107,13 @@ Open a trace:
 
 ```
 venv\Scripts\python.exe -m playwright show-trace reports\artifacts\<name>-trace.zip
+```
+
+Rebuild a run's page (after a hand edit of its folder, or for a run
+archived before the page existed):
+
+```
+venv\Scripts\python.exe -m plugins.run_report latest
 ```
 
 `docs/FAILURE_TRIAGE.md` explains how to read a trace and lists the
@@ -120,6 +128,7 @@ Set these in `.env` or in the shell for one run.
 | `ENV` | `qa`, `stage`, `prod` | Environment under test |
 | `REPORT_SCREENSHOTS` | `all`, `off` | `all` embeds passed-test screenshots in the report too; `off` disables screenshots |
 | `RUN_ARCHIVE` | `off` | Disables the per-run archive |
+| `RECORD_VIDEO` | `off` | Disables the per-test video. Default: record every test, keep the clip only on failure |
 | `RUN_GUARD` | `off` | Disables the one-run-at-a-time guard |
 | `SEND_TEST_REPORT` + `REPORT_RECIPIENT` | `1` + an address | Emails the report after the run |
 | `PWDEBUG` | `1` | Opens the Playwright Inspector and steps through the test |

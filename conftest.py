@@ -171,11 +171,20 @@ def tenant_login(login_data):
 # Session-Cached Authentication (Playwright Storage State)
 # ----------------
 # This optimization saves ~345 seconds on test runs by caching auth state.
-# See docs/SESSION_CACHING_IMPLEMENTATION.md for details.
+# See docs/archive/SESSION_CACHING_IMPLEMENTATION.md for details.
 
 AUTH_STATE_FILE = ".auth_state.json"
 
 TRACE_DIR = Path("reports") / "artifacts"
+
+# Video clips record under the trace dir so pytest-playwright's session-start
+# wipe of reports/artifacts/ clears them and run_archive's copy keeps them.
+# A kept clip moves up next to its trace as <test>-video.webm.
+VIDEO_DIR = TRACE_DIR / "videos"
+
+# Same off values as plugins/report_media.py so one convention covers every
+# switch: RECORD_VIDEO=off skips recording entirely.
+_OFF_VALUES = ("off", "0", "false", "no")
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -197,16 +206,53 @@ def _trace_path(name: str) -> Path:
     return TRACE_DIR / f"{safe}-trace.zip"
 
 
+def _video_path(name: str) -> Path:
+    """Build a filesystem-safe video path from a test node id (same
+    sanitizer and cap as _trace_path, so the clip sorts next to its trace)."""
+    safe = re.sub(r"[^\w.-]+", "-", name).strip("-")[:150]
+    TRACE_DIR.mkdir(parents=True, exist_ok=True)
+    return TRACE_DIR / f"{safe}-video.webm"
+
+
+def _video_context_args() -> dict:
+    """The new_context kwargs that record every page of the context.
+
+    Empty under RECORD_VIDEO=off. pytest-playwright's --video flag only
+    covers the plugin's own context, never the one this fixture builds.
+    """
+    if os.environ.get("RECORD_VIDEO", "").strip().lower() in _OFF_VALUES:
+        return {}
+    VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+    return {"record_video_dir": str(VIDEO_DIR)}
+
+
+def _video_of(page):
+    """The page's video handle, or None when recording is off.
+
+    Taken while the page is still open: the handle stays valid after the
+    page and context close, and that is when its file is complete.
+    """
+    try:
+        return page.video
+    except Exception as e:
+        print(f"[VIDEO] Could not get the video handle: {e}")
+        return None
+
+
+def _test_failed(request) -> bool:
+    """Whether the test body failed, read from the report conftest stashed."""
+    rep_call = getattr(request.node, "rep_call", None)
+    return rep_call is not None and rep_call.failed
+
+
 def _finish_tracing(context, request) -> None:
     """Save the trace if the test failed; otherwise discard it.
 
     Mirrors pytest-playwright's --tracing=retain-on-failure for the context
     this fixture creates itself (which the plugin's flag does not cover).
     """
-    rep_call = getattr(request.node, "rep_call", None)
-    failed = rep_call is not None and rep_call.failed
     try:
-        if failed:
+        if _test_failed(request):
             path = _trace_path(request.node.nodeid)
             context.tracing.stop(path=str(path))
             print(f"[TRACE] Saved failure trace to {path}")
@@ -214,6 +260,27 @@ def _finish_tracing(context, request) -> None:
             context.tracing.stop()
     except Exception as e:
         print(f"[TRACE] Could not finalize trace: {e}")
+
+
+def _finish_video(video, keep_as: str | None) -> None:
+    """Keep the clip as <keep_as>-video.webm, or discard it when keep_as is None.
+
+    Same keep-on-failure rule as _finish_tracing. Must run after the
+    context closed: Playwright finishes writing the .webm on context close,
+    and save_as refuses a page that is still open. The raw file under
+    VIDEO_DIR is deleted either way so the folder never accumulates the
+    clips of passing tests.
+    """
+    if video is None:
+        return
+    try:
+        if keep_as is not None:
+            path = _video_path(keep_as)
+            video.save_as(str(path))
+            print(f"[VIDEO] Saved failure video to {path}")
+        video.delete()
+    except Exception as e:
+        print(f"[VIDEO] Could not finalize video: {e}")
 
 
 @pytest.fixture(scope="session")
@@ -237,21 +304,26 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
     First run: Logs in via UI and saves storage state to file.
     Subsequent runs: Loads cached state (skips login entirely).
 
-    Records a Playwright trace for every test and keeps it only on failure
-    (reports/artifacts/<test>-trace.zip; open with `playwright show-trace`).
+    Records a Playwright trace and a video for every test and keeps both
+    only on failure (reports/artifacts/<test>-trace.zip, open with
+    `playwright show-trace`; reports/artifacts/<test>-video.webm).
+    RECORD_VIDEO=off skips the video.
     """
     import os
 
     context = None
     page = None
+    video = None
 
     # Check if we have cached auth state
     if os.path.exists(auth_state_path):
         print(f"[AUTH] Loading cached session from {auth_state_path}")
         try:
-            context = browser.new_context(storage_state=auth_state_path)
+            context = browser.new_context(storage_state=auth_state_path,
+                                          **_video_context_args())
             context.tracing.start(screenshots=True, snapshots=True, sources=True)
             page = context.new_page()
+            video = _video_of(page)
             page.goto(base_url)
             page.wait_for_load_state('domcontentloaded', timeout=30000)
 
@@ -269,8 +341,11 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
                 page.close()
             if context is not None:
                 context.close()
+            # The dead session's clip is not the test's evidence.
+            _finish_video(video, None)
             context = None
             page = None
+            video = None
             try:
                 os.remove(auth_state_path)
             except OSError:
@@ -279,9 +354,10 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
     if context is None:
         # No valid cache - perform fresh login
         print("[AUTH] Performing fresh login...")
-        context = browser.new_context()
+        context = browser.new_context(**_video_context_args())
         context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
+        video = _video_of(page)
 
         try:
             from tests.shared.pages.login_page import LoginPage
@@ -310,12 +386,14 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
                 pass
             page.close()
             context.close()
+            _finish_video(video, f"{request.node.nodeid}-login-failure")
             raise
 
     yield page
     _finish_tracing(context, request)
     page.close()
     context.close()
+    _finish_video(video, request.node.nodeid if _test_failed(request) else None)
 
 
 # Graph's sendMail call carries the whole message in one request with a

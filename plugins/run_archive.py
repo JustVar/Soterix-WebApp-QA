@@ -6,6 +6,8 @@ wipes reports/artifacts/ at session start, and reports/screenshots/ only
 ever holds the latest run.
 
 What lands in reports/runs/<start-time>__<target>/:
+  - run.html: the run's own page (plugins/run_report.py) - failures first,
+    each with its error, call log, screenshots, video, and trace command.
   - report.html: this run's HTML report (skipped when the run wrote none).
   - screenshots/: the labeled per-test screenshots (see report_media).
   - traces/: everything under reports/artifacts/ - failure trace zips plus
@@ -22,8 +24,13 @@ What lands in reports/runs/<start-time>__<target>/:
     every run, so nobody has to grep for them.
 
 Start at reports/runs/index.html: one row per archived run, newest first,
-with links to each run's report and folder. The page is rebuilt after every
-run from the folders' summary.json files, so hand-deleting a folder is safe.
+with links to each run's page, report, and folder. The index is rebuilt
+after every run from the folders' summary.json files, so hand-deleting a
+folder is safe.
+
+Runs whose every target sits under tests/plugins or tests/tools are not
+archived: those are the repo's own unit tests, and they leave no UI
+evidence worth a folder.
 
 Retention: each target keeps its newest 20 runs, capped at 100 runs in
 total - per-target so a morning of debug iterations on one file can only
@@ -54,6 +61,8 @@ from datetime import datetime
 from html import escape
 from pathlib import Path
 from typing import Any
+
+from plugins.run_report import build_run_report
 
 log = logging.getLogger('run_archive')
 
@@ -95,6 +104,10 @@ FIT_TAIL = 20
 
 # Same off-values parsing as report_media so one convention covers both.
 _OFF_VALUES = ('off', '0', 'false', 'no')
+
+# The repo's own unit tests. A run aimed only at these produces no
+# screenshots, traces, or advisories - nothing an archive folder could hold.
+UNIT_TEST_ROOTS = ('tests/plugins', 'tests/tools')
 
 # Run folders are named <session-start>__<slug>; only names with this shape
 # are ever pruned, so index.html and hand-made folders can never be deleted.
@@ -145,12 +158,34 @@ def _should_archive(config: Any, environ: Mapping[str, str], tests_run: int) -> 
       controller sees every result and archives once.
     - Zero tests ran: nothing was produced, so there is nothing to keep,
       and a folder per typo'd invocation would drown the real runs.
+    - Every target is a unit-test root (tests/plugins, tests/tools): those
+      runs leave no UI evidence, and a folder per plugin test run would
+      bury the suite runs the archive exists for.
     """
     if config.getoption('--collect-only', default=False):
         return False
     if environ.get('PYTEST_XDIST_WORKER'):
         return False
+    if _unit_tests_only(getattr(config, 'args', None) or []):
+        return False
     return tests_run > 0
+
+
+def _unit_tests_only(args: list[str]) -> bool:
+    """True when every invocation target sits under a unit-test root.
+
+    A target is a path or a node id (path::Class::test); only the path
+    part counts. Separators are normalized so a backslash or an absolute
+    path still lands under its root. No targets means the whole suite.
+    """
+    targets = [str(a) for a in args if str(a).strip()]
+    if not targets:
+        return False
+    for target in targets:
+        path = target.split('::', 1)[0].replace('\\', '/').strip('/')
+        if not any(f'/{root}/' in f'/{path}/' for root in UNIT_TEST_ROOTS):
+            return False
+    return True
 
 
 def _classify(when: str, outcome: str) -> str | None:
@@ -421,7 +456,8 @@ def _load_entries(runs_dir: Path) -> list[dict]:
         except (OSError, ValueError):
             pass
         entries.append({'name': folder.name, 'summary': summary,
-                        'has_report': (folder / 'report.html').is_file()})
+                        'has_report': (folder / 'report.html').is_file(),
+                        'has_run_report': (folder / 'run.html').is_file()})
     return entries
 
 
@@ -446,6 +482,8 @@ def _render_index(entries: list[dict]) -> str:
         links = [f'<a href="{escape(name, quote=True)}/">folder</a>']
         if entry.get('has_report'):
             links.insert(0, f'<a href="{escape(name, quote=True)}/report.html">report</a>')
+        if entry.get('has_run_report'):
+            links.insert(0, f'<a href="{escape(name, quote=True)}/run.html">run report</a>')
         cells = [
             escape(str(started)),
             escape(str(target)),
@@ -473,9 +511,10 @@ th {{ background: #f0f0f0; }}
 </head>
 <body>
 <h1>Test run archive</h1>
-<p>One folder per test run, newest first. The archive keeps the newest
-{KEEP_RUNS} runs of each target ({KEEP_RUNS_TOTAL} in total) and rebuilds
-this page after every run.</p>
+<p>One folder per test run, newest first. Open a run's <b>run report</b>
+for its failures with their screenshots, video, and trace. The archive
+keeps the newest {KEEP_RUNS} runs of each target ({KEEP_RUNS_TOTAL} in
+total) and rebuilds this page after every run.</p>
 <table>
 <tr><th>Started</th><th>Target</th><th>Passed</th><th>Failed</th>
 <th>Skipped</th><th>Errors</th><th>Exit</th><th>Advisories</th><th>Open</th></tr>
@@ -520,7 +559,21 @@ def _archive_run(config: Any, state: _RunState) -> None:
     if state.advisories:
         (dest / 'advisories.txt').write_text(_format_advisories(state.advisories),
                                              encoding='utf-8')
+    _write_run_report(dest)
     log.info(f'run_archive: archived the run to {dest}')
+
+
+def _write_run_report(dest: Path) -> None:
+    """Build the run's own page from the copies just filed.
+
+    Last, so it sees summary.json and every copy. The builder reads only
+    the folder, so `python -m plugins.run_report <folder>` can rebuild the
+    page later. A builder error costs the page, never the archive.
+    """
+    try:
+        (dest / 'run.html').write_text(build_run_report(dest), encoding='utf-8')
+    except Exception as e:  # noqa: BLE001 - the page is a convenience; the copies already stand
+        log.warning(f'run_archive: could not build run.html for {dest.name}: {e}')
 
 
 def pytest_sessionstart(session: Any) -> None:  # noqa: ARG001 - pytest fixes the hook signature

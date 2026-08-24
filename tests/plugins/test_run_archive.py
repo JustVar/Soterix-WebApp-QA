@@ -2,9 +2,10 @@
 
 Pure-helper coverage plus the screenshot copy's gates (run on temp folders):
 slug building, collision suffixing, prune selection, path-cap truncation,
-the summary shape, index rendering, outcome classification, and the guard
-decisions. The full end-to-end archive needs a finished pytest session with
-real report files, so it is exercised by real runs, not here.
+the summary shape, index rendering, outcome classification, the guard
+decisions, and the run.html hand-off to run_report. The full end-to-end
+archive needs a finished pytest session with real report files, so it is
+exercised by real runs, not here.
 
 Living under tests/plugins/ to be picked up by the default discovery without
 needing to add a new test root or update pytest collection config. The tests
@@ -288,6 +289,26 @@ def test_index_links_report_only_when_present():
     assert '2026-08-02_10-00-00__b/' in html
 
 
+def test_index_links_the_run_report_first_when_present():
+    """run.html is where a reader starts, so its link leads the Open cell."""
+    html = ra._render_index([
+        {'name': '2026-08-01_10-00-00__a', 'summary': {}, 'has_report': True,
+         'has_run_report': True},
+        {'name': '2026-08-02_10-00-00__b', 'summary': {}, 'has_report': True},
+    ])
+    cell_a = html[html.index('2026-08-01_10-00-00__a/run.html'):]
+    assert cell_a.index('run report') < cell_a.index('>report<') < cell_a.index('folder')
+    assert '2026-08-02_10-00-00__b/run.html' not in html
+
+
+def test_load_entries_flags_the_run_report(tmp_path):
+    (tmp_path / '2026-08-01_10-00-00__a').mkdir()
+    (tmp_path / '2026-08-01_10-00-00__a' / 'run.html').write_text('x', encoding='utf-8')
+    (tmp_path / '2026-08-02_10-00-00__b').mkdir()
+    flags = {e['name']: e['has_run_report'] for e in ra._load_entries(tmp_path)}
+    assert flags == {'2026-08-01_10-00-00__a': True, '2026-08-02_10-00-00__b': False}
+
+
 def test_index_tolerates_an_empty_summary():
     """A folder from an older layout (no summary.json) still gets a row
     built from its name alone."""
@@ -362,14 +383,19 @@ def test_kill_switch_defaults_to_on():
 # ---------------------------------------------------------------------------
 
 class _FakeConfig:
-    """Just enough of pytest Config for _should_archive: getoption only."""
+    """Just enough of pytest Config for the guard and the archive: getoption
+    plus the invocation targets in `args`."""
 
-    def __init__(self, collect_only=False):
+    def __init__(self, collect_only=False, args=('tests/ui',), htmlpath=None):
         self._collect_only = collect_only
+        self.args = list(args)
+        self._htmlpath = htmlpath
 
     def getoption(self, name, default=None):
         if name == '--collect-only':
             return self._collect_only
+        if name == 'htmlpath':
+            return self._htmlpath
         return default
 
 
@@ -394,6 +420,78 @@ def test_should_not_archive_when_zero_tests_ran():
 def test_should_not_archive_when_every_guard_trips():
     env = {'PYTEST_XDIST_WORKER': 'gw1'}
     assert ra._should_archive(_FakeConfig(collect_only=True), env, tests_run=0) is False
+
+
+@pytest.mark.parametrize('args', [
+    ['tests/plugins'],
+    ['tests/tools'],
+    ['tests/plugins', 'tests/tools'],
+    ['tests/plugins/test_run_archive.py::test_slug_caps_at_40'],
+    ['tests\\plugins\\test_run_archive.py'],
+    ['tests/plugins/'],
+    ['C:/repo/tests/tools/test_qatouch_client.py'],
+])
+def test_should_not_archive_a_unit_test_only_run(args):
+    """The repo's own unit tests leave no UI evidence; a folder per plugin
+    test run would bury the suite runs the archive exists for."""
+    assert ra._unit_tests_only(args) is True
+    assert ra._should_archive(_FakeConfig(args=args), {}, tests_run=40) is False
+
+
+@pytest.mark.parametrize('args', [
+    [],                                   # bare pytest: the whole suite
+    ['tests'],
+    ['tests/ui/views'],
+    ['tests/plugins', 'tests/ui/views'],  # one UI target keeps the archive
+    ['tests/ui/plugins_page/test_x.py'],  # a UI folder that merely contains the word
+])
+def test_should_archive_when_any_target_is_not_a_unit_test(args):
+    assert ra._unit_tests_only(args) is False
+    assert ra._should_archive(_FakeConfig(args=args), {}, tests_run=5) is True
+
+
+# ---------------------------------------------------------------- run.html hand-off
+
+def _archive_on_temp(tmp_path, monkeypatch):
+    """Point every live path at the temp folder and archive one fake run."""
+    monkeypatch.setattr(ra, 'RUNS_DIR', tmp_path / 'runs')
+    monkeypatch.setattr(ra, 'SCREENSHOT_DIR', tmp_path / 'shots')
+    monkeypatch.setattr(ra, 'TRACE_DIR', tmp_path / 'artifacts')
+    monkeypatch.setattr(ra, 'RESULTS_JSON', tmp_path / 'none.json')
+    (tmp_path / 'shots').mkdir()
+    (tmp_path / 'shots' / 't-x.py-test_a-chromium__FAILED.png').write_bytes(b'png')
+    state = ra._RunState()
+    state.started = 1_700_000_000.0
+    state.ended = state.started + 12.5
+    state.exitstatus = 1
+    state.counts['failed'] = 1
+    state.advisories = [{'test': 't/x.py::test_a[chromium]', 'phase': 'call',
+                         'line': '[LPR] play_camera: drag landed nothing'}]
+    ra._archive_run(_FakeConfig(args=['t/x.py']), state)
+    folders = [p for p in (tmp_path / 'runs').iterdir() if p.is_dir()]
+    assert len(folders) == 1
+    return folders[0]
+
+
+def test_archive_writes_the_run_report(tmp_path, monkeypatch):
+    dest = _archive_on_temp(tmp_path, monkeypatch)
+    page = (dest / 'run.html').read_text(encoding='utf-8')
+    assert (dest / 'summary.json').is_file()
+    assert (dest / 'advisories.txt').is_file()
+    assert 'Failures (1)' in page
+    assert 'screenshots/t-x.py-test_a-chromium__FAILED.png' in page
+    assert '[LPR] play_camera: drag landed nothing' in page
+
+
+def test_archive_survives_a_report_builder_failure(tmp_path, monkeypatch):
+    """A page that cannot be built costs the page, never the copies."""
+    def boom(run_dir):
+        raise RuntimeError('builder down')
+    monkeypatch.setattr(ra, 'build_run_report', boom)
+    dest = _archive_on_temp(tmp_path, monkeypatch)
+    assert (dest / 'summary.json').is_file()
+    assert (dest / 'screenshots' / 't-x.py-test_a-chromium__FAILED.png').is_file()
+    assert not (dest / 'run.html').exists()
 
 
 # ---------------------------------------------------------------- advisories

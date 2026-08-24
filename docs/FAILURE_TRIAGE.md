@@ -17,6 +17,10 @@ Two mechanisms record traces. Both keep a trace only when the test fails.
 Traces land in `reports/artifacts/` as `<test-id>-trace.zip`. A failed login
 also saves a trace, named `<test-id>-login-failure-trace.zip`.
 
+The `authenticated_page` fixture also records a video of every test and keeps
+it only on failure, as `reports/artifacts/<test-id>-video.webm` next to the
+trace. Set `RECORD_VIDEO=off` to skip the recording.
+
 **Each pytest run clears `reports/artifacts/` at start.** Copy a trace out of
 the folder before you start the next run if you want to keep it.
 
@@ -27,12 +31,20 @@ The live outputs hold only the latest run. Each run overwrites
 `reports/artifacts/`.
 
 The archive keeps the evidence of past runs. After every run,
-`plugins/run_archive.py` copies the report, the screenshots, the traces, and
-the results JSON to `reports/runs/<start-time>__<target>/`. Open
+`plugins/run_archive.py` copies the report, the screenshots, the traces, the
+videos, and the results JSON to `reports/runs/<start-time>__<target>/`. Open
 `reports/runs/index.html` to browse the archived runs, newest first. The
 archive keeps the newest 20 runs of each target, and 100 runs in total, so
 repeated runs of one test do not push out a full-suite archive. Set
 `RUN_ARCHIVE=off` to disable it.
+
+Start a triage at the run's `run.html`. It lists the failures first. Each
+failure shows the error message, the failing Playwright action with its call
+log, the 15 actions before it, the console errors, every screenshot of the
+test (final and mid-drag), the video clip, and the exact `show-trace`
+command for its trace. Passed and skipped tests sit below in collapsed lists
+with their screenshots. `python -m plugins.run_report latest` rebuilds the
+page for the newest run, or pass a run folder.
 
 ## View a trace in the GUI
 
