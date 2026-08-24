@@ -76,7 +76,7 @@ venv\Scripts\python.exe run.py test "tests/ui/views/test_views_basic.py::TestVie
 venv\Scripts\python.exe run.py rerun latest                         # the failed tests of the newest archived run
 venv\Scripts\python.exe run.py open latest                          # that run's run.html in your browser
 venv\Scripts\python.exe run.py list                                 # the last 10 archived runs
-venv\Scripts\python.exe run.py health                               # pass rates, flaky candidates, slowest tests (reports/runs/health.html)
+venv\Scripts\python.exe run.py health                               # pass rates per target and module, tests to watch (reports/runs/health.html)
 venv\Scripts\python.exe run.py module views -- --headed -s          # anything after -- goes to pytest
 venv\Scripts\python.exe run.py smoke --check                        # confirm the environment answers first
 ```
@@ -120,7 +120,7 @@ a message that names the run that holds the lock.
 
 | Where | What |
 |-------|------|
-| `reports/runs/<start>__<target>/run.html` | Start here for a run. Failures first, each with its error, call log, screenshots, video, and the show-trace command. Then advisories, passed, and skipped |
+| `reports/runs/<start>__<target>/run.html` | Start here for a run. A one-sentence verdict, then the failures, grouped when they share an error, each with its error, call log, screenshots, video, and the show-trace command. Then advisories, the slowest 5, passed, and skipped. Every test carries a strip of its last 20 outcomes and a label for what changed since the previous run |
 | `reports/runs/index.html` | One row per run, newest first, with counts, advisories, and a `run report` link |
 | `reports/runs/<start>__<target>/` | That run's report, screenshots, traces, videos, results JSON, and `advisories.txt` |
 | `reports/report.html` | The latest run's report (failures show their screenshot and a trace link) |
@@ -141,9 +141,12 @@ archived before the page existed):
 venv\Scripts\python.exe -m plugins.run_report latest
 ```
 
-Each run folder also holds `log/`: one file per test with the output
-pytest captured in every phase, and `run.log` with the session's logging.
-`run.html` links them from each test.
+Each run folder also holds `log/`. `run.log` has the session's logging
+and then, one section per test, the output pytest captured for every
+passed and skipped test. Each failed test has its own file beside it
+with its captured output and traceback. `run.html` links a failed
+test's file from its card, and `run.log` from the header and the Passed
+section.
 
 `docs/FAILURE_TRIAGE.md` explains how to read a trace and lists the
 traps this app has taught us. Check that list before you blame timing.

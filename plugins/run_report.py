@@ -7,33 +7,46 @@ puts every piece of the run's evidence one click away, failures first.
     python -m plugins.run_report reports/runs/<start>__<target>
 
 What the page shows, in order:
+  - Verdict: one sentence in plain words, e.g. "3 of 49 tests failed - 2
+    new failures, 1 still failing; 1 test skipped." or "All 49 tests
+    passed."
   - Header: target, start time, duration, outcome counts, exit status,
     provenance (ENV, host, git commit, browser, Playwright versions), and
-    links to the pytest-html report, the archive index, and the run that
-    the change chips compare against.
+    links to the pytest-html report, the archive index, and the previous
+    run of these tests, which the change labels compare against.
   - A filter box: type part of a title, node id, case key, module, or
     outcome and only the matching tests stay visible.
   - Failures: one card per failed or errored test with the error message,
     the failing Playwright action and its call log, the actions that led
     up to it, console errors, every screenshot of the test (final plus
     mid-drag frames, click for full size), the video clip when one was
-    kept, and the exact show-trace command for the trace zip.
+    kept, and the exact show-trace command for the trace zip. Tests that
+    failed with the same error (first line, with numbers, quotes, hex
+    addresses, and locator text reduced) sit together under "N tests
+    share this error". Every failure says whether its error is new or
+    was seen in one of the previous 20 runs of these tests, and when.
   - Advisories: the [VIEWS] / [LPR] / [EXPORT] lines from summary.json.
   - Slowest 5: the longest tests of the run.
   - Passed and Skipped: collapsed lists grouped by module, each test with
-    its thumbnails and its advisory lines.
+    its final screenshot and its advisory lines. Mid-drag frames stay on
+    disk and show only on a failure card.
 
 Every test shows its readable title first (the docstring's first line, or
 the function name as words), the QA Touch case title beneath it when the
 test is mapped, and the node id smaller under both. The node id stays the
 join key for the QA Touch mapping and the archive history, so the page
-never renames a test. Each test also carries its duration, a link to its
-captured output under log/, and a change chip against the previous run of
-the same target: new failure, fixed, still failing, or new test.
+never renames a test. Each test also carries its duration, a history
+strip (its outcome in each of the last 20 archived runs of these tests,
+oldest left, with "passed 17/20" and a flaky label when it both passed
+and failed in that window), and a change label against the previous run:
+New failure, Fixed, Still failing, or New test. Failed tests link their
+captured output under log/. The output of every other test is in
+log/run.log.
 
 Where the facts come from, most reliable first:
   1. summary.json "tests" - run_archive's own per-test record: title,
-     module, QA Touch case, outcome, per-phase timing, log file.
+     module, QA Touch case, outcome, per-phase timing, log file, and the
+     error line of a failure.
   2. report.html - pytest-html embeds every test's outcome, duration, and
      captured log (the traceback) as JSON in a data-jsonblob attribute.
   3. last_run_results.json - qatouch_reporter's per-nodeid outcomes. Only
@@ -61,9 +74,12 @@ import sys
 import zipfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from datetime import datetime
 from html import escape
 from pathlib import Path
 from urllib.parse import quote
+
+from plugins.branding import favicon_link, header_logo
 
 # Same sanitizer and caps as report_media._safe_name (screenshots) and
 # conftest._trace_path (traces, videos): the archive names are those
@@ -82,16 +98,41 @@ LAST_ACTIONS = 15
 # How many of the run's longest tests the "Slowest" block lists.
 SLOWEST_COUNT = 5
 
-# Change chips against the previous run of the same target.
-DELTA_NEW_FAILURE = 'new failure'
-DELTA_FIXED = 'fixed'
-DELTA_STILL_FAILING = 'still failing'
-DELTA_NEW_TEST = 'new test'
+# How many archived runs of the target the history strip and the "new
+# error" check look at, this run included. The archive keeps that many
+# per target (run_archive.KEEP_RUNS), so the window is never wider than
+# what is on disk.
+HISTORY_RUNS = 20
+
+# Change labels against the previous run of the same target, in the words
+# a reader sees on the page. The CSS class is the lower-case form.
+DELTA_NEW_FAILURE = 'New failure'
+DELTA_FIXED = 'Fixed'
+DELTA_STILL_FAILING = 'Still failing'
+DELTA_NEW_TEST = 'New test'
 
 # Error lines pytest prefixes with 'E ' in a longrepr; the first block of
 # them is the headline a reader wants before the full traceback.
 _ERROR_LINE_RE = re.compile(r'^E {1,3}(.*)$')
 _HEADLINE_MAX = 30
+# The one error line kept in summary.json per failure, capped so the
+# summary stays small.
+ERROR_LINE_MAX = 300
+
+# The parts of an error line that change between runs of the same
+# failure. Reduced in this order: an object repr holds a hex address, a
+# locator call holds quotes and digits, a quoted value holds digits.
+_SIG_OBJECT_RE = re.compile(r'<[^<>]*?object at [^<>]*>')
+_SIG_LOCATOR_RE = re.compile(r'\b(locator|get_by_\w+|nth|filter)\([^()]*\)')
+_SIG_QUOTED_RE = re.compile(r'"[^"]*"|\'[^\']*\'')
+_SIG_HEX_RE = re.compile(r'\b0x[0-9a-fA-F]+\b')
+_SIG_NUMBER_RE = re.compile(r'\d+(?:\.\d+)?')
+
+# Start times as summary.json writes them (2026-08-24T14:27:25) and as the
+# run folder names carry them (2026-08-24_14-27-25).
+_STARTED_RE = re.compile(r'^(\d{4})-(\d{2})-(\d{2})[T_ ](\d{2})[:-](\d{2})(?:[:-](\d{2}))?')
+_MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
 _SCREENSHOT_RE = re.compile(
     r'^(?P<test>.*?)__(?P<suffix>PASSED|FAILED|SETUP_FAILED|SKIPPED)'
@@ -136,6 +177,15 @@ class TestRecord:
     log_file: str = ''
     seconds: float | None = None
     delta: str = ''
+    # Filled by build_run_report for failures: the error headline, its
+    # signature, the trace digest, and the newest earlier run that showed
+    # the same signature ({'run', 'started'}, None when the error is new).
+    headline: str = ''
+    signature: str = ''
+    digest: dict | None = None
+    seen: dict | None = None
+    # history_facts() over the archived runs of this target.
+    history: dict = field(default_factory=dict)
 
     @property
     def safe(self) -> str:
@@ -197,6 +247,68 @@ def format_seconds(seconds: float) -> str:
         return f'{seconds:.1f} s'
     minutes, rest = divmod(seconds, 60)
     return f'{int(minutes)} min {rest:.0f} s'
+
+
+def parse_started(text: str | None) -> datetime | None:
+    """A summary 'started' value or a run folder's stamp as a datetime, or
+    None when the text has neither shape."""
+    m = _STARTED_RE.match(str(text or '').strip())
+    if not m:
+        return None
+    year, month, day, hour, minute, second = (int(g or 0) for g in m.groups())
+    try:
+        return datetime(year, month, day, hour, minute, second)
+    except ValueError:
+        return None
+
+
+def friendly_time(text: str | None) -> str:
+    """Aug 24, 2:27 PM - the form a reader recognises. Month names are
+    fixed here, not taken from the locale, so two machines agree. The
+    raw text stands in when it does not parse."""
+    dt = parse_started(text)
+    if dt is None:
+        return str(text or '-')
+    hour = dt.hour % 12 or 12
+    return f'{_MONTHS[dt.month - 1]} {dt.day}, {hour}:{dt.minute:02d} {"AM" if dt.hour < 12 else "PM"}'
+
+
+def run_started(run_dir: Path, summary: Mapping | None = None) -> str:
+    """When the run started: summary.json's value, else the folder stamp."""
+    started = (summary or {}).get('started')
+    return str(started) if started else run_dir.name.partition('__')[0]
+
+
+def first_line(text: str) -> str:
+    return next((line.strip() for line in (text or '').splitlines() if line.strip()), '')
+
+
+def error_line(longrepr: str) -> str:
+    """The one line that names a failure: the first 'E ' line of pytest's
+    longrepr, else its first non-empty line, capped for summary.json."""
+    return first_line(_headline(longrepr) or longrepr)[:ERROR_LINE_MAX]
+
+
+def error_signature(text: str) -> str:
+    """The error's first line with the parts that vary between runs reduced.
+
+    Two failures share a signature when only their numbers (timeouts,
+    counts, ids), quoted values, hex addresses, or locator text differ:
+    a 30000 ms and a 15000 ms timeout on the same step are one error, and
+    so are "group 'AutoTest 131103' not found" on two days. Empty for an
+    empty error, so a failure without a message never groups.
+    """
+    line = first_line(text)
+    # A raw longrepr line still carries pytest's 'E ' prefix.
+    prefixed = _ERROR_LINE_RE.match(line)
+    if prefixed:
+        line = prefixed.group(1).strip()
+    line = _SIG_OBJECT_RE.sub('<object>', line)
+    line = _SIG_LOCATOR_RE.sub(r'\1(...)', line)
+    line = _SIG_QUOTED_RE.sub('"..."', line)
+    line = _SIG_HEX_RE.sub('0x...', line)
+    line = _SIG_NUMBER_RE.sub('#', line)
+    return re.sub(r'\s+', ' ', line).strip()
 
 
 def _loose(text: str) -> str:
@@ -327,8 +439,8 @@ def summary_tests(summary: Mapping) -> list[dict]:
     return [r for r in rows if isinstance(r, dict) and r.get('nodeid')]
 
 
-def find_previous_run(run_dir: Path) -> Path | None:
-    """The newest earlier archive of the same target, or None.
+def find_earlier_runs(run_dir: Path, limit: int) -> list[Path]:
+    """The newest `limit` earlier archives of the same target, newest first.
 
     Same target means the same folder slug: the part after '__'. Only
     folders that sort before this run count, so rebuilding an old run's
@@ -336,12 +448,19 @@ def find_previous_run(run_dir: Path) -> Path | None:
     """
     slug = run_dir.name.partition('__')[2]
     parent = run_dir.parent
-    if not slug or not parent.is_dir():
-        return None
-    earlier = sorted(p for p in parent.iterdir()
-                     if p.is_dir() and RUN_DIR_RE.match(p.name)
-                     and p.name < run_dir.name and p.name.partition('__')[2] == slug)
-    return earlier[-1] if earlier else None
+    if not slug or limit < 1 or not parent.is_dir():
+        return []
+    earlier = sorted((p for p in parent.iterdir()
+                      if p.is_dir() and RUN_DIR_RE.match(p.name)
+                      and p.name < run_dir.name and p.name.partition('__')[2] == slug),
+                     reverse=True)
+    return earlier[:limit]
+
+
+def find_previous_run(run_dir: Path) -> Path | None:
+    """The newest earlier archive of the same target, or None."""
+    earlier = find_earlier_runs(run_dir, 1)
+    return earlier[0] if earlier else None
 
 
 def load_previous_outcomes(prev_dir: Path) -> dict[str, str]:
@@ -380,6 +499,140 @@ def compute_deltas(current: Mapping[str, str],
         elif was_failing and outcome in PASSED_OUTCOMES:
             chips[nodeid] = DELTA_FIXED
     return chips
+
+
+def load_run_errors(run_dir: Path) -> dict[str, str]:
+    """Node id -> the error line of each failed test of an archived run.
+
+    From the summary records when the archive wrote them (schema 3), else
+    from the captured logs in report.html (older archives). Empty when
+    neither knows, or when nothing failed.
+    """
+    rows = summary_tests(load_summary(run_dir))
+    failed = [r for r in rows if str(r.get('outcome') or '') in FAILURE_OUTCOMES]
+    if rows and all('error' in r for r in failed):
+        return {str(r['nodeid']): str(r.get('error') or '') for r in failed}
+    return {nodeid: first_line(_headline(row['log']))
+            for nodeid, row in load_report_results(run_dir).items()
+            if row['outcome'] in FAILURE_OUTCOMES}
+
+
+def load_history(run_dir: Path, limit: int = HISTORY_RUNS) -> list[dict]:
+    """The earlier runs of this target the page compares with, newest
+    first: {'name', 'started', 'outcomes', 'errors'} each. At most
+    limit - 1 of them, so that with this run the window holds `limit`."""
+    history = []
+    for earlier in find_earlier_runs(run_dir, limit - 1):
+        summary = load_summary(earlier)
+        history.append({'name': earlier.name, 'started': run_started(earlier, summary),
+                        'outcomes': load_previous_outcomes(earlier),
+                        'errors': load_run_errors(earlier)})
+    return history
+
+
+def test_results(nodeid: str, runs: list[dict]) -> list[dict]:
+    """The test's outcome in each run that ran it, in the runs' order."""
+    return [{'run': r['name'], 'started': r.get('started'), 'outcome': r['outcomes'][nodeid]}
+            for r in runs if nodeid in (r.get('outcomes') or {})]
+
+
+def history_facts(results: list[dict], limit: int = HISTORY_RUNS) -> dict:
+    """The history strip's facts from a test's results, newest first.
+
+    'blocks' are the newest `limit` results, oldest first (the strip reads
+    left to right). 'rate' is the flaky rate: failures / runs the test was
+    present in, None with no runs. 'flaky' is true when the window holds
+    at least one pass and one failure. 'last_failure' is the newest
+    failing block, or None.
+    """
+    blocks = list(reversed(results[:limit]))
+    passed = sum(1 for b in blocks if b['outcome'] in PASSED_OUTCOMES)
+    failures = [b for b in blocks if b['outcome'] in FAILURE_OUTCOMES]
+    runs = len(blocks)
+    return {'blocks': blocks, 'runs': runs, 'passed': passed, 'failed': len(failures),
+            'rate': (len(failures) / runs) if runs else None,
+            'flaky': passed > 0 and len(failures) > 0,
+            'last_failure': failures[-1] if failures else None}
+
+
+def signatures_seen(history: list[dict]) -> dict[str, dict]:
+    """Error signature -> the newest earlier run that showed it, as
+    {'run', 'started'}. `history` is newest first, as load_history gives it."""
+    seen: dict[str, dict] = {}
+    for run in history:
+        for line in (run.get('errors') or {}).values():
+            signature = error_signature(line)
+            if signature and signature not in seen:
+                seen[signature] = {'run': run['name'], 'started': run.get('started')}
+    return seen
+
+
+def group_failures(failures: list[TestRecord]) -> list[list[TestRecord]]:
+    """Failures grouped by signature, each group placed where its first
+    member was. A failure without a signature stands alone."""
+    groups: dict[str, list[TestRecord]] = {}
+    ordered: list[list[TestRecord]] = []
+    for rec in failures:
+        if not rec.signature:
+            ordered.append([rec])
+            continue
+        if rec.signature not in groups:
+            groups[rec.signature] = []
+            ordered.append(groups[rec.signature])
+        groups[rec.signature].append(rec)
+    return ordered
+
+
+def plural(count: int, one: str, many: str) -> str:
+    return f'{count} {one if count == 1 else many}'
+
+
+def run_verdict(passed: int, failed: int, skipped: int,
+                deltas: Mapping[str, str] | None = None) -> str:
+    """The run in one sentence of plain words, numbers exact.
+
+    "3 of 49 tests failed - 2 new failures, 1 still failing; 1 test
+    skipped." or "All 49 tests passed." `failed` counts errors too: a
+    test that could not start did not pass. The change counts come from
+    the deltas against the previous run and are left out without one.
+    """
+    total = passed + failed + skipped
+    if total == 0:
+        return 'No tests ran.'
+    tests = 'test' if total == 1 else 'tests'
+    if failed:
+        text = f'{failed} of {total} {tests} failed'
+    elif skipped:
+        text = f'{passed} of {total} {tests} passed'
+    elif total == 1:
+        text = '1 test ran and passed'
+    else:
+        text = f'All {total} tests passed'
+    labels = list((deltas or {}).values())
+    changes = [(labels.count(DELTA_NEW_FAILURE), 'new failure', 'new failures'),
+               (labels.count(DELTA_STILL_FAILING), 'still failing', 'still failing'),
+               (labels.count(DELTA_FIXED), 'fixed', 'fixed')]
+    detail = ', '.join(plural(n, one, many) for n, one, many in changes if n)
+    if detail:
+        text += f' - {detail}'
+    if skipped:
+        text += f'; {plural(skipped, "test skipped", "tests skipped")}'
+    return text + '.'
+
+
+def delta_wording(previous: Mapping | None,
+                  link: Callable[[str], str] | None = None) -> str:
+    """The sentence that says what the change labels compare against.
+
+    With a previous run: "Changes since the previous run of these tests
+    (Aug 24, 2:27 PM)", where `link` wraps the run's name and time when
+    the page wants a link. Without one: "First run of these tests -
+    nothing to compare yet."
+    """
+    if previous is None:
+        return 'First run of these tests - nothing to compare yet.'
+    label = f'previous run of these tests ({friendly_time(previous.get("started"))})'
+    return f'Changes since the {link(label) if link else label}'
 
 
 def load_report_results(run_dir: Path) -> dict[str, dict]:
@@ -712,6 +965,20 @@ h3.title { margin: 0; }
 .chip.new-failure, .chip.still-failing { color: var(--fail); background: var(--fail-bg); border-color: var(--fail); }
 .chip.fixed { color: var(--pass); background: var(--pass-bg); border-color: var(--pass); }
 .chip.new-test { color: var(--link); border-color: var(--link); }
+.chip.new-error { color: var(--fail); border-color: var(--fail); }
+.chip.seen-before { color: var(--muted); }
+.chip.flaky { color: var(--skip); background: var(--skip-bg); border-color: var(--skip); }
+.verdict { font-size: 1.1rem; font-weight: 600; margin: .25rem 0 .75rem; }
+ul.verdict { padding-left: 1.25rem; }
+.history { display: inline-flex; align-items: center; gap: .5rem; }
+.strip { display: inline-flex; gap: 2px; }
+.blk { width: 9px; height: 14px; border-radius: 2px; background: var(--line); display: inline-block; }
+.blk.passed, .blk.xpassed { background: var(--pass); }
+.blk.failed, .blk.error { background: var(--fail); }
+.blk.skipped, .blk.xfailed { background: var(--skip); }
+.group { border: 1px dashed var(--fail); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+.group-head { margin-bottom: 1rem; }
+.group-head b { font-size: 1.05rem; margin-right: .5rem; }
 h4.module { margin-top: 1.25rem; text-transform: none; letter-spacing: 0; font-family: ui-monospace, Consolas, monospace; }
 input#filter { width: min(100%, 36rem); padding: .45rem .7rem; font: inherit; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); }
 #filter-count { color: var(--muted); margin-left: .75rem; font-size: .9rem; }
@@ -763,7 +1030,12 @@ def _headline(log: str) -> str:
 
 
 def _render_shots(rec: TestRecord) -> str:
-    items = [(rel, 'final') for rel in rec.screenshots] + [(rel, 'mid-drag') for rel in rec.frames]
+    """The final screenshots, plus the mid-drag frames on a failure only:
+    a passed drag's frames are on disk for anyone who wants them, but on
+    the page they are noise."""
+    items = [(rel, 'final') for rel in rec.screenshots]
+    if rec.outcome in FAILURE_OUTCOMES:
+        items += [(rel, 'mid-drag') for rel in rec.frames]
     if not items:
         return ''
     figures = []
@@ -800,8 +1072,41 @@ def _filter_key(rec: TestRecord) -> str:
 def _delta_chip(rec: TestRecord) -> str:
     if not rec.delta:
         return ''
-    return (f'<span class="chip delta {escape(rec.delta.replace(" ", "-"))}">'
+    return (f'<span class="chip delta {escape(rec.delta.lower().replace(" ", "-"))}">'
             f'{escape(rec.delta)}</span>')
+
+
+def _seen_chip(rec: TestRecord) -> str:
+    """New error, or Seen before with the newest earlier run that showed
+    the same error signature, linked."""
+    if rec.outcome not in FAILURE_OUTCOMES or not rec.signature:
+        return ''
+    if rec.seen is None:
+        return '<span class="chip delta new-error">New error</span>'
+    when = friendly_time(rec.seen.get('started'))
+    return (f'<span class="chip delta seen-before">Seen before (last on '
+            f'<a href="../{_href(str(rec.seen["run"]))}/run.html">{escape(when)}</a>)</span>')
+
+
+def render_strip(facts: Mapping, href_prefix: str = '', with_text: bool = True) -> str:
+    """The history strip: one block per run, oldest left and newest right,
+    each a link to that run's page with the date and outcome as its
+    tooltip. With `with_text`, "passed 17/20" follows, then the flaky
+    label with the flaky rate when the window holds both outcomes.
+    `href_prefix` is the path from the page to the runs folder."""
+    if not facts or not facts.get('runs'):
+        return ''
+    blocks = ''.join(
+        f'<a class="blk {escape(str(b["outcome"]))}" href="{href_prefix}{_href(str(b["run"]))}/run.html" '
+        f'title="{escape(friendly_time(b.get("started")))}: {escape(str(b["outcome"]))}"></a>'
+        for b in facts['blocks'])
+    parts = [f'<span class="strip" title="the last {facts["runs"]} runs of these tests, '
+             f'newest right">{blocks}</span>']
+    if with_text:
+        parts.append(f'<span>passed {facts["passed"]}/{facts["runs"]}</span>')
+        if facts['flaky']:
+            parts.append(f'<span class="chip delta flaky">flaky {facts["rate"] * 100:.0f}%</span>')
+    return '<span class="history">' + ''.join(parts) + '</span>'
 
 
 def _render_identity(rec: TestRecord, heading: str) -> str:
@@ -814,31 +1119,43 @@ def _render_identity(rec: TestRecord, heading: str) -> str:
     return ''.join(parts)
 
 
-def _render_facts(rec: TestRecord, with_outcome: bool = False) -> str:
+def _render_facts(rec: TestRecord, with_outcome: bool = False, with_seen: bool = True) -> str:
     facts = []
     if with_outcome:
         facts.append(f'<span class="chip {escape(rec.outcome)}">{escape(rec.outcome)}</span>')
     if rec.duration_text:
         facts.append(f'<span>{escape(rec.duration_text)}</span>')
     facts.append(_delta_chip(rec))
+    if with_seen:
+        facts.append(_seen_chip(rec))
     facts.append(f'<span>{escape(rec.module_name)}</span>')
     if rec.log_file:
         facts.append(f'<a href="{_href(rec.log_file)}">captured output</a>')
+    facts.append(render_strip(rec.history, '../'))
     return '<div class="facts">' + ''.join(f for f in facts if f) + '</div>'
 
 
-def _render_failure(rec: TestRecord, run_dir: Path) -> str:
-    parts = [f'<div class="card {escape(rec.outcome)}" id="{escape(rec.safe, quote=True)}" '
-             f'data-test="{_filter_key(rec)}">',
-             _render_identity(rec, 'h3'), _render_facts(rec, with_outcome=True)]
-    digest = None
+def failure_digest(rec: TestRecord, run_dir: Path) -> dict | None:
+    """The digest of the test's first trace zip, or None without one."""
     trace_zips = [rel for rel in rec.traces if rel.lower().endswith('.zip')]
-    if trace_zips:
-        digest = digest_trace(run_dir / trace_zips[0])
+    return digest_trace(run_dir / trace_zips[0]) if trace_zips else None
 
+
+def failure_headline(rec: TestRecord, digest: dict | None) -> str:
+    """The error block from the captured log, else the trace's error lines."""
     headline = _headline(rec.log)
     if not headline and digest and digest.get('errors'):
         headline = '\n'.join(digest['errors'])
+    return headline
+
+
+def _render_failure(rec: TestRecord, run_dir: Path, with_seen: bool = True) -> str:
+    parts = [f'<div class="card {escape(rec.outcome)}" id="{escape(rec.safe, quote=True)}" '
+             f'data-test="{_filter_key(rec)}">',
+             _render_identity(rec, 'h3'), _render_facts(rec, with_outcome=True, with_seen=with_seen)]
+    # build_run_report fills these in. A caller that skipped it still gets a card.
+    digest = rec.digest if rec.digest is not None else failure_digest(rec, run_dir)
+    headline = rec.headline or failure_headline(rec, digest)
     parts.append('<h4>Error</h4>')
     if headline:
         parts.append(f'<pre class="headline">{escape(headline)}</pre>')
@@ -887,6 +1204,20 @@ def _render_failure(rec: TestRecord, run_dir: Path) -> str:
         parts.append('<p class="empty">No trace kept for this test.</p>')
     parts.append('</div>')
     return '\n'.join(parts)
+
+
+def _render_group(group: list[TestRecord], run_dir: Path) -> str:
+    """One failure renders as its card. Several with one error signature
+    share a frame that says so, with the error and its new/seen label
+    once at the top instead of on every card."""
+    if len(group) == 1:
+        return _render_failure(group[0], run_dir)
+    lead = group[0]
+    head = (f'<div class="group-head"><b>{len(group)} tests share this error</b>'
+            f'{_seen_chip(lead)}'
+            f'<pre class="headline">{escape(first_line(lead.headline))}</pre></div>')
+    cards = '\n'.join(_render_failure(r, run_dir, with_seen=False) for r in group)
+    return f'<div class="group">{head}\n{cards}\n</div>'
 
 
 def _render_row(rec: TestRecord) -> str:
@@ -942,10 +1273,12 @@ def _render_provenance(summary: dict) -> str:
 
 
 def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord],
-                      unattached: list[str], previous: str | None = None) -> str:
+                      unattached: list[str], previous: Mapping | None = None,
+                      verdict: str = '') -> str:
     """Render the page from already-collected facts. Pure - no disk reads
-    beyond the trace digest in the failure cards. `previous` names the
-    run folder the change chips were computed against, when there is one."""
+    beyond a failure card whose digest build_run_report did not fill.
+    `previous` is the run the change labels were computed against
+    ({'name', 'started'}), when there is one."""
     counts = summary.get('counts') if isinstance(summary.get('counts'), dict) else {}
     target = ' '.join(str(t) for t in (summary.get('target') or [])) or run_dir.name.partition('__')[2]
     started = summary.get('started') or run_dir.name.partition('__')[0].replace('_', ' ')
@@ -969,13 +1302,22 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
         links.insert(0, '<a href="report.html">pytest-html report</a>')
     if (run_dir / 'advisories.txt').is_file():
         links.append('<a href="advisories.txt">advisories.txt</a>')
-    if (run_dir / 'log' / 'run.log').is_file():
+    has_run_log = (run_dir / 'log' / 'run.log').is_file()
+    if has_run_log:
         links.append('<a href="log/run.log">run.log</a>')
     if previous:
-        links.append(f'<a href="../{_href(previous)}/run.html">previous run of this target</a>')
+        links.append(f'<a href="../{_href(str(previous["name"]))}/run.html">previous run of these tests</a>')
     links.append('<a href="./">folder</a>')
-    compared = (f'<p class="case">Change chips compare against <code>{escape(previous)}</code>.</p>'
-                if previous else '<p class="case">No earlier run of this target to compare with.</p>')
+
+    if previous:
+        def link(label: str) -> str:
+            return f'<a href="../{_href(str(previous["name"]))}/run.html">{escape(label)}</a>'
+        compared = (f'<p class="case">{delta_wording(previous, link)}. Each changed test carries '
+                    f'a label: {DELTA_NEW_FAILURE}, {DELTA_FIXED}, {DELTA_STILL_FAILING}, '
+                    f'or {DELTA_NEW_TEST}.</p>')
+    else:
+        compared = f'<p class="case">{escape(delta_wording(None))}</p>'
+    verdict_html = f'<p class="verdict">{escape(verdict)}</p>' if verdict else ''
 
     advisories = [a for a in (summary.get('advisories') or []) if isinstance(a, dict)]
     if advisories:
@@ -985,8 +1327,11 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
     else:
         adv_body = '<p class="empty">None.</p>'
 
-    failure_body = ('\n'.join(_render_failure(r, run_dir) for r in failures)
+    failure_body = ('\n'.join(_render_group(g, run_dir) for g in group_failures(failures))
                     if failures else '<p class="empty">No failures in this run.</p>')
+    passed_note = ('<p class="case">The captured output of passed and skipped tests is in '
+                   '<a href="log/run.log">log/run.log</a>, one section per test.</p>'
+                   if has_run_log else '')
 
     extra_sections = ''
     if unknown:
@@ -1003,10 +1348,15 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Run {escape(run_dir.name)}</title>
-<style>{PAGE_CSS}</style>
+{favicon_link()}
+<style>
+.brand-row {{ display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }}
+.brand-row h1 {{ margin: 0; }}
+.brand {{ display: block; }}{PAGE_CSS}</style>
 </head>
 <body>
-<h1>Test run {escape(str(started))}</h1>
+<div class="brand-row">{header_logo()}<h1>Test run {escape(str(started))}</h1></div>
+{verdict_html}
 <div class="meta">
 <span>Target: <code>{escape(target)}</code></span>
 <span>Duration: {escape(str(duration)) if duration is not None else '-'} s</span>
@@ -1030,6 +1380,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 {_render_slowest(list(tests.values()))}
 
 <h2 id="passed">Passed</h2>
+{passed_note}
 {_render_collapsed('Passed', passed)}
 
 <h2 id="skipped">Skipped</h2>
@@ -1042,16 +1393,49 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 
 
 def build_run_report(run_dir: Path) -> str:
-    """Build the run.html for one archived run folder and return it."""
+    """Build the run.html for one archived run folder and return it.
+
+    Reads the folder, then the previous HISTORY_RUNS - 1 archives of the
+    same target for the change labels, the history strips, and the
+    new-or-seen verdict on each error signature.
+    """
     run_dir = Path(run_dir)
+    summary = load_summary(run_dir)
     tests, unattached = collect_tests(run_dir)
-    previous = find_previous_run(run_dir)
-    chips = compute_deltas({nodeid: rec.outcome for nodeid, rec in tests.items()},
-                           load_previous_outcomes(previous) if previous else None)
+    outcomes = {nodeid: rec.outcome for nodeid, rec in tests.items()}
+    history = load_history(run_dir)
+    previous = history[0] if history else None
+    chips = compute_deltas(outcomes, previous['outcomes'] if previous else None)
     for nodeid, chip in chips.items():
         tests[nodeid].delta = chip
-    return render_run_report(run_dir, load_summary(run_dir), tests, unattached,
-                             previous=previous.name if previous else None)
+
+    current = {'name': run_dir.name, 'started': run_started(run_dir, summary), 'outcomes': outcomes}
+    runs = [current, *history]
+    for nodeid, rec in tests.items():
+        rec.history = history_facts(test_results(nodeid, runs))
+
+    seen = signatures_seen(history)
+    for rec in tests.values():
+        if rec.outcome not in FAILURE_OUTCOMES:
+            continue
+        rec.digest = failure_digest(rec, run_dir)
+        rec.headline = failure_headline(rec, rec.digest)
+        rec.signature = error_signature(rec.headline)
+        rec.seen = seen.get(rec.signature) if rec.signature else None
+
+    counts = summary.get('counts') if isinstance(summary.get('counts'), dict) else None
+    if counts:
+        passed, skipped = int(counts.get('passed', 0) or 0), int(counts.get('skipped', 0) or 0)
+        failed = int(counts.get('failed', 0) or 0) + int(counts.get('errors', 0) or 0)
+    else:
+        # No summary (an older layout, an archive that died mid-write): the
+        # collected records are the only count there is.
+        passed = sum(1 for o in outcomes.values() if o in PASSED_OUTCOMES)
+        failed = sum(1 for o in outcomes.values() if o in FAILURE_OUTCOMES)
+        skipped = sum(1 for o in outcomes.values() if o in SKIPPED_OUTCOMES)
+    verdict = run_verdict(passed, failed, skipped, chips)
+    return render_run_report(run_dir, summary, tests, unattached, previous=previous,
+                             verdict=verdict)
 
 
 # ---------------------------------------------------------------- CLI

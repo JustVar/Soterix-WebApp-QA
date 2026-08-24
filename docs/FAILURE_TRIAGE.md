@@ -38,26 +38,47 @@ archive keeps the newest 20 runs of each target, and 100 runs in total, so
 repeated runs of one test do not push out a full-suite archive. Set
 `RUN_ARCHIVE=off` to disable it.
 
-Start a triage at the run's `run.html`. It lists the failures first. Each
-failure shows the error message, the failing Playwright action with its call
-log, the 15 actions before it, the console errors, every screenshot of the
-test (final and mid-drag), the video clip, and the exact `show-trace`
-command for its trace. Passed and skipped tests sit below in collapsed lists
-with their screenshots, grouped by module. Every test shows its readable
-title, its QA Touch case when the node id is mapped, its duration, and a
-chip that says what changed since the previous run of the same target (new
-failure, fixed, still failing, new test). The filter box at the top narrows
-the page to the tests that match a word. `python -m plugins.run_report
-latest` rebuilds the page for the newest run, or pass a run folder.
+Start a triage at the run's `run.html`. It opens with a one-sentence
+verdict ("3 of 49 tests failed - 2 new failures, 1 still failing; 1 test
+skipped.") and lists the failures first. Failures that share an error sit
+together under "N tests share this error". The error's first line is
+compared with numbers, quoted values, hex addresses, and locator text
+reduced, so a 30000 ms and a 15000 ms timeout on the same step are one
+error. Each failure says "New error" when that error appeared in none of
+the previous 20 runs of these tests, or "Seen before (last on <date>)"
+with a link to that run. Each failure shows the error message, the failing
+Playwright action with its call log, the 15 actions before it, the console
+errors, every screenshot of the test (final and mid-drag), the video clip,
+and the exact `show-trace` command for its trace. Passed and skipped tests
+sit below in collapsed lists with their final screenshots, grouped by
+module. Mid-drag frames stay on disk and show only on a failure card.
 
-The run's `log/` folder holds one file per test with the output pytest
-captured in every phase, and `run.log` with the session's logging. When a
-page object printed something a screenshot cannot show, it is there.
+Every test shows its readable title, its QA Touch case when the node id is
+mapped, its duration, a history strip, and a change label. The strip is
+one colored block per archived run of these tests, up to 20, oldest left
+and newest right. Hover a block for the run's date and outcome, click it
+to open that run. "passed 17/20" follows, and "flaky 15%" when the test
+both passed and failed in that window. The flaky rate is failures / runs
+the test was present in. The change label compares with the previous run
+of these tests, named by date under the header: New failure, Fixed, Still
+failing, or New test. The filter box at the top narrows the page to the
+tests that match a word. `python -m plugins.run_report latest` rebuilds
+the page for the newest run, or pass a run folder.
+
+The run's `log/` folder holds `run.log`, with the session's logging and
+then the output pytest captured for every passed and skipped test, one
+section per test. Each failed test has its own file beside it with its
+captured output and traceback. When a page object printed something a
+screenshot cannot show, it is there.
 
 `python run.py health` builds `reports/runs/health.html` from the archived
-summaries: pass rate and mean duration per target and per module, flaky
-candidates (tests that both passed and failed), newly failing tests, and
-the slowest tests. Check it before you call a failure new.
+summaries. It opens with one verdict line per target ("Views: 96% pass
+rate over 20 runs, 1 test to watch."), then shows pass rate and mean
+duration per target and per module, the advisory count per target with a
+link to the newest run's lines, and a "Tests to watch" table: every test
+that failed at least once in its last 20 results, with its strip, its
+flaky rate, and the date of its last failure, sorted by flaky rate. Check
+it before you call a failure new.
 
 ## View a trace in the GUI
 

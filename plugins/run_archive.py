@@ -14,17 +14,20 @@ What lands in reports/runs/<start-time>__<target>/:
     pytest-playwright's per-test artifact dirs.
   - last_run_results.json: the per-nodeid outcomes from qatouch_reporter,
     when that reporter ran.
-  - log/: one file per test with the stdout and stderr pytest captured in
-    every phase (plus the traceback of a failed phase), and run.log with
-    every INFO-or-higher logging record of the session. Page-object
-    prints land in the per-test files, logging in run.log.
+  - log/: run.log, always, with every INFO-or-higher logging record of
+    the session and then, one section per test, the stdout and stderr
+    pytest captured in every phase of each passed and skipped test. Each
+    failed or errored test gets its own file beside it, with the same
+    captured output plus the traceback: those are the files a triage
+    opens, and one file per passing test buried them.
   - summary.json: timing, counts, exit status, the invocation target,
     provenance (ENV, base_url host, git commit, browser, Playwright
     versions), the advisories below, and one record per test: node id,
     module, readable title (the docstring's first line, else the function
     name as words), the QA Touch case from config/qatouch_case_mapping.json
-    when the node id is mapped, outcome, per-phase timing, and its log
-    file. The node id is the key; the title is display only.
+    when the node id is mapped, outcome, per-phase timing, its log file
+    (failures only), and the error line of a failure. The node id is the
+    key. The title is display only.
   - advisories.txt: every [VIEWS] / [LPR] / [EXPORT] marker line a test
     printed, grouped by test - the drag fallbacks, content-health deltas,
     and export timings the page objects report. They come from pytest's
@@ -78,7 +81,15 @@ from urllib.parse import urlparse
 
 import pytest
 
-from plugins.run_report import RUN_DIR_RE, build_run_report, module_of, readable_title
+from plugins.branding import favicon_link, header_logo
+from plugins.run_report import (
+    FAILURE_OUTCOMES,
+    RUN_DIR_RE,
+    build_run_report,
+    error_line,
+    module_of,
+    readable_title,
+)
 
 log = logging.getLogger('run_archive')
 
@@ -94,11 +105,17 @@ MAPPING_FILE = Path('config') / 'qatouch_case_mapping.json'
 RUN_LOG = Path('logs') / 'run.log'
 
 # 2: adds "tests" (per-test records) and "provenance".
-SCHEMA_VERSION = 2
+# 3: each test record carries "error" (the failure's first error line,
+#    None when it did not fail). "log_file" is set for failures only.
+SCHEMA_VERSION = 3
 
 # Per-test log files use the screenshot sanitizer and cap: the archive's
 # names then sort together, and the path cap already fits them.
 LOG_NAME_MAX = 120
+
+# The heading that separates run.log's logging records from the captured
+# output of the tests that got no file of their own.
+RUN_LOG_SECTION_TITLE = 'captured output of passed and skipped tests, one section per test'
 
 # Marker tags the page objects print for things worth a human's eye that
 # never fail a test on their own. Add a tag here when a page object
@@ -548,6 +565,7 @@ def record_phase(state: _RunState, report: Any, doc: str | None = None,
             'title': readable_title(nodeid, doc),
             'case_key': case['case_key'], 'case_title': case['case_title'],
             'outcome': None, 'duration_s': 0.0, 'phases': {}, 'log_file': None,
+            'error': None,
         }
     if report.outcome == 'rerun':
         return
@@ -557,6 +575,10 @@ def record_phase(state: _RunState, report: Any, doc: str | None = None,
     outcome = _PHASE_TEST_OUTCOME.get((report.when, report.outcome))
     if outcome is not None:
         rec['outcome'] = outcome
+    if outcome in FAILURE_OUTCOMES:
+        # The line run_report groups failures by and checks against the
+        # previous runs. Kept here so no later reader needs report.html.
+        rec['error'] = error_line(getattr(report, 'longreprtext', '') or '')
     state.captured.setdefault(nodeid, []).append({
         'phase': report.when, 'outcome': report.outcome, 'duration': duration,
         'stdout': phase_capture(report, 'stdout'),
@@ -588,10 +610,37 @@ def format_test_log(rec: Mapping[str, Any], phases: list[dict]) -> str:
     return '\n'.join(lines) + '\n'
 
 
+def wants_log_file(outcome: str | None) -> bool:
+    """Only a failed or errored test gets its own log file. Its output is
+    what a triage reads. A file per passing test buried those."""
+    return outcome in FAILURE_OUTCOMES
+
+
+def format_run_log(session_text: str, sections: list[str]) -> str:
+    """run.log's body: the session's logging records, then the captured
+    output of the tests without a file of their own, one section each."""
+    parts = []
+    if session_text.strip():
+        parts.append(session_text.rstrip('\n') + '\n')
+    if sections:
+        parts.append(f'\n===== {RUN_LOG_SECTION_TITLE} =====\n\n' + '\n'.join(sections))
+    return ''.join(parts) or '(no logging records)\n'
+
+
 def _write_logs(dest: Path, state: _RunState) -> None:
-    """Write log/<test>.log per test and copy the session's run.log."""
+    """Write log/run.log, and log/<test>.log for each failed or errored test.
+
+    The captured output of every other test goes into run.log after the
+    session's logging records, so nothing is lost and the folder holds
+    the failures' files instead of one file per test.
+    """
     log_dir = dest / 'log'
+    sections: list[str] = []
     for nodeid, rec in state.tests.items():
+        text = format_test_log(rec, state.captured.get(nodeid) or [])
+        if not wants_log_file(rec.get('outcome')):
+            sections.append(text)
+            continue
         target = _fit_dest(log_dir / log_file_name(nodeid))
         if target is None:
             log.warning(f'run_archive: skipped the log of {nodeid}: its destination '
@@ -600,18 +649,23 @@ def _write_logs(dest: Path, state: _RunState) -> None:
             continue
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(format_test_log(rec, state.captured.get(nodeid) or []),
-                              encoding='utf-8', errors='replace')
+            target.write_text(text, encoding='utf-8', errors='replace')
             rec['log_file'] = (Path('log') / target.name).as_posix()
         except OSError as e:
             log.warning(f'run_archive: could not write the log of {nodeid}: {e}')
+    session_text = ''
     run_log = state.run_log.path
     if run_log is not None and run_log.is_file():
         try:
-            log_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(run_log, log_dir / 'run.log')
+            session_text = run_log.read_text(encoding='utf-8', errors='replace')
         except OSError as e:
-            log.warning(f'run_archive: could not copy {run_log}: {e}')
+            log.warning(f'run_archive: could not read {run_log}: {e}')
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+        (log_dir / 'run.log').write_text(format_run_log(session_text, sections),
+                                         encoding='utf-8', errors='replace')
+    except OSError as e:
+        log.warning(f'run_archive: could not write run.log: {e}')
 
 
 def _provenance(config: Any, environ: Mapping[str, str]) -> dict:
@@ -776,16 +830,20 @@ def _render_index(entries: list[dict], has_health: bool = False) -> str:
 
     body = '\n'.join(rows) if rows else ('<tr><td colspan="9">No archived runs '
                                          'yet. Run the suite once.</td></tr>')
-    health = ('<p><a href="health.html">Health summary</a>: pass rates, flaky '
-              'candidates, and the slowest tests across recent runs.</p>' if has_health
-              else '<p><code>python run.py health</code> builds health.html: pass rates, '
-                   'flaky candidates, and the slowest tests across recent runs.</p>')
+    health = ('<p><a href="health.html">Health summary</a>: pass rates per target and '
+              'module, and the tests to watch, across recent runs.</p>' if has_health
+              else '<p><code>python run.py health</code> builds health.html: pass rates per '
+                   'target and module, and the tests to watch, across recent runs.</p>')
     return f'''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>Test run archive</title>
+{favicon_link()}
 <style>
+.brand-row {{ display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }}
+.brand-row h1 {{ margin: 0; }}
+.brand {{ display: block; }}
 body {{ font-family: system-ui, sans-serif; margin: 2rem; }}
 table {{ border-collapse: collapse; }}
 th, td {{ border: 1px solid #ccc; padding: 0.35rem 0.7rem; text-align: left; }}
@@ -793,7 +851,7 @@ th {{ background: #f0f0f0; }}
 </style>
 </head>
 <body>
-<h1>Test run archive</h1>
+<div class="brand-row">{header_logo()}<h1>Test run archive</h1></div>
 <p>One folder per test run, newest first. Open a run's <b>run report</b>
 for its failures with their screenshots, video, and trace. The archive
 keeps the newest {KEEP_RUNS} runs of each target ({KEEP_RUNS_TOTAL} in

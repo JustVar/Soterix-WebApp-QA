@@ -255,7 +255,7 @@ def test_summary_shape():
                             'exitstatus', 'counts', 'target', 'markexpr',
                             'keyword', 'report_file', 'advisories', 'tests',
                             'provenance'}
-    assert summary['schema_version'] == 2
+    assert summary['schema_version'] == 3
     assert summary['tests'] == []
     assert summary['provenance'] == {}
     assert summary['duration_s'] == 90.5
@@ -694,6 +694,7 @@ class TestRecordPhase:
         assert rec['phases'] == {'setup': 0.5, 'call': 12.25, 'teardown': 0.25}
         assert rec['duration_s'] == 13.0
         assert rec['log_file'] is None
+        assert rec['error'] == 'assert False'
         captured = state.captured[self.NODEID]
         assert [c['phase'] for c in captured] == ['setup', 'call', 'teardown']
         assert captured[1]['stderr'] == 'warn\n'
@@ -711,6 +712,20 @@ class TestRecordPhase:
         state = self._state()
         ra.record_phase(state, _FakePhaseReport(self.NODEID, when, outcome))
         assert state.tests[self.NODEID]['outcome'] == expected
+
+    def test_error_line_is_kept_for_failures_only(self):
+        """A failed call or setup records its first error line; a pass records None."""
+        state = self._state()
+        ra.record_phase(state, _FakePhaseReport(self.NODEID, 'setup', 'failed', 1.0,
+                                                longrepr='x = 1\nE   fixture "api" not found\nE   more'))
+        assert state.tests[self.NODEID]['outcome'] == 'error'
+        assert state.tests[self.NODEID]['error'] == 'fixture "api" not found'
+        state = self._state()
+        ra.record_phase(state, _FakePhaseReport(self.NODEID, 'call', 'passed', 1.0))
+        assert state.tests[self.NODEID]['error'] is None
+        ra.record_phase(state, _FakePhaseReport(self.NODEID, 'teardown', 'failed', 1.0,
+                                                longrepr='E   teardown boom'))
+        assert state.tests[self.NODEID]['error'] is None  # teardown never speaks for the test
 
     def test_title_falls_back_to_the_function_name(self):
         """Without a docstring, the record's title comes from the function name."""
@@ -762,8 +777,31 @@ class TestRecordPhase:
         assert 'teardown' not in summary['tests'][0]['phases']
 
 
+class TestLogPolicy:
+    """Only failures get a log file; everything else goes into run.log."""
+
+    @pytest.mark.parametrize(('outcome', 'wants'), [
+        ('failed', True), ('error', True), ('passed', False), ('skipped', False),
+        ('xfailed', False), (None, False),
+    ])
+    def test_wants_log_file(self, outcome, wants):
+        """A failed or errored test gets its own file; no other outcome does."""
+        assert ra.wants_log_file(outcome) is wants
+
+    def test_format_run_log_appends_sections_after_the_records(self):
+        """run.log is the session's records, then one section per test without a file."""
+        text = ra.format_run_log('12:00 INFO x: hello\n', ['t::a\nA\n(no output)\n', 't::b\nB\n'])
+        assert text.startswith('12:00 INFO x: hello\n\n===== ')
+        assert ra.RUN_LOG_SECTION_TITLE in text
+        assert text.index('t::a\nA') < text.index('t::b\nB')
+        assert ra.format_run_log('', []) == '(no logging records)\n'
+        assert ra.format_run_log('rec\n', []) == 'rec\n'
+        assert '=====' not in ra.format_run_log('rec\n', [])
+        assert ra.format_run_log('', ['t::a\n']).startswith('\n=====')
+
+
 class TestTestLog:
-    """One file per test: every phase's captured output, in order."""
+    """A file per failed test with every phase's captured output, in order."""
 
     def test_format_lists_each_phase(self):
         """The test log lists its header lines, then each phase's output in order."""
@@ -787,8 +825,59 @@ class TestTestLog:
         assert text == 't::a\nA\n'
 
     def test_archive_writes_the_log_folder(self, tmp_path, monkeypatch):
-        """log/<test>.log per test plus the session's run.log, and the
-        summary record points at the file."""
+        """log/<test>.log for the failed test only, plus run.log with the
+        session's records and the passed test's output as a section; the
+        summary record points at the file where there is one."""
+        monkeypatch.setattr(ra, 'RUNS_DIR', tmp_path / 'runs')
+        monkeypatch.setattr(ra, 'SCREENSHOT_DIR', tmp_path / 'shots')
+        monkeypatch.setattr(ra, 'TRACE_DIR', tmp_path / 'artifacts')
+        monkeypatch.setattr(ra, 'RESULTS_JSON', tmp_path / 'none.json')
+        state = ra._RunState()
+        state.mapping = {}
+        state.started, state.ended, state.exitstatus = 1_700_000_000.0, 1_700_000_010.0, 1
+        state.counts['passed'] = 1
+        state.counts['failed'] = 1
+        passed = 't/x.py::test_a[chromium]'
+        failed = 't/x.py::test_b[chromium]'
+        ra.record_phase(state, _FakePhaseReport(passed, 'setup', 'passed', 0.5, stdout='hi\n'))
+        ra.record_phase(state, _FakePhaseReport(passed, 'call', 'passed', 2.0, stdout='[LPR] x\n'))
+        ra.record_phase(state, _FakePhaseReport(failed, 'call', 'failed', 3.0, stdout='boom\n',
+                                                longrepr='E   assert 1 == 2'))
+        state.run_log.attach(tmp_path / 'live' / 'run.log')
+        logging.getLogger('views_page').info('opened the page')
+        state.run_log.detach()
+
+        ra._archive_run(_FakeConfig(args=['t/x.py']), state)
+        dest = next(p for p in (tmp_path / 'runs').iterdir() if p.is_dir())
+        assert sorted(p.name for p in (dest / 'log').iterdir()) == \
+            ['run.log', 't-x.py-test_b-chromium.log']
+        failed_log = (dest / 'log' / 't-x.py-test_b-chromium.log').read_text(encoding='utf-8')
+        assert 'boom\n' in failed_log
+        assert 'E   assert 1 == 2' in failed_log
+        run_log = (dest / 'log' / 'run.log').read_text(encoding='utf-8')
+        assert run_log.index('opened the page') < run_log.index(ra.RUN_LOG_SECTION_TITLE)
+        assert f'{passed}\nA\n' in run_log
+        assert 'hi\n' in run_log
+        assert '[LPR] x' in run_log
+        assert 'boom' not in run_log  # the failure's output lives in its own file
+        summary = json.loads((dest / 'summary.json').read_text(encoding='utf-8'))
+        by_id = {t['nodeid']: t for t in summary['tests']}
+        assert by_id[passed]['log_file'] is None
+        assert by_id[passed]['error'] is None
+        assert by_id[passed]['title'] == 'A'
+        assert by_id[failed]['log_file'] == 'log/t-x.py-test_b-chromium.log'
+        assert by_id[failed]['error'] == 'assert 1 == 2'
+        assert set(summary['provenance']) == {'env', 'base_url_host', 'git_commit', 'playwright',
+                                              'pytest_playwright', 'browser', 'browser_channel'}
+        page = (dest / 'run.html').read_text(encoding='utf-8')
+        assert 'href="log/t-x.py-test_b-chromium.log"' in page
+        assert 'href="log/t-x.py-test_a-chromium.log"' not in page
+        assert 'href="log/run.log"' in page
+        assert 'The captured output of passed and skipped tests is in' in page
+
+    def test_archive_writes_run_log_without_a_session_log(self, tmp_path, monkeypatch):
+        """No live run.log (the handler never attached) still yields a
+        run.log with the passed tests' sections."""
         monkeypatch.setattr(ra, 'RUNS_DIR', tmp_path / 'runs')
         monkeypatch.setattr(ra, 'SCREENSHOT_DIR', tmp_path / 'shots')
         monkeypatch.setattr(ra, 'TRACE_DIR', tmp_path / 'artifacts')
@@ -797,29 +886,11 @@ class TestTestLog:
         state.mapping = {}
         state.started, state.ended, state.exitstatus = 1_700_000_000.0, 1_700_000_010.0, 0
         state.counts['passed'] = 1
-        nodeid = 't/x.py::test_a[chromium]'
-        ra.record_phase(state, _FakePhaseReport(nodeid, 'setup', 'passed', 0.5, stdout='hi\n'))
-        ra.record_phase(state, _FakePhaseReport(nodeid, 'call', 'passed', 2.0, stdout='[LPR] x\n'))
-        state.run_log.attach(tmp_path / 'live' / 'run.log')
-        logging.getLogger('views_page').info('opened the page')
-        state.run_log.detach()
-
+        ra.record_phase(state, _FakePhaseReport('t/x.py::test_a', 'call', 'passed', 2.0, stdout='hi\n'))
         ra._archive_run(_FakeConfig(args=['t/x.py']), state)
         dest = next(p for p in (tmp_path / 'runs').iterdir() if p.is_dir())
-        test_log = dest / 'log' / 't-x.py-test_a-chromium.log'
-        assert test_log.is_file()
-        body = test_log.read_text(encoding='utf-8')
-        assert 'hi\n' in body
-        assert '[LPR] x' in body
-        assert 'opened the page' in (dest / 'log' / 'run.log').read_text(encoding='utf-8')
-        summary = json.loads((dest / 'summary.json').read_text(encoding='utf-8'))
-        assert summary['tests'][0]['log_file'] == 'log/t-x.py-test_a-chromium.log'
-        assert summary['tests'][0]['title'] == 'A'
-        assert set(summary['provenance']) == {'env', 'base_url_host', 'git_commit', 'playwright',
-                                              'pytest_playwright', 'browser', 'browser_channel'}
-        page = (dest / 'run.html').read_text(encoding='utf-8')
-        assert 'href="log/t-x.py-test_a-chromium.log"' in page
-        assert 'href="log/run.log"' in page
+        assert [p.name for p in (dest / 'log').iterdir()] == ['run.log']
+        assert 'hi\n' in (dest / 'log' / 'run.log').read_text(encoding='utf-8')
 
 
 class TestRunLog:

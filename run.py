@@ -7,7 +7,7 @@
     python run.py rerun latest                # the failed tests of the newest archived run
     python run.py open latest                 # that run's run.html in the browser
     python run.py list                        # the last 10 archived runs
-    python run.py health                      # pass rates, flaky candidates, slowest tests
+    python run.py health                      # pass rates per target and module, tests to watch
                                               # over the newest 20 runs of each target (or: health 50)
 
 Anything after `--` goes to pytest unchanged:
