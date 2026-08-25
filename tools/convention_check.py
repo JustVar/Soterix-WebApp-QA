@@ -4,8 +4,9 @@ Ruff checks Python style. This tool checks the rules ruff cannot see:
 uncommented sleeps, in-test QA Touch markers, absolute count oracles,
 icon locator guesses, hardcoded tenant names, except blocks that
 swallow failures into prints, test bodies with no oracle, early
-test-body returns (vacuous passes), and .first/.last picks on union
-selectors.
+test-body returns (vacuous passes), .first/.last picks on union
+selectors, and new tests that land without a title, without a
+"Steps:" block, or without a QA Touch mapping row.
 
 Every rule here started as a defect found in review; when a review
 finds a new class, it gets a detector so the class cannot recur.
@@ -25,17 +26,21 @@ Exit codes: 0 = clean (MEDIUM findings only warn), 1 = HIGH findings,
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+MAPPING_PATH = REPO / "config" / "qatouch_case_mapping.json"
 
 # Only test code is checked. tools/ and plugins/ have their own rules
 # (see pyproject.toml per-file ignores).
 INCLUDE_PREFIXES = ("tests/",)
 EXCLUDE_PREFIXES = ("tests/legacy/",)
+# The tests QA Touch cases are generated for and mapped to
+UI_PREFIX = "tests/ui/"
 
 SLEEP_RE = re.compile(r"(?:wait_for_timeout|time\.sleep)\s*\(")
 QATOUCH_RE = re.compile(r"@pytest\.mark\.qatouch")
@@ -49,6 +54,11 @@ UNION_PICK_RE = re.compile(
 )
 EXCEPT_RE = re.compile(r"^\s*except\b.*:")
 TEST_DEF_RE = re.compile(r"^\s*def (test_\w+)")
+CLASS_DEF_RE = re.compile(r"^(\s*)class (\w+)")
+DOCSTRING_OPEN_RE = re.compile(r"""^[rRuUbB]{0,2}("{3}|'{3}|"|')""")
+# The block tools/qatouch_cases_from_tests.py reads the case from
+STEPS_HEADER_RE = re.compile(r"^\s*Steps:\s*$", re.MULTILINE)
+PARAM_SUFFIX_RE = re.compile(r"\[.*\]$")
 # Anything in a test body that can fail the test. expect.soft counts:
 # pytest-playwright collects soft failures per test and raises them
 # in an ExceptionGroup at test end.
@@ -100,8 +110,72 @@ def test_has_title(lines: list[str], idx: int) -> bool:
     return first.startswith(('"', "'", 'r"', "r'"))
 
 
-def check_line(path: str, lines: list[str], idx: int) -> list[dict]:
-    """Return findings for one line (0-based idx) of a file."""
+def test_docstring(lines: list[str], idx: int) -> str:
+    """The docstring of the def at idx, "" when it has none."""
+    j = idx
+    while j < len(lines) and not lines[j].rstrip().endswith(':'):
+        j += 1
+    j += 1
+    while j < len(lines) and not lines[j].strip():
+        j += 1
+    if j >= len(lines):
+        return ""
+    first = lines[j].strip()
+    m = DOCSTRING_OPEN_RE.match(first)
+    if not m:
+        return ""
+    quote = m.group(1)
+    body = first[m.end():]
+    if quote in body:
+        return body[:body.index(quote)]
+    if len(quote) == 1:
+        return body
+    out = [body]
+    for k in range(j + 1, len(lines)):
+        if quote in lines[k]:
+            out.append(lines[k][:lines[k].index(quote)])
+            break
+        out.append(lines[k])
+    return "\n".join(out)
+
+
+def test_nodeid(path: str, lines: list[str], idx: int) -> str:
+    """file::Class::name for the def at idx, or file::name outside a
+    class. The class is the nearest one above with less indentation."""
+    name = TEST_DEF_RE.match(lines[idx]).group(1)
+    indent = len(lines[idx]) - len(lines[idx].lstrip())
+    if indent:
+        for j in range(idx - 1, -1, -1):
+            m = CLASS_DEF_RE.match(lines[j])
+            if m and len(m.group(1)) < indent:
+                return f"{path}::{m.group(2)}::{name}"
+    return f"{path}::{name}"
+
+
+_mapped_cache: dict[Path, set[str]] = {}
+
+
+def mapped_tests(path: Path = MAPPING_PATH) -> set[str]:
+    """Node ids in the mapping file with their [param] suffix removed,
+    so a parametrized test counts as mapped when any of its ids is.
+    An unreadable file maps nothing: the rule then fires on every new
+    test instead of staying silent."""
+    if path not in _mapped_cache:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            bases = {PARAM_SUFFIX_RE.sub("", n) for n in data.get("mappings", {})}
+        except (OSError, ValueError):
+            bases = set()
+        _mapped_cache[path] = bases
+    return _mapped_cache[path]
+
+
+def check_line(path: str, lines: list[str], idx: int,
+               mapped: set[str] | None = None) -> list[dict]:
+    """Return findings for one line (0-based idx) of a file.
+
+    mapped is the set of mapped node ids (params stripped). None reads
+    the live mapping file."""
     line = lines[idx]
     stripped = line.strip()
     if stripped.startswith("#"):
@@ -139,13 +213,34 @@ def check_line(path: str, lines: list[str], idx: int) -> list[dict]:
                    "app (measured 08/24/2026) - and says so in a why-comment "
                    "(CONVENTIONS.md > Locators).",
         })
-    if TEST_DEF_RE.match(line) and not test_has_title(lines, idx):
-        findings.append({
-            "sev": "MEDIUM", "rule": "test-without-title",
-            "msg": "no docstring: the run report shows a test's docstring first "
-                   "line as its readable title. Add one sentence that says what "
-                   "the test proves (CONVENTIONS.md > Adding a test).",
-        })
+    if TEST_DEF_RE.match(line):
+        nodeid = test_nodeid(path, lines, idx)
+        if not test_has_title(lines, idx):
+            findings.append({
+                "sev": "MEDIUM", "rule": "test-without-title",
+                "msg": "no docstring: the run report shows a test's docstring first "
+                       "line as its readable title. Add one sentence that says what "
+                       "the test proves (CONVENTIONS.md > Adding a test).",
+            })
+    # A QA Touch case exists for UI tests only: the tooling and plugin
+    # pins under tests/tools and tests/plugins have no case to map
+    if TEST_DEF_RE.match(line) and path.startswith(UI_PREFIX):
+        if not STEPS_HEADER_RE.search(test_docstring(lines, idx)):
+            findings.append({
+                "sev": "MEDIUM", "rule": "test-without-steps",
+                "msg": "no Steps: block in the docstring: the QA Touch case is "
+                       "generated from it. Add 'Steps:' with numbered tester "
+                       "steps and an Expected: line under each "
+                       "(CONVENTIONS.md > Adding a test).",
+            })
+        if nodeid not in (mapped if mapped is not None else mapped_tests()):
+            findings.append({
+                "sev": "MEDIUM", "rule": "test-without-mapping",
+                "msg": "new test has no QA Touch case: python "
+                       f"tools/qatouch_cases_from_tests.py --test {nodeid}, "
+                       "import, then --after-import "
+                       "(CONVENTIONS.md > Adding a test).",
+            })
     if TENANT_NAME_RE.search(line):
         findings.append({
             "sev": "MEDIUM", "rule": "hardcoded-tenant-name",
@@ -218,6 +313,10 @@ def check_no_oracle_tests(path: str, lines: list[str]) -> list[dict]:
     for idx, line in enumerate(lines):
         m = TEST_DEF_RE.match(line)
         if not m:
+            continue
+        # a def quoted inside a string (a tool's own pins carry sample
+        # test files) is not a test
+        if inside_triple_quote(lines, idx):
             continue
         body = [lines[i] for i in _block_range(lines, idx)]
         if any("oracle" in b.lower() for b in body):

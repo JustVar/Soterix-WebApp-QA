@@ -201,6 +201,31 @@ def candidates(test: dict, cases: dict[str, dict], limit: int) -> list[dict]:
 
 # ------------------------------------------------------------------- audit
 
+def unmapped_nodeids(tests: dict[str, dict], mappings: dict) -> list[str]:
+    """Base node ids of tests with no mapping row, params ignored.
+
+    Shared with tools/qatouch_cases_from_tests.py --unmapped, so both
+    tools name the same set.
+    """
+    mapped_bases = {function_base(n) for n in mappings}
+    return sorted(n for n in tests if n not in mapped_bases)
+
+
+def dead_key_nodeids(tests: dict[str, dict], mappings: dict,
+                     cases: dict[str, dict]) -> list[str]:
+    """Base node ids of live tests whose mapped case is in no snapshot.
+
+    The case was deleted, so the row points at nothing. Shared with
+    tools/qatouch_cases_from_tests.py --dead-keys.
+    """
+    dead = set()
+    for nodeid, entry in mappings.items():
+        base = function_base(nodeid)
+        if base in tests and str(entry.get('case_key') or '') not in cases:
+            dead.add(base)
+    return sorted(dead)
+
+
 def audit(mapping: dict, tests: dict[str, dict], cases: dict[str, dict],
           threshold: float, limit: int) -> dict:
     mappings = mapping.get('mappings', {})
@@ -236,8 +261,7 @@ def audit(mapping: dict, tests: dict[str, dict], cases: dict[str, dict],
         rows.append(row)
 
     shared = {k: sorted(bases) for k, bases in by_key.items() if len(bases) > 1}
-    mapped_bases = {function_base(n) for n in mappings}
-    unmapped = sorted(n for n in tests if n not in mapped_bases)
+    unmapped = unmapped_nodeids(tests, mappings)
     unmapped_by_area: dict[str, int] = {}
     for n in unmapped:
         area = tests[n]['area']

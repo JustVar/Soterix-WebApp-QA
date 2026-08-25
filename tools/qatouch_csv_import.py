@@ -88,6 +88,28 @@ CANONICAL_TO_API = {
 }
 
 
+# The friendly headers of the authoring CSV (tools/qa_touch_import_test.csv,
+# and what tools/qatouch_cases_from_tests.py writes) -> the endpoint's
+# column. "Created By" has no home on the endpoint: dropped, no warning.
+FRIENDLY_TO_API = {
+    "Module_name": "module_name",
+    "Test Case Title": "title",
+    "Test Data": "test_data",
+    "Estimate": "estimate",
+    "Reference": "reference",
+    "Precondition": "precondition",
+    "Steps": "steps",
+    "Expected_result": "expected_result",
+    "Test Suite": "test_suite",
+    "Tags": "tags",
+    "Description": "description",
+    "Type": "type",
+    "Priority": "priority",
+    "Mode": "mode",
+}
+DROPPED_QUIETLY = {"Created By"}
+
+
 def load_rows(path: Path) -> list[dict]:
     """Read a CSV into a list of dicts, keeping blank cells as empty strings."""
     with open(path, encoding="utf-8-sig", newline="") as f:
@@ -108,15 +130,18 @@ def to_api_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
             "duplicates - it cannot update. Remove those rows unless you really "
             "mean to create new cases.")
 
-    # Accept either our canonical names or the API names directly.
+    # Accept our canonical names, the friendly authoring headers, or the
+    # API names directly.
     mapping = {}
     for col in present:
         if col in CANONICAL_TO_API:
             mapping[col] = CANONICAL_TO_API[col]
+        elif col in FRIENDLY_TO_API:
+            mapping[col] = FRIENDLY_TO_API[col]
         elif col in API_COLUMNS:
             mapping[col] = col
 
-    unmapped = sorted(present - set(mapping))
+    unmapped = sorted(present - set(mapping) - DROPPED_QUIETLY)
     if unmapped:
         warnings.append(f"Column(s) ignored, the endpoint has no home for them: {unmapped}")
 
@@ -171,23 +196,42 @@ def post_chunk(project_key: str, payload: bytes) -> dict:
     return resp.json()
 
 
-def cmd_preview(args):
-    rows = load_rows(Path(args.csv))
+def preview(path: Path) -> dict:
+    """What `preview` prints, as data: rows read, cases, requests,
+    warnings, the first API row, tagged cases, and cases with an empty
+    title. Sends nothing. Other tools call this to check a CSV before
+    they hand it on."""
+    rows = load_rows(path)
     api_rows, warnings = to_api_rows(rows)
-    print(f"\n  CSV rows read:      {len(rows)}")
-    print(f"  Cases to create:    {len(api_rows)}")
-    print(f"  Requests (100 max): {(len(api_rows) + CHUNK_SIZE - 1) // CHUNK_SIZE}")
-    for w in warnings:
+    return {
+        "rows": len(rows),
+        "cases": len(api_rows),
+        "requests": (len(api_rows) + CHUNK_SIZE - 1) // CHUNK_SIZE,
+        "warnings": warnings,
+        "first": api_rows[0] if api_rows else None,
+        "tagged": sum(1 for r in api_rows if r["tags"].strip()),
+        "empty_titles": sum(1 for r in api_rows if not r["title"].strip()),
+    }
+
+
+def cmd_preview(args):
+    result = preview(Path(args.csv))
+    print(f"\n  CSV rows read:      {result['rows']}")
+    print(f"  Cases to create:    {result['cases']}")
+    print(f"  Requests (100 max): {result['requests']}")
+    for w in result["warnings"]:
         print(f"\n  WARNING: {w}")
-    if not api_rows:
+    if result["empty_titles"]:
+        print(f"\n  WARNING: {result['empty_titles']} case(s) have an empty title. "
+              "The title column was not recognised: check the header row.")
+    if not result["first"]:
         return
     print("\n  First case as it will be sent:")
     for col in API_COLUMNS:
-        value = str(api_rows[0].get(col, ""))
+        value = str(result["first"].get(col, ""))
         shown = value.replace("\n", " / ")[:70]
         print(f"    {col:18s} {shown}")
-    tagged = sum(1 for r in api_rows if r["tags"].strip())
-    print(f"\n  Cases carrying tags: {tagged}")
+    print(f"\n  Cases carrying tags: {result['tagged']}")
     print("\n  Preview only. Nothing sent.")
     print("  Remember: this endpoint CREATES. There is no delete API.")
 

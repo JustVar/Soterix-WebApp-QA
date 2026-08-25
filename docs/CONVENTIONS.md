@@ -251,22 +251,65 @@ manually. Nothing below runs unless you opt in. Treat it as in development.
   shows the docstring's first line as the readable test name and the
   QA Touch case title beneath it, with the node id smaller. Write one
   sentence that says what the test proves ("Verify a saved view can be
-  dragged to an empty tile"), then map the node id in
-  config/qatouch_case_mapping.json. Never rename test functions for
+  dragged to an empty tile"). Never rename test functions for
   readability: the node id is the join key for the mapping, the archive
   history, and `run.py rerun`. The checker flags a test without a
   docstring.
 
+- **The docstring is the QA Touch case.** A human writes the tester
+  steps in the docstring, and the case is generated from there. Never
+  from code: a step that names a locator or a method is not a step a
+  tester can follow. Write what the tester does and what they see, one
+  short sentence each, in this form:
+
+  ```python
+  def test_favorite_camera(self):
+      """Verify the star adds the camera to the Favorites panel.
+
+      Steps:
+      1. Open Views and expand the configured test site.
+         Expected: The camera list shows.
+      2. Click the star on the configured test camera.
+         Expected: The star fills and the camera appears in the Favorites panel.
+      """
+  ```
+
+  The block starts at a line that reads `Steps:`. Each numbered line is
+  a step. An `Expected:` line belongs to the step above it. Give every
+  step with a visible result its own `Expected:`, and give the last
+  step one always. For a parametrized test, say the variant in words
+  ("Repeat for the Vehicle category"). The checker flags a new test
+  with no `Steps:` block.
+
+- **A test lands with its QA Touch case and mapping row in the same
+  change.** Three commands:
+
+  ```
+  python tools/qatouch_cases_from_tests.py --test tests/ui/{module}/test_x.py::TestX::test_y
+  python tools/qatouch_csv_import.py import logs/qatouch_new_cases_<date>.csv --project JlW1
+  python tools/qatouch_cases_from_tests.py --after-import logs/qatouch_new_cases_<date>.csv
+  ```
+
+  The first writes the case CSV and a Markdown preview under `logs/`
+  from the docstring. Read the preview, then run `preview` on the CSV.
+  The second is the owner's command: it creates the cases, and there is
+  no delete API. The third reads the cases back, matches the CSV's
+  Reference column (the node id) to each new case, and writes the
+  mapping rows. The checker flags a new test with no mapping row.
+  `--unmapped` and `--dead-keys` select the tests that still need a
+  case across the tree.
+
 1. Create the test file in `tests/ui/{module}/`.
-2. Add the relevant markers from `pytest.ini`.
-3. Use existing page objects, or create new ones in `tests/shared/pages/`.
-4. If the test belongs in the QA verification pipeline, wire up `step_capture`
+2. Write the title and the `Steps:` block in the docstring.
+3. Add the relevant markers from `pytest.ini`.
+4. Use existing page objects, or create new ones in `tests/shared/pages/`.
+5. If the test belongs in the QA verification pipeline, wire up `step_capture`
    in the setup fixture and add `.mark()` calls (see below). Optional otherwise.
-5. Create the matching JSON sidecar in `tests/steps/ui/{module}/` (only if the
+6. Create the matching JSON sidecar in `tests/steps/ui/{module}/` (only if the
    test uses step capture).
-6. Map to QA Touch through `config/qatouch_case_mapping.json`, never with an
-   in-test marker.
-7. Sync steps to QA Touch: `python tools/qatouch_step_api.py sync --cases KEY`.
+7. Generate, import, and map the QA Touch case with the three commands
+   above. The mapping lives in `config/qatouch_case_mapping.json`, never
+   in an in-test marker.
 
 ## Step capture (for tests in the verification pipeline)
 
@@ -390,7 +433,8 @@ python tools/convention_check.py
 - **HIGH, blocks the commit:** a sleep (`wait_for_timeout` or `time.sleep`)
   with no why-comment, and `@pytest.mark.qatouch` in a test file.
 - **MEDIUM, warns:** absolute `count() > 0` oracles, `img[src]` icon locator
-  guesses, and hardcoded tenant data names.
+  guesses, hardcoded tenant data names, and a new test without a title,
+  without a `Steps:` block, or without a mapping row.
 
 The default mode checks only the lines added since HEAD, so debt in files
 you did not touch never blocks you. `--base <ref>` widens the diff (use it
