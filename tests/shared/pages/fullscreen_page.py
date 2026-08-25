@@ -10,6 +10,39 @@ import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 
+# The player's media element, re-queried on every poll so a re-mounted
+# element (the refresh link swaps the blob src) still counts. Where
+# several tiles keep a video mounted, the one filling the most screen
+# is the full screen player (probed 08/25/2026: one video.player at
+# 1280x720, readyState 4, currentTime +1.6s per 1.5s sample).
+_PLAYER_VIDEO_JS = """
+    () => {
+        const area = v => { const r = v.getBoundingClientRect(); return r.width * r.height; };
+        const vids = Array.from(document.querySelectorAll('video.player'))
+            .filter(v => v.getClientRects().length)
+            .sort((a, b) => area(b) - area(a));
+        return vids[0] || null;
+    }
+"""
+_VIDEO_STATE_JS = f"""
+    () => {{
+        const pick = {_PLAYER_VIDEO_JS};
+        const v = pick();
+        return {{
+            count: document.querySelectorAll('video.player').length,
+            ready: v ? v.readyState : 0,
+            t: v ? v.currentTime : 0,
+        }};
+    }}
+"""
+_VIDEO_PLAYING_JS = f"""
+    (t0) => {{
+        const pick = {_PLAYER_VIDEO_JS};
+        const v = pick();
+        return !!v && v.readyState >= 3 && v.currentTime > t0;
+    }}
+"""
+
 
 class FullScreenPage:
     """Page object for the full screen video player and bookmarks panel."""
@@ -25,6 +58,13 @@ class FullScreenPage:
         self.exit_fullscreen_button = page.locator(".top_container img[src*='exitFullScreen']")
         self.loader = page.locator(".MuiCircularProgress-root")
         self.streaming_failed = page.locator("text=failed to load")
+        # the player's <video>; the grid tile paints a canvas and keeps
+        # its video at readyState 0, so the playing oracle below is for
+        # full screen only (probed 08/25/2026)
+        self.video = page.locator("video.player")
+        # the camera name in the player's top bar (probed 08/25/2026:
+        # .top_container > .box1 > .box holds 'main gate')
+        self.camera_name_box = page.locator(".top_container .box")
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.live_indicator = page.locator("img[src*='media/Live.']")
 
@@ -100,6 +140,65 @@ class FullScreenPage:
         # strict-mode violation when two spinners overlap (a tile
         # placeholder plus the player's), so wait on the count
         expect(self.loader).to_have_count(0, timeout=timeout)
+
+    def assert_stream_playing(self, timeout_ms: int = 30000) -> None:
+        """Fail unless the player's video is really playing.
+
+        The loader clearing only proves the spinner left: the tenant's
+        stream can stay black, or raise the failure overlay, with no
+        spinner up. Playing is the media element's own word: readyState
+        >= 3 (a frame decoded and more buffered) and currentTime past a
+        first sample. The failure names the camera, both samples, and
+        the overlay text when it is up - that text is what
+        run.py --retry-streams matches, so a dead stream with no
+        overlay never reruns.
+        """
+        started = time.monotonic()
+        first = self._video_state()
+        try:
+            self.page.wait_for_function(
+                _VIDEO_PLAYING_JS, arg=first["t"], timeout=timeout_ms
+            )
+        except PlaywrightError:
+            last = self._video_state()
+            overlay = ""
+            try:
+                if (self.streaming_failed.count()
+                        and self.streaming_failed.first.is_visible()):
+                    overlay = "; the player shows 'The camera failed to load'"
+            # the overlay read only decorates the message
+            except PlaywrightError:
+                pass
+            raise AssertionError(
+                f"[PLAYER] stream never played for camera "
+                f"'{self.player_camera_name()}' within {timeout_ms / 1000:.0f}s: "
+                f"readyState {first['ready']} -> {last['ready']}, "
+                f"currentTime {first['t']:.2f} -> {last['t']:.2f}, "
+                f"{last['count']} video element(s){overlay}"
+            ) from None
+        last = self._video_state()
+        print(f"[PLAYER] stream playing for '{self.player_camera_name()}' "
+              f"after {time.monotonic() - started:.1f}s: readyState "
+              f"{last['ready']}, currentTime {first['t']:.2f} -> {last['t']:.2f}")
+
+    def _video_state(self) -> dict:
+        """One read of the player video: element count, readyState,
+        currentTime. Zeros when no video is on screen."""
+        return self.page.evaluate(_VIDEO_STATE_JS)
+
+    def player_camera_name(self) -> str:
+        """The camera name the player's top bar shows; the configured
+        test camera when the bar is not readable."""
+        try:
+            names = [t.strip() for t in self.camera_name_box.all_inner_texts()]
+            names = [n for n in names if n]
+            if names:
+                return names[0]
+        # a torn-down page still gets a named failure
+        except PlaywrightError:
+            pass
+        from config.base_config import config
+        return config.get("test_camera_name") or "unknown camera"
 
     def is_streaming(self) -> bool:
         """Return True if video appears to be streaming (no loader, no error)."""

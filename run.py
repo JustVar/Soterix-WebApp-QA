@@ -16,8 +16,10 @@ Anything after `--` goes to pytest unchanged:
 
 Each run prints the pytest command it starts and, at the end, the run's
 run.html and the archive index (reports/runs/). `--check` runs
-tools/pre_run_check.py against the target environment first. One run at a
-time: plugins/single_run_guard.py refuses a second one.
+tools/pre_run_check.py against the target environment first.
+`--retry-streams` reruns once, and only, a test that failed on the
+tenant's stream-failure message. One run at a time:
+plugins/single_run_guard.py refuses a second one.
 """
 from __future__ import annotations
 
@@ -44,6 +46,12 @@ PYTEST = [sys.executable, '-m', 'pytest']
 MODULES_DIR = Path('tests') / 'ui'
 LIST_MAX = 10
 NEEDS_TARGET = ('module', 'test')
+# The one rerun the suite allows, and only on request: the tenant's
+# live stream fails intermittently with 'The camera failed to load',
+# and that message class is the whole match. Never the default, never
+# broadened - a wider match hides a broken wait or a tenant that
+# needs a fix (house rule: fix first).
+STREAM_RERUN_ARGS = ['--reruns', '1', '--only-rerun', 'failed to load']
 
 
 def _run_dirs() -> list[Path]:
@@ -115,10 +123,23 @@ def _check() -> None:
         sys.exit('The pre-run check failed. Fix what it reports, then run again.')
 
 
-def _run(target: list[str], extra: list[str], check: bool) -> int:
+def build_command(target: list[str], extra: list[str],
+                  retry_streams: bool = False) -> list[str]:
+    """The pytest command a run starts. Pure, so a test can check it."""
+    cmd = [*PYTEST, *target, *extra]
+    if retry_streams:
+        cmd += STREAM_RERUN_ARGS
+    return cmd
+
+
+def _run(target: list[str], extra: list[str], check: bool,
+         retry_streams: bool = False) -> int:
     if check:
         _check()
-    cmd = [*PYTEST, *target, *extra]
+    cmd = build_command(target, extra, retry_streams)
+    if retry_streams:
+        print('Retry policy: a test that failed on "failed to load" (the tenant '
+              'stream failure) reruns once. No other failure reruns.')
     # flush: when stdout is a pipe, pytest's output would otherwise land first
     print(f'Command: {_pretty(cmd)}\n', flush=True)
     before = _run_dirs()[:1]
@@ -185,6 +206,9 @@ def main(argv: list[str] | None = None) -> int:
                              'or for health the runs per module (default 20)')
     parser.add_argument('--check', action='store_true',
                         help='run tools/pre_run_check.py against the target environment first')
+    parser.add_argument('--retry-streams', action='store_true',
+                        help='rerun once a test that failed on the tenant stream-failure '
+                             'message ("failed to load"); no other failure reruns')
     args = parser.parse_args(argv)
     if args.verb in NEEDS_TARGET and not args.target:
         parser.error(f'{args.verb} needs a target')
@@ -201,7 +225,7 @@ def main(argv: list[str] | None = None) -> int:
         return _health(args.target)
     if args.verb == 'open':
         return _open(args.target or 'latest')
-    return _run(_pytest_target(args), extra, args.check)
+    return _run(_pytest_target(args), extra, args.check, args.retry_streams)
 
 
 if __name__ == '__main__':

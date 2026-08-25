@@ -25,15 +25,24 @@ class TestViewsFullscreen:
             # the tile appearing is the added signal
             video_tiles.first.wait_for(state="visible", timeout=30000)
 
+    def _enter_fullscreen(self) -> FullScreenPage:
+        """Enter full screen on the first tile and return the page object.
+
+        The loader clearing is not playing: the stream oracle fails
+        here, named, when the configured camera never plays.
+        """
+        self.views.enter_fullscreen_on_tile(0)
+        fs = FullScreenPage(self.page)
+        fs.wait_for_stream_loaded(timeout=120000)
+        fs.assert_stream_playing()
+        return fs
+
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
     def test_enter_fullscreen(self):
         """Verify clicking zoom icon enters full screen and video streams."""
-        self.views.enter_fullscreen_on_tile(0)
-
-        fs = FullScreenPage(self.page)
-        fs.wait_for_stream_loaded(timeout=120000)
+        fs = self._enter_fullscreen()
 
         assert fs.is_streaming(), "Video should be streaming in full screen"
 
@@ -42,9 +51,7 @@ class TestViewsFullscreen:
     @pytest.mark.views_fullscreen
     def test_exit_fullscreen(self):
         """Verify exiting full screen returns to the views grid."""
-        self.views.enter_fullscreen_on_tile(0)
-        fs = FullScreenPage(self.page)
-        fs.wait_for_stream_loaded(timeout=120000)
+        fs = self._enter_fullscreen()
 
         fs.exit_fullscreen()
 
@@ -61,9 +68,7 @@ class TestViewsFullscreen:
         In archive/playback mode, they would be active. This test verifies
         the control bar and timeline elements exist regardless of mode.
         """
-        self.views.enter_fullscreen_on_tile(0)
-        fs = FullScreenPage(self.page)
-        fs.wait_for_stream_loaded(timeout=120000)
+        fs = self._enter_fullscreen()
 
         if fs.is_live_mode():
             # In live mode, timeline controls show as disabled icons
@@ -77,15 +82,14 @@ class TestViewsFullscreen:
     @pytest.mark.views_fullscreen
     def test_fullscreen_controls_visible(self):
         """Verify player controls are visible in full screen."""
-        self.views.enter_fullscreen_on_tile(0)
-        fs = FullScreenPage(self.page)
-        fs.wait_for_stream_loaded(timeout=120000)
+        fs = self._enter_fullscreen()
 
-        # Control bar elements that are always visible
-        expect(fs.exit_fullscreen_button).to_be_visible(timeout=5000)
-        expect(fs.bookmarks_toggle).to_be_visible(timeout=5000)
-        expect(fs.bottom_controls).to_be_visible(timeout=5000)
-        expect(fs.volume_control).to_be_visible(timeout=5000)
+        # Four independent checks on one screen: soft, so a missing
+        # control reports with the others instead of hiding them
+        expect.soft(fs.exit_fullscreen_button).to_be_visible(timeout=5000)
+        expect.soft(fs.bookmarks_toggle).to_be_visible(timeout=5000)
+        expect.soft(fs.bottom_controls).to_be_visible(timeout=5000)
+        expect.soft(fs.volume_control).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.fullscreen
@@ -93,9 +97,7 @@ class TestViewsFullscreen:
     @pytest.mark.livestream
     def test_fullscreen_video_streaming(self):
         """Verify video is actively streaming (no loader, no error state)."""
-        self.views.enter_fullscreen_on_tile(0)
-        fs = FullScreenPage(self.page)
-        fs.wait_for_stream_loaded(timeout=120000)
+        fs = self._enter_fullscreen()
 
         if not fs.is_streaming():
             # Retry: stream may need extra time to stabilize

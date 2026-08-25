@@ -41,5 +41,8 @@ def fullscreen_page(authenticated_page):
 
     fs = FullScreenPage(page)
     fs.wait_for_stream_loaded(timeout=120000)
+    # the loader clearing is not playing: a dead stream fails here,
+    # named, instead of later at a click
+    fs.assert_stream_playing()
 
     return fs

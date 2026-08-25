@@ -40,8 +40,31 @@ signal instead:
 - If a transition has no DOM signal, keep a short sleep and add a comment that
   says why. These should stay rare.
 
-For assertion-dense tests, `expect.soft()` collects all assertion failures and
-reports them together at the end of the test instead of stopping at the first.
+**Soft assertions.** `expect.soft()` collects every failure and reports
+them together at the end of the test. Use it when one test makes three or
+more independent checks on one screen, and no check depends on an earlier
+one (the four controls of the full screen player, the three fields of the
+login form). Keep a check hard when the next step needs it: a toggle that
+must show before its click, a row that must exist before its count. A hard
+check stops the test at the first missing thing; a soft check lets the
+others report too. Never soften a check that guards an action.
+
+**Stream oracle.** The loader clearing only proves the spinner left. In
+the full screen player, `FullScreenPage.assert_stream_playing()` is the
+oracle: the `<video>` reports `readyState >= 3` and its `currentTime`
+advances between two samples. The shared setups call it right after
+`wait_for_stream_loaded`, so a dead stream fails at setup with "stream
+never played" and the camera's name, not later at a click. The Views
+grid keeps its advisory content-health layer; that layer never decides
+a test.
+
+**Reruns.** pytest-rerunfailures is installed for one case only.
+`run.py --retry-streams` appends `--reruns 1 --only-rerun "failed to
+load"`: a test that failed on the tenant's stream-failure message runs
+once more, and nothing else does. The flag is opt-in, never the default,
+and the match is never widened. A rerun hides a broken wait, a wrong
+locator, or a tenant that needs a fix. Fix first.
+
 For clicks that a sticky header or a lazy-loaded overlay intercepts, try
 `click(scroll="none")` before you reach for `force=True` or a JS click.
 
@@ -132,6 +155,9 @@ registers them. They need `QA_USER`, `QA_PASSWORD` and `TEST_SITE_ID` in
   created group. The default holds the configured test camera.
 - `api_bookmark`: `make(comment=None, camera_id=None, ...)` returns the
   created bookmark.
+- `api_saved_view`: `make(name=None, channel_ids=None, grid="2x2")` returns
+  the created My Views card. `test_drag_saved_view_to_tile` uses it and
+  proves only the drag.
 
 Rules for any new fixture:
 
@@ -147,7 +173,10 @@ Rules for any new fixture:
 4. Read what the UI reads. A camera group in Admin > Sites is a
    *location* in the API (`site/config/{site}/location`,
    `location/tree`, `deletelocation`). The API's groups (`addgroup`,
-   `grouptree`) are a different entity the Admin UI never shows.
+   `grouptree`) are a different entity the Admin UI never shows. A saved
+   view in Views > My Views is a *preset* (`GET/POST /REST/preset`,
+   `DELETE /REST/preset/{id}`); the spec's UserViewLayouts endpoints are
+   never called by the web client.
 5. Create the data before the page renders so the UI shows it without a
    reload, and open the site the API wrote to by name.
 

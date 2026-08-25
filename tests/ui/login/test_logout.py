@@ -55,9 +55,11 @@ def test_login_form_visible_after_logout(authenticated_page, base_url):
     password_field = page.locator('input[name="password"]')
     submit_btn = page.locator('button[type="submit"]')
 
-    expect(email_field).to_be_visible()
-    expect(password_field).to_be_visible()
-    expect(submit_btn).to_be_visible()
+    # Three independent checks on one screen: soft, so a missing
+    # field reports with the others instead of hiding them
+    expect.soft(email_field).to_be_visible()
+    expect.soft(password_field).to_be_visible()
+    expect.soft(submit_btn).to_be_visible()
 
 
 @pytest.mark.ui

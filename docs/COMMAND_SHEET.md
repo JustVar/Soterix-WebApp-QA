@@ -79,10 +79,20 @@ venv\Scripts\python.exe run.py list                                 # the last 1
 venv\Scripts\python.exe run.py health                               # pass rates per product and module, tests to watch (reports/runs/health.html)
 venv\Scripts\python.exe run.py module views -- --headed -s          # anything after -- goes to pytest
 venv\Scripts\python.exe run.py smoke --check                        # confirm the environment answers first
+venv\Scripts\python.exe run.py module views --retry-streams        # rerun once a test that failed on the tenant stream failure
 ```
 
-`rerun` and `open` also take a run folder name from `run.py list`. The
-raw pytest forms below do the same work without the wrapper:
+`rerun` and `open` also take a run folder name from `run.py list`.
+
+`--retry-streams` is the one rerun the suite allows. It adds
+`--reruns 1 --only-rerun "failed to load"` to the pytest command and
+prints that it did. A test that failed on the tenant's stream-failure
+message ("The camera failed to load") runs one more time. Every other
+failure stays a failure. The flag is never the default, and the match
+is never widened. A rerun hides a broken wait or a tenant that needs
+a fix. Fix first.
+
+The raw pytest forms below do the same work without the wrapper:
 
 ```
 venv\Scripts\python.exe -m pytest tests/ui/views                 # one module
