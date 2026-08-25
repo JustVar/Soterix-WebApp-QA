@@ -1449,7 +1449,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
     # A mixed run's header names no single product, so every test names its own.
     with_product = is_mixed(product)
     when = friendly_stamp(started)
-    title = f'{product} - Test Run {when}' if product else f'Test Run {when}'
+    title = f'{product} - Test Run - {when}' if product else f'Test Run - {when}'
 
     def by_outcome(names: tuple[str, ...]) -> list[TestRecord]:
         return sorted((t for t in tests.values() if t.outcome in names),
@@ -1525,7 +1525,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 .brand {{ display: block; }}{PAGE_CSS}</style>
 </head>
 <body>
-<div class="brand-row">{header_logo()}<h1>Test Run {escape(friendly_stamp(started))}</h1></div>
+<div class="brand-row">{header_logo()}<h1>Test Run - {escape(friendly_stamp(started))}</h1></div>
 {verdict_html}
 <div class="meta">
 <span>Target: <code>{escape(target)}</code></span>

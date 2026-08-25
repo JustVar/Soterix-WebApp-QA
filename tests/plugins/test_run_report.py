@@ -1031,7 +1031,7 @@ def test_page_names_the_product_in_title_and_header(tmp_path, monkeypatch):
     rows = [dict(r, product='NexaiQ-Neurosen') for r in _summary_test_rows()]
     _add_summary_tests(run, rows, {'env': 'qa', 'product': 'NexaiQ-Neurosen'})
     page = rr.build_run_report(run)
-    assert '<title>NexaiQ-Neurosen - Test Run Aug 24, 2026, 10:00 AM</title>' in page
+    assert '<title>NexaiQ-Neurosen - Test Run - Aug 24, 2026, 10:00 AM</title>' in page
     header = page[page.index('<body>'):page.index('id="failures"')]
     assert '<span class="product">Product: NexaiQ-Neurosen</span>' in header
     assert header.index('Product: NexaiQ-Neurosen') < header.index('Env: <code>QA</code>')
@@ -1048,7 +1048,7 @@ def test_mixed_run_names_the_product_on_every_test(tmp_path):
     rows[1]['product'] = rows[2]['product'] = 'NexaiQ-Camera 2 Cloud'
     _add_summary_tests(run, rows, {'product': 'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core'})
     page = rr.build_run_report(run)
-    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test Run' in page
+    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test Run -' in page
     card = page[page.index('<div class="card failed"'):page.index('id="advisories"')]
     assert '<span class="product">Product: NexaiQ-Core</span>' in card
     rows_html = page[page.index('id="passed"'):]
@@ -1062,14 +1062,14 @@ def test_older_archive_derives_the_product_from_the_node_ids(tmp_path, monkeypat
     run = _make_run(tmp_path)
     page = rr.build_run_report(run)
     # NODEID is a views test, the twins are c2c tests.
-    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test Run' in page
+    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test Run -' in page
     assert 'Product: NexaiQ-Camera 2 Cloud</span>' in page
     monkeypatch.setenv('QATOUCH_PROJECT_ID', 'P0BK')
     later = tmp_path / '2026-08-25_10-00-00__tests-ui-views'
     later.mkdir()
     (later / 'report.html').write_text(_report_html({NODEID: [_row('Passed')]}), encoding='utf-8')
     page = rr.build_run_report(later)
-    assert '<title>NexaiQ-Neurosen - Test Run' in page
+    assert '<title>NexaiQ-Neurosen - Test Run -' in page
     assert rr.summary_product({}) == ''
     assert rr.summary_product({'provenance': 'no'}) == ''
     assert rr.summary_product({'provenance': {'product': 'X'}}) == 'X'
