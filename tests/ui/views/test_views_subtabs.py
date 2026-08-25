@@ -251,11 +251,12 @@ class TestViewsSubtabs:
         """MY VIEWS: Drag saved view directly to tile.
 
         Steps:
-        1. Create and save a test view
-        2. Click My Views tab
-        3. Drag saved view to empty tile
-
-        Success: Tile filled with view content
+        1. On Views, click the plus tab, rename the new tab, add the first camera with its checkbox, and click Save.
+           Expected: A toast reads View saved successfully.
+        2. Reload the page and click the My Views subtab.
+           Expected: The saved view is listed by its name.
+        3. Drag the saved view onto an empty tile.
+           Expected: The tile fills with the view content, or the view opens as a new tab.
         """
         import datetime
         view_name = f"DragViewTest_{datetime.datetime.now().strftime('%H%M%S')}"

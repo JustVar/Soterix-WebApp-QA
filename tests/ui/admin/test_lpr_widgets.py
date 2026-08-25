@@ -61,7 +61,18 @@ class TestLprWidgets:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_create_new_insight_widget(self):
-        """Create an LPR insight widget with the shared Insights flow."""
+        """Create an LPR insight widget with the shared Insights flow.
+
+        Steps:
+        1. Click Insights in the left sidebar, then click the Widgets tab.
+           Expected: The Widgets tab opens with a Create New Widget button.
+        2. Click Create New Widget and enter a unique widget name.
+           Expected: The widget form shows the name.
+        3. Choose Line as the graph type, Event as the category, and License Plate Recognition as the description, then choose the configured test site.
+           Expected: The form shows the chosen values.
+        4. Click Save.
+           Expected: A toast confirms the widget was created and the widget is listed by its name.
+        """
         self.step_capture.mark(1, "Create a widget with the LPR description")
         name = self._create_lpr_widget()
         assert name, "Widget name should be returned after creation"
@@ -70,7 +81,18 @@ class TestLprWidgets:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_verify_widget_in_lpr_dropdown(self):
-        """A created LPR widget appears in the camera page Widgets panel."""
+        """A created LPR widget appears in the camera page Widgets panel.
+
+        Steps:
+        1. On Insights, create a Line widget for the Event category with the License Plate Recognition description and the configured test site.
+           Expected: A toast confirms the widget was created.
+        2. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        3. Click the Widgets header.
+           Expected: The Widgets panel opens and shows widget cards.
+        4. Type the widget name in the panel's Search field.
+           Expected: Exactly one card is listed, and it carries the widget name.
+        """
         self.step_capture.mark(1, "Create a widget with the LPR description")
         name = self._create_lpr_widget()
 
@@ -95,6 +117,16 @@ class TestLprWidgets:
         redesigned panel (measured 08/13/2026); cards drag onto tiles
         the way cameras do. Placement is session-scoped, so the tile
         resets next session without cleanup.
+
+        Steps:
+        1. On Insights, create a Line widget for the Event category with the License Plate Recognition description and the configured test site.
+           Expected: A toast confirms the widget was created.
+        2. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        3. Click the Widgets header, then type the widget name in the panel's Search field.
+           Expected: The widget card is listed.
+        4. Drag the card onto the last empty tile.
+           Expected: The tile fills with the widget and one fewer empty tile remains.
         """
         self.step_capture.mark(1, "Create a widget with the LPR description")
         name = self._create_lpr_widget()

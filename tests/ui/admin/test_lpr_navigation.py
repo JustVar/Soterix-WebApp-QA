@@ -25,7 +25,12 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_navigate_to_lpr_main_page(self):
-        """Verify navigation to Admin > LPR Lists page."""
+        """Verify navigation to Admin > LPR Lists page.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The LPR Lists page opens and shows the Create List button.
+        """
         self.step_capture.mark(1, "Navigate to Admin > LPR")
         self.lpr.navigate_to_lpr()
 
@@ -39,7 +44,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_ensure_lpr_page_already_on_lists(self):
-        """Verify ensure_lpr_page returns when already on Lists page."""
+        """Verify ensure_lpr_page returns when already on Lists page.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The LPR Lists page opens and shows the Create List button.
+        2. Click LPR again while the Lists page is open.
+           Expected: The Lists page stays as it is and the Create List button stays visible.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -55,7 +67,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_ensure_lpr_lists_page_already_on_lists(self):
-        """Verify ensure_lpr_lists_page returns when already on Lists."""
+        """Verify ensure_lpr_lists_page returns when already on Lists.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The LPR Lists page opens and shows the Create List button.
+        2. Click LPR again while the Lists page is open.
+           Expected: The Lists page stays as it is and the Create List button stays visible.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -71,7 +90,16 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_navigate_from_search_results_to_lists(self):
-        """Verify navigation from Search Results back to Lists via breadcrumb."""
+        """Verify navigation from Search Results back to Lists via breadcrumb.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The LPR Lists page opens and shows the Create List button.
+        2. Click the View icon on the first list, click the Filter icon, then click Apply.
+           Expected: The Search Results view opens.
+        3. Click LPR in the breadcrumb.
+           Expected: The Lists page opens again with the Create List button.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -89,7 +117,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_categories_page_navigation(self):
-        """Verify navigation to Categories page."""
+        """Verify navigation to Categories page.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The LPR Lists page opens and shows the Create List button.
+        2. Click the Categories tab.
+           Expected: The Categories page opens and shows the Add Category button.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -106,7 +141,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_categories_page_already_on_categories(self):
-        """Verify ensure_lpr_categories_page returns when already on Categories."""
+        """Verify ensure_lpr_categories_page returns when already on Categories.
+
+        Steps:
+        1. Click Admin in the left sidebar, click LPR, then click the Categories tab.
+           Expected: The Categories page opens and shows the Add Category button.
+        2. Click the Categories tab again.
+           Expected: The Categories page stays open and the Add Category button stays visible.
+        """
         self.step_capture.mark(1, "Navigate to Categories page")
         self.lpr.navigate_to_lpr()
         self.lpr.ensure_lpr_categories_page()
@@ -123,7 +165,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_navigate_back_to_lists_from_categories(self):
-        """Verify navigation back to Lists page from Categories via List tab."""
+        """Verify navigation back to Lists page from Categories via List tab.
+
+        Steps:
+        1. Click Admin in the left sidebar, click LPR, then click the Categories tab.
+           Expected: The Categories page opens and shows the Add Category button.
+        2. Click the List tab.
+           Expected: The Lists page opens and shows the Create List button.
+        """
         self.step_capture.mark(1, "Navigate to Categories page")
         self.lpr.navigate_to_lpr()
         self.lpr.ensure_lpr_categories_page()
@@ -146,7 +195,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_open_plate_page_from_lists(self):
-        """Verify opening Plate page by clicking View icon on a list."""
+        """Verify opening Plate page by clicking View icon on a list.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The Lists page shows at least one list row.
+        2. Click the View icon on the first list row.
+           Expected: The Plate page for that list opens and shows the Add Plate button.
+        """
         self.step_capture.mark(1, "Navigate to Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -180,7 +236,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_ensure_plate_page_already_on_plate(self):
-        """Verify ensure_lpr_plate_page returns when already on Plate page."""
+        """Verify ensure_lpr_plate_page returns when already on Plate page.
+
+        Steps:
+        1. Click Admin, then LPR, and click the View icon on the first list row.
+           Expected: The Plate page for that list opens and shows the Add Plate button.
+        2. Open the same list again while its Plate page is open.
+           Expected: The Plate page stays open and the Add Plate button stays visible.
+        """
         self.step_capture.mark(1, "Navigate to Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -209,7 +272,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_filter_panel_navigation(self):
-        """Verify opening and closing filter panel on Plate page."""
+        """Verify opening and closing filter panel on Plate page.
+
+        Steps:
+        1. Click Admin, then LPR, and click the View icon on the first list row.
+           Expected: The Plate page for that list opens and shows the Add Plate button.
+        2. Click the Filter icon.
+           Expected: The filter panel opens and shows the Apply and Reset buttons.
+        """
         self.step_capture.mark(1, "Navigate to Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -240,7 +310,16 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_filter_panel_already_open(self):
-        """Verify ensure_lpr_filter_panel returns when panel already open."""
+        """Verify ensure_lpr_filter_panel returns when panel already open.
+
+        Steps:
+        1. Click Admin, then LPR, and click the View icon on the first list row.
+           Expected: The Plate page for that list opens and shows the Add Plate button.
+        2. Click the Filter icon.
+           Expected: The filter panel opens and shows the Apply and Reset buttons.
+        3. Open the filter panel again without closing it.
+           Expected: The panel stays open and the Apply button stays visible.
+        """
         self.step_capture.mark(1, "Navigate to Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -270,7 +349,14 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_ensure_in_search_results_not_in_results(self):
-        """Verify ensure_in_search_results raises exception when not in Search Results."""
+        """Verify ensure_in_search_results raises exception when not in Search Results.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The Lists page opens and shows no Search Results header.
+        2. Look for the Search Results view without applying a filter.
+           Expected: The Search Results header is not shown. The Lists page stays open.
+        """
         self.step_capture.mark(1, "Navigate to Lists page")
         self.lpr.navigate_to_lpr()
 

@@ -49,7 +49,20 @@ class TestLprGridLayout:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_select_grid_layouts(self):
-        """Each layout button shows its tile count and active state."""
+        """Each layout button shows its tile count and active state.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens with three layout buttons.
+        2. Click the 1x1 layout button.
+           Expected: One empty tile shows and the 1x1 button is highlighted.
+        3. Click the 2x2 layout button.
+           Expected: Four empty tiles show and the 2x2 button is highlighted.
+        4. Click the 3x3 layout button.
+           Expected: Nine empty tiles show and the 3x3 button is highlighted.
+        5. Click the 2x2 layout button again.
+           Expected: Four empty tiles show.
+        """
         self.step_capture.mark(1, "Navigate to the LPR camera page")
         self.lpr.ensure_lpr_camera_page()
         buttons = self._layout_buttons()
@@ -142,7 +155,16 @@ class TestLprTimer:
     @pytest.mark.livestream
     @pytest.mark.flaky(reruns=1)
     def test_timer_popup_validation(self):
-        """The popup opens over a playing stream and closes on Cancel."""
+        """The popup opens over a playing stream and closes on Cancel.
+
+        Steps:
+        1. Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.
+           Expected: The camera streams in the tile.
+        2. Click the timer icon.
+           Expected: The Set Timeout Duration popup opens with Save and Cancel buttons.
+        3. Click Cancel, then click Reset View.
+           Expected: The popup closes and the tiles are empty.
+        """
         self.step_capture.mark(1, "Play a stream and open the popup")
         self._open_popup_with_stream()
 
@@ -162,7 +184,18 @@ class TestLprTimer:
     @pytest.mark.livestream
     @pytest.mark.flaky(reruns=1)
     def test_timer_dropdown_values(self):
-        """The duration dropdown offers the preset values."""
+        """The duration dropdown offers the preset values.
+
+        Steps:
+        1. Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.
+           Expected: The camera streams in the tile.
+        2. Click the timer icon.
+           Expected: The Set Timeout Duration popup opens and shows a Minutes value.
+        3. Click the Minutes value.
+           Expected: The list shows 30 Minutes and 45 Minutes.
+        4. Press Escape, click Cancel, then click Reset View.
+           Expected: The popup closes and the tiles are empty.
+        """
         self.step_capture.mark(1, "Play a stream and open the popup")
         self._open_popup_with_stream()
 
@@ -191,7 +224,16 @@ class TestLprTimer:
     @pytest.mark.livestream
     @pytest.mark.flaky(reruns=1)
     def test_timer_cancel_button(self):
-        """Cancel closes the popup without saving."""
+        """Cancel closes the popup without saving.
+
+        Steps:
+        1. Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.
+           Expected: The camera streams in the tile.
+        2. Click the timer icon, then click Cancel.
+           Expected: The Set Timeout Duration popup closes.
+        3. Click Reset View.
+           Expected: The tiles are empty.
+        """
         self.step_capture.mark(1, "Play a stream and open the popup")
         self._open_popup_with_stream()
 
@@ -212,7 +254,20 @@ class TestLprTimer:
     @pytest.mark.livestream
     @pytest.mark.flaky(reruns=1)
     def test_timer_after_page_refresh(self):
-        """The popup reopens with a value after a reload."""
+        """The popup reopens with a value after a reload.
+
+        Steps:
+        1. Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.
+           Expected: The camera streams in the tile.
+        2. Click the timer icon.
+           Expected: The Set Timeout Duration popup opens and shows a Minutes value.
+        3. Click Cancel, then reload the browser page.
+           Expected: The LPR camera page loads again.
+        4. Drag the test camera onto an empty tile, then click the timer icon again.
+           Expected: The popup opens and still shows a Minutes value.
+        5. Click Cancel, then click Reset View.
+           Expected: The popup closes and the tiles are empty.
+        """
         self.step_capture.mark(1, "Play a stream and open the popup")
         self._open_popup_with_stream()
         expect(

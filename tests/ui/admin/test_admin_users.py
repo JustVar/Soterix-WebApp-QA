@@ -168,7 +168,18 @@ class TestAdminUsers:
     @pytest.mark.admin
     @pytest.mark.admin_users
     def test_delete_user(self):
-        """Verify a user can be deleted via options menu > delete > confirm."""
+        """Verify a user can be deleted via options menu > delete > confirm.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click Users.
+           Expected: The Users list opens.
+        2. Type AutoTest in the user search field.
+           Expected: The list shrinks to the AutoTest users.
+        3. Click the options icon on an AutoTest user card, then click Delete.
+           Expected: A confirmation dialog opens.
+        4. Click Delete in the dialog.
+           Expected: The user card is removed, the list shows one card fewer, and no error is shown.
+        """
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 

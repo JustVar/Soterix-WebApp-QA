@@ -136,7 +136,16 @@ def test_relogin_after_logout(authenticated_page, base_url, login_data):
     ("/insights", "Insights"),
 ])
 def test_logout_from_different_pages(authenticated_page, base_url, path, page_name):
-    """Verify logout works from various application pages."""
+    """Verify logout works from various application pages.
+
+    Steps:
+    1. Open the Search page from its URL.
+       Expected: The page renders with the profile avatar in the header.
+    2. Click the avatar, then click Sign out.
+       Expected: The login page opens.
+    3. Repeat from the Events page and from the Insights page.
+       Expected: The login page opens each time.
+    """
     page = authenticated_page
     lp = LoginPage(page, base_url)
 

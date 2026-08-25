@@ -44,7 +44,20 @@ class TestLprCameraSelection:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_select_multi_camera_by_site(self):
-        """The group row's hover checkbox starts the group's cameras."""
+        """The group row's hover checkbox starts the group's cameras.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens with empty tiles that read Drag & Drop Camera here.
+        2. Click the Locations & Cameras header.
+           Expected: The panel opens and lists the configured test site.
+        3. Click the test site.
+           Expected: The All Cameras group row shows under the site.
+        4. Hover the group row and click its checkbox.
+           Expected: At least one new stream starts in a tile.
+        5. Click Reset View.
+           Expected: Every tile is empty again.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -70,7 +83,16 @@ class TestLprCameraSelection:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_drag_drop_camera_to_grid(self):
-        """Dragging the group onto a tile starts its cameras."""
+        """Dragging the group onto a tile starts its cameras.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens with empty tiles that read Drag & Drop Camera here.
+        2. Click the Locations & Cameras header, then click the test site.
+           Expected: The All Cameras group row shows under the site.
+        3. Drag the All Cameras group row onto the last empty tile.
+           Expected: At least one camera of the group starts streaming in a tile.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -84,7 +106,16 @@ class TestLprCameraSelection:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_hover_and_select_single_camera(self):
-        """A camera row's hover checkbox starts that camera."""
+        """A camera row's hover checkbox starts that camera.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens with empty tiles that read Drag & Drop Camera here.
+        2. Click the Locations & Cameras header, click the test site, then click the All Cameras group.
+           Expected: The configured test camera row shows under the group.
+        3. Hover the camera row and click its checkbox.
+           Expected: The camera starts streaming in a tile.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 

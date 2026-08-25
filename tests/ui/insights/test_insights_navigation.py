@@ -61,7 +61,16 @@ class TestInsightsNavigation:
     @pytest.mark.ui
     @pytest.mark.insights
     def test_close_system_status_tab(self):
-        """Verify the System Status tab can be closed."""
+        """Verify the System Status tab can be closed.
+
+        Steps:
+        1. Click Insights in the left sidebar, then click System Status.
+           Expected: The System Status dashboard opens with a site dropdown.
+        2. Select the configured test site in the dropdown.
+           Expected: The dashboard shows the Devices section.
+        3. Click the close icon on the System Status tab.
+           Expected: The tab closes and the System Status link shows again.
+        """
         self.insights.open_system_status(SITE_NAME)
         self.insights.close_tab()
 

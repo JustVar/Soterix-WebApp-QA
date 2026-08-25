@@ -101,8 +101,14 @@ class TestChats:
     @pytest.mark.ui
     @pytest.mark.chats
     def test_edit_group_name(self):
-        """Group editing needs a group, which cannot be created in the
-        redesigned panel."""
+        """Group editing needs a group, which the redesigned panel cannot create.
+
+        Steps:
+        1. Click the chat icon in the header.
+           Expected: The chat panel opens with its search field.
+        2. Look for a Create Group control in the panel.
+           Expected: No Create Group control is shown. Group editing cannot be tested until the control returns.
+        """
         self.chat.open_chat_panel()
         # oracle: _skip_unless_groups_returned always raises - skip
         # while the feature stays gone, fail on the tripwire

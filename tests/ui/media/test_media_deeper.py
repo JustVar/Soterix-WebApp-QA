@@ -130,7 +130,14 @@ class TestMediaDeeper:
     @pytest.mark.media
     @pytest.mark.media_deeper
     def test_tab_round_trip_folders_to_shared(self):
-        """Verify switching from Folders to Shared with me and back works."""
+        """Verify switching from Folders to Shared with me and back works.
+
+        Steps:
+        1. Click Media in the left sidebar, open the date filter, and choose Last 30 Days.
+           Expected: The list reloads for the last 30 days.
+        2. Click the Folders tab, then Shared with me, then Folders again.
+           Expected: Each tab loads and the date filter stays visible.
+        """
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("Folders")
         self.media.click_tab("Shared with me")
@@ -142,7 +149,14 @@ class TestMediaDeeper:
     @pytest.mark.media
     @pytest.mark.media_deeper
     def test_core_tabs_accessible(self):
-        """Verify the core media tabs can be clicked without errors."""
+        """Verify the core media tabs can be clicked without errors.
+
+        Steps:
+        1. Click Media in the left sidebar, open the date filter, and choose Last 30 Days.
+           Expected: The list reloads for the last 30 days.
+        2. Click the All, My Media, Shared with me, Clips, and Folders tabs in turn.
+           Expected: Each tab loads without an error and the date filter stays visible.
+        """
         self.media.select_date_filter("Last 30 Days")
         # Test core tabs that are always present (Vault may not be visible)
         for tab in ["All", "My Media", "Shared with me", "Clips", "Folders"]:
@@ -177,7 +191,16 @@ class TestMediaDeeper:
     @pytest.mark.media
     @pytest.mark.media_deeper
     def test_search_clear_and_retry(self):
-        """Verify clearing search and searching again works."""
+        """Verify clearing search and searching again works.
+
+        Steps:
+        1. Click Media in the left sidebar, open the date filter, and choose Last 30 Days.
+           Expected: The list reloads for the last 30 days.
+        2. Type clip in the search field and press Enter.
+           Expected: The list reloads with the search applied.
+        3. Clear the field, type 17, and press Enter.
+           Expected: The list reloads again and the date filter stays visible.
+        """
         self.media.select_date_filter("Last 30 Days")
         self.media.search_media("clip")
 

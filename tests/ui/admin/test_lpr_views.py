@@ -19,7 +19,14 @@ class TestLprViews:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_click_lpr_navigation(self):
-        """Navigate to LPR then to Views page and verify page loaded."""
+        """Navigate to LPR then to Views page and verify page loaded.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The LPR Lists page opens and shows the Create List button.
+        2. Click Views in the left sidebar.
+           Expected: The Views page opens and shows a titled view tab.
+        """
         self.step_capture.mark(1, "Navigate to LPR main page")
         self.lpr.navigate_to_lpr()
 
@@ -41,7 +48,14 @@ class TestLprViews:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_create_multiple_views(self):
-        """Create multiple view tabs by clicking view plus button."""
+        """Create multiple view tabs by clicking view plus button.
+
+        Steps:
+        1. Click Admin in the left sidebar, click LPR, then click Views in the left sidebar.
+           Expected: The Views page opens with its view tabs and a plus tab.
+        2. Count the view tabs, then click the plus tab.
+           Expected: One new view tab appears next to the existing tabs.
+        """
         self.step_capture.mark(1, "Navigate to LPR page first")
         self.lpr.navigate_to_lpr()
 
@@ -73,6 +87,16 @@ class TestLprViews:
         a native alert 'Action not permitted' while the view stays.
         The old version looked for 'Close' buttons that do not exist
         and registered its dialog handler after the click.
+
+        Steps:
+        1. Click Views in the left sidebar.
+           Expected: The Views page opens with its view tabs.
+        2. Click the plus tab.
+           Expected: One new view tab appears.
+        3. Click the close icon on the last tab. Repeat until one tab remains.
+           Expected: Each click removes one tab.
+        4. Click the close icon on the last remaining tab.
+           Expected: An alert reads Action not permitted and the tab stays open.
         """
         self.step_capture.mark(1, "Navigate to Views page")
         self.lpr.go_to_views_page()

@@ -25,7 +25,14 @@ def test_xss_attempt(page, base_url):
 
 @pytest.mark.ui
 def test_password_too_short(page, base_url):
-    """A three-character password does not log the user in."""
+    """A three-character password does not log the user in.
+
+    Steps:
+    1. Open the login page.
+       Expected: The Email and Password fields show.
+    2. Enter user@example.com as the email and 123 as the password, then click Login.
+       Expected: The user is not logged in. The login page stays open or shows a validation message.
+    """
     lp = LoginPage(page, base_url)
     lp.login("user@example.com", "123")
     assert not lp.is_logged_in(), "Short password should not grant access"

@@ -34,7 +34,12 @@ class TestLprCameraPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_navigate_to_lpr_camera_page(self):
-        """Navigate to LPR camera/playback page."""
+        """Navigate to LPR camera/playback page.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens, the URL ends with /lpr, and a tile reads Drag & Drop Camera here.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -50,7 +55,14 @@ class TestLprCameraPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_open_locations_dropdown(self):
-        """Verify Locations & Cameras dropdown opens and lists the site."""
+        """Verify Locations & Cameras dropdown opens and lists the site.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        2. Click the Locations & Cameras header.
+           Expected: The panel opens and lists the configured test site.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -66,7 +78,14 @@ class TestLprCameraPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_wait_for_site_list_loading(self):
-        """Verify site list loads correctly."""
+        """Verify site list loads correctly.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        2. Click the Locations & Cameras header and wait for the list to load.
+           Expected: The configured test site appears in the panel.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -81,7 +100,14 @@ class TestLprCameraPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_safe_reset_to_views(self):
-        """Verify safe reset lands on the Views page."""
+        """Verify safe reset lands on the Views page.
+
+        Steps:
+        1. Reload the browser page.
+           Expected: The application loads again.
+        2. Click Views in the left sidebar.
+           Expected: The Views page opens and shows its subtab bar.
+        """
         self.step_capture.mark(1, "Call safe reset to Views")
         self.lpr.safe_reset_to_views()
 
@@ -97,7 +123,14 @@ class TestLprCameraPlayback:
     @pytest.mark.livestream
     @pytest.mark.flaky(reruns=1)
     def test_camera_tile_activation(self):
-        """Play the configured camera, then activate its tile."""
+        """Play the configured camera, then activate its tile.
+
+        Steps:
+        1. Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.
+           Expected: The camera streams in the tile.
+        2. Click the streaming tile.
+           Expected: The tile shows the live icon.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -115,7 +148,14 @@ class TestLprCameraPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_dismiss_backdrop(self):
-        """Verify backdrop dismissal leaves no click-blocking overlay."""
+        """Verify backdrop dismissal leaves no click-blocking overlay.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        2. Press Escape if a dialog backdrop covers the page.
+           Expected: No backdrop is visible and the page accepts clicks.
+        """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -139,6 +179,14 @@ class TestLprCameraPlayback:
 
         The popup opens only while a stream plays; without one the
         icon click yields nothing but its tooltip.
+
+        Steps:
+        1. Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.
+           Expected: The camera streams in the tile.
+        2. Click the timer icon.
+           Expected: The Set Timeout Duration popup opens with a Cancel button.
+        3. Click Cancel, then click Reset View.
+           Expected: The popup closes and the tiles are empty.
         """
         self.step_capture.mark(1, "Play the configured camera")
         self.lpr.ensure_lpr_camera_page()
@@ -165,7 +213,16 @@ class TestLprCameraPlayback:
     @pytest.mark.livestream
     @pytest.mark.flaky(reruns=1)
     def test_open_lpr_playback_timeout_popup(self):
-        """Verify the LPR timeout popup opens and closes cleanly."""
+        """Verify the LPR timeout popup opens and closes cleanly.
+
+        Steps:
+        1. Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.
+           Expected: The camera streams in the tile.
+        2. Click the timer icon.
+           Expected: The Set Timeout Duration popup opens with a Save button.
+        3. Click Cancel, then click Reset View.
+           Expected: The popup closes and the tiles are empty.
+        """
         self.step_capture.mark(1, "Play the configured camera")
         self.lpr.ensure_lpr_camera_page()
         self.lpr.play_camera(site_name=SITE_NAME, camera_name=CAMERA_NAME)
@@ -205,7 +262,12 @@ class TestLprViewsIntegration:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_navigate_to_views_page(self):
-        """Verify navigation to Views page."""
+        """Verify navigation to Views page.
+
+        Steps:
+        1. Click Views in the left sidebar.
+           Expected: The Views page opens and shows its subtab bar.
+        """
         self.step_capture.mark(1, "Navigate to Views page")
         self.lpr.go_to_views_page()
 
@@ -219,7 +281,14 @@ class TestLprViewsIntegration:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_safe_views_navigation_on_non_views_page(self):
-        """Verify safe navigation to Views works from non-Views pages."""
+        """Verify safe navigation to Views works from non-Views pages.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The LPR Lists page opens.
+        2. Click Views in the left sidebar.
+           Expected: The Views page opens and shows its subtab bar.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page first")
         self.lpr.navigate_to_lpr()
 
@@ -242,6 +311,16 @@ class TestLprViewsIntegration:
 
         The oracle lives in play_camera: it raises when the camera is
         missing or no new stream appears past the baseline.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        2. Click the Locations & Cameras header, click the test site, then click the All Cameras group.
+           Expected: The configured test camera row is listed.
+        3. Drag the camera row onto the last empty tile.
+           Expected: The camera streams in the tile.
+        4. Click Reset View.
+           Expected: The tiles are empty.
         """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
@@ -262,6 +341,16 @@ class TestLprViewsIntegration:
 
         The oracle lives in play_camera: it raises when no new stream
         appears past the baseline after the group drop.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        2. Click the Locations & Cameras header, then click the test site.
+           Expected: The All Cameras group row is listed.
+        3. Drag the All Cameras group row onto the last empty tile.
+           Expected: At least one camera of the group streams in a tile.
+        4. Click Reset View.
+           Expected: The tiles are empty.
         """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()

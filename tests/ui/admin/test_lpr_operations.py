@@ -53,7 +53,14 @@ class TestLprListOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_click_admin_and_access_lpr(self):
-        """Verify navigation to Admin page and LPR menu visibility."""
+        """Verify navigation to Admin page and LPR menu visibility.
+
+        Steps:
+        1. Click Admin in the left sidebar.
+           Expected: The Admin menu shows an LPR entry.
+        2. Click LPR.
+           Expected: The Lists page opens and shows the Create List button.
+        """
         self.step_capture.mark(1, "Navigate to Admin page")
         self.lpr.navigate_to_lpr()
 
@@ -69,7 +76,14 @@ class TestLprListOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_page_ui_elements(self):
-        """Verify LPR page UI elements are present."""
+        """Verify LPR page UI elements are present.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The Lists page opens.
+        2. Check the page controls.
+           Expected: The Create List button, the List and Categories tabs, the lists table, and the Search field are all visible.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -100,7 +114,22 @@ class TestLprListOperations:
     @pytest.mark.lpr
     @pytest.mark.flaky(reruns=2)
     def test_create_lpr_list(self):
-        """Create a new LPR list with valid data."""
+        """Create a new LPR list with valid data.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The Lists page opens.
+        2. Click Create List.
+           Expected: The Create List dialog opens with a List Name field and a type dropdown.
+        3. Enter a unique name in the List Name field.
+           Expected: The field shows the name.
+        4. Open the type dropdown and choose White List.
+           Expected: The dropdown closes and shows White List.
+        5. Click Save.
+           Expected: The dialog closes.
+        6. Find the new list in the table.
+           Expected: A row with the new name is listed.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -156,7 +185,14 @@ class TestLprListOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_search_lpr_list_by_name(self):
-        """Search for LPR list by name."""
+        """Search for LPR list by name.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The Lists page shows at least one list row.
+        2. Type the name of the first list into the Search field.
+           Expected: The table shows a row with that name.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -183,7 +219,14 @@ class TestLprListOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_open_list_and_verify_plate_page(self):
-        """Open a list and verify plate page UI."""
+        """Open a list and verify plate page UI.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The Lists page shows at least one list row.
+        2. Click the View icon on the first list row.
+           Expected: The Plate page opens with the Add Plate button and a plate table.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -212,7 +255,14 @@ class TestLprListOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_list_actions_visible(self):
-        """Verify View, Edit, and Delete actions are available for lists."""
+        """Verify View, Edit, and Delete actions are available for lists.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The Lists page shows at least one list row.
+        2. Look at the action icons on the first list row.
+           Expected: The row shows View, Edit, and Delete icons.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -241,7 +291,14 @@ class TestLprListOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_list_status_toggle(self):
-        """Verify list status toggle is present and interactive."""
+        """Verify list status toggle is present and interactive.
+
+        Steps:
+        1. Click Admin in the left sidebar, then click LPR.
+           Expected: The Lists page shows at least one list row.
+        2. Look at the first list row.
+           Expected: The row shows a status toggle.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -275,7 +332,16 @@ class TestLprFilterOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_apply_filter_shows_search_results(self):
-        """Verify applying a filter shows Search Results view."""
+        """Verify applying a filter shows Search Results view.
+
+        Steps:
+        1. Click Admin, then LPR, and click the View icon on the first list row.
+           Expected: The Plate page for that list opens and shows the Add Plate button.
+        2. Click the Filter icon.
+           Expected: The filter panel opens with the Apply button.
+        3. Click Apply.
+           Expected: The Search Results view opens with its header.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -306,7 +372,16 @@ class TestLprFilterOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_reset_filter_returns_to_plate(self):
-        """Verify resetting filter returns to Plate page."""
+        """Verify resetting filter returns to Plate page.
+
+        Steps:
+        1. Click Admin, then LPR, and click the View icon on the first list row.
+           Expected: The Plate page for that list opens and shows the Add Plate button.
+        2. Click the Filter icon, then click Apply.
+           Expected: The Search Results view opens.
+        3. Click Reset.
+           Expected: The Plate page opens again with the Add Plate button.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
@@ -347,7 +422,16 @@ class TestLprFilterOperations:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_filter_panel_toggle(self):
-        """Verify filter panel can be opened and closed."""
+        """Verify filter panel can be opened and closed.
+
+        Steps:
+        1. Click Admin, then LPR, and click the View icon on the first list row.
+           Expected: The Plate page for that list opens and shows the Add Plate button.
+        2. Click the Filter icon.
+           Expected: The filter panel opens with the Apply and Reset buttons.
+        3. Click the Filter icon again.
+           Expected: The filter panel closes and the Apply button is hidden.
+        """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 

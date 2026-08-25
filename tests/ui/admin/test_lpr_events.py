@@ -62,7 +62,16 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_event_selection_play_pause_scrubber(self):
-        """Selecting an event opens its clip player, and close ends it."""
+        """Selecting an event opens its clip player, and close ends it.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens and the event feed lists plate cards.
+        2. Click the first event card.
+           Expected: The clip player opens with a video and a position readout such as 00:00 / 00:20.
+        3. Click the close icon on the player.
+           Expected: The player closes and no video remains.
+        """
         self.step_capture.mark(1, "Navigate to the LPR camera page")
         self._open_feed_or_skip()
 
@@ -85,7 +94,14 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_event_list_visibility(self):
-        """The live feed lists at least one event card."""
+        """The live feed lists at least one event card.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        2. Look at the event feed.
+           Expected: At least one event card shows a plate, a confidence, a camera, and a timestamp.
+        """
         self.step_capture.mark(1, "Navigate to the LPR camera page")
         cards = self._open_feed_or_skip()
 
@@ -98,7 +114,16 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_event_scrubber_control(self):
-        """The clip player shows its timeline readout and seek controls."""
+        """The clip player shows its timeline readout and seek controls.
+
+        Steps:
+        1. Click LPR in the left sidebar, then click the first event card in the feed.
+           Expected: The clip player opens with a video.
+        2. Look at the player controls.
+           Expected: The player shows the position readout and the Backward and Forward seek icons.
+        3. Click the close icon on the player.
+           Expected: The player closes.
+        """
         self.step_capture.mark(1, "Open the first event")
         self._open_feed_or_skip()
         self.lpr.open_first_event()
@@ -117,7 +142,14 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_event_filter_by_type(self):
-        """The feed filter opens with camera and duration options."""
+        """The feed filter opens with camera and duration options.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens.
+        2. Click the Filter icon above the event feed.
+           Expected: The filter panel opens with Cameras and Duration sections and an Apply button.
+        """
         self.step_capture.mark(1, "Navigate to the LPR camera page")
         self.lpr.ensure_lpr_camera_page()
 
@@ -136,7 +168,14 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_event_timestamp_verification(self):
-        """Event cards carry a full time-and-date stamp."""
+        """Event cards carry a full time-and-date stamp.
+
+        Steps:
+        1. Click LPR in the left sidebar.
+           Expected: The event feed lists at least one card.
+        2. Read the timestamp line on the first card.
+           Expected: The line shows a time and a date, for example 1:37:38 AM | Aug 11 2026.
+        """
         self.step_capture.mark(1, "Navigate to the LPR camera page")
         cards = self._open_feed_or_skip()
 
@@ -151,7 +190,16 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_event_details_panel(self):
-        """The clip player exposes the event's action controls."""
+        """The clip player exposes the event's action controls.
+
+        Steps:
+        1. Click LPR in the left sidebar, then click the first event card in the feed.
+           Expected: The clip player opens with a video.
+        2. Look at the action icons on the player.
+           Expected: The player shows Share, Export, and Create Link icons.
+        3. Click the close icon on the player.
+           Expected: The player closes.
+        """
         self.step_capture.mark(1, "Open the first event")
         self._open_feed_or_skip()
         self.lpr.open_first_event()
@@ -169,7 +217,14 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_playback_speed_control(self):
-        """Speed control on the clip player (absent in the current UI)."""
+        """Speed control on the clip player (absent in the current UI).
+
+        Steps:
+        1. Click LPR in the left sidebar, then click the first event card in the feed.
+           Expected: The clip player opens with its position readout.
+        2. Look for a playback speed control such as 1x.
+           Expected: No speed control is shown. The current player has none.
+        """
         self.step_capture.mark(1, "Open the first event")
         self._open_feed_or_skip()
         self.lpr.open_first_event()
@@ -199,7 +254,16 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_event_navigation_next_prev(self):
-        """The seek controls act on the open clip without breaking it."""
+        """The seek controls act on the open clip without breaking it.
+
+        Steps:
+        1. Click LPR in the left sidebar, then click the first event card in the feed.
+           Expected: The clip player opens with a video.
+        2. Click the Forward icon, then the Backward icon.
+           Expected: The video and the position readout stay visible.
+        3. Click the close icon on the player.
+           Expected: The player closes.
+        """
         self.step_capture.mark(1, "Open the first event")
         self._open_feed_or_skip()
         self.lpr.open_first_event()
@@ -221,7 +285,18 @@ class TestLprEventPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_lpr_fullscreen_event_playback(self):
-        """Fullscreen engages and releases on the clip player."""
+        """Fullscreen engages and releases on the clip player.
+
+        Steps:
+        1. Click LPR in the left sidebar, then click the first event card in the feed.
+           Expected: The clip player opens with a video.
+        2. Click the full screen icon.
+           Expected: The player fills the screen.
+        3. Exit full screen.
+           Expected: The player returns to its inline size.
+        4. Click the close icon on the player.
+           Expected: The player closes.
+        """
         self.step_capture.mark(1, "Open the first event")
         self._open_feed_or_skip()
         self.lpr.open_first_event()
