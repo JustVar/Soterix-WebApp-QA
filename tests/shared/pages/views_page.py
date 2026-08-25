@@ -1224,7 +1224,14 @@ class ViewsPage:
                 return {clicked: null, candidates: found.slice(0, 15)};
             }""", list(known_labels))
             print(f"DEBUG click_site JS result: {result}")
-            self.page.wait_for_timeout(500)  # JS click bypasses waits; no signal
+            # The site expanding shows its All Cameras entry; a click
+            # that landed nothing leaves it absent, and the bounded
+            # wait logs so the caller's next step decides
+            if result.get("clicked") and not self._appears(
+                self.page.locator("text=All Cameras"), timeout=5000
+            ):
+                print("[VIEWS] click_site: All Cameras did not show "
+                      "within 5s of the JS click")
             return result
 
     def click_all_cameras(self):
@@ -1329,15 +1336,22 @@ class ViewsPage:
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         bookmark_icon = fs.video_container.locator("img[src*='Bookmark']")
         bookmark_icon.click()
-        # The bookmark save shows no confirmation on the timeline
-        self.page.wait_for_timeout(2000)
+        # The 'Bookmark Added' snackbar is the saved signal (probe
+        # 08/25/2026); a miss is logged and the caller's bookmark-row
+        # check decides
+        if not self._appears(
+            self.page.get_by_text("Bookmark Added", exact=False),
+            timeout=10000,
+        ):
+            print("[VIEWS] add_bookmark_on_tile: no 'Bookmark Added' "
+                  "toast within 10s")
         print(f"DEBUG add_bookmark_on_tile: Bookmark added!")
 
         # Exit fullscreen
         print(f"DEBUG add_bookmark_on_tile: Exiting fullscreen...")
         fs.exit_fullscreen()
-        # The fullscreen exit animation has no reliable DOM signal
-        self.page.wait_for_timeout(1000)
+        # The exit control leaving with the player is the exited signal
+        fs.exit_fullscreen_button.wait_for(state="hidden", timeout=10000)
         print(f"DEBUG add_bookmark_on_tile: Done!")
 
     def share_live_view_on_tile(self, email: str, tile_index: int = 0):
@@ -1430,10 +1444,15 @@ class ViewsPage:
             "button:has(img[alt='favorite'])"
         ).first
         fav_button.wait_for(state="visible", timeout=10000)
+        # The star's src flips to favoriteIconFilled (or back) once the
+        # save lands: the row-scoped count is the applied signal
+        filled = row_anchor.locator("xpath=../..").locator(
+            # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
+            "img[src*='media/favoriteIconFilled']"
+        )
+        before = filled.count()
         fav_button.click()
-        # The favorite state is saved server-side with no validated DOM
-        # signal for the toggle landing
-        self.page.wait_for_timeout(2000)
+        expect(filled).to_have_count(1 - before, timeout=10000)
 
     def is_camera_favorited(self, camera_name: str) -> bool:
         """Return True if the camera has a filled favorite icon.
@@ -1458,20 +1477,56 @@ class ViewsPage:
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
         fav_icon.click()
-        # The panel slide-in has no known DOM signal
-        self.page.wait_for_timeout(2000)
+        # The panel takes the camera tree's place: the tree list
+        # leaving is the open signal (probe 08/25/2026)
+        self._camera_list_toggled(hidden=True, action="open_favorites_panel")
 
     def close_favorites_panel(self):
         """Close the favorites panel by clicking the favorites icon again."""
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
         fav_icon.click()
-        # The panel slide-out has no known DOM signal
-        self.page.wait_for_timeout(1000)
+        # The tree list returning is the closed signal
+        self._camera_list_toggled(hidden=False, action="close_favorites_panel")
 
-    def is_camera_in_favorites(self, camera_name: str) -> bool:
-        """Return True if the camera name appears in the currently open favorites panel."""
-        return self.page.locator(f"text={camera_name}").count() > 0
+    def _camera_list_toggled(self, hidden: bool, action: str) -> bool:
+        """Bounded wait for the camera tree list to leave or return.
+
+        The favorites panel swaps in for nav.camerasList. The swap is
+        a settle, not the oracle: a miss is logged and the caller's
+        membership check decides.
+        """
+        state = "hidden" if hidden else "visible"
+        try:
+            self.page.locator("nav.camerasList").first.wait_for(
+                state=state, timeout=5000
+            )
+            return True
+        # a list that does not swap is logged for the run report; the
+        # caller's membership check decides the test
+        except PlaywrightError:
+            print(f"[VIEWS] {action}: camera list not {state} within 5s")
+            return False
+
+    def is_camera_in_favorites(self, camera_name: str, present: bool = True,
+                               timeout: int = 5000) -> bool:
+        """True when the favorites panel's card for the camera is there
+        (present=True) or gone (present=False), within `timeout` ms.
+
+        The panel repaints a beat after it opens - on reopen it first
+        shows the previous list - so both directions wait for the
+        panel's own card (.cameraThumbnailWrapper, probe 08/25/2026)
+        rather than counting page text on the same tick.
+        """
+        card = self.page.locator(".cameraThumbnailWrapper").filter(has_text=camera_name)
+        if present:
+            return self._appears(card, timeout=timeout)
+        try:
+            card.first.wait_for(state="hidden", timeout=timeout)
+            return True
+        # a card that stays is the answer, not an error
+        except PlaywrightError:
+            return False
 
     def enter_fullscreen_on_tile(self, tile_index: int = 0):
         """Enter full screen mode on a specific video tile.

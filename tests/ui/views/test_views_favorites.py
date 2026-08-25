@@ -81,7 +81,7 @@ class TestViewsFavorites:
 
         # Open favorites and verify camera is gone
         self.views.open_favorites_panel()
-        assert not self.views.is_camera_in_favorites(camera_name), (
+        assert self.views.is_camera_in_favorites(camera_name, present=False), (
             f"Camera '{camera_name}' should not appear in favorites after removing"
         )
         self.views.close_favorites_panel()
