@@ -296,8 +296,8 @@ def format_seconds(seconds: float) -> str:
     """12.3 s under a minute, else 1 min 41 s."""
     if seconds < 60:
         return f'{seconds:.1f} s'
-    minutes, rest = divmod(seconds, 60)
-    return f'{int(minutes)} min {rest:.0f} s'
+    minutes, rest = divmod(round(seconds), 60)
+    return f'{int(minutes)} min {rest} s'
 
 
 def parse_started(text: str | None) -> datetime | None:
@@ -1253,7 +1253,7 @@ def _render_facts(rec: TestRecord, with_outcome: bool = False, with_seen: bool =
     test names its own."""
     facts = []
     if with_outcome:
-        facts.append(f'<span class="chip {escape(rec.outcome)}">{escape(rec.outcome)}</span>')
+        facts.append(f'<span class="chip {escape(rec.outcome)}">{escape(rec.outcome.capitalize())}</span>')
     if rec.duration_text:
         facts.append(f'<span>{escape(rec.duration_text)}</span>')
     facts.append(_delta_chip(rec))
@@ -1395,7 +1395,7 @@ def _render_slowest(records: list[TestRecord], count: int = SLOWEST_COUNT) -> st
     rows = ''.join(
         f'<tr><td class="num">{escape(format_seconds(r.seconds or 0.0))}</td>'
         f'<td>{escape(r.display_title)}<div class="nodeid">{escape(r.nodeid)}</div></td>'
-        f'<td>{escape(r.outcome)}</td></tr>' for r in timed)
+        f'<td>{escape(r.outcome.capitalize())}</td></tr>' for r in timed)
     return ('<table class="facts-table"><tr><th>Duration</th><th>Test</th><th>Outcome</th></tr>'
             + rows + '</table>')
 
@@ -1416,11 +1416,13 @@ def _render_provenance(summary: dict, product: str = '') -> str:
     """The provenance line: the product first, as a name, then the
     machine facts in code."""
     prov = summary.get('provenance') if isinstance(summary.get('provenance'), dict) else {}
-    browser = ' / '.join(str(v) for v in (prov.get('browser'), prov.get('browser_channel')) if v)
+    # Names read as names: Chromium / Chrome, Playwright, Env QA
+    browser = ' / '.join(str(v).capitalize() for v in (prov.get('browser'), prov.get('browser_channel')) if v)
     versions = ', '.join(
         f'{label} {prov[key]}' for label, key in
-        (('playwright', 'playwright'), ('pytest-playwright', 'pytest_playwright')) if prov.get(key))
-    facts = (('ENV', prov.get('env')), ('Host', prov.get('base_url_host')),
+        (('Playwright', 'playwright'), ('Pytest-Playwright', 'pytest_playwright')) if prov.get(key))
+    env = str(prov.get('env')).upper() if prov.get('env') else None
+    facts = (('Env', env), ('Host', prov.get('base_url_host')),
              ('Commit', prov.get('git_commit')), ('Browser', browser), ('Versions', versions))
     spans = [f'<span class="product">Product: {escape(product)}</span>'] if product else []
     spans += [f'<span>{label}: <code>{escape(str(value))}</code></span>'
@@ -1447,7 +1449,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
     # A mixed run's header names no single product, so every test names its own.
     with_product = is_mixed(product)
     when = friendly_stamp(started)
-    title = f'{product} - Test run {when}' if product else f'Test run {when}'
+    title = f'{product} - Test Run {when}' if product else f'Test Run {when}'
 
     def by_outcome(names: tuple[str, ...]) -> list[TestRecord]:
         return sorted((t for t in tests.values() if t.outcome in names),
@@ -1459,7 +1461,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
     unknown = by_outcome(('unknown',))
 
     chips = ''.join(
-        f'<span class="chip {key}">{escape(key)}: {escape(str(counts.get(key, "-")))}</span>'
+        f'<span class="chip {key}">{escape(key.capitalize())}: {escape(str(counts.get(key, "-")))}</span>'
         for key in ('passed', 'failed', 'skipped', 'errors'))
     links = ['<a href="../index.html">Archive Index</a>']
     if (run_dir / 'report.html').is_file():
@@ -1523,11 +1525,11 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 .brand {{ display: block; }}{PAGE_CSS}</style>
 </head>
 <body>
-<div class="brand-row">{header_logo()}<h1>Test run {escape(str(started))}</h1></div>
+<div class="brand-row">{header_logo()}<h1>Test Run {escape(friendly_stamp(started))}</h1></div>
 {verdict_html}
 <div class="meta">
 <span>Target: <code>{escape(target)}</code></span>
-<span>Duration: {escape(str(duration)) if duration is not None else '-'} s</span>
+<span>Duration: {escape(format_seconds(float(duration))) if duration is not None else '-'}</span>
 <span>Outcome: {outcome_html(exitstatus)}</span>
 <span>Folder: <code>{escape(run_dir.name)}</code></span>
 </div>
