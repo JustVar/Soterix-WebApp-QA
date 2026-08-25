@@ -5,7 +5,9 @@ rules management, and sites/camera group management.
 Used by Admin Users, Admin Sites, and Admin Rules test modules.
 """
 import datetime
-from playwright.sync_api import Page, expect
+import time
+
+from playwright.sync_api import Error as PlaywrightError, Page, expect
 
 
 class AdminPage:
@@ -513,7 +515,11 @@ class AdminPage:
         count = self.mute_notification_icons.count()
         target = count + index if index < 0 else index
         self.mute_notification_icons.nth(target).click()
-        self.page.wait_for_timeout(1000)  # mute ack has no DOM signal
+        # The icon's aria-label flips to Unmute once the mute lands, so
+        # one fewer Mute icon is the applied signal (probe 08/25/2026)
+        expect(self.mute_notification_icons).to_have_count(
+            count - 1, timeout=10000
+        )
 
     # --- Sites management ---
 
@@ -626,16 +632,21 @@ class AdminPage:
         )
 
     def click_sort_az(self):
-        """Click the A-Z sort icon."""
+        """Click the A-Z sort icon.
+
+        The sort control is one toggle icon: the list reorders on the
+        click and the icon swaps to the other direction on the same
+        tick (probe 08/25/2026), so the opposite icon is the signal.
+        """
         self.sort_az_icon.wait_for(state="visible", timeout=10000)
         self.sort_az_icon.click()
-        self.page.wait_for_timeout(1000)  # in-place reorder has no DOM signal
+        self.sort_za_icon.wait_for(state="visible", timeout=5000)
 
     def click_sort_za(self):
-        """Click the Z-A sort icon."""
+        """Click the Z-A sort icon (same toggle as click_sort_az)."""
         self.sort_za_icon.wait_for(state="visible", timeout=10000)
         self.sort_za_icon.click()
-        self.page.wait_for_timeout(1000)  # in-place reorder has no DOM signal
+        self.sort_az_icon.wait_for(state="visible", timeout=5000)
 
     def delete_camera_group_by_name(self, name: str) -> bool:
         """Delete the group with the given name; False when not found.
@@ -808,9 +819,13 @@ class AdminPage:
             state="attached", timeout=20000
         )
         if camera:
+            # The unfiltered tree stays up while the filter runs: the
+            # checkbox count leaving its baseline is the re-rendered
+            # signal (a one-camera tree never moves it, so a miss logs)
+            boxes = self.page.locator("input[type='checkbox']")
+            before = boxes.count()
             search.fill(camera)
-            # The tree filter re-renders with no completion signal
-            self.page.wait_for_timeout(1000)
+            self._count_left_baseline(boxes, before, "wizard device filter")
         # The configured camera's own row, fail-fast: a silent fallback
         # to another checkbox would create the rule against an
         # arbitrary device and pass on wrong data
@@ -833,20 +848,14 @@ class AdminPage:
         ).locator("input[type='checkbox']").first
         box.wait_for(state="attached", timeout=10000)
         box.evaluate("el => el.click()")
-        # Checked state is the applied signal
-        self.page.wait_for_timeout(500)  # state propagates, no DOM signal
+        # The input's checked state is the applied signal
         try:
-            checked = box.is_checked()
-        except Exception:
-            raise RuntimeError(
-                f"Wizard camera checkbox for '{camera}' could not be read "
-                f"after the click"
-            ) from None
-        if not checked:
+            expect(box).to_be_checked(timeout=5000)
+        except AssertionError:
             raise RuntimeError(
                 f"Wizard camera checkbox for '{camera}' did not register: "
                 f"the rule would be created against no device"
-            )
+            ) from None
 
     def _draw_wizard_region(self):
         """Draw a region on the Set Rule canvas and confirm with Done.
@@ -877,7 +886,8 @@ class AdminPage:
         try:
             if done.is_visible():
                 done.click()
-                self.page.wait_for_timeout(1000)  # commit, no signal
+                # The region modal closing takes Done with it
+                self._hidden_or_log(done, "Set Rule Done (region)")
         except Exception:
             raise AssertionError(
                 "Set Rule Done was visible but the click failed - the "
@@ -956,11 +966,13 @@ class AdminPage:
                 sw.wait_for(state="attached", timeout=5000)
                 if not sw.evaluate("el => el.checked"):
                     sw.evaluate("el => el.click()")
-                    self.page.wait_for_timeout(300)  # state, no signal
-                if not sw.evaluate("el => el.checked"):
+                # The input's checked state is the applied signal
+                try:
+                    expect(sw).to_be_checked(timeout=5000)
+                except AssertionError:
                     raise RuntimeError(
                         "The 'Use full view' switch did not turn on"
-                    )
+                    ) from None
                 # Done arms only after the snapshot loads, and the
                 # modal backdrop eats pointer clicks - wait for the
                 # armed button, then click it through JS
@@ -969,11 +981,14 @@ class AdminPage:
                 ).first
                 done.wait_for(state="visible", timeout=30000)
                 done.evaluate("el => el.click()")
-                self.page.wait_for_timeout(1000)  # close has no signal
+                # The Set Rule modal closing takes Done with it
+                self._hidden_or_log(done, "Set Rule Done (full view)")
             elif region_visible:
                 self._draw_wizard_region()
 
             nxt = self.page.get_by_text("Next", exact=True).first
+            before_step = self._wizard_step_texts()
+            advanced = True
             try:
                 nxt.wait_for(state="visible", timeout=5000)
                 nxt.click(timeout=10000)
@@ -988,10 +1003,14 @@ class AdminPage:
                 if fallback.count() > 0:
                     fallback.first.evaluate("el => el.click()")
                 else:
+                    advanced = False
                     print(f"[ADMIN] Wizard step {step}: Next not "
                           f"clickable: {str(e)[:80]}")
-            # Step transitions re-render in place with no signal
-            self.page.wait_for_timeout(1500)
+            # Steps re-render in place: the visible label set changing
+            # is the next step's signal. Nothing was clicked when Next
+            # is absent (the Save step), so there is nothing to wait on
+            if advanced:
+                self._wizard_step_changed(before_step, step)
 
             if rule_name:
                 # Exclude the camera-search box, whose placeholder also
@@ -1058,6 +1077,62 @@ class AdminPage:
             f"Rule wizard stalled walking '{rule_type}'; visible: "
             f"{self._wizard_leaf_texts()[:20]}"
         )
+
+    def _count_left_baseline(self, locator, before: int, action: str,
+                             timeout_s: float = 5.0) -> bool:
+        """Wait for a locator count to move off a pre-action baseline.
+
+        A filter replaces its list in place with no other signal; the
+        count changing is the re-rendered sign. Logs and returns False
+        on timeout so the caller's own wait decides.
+        """
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            if locator.count() != before:
+                return True
+            self.page.wait_for_timeout(250)  # poll tick for the re-render
+        print(f"[ADMIN] {action}: count stayed at {before} for "
+              f"{timeout_s:.0f}s")
+        return False
+
+    def _hidden_or_log(self, locator, label: str, timeout: int = 5000) -> bool:
+        """Bounded hidden wait for a closing control; logs a miss.
+
+        The close is a settle, not the oracle: callers verify the
+        outcome (the rule row, the checked switch) on their own.
+        """
+        try:
+            locator.wait_for(state="hidden", timeout=timeout)
+            return True
+        # a control that lingers is logged for the run report; the
+        # caller's outcome check decides the test
+        except PlaywrightError:
+            print(f"[ADMIN] {label} still visible after "
+                  f"{timeout / 1000:.0f}s")
+            return False
+
+    def _wizard_step_texts(self) -> frozenset:
+        """Visible short leaf texts without digits: the step's label set.
+
+        Counters and clocks change on their own, so digit-bearing
+        texts stay out of the fingerprint.
+        """
+        return frozenset(
+            t for t in self._wizard_leaf_texts()
+            if not any(c.isdigit() for c in t)
+        )
+
+    def _wizard_step_changed(self, before: frozenset, step: int,
+                             timeout_s: float = 8.0) -> bool:
+        """Wait for the wizard's label set to leave its pre-Next state."""
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            if self._wizard_step_texts() != before:
+                return True
+            self.page.wait_for_timeout(250)  # poll tick for the step re-render
+        print(f"[ADMIN] Wizard step {step}: labels unchanged "
+              f"{timeout_s:.0f}s after Next")
+        return False
 
     def _wizard_leaf_texts(self):
         """Short visible leaf texts, nav chrome excluded (diagnostics)."""
