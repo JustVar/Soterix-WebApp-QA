@@ -704,7 +704,7 @@ def test_build_run_report_without_a_previous_run_has_no_chips(tmp_path):
         assert f'chip delta {label}' not in page
     assert 'First run of these tests - nothing to compare yet.' in page
     assert 'Passed 1/1' in page
-    assert 'passed 0/1' in page
+    assert 'Passed 0/1' in page
     assert 'Flaky' not in page.split('<style>')[1].split('</style>')[1]
     assert 'New error' in page
 
@@ -1229,6 +1229,7 @@ def test_format_seconds_carries_the_minute():
 
 
 def test_outcome_label_reads_as_words():
+    """Outcomes render as words: Passed, Unexpected pass, Expected failure."""
     assert rr.outcome_label('passed') == 'Passed'
     assert rr.outcome_label('xpassed') == 'Unexpected pass'
     assert rr.outcome_label('xfailed') == 'Expected failure'
@@ -1236,6 +1237,7 @@ def test_outcome_label_reads_as_words():
 
 
 def test_duration_text_never_raises():
+    """A missing or non-numeric duration renders as '-', never an error."""
     assert rr.duration_text(101.8) == '1 min 42 s'
     assert rr.duration_text(None) == '-'
     assert rr.duration_text('soon') == '-'
