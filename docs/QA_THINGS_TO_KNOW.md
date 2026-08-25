@@ -23,9 +23,10 @@ trace instead of a rerun.
 9. [Session caching](#session-caching)
 10. [API vs UI tests](#api-vs-ui-tests)
 11. [Drag and drop](#drag-and-drop)
-12. [Debugging failures](#debugging-failures)
-13. [Migration notes (Selenium)](#migration-notes-selenium)
-14. [Updating this document](#updating-this-document)
+12. [Live stream delivery](#live-stream-delivery)
+13. [Debugging failures](#debugging-failures)
+14. [Migration notes (Selenium)](#migration-notes-selenium)
+15. [Updating this document](#updating-this-document)
 
 ---
 
@@ -338,6 +339,82 @@ multi-item drags, and drag cancellation with ESC.
 
 ---
 
+## Live stream delivery
+
+Problem: a test that checks a camera's codec, resolution, frame rate or
+audio needs a source of truth for what the tile receives. The player shows
+none of it: there is no codec, bitrate or resolution overlay, and the full
+screen settings gear opens "Image Parameters" only.
+
+How a tile gets its video (probed on QA, 2026-08-25, camera "main gate",
+channel 97 on site 16):
+
+1. The app opens
+   `wss://media.example.invalid/v3/api/ws?name=<site>/<channel>/<app>/<live>/<stream>/<timestamp>/<uuid>`
+   from the main thread and sends `{"type":"mse","value":""}`. A tile uses
+   stream index 1 (the minor stream). Full screen opens a second socket with
+   stream index 0 (the major stream). The socket
+   `/ws/timeline/site/<site>/channel/<channel>` carries the timeline bar only.
+2. The server answers one text frame with the MediaSource mime type, for
+   example `{"type":"mse","value":"video/mp4; codecs=\"hvc1.1.6.L153.B0,flac\""}`,
+   then binary frames: an fMP4 init segment (`ftyp iso5` + `moov`) and one
+   `moof` + `mdat` per frame. JSON text frames with per-frame counters
+   (`timeStamp`, `vehicleCount`, `peopleCount`) arrive in between.
+3. The app feeds the frames to a `MediaSource` on the tile's `<video>` (blob
+   src). The hidden `canvas` in the tile is for snapshots, not decoding.
+   `/REST/central/user/session` answers `"streamer":"webrtc"` and the v2
+   `startlive` URL ends in `/webrtc`, but the page creates no
+   `RTCPeerConnection`. That field does not describe the tile transport.
+
+Solution: run `python tools/stream_probe.py --camera "main gate"`. Add
+`--fullscreen` for the stream 0 socket and `--json out.json` for the raw
+capture. It prints one row per fact with its source.
+
+- Delivered facts come from the socket. Codec: the `moov` sample entry
+  (`hev1`/`hvc1` = H.265, `avc1` = H.264) and the SPS inside `hvcC`/`avcC`.
+  Resolution: the SPS after its conformance window. The sample entry holds
+  the coded size (2592x1472 for a 2592x1458 stream), so do not compare that
+  one with the configuration. Frame rate and bitrate: `tfdt` and `mdat`
+  across the fragments. Audio: the `fLaC`/`mp4a` entry.
+- Configured facts come from the internal API.
+  `POST /REST/site/{siteid}/getCameraStreamingParameters` with
+  `{"channelId": N, "streamType": 0|1}` is a read despite the verb and gives
+  `codecType`, width, height, fps and bitrate.
+  `POST /REST/site/{siteid}/camera/audio/streaming` gives the camera audio
+  codec. `GET .../channel/{channelid}/config` returns the same block, takes
+  about 45 s and embeds a snapshot. Do not call it from a test.
+- The tool captures frames over CDP (`Network.enable` and
+  `Network.webSocketFrameReceived` on `context.new_cdp_session(page)`).
+  `page.on("websocket")` showed no frames in an earlier probe.
+
+Facts that need care:
+
+- `codecType` is a number. The OpenAPI spec has no enum text for it. Value 8
+  was H.265 on channels 97 and 88. The value for H.264 is not verified.
+  Probe an H.264 camera before you assert on it.
+- Playwright's bundled Chromium answers
+  `MediaSource.isTypeSupported('video/mp4; codecs="hvc1..."')` with `false`.
+  An H.265 tile's `<video>` stays at `readyState 0` with a spinner while the
+  frames arrive. A "stream plays" oracle cannot pass for an H.265 camera in
+  that browser. The same tile in branded Chrome (`--channel chrome`)
+  answered `true` and reached `readyState 4` with 95 decoded frames in 12 s.
+- The init segment always carries a FLAC mono 8 kHz audio track (the server
+  transcodes the camera's G.711), and audio fragments arrive when the
+  channel has `audioGrabbing: false`. The track does not prove the camera
+  sends audio. The tile and full screen start muted
+  (`img[src*='volumn-mute-active-icon']`).
+- PTZ: the full screen DOM had no `[class*='ptz']` element for the fixed
+  Q1656-LE, but `GET .../channel/97/preset` still answered
+  `["preset20","Home"]` and `getcurrentptzposition` answered zeros. Neither
+  call is a PTZ flag on its own. `channelType` (0 here, 1 on "Training
+  Area") is not verified as the PTZ marker.
+  `GET /REST/dashboard/system/getcameraconfigtypes` counts `ptzCameras: 9`
+  for the enterprise. Open until a PTZ camera on the QA site is probed.
+
+Files: `tools/stream_probe.py`, `tests/shared/api/client.py`
+
+---
+
 ## Debugging failures
 
 **Read the trace first.** Every failed test saves one to `reports/artifacts/`.
@@ -407,4 +484,4 @@ Files: tests/... or tests/shared/pages/...
 
 ---
 
-*Last updated: 2026-08-07*
+*Last updated: 2026-08-25*

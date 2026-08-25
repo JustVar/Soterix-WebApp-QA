@@ -29,6 +29,8 @@ Status: [REDO] rebuild, [INVESTIGATE] feature moved or died?,
 | 11 | Leaked "AutoTest" users | [BLOCKED] | Each test_add_user run leaves one more (3 -> 4 on 08/24) because the tenant rejects user/remove (the 08/17 app defect). tools/tenant_cleanup.py will clear them once the app fix lands. |
 | 12 | TEST_SITE_ID pointed at the wrong site | [DONE] | `.env` had 17 ("Example Corporate Office"); the configured test site "Newtown Action Area" is 16. Corrected 08/24; the `api` fixture skips with both values on a mismatch. Check any teammate `.env` copied from the old template. |
 | 13 | test_drag_location_to_tile skipped vacuously | [DONE] | Passed None as the location, so the locator was `text=None` and the test had only ever skipped. Found 08/24 by the new skip-reason logs; now drags the configured site and passes (17 s). |
+| 14 | drag_camera_to_tile_by_name lands the wrong camera | [INVESTIGATE] | Seen once in four runs during the stream probe: "main gate" drag landed channel 121. The has-text match or the tile target may be loose; tools/stream_probe.py verifies the socket channel and falls back to the checkbox. Pin the camera by exact name and channel id. |
+| 15 | Audio delivered while audioGrabbing is false | app question | Channel 97 streams a FLAC audio track (fragments flowing) although getCameraStreamingParameters/audio says audioGrabbing false. Ask the team whether the track is silence or a settings defect before any audio oracle. |
 
 Quality gates, all zero as of 08/17/2026 and enforced by the checker
 on every commit: no-oracle tests, early-exit passes, except-swallow
