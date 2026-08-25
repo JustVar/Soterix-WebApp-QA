@@ -99,6 +99,7 @@ from plugins.run_report import (
     error_line,
     exit_outcome,
     filter_script,
+    friendly_stamp,
     module_of,
     outcome_html,
     readable_title,
@@ -872,7 +873,8 @@ def _render_index(entries: list[dict], has_health: bool = False,
             links.append(f'<a href="{folder}/report.html">{INDEX_LINK_RAW_REPORT}</a>')
         links.append(f'<a href="{folder}/">{INDEX_LINK_FOLDER}</a>')
         cells = [
-            escape(str(started)),
+            # the readable form; the ISO stamp stays in the tooltip and the search words
+            f'<span title="{escape(str(started), quote=True)}">{escape(friendly_stamp(started))}</span>',
             escape(product),
             escape(str(target)),
             *[escape(str(counts.get(key, '-')))
@@ -881,7 +883,8 @@ def _render_index(entries: list[dict], has_health: bool = False,
             escape(str(advisory_count)),
             '<span class="open">' + ''.join(links) + '</span>',
         ]
-        words = ' '.join(str(w) for w in (started, product, target, exit_outcome(exitstatus), name))
+        words = ' '.join(str(w) for w in (started, friendly_stamp(started), product, target,
+                                           exit_outcome(exitstatus), name))
         rows.append(f'<tr data-test="{escape(words.lower(), quote=True)}">'
                     + ''.join(f'<td>{cell}</td>' for cell in cells) + '</tr>')
 

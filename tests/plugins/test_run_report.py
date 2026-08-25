@@ -1031,7 +1031,7 @@ def test_page_names_the_product_in_title_and_header(tmp_path, monkeypatch):
     rows = [dict(r, product='NexaiQ-Neurosen') for r in _summary_test_rows()]
     _add_summary_tests(run, rows, {'env': 'qa', 'product': 'NexaiQ-Neurosen'})
     page = rr.build_run_report(run)
-    assert '<title>NexaiQ-Neurosen - Test run 2026-08-24T10:00:00</title>' in page
+    assert '<title>NexaiQ-Neurosen - Test run Aug 24, 2026, 10:00 AM</title>' in page
     header = page[page.index('<body>'):page.index('id="failures"')]
     assert '<span class="product">Product: NexaiQ-Neurosen</span>' in header
     assert header.index('Product: NexaiQ-Neurosen') < header.index('ENV: <code>qa</code>')
@@ -1211,3 +1211,12 @@ def test_cli_all_backfills_every_run_without_a_page(tmp_path, monkeypatch, capsy
     assert '2026-08-01_10-00-00__tests-ui-views/run.html' in index
     # A second pass has nothing left to write.
     assert rr.backfill_run_reports(runs) == ([], [broken])
+
+
+def test_friendly_stamp_reads_as_a_date_with_the_year():
+    """The archive index spans months, so its Started cell carries the year;
+    text that is not a stamp stands as it is."""
+    assert rr.friendly_stamp('2026-08-25T10:17:14') == 'Aug 25, 2026, 10:17 AM'
+    assert rr.friendly_stamp('2026-08-25_14-27-25') == 'Aug 25, 2026, 2:27 PM'
+    assert rr.friendly_stamp('') == '-'
+    assert rr.friendly_stamp('yesterday') == 'yesterday'

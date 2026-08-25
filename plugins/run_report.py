@@ -324,6 +324,16 @@ def friendly_time(text: str | None) -> str:
     return f'{_MONTHS[dt.month - 1]} {dt.day}, {hour}:{dt.minute:02d} {"AM" if dt.hour < 12 else "PM"}'
 
 
+def friendly_stamp(text: str | None) -> str:
+    """Aug 25, 2026, 10:17 AM - friendly_time with the year, for a list
+    that spans months (the archive index) and a page title that stands
+    alone. The raw text stands in when it does not parse."""
+    dt = parse_started(text)
+    if dt is None:
+        return str(text or '-')
+    return f'{friendly_date(text, with_year=True)}, {friendly_time(text).split(", ", 1)[1]}'
+
+
 def friendly_date(text: str | None, with_year: bool = False) -> str:
     """Aug 24, or Aug 24, 2026 with the year: the day alone, for a span of
     runs ("Aug 21 to Aug 24, 2026"). The raw text stands in when it does
@@ -1436,7 +1446,8 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
     run_links = RunLinks(runs_dir, run_dir.name)
     # A mixed run's header names no single product, so every test names its own.
     with_product = is_mixed(product)
-    title = f'{product} - Test run {started}' if product else f'Test run {started}'
+    when = friendly_stamp(started)
+    title = f'{product} - Test run {when}' if product else f'Test run {when}'
 
     def by_outcome(names: tuple[str, ...]) -> list[TestRecord]:
         return sorted((t for t in tests.values() if t.outcome in names),
