@@ -339,8 +339,8 @@ def test_render_health_has_every_section_and_run_links(monkeypatch):
     # The watch table: strip blocks linked to their runs, the rate, the last failure.
     watch = page[page.index('id="watch"'):]
     assert ('<a class="blk failed" href="2026-08-24_12-00-00__views/run.html" '
-            'title="Aug 24, 12:00 PM: failed"></a>') in watch
-    assert '33% (1 of 3 failed) <span class="chip delta flaky">flaky</span>' in watch
+            'title="Aug 24, 12:00 PM: Failed"></a>') in watch
+    assert '33% (1 of 3 failed) <span class="chip delta flaky">Flaky</span>' in watch
     assert '<a href="2026-08-24_12-00-00__views/run.html">Aug 24, 12:00 PM</a>' in watch
     assert '<td>Views<div class="nodeid">ui/views/test_a.py</div></td>' in watch
     assert 'passed 2/3' not in watch  # the strip text is the rate column's job here

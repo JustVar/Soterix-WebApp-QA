@@ -502,7 +502,7 @@ def _rate_cell(facts: dict) -> str:
     it fails every time, and the label would hide that."""
     text = escape(f"{_pct(facts['rate'])} ({facts['failed']} of {facts['runs']} failed)")
     if facts['flaky']:
-        text += ' <span class="chip delta flaky">flaky</span>'
+        text += ' <span class="chip delta flaky">Flaky</span>'
     return f'<td class="num">{text}</td>'
 
 
@@ -565,7 +565,7 @@ def render_health(agg: dict, generated: str | None = None,
                   f"<div class=\"case\">{outcome_html(m['newest_exit'])}</div>"),
         ]
 
-    module_headers = ['Module', 'Runs', 'Pass rate', 'Passed / failed',
+    module_headers = ['Module', 'Runs', 'Pass rate', 'Passed / Failed',
                       ('Mean full run', FULL_RUN_TITLE), ('Notes', NOTES_TITLE), 'Newest run']
     # One block per product: its heading, the verdict lines of its
     # modules, then their table.

@@ -12,10 +12,10 @@ What the page shows, in order:
     new failures, 1 still failing; 1 test skipped." or "All 49 tests
     passed."
   - Header: the product under test (plugins/products.py: also the page
-    title's prefix, "NexaiQ-Core - Test run ..."), target, start time,
+    title's prefix, "NexaiQ-Core - Test Run - ..."), target, start time,
     duration, outcome counts, the run's outcome (pytest's exit status as
     a word: Passed, Failed, Interrupted, Error, No tests, with the code
-    as a tooltip), provenance (ENV, host, git commit, browser, Playwright
+    as a tooltip), provenance (Env, host, git commit, browser, Playwright
     versions), and links: Raw pytest-html,
     Archive Index, Health when health.html exists, the previous run of
     these tests (which the change labels compare against), and Folder.
@@ -41,7 +41,8 @@ What the page shows, in order:
 
 Every test shows its readable title first (the docstring's first line, or
 the function name as words), the QA Touch case title beneath it when the
-test is mapped, and the node id smaller under both. The node id stays the
+test is mapped, and the node id smaller under both (a passed or skipped
+row shows the short id, the full one clipped beside it). The node id stays the
 join key for the QA Touch mapping and the archive history, so the page
 never renames a test. Each test also carries its duration, a history
 strip (its outcome in each of the last 20 archived runs of these tests,
@@ -170,6 +171,16 @@ _OUTCOME_RANK = {'error': 5, 'failed': 4, 'xfailed': 3, 'skipped': 2,
                  'xpassed': 1, 'passed': 0}
 FAILURE_OUTCOMES = ('failed', 'error')
 PASSED_OUTCOMES = ('passed', 'xpassed')
+
+# How an outcome reads on the page: pytest's words, as labels.
+OUTCOME_LABELS = {'passed': 'Passed', 'failed': 'Failed', 'error': 'Error', 'skipped': 'Skipped',
+                  'xfailed': 'Expected failure', 'xpassed': 'Unexpected pass', 'rerun': 'Rerun',
+                  'unknown': 'Unknown'}
+
+
+def outcome_label(outcome: str) -> str:
+    """'Passed', 'Expected failure', ... - the outcome as a reader's word."""
+    return OUTCOME_LABELS.get(str(outcome), str(outcome).capitalize())
 SKIPPED_OUTCOMES = ('skipped', 'xfailed')
 
 # pytest's exit codes (ExitCode in _pytest/config) as the words a reader
@@ -290,6 +301,15 @@ def module_of(nodeid: str) -> str:
     the health summary. A path outside tests/ is kept whole."""
     path = nodeid.split('::', 1)[0].replace('\\', '/')
     return path[len('tests/'):] if path.startswith('tests/') else path
+
+
+def duration_text(value: object) -> str:
+    """format_seconds for a summary value, '-' when it is missing or not
+    a number: the page renders, never raises."""
+    try:
+        return format_seconds(float(value))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return '-'
 
 
 def format_seconds(seconds: float) -> str:
@@ -1002,7 +1022,7 @@ h4 { font-size: .9rem; margin: 1rem 0 .35rem; color: var(--muted); text-transfor
 .meta { color: var(--muted); display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; margin-bottom: .75rem; }
 .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 1rem; }
 .chip { border-radius: 999px; padding: .15rem .7rem; font-weight: 600; border: 1px solid var(--line); background: var(--card); }
-.chip.failed, .chip.error { color: var(--fail); background: var(--fail-bg); border-color: var(--fail); }
+.chip.failed, .chip.error, .chip.errors { color: var(--fail); background: var(--fail-bg); border-color: var(--fail); }
 .chip.passed { color: var(--pass); background: var(--pass-bg); border-color: var(--pass); }
 .chip.skipped { color: var(--skip); background: var(--skip-bg); border-color: var(--skip); }
 .card { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--fail);
@@ -1024,13 +1044,14 @@ video { max-width: 100%; width: 640px; border: 1px solid var(--line); border-rad
 details { margin: .5rem 0; }
 summary { cursor: pointer; font-weight: 600; }
 details.section > summary { font-size: 1.05rem; }
-.row { display: flex; align-items: flex-start; gap: 1rem; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem; padding: .6rem 0; border-bottom: 1px solid var(--line); }
 .row-main { flex: 1 1 auto; min-width: 0; }
 .row .shots { flex: 0 0 auto; }
 .row .shots figure { max-width: 160px; }
 .row .facts { margin: .2rem 0 0; }
 .sub { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin-top: .1rem; }
-.sub .nodeid { word-break: normal; }
+.sub .nodeid { word-break: normal; overflow-wrap: anywhere; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .dur { color: var(--muted); font-size: .85rem; margin-left: .5rem; }
 ul.plain { margin: .25rem 0; padding-left: 1.25rem; }
 .empty { color: var(--muted); font-style: italic; }
@@ -1233,14 +1254,14 @@ def render_strip(facts: Mapping, href_prefix: str = '', with_text: bool = True,
     links = links or RunLinks()
     blocks = ''.join(
         f'<a class="blk {escape(str(b["outcome"]))}" href="{links.href(b["run"], href_prefix)}" '
-        f'title="{escape(friendly_time(b.get("started")))}: {escape(str(b["outcome"]))}"></a>'
+        f'title="{escape(friendly_time(b.get("started")))}: {escape(outcome_label(b["outcome"]))}"></a>'
         for b in facts['blocks'])
     parts = [f'<span class="strip" title="the last {facts["runs"]} runs of these tests, '
              f'newest right">{blocks}</span>']
     if with_text:
-        parts.append(f'<span>passed {facts["passed"]}/{facts["runs"]}</span>')
+        parts.append(f'<span>Passed {facts["passed"]}/{facts["runs"]}</span>')
         if facts['flaky']:
-            parts.append(f'<span class="chip delta flaky">flaky {facts["rate"] * 100:.0f}%</span>')
+            parts.append(f'<span class="chip delta flaky">Flaky {facts["rate"] * 100:.0f}%</span>')
     return '<span class="history">' + ''.join(parts) + '</span>'
 
 
@@ -1260,8 +1281,11 @@ def _render_identity(rec: TestRecord, heading: str, compact: bool = False) -> st
         case = f'QA Touch {rec.case_key}'.rstrip() + (f': {rec.case_title}' if rec.case_title else '')
     if compact:
         bits = [f'<span class="case">{escape(case)}</span>'] if case else []
+        # the short id is what shows; the full id follows in a clipped span
+        # so a copy or a screen reader still gets it whole
         bits.append(f'<span class="nodeid" title="{escape(rec.nodeid, quote=True)}">'
-                    f'{escape(short_id(rec.nodeid))}</span>')
+                    f'{escape(short_id(rec.nodeid))}'
+                    f'<span class="sr-only"> ({escape(rec.nodeid)})</span></span>')
         parts.append('<div class="sub">' + ''.join(bits) + '</div>')
         return ''.join(parts)
     if case:
@@ -1278,7 +1302,7 @@ def _render_facts(rec: TestRecord, with_outcome: bool = False, with_seen: bool =
     test names its own."""
     facts = []
     if with_outcome:
-        facts.append(f'<span class="chip {escape(rec.outcome)}">{escape(rec.outcome.capitalize())}</span>')
+        facts.append(f'<span class="chip {escape(rec.outcome)}">{escape(outcome_label(rec.outcome))}</span>')
     if rec.duration_text:
         facts.append(f'<span>{escape(rec.duration_text)}</span>')
     facts.append(_delta_chip(rec))
@@ -1351,7 +1375,7 @@ def _render_failure(rec: TestRecord, run_dir: Path, with_seen: bool = True,
     if rec.videos:
         for rel in rec.videos:
             parts.append(f'<video controls preload="metadata" src="{_href(rel)}"></video>'
-                         f'<div><a href="{_href(rel)}">{escape(Path(rel).name)}</a></div>')
+                         f'<div><a href="{_href(rel)}" title="{escape(Path(rel).name, quote=True)}">Video clip</a></div>')
     else:
         parts.append('<p class="empty">No video kept for this test.</p>')
 
@@ -1359,7 +1383,9 @@ def _render_failure(rec: TestRecord, run_dir: Path, with_seen: bool = True,
     if rec.traces:
         for rel in rec.traces:
             absolute = os.path.abspath(run_dir / rel)
-            parts.append(f'<div><a href="{_href(rel)}">{escape(Path(rel).name)}</a></div>')
+            label = 'Trace zip' if rel.lower().endswith('.zip') else Path(rel).name
+            parts.append(f'<div><a href="{_href(rel)}" title="{escape(Path(rel).name, quote=True)}">'
+                         f'{escape(label)}</a></div>')
             if rel.lower().endswith('.zip'):
                 parts.append(f'<pre>python -m playwright show-trace "{escape(absolute)}"</pre>')
     else:
@@ -1421,7 +1447,7 @@ def _render_slowest(records: list[TestRecord], count: int = SLOWEST_COUNT) -> st
     rows = ''.join(
         f'<tr><td class="num">{escape(format_seconds(r.seconds or 0.0))}</td>'
         f'<td>{escape(r.display_title)}<div class="nodeid">{escape(r.nodeid)}</div></td>'
-        f'<td>{escape(r.outcome.capitalize())}</td></tr>' for r in timed)
+        f'<td>{escape(outcome_label(r.outcome))}</td></tr>' for r in timed)
     return ('<table class="facts-table"><tr><th>Duration</th><th>Test</th><th>Outcome</th></tr>'
             + rows + '</table>')
 
@@ -1555,7 +1581,7 @@ def render_run_report(run_dir: Path, summary: dict, tests: dict[str, TestRecord]
 {verdict_html}
 <div class="meta">
 <span>Target: <code>{escape(target)}</code></span>
-<span>Duration: {escape(format_seconds(float(duration))) if duration is not None else '-'}</span>
+<span>Duration: {escape(duration_text(duration))}</span>
 <span>Outcome: {outcome_html(exitstatus)}</span>
 <span>Folder: <code>{escape(run_dir.name)}</code></span>
 </div>

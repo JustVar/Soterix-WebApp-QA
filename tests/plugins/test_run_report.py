@@ -664,10 +664,10 @@ def test_build_run_report_shows_titles_facts_and_change_chips(tmp_path):
     assert f'href="log/{SAFE}.log"' in card
     # Its error was not in the previous run, and its strip reads passed then failed.
     assert '<span class="chip delta new-error">New error</span>' in card
-    assert 'passed 1/2' in card
-    assert 'flaky 50%' in card
+    assert 'Passed 1/2' in card
+    assert 'Flaky 50%' in card
     assert ('class="blk passed" href="../2026-08-23_10-00-00__tests-ui-views/run.html" '
-            'title="Aug 23, 10:00 AM: passed"') in card
+            'title="Aug 23, 10:00 AM: Passed"') in card
     key = re.search(r'<div class="card failed"[^>]*data-test="([^"]*)"', page).group(1)
     assert 'verify the view opens.' in key
     assert NODEID.lower() in key
@@ -703,9 +703,9 @@ def test_build_run_report_without_a_previous_run_has_no_chips(tmp_path):
     for label in ('new-failure', 'still-failing', 'fixed', 'new-test'):
         assert f'chip delta {label}' not in page
     assert 'First run of these tests - nothing to compare yet.' in page
-    assert 'passed 1/1' in page
+    assert 'Passed 1/1' in page
     assert 'passed 0/1' in page
-    assert 'flaky' not in page.split('<style>')[1].split('</style>')[1]
+    assert 'Flaky' not in page.split('<style>')[1].split('</style>')[1]
     assert 'New error' in page
 
 
@@ -967,12 +967,12 @@ def test_render_strip_links_each_block_and_labels_flaky():
     html_ = rr.render_strip(facts, '../')
     assert html_.index('blk passed') < html_.index('blk failed')  # oldest left
     assert ('<a class="blk failed" href="../2026-08-20_10-00-00__views/run.html" '
-            'title="Aug 20, 10:00 AM: failed"></a>') in html_
-    assert 'passed 1/2' in html_
-    assert '<span class="chip delta flaky">flaky 50%</span>' in html_
+            'title="Aug 20, 10:00 AM: Failed"></a>') in html_
+    assert 'Passed 1/2' in html_
+    assert '<span class="chip delta flaky">Flaky 50%</span>' in html_
     bare = rr.render_strip(facts, '', with_text=False)
     assert 'href="2026-08-20_10-00-00__views/run.html"' in bare
-    assert 'passed 1/2' not in bare
+    assert 'Passed 1/2' not in bare
     assert rr.render_strip(rr.history_facts([])) == ''
     assert rr.render_strip({}) == ''
 
@@ -1133,7 +1133,7 @@ def test_history_and_delta_links_open_what_the_older_run_has(tmp_path):
     assert ('Changes since the <a href="../2026-08-23_10-00-00__tests-ui-views/report.html">'
             'previous run of these tests (Aug 23, 10:00 AM)</a>') in page
     assert ('class="blk failed" href="../2026-08-23_10-00-00__tests-ui-views/report.html" '
-            'title="Aug 23, 10:00 AM: failed"') in page
+            'title="Aug 23, 10:00 AM: Failed"') in page
     assert 'class="blk passed" href="../2026-08-22_10-00-00__tests-ui-views/" ' in page
     assert ('Seen before (last on <a href="../2026-08-23_10-00-00__tests-ui-views/report.html">'
             'Aug 23, 10:00 AM</a>)') in page
@@ -1226,3 +1226,40 @@ def test_format_seconds_carries_the_minute():
     """119.6 s is 2 min 0 s, never 1 min 60 s."""
     assert rr.format_seconds(119.6) == '2 min 0 s'
     assert rr.format_seconds(12.34) == '12.3 s'
+
+
+def test_outcome_label_reads_as_words():
+    assert rr.outcome_label('passed') == 'Passed'
+    assert rr.outcome_label('xpassed') == 'Unexpected pass'
+    assert rr.outcome_label('xfailed') == 'Expected failure'
+    assert rr.outcome_label('odd') == 'Odd'
+
+
+def test_duration_text_never_raises():
+    assert rr.duration_text(101.8) == '1 min 42 s'
+    assert rr.duration_text(None) == '-'
+    assert rr.duration_text('soon') == '-'
+
+
+def test_compact_row_shows_short_id_and_keeps_the_full_one(tmp_path):
+    """A passed row: the short id as text, the full id clipped beside it
+    and on hover, no module fact (the heading names it), the thumbnail
+    with a readable alt and the file name on hover, no caption."""
+    run = _make_run(tmp_path)
+    nodeid = 'tests/ui/views/test_x.py::TestX::test_y[chromium-a "b"]'
+    (run / 'screenshots').mkdir(exist_ok=True)
+    shot = run / 'screenshots' / 'tests-ui-views-test_x.py-TestX-test_y-chromium__PASSED.png'
+    shot.write_bytes(b'png')
+    _add_summary_tests(run, [{'nodeid': nodeid, 'outcome': 'passed', 'seconds': 1.5,
+                              'title': 'Verify y.', 'module': 'ui/views/test_x.py',
+                              'screenshots': ['screenshots/' + shot.name]}], {'env': 'qa'})
+    page = rr.build_run_report(run)
+    start = page.index('<div class="row"')
+    row = page[start:page.index('</details>', start)]
+    full = 'tests/ui/views/test_x.py::TestX::test_y[chromium-a &quot;b&quot;]'
+    assert 'TestX::test_y[chromium-a &quot;b&quot;]' in row
+    assert f'<span class="sr-only"> ({full})</span>' in row
+    assert f'title="{full}"' in row
+    assert '<span>ui/views/test_x.py</span>' not in row
+    assert 'alt="Final screenshot"' in row and '<figcaption>' not in row
+    assert f'title="{shot.name}"' in row
