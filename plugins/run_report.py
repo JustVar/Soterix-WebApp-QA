@@ -1024,8 +1024,13 @@ video { max-width: 100%; width: 640px; border: 1px solid var(--line); border-rad
 details { margin: .5rem 0; }
 summary { cursor: pointer; font-weight: 600; }
 details.section > summary { font-size: 1.05rem; }
-.row { padding: .5rem 0; border-bottom: 1px solid var(--line); }
-.row .shots figure { max-width: 200px; }
+.row { display: flex; align-items: flex-start; gap: 1rem; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.row-main { flex: 1 1 auto; min-width: 0; }
+.row .shots { flex: 0 0 auto; }
+.row .shots figure { max-width: 160px; }
+.row .facts { margin: .2rem 0 0; }
+.sub { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin-top: .1rem; }
+.sub .nodeid { word-break: normal; }
 .dur { color: var(--muted); font-size: .85rem; margin-left: .5rem; }
 ul.plain { margin: .25rem 0; padding-left: 1.25rem; }
 .empty { color: var(--muted); font-style: italic; }
@@ -1152,7 +1157,7 @@ def _headline(log: str) -> str:
     return '\n'.join(lines).strip()
 
 
-def _render_shots(rec: TestRecord) -> str:
+def _render_shots(rec: TestRecord, compact: bool = False) -> str:
     """The final screenshots, plus the mid-drag frames on a failure only:
     a passed drag's frames are on disk for anyone who wants them, but on
     the page they are noise."""
@@ -1162,12 +1167,15 @@ def _render_shots(rec: TestRecord) -> str:
     if not items:
         return ''
     figures = []
+    labels = {'final': 'Final screenshot', 'mid-drag': 'Mid-drag frame'}
     for rel, kind in sorted(items, key=lambda i: (i[1] == 'final', i[0])):
         name = Path(rel).name
+        # the file name is on hover and in the link; the caption reads as words
+        caption = '' if compact else f'<figcaption>{escape(labels[kind])}</figcaption>'
         figures.append(
-            f'<figure><a href="{_href(rel)}" target="_blank">'
-            f'<img src="{_href(rel)}" alt="{escape(name)}" loading="lazy"></a>'
-            f'<figcaption>{escape(kind)}: {escape(name)}</figcaption></figure>')
+            f'<figure><a href="{_href(rel)}" target="_blank" title="{escape(name, quote=True)}">'
+            f'<img src="{_href(rel)}" alt="{escape(labels[kind])}" loading="lazy"></a>'
+            f'{caption}</figure>')
     return '<div class="shots">' + ''.join(figures) + '</div>'
 
 
@@ -1236,18 +1244,35 @@ def render_strip(facts: Mapping, href_prefix: str = '', with_text: bool = True,
     return '<span class="history">' + ''.join(parts) + '</span>'
 
 
-def _render_identity(rec: TestRecord, heading: str) -> str:
-    """Title first, QA Touch case second, node id smaller beneath."""
+def short_id(nodeid: str) -> str:
+    """The node id without its file: TestClass::test_name[param]. The
+    module heading above a row already names the file."""
+    return nodeid.split('::', 1)[1] if '::' in nodeid else nodeid
+
+
+def _render_identity(rec: TestRecord, heading: str, compact: bool = False) -> str:
+    """Title first, QA Touch case second, node id smaller beneath. Compact
+    (the passed and skipped rows): the case and the short id share one
+    muted line, the full id on hover."""
     parts = [f'<{heading} class="title">{escape(rec.display_title)}</{heading}>']
+    case = ''
     if rec.case_key or rec.case_title:
         case = f'QA Touch {rec.case_key}'.rstrip() + (f': {rec.case_title}' if rec.case_title else '')
+    if compact:
+        bits = [f'<span class="case">{escape(case)}</span>'] if case else []
+        bits.append(f'<span class="nodeid" title="{escape(rec.nodeid, quote=True)}">'
+                    f'{escape(short_id(rec.nodeid))}</span>')
+        parts.append('<div class="sub">' + ''.join(bits) + '</div>')
+        return ''.join(parts)
+    if case:
         parts.append(f'<div class="case">{escape(case)}</div>')
     parts.append(f'<div class="nodeid">{escape(rec.nodeid)}</div>')
     return ''.join(parts)
 
 
 def _render_facts(rec: TestRecord, with_outcome: bool = False, with_seen: bool = True,
-                  links: RunLinks | None = None, with_product: bool = False) -> str:
+                  links: RunLinks | None = None, with_product: bool = False,
+                  with_module: bool = True) -> str:
     """The fact line under a test's names. `with_product` is on when the
     run mixes products: the header then names no single one, so each
     test names its own."""
@@ -1261,7 +1286,8 @@ def _render_facts(rec: TestRecord, with_outcome: bool = False, with_seen: bool =
         facts.append(_seen_chip(rec, links))
     if with_product and rec.product:
         facts.append(f'<span class="product">Product: {escape(rec.product)}</span>')
-    facts.append(f'<span>{escape(rec.module_name)}</span>')
+    if with_module:
+        facts.append(f'<span>{escape(rec.module_name)}</span>')
     if rec.log_file:
         facts.append(f'<a href="{_href(rec.log_file)}">captured output</a>')
     facts.append(render_strip(rec.history, '../', links=links))
@@ -1364,10 +1390,10 @@ def _render_row(rec: TestRecord, links: RunLinks | None = None,
     if rec.advisories:
         extras += '<ul class="plain">' + ''.join(
             f'<li>{escape(a)}</li>' for a in rec.advisories) + '</ul>'
-    return (f'<div class="row" data-test="{_filter_key(rec)}">'
-            f'{_render_identity(rec, "div")}'
-            f'{_render_facts(rec, links=links, with_product=with_product)}'
-            f'{extras}{_render_shots(rec)}</div>')
+    return (f'<div class="row" data-test="{_filter_key(rec)}"><div class="row-main">'
+            f'{_render_identity(rec, "div", compact=True)}'
+            f'{_render_facts(rec, links=links, with_product=with_product, with_module=False)}'
+            f'{extras}</div>{_render_shots(rec, compact=True)}</div>')
 
 
 def _render_collapsed(title: str, records: list[TestRecord], links: RunLinks | None = None,
