@@ -4,6 +4,7 @@ Models the Global Search page including category selection, description
 filters, locations/cameras picker, duration, zone/line drawing on canvas,
 search execution, and result playback.
 """
+import re
 import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
@@ -224,16 +225,15 @@ class SearchPage:
 
         # the gender container rendering is the opened signal
         self.gender_container.wait_for(state="visible", timeout=10000)
-        gender_option = self.gender_container.locator(
-            f"p:has-text('{gender}')"
-        ).first
+        # Whole-word match: 'Male' must not pass on 'Female' (zero-width
+        # spaces tolerated, CONVENTIONS > Locators)
+        exact = re.compile(rf"^[\s\u200b]*{re.escape(gender)}[\s\u200b]*$")
+        gender_option = self.gender_container.locator("p").filter(has_text=exact).first
         gender_option.click()
         # The picked option gains selectedTab on the same tick (probe
         # 08/25/2026); a click during the panel's open animation can
         # drop, so one retry click self-heals before the wait raises
-        picked = self.gender_container.locator(
-            f"p.selectedTab:has-text('{gender}')"
-        )
+        picked = self.gender_container.locator("p.selectedTab").filter(has_text=exact)
         if not self._appears(picked, timeout=3000):
             gender_option.click()
             picked.wait_for(state="visible", timeout=5000)

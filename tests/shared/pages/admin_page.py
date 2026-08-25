@@ -886,8 +886,9 @@ class AdminPage:
         try:
             if done.is_visible():
                 done.click()
-                # The region modal closing takes Done with it
-                self._hidden_or_log(done, "Set Rule Done (region)")
+                # The region modal closing takes Done with it; a modal
+                # that stays lets Next advance the wizard unconfigured
+                self._must_close(done, "Set Rule Done (region)")
         except Exception:
             raise AssertionError(
                 "Set Rule Done was visible but the click failed - the "
@@ -981,8 +982,9 @@ class AdminPage:
                 ).first
                 done.wait_for(state="visible", timeout=30000)
                 done.evaluate("el => el.click()")
-                # The Set Rule modal closing takes Done with it
-                self._hidden_or_log(done, "Set Rule Done (full view)")
+                # The Set Rule modal closing takes Done with it; a modal
+                # that stays lets Next advance the wizard unconfigured
+                self._must_close(done, "Set Rule Done (full view)")
             elif region_visible:
                 self._draw_wizard_region()
 
@@ -1007,8 +1009,8 @@ class AdminPage:
                     print(f"[ADMIN] Wizard step {step}: Next not "
                           f"clickable: {str(e)[:80]}")
             # Steps re-render in place: the visible label set changing
-            # is the next step's signal. Nothing was clicked when Next
-            # is absent (the Save step), so there is nothing to wait on
+            # is a settle; the next step's own element waits decide.
+            # Nothing was clicked when Next is absent (the Save step)
             if advanced:
                 self._wizard_step_changed(before_step, step)
 
@@ -1086,14 +1088,24 @@ class AdminPage:
         count changing is the re-rendered sign. Logs and returns False
         on timeout so the caller's own wait decides.
         """
-        deadline = time.monotonic() + timeout_s
-        while time.monotonic() < deadline:
-            if locator.count() != before:
-                return True
-            self.page.wait_for_timeout(250)  # poll tick for the re-render
-        print(f"[ADMIN] {action}: count stayed at {before} for "
-              f"{timeout_s:.0f}s")
-        return False
+        try:
+            expect(locator).not_to_have_count(before, timeout=int(timeout_s * 1000))
+            return True
+        except AssertionError:
+            print(f"[ADMIN] {action}: count stayed at {before} for "
+                  f"{timeout_s:.0f}s")
+            return False
+
+    def _must_close(self, locator, label: str, timeout: int = 5000) -> None:
+        """A confirming control must leave with its modal, or the step
+        was not confirmed."""
+        try:
+            locator.wait_for(state="hidden", timeout=timeout)
+        except PlaywrightError:
+            raise AssertionError(
+                f"{label} stayed visible {timeout / 1000:.0f}s after the click: "
+                f"the step was not confirmed"
+            ) from None
 
     def _hidden_or_log(self, locator, label: str, timeout: int = 5000) -> bool:
         """Bounded hidden wait for a closing control; logs a miss.

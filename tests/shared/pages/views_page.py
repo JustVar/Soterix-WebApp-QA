@@ -1337,14 +1337,17 @@ class ViewsPage:
         bookmark_icon = fs.video_container.locator("img[src*='Bookmark']")
         bookmark_icon.click()
         # The 'Bookmark Added' snackbar is the saved signal (probe
-        # 08/25/2026); a miss is logged and the caller's bookmark-row
-        # check decides
-        if not self._appears(
-            self.page.get_by_text("Bookmark Added", exact=False),
-            timeout=10000,
-        ):
-            print("[VIEWS] add_bookmark_on_tile: no 'Bookmark Added' "
-                  "toast within 10s")
+        # 08/25/2026) and the only proof this bookmark saved: the panel's
+        # row count cannot tell a new bookmark from one an earlier run left
+        try:
+            self.page.get_by_text("Bookmark Added", exact=False).first.wait_for(
+                state="visible", timeout=10000
+            )
+        except PlaywrightError:
+            raise AssertionError(
+                "No 'Bookmark Added' toast within 10s of the bookmark click: "
+                "the bookmark was not saved"
+            ) from None
         print(f"DEBUG add_bookmark_on_tile: Bookmark added!")
 
         # Exit fullscreen
@@ -1444,14 +1447,24 @@ class ViewsPage:
             "button:has(img[alt='favorite'])"
         ).first
         fav_button.wait_for(state="visible", timeout=10000)
-        # The star's src flips to favoriteIconFilled (or back) once the
-        # save lands: the row-scoped count is the applied signal
         filled = row_anchor.locator("xpath=../..").locator(
             # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
             "img[src*='media/favoriteIconFilled']"
         )
         before = filled.count()
-        fav_button.click()
+        # The star flips on the click itself (9-12 ms in the 08/25 trace),
+        # about 300 ms before the save answers: the POST/DELETE response
+        # is the saved signal, the flipped star the applied one
+        with self.page.expect_response(
+            lambda r: "/REST/favourite/site/channel" in r.url
+            and r.request.method in ("POST", "DELETE"),
+            timeout=15000,
+        ) as saved:
+            fav_button.click()
+        if not saved.value.ok:
+            raise AssertionError(
+                f"Favorite toggle for '{camera_name}' answered HTTP {saved.value.status}"
+            )
         expect(filled).to_have_count(1 - before, timeout=10000)
 
     def is_camera_favorited(self, camera_name: str) -> bool:
@@ -1476,7 +1489,13 @@ class ViewsPage:
         """Open the favorites panel by clicking the favorites icon."""
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         fav_icon = self.page.locator("img[src*='media/favoriteIcon']").first
-        fav_icon.click()
+        # The panel re-reads its list from the server after it opens (two
+        # of two opens in the 08/25 trace) and shows the previous list
+        # until then: that response is the listed signal
+        with self.page.expect_response(
+            lambda r: "favourite/getallfavourites" in r.url, timeout=15000
+        ):
+            fav_icon.click()
         # The panel takes the camera tree's place: the tree list
         # leaving is the open signal (probe 08/25/2026)
         self._camera_list_toggled(hidden=True, action="open_favorites_panel")
@@ -1518,7 +1537,7 @@ class ViewsPage:
         panel's own card (.cameraThumbnailWrapper, probe 08/25/2026)
         rather than counting page text on the same tick.
         """
-        card = self.page.locator(".cameraThumbnailWrapper").filter(has_text=camera_name)
+        card = self.page.locator(f".cameraThumbnailWrapper span[title='{camera_name}']")
         if present:
             return self._appears(card, timeout=timeout)
         try:

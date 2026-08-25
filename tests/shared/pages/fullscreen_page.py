@@ -139,7 +139,34 @@ class FullScreenPage:
         # every spinner must clear: a bare wait on the union is a
         # strict-mode violation when two spinners overlap (a tile
         # placeholder plus the player's), so wait on the count
-        expect(self.loader).to_have_count(0, timeout=timeout)
+        try:
+            expect(self.loader).to_have_count(0, timeout=timeout)
+        except AssertionError:
+            # Name where the spinner lives so a spinner outside the
+            # player (a list loading below the fold) reads as such
+            print(f"[FULLSCREEN] spinner(s) still present after {timeout / 1000:.0f}s: "
+                  f"{self._spinner_homes()}")
+            raise
+
+    def _spinner_homes(self) -> list:
+        """The nearest classed ancestors of every spinner: a diagnostic
+        for the loader wait, so its failure names the spinner's home."""
+        try:
+            return self.loader.evaluate_all("""els => els.map(el => {
+                const chain = [];
+                let node = el.parentElement;
+                while (node && chain.length < 4) {
+                    if (node.className && typeof node.className === 'string') {
+                        chain.push(node.className.split(' ').slice(0, 2).join('.'));
+                    }
+                    node = node.parentElement;
+                }
+                const r = el.getBoundingClientRect();
+                return chain.join(' < ') + ` @${Math.round(r.x)},${Math.round(r.y)}`;
+            })""")
+        # the diagnostic must not mask the wait's own failure
+        except Exception as exc:  # noqa: BLE001
+            return [f"unreadable: {str(exc)[:80]}"]
 
     def assert_stream_playing(self, timeout_ms: int = 30000) -> None:
         """Fail unless the player's video is really playing.
