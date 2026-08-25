@@ -84,7 +84,7 @@ def main() -> int:
         scope = {"page": page, "config": config, "pw": pw, "snap": snap}
         if args.script:
             source = Path(args.script).read_text(encoding="utf-8")
-            exec(compile(source, args.script, "exec"), scope)  # noqa: S102
+            exec(compile(source, args.script, "exec"), scope)
         else:
             code.interact(
                 banner="page, config, pw are in scope. Ctrl-Z to exit.",
