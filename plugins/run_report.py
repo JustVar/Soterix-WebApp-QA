@@ -1049,7 +1049,7 @@ details.section > summary { font-size: 1.05rem; }
 .row .shots { flex: 0 0 auto; }
 .row .shots figure { max-width: 160px; }
 .row .facts { margin: .2rem 0 0; }
-.sub { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin-top: .1rem; }
+.sub { display: flex; flex-direction: column; gap: .15rem; margin-top: .15rem; }
 .sub .nodeid { word-break: normal; overflow-wrap: anywhere; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .dur { color: var(--muted); font-size: .85rem; margin-left: .5rem; }
@@ -1080,7 +1080,9 @@ ul.verdict .product { font-weight: 400; color: var(--muted); margin-left: .5rem;
 .group { border: 1px dashed var(--fail); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
 .group-head { margin-bottom: 1rem; }
 .group-head b { font-size: 1.05rem; margin-right: .5rem; }
-h4.module { margin-top: 1.25rem; text-transform: none; letter-spacing: 0; font-family: ui-monospace, Consolas, monospace; }
+h4.module { position: sticky; top: 0; z-index: 1; margin: 1.75rem 0 .25rem; padding: .5rem .75rem;
+  background: var(--card); border-left: 4px solid var(--link); border-bottom: 1px solid var(--line);
+  text-transform: none; letter-spacing: 0; font-family: ui-monospace, Consolas, monospace; font-size: .95rem; }
 input#filter { width: min(100%, 36rem); padding: .45rem .7rem; font: inherit; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); }
 #filter-count { color: var(--muted); margin-left: .75rem; font-size: .9rem; }
 table.facts-table { border-collapse: collapse; width: 100%; max-width: 60rem; }
@@ -1429,9 +1431,11 @@ def _render_collapsed(title: str, records: list[TestRecord], links: RunLinks | N
         groups: dict[str, list[TestRecord]] = {}
         for rec in records:
             groups.setdefault(rec.module_name, []).append(rec)
+        # each module in its own wrapper, so its sticky heading stays
+        # only while its rows scroll and the next heading takes over
         body = ''.join(
-            f'<h4 class="module">{escape(module)} ({len(group)})</h4>'
-            + ''.join(_render_row(r, links, with_product) for r in group)
+            f'<div class="module-group"><h4 class="module">{escape(module)} ({len(group)})</h4>'
+            + ''.join(_render_row(r, links, with_product) for r in group) + '</div>'
             for module, group in sorted(groups.items()))
     else:
         body = '<p class="empty">None.</p>'
