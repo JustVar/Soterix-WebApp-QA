@@ -5,6 +5,7 @@ python-dotenv==1.2.2
 pytest-html==4.2.0
 pytest-xdist==3.8.0
 requests==2.34.2
+aiohttp==3.14.3  # tools/stream_probe.py --no-browser (direct media socket)
 paramiko==5.0.0
 scp==0.16.1
 pytest-rerunfailures==16.4
