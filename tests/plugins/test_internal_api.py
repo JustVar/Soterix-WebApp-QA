@@ -1,5 +1,5 @@
-"""Unit tests for tests/shared/api/client.py and the grouptree helpers
-in tests/shared/api/fixtures.py.
+"""Unit tests for tests/shared/api/client.py and the pure helpers in
+tests/shared/api/fixtures.py (tree, preset, thumbnail bytes).
 
 No network, no credentials, no browser: the HTTP session is a mock and
 each test asserts on the exact request the client sends or the exact
@@ -24,9 +24,13 @@ if str(REPO_ROOT) not in sys.path:
 
 from tests.shared.api.client import ApiError, InternalApi  # noqa: E402
 from tests.shared.api.fixtures import (  # noqa: E402
+    SNAP_PNG,
     bookmark_deleted,
     channel_id,
     find_location,
+    find_location_by_id,
+    find_preset,
+    signed_bytes,
 )
 
 # ---------------------------------------------------------------- helpers
@@ -203,3 +207,39 @@ def test_channel_id_missing_camera_names_the_fix():
     assert "'lobby'" in text
     assert "main gate" in text
     assert "test_camera_name" in text
+
+
+def test_find_location_by_id_ignores_the_name():
+    """A location id resolves to its node whatever the name; a miss is None."""
+    # The UI rename test changes the name, so teardown must find the
+    # group by id
+    assert find_location_by_id(LOCATION_TREE, 140)["location"]["name"] == "AutoTest Group 125709"
+    assert find_location_by_id(LOCATION_TREE, 73)["location"]["id"] == 73
+    assert find_location_by_id(LOCATION_TREE, 999) is None
+    assert find_location_by_id([], 1) is None
+
+# ---------------------------------------------------------- preset helpers
+
+PRESETS = [
+    {"presetid": 1016, "name": "DragTest_131701", "grid": "2x2"},
+    {"presetid": 1063, "name": "AutoTest View 100340", "grid": "2x2"},
+    {"presetid": 1064, "name": "AutoTest View 100340", "grid": "2x2"},
+]
+
+
+def test_find_preset_by_exact_name_newest_wins():
+    """An exact preset name match returns the highest presetid; case must match."""
+    assert find_preset(PRESETS, "AutoTest View 100340")["presetid"] == 1064
+    assert find_preset(PRESETS, "DragTest_131701")["presetid"] == 1016
+    assert find_preset(PRESETS, "autotest view 100340") is None
+    assert find_preset([], "AutoTest View 100340") is None
+
+
+def test_signed_bytes_wraps_the_high_half():
+    """Bytes above 127 become negative, the way the Java API lists them."""
+    assert signed_bytes(b"\x00\x7f\x80\xff") == [0, 127, -128, -1]
+    assert signed_bytes(b"") == []
+    # The PNG magic starts 0x89 0x50 0x4e 0x47, which the API echoed
+    # back as -119, 80, 78, 71 (2026-08-25)
+    assert signed_bytes(SNAP_PNG)[:4] == [-119, 80, 78, 71]
+    assert all(-128 <= value <= 127 for value in signed_bytes(SNAP_PNG))

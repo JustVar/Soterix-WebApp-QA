@@ -1,9 +1,9 @@
 """Small client for the internal /v-apiserver REST API.
 
 The UI tests use it to build and remove test data (camera groups,
-bookmarks) without driving the browser through screens the test does
-not prove. It stays inside this repo: the API test repo is a separate
-project and nothing here imports from it.
+bookmarks, saved views) without driving the browser through screens
+the test does not prove. It stays inside this repo: the API test repo
+is a separate project and nothing here imports from it.
 
 Every response is an envelope: {status, code, description, message,
 result}. The `message` text is not a signal. `addgroup` answers
@@ -17,6 +17,7 @@ Verified against QA on 2026-08-24.
 from __future__ import annotations
 
 import hashlib
+import warnings
 
 import requests
 import urllib3
@@ -49,9 +50,6 @@ class InternalApi:
         self.user: str | None = None
         self.session = session or requests.Session()
         self.session.verify = verify
-        if not verify:
-            # QA serves a self-signed certificate
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     def login(self, user: str, password: str) -> str:
         """Log in and keep the JSESSIONID cookie on the session."""
@@ -80,9 +78,16 @@ class InternalApi:
 
         Raises ApiError when `code` is not 200 or the body is not JSON.
         """
-        response = self.session.request(
-            method, self.base_url + path, timeout=TIMEOUT_S, **kwargs
-        )
+        # QA serves a self-signed certificate. The warning is silenced
+        # per request: pytest resets the warning filters after every
+        # test, so a one-time disable at construction lapses for the
+        # session client and the next test reports it.
+        with warnings.catch_warnings():
+            if not self.session.verify:
+                warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
+            response = self.session.request(
+                method, self.base_url + path, timeout=TIMEOUT_S, **kwargs
+            )
         try:
             envelope = response.json()
         except ValueError:

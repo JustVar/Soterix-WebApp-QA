@@ -257,29 +257,35 @@ class TestAdminSites:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_sites
-    def test_edit_camera_group(self):
-        """Verify editing a camera group name."""
+    def test_edit_camera_group(self, api_camera_group):
+        """Verify editing a camera group name.
+
+        The group comes from the API (tests/shared/api/fixtures.py):
+        this test proves the UI rename, and test_create_camera_group
+        proves the UI create. Renaming our own group, never the last
+        existing one, keeps team-owned data on the shared tenant safe.
+        """
+        # Created before the page renders, so the Groups dropdown
+        # loads it with the site detail and no reload is needed
+        group = api_camera_group()
+
         self._navigate_to_sites()
-        self._open_first_site()
+        # The API wrote to TEST_SITE_ID, so open that site by name
+        # instead of the first card
+        self.admin.search_site(group["site_name"])
+        self.admin.click_site(group["site_name"])
 
         # Group management lives in the Groups dropdown since 2026-08.
         # click_site already failed loud if the detail (and its Groups
         # label) never rendered, so no skip guard belongs here.
         self.admin.open_groups_dropdown()
 
-        # Create our own group and rename THAT: renaming the last
-        # existing group mutates team-owned data on the shared tenant
+        # The fixture deletes the group by id at teardown, so the new
+        # name needs no entry in the UI cleanup list
         timestamp = datetime.datetime.now().strftime("%H%M%S")
-        group_name = f"AutoTest Group {timestamp}"
-        self._created_groups.append(group_name)
-        camera_search = config.get("test_camera_name", "camera")
-        self.admin.create_camera_group(group_name, camera_search=camera_search)
-
-        self.admin.open_groups_dropdown()
         new_name = f"AutoTest Edited {timestamp}"
-        self._created_groups.append(new_name)
-        assert self.admin.edit_camera_group_by_name(group_name, new_name), (
-            f"Created group '{group_name}' not found for rename"
+        assert self.admin.edit_camera_group_by_name(group["name"], new_name), (
+            f"API-created group '{group['name']}' not found for rename"
         )
 
     @pytest.mark.ui

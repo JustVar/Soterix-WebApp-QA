@@ -69,6 +69,41 @@ def channel_id(tree: list[dict], camera_name: str) -> int:
     )
 
 
+def find_location_by_id(tree: list[dict], location_id: int) -> dict | None:
+    """The location/tree node with this location id, or None.
+
+    Teardown looks groups up by id, not name: a test that renames its
+    group through the UI (test_edit_camera_group) would otherwise
+    orphan it on the shared tenant.
+    """
+    for node in tree:
+        if node.get("location", {}).get("id") == location_id:
+            return node
+    return None
+
+
+def find_preset(rows: list[dict], name: str) -> dict | None:
+    """The /REST/preset row called `name`, or None.
+
+    With 2 rows of the same name (a stale leftover) the newest wins,
+    the one with the highest presetid.
+    """
+    matches = [row for row in rows if row.get("name") == name]
+    if not matches:
+        return None
+    return max(matches, key=lambda row: row["presetid"])
+
+
+def signed_bytes(data: bytes) -> list[int]:
+    """`data` as the signed byte list a preset thumbnail takes.
+
+    The API is Java: a byte array travels in JSON as a list of -128..127
+    (the listed thumbnails start with -1, -40 for JPEG), and a plain
+    0..255 list is not the same value.
+    """
+    return [byte - 256 if byte > 127 else byte for byte in data]
+
+
 def bookmark_deleted(row: dict) -> bool:
     """True when a VClipBookmark row is soft-deleted.
 
@@ -158,8 +193,10 @@ def api_camera_group(api: InternalApi):
            locations. A second delete of the same id answers HTTP 400,
            code 1006 "Database: no record found!", so teardown reads
            the tree first and skips groups the test deleted.
+
+    Teardown deletes by id: the UI rename test changes the name.
     """
-    created: list[str] = []
+    created: list[int] = []
 
     def make(name: str | None = None, channel_ids: list[int] | None = None) -> dict:
         name = name or f"{NAME_PREFIX}Group {_stamp()}"
@@ -173,7 +210,6 @@ def api_camera_group(api: InternalApi):
             f"/REST/site/config/{api.site_id}/location",
             {"name": name, "siteId": api.site_id, "channelList": list(channel_ids)},
         )
-        created.append(name)
 
         # Verify before use: the envelope text is not a signal, and the
         # create answers no id
@@ -181,6 +217,7 @@ def api_camera_group(api: InternalApi):
         assert node is not None, (
             f"The location create answered OK but location/tree does not list '{name}'"
         )
+        created.append(node["location"]["id"])
         got = sorted(channel["id"] for channel in node.get("channel", []))
         assert got == sorted(channel_ids), (
             f"Group '{name}' holds channels {got}, expected {sorted(channel_ids)}"
@@ -196,17 +233,16 @@ def api_camera_group(api: InternalApi):
         return
     tree = location_tree(api)
     leftover = []
-    for name in created:
-        node = find_location(tree, name)
-        if node is None:
+    for location_id in created:
+        if find_location_by_id(tree, location_id) is None:
             continue  # the test deleted it (the UI delete test does)
-        api.get(f"/REST/site/{api.site_id}/deletelocation/{node['location']['id']}")
-        if find_location(location_tree(api), name) is not None:
-            leftover.append(name)
+        api.get(f"/REST/site/{api.site_id}/deletelocation/{location_id}")
+        if find_location_by_id(location_tree(api), location_id) is not None:
+            leftover.append(location_id)
     if leftover:
         pytest.fail(
-            f"Groups still on site {api.site_id} after deletelocation: {leftover}. "
-            f"Delete them by hand in Admin > Sites."
+            f"Groups still on site {api.site_id} after deletelocation (ids): "
+            f"{leftover}. Delete them by hand in Admin > Sites."
         )
 
 
@@ -290,4 +326,96 @@ def api_bookmark(api: InternalApi):
         pytest.fail(
             f"Bookmarks still live on site {api.site_id} after DELETE: {leftover}. "
             f"Delete them by hand in the bookmarks panel."
+        )
+
+
+@pytest.fixture
+def api_saved_view(api: InternalApi):
+    """Factory: make(name=None, channel_ids=None, grid="2x2") -> the
+    created view.
+
+    The dict holds id, name, grid, channel_ids, site_id and site_name.
+    channel_ids defaults to the configured test camera; each channel
+    takes the next tile index.
+
+    A "saved view" (a My Views card) is a *preset* in the API: My Views
+    reads GET /REST/preset (seen in the page trace, 2026-08-25). The
+    spec's UserViewLayouts endpoints are a different entity the web
+    client never calls. Probed on site 16 for the record:
+      POST /REST/site/16/getuserviewlayouts {} -> 2006 "Successfully
+        deleted!" (deletes nothing); {"mode": "live"} -> 3139 "payload
+        not found"; {"mode": 0|1|2}, with or without "username" and
+        "liveViewLayouts": [] -> code 200, result [{"mode": -1, ...}]
+        echoing the body. Nothing lists the user's views.
+
+    Requests, probed 2026-08-25 on site 16, camera 97:
+      GET /REST/preset
+        -> result [{"presetid": 1035, "name", "userid", "enterpriseid",
+           "grid": "2x2", "thumbnail": [signed bytes],
+           "presetelementlist": [{"index": 0, "siteid": 16,
+           "channelid": 97}]}, ...], the caller's own views only.
+      POST /REST/preset {"name": "AutoTest View 100340", "grid": "2x2",
+           "presetelementlist": [{"index": 0, "siteid": 16, "channelid": 97}]}
+        -> HTTP 400, code 3007 "Missing one or more mandatory request
+           parameter(s)!". With "thumbnail": signed_bytes(1x1 PNG)
+        -> code 200, result [the row with "presetid": 1063]. The card
+           then showed in My Views (headless check).
+      DELETE /REST/preset/1063
+        -> code 200, result [true], and the list no longer holds it.
+           A second delete answers code 200, result [false], so the
+           teardown reads the list first and skips views the test
+           deleted.
+    """
+    created: list[int] = []
+
+    def listed(preset_id: int) -> bool:
+        return any(row.get("presetid") == preset_id for row in api.get("/REST/preset"))
+
+    def make(
+        name: str | None = None, channel_ids: list[int] | None = None,
+        grid: str = "2x2",
+    ) -> dict:
+        name = name or f"{NAME_PREFIX}View {_stamp()}"
+        assert name.startswith(NAME_PREFIX), (
+            f"Test data names must start with '{NAME_PREFIX}': {name}"
+        )
+        if channel_ids is None:
+            channel_ids = [channel_id(location_tree(api), config["test_camera_name"])]
+
+        api.post("/REST/preset", {
+            "name": name, "grid": grid, "thumbnail": signed_bytes(SNAP_PNG),
+            "presetelementlist": [
+                {"index": index, "siteid": api.site_id, "channelid": channel}
+                for index, channel in enumerate(channel_ids)
+            ],
+        })
+
+        # Verify before use: the envelope text is not a signal
+        row = find_preset(api.get("/REST/preset"), name)
+        assert row is not None, (
+            f"POST /REST/preset answered OK but the list does not show '{name}'"
+        )
+        created.append(row["presetid"])
+        got = [element["channelid"] for element in row.get("presetelementlist", [])]
+        assert got == list(channel_ids), (
+            f"View '{name}' holds channels {got}, expected {list(channel_ids)}"
+        )
+        return {
+            "id": row["presetid"], "name": name, "grid": row.get("grid"),
+            "channel_ids": got, "site_id": api.site_id, "site_name": api.site_name,
+        }
+
+    yield make
+
+    leftover = []
+    for preset_id in created:
+        if not listed(preset_id):
+            continue  # the test deleted it
+        api.delete(f"/REST/preset/{preset_id}")
+        if listed(preset_id):
+            leftover.append(preset_id)
+    if leftover:
+        pytest.fail(
+            f"Saved views still listed after DELETE /REST/preset (ids): {leftover}. "
+            f"Delete them by hand in Views > My Views."
         )

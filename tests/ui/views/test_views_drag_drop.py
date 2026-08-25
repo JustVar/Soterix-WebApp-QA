@@ -13,18 +13,11 @@ class TestViewsDragDrop:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.views = ViewsPage(self.page)
-        self._saved_view_names = []
         self.views.navigate()
         self.views.wait_for_page_load()
         yield
-        # Cleanup: delete any saved views created during the test
-        for name in reversed(self._saved_view_names):
-            try:
-                self._delete_saved_view_safe(name)
-            # cleanup only: a leftover saved view must not fail a test that
-            # already passed - the failure is logged
-            except Exception as e:
-                print(f"Cleanup: failed to delete view '{name}': {e}")
+        # Saved views come from the api_saved_view fixture, which
+        # deletes them itself; only the tabs need a UI cleanup.
         # Cleanup: close extra view tabs (only the first should
         # remain). The old loop counted the untitled add (+) tab as a
         # tab, always found no close icon on it, and broke without
@@ -52,27 +45,6 @@ class TestViewsDragDrop:
         """View tabs only: they carry the view name in the tabInner
         title, while the add (+) tab's tabInner has no title."""
         return self.page.locator("button.tabItem:has(div.tabInner[title])")
-
-    def _delete_saved_view_safe(self, view_name):
-        """Delete a saved view from the My Views panel."""
-        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
-        self.page.locator("img[src*='myviews']").click()
-        saved_view = self.page.locator(f"span[title='{view_name}']")
-        try:
-            saved_view.first.wait_for(state="visible", timeout=5000)
-        # absent from the panel means already deleted - nothing to do
-        except PlaywrightError:
-            return
-        saved_view.hover()
-        # the delete icon renders on hover as an img asset (this
-        # app's pattern, not MUI svg); the click's own actionability
-        # wait covers the render
-        self.page.locator("img[src*='delete-icon']").click()
-        self.page.locator("button:has-text('Delete')").click()
-        # the toast is the deleted signal
-        self.page.locator("text=Successfully deleted").wait_for(
-            state="visible", timeout=60000
-        )
 
     def _wait_tile_consumed(self, initial_count: int, timeout: int = 15000):
         """Bounded wait for an empty tile to be consumed after a drop.
@@ -176,59 +148,20 @@ class TestViewsDragDrop:
     @pytest.mark.ui
     @pytest.mark.dragdrop
     @pytest.mark.views_myviews
-    def test_drag_saved_view_to_tile(self):
-        """Verify a saved view can be dragged from My Views to an empty tile."""
-        import datetime
+    def test_drag_saved_view_to_tile(self, api_saved_view):
+        """Verify a saved view can be dragged from My Views to an empty tile.
 
-        # First create and save a view
-        view_name = f"DragTest_{datetime.datetime.now().strftime('%H%M%S')}"
-        self._saved_view_names.append(view_name)
-
-        view_tabs = self._view_tabs()
-        baseline_tabs = view_tabs.count()
-        self.views.add_new_tab()
-        # a new view tab appearing is the added signal; the new tab
-        # becomes the active one
-        expect(view_tabs).to_have_count(baseline_tabs + 1, timeout=10000)
-        tab = self.page.locator("button.tabItem.active")
-
-        # Rename the tab; the click's own actionability wait covers
-        # the hover-rendered edit icon
-        tab.hover()
-        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
-        tab.locator("img[src*='editIcon']").click()
-
-        tab_input = tab.locator("input.tabTitle")
-        tab_input.fill(view_name)
-        tab_input.press("Enter")
-        # the input holding the new name is the committed signal
-        expect(tab_input).to_have_value(view_name)
-
-        # Add a camera to the view (the expand call confirms cameras
-        # visible on its own; the tile appearing is the added signal)
-        self.views.expand_site_and_show_cameras(None)
-        self.views.add_first_camera_via_checkbox()
-        self.page.locator(
-            "[class*='video_container'][class*='new_video_player']"
-        ).first.wait_for(state="visible", timeout=30000)
-
-        # Save the view; the toast is the saved signal
-        save_btn = self.page.locator("img[src*='save']").nth(1)
-        save_btn.evaluate("el => el.click()")
-        self.page.locator("text=View saved successfully").wait_for(state="visible", timeout=60000)
-
-        # Close the tab; the view-tab count returning to baseline is
-        # the closed signal (the untitled + tab never counts)
-        tab.hover()
-        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
-        tab.locator("img[src*='closeIcon']").click()
-        expect(view_tabs).to_have_count(baseline_tabs, timeout=10000)
+        The view comes from the API (tests/shared/api/fixtures.py):
+        this test proves the drag, and test_views_basic proves the UI
+        save. The fixture deletes the view at teardown.
+        """
+        view_name = api_saved_view()["name"]
 
         # Reload, then open the My Views SUBTAB (not the side-panel
-        # icon): a live-inserted card lists by name but only gets its
-        # drag wiring on a fresh load, and only the subtab surface
-        # drops onto tiles - measured 08/21/2026, the sibling subtabs
-        # test documents the same refresh requirement
+        # icon): the page loaded before the API wrote the view, and a
+        # card only gets its drag wiring on a fresh load; only the
+        # subtab surface drops onto tiles - measured 08/21/2026, the
+        # sibling subtabs test documents the same refresh requirement
         self.page.reload()
         self.views.open_my_views()
         saved_view = self.page.locator(f"span[title='{view_name}']")
