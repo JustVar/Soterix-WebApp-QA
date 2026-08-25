@@ -8,11 +8,7 @@
 
 - [ ]
 
-## QA mapping
+## Checks
 
-
-- Updated `qa/doc_registry.yaml`? [ ] yes / [ ] n/a
-- Ran `python qa/check_doc_ids.py` and it passes? [ ] yes / [ ] n/a
-- Ran `python qa/export_registry.py --csv` and committed the refreshed `qa/Automation_QA.csv`? [ ] yes / [ ] n/a
-
-> Don't hand-edit `qa/Automation_QA.csv` or the `Test Mapping` tab of `qa/Automation_QA.xlsx`. Those are regenerated from `qa/doc_registry.yaml`.
+- Ran the affected tests and linked the archived run (`python run.py list`): [ ] yes / [ ] n/a
+- `python tools/convention_check.py` reports 0 HIGH: [ ] yes

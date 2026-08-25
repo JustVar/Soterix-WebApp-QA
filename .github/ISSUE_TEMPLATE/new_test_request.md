@@ -7,8 +7,7 @@ labels: ["test-request", "qa"]
 
 <!--
 Use this template to propose a new test that should be added to automation.
-An engineer will pick it up, map it to a QA Touch case, and either write the test or
-file it as status: planned in qa/doc_registry.yaml.
+An engineer will pick it up, map it to a QA Touch case, and write the test.
 
 You do NOT need to edit any files yourself - just fill out below.
 -->
@@ -47,6 +46,5 @@ Area:
 
 ### For the triaging engineer (delete this section once filled)
 
-- [ ] Added entry to `qa/doc_registry.yaml` (status: `active` if shipping now, `planned` if not)
 - [ ] Linked this Issue to the PR that lands the test
-- [ ] Ran `python qa/export_registry.py --csv` and committed the refreshed CSV
+- [ ] Gave the test a readable title (see `docs/CONVENTIONS.md`)
