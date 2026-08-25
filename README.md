@@ -133,7 +133,7 @@ tests/
 plugins/
 ├── qatouch_reporter.py    # --qatouch-upload --qatouch-run <KEY>
 └── verification_runner.py # --verify-mode + --step-review
-tools/                     # ~80 utility scripts
+tools/                     # about 70 utility scripts (one-offs under tools/archive/)
 ├── run_suite.py           # WIP orchestration: clone + pytest + bug filing
 ├── qatouch_*.py           # WIP: QA Touch CRUD, scaffolding, audits, analytics
 ├── smart_jira_bug_creator.py  # WIP: auto-file Jira bugs on failure

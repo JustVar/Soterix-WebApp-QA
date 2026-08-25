@@ -18,7 +18,7 @@ from playwright.sync_api import BrowserContext, Page, expect
 # Default camera config - used when no config dict provided (legacy env-var mode)
 CAMERA_IP = os.environ.get("C2C_CAMERA_IP", "192.168.1.149")
 CAMERA_USER = os.environ.get("C2C_CAMERA_USER", "root")
-CAMERA_PASS = os.environ.get("C2C_CAMERA_PASS", "***REMOVED***")
+CAMERA_PASS = os.environ.get("C2C_CAMERA_PASS", "")  # required; the c2c conftest skips when unset
 
 
 class CameraHardwarePage:

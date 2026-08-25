@@ -1,6 +1,7 @@
 # conftest.py
 import importlib
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import re
 from datetime import datetime
@@ -20,8 +21,10 @@ pytest_plugins = ['plugins.qatouch_reporter', 'plugins.verification_runner', 'pl
 # Logging (env/tenant resolution)
 LOG_FILE = os.path.join("logs", "env_config.log")
 os.makedirs("logs", exist_ok=True)
-logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
-                    format="%(asctime)s [%(levelname)s] %(message)s")
+# One rotating file: the log was appending for good and had reached 1.4 MB
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] %(message)s",
+                    handlers=[RotatingFileHandler(LOG_FILE, maxBytes=512_000, backupCount=2)])
 
 def pytest_addoption(parser):
     """Register the opt-in required to run hardware-disrupting tests."""

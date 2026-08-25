@@ -10,7 +10,7 @@ entries (one per lens) since each lens has its own license.
 Override via environment variables (single-camera mode):
     C2C_CAMERA_IP    - Override camera IP (skips YAML, uses env only)
     C2C_CAMERA_USER  - Camera username (default: root)
-    C2C_CAMERA_PASS  - Camera password (default: ***REMOVED***)
+    C2C_CAMERA_PASS  - Camera password (required; no default)
 
 Example runs:
     # All enabled cameras
@@ -38,7 +38,7 @@ DEFAULT_CAMERA = {
     "id": "default",
     "ip": os.environ.get("C2C_CAMERA_IP", "192.168.1.149"),
     "user": os.environ.get("C2C_CAMERA_USER", "root"),
-    "password": os.environ.get("C2C_CAMERA_PASS", "***REMOVED***"),
+    "password": os.environ.get("C2C_CAMERA_PASS", ""),
     "model": "BC-5V-1",
     "manufacturer": "SOTERIX SYSTEMS",
     "max_resolution": "2592x1944",
@@ -72,7 +72,7 @@ def _load_cameras():
     # shared lab login here instead, overridable per environment.
     for cam in enabled:
         cam.setdefault("user", os.environ.get("C2C_CAMERA_USER", "root"))
-        cam.setdefault("password", os.environ.get("C2C_CAMERA_PASS", "***REMOVED***"))
+        cam.setdefault("password", os.environ.get("C2C_CAMERA_PASS", ""))
     return enabled if enabled else [DEFAULT_CAMERA]
 
 

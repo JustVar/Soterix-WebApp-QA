@@ -52,7 +52,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = ROOT / "tests" / "data" / "c2c_cameras.yaml"
 
 USER = os.environ.get("C2C_CAMERA_USER", "root")
-PASSWORD = os.environ.get("C2C_CAMERA_PASS", "***REMOVED***")
+PASSWORD = os.environ.get("C2C_CAMERA_PASS", "")
 
 PROBE_TIMEOUT = 2.0
 # Some cameras answer TCP promptly but are slow to render the setup UI, so the

@@ -27,6 +27,8 @@ from typing import Any
 import pytest
 from playwright.sync_api import Error as PlaywrightError
 
+from plugins.paths import fit_name
+
 log = logging.getLogger('verification_runner')
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -266,8 +268,7 @@ class StepCapture:
 
         try:
             prefix = self._case_key or self._safe_filename()
-            filename = f'{prefix}_step{step_num}.png'
-            path = SCREENSHOTS_DIR / filename
+            path = SCREENSHOTS_DIR / fit_name(SCREENSHOTS_DIR, f'{prefix}_step{step_num}', '.png')
             self._page.screenshot(path=str(path), full_page=False)
             return path.relative_to(ROOT)
         except Exception as e:
@@ -412,7 +413,7 @@ class VerificationCollector:
         if report.failed and capture._page:
             try:
                 prefix = capture._case_key or capture._safe_filename()
-                path = SCREENSHOTS_DIR / f'{prefix}_FAILED.png'
+                path = SCREENSHOTS_DIR / fit_name(SCREENSHOTS_DIR, f'{prefix}_FAILED', '.png')
                 capture._page.screenshot(path=str(path), full_page=False)
             except Exception:
                 pass
@@ -425,7 +426,7 @@ class VerificationCollector:
 
         # Write evidence JSON
         safe_name = capture._safe_filename()
-        evidence_path = OUTPUT_DIR / f'{safe_name}.json'
+        evidence_path = OUTPUT_DIR / fit_name(OUTPUT_DIR, safe_name, '.json')
         try:
             with open(evidence_path, 'w', encoding='utf-8') as f:
                 json.dump(evidence, f, indent=2, ensure_ascii=False)

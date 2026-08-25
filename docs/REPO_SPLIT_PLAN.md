@@ -203,7 +203,8 @@ One commit, fully revertable, on the current repo:
   is unaffected by split, rename, and folder rename.
 - **No in-flight work**: no open PRs on either remote; `main` is the only branch
   on both.
-- **Root-level scripts** (`check_cameras.py`, `compare_import.py`,
+- **Root-level scripts** (retired 08/25/2026: `check_cameras.py` deleted, the import
+  scripts moved to `tools/archive/`) (`check_cameras.py`, `compare_import.py`,
   `regenerate_import_csv.py`, `validate_qa_touch_import.py`): no `api_clients`
   or `tests.api` imports.
 - **API tests** use nothing from `utils/`, `tests/shared/fixtures/`,
