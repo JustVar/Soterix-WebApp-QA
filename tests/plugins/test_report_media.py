@@ -4,9 +4,11 @@ Pure-helper coverage: filename sanitizing and capping, phase/outcome to
 suffix mapping, page resolution, the report-embed gate, the kill switch,
 the cleanup guard decisions, and the mid-drag capture drain (clear-in-place
 semantics, the per-test cap, filed names, embed gating, the skipped-drag
-filing). The final-shot capture itself needs a live browser plus the
-pytest-html run loop, so it is exercised by real UI runs; the drag-frame
-filing runs here against fake pages and reports.
+filing), the PASSED-shot settle, and the grid stream verdict
+(ViewsPage.assert_tile_streaming's pure decision, kept here with the
+other browser-free checks). The final-shot capture itself needs a live
+browser plus the pytest-html run loop, so it is exercised by real UI
+runs; the drag-frame filing runs here against fake pages and reports.
 
 Living under tests/plugins/ to be picked up by the default discovery without
 needing to add a new test root or update pytest collection config. The tests
@@ -30,6 +32,10 @@ if str(REPO_ROOT) not in sys.path:
 
 import conftest  # noqa: E402
 from plugins import report_media as rm, run_report as rr  # noqa: E402
+from tests.shared.pages.views_page import (  # noqa: E402
+    describe_tile_samples,
+    tile_stream_verdict,
+)
 
 
 def _deep_dir(tmp_path: Path, length: int = 190) -> Path:
@@ -578,3 +584,170 @@ def test_clean_deletes_only_top_level_pngs(tmp_path):
 def test_clean_missing_dir_is_a_noop(tmp_path):
     """Cleaning a folder that does not exist removes nothing."""
     assert rm._clean_screenshot_dir(tmp_path / 'never-created') == 0
+
+
+# ---------------------------------------------------------------------------
+# PASSED-shot settle (spinners leave before the green screenshot)
+# ---------------------------------------------------------------------------
+
+class _FakeSettlePage(_FakeShotPage):
+    """A fake page whose wait_for_function records its call and either
+    returns (the spinners left) or raises (still up, or broken)."""
+
+    def __init__(self, raise_with=None):
+        super().__init__()
+        self.raise_with = raise_with
+        self.calls = []
+
+    def wait_for_function(self, expression, timeout=None):
+        self.calls.append((expression, timeout))
+        if self.raise_with is not None:
+            raise self.raise_with
+
+
+def test_settle_waits_on_the_spinner_selector_with_the_5s_bound():
+    """The settle polls the app's spinner selector for count zero, 5 s at most."""
+    page = _FakeSettlePage()
+    assert rm._settle_loaders(page) is True
+    [(expression, timeout)] = page.calls
+    assert rm.LOADER_SELECTOR in expression
+    assert 'length === 0' in expression
+    assert timeout == rm.SETTLE_MS == 5000
+
+
+def test_settle_swallows_a_timeout_and_reports_false():
+    """A spinner that stays is not an error: the shot is taken as-is."""
+    page = _FakeSettlePage(raise_with=TimeoutError('still spinning'))
+    assert rm._settle_loaders(page, timeout_ms=10) is False
+    assert page.calls[0][1] == 10
+
+
+def test_settle_without_a_page_or_the_method_is_false():
+    """No page, or a page without wait_for_function, settles nothing."""
+    assert rm._settle_loaders(None) is False
+    assert rm._settle_loaders(_FakeShotPage()) is False
+
+
+@pytest.mark.parametrize(('outcome', 'settle_calls'), [('passed', 1), ('failed', 0)])
+def test_only_the_passed_shot_settles_first(monkeypatch, tmp_path, outcome, settle_calls):
+    """PASSED waits for the spinners before its shot; FAILED keeps its
+    spinner as evidence and shoots at once."""
+    monkeypatch.setattr(rm, 'SCREENSHOT_DIR', tmp_path)
+    monkeypatch.delenv('REPORT_SCREENSHOTS', raising=False)
+    page = _FakeSettlePage()
+    item = _FakeItem(funcargs={'page': page})
+
+    rm._attach_media(item, _FakeReport('call', outcome))
+
+    assert len(page.calls) == settle_calls
+    assert (tmp_path / f'tests-ui-x.py-test_t__{outcome.upper()}.png').read_bytes() == b'final-bytes'
+
+
+def test_a_broken_settle_never_costs_the_passed_shot(monkeypatch, tmp_path):
+    """Any settle error is swallowed and the screenshot is still written."""
+    monkeypatch.setattr(rm, 'SCREENSHOT_DIR', tmp_path)
+    monkeypatch.delenv('REPORT_SCREENSHOTS', raising=False)
+    page = _FakeSettlePage(raise_with=RuntimeError('page gone'))
+    item = _FakeItem(funcargs={'page': page})
+
+    rm._attach_media(item, _FakeReport('call', 'passed'))
+
+    assert (tmp_path / 'tests-ui-x.py-test_t__PASSED.png').is_file()
+
+
+# ---------------------------------------------------------------------------
+# Grid stream verdict (ViewsPage.assert_tile_streaming's pure decision)
+# ---------------------------------------------------------------------------
+
+def _sample(**over):
+    """One tile sample as the page's sampler returns it: a loading tile
+    (video silent at readyState 0, the snapshot on screen) unless
+    overridden."""
+    base = {'found': True, 'surface': 'img 960x540', 'readable': True,
+            'hash': 's', 'loader': 0, 'failed': False,
+            'video_ready': 0, 'video_t': 0.0, 'video_w': 0}
+    base.update(over)
+    return base
+
+
+def _playing(t=1.5, **over):
+    """A sample whose video reports a decoded frame at currentTime t."""
+    return _sample(video_ready=4, video_t=t, video_w=1280, **over)
+
+
+def test_verdict_video_when_the_player_reports_and_time_moves():
+    """The player's own word passes: readyState >= 3 and currentTime past
+    the first sample - the full screen rule."""
+    assert tile_stream_verdict(_sample(), _playing(0.4)) == 'video'
+    assert tile_stream_verdict(_playing(0.4), _playing(1.1)) == 'video'
+
+
+def test_verdict_video_that_reports_but_stalls_is_no_pass():
+    """Once the video reports, a still currentTime is a stall - and the
+    picture path is not consulted, even with a changed hash."""
+    assert tile_stream_verdict(_playing(1.0), _playing(1.0)) == ''
+    assert tile_stream_verdict(_playing(1.0), _playing(1.0, hash='other')) == ''
+
+
+def test_verdict_frames_when_the_video_never_reports_but_the_picture_moves():
+    """Fallback: the same painted surface hashing differently between
+    the samples is a frame advancing."""
+    canvas = _sample(surface='canvas.paint 640x360', hash='c1')
+    assert tile_stream_verdict(canvas, dict(canvas, hash='c2')) == 'frames'
+
+
+def test_verdict_empty_on_a_still():
+    """Equal hashes with a silent video are a still - the snapshot under
+    the spinner, or a frozen feed."""
+    assert tile_stream_verdict(_sample(), _sample()) == ''
+
+
+def test_verdict_waits_out_a_surface_change():
+    """Snapshot image to painted canvas differs in hash but is not a
+    frame advancing; the next pair on the new surface decides."""
+    assert tile_stream_verdict(_sample(), _sample(surface='canvas.paint 640x360', hash='c1')) == ''
+
+
+def test_verdict_empty_without_a_surface_or_a_tile():
+    """No picture surface, no tile, or no sample at all is never a verdict."""
+    assert tile_stream_verdict(_sample(surface=''), _sample(surface='')) == ''
+    missing = {'found': False, 'tiles': 0}
+    assert tile_stream_verdict(missing, missing) == ''
+    assert tile_stream_verdict(None, _sample()) == ''
+
+
+def test_verdict_unreadable_live_needs_no_loader_and_no_failure():
+    """A tainted surface passes only with the spinner gone and no overlay."""
+    tainted = _sample(surface='canvas.paint 640x360', readable=False, hash='', error='SecurityError')
+    assert tile_stream_verdict(tainted, tainted) == 'unreadable-live'
+    assert tile_stream_verdict(tainted, dict(tainted, loader=1)) == ''
+    assert tile_stream_verdict(tainted, dict(tainted, failed=True)) == ''
+
+
+def test_verdict_never_passes_across_a_readable_and_an_unreadable_sample():
+    """A hash against no hash is not a comparison."""
+    assert tile_stream_verdict(_sample(readable=False, hash=''), _sample(hash='b2')) == ''
+
+
+def test_describe_names_the_still_the_loader_the_video_and_the_overlay():
+    """The failure text carries the surface, both hashes, the loader,
+    the video's readyState and currentTime, and the overlay when up."""
+    first = _sample(loader=1)
+    last = _sample(loader=0, failed=True)
+    text = describe_tile_samples(first, last)
+    assert 'surface img 960x540' in text
+    assert 'hash s -> s (still)' in text
+    assert 'no loader' in text
+    assert 'video readyState 0 -> 0, currentTime 0.00 -> 0.00' in text
+    assert "the tile shows 'The camera failed to load'" in text
+
+
+def test_describe_reports_a_surface_change_and_a_missing_tile():
+    """A surface that changed is named with the one it started on; a
+    missing tile says how many player tiles were on screen."""
+    text = describe_tile_samples(_sample(), _sample(surface='canvas.paint 640x360', hash='t'))
+    assert 'surface canvas.paint 640x360 (was img 960x540)' in text
+    assert 'hash s -> t' in text
+    assert '(still)' not in text
+    gone = describe_tile_samples(_sample(), {'found': False, 'tiles': 0})
+    assert 'no player tile at that index (0 player tile(s)' in gone

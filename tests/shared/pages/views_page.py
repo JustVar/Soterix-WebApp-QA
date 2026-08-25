@@ -3,6 +3,145 @@ import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 
+# A filled grid tile (probed 08/25/2026 on the QA tenant, Chrome channel):
+# div.video_container.new_video_player > div.player__wrapper holds
+# canvas#video-png.canvas-container-reference, video.player, the spinner
+# box (.MuiBox-root > .MuiCircularProgress-root) and a full-tile
+# <img src="data:image/jpeg;base64,..."> with the camera's last snapshot;
+# a second classless canvas is the tile's last child. The tile streams
+# through MediaSource into video.player (blob: src, {"type":"mse"}
+# handshake on the media socket - tools/stream_probe.py), and both
+# canvases keep the default 300x150 at display:none. In branded Chrome
+# (pytest.ini's channel) video.player reaches readyState 4 with frames
+# decoded; the bundled Chromium cannot decode the tenant's H.265 and
+# leaves it at readyState 0. So a live tile is the player's own word
+# first - readyState >= 3 with currentTime moving between two samples,
+# the rule fullscreen_page.assert_stream_playing uses - and the picture
+# the tile paints (a sized visible canvas, else the snapshot image),
+# hashed twice, is the fallback for a video that never reports.
+_TILE_SEL = "[class*='video_container'][class*='new_video_player']"
+# Gap between two frame samples. A live picture changes across 700 ms
+# (the camera's own timestamp overlay ticks every second), so equal
+# hashes across the gap mean a still.
+TILE_SAMPLE_GAP_MS = 700
+_TILE_SURFACE_JS = r"""
+    ([sel, tileIndex]) => {
+        const tiles = Array.from(document.querySelectorAll(sel));
+        const tile = tiles[tileIndex];
+        if (!tile) return {found: false, tiles: tiles.length};
+        const area = el => { const r = el.getBoundingClientRect(); return r.width * r.height; };
+        const shown = el => area(el) > 0 && getComputedStyle(el).display !== 'none';
+        // the fallback picture: a painted canvas, else the snapshot that
+        // fills the tile (the overlay's icons are a few pixels wide)
+        const cands = [];
+        for (const c of tile.querySelectorAll('canvas')) if (c.width && c.height && shown(c)) cands.push(c);
+        for (const im of tile.querySelectorAll('img')) if (im.naturalWidth >= 64 && shown(im) && area(im) >= area(tile) / 2) cands.push(im);
+        cands.sort((a, b) => area(b) - area(a));
+        const video = tile.querySelector('video');
+        const state = {
+            found: true,
+            loader: tile.querySelectorAll('.MuiCircularProgress-root').length,
+            failed: /failed to load/i.test(tile.innerText || ''),
+            video_ready: video ? video.readyState : -1,
+            video_t: video ? video.currentTime : 0,
+            video_w: video ? video.videoWidth : 0,
+            surface: '', readable: false, hash: '', blank: true,
+        };
+        const s = cands[0];
+        if (!s) return state;
+        const w = s.width || s.naturalWidth;
+        const h = s.height || s.naturalHeight;
+        const cls = String(s.className || '').split(' ')[0];
+        state.surface = s.tagName.toLowerCase() + (cls ? '.' + cls : '') + ' ' + w + 'x' + h;
+        const off = document.createElement('canvas');
+        off.width = 32; off.height = 18;
+        const ctx = off.getContext('2d', {willReadFrequently: true});
+        try {
+            ctx.drawImage(s, 0, 0, 32, 18);
+            const d = ctx.getImageData(0, 0, 32, 18).data;
+            let hash = 2166136261 >>> 0, lo = 255, hi = 0;
+            for (let k = 0; k < d.length; k += 4) {
+                for (let j = 0; j < 3; j++) {
+                    const b = d[k + j];
+                    hash = Math.imul(hash ^ b, 16777619) >>> 0;
+                    if (b < lo) lo = b;
+                    if (b > hi) hi = b;
+                }
+            }
+            state.readable = true;
+            state.hash = hash.toString(16);
+            state.blank = hi - lo < 8;
+        } catch (e) {
+            // cross-origin pixels taint the copy (SecurityError): the
+            // surface is on screen but its pixels cannot be read
+            state.error = e.name;
+        }
+        return state;
+    }
+"""
+
+
+def tile_stream_verdict(before: dict | None, after: dict | None) -> str:
+    """Decide from two tile samples whether the tile is streaming.
+
+    'video': the tile's video reports a decoded frame (readyState >= 3)
+    and its currentTime moved between the samples - the player's own
+    word, the same rule as the full screen player. Once the video
+    reports, nothing else is consulted: a still currentTime is a
+    stall, not a pass. When it never reports, the picture the tile
+    paints decides: 'frames' when both samples hashed the same surface
+    (a painted canvas, else the snapshot) differently; 'unreadable-
+    live' when that surface is on screen but its pixels cannot be read
+    (a tainted canvas) and the tile shows no loader and no failure
+    text. '' otherwise. A surface that changes between the samples is
+    no verdict on its own: the next pair on the new surface decides.
+    """
+    if not before or not after:
+        return ""
+    if not before.get("found") or not after.get("found"):
+        return ""
+    if after.get("video_ready", -1) >= 3:
+        return "video" if after.get("video_t", 0) > before.get("video_t", 0) else ""
+    if not after.get("surface") or before.get("surface") != after.get("surface"):
+        return ""
+    if before.get("readable") and after.get("readable"):
+        return "frames" if before.get("hash") != after.get("hash") else ""
+    if not after.get("readable") and not after.get("loader") and not after.get("failed"):
+        return "unreadable-live"
+    return ""
+
+
+def describe_tile_samples(first: dict, last: dict) -> str:
+    """What the sampler saw between its first and last sample, for the
+    failure message: the surface (and the one it started on when that
+    changed), the hashes, the loader, the video's readyState, and the
+    failure overlay when it is up."""
+    if not last.get("found"):
+        return (f"no player tile at that index "
+                f"({last.get('tiles', 0)} player tile(s) on screen)")
+    parts = []
+    if last.get("surface"):
+        surface = f"surface {last['surface']}"
+        if first.get("surface") and first["surface"] != last["surface"]:
+            surface += f" (was {first['surface']})"
+        if last.get("readable"):
+            surface += f", hash {first.get('hash') or '-'} -> {last['hash']}"
+            if first.get("surface") == last["surface"] and first.get("hash") == last["hash"]:
+                surface += " (still)"
+        else:
+            surface += f", pixels unreadable ({last.get('error', 'no read')})"
+        parts.append(surface)
+    else:
+        parts.append("no picture surface (no sized canvas, decoded video "
+                     "frame, or snapshot image)")
+    parts.append("loader up" if last.get("loader") else "no loader")
+    parts.append(f"video readyState {first.get('video_ready')} -> "
+                 f"{last.get('video_ready')}, currentTime "
+                 f"{first.get('video_t', 0):.2f} -> {last.get('video_t', 0):.2f}")
+    if last.get("failed"):
+        parts.append("the tile shows 'The camera failed to load'")
+    return "; ".join(parts)
+
 
 class ViewsPage:
     """Page object for Views functionality (video wall, thumbnails, tabs)."""
@@ -823,6 +962,93 @@ class ViewsPage:
         """Check if streaming is working (failures <= expected offline cameras)."""
         failure_count = self.streaming_failed.count()
         return failure_count <= expected_failures
+
+    def player_tile_count(self) -> int:
+        """Number of grid tiles holding a player (a dropped camera).
+
+        A drop lands in the first empty tile, and the empties follow
+        the filled ones in a view that only ever gains tiles, so the
+        count taken before a drop is the index the new tile gets -
+        what assert_tile_streaming takes.
+        """
+        return self.page.locator(_TILE_SEL).count()
+
+    def _tile_surface(self, tile_index: int) -> dict:
+        """One sample of a player tile's picture: the surface that shows,
+        its pixel hash when readable, and the loader / failure state."""
+        return self.page.evaluate(_TILE_SURFACE_JS, [_TILE_SEL, tile_index])
+
+    def assert_tile_streaming(self, tile_index: int = 0, timeout_ms: int = 30000,
+                              camera_name: str | None = None) -> None:
+        """Fail unless the player tile really plays.
+
+        The loader leaving only proves the spinner left: the tile keeps
+        the camera's last snapshot on screen while it loads and under
+        the tenant's 'The camera failed to load' overlay, so a still
+        picture is not a stream. Two samples TILE_SAMPLE_GAP_MS apart
+        decide (tile_stream_verdict holds the rule): the tile's video
+        at readyState >= 3 with currentTime moving is the pass, and a
+        video that never reports falls back to the picture the tile
+        paints hashing differently. The poll repeats until a verdict
+        or the timeout, and the pass line names the path. The failure
+        names the camera (camera_name, else the configured test
+        camera), the video's readyState and currentTime, the surface
+        it hashed and both hashes, the loader, and the overlay text
+        when it is up - that text is what run.py --retry-streams
+        matches.
+        """
+        if camera_name is None:
+            from config.base_config import config
+            camera_name = config.get("test_camera_name") or "unknown camera"
+        started = time.monotonic()
+        deadline = started + timeout_ms / 1000
+        first = self._tile_surface(tile_index)
+        before = first
+        after = first
+        verdict = ""
+        while time.monotonic() < deadline:
+            # the gap between the two frame samples the verdict compares
+            self.page.wait_for_timeout(TILE_SAMPLE_GAP_MS)
+            after = self._tile_surface(tile_index)
+            verdict = tile_stream_verdict(before, after)
+            if verdict:
+                break
+            before = after
+        if not verdict:
+            raise AssertionError(
+                f"[VIEWS] tile {tile_index} never streamed for camera "
+                f"'{camera_name}' within {timeout_ms / 1000:.0f}s: "
+                f"{describe_tile_samples(first, after)}"
+            )
+        if verdict == "video":
+            detail = (f"video readyState {after['video_ready']}, currentTime "
+                      f"{before['video_t']:.2f} -> {after['video_t']:.2f}")
+        else:
+            detail = (f"{after['surface']}, hash {before.get('hash') or '-'} -> "
+                      f"{after.get('hash') or '-'}")
+        print(f"[VIEWS] tile {tile_index} streaming for '{camera_name}' after "
+              f"{time.monotonic() - started:.1f}s ({verdict} path): {detail}")
+
+    def wait_for_tiles_settled(self, timeout_ms: int = 10000) -> bool:
+        """Wait until no player tile in the grid shows a loader.
+
+        The spinner leaves when the stream starts or when the tenant's
+        failure overlay replaces it (about 35 s after the drop on a
+        dead stream, measured 08/25/2026), so this is a settle, not a
+        stream oracle - assert_tile_streaming is that. Empty tiles carry
+        no spinner. Returns True once settled; logs and returns False
+        on timeout, so a test that adds a camera the tenant may have
+        offline keeps its own verdict and the content-health advisory
+        reports the overlay.
+        """
+        loaders = self.page.locator(f"{_TILE_SEL} .MuiCircularProgress-root:visible")
+        try:
+            expect(loaders).to_have_count(0, timeout=timeout_ms)
+            return True
+        except AssertionError:
+            print(f"[VIEWS] {loaders.count()} tile loader(s) still up after "
+                  f"{timeout_ms / 1000:.0f}s")
+            return False
 
     def content_health_snapshot(self) -> dict | None:
         """Count broken images and stream-failure tiles, page-wide.

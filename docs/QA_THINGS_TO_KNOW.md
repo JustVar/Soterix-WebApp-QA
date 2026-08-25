@@ -398,6 +398,13 @@ Facts that need care:
   frames arrive. A "stream plays" oracle cannot pass for an H.265 camera in
   that browser. The same tile in branded Chrome (`--channel chrome`)
   answered `true` and reached `readyState 4` with 95 decoded frames in 12 s.
+- When the streaming host is down for the account, every media socket
+  receives one frame and closes after about 30 s, and every tile - and the
+  full screen player - shows "The camera failed to load" about 35 s after
+  the drop (all four dropped cameras and the configured one, Chrome
+  channel, 2026-08-25 10:40). That is not the intermittent single-camera
+  failure. Run `python tools/stream_probe.py` before repairing a test that
+  failed on that text.
 - The init segment always carries a FLAC mono 8 kHz audio track (the server
   transcodes the camera's G.711), and audio fragments arrive when the
   channel has `audioGrabbing: false`. The track does not prove the camera

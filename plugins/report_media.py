@@ -6,7 +6,12 @@ from the report or from the folder - no rerun needed.
 
 What gets captured:
   - Every test that reaches its body: one screenshot as the test finishes,
-    labeled PASSED or FAILED.
+    labeled PASSED or FAILED. A PASSED shot first waits up to 5 s for the
+    app's loading spinners (.MuiCircularProgress-root) to leave: a Views
+    test passes the moment its tile is consumed, while the stream still
+    loads, and the green shot would otherwise show the loading circle
+    instead of the painted tile. Best-effort - a spinner that stays is
+    filed as-is. Failures skip the wait: their spinner is evidence.
   - A test whose setup fails with its page already reachable (parked on
     self.page or requested directly by the test): labeled SETUP FAILED.
   - Drag-and-drop tests: the mid-drag frames ViewsPage.mouse_drag stashed
@@ -84,6 +89,11 @@ SAFE_NAME_MAX = 120
 # test could stash dozens, and every embedded frame is inlined into the
 # self-contained report. Overflow is logged and dropped.
 DRAG_CAPTURE_MAX = 8
+
+# The app's loading spinner (MUI CircularProgress) - the selector the page
+# objects wait on - and how long a PASSED screenshot waits for it to leave.
+LOADER_SELECTOR = '.MuiCircularProgress-root'
+SETTLE_MS = 5000
 
 _OFF_VALUES = ('off', '0', 'false', 'no')
 _EMBED_ALL_VALUES = ('all',)
@@ -170,6 +180,28 @@ def _drain_drag_captures(page: Any, cap: int = DRAG_CAPTURE_MAX) -> list:
     except Exception as e:  # noqa: BLE001 - an unclearable stash must not cost the frames
         log.debug(f'report_media: could not clear the drag stash: {e}')
     return taken
+
+
+def _settle_loaders(page: Any, timeout_ms: int = SETTLE_MS) -> bool:
+    """Best-effort wait for every loading spinner to leave before a PASSED shot.
+
+    A Views test passes on the consumed tile while its stream still loads;
+    without this the green shot shows the loading circle, not the painted
+    tile. Returns True when the spinners left within the bound, False for
+    everything else (no page, timeout, any error) - the shot is then taken
+    as-is. Evidence only, never a verdict.
+    """
+    if page is None:
+        return False
+    try:
+        page.wait_for_function(
+            f'() => document.querySelectorAll({LOADER_SELECTOR!r}).length === 0',
+            timeout=timeout_ms,
+        )
+        return True
+    except Exception as e:  # noqa: BLE001 - evidence only; a spinner that stays is filed as-is
+        log.debug(f'report_media: spinners still up after {timeout_ms} ms: {e}')
+        return False
 
 
 def _suffix_for(when: str, outcome: str) -> str | None:
@@ -300,6 +332,11 @@ def _attach_media(item: Any, report: Any) -> None:
                     report.extras = [*getattr(report, 'extras', []),
                                      extras.png(base64.b64encode(frame_png).decode('ascii'),
                                                 name=f'{item.name} - {frame_label} {index}')]
+            # A green Views test is still loading its stream when the
+            # verdict lands; give the spinner a bounded moment to leave so
+            # the shot shows the painted tile. Failures keep theirs.
+            if suffix == 'PASSED':
+                _settle_loaders(page)
             # Viewport-only (not full_page) keeps payload size reasonable -
             # the self-contained report inlines every image.
             png = page.screenshot()

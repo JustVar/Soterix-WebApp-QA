@@ -40,6 +40,7 @@ blocks, uncommented test-file sleeps (outside the c2c hold).
 
 | Test / suite | Done | Lesson home |
 |--------------|------|-------------|
+| views grid stream oracle (drag_drop by-name + multiple cameras) | 08/25: `ViewsPage.assert_tile_streaming` - the tile's video at readyState >= 3 with currentTime moving between two samples 700 ms apart, else the painted picture hashing differently; a still (the snapshot under the spinner or the failure overlay) fails naming the camera. First-camera tests settle + advisory only (tenant has offline cameras). PASSED screenshots wait up to 5 s for spinners. Built during a streaming outage (every media socket one frame, then closed); dragdrop run green after recovery, 11/11, oracle passed on the video path in 8 s. | CONVENTIONS (Waits), QA_THINGS_TO_KNOW (Live stream delivery) |
 | views drag-and-drop (drag_drop + subtabs, 11 tests) | Repaired 08/21. Drags gripped text labels and silently text-selected; grip re-aimed at the draggable ancestor (app is plain HTML5 DnD) and oracles made baseline-relative. The JS fallbacks had never run (evaluate two-arg bug). Saved-view drag additionally needs a reload + the My Views subtab surface. | views_page.mouse_drag docstring |
 | views_favorites add/remove | Rebuilt 08/09; camera tree self-collapses, toggle re-expands. | FAILURE_TRIAGE |
 | admin_sites group CRUD + search inside site + site detail | Rebuilt 08/11-12 for the redesigned detail; sorting keeps an honest skip (no sort control). | - |

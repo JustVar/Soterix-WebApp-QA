@@ -94,6 +94,10 @@ class TestViewsDragDrop:
         # object, which retries a no-op drag via the JS fallback
         self.views.drag_camera_to_tile(camera)
         self._wait_tile_consumed(initial_tile_count)
+        # The first sidebar camera is whichever the tenant lists first
+        # and may be offline, so the stream oracle stays off here: the
+        # tile settles, then the advisory reports a dead stream
+        self.views.wait_for_tiles_settled()
         self.views.log_new_content_issues(health, "camera drag")
 
         # Verify: either tile count decreased OR video element appeared
@@ -118,13 +122,13 @@ class TestViewsDragDrop:
         camera_count = cameras.count()
         assert camera_count > 0, "No cameras available"
 
-        # Get the name of the first camera
-        first_camera = cameras.first
-        camera_text = first_camera.inner_text()
-        camera_name = camera_text.split("\n")[0] if camera_text else None
+        # The configured test camera: the one the tenant keeps online,
+        # so the stream oracle below can hold its tile to a live picture
+        camera_name = config.get("test_camera_name")
 
         if camera_name:
             initial_tile_count = self.views.get_available_tile_count()
+            filled_before = self.views.player_tile_count()
 
             # Sidebar previews match [class*='video'] page-wide, so only
             # growth over this pre-drag baseline counts as drop evidence
@@ -136,6 +140,9 @@ class TestViewsDragDrop:
             self.views.drag_camera_to_tile_by_name(camera_name, tile_index=0)
             self._wait_tile_consumed(initial_tile_count)
             self.views.log_new_content_issues(health, "camera drag")
+            # a consumed tile is not a stream: the new tile must paint
+            # changing frames
+            self.views.assert_tile_streaming(filled_before, camera_name=camera_name)
 
             # Verify drag worked
             new_tile_count = self.views.get_available_tile_count()
@@ -398,8 +405,11 @@ class TestViewsDragDrop:
         video_elements = self.page.locator("video, canvas, [class*='video']")
         video_baseline = video_elements.count()
 
-        # Add first camera via checkbox; a consumed tile is the
-        # added signal
+        # Add the configured camera via checkbox; a consumed tile is
+        # the added signal, and the tile it lands in is held to a live
+        # picture below
+        filled_before = self.views.player_tile_count()
+        health = self.views.content_health_snapshot()
         self.views.add_first_camera_via_checkbox()
         self._wait_tile_consumed(initial_tile_count)
 
@@ -411,6 +421,13 @@ class TestViewsDragDrop:
         if checkbox.count() > 0:
             checkbox.click()
             self._wait_tile_consumed(initial_tile_count - 1)
+
+        # The configured camera must paint a live picture; the second
+        # camera is whichever the tenant lists next and may be offline,
+        # so its tile only settles and the advisory reports it
+        self.views.assert_tile_streaming(filled_before)
+        self.views.wait_for_tiles_settled()
+        self.views.log_new_content_issues(health, "camera adds")
 
         # Verify at least one camera was added
         final_tile_count = self.views.get_available_tile_count()

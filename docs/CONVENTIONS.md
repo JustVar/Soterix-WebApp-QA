@@ -54,9 +54,17 @@ the full screen player, `FullScreenPage.assert_stream_playing()` is the
 oracle: the `<video>` reports `readyState >= 3` and its `currentTime`
 advances between two samples. The shared setups call it right after
 `wait_for_stream_loaded`, so a dead stream fails at setup with "stream
-never played" and the camera's name, not later at a click. The Views
-grid keeps its advisory content-health layer; that layer never decides
-a test.
+never played" and the camera's name, not later at a click. In the
+Views grid, `ViewsPage.assert_tile_streaming(tile_index)` is the oracle
+for the configured camera: the same rule on the tile's `<video>`
+(readyState >= 3, currentTime moving between two samples 700 ms
+apart), and when that video never reports, the picture the tile
+paints must hash differently between the samples (the tile keeps the
+camera's last snapshot on screen while it loads and under the failure
+overlay, so a still is not a stream). Tests that add
+whichever camera the tenant lists first, which may be offline, use
+`wait_for_tiles_settled()` plus the advisory content-health layer
+instead; that layer never decides a test.
 
 **Reruns.** pytest-rerunfailures is installed for one case only.
 `run.py --retry-streams` appends `--reruns 1 --only-rerun "failed to

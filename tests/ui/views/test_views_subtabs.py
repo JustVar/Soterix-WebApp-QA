@@ -142,10 +142,17 @@ class TestViewsSubtabs:
         assert checkbox is not None, "Checkbox not visible on hover"
         content_sel = "video, canvas, [class*='video']"
         baseline = self._content_baseline(content_sel)
+        # advisory content-health baseline: the first sidebar camera is
+        # whichever the tenant lists first and may be offline, so the
+        # stream oracle stays off here - the tile settles, then the
+        # advisory reports a dead stream
+        health = self.views.content_health_snapshot()
         checkbox.click()
 
         assert self._content_added(initial_tiles, content_sel, baseline), \
             f"Camera not added. Tiles: {initial_tiles} -> {self.views.get_available_tile_count()}"
+        self.views.wait_for_tiles_settled()
+        self.views.log_new_content_issues(health, "camera add")
 
     @pytest.mark.ui
     @pytest.mark.subtabs
@@ -181,6 +188,9 @@ class TestViewsSubtabs:
 
         assert self._content_added(initial_tiles, content_sel, baseline), \
             f"Drag failed. Tiles: {initial_tiles} -> {self.views.get_available_tile_count()}"
+        # first sidebar camera, maybe offline (see the checkbox test):
+        # the tile settles so the advisory below sees the outcome
+        self.views.wait_for_tiles_settled()
         self.views.log_new_content_issues(health, "camera drag")
 
     # =========================================================================
