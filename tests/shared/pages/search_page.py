@@ -228,9 +228,15 @@ class SearchPage:
             f"p:has-text('{gender}')"
         ).first
         gender_option.click()
-        # a selection has no DOM signal of its own beyond the click
-        # landing; the next section open is the natural next wait
-        self.page.wait_for_timeout(500)
+        # The picked option gains selectedTab on the same tick (probe
+        # 08/25/2026); a click during the panel's open animation can
+        # drop, so one retry click self-heals before the wait raises
+        picked = self.gender_container.locator(
+            f"p.selectedTab:has-text('{gender}')"
+        )
+        if not self._appears(picked, timeout=3000):
+            gender_option.click()
+            picked.wait_for(state="visible", timeout=5000)
 
     def _open_section(self, label: str):
         """Open a search sidebar section by clicking its value control.
