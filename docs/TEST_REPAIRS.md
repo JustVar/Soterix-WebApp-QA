@@ -10,15 +10,16 @@ with a pointer here.
 Status: [REDO] rebuild, [INVESTIGATE] feature moved or died?,
 [VERIFY] not run since conversion, [DATA] stale tenant data,
 [ARTIFACT] support files wrong, [BLOCKED] waiting outside the repo,
-[DONE] repaired and verified green.
+[DONE] repaired and verified green, [APP QUESTION] behaviour the app team
+must answer, [SECURITY QUESTION] same, raised with the security owner.
 
-## Open items (08/14/2026)
+## Open items (opened 08/14/2026, kept current)
 
 | # | Item | Status | Needs |
 |---|------|--------|-------|
 | 1 | Event Wall display suite (tests/ui/event_wall/test_event_wall_display.py) | [BLOCKED] | Local-access wall user (Justin creating). Then: its own env vars in config/env, probe login + site-select, build the wall's markers. |
 | 2 | Media destructive set (clip/folder delete, grouping, move) | [INVESTIGATE] | Answer: does deleting a folder delete the clips grouped into it? Or a disposable measurement. |
-| 3 | Page-object sleeps | mostly [DONE] | Converted 08/14: search_page, incamera_search_page, fullscreen_page, maps_page, login_page (53 -> 8 commented signal-less settles). Verified: maps 5/5, fullscreen 5/5, bookmarks 8/9 (setup flake), playback 9/10; search consumers verified NEUTRAL by A/B against HEAD (6 vs 7 fails on the same suite in the same window - the search endpoint was 400 again, see defects). camera_hardware_page (9) joins the c2c hold. |
+| 3 | Page-object sleeps | mostly [DONE] | Converted 08/14: search_page, incamera_search_page, fullscreen_page, maps_page, login_page (53 -> 11 commented pacing/poll settles, counted 08/25). Verified: maps 5/5, fullscreen 5/5, bookmarks 8/9 (setup flake), playback 9/10; search consumers verified NEUTRAL by A/B against HEAD (6 vs 7 fails on the same suite in the same window - the search endpoint was 400 again, see defects). camera_hardware_page (11) joins the c2c hold. |
 | 4 | c2c sleeps (3) | [BLOCKED] | Hardware session to verify a conversion. |
 | 5 | Sidecar step files: maps, media_operations, chats, events_search | [ARTIFACT] | Regenerate at next sidecar sync (case keys kept); events_search corrected steps need Justin's manual push to live QA Touch. |
 | 6 | QA Touch gap analysis (coverage vs case mapping) | deferred | After the above, per Justin. Note: mapping metadata says 352 tests, collection says 819. |
@@ -30,8 +31,8 @@ Status: [REDO] rebuild, [INVESTIGATE] feature moved or died?,
 | 12 | TEST_SITE_ID pointed at the wrong site | [DONE] | `.env` had 17 ("Example Corporate Office"); the configured test site "Newtown Action Area" is 16. Corrected 08/24; the `api` fixture skips with both values on a mismatch. Check any teammate `.env` copied from the old template. |
 | 13 | test_drag_location_to_tile skipped vacuously | [DONE] | Passed None as the location, so the locator was `text=None` and the test had only ever skipped. Found 08/24 by the new skip-reason logs; now drags the configured site and passes (17 s). |
 | 14 | drag_camera_to_tile_by_name lands the wrong camera | [INVESTIGATE] | Seen once in four runs during the stream probe: "main gate" drag landed channel 121. The has-text match or the tile target may be loose; tools/stream_probe.py verifies the socket channel and falls back to the checkbox. Pin the camera by exact name and channel id. |
-| 15 | Audio delivered while audioGrabbing is false | app question | Channel 97 streams a FLAC audio track (fragments flowing) although getCameraStreamingParameters/audio says audioGrabbing false. Ask the team whether the track is silence or a settings defect before any audio oracle. |
-| 16 | Media socket not tied to the session | security question | The streaming socket (streaming2 /v3/api/ws) delivered a full stream with no session cookie; the `src=` parameter alone admits the connection (probed 08/25, tools/stream_probe.py --no-browser). Raise with the app/security team before any external exposure review. |
+| 15 | Audio delivered while audioGrabbing is false | [APP QUESTION] | Channel 97 streams a FLAC audio track (fragments flowing) although getCameraStreamingParameters/audio says audioGrabbing false. Ask the team whether the track is silence or a settings defect before any audio oracle. |
+| 16 | Media socket not tied to the session | [SECURITY QUESTION] | The streaming socket (streaming2 /v3/api/ws) delivered a full stream with no session cookie; the `src=` parameter alone admits the connection (probed 08/25, tools/stream_probe.py --no-browser). Raise with the app/security team before any external exposure review. |
 
 Quality gates, all zero as of 08/17/2026 and enforced by the checker
 on every commit: no-oracle tests, early-exit passes, except-swallow

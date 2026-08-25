@@ -16,19 +16,10 @@ You do NOT need to edit any files yourself - just fill out below.
 
 <!-- One paragraph in plain English. What feature/endpoint/flow? What's the success criterion? -->
 
-## Section
+## Module / product
 
+<!-- Which part of the app (Views, Events, Admin, Search, Insights, Maps, LPR...) and which product, if not NexaiQ-Core. -->
 
-- [ ] I. API smoke (a REST endpoint)
-- [ ] II. Simulation (real-world scenario - camera offline, network blip, scale)
-- [ ] III. Planned (nice-to-have, not yet ready to build)
-- [ ] Ref. UI E2E (a UI feature)
-
-## Suggested area code
-
-<!-- See qa/area_codes.md. Examples: AUTH, ADM-USR, ADM-RUL, EVT, RBAC, NTF, NET. If unsure, leave blank - the engineer will pick. -->
-
-Area:
 
 ## Why now / deployment point
 
