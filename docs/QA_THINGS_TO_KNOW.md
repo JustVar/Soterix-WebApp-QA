@@ -448,15 +448,15 @@ Sample (QA, 2026-08-25, 20 s):
 
 - Browser tile, "main gate" (channel 97, stream 1): online, first frame
   2650 ms, 183 video fragments, 10.07 fps (configured 10), 3455 kbps
-  (configured 2560, `adaptiveBitrate` off on this stream so the delivered
-  rate runs above the cap), 2592x1458 delivered and configured, H.265
+  (configured 2560; the facts run read `adaptiveBitrate` off on this stream,
+  so the delivered rate runs above the cap), 2592x1458 delivered and configured, H.265
   `hev1`, keyframe interval 0.99 s (exact IRAP method, ~1 s GOP), 0 timestamp
   gaps, latency median 2213 ms, 285 audio fragments, 182 analytics frames.
   The tile's `timeline` came back empty: bundled Chromium cannot decode
   H.265, so the player never reaches ready state and the app never issues
   the timeline query. `--no-browser` issues the query itself and does
   capture it (`humans`/`vehicles`/`recordings` rows).
-- `--all-cameras --no-browser`: 2 online, 8 offline of 10. Online were
+- `--all-cameras --no-browser` (one run, JSON not kept): 2 online, 8 offline of 10. Online were
   "main gate" (188 fragments, 10.05 fps, 2878 kbps, 0.99 s keyframe, latency
   2218 ms) and "Hanwha" (channel 88, 180 fragments, 10.06 fps, 3102 kbps,
   2048x1536, 1.0 s keyframe, latency 1432 ms). Six of the eight offline
@@ -467,46 +467,27 @@ Sample (QA, 2026-08-25, 20 s):
   no frames in the window. Offline here means "no media in the window", not
   a tool fault.
 
-Browser-free collection (the `--no-browser` experiment,
-`python tools/stream_probe.py --no-browser --camera "main gate"`):
+Browser-free collection (`python tools/stream_probe.py --no-browser --camera "main gate"`):
 
-- A media socket opened straight from Python (`aiohttp`, already in the
-  venv - `websockets` / `websocket-client` are not installed) delivers the
-  full fMP4 H.265 + FLAC stream and the analytics JSON frames, with no
-  browser and no app. Proven on the `--all-cameras` run (main gate 482,
-  Hanwha 361 binary frames, one socket each) and on the experiment's
-  app-like variant (179 video fragments).
-- The URL to reproduce:
-  `wss://media.example.invalid/v3/api/ws?name=<site>/<channel>/0/1/<stream>/0/<uuid>&src=videonetics://<videoneticsAddr>/<same path>`
-  then the text handshake `{"type":"mse","value":""}`. `app` = 0, `live` = 1,
-  `timestamp` = 0 for live, `stream` = 1 for the tile / 0 for full screen.
-  The `uuid` is a random v4 and its value does not matter - a socket opened
-  with the literal `probe` was admitted the same way.
-- What authorises it: **not** the `JSESSIONID` cookie. A socket sent with no
-  cookie at all delivered a complete 179-fragment stream. The cookie is
-  scoped to `qa.example.invalid`; the streaming host does not check it.
-  The gate is the **`src=` parameter**: across two runs every variant that
-  omitted `src=` was closed by the server after ~0.8 s (code 1006), and
-  every variant that carried `src=` stayed open. The timeline socket also
-  needs no cookie (rich `humans`/`vehicles` messages with Origin-only
-  headers).
+- A media socket opened straight from Python (`aiohttp`, declared in
+  `requirements.txt`) delivers the full fMP4 H.265 + FLAC stream and the
+  analytics JSON frames with no browser. Measured once on 2026-08-25 (main
+  gate 482 and Hanwha 361 binary frames in 20 s); that run's JSON was not
+  kept, so treat the numbers as one sample.
+- What authorises the socket is a security question for the app team, not a
+  QA fact to circulate: see `docs/TEST_REPAIRS.md` row 16. The exact
+  connection recipe is kept out of this doc on purpose.
 - Caveat, verified: frame delivery is intermittent. Opening several sockets
-  to one channel in quick succession starves the later ones - they get the
-  `101` upgrade and `src=` admission but zero frames and no close. Once the
-  whole host stopped delivering to every variant for a spell (same family as
-  the "one frame then close after ~30 s" state noted above). A real
-  collector should open one socket per channel (clean on the `--all-cameras`
-  run) and reconnect on a dry socket rather than reading zero frames as
+  to one channel in quick succession starves the later ones (upgrade
+  accepted, zero frames, no close), and the host sometimes stops delivering
+  to everything for a spell. A collector should open one socket per channel
+  and reconnect on a dry socket rather than reading zero frames as
   "camera offline".
 
 Decision: a lightweight browser-free collector is viable. It needs the login
-only to enumerate channels and read the configured parameters; the media
-socket itself is admitted by the `src=` URL, not by the session. `codecType`
-8 = H.265 held on channels 88 and 97; the H.264 value is still unverified.
-
-Files: `tools/stream_probe.py`, `tests/shared/api/client.py`
-
----
+to enumerate channels and read the configured parameters; the media socket
+needs no session. `codecType` 8 = H.265 held on channels 88 and 97; the
+H.264 value is still unverified.
 
 ## Debugging failures
 
