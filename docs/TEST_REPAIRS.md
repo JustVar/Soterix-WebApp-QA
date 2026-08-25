@@ -31,6 +31,7 @@ Status: [REDO] rebuild, [INVESTIGATE] feature moved or died?,
 | 13 | test_drag_location_to_tile skipped vacuously | [DONE] | Passed None as the location, so the locator was `text=None` and the test had only ever skipped. Found 08/24 by the new skip-reason logs; now drags the configured site and passes (17 s). |
 | 14 | drag_camera_to_tile_by_name lands the wrong camera | [INVESTIGATE] | Seen once in four runs during the stream probe: "main gate" drag landed channel 121. The has-text match or the tile target may be loose; tools/stream_probe.py verifies the socket channel and falls back to the checkbox. Pin the camera by exact name and channel id. |
 | 15 | Audio delivered while audioGrabbing is false | app question | Channel 97 streams a FLAC audio track (fragments flowing) although getCameraStreamingParameters/audio says audioGrabbing false. Ask the team whether the track is silence or a settings defect before any audio oracle. |
+| 16 | Media socket not tied to the session | security question | The streaming socket (streaming2 /v3/api/ws) delivered a full stream with no session cookie; the `src=` parameter alone admits the connection (probed 08/25, tools/stream_probe.py --no-browser). Raise with the app/security team before any external exposure review. |
 
 Quality gates, all zero as of 08/17/2026 and enforced by the checker
 on every commit: no-oracle tests, early-exit passes, except-swallow

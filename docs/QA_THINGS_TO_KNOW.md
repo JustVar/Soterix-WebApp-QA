@@ -418,6 +418,92 @@ Facts that need care:
   `GET /REST/dashboard/system/getcameraconfigtypes` counts `ptzCameras: 9`
   for the enterprise. Open until a PTZ camera on the QA site is probed.
 
+### Health mode
+
+`python tools/stream_probe.py --health --camera "main gate"` samples one
+channel (default 20 s) and prints a per-channel row plus the delivered-vs-
+configured numbers; `--all-cameras` does every channel on the site;
+`--json path` writes the raw metrics. Each metric names how it is measured
+(see `health_metrics()`):
+
+- `online`: a `moof`/`mdat` video fragment arrived in the window.
+- `first_frame_ms`: handshake request to first video fragment.
+- `fps_measured` / `bitrate_kbps`: video track `tfdt` span and `mdat` bytes,
+  next to `getCameraStreamingParameters` `fps` / `bitrate`.
+- `resolution` / `codec`: SPS size and `moov` sample entry, next to the API.
+- `keyframe_interval_s`: mean `tfdt` distance between keyframes. A keyframe
+  is a fragment whose `mdat` holds an IRAP (H.265 NAL 16-21) or IDR (H.264
+  NAL 5); the tool falls back to `sample_is_non_sync_sample == 0`, then to an
+  `mdat` above 3x the median. `keyframe_method` says which was used.
+- `timestamp_gaps`: `tfdt` deltas above 2x nominal (`1000 / configured fps`,
+  else the median), plus any backwards step.
+- `latency_ms`: wall clock at receipt minus the analytics frame `timeStamp`.
+  The `timeStamp` is epoch ms (verified within a day of now); the number
+  includes the clock offset between this machine and the encoder, so read it
+  as an upper bound, not a pure pipeline delay.
+- `reconnects`, `analytics_alive`, `audio_fragments`, socket `close`
+  code/reason, and the timeline socket's message types round out the row.
+
+Sample (QA, 2026-08-25, 20 s):
+
+- Browser tile, "main gate" (channel 97, stream 1): online, first frame
+  2650 ms, 183 video fragments, 10.07 fps (configured 10), 3455 kbps
+  (configured 2560, `adaptiveBitrate` off on this stream so the delivered
+  rate runs above the cap), 2592x1458 delivered and configured, H.265
+  `hev1`, keyframe interval 0.99 s (exact IRAP method, ~1 s GOP), 0 timestamp
+  gaps, latency median 2213 ms, 285 audio fragments, 182 analytics frames.
+  The tile's `timeline` came back empty: bundled Chromium cannot decode
+  H.265, so the player never reaches ready state and the app never issues
+  the timeline query. `--no-browser` issues the query itself and does
+  capture it (`humans`/`vehicles`/`recordings` rows).
+- `--all-cameras --no-browser`: 2 online, 8 offline of 10. Online were
+  "main gate" (188 fragments, 10.05 fps, 2878 kbps, 0.99 s keyframe, latency
+  2218 ms) and "Hanwha" (channel 88, 180 fragments, 10.06 fps, 3102 kbps,
+  2048x1536, 1.0 s keyframe, latency 1432 ms). Six of the eight offline
+  channels have no live source right now: `getCameraStreamingParameters`
+  answers `Cannot connect the analytic server` (status 1510) or
+  `VMS server error` (status 2), and their media sockets deliver nothing.
+  "Street#36" and "Training Area" have a stream config but still delivered
+  no frames in the window. Offline here means "no media in the window", not
+  a tool fault.
+
+Browser-free collection (the `--no-browser` experiment,
+`python tools/stream_probe.py --no-browser --camera "main gate"`):
+
+- A media socket opened straight from Python (`aiohttp`, already in the
+  venv - `websockets` / `websocket-client` are not installed) delivers the
+  full fMP4 H.265 + FLAC stream and the analytics JSON frames, with no
+  browser and no app. Proven on the `--all-cameras` run (main gate 482,
+  Hanwha 361 binary frames, one socket each) and on the experiment's
+  app-like variant (179 video fragments).
+- The URL to reproduce:
+  `wss://media.example.invalid/v3/api/ws?name=<site>/<channel>/0/1/<stream>/0/<uuid>&src=videonetics://<videoneticsAddr>/<same path>`
+  then the text handshake `{"type":"mse","value":""}`. `app` = 0, `live` = 1,
+  `timestamp` = 0 for live, `stream` = 1 for the tile / 0 for full screen.
+  The `uuid` is a random v4 and its value does not matter - a socket opened
+  with the literal `probe` was admitted the same way.
+- What authorises it: **not** the `JSESSIONID` cookie. A socket sent with no
+  cookie at all delivered a complete 179-fragment stream. The cookie is
+  scoped to `qa.example.invalid`; the streaming host does not check it.
+  The gate is the **`src=` parameter**: across two runs every variant that
+  omitted `src=` was closed by the server after ~0.8 s (code 1006), and
+  every variant that carried `src=` stayed open. The timeline socket also
+  needs no cookie (rich `humans`/`vehicles` messages with Origin-only
+  headers).
+- Caveat, verified: frame delivery is intermittent. Opening several sockets
+  to one channel in quick succession starves the later ones - they get the
+  `101` upgrade and `src=` admission but zero frames and no close. Once the
+  whole host stopped delivering to every variant for a spell (same family as
+  the "one frame then close after ~30 s" state noted above). A real
+  collector should open one socket per channel (clean on the `--all-cameras`
+  run) and reconnect on a dry socket rather than reading zero frames as
+  "camera offline".
+
+Decision: a lightweight browser-free collector is viable. It needs the login
+only to enumerate channels and read the configured parameters; the media
+socket itself is admitted by the `src=` URL, not by the session. `codecType`
+8 = H.265 held on channels 88 and 97; the H.264 value is still unverified.
+
 Files: `tools/stream_probe.py`, `tests/shared/api/client.py`
 
 ---

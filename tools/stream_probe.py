@@ -3,10 +3,26 @@
 
     python tools/stream_probe.py --camera "main gate"
     python tools/stream_probe.py --camera "main gate" --fullscreen --json out.json
+    python tools/stream_probe.py --health --camera "main gate" --seconds 20
+    python tools/stream_probe.py --health --all-cameras --no-browser --json out.json
+    python tools/stream_probe.py --no-browser --camera "main gate"
 
 Read-only: it logs in, drops the camera on a Views tile, watches the media
 WebSocket for a few seconds, and reads channel settings from the internal
 API. Nothing on the tenant is changed.
+
+Modes:
+
+  * facts (default): one camera, one row per delivery fact with its source.
+  * --health: per channel, a table and JSON of online / first frame /
+    fps / bitrate / resolution / codec / keyframe interval / timestamp
+    gaps / latency / reconnects / analytics / audio / close reason /
+    timeline status. `--all-cameras` covers every channel on the site.
+    Metric definitions are in health_metrics().
+  * --no-browser: open the media socket from Python (aiohttp) with the
+    same URL and handshake the app uses, no browser at all. On its own it
+    runs the authorisation experiment (which header or URL part lets
+    frames flow); with --health it is the capture path.
 
 How the stream is identified (probed 2026-08-25, docs/QA_THINGS_TO_KNOW.md
 "Live stream delivery"):
@@ -29,14 +45,20 @@ page.on("websocket") did not surface them in an earlier probe.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import base64
+import itertools
 import json
 import os
 import re
+import statistics
 import struct
 import sys
 import time
+import uuid as uuid_mod
+from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -54,6 +76,13 @@ from tests.shared.pages.views_page import ViewsPage  # noqa: E402
 
 TILE = "[class*='video_container'][class*='new_video_player']"
 MEDIA_WS = "/v3/api/ws"
+TIMELINE_WS = "/ws/timeline/"
+STREAM_HOST = "wss://media.example.invalid"
+HANDSHAKE = '{"type":"mse","value":""}'
+# The app sends this literal placeholder in the src= parameter (08/25)
+SRC_PREFIX = "videonetics://<videoneticsAddr>/"
+CODEC_TYPES = {8: "H.265"}  # only value seen so far; the H.264 value is not verified
+UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 # /REST/site/recordingstream names the stream indexes 0..6; the tile
 # opens index 1 and full screen index 0 (matched by resolution, 08/25)
 STREAM_NAMES = {0: "major", 1: "minor", 2: "third", 3: "jpeg snap", 6: "fourth"}
@@ -69,8 +98,12 @@ HOOK = r"""
   const OWS = window.WebSocket;
   window.WebSocket = function(url, protocols) {
     const ws = protocols === undefined ? new OWS(url) : new OWS(url, protocols);
-    const rec = { url: String(url), recv: 0, sent: [], text: [] };
+    const rec = { url: String(url), recv: 0, sent: [], text: [], opened: performance.now(), close: null };
     P.ws.push(rec);
+    ws.addEventListener('close', (ev) => {
+      rec.close = { code: ev.code, reason: ev.reason, clean: ev.wasClean,
+                    after_s: (performance.now() - rec.opened) / 1000 };
+    });
     const osend = ws.send.bind(ws);
     ws.send = function(d) {
       if (rec.sent.length < 10) rec.sent.push(typeof d === 'string' ? d.slice(0, 300) : '<binary>');
@@ -308,7 +341,8 @@ def parse_init_segment(buf: bytes) -> dict:
 
 
 def _hvcc(c: bytes) -> dict:
-    info = {"codec": "H.265 (HEVC)", "hvcc_profile_idc": c[1] & 0x1F, "hvcc_level_idc": c[12]}
+    info = {"codec": "H.265 (HEVC)", "hvcc_profile_idc": c[1] & 0x1F, "hvcc_level_idc": c[12],
+            "nal_length_size": (c[21] & 3) + 1}
     off = 23
     for _ in range(c[22]):
         nal_type = c[off] & 0x3F
@@ -327,7 +361,8 @@ def _hvcc(c: bytes) -> dict:
 
 
 def _avcc(c: bytes) -> dict:
-    info = {"codec": "H.264 (AVC)", "avcc_profile_idc": c[1], "avcc_level_idc": c[3]}
+    info = {"codec": "H.264 (AVC)", "avcc_profile_idc": c[1], "avcc_level_idc": c[3],
+            "nal_length_size": (c[4] & 3) + 1}
     off = 6
     for _ in range(c[5] & 0x1F):
         length = struct.unpack(">H", c[off:off + 2])[0]
@@ -358,10 +393,74 @@ def parse_fragment(buf: bytes) -> dict | None:
         frag["time"] = (struct.unpack(">Q", buf[tfdt[0] + 4:tfdt[0] + 12])[0] if v
                         else struct.unpack(">I", buf[tfdt[0] + 4:tfdt[0] + 8])[0])
     frag["samples"] = struct.unpack(">I", buf[trun[0] + 4:trun[0] + 8])[0] if trun else 0
+    frag.update(_first_sample(buf, tfhd, trun))
     for typ, _hdr, body, box_end in boxes(buf):
         if typ == "mdat":
             frag["mdat"] = box_end - body
+            frag["mdat_body"] = (body, box_end)
     return frag
+
+
+def _u32(buf: bytes, off: int) -> int:
+    return struct.unpack(">I", buf[off:off + 4])[0]
+
+
+def _first_sample(buf: bytes, tfhd, trun) -> dict:
+    """flags and duration of the fragment's first sample (trun, else tfhd defaults)."""
+    out: dict = {"flags": None, "duration": None}
+    tf = _u32(buf, tfhd[0]) & 0xFFFFFF
+    off = tfhd[0] + 8
+    if tf & 0x1:
+        off += 8
+    if tf & 0x2:
+        off += 4
+    if tf & 0x8:
+        out["duration"] = _u32(buf, off)
+        off += 4
+    if tf & 0x10:
+        off += 4
+    if tf & 0x20:
+        out["flags"] = _u32(buf, off)
+    if not trun:
+        return out
+    tr = _u32(buf, trun[0]) & 0xFFFFFF
+    count = _u32(buf, trun[0] + 4)
+    off = trun[0] + 8
+    if tr & 0x1:
+        off += 4
+    if tr & 0x4:
+        out["flags"] = _u32(buf, off)
+        off += 4
+    if count:
+        if tr & 0x100:
+            out["duration"] = _u32(buf, off)
+            off += 4
+        if tr & 0x200:
+            off += 4
+        if tr & 0x400:
+            out["flags"] = _u32(buf, off)
+    return out
+
+
+def keyframe_by_nal(buf: bytes, body: tuple[int, int], nal_len: int, hevc: bool) -> bool | None:
+    """True when the mdat holds an IRAP (H.265 types 16-21) or IDR (H.264 type 5) NAL.
+
+    None when the length-prefixed NAL walk breaks, so the caller can fall
+    back to the sample flags.
+    """
+    off, end = body
+    seen = False
+    while off + nal_len < end:
+        length = int.from_bytes(buf[off:off + nal_len], "big")
+        if length == 0 or off + nal_len + length > end:
+            return None if not seen else False
+        head = buf[off + nal_len]
+        nal_type = (head >> 1) & 0x3F if hevc else head & 0x1F
+        if (hevc and 16 <= nal_type <= 21) or (not hevc and nal_type == 5):
+            return True
+        seen = True
+        off += nal_len + length
+    return False if seen else None
 
 
 def summarize_frames(frames: list[dict]) -> dict:
@@ -465,86 +564,149 @@ def parse_ws_name(url: str) -> dict:
     return dict(zip(keys, parts, strict=False))
 
 
-def browser_facts(camera: str, seconds: int, fullscreen: bool, headed: bool,
-                  channel: str | None = None, channel_id: int | None = None) -> dict:
-    """Drop the camera on a tile and capture its media socket over CDP."""
-    sockets: dict[str, str] = {}
-    frames: dict[str, list] = {}
-    out = {"sockets": [], "tile": {}, "fullscreen": None}
+class Capture:
+    """Record every WebSocket a page opens, over CDP.
 
-    def on_created(ev):
-        sockets[ev["requestId"]] = ev["url"]
-        frames.setdefault(ev["url"], [])
+    Media sockets keep all frames; timeline sockets keep text frames only.
+    Open time comes from the handshake request (CDP monotonic timestamp
+    plus wallTime, which maps frame times onto the wall clock for the
+    latency metric).
+    """
 
-    def on_frame(ev):
-        url = sockets.get(ev["requestId"])
-        if not url or MEDIA_WS not in url:
+    def __init__(self):
+        self.urls: dict[str, str] = {}
+        self.frames: dict[str, list] = {}
+        self.opened: dict[str, tuple[float, float]] = {}
+        self.closed: dict[str, float] = {}
+        self.errors: dict[str, str] = {}
+
+    def attach(self, ctx, page) -> None:
+        cdp = ctx.new_cdp_session(page)
+        cdp.send("Network.enable")
+        cdp.on("Network.webSocketCreated", self._created)
+        cdp.on("Network.webSocketWillSendHandshakeRequest", self._handshake)
+        cdp.on("Network.webSocketFrameReceived", self._frame)
+        cdp.on("Network.webSocketClosed", self._close)
+        cdp.on("Network.webSocketFrameError", self._error)
+
+    def _created(self, ev):
+        self.urls[ev["requestId"]] = ev["url"]
+        self.frames.setdefault(ev["url"], [])
+
+    def _handshake(self, ev):
+        url = self.urls.get(ev["requestId"])
+        if url:
+            self.opened[url] = (ev["timestamp"], ev["wallTime"])
+
+    def _frame(self, ev):
+        url = self.urls.get(ev["requestId"])
+        if not url:
             return
         payload = ev["response"]
         entry = {"opcode": payload["opcode"], "t": ev["timestamp"]}
-        if payload["opcode"] == 2:
-            entry["data"] = base64.b64decode(payload["payloadData"])
-        else:
+        if MEDIA_WS in url:
+            if payload["opcode"] == 2:
+                entry["data"] = base64.b64decode(payload["payloadData"])
+            else:
+                entry["text"] = payload["payloadData"]
+        elif TIMELINE_WS in url and payload["opcode"] == 1:
             entry["text"] = payload["payloadData"]
-        frames[url].append(entry)
+        else:
+            return
+        self.frames[url].append(entry)
+
+    def _close(self, ev):
+        url = self.urls.get(ev["requestId"])
+        if url:
+            self.closed[url] = ev["timestamp"]
+
+    def _error(self, ev):
+        url = self.urls.get(ev["requestId"])
+        if url:
+            self.errors[url] = ev.get("errorMessage", "?")
+
+    def media_urls(self) -> list[str]:
+        return [u for u in self.frames if MEDIA_WS in u]
+
+
+def open_browser(p, headed: bool, channel: str | None):
+    """Launch, hook, log in and land on Views. Returns (browser, page, views, capture)."""
+    browser = p.chromium.launch(headless=not headed, channel=channel)
+    ctx = browser.new_context(ignore_https_errors=True, viewport={"width": 1600, "height": 900})
+    ctx.add_init_script(HOOK)
+    page = ctx.new_page()
+    cap = Capture()
+    cap.attach(ctx, page)
+    page.goto(config["base_url"])
+    LoginPage(page, config["base_url"]).login(os.environ["QA_USER"], os.environ["QA_PASSWORD"])
+    page.wait_for_function("() => !window.location.href.includes('/auth/login')", timeout=60000)
+    page.locator("text=Views").first.wait_for(state="visible", timeout=30000)
+    views = ViewsPage(page)
+    views.navigate()
+    views.wait_for_page_load()
+    views.expand_site_and_show_cameras(None)
+    return browser, page, views, cap
+
+
+def drop_camera(page, views, cap: Capture, camera: str, want: str | None,
+                timeout_s: int = 20) -> bool:
+    """Land the camera on a tile and wait for its media socket.
+
+    Drag first, checkbox second: on 08/25 the drag landed the tile in
+    three of four runs and consumed nothing in the fourth. The media
+    socket names the channel it streams; one drag landed the neighbouring
+    thumbnail (channel 121 for "main gate"), so the landed channel is
+    checked against the API's id and the checkbox path adds the right
+    camera to the next tile. Returns False when no socket for `want`
+    opened within the timeout (the caller decides whether that is fatal).
+    """
+    tile = page.locator(TILE).first
+    for attempt in ("drag", "checkbox"):
+        try:
+            if attempt == "drag":
+                views.drag_camera_to_tile_by_name(camera)
+            else:
+                views.add_camera_via_checkbox(camera)
+            tile.wait_for(state="attached", timeout=10000)
+            break
+        except Exception as e:  # the next attempt is the fallback
+            print(f"[probe] {attempt} did not land a tile ({str(e)[:120]})")
+    else:
+        raise SystemExit(f"'{camera}' never landed on a tile; nothing to capture")
+
+    def landed() -> set[str]:
+        return {parse_ws_name(u).get("channel") for u in cap.media_urls()}
+
+    def wait_for_socket() -> bool:
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            if landed() and (want is None or want in landed()):
+                return True
+            page.wait_for_timeout(250)
+        return False
+
+    if wait_for_socket():
+        return True
+    if want:
+        print(f"[probe] the drop opened channel(s) {sorted(landed())}, not {want}; "
+              "adding the camera through its checkbox")
+        views.add_camera_via_checkbox(camera)
+        return wait_for_socket()
+    return False
+
+
+def browser_facts(camera: str, seconds: int, fullscreen: bool, headed: bool,
+                  channel: str | None = None, channel_id: int | None = None) -> dict:
+    """Drop the camera on a tile and capture its media socket over CDP."""
+    out = {"sockets": [], "tile": {}, "fullscreen": None}
+    want = str(channel_id) if channel_id else None
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=not headed, channel=channel)
-        ctx = browser.new_context(ignore_https_errors=True, viewport={"width": 1600, "height": 900})
-        ctx.add_init_script(HOOK)
-        page = ctx.new_page()
-        cdp = ctx.new_cdp_session(page)
-        cdp.send("Network.enable")
-        cdp.on("Network.webSocketCreated", on_created)
-        cdp.on("Network.webSocketFrameReceived", on_frame)
-
-        page.goto(config["base_url"])
-        LoginPage(page, config["base_url"]).login(os.environ["QA_USER"], os.environ["QA_PASSWORD"])
-        page.wait_for_function("() => !window.location.href.includes('/auth/login')", timeout=60000)
-        page.locator("text=Views").first.wait_for(state="visible", timeout=30000)
-        views = ViewsPage(page)
-        views.navigate()
-        views.wait_for_page_load()
-        views.expand_site_and_show_cameras(None)
-        # drag first, checkbox second: on 08/25 the drag landed the tile
-        # in three of four runs and consumed nothing in the fourth
+        browser, page, views, cap = open_browser(p, headed, channel)
+        frames = cap.frames
         tile = page.locator(TILE).first
-        for attempt in ("drag", "checkbox"):
-            try:
-                if attempt == "drag":
-                    views.drag_camera_to_tile_by_name(camera)
-                else:
-                    views.add_camera_via_checkbox(camera)
-                tile.wait_for(state="attached", timeout=10000)
-                break
-            except Exception as e:  # the next attempt is the fallback
-                print(f"[probe] {attempt} did not land a tile ({str(e)[:120]})")
-        else:
-            raise SystemExit(f"'{camera}' never landed on a tile; nothing to capture")
-
-        # The media socket names the channel it streams. On 08/25 one
-        # drag landed the neighbouring thumbnail (channel 121 for "main
-        # gate"), so the landed channel is checked against the API's id
-        # and the checkbox path adds the right camera to the next tile.
-        want = str(channel_id) if channel_id else None
-
-        def landed() -> set[str]:
-            return {parse_ws_name(u).get("channel") for u in frames if MEDIA_WS in u}
-
-        def wait_for_socket() -> bool:
-            deadline = time.monotonic() + 20
-            while time.monotonic() < deadline:
-                if landed() and (want is None or want in landed()):
-                    return True
-                page.wait_for_timeout(250)
-            return False
-
-        if not wait_for_socket() and want:
-            print(f"[probe] the drop opened channel(s) {sorted(landed())}, not {want}; "
-                  "adding the camera through its checkbox")
-            views.add_camera_via_checkbox(camera)
-            if not wait_for_socket():
-                raise SystemExit(f"no media socket for channel {want} opened within 20s")
+        if not drop_camera(page, views, cap, camera, want):
+            raise SystemExit(f"no media socket for channel {want} opened within 20s")
         out["want_channel"] = want
         # the capture window starts when the media socket opens, so a
         # slow tile does not eat the window
@@ -601,6 +763,495 @@ def _read_tile_menu(page, tile) -> list[str]:
         return items[:20]
     except Exception as e:  # the menu is optional evidence
         return [f"<menu read failed: {str(e)[:80]}>"]
+
+
+# --------------------------------------------------------------- health ---
+def health_metrics(sockets: list[dict], timeline_text: list[str], cfg: dict | None) -> dict:
+    """Health numbers for one channel from its captured media socket(s).
+
+    `sockets` holds one dict per media socket opened for the channel in
+    the window, in open order: {url, name, t_open, wall_open, frames,
+    close, error}. Times share one monotonic clock; wall_open is the epoch
+    time of the handshake. `cfg` is the getCameraStreamingParameters row
+    for the stream index, or None.
+
+    Definitions:
+      online              a moof/mdat video fragment arrived in the window
+      first_frame_ms      handshake request -> first video fragment
+      frames              video fragments in the window (one sample each)
+      fps_measured        (video samples - 1) / tfdt span of the video track
+      bitrate_kbps        video mdat bytes * 8 / tfdt span / 1000
+      resolution          SPS width x height after the conformance window
+      codec               moov sample entry (hev1/hvc1 H.265, avc1/avc3 H.264)
+      keyframe_interval_s mean tfdt distance between keyframes. A keyframe
+                          is a fragment whose mdat holds an IRAP/IDR NAL
+                          (exact); else sample_is_non_sync_sample == 0 in
+                          the trun/tfhd flags; else an mdat above 3x the
+                          median size (approximate). keyframe_method says
+                          which one was used.
+      timestamp_gaps      consecutive video tfdt deltas above 2x nominal;
+                          nominal = 1000 / configured fps, else the median
+      latency_ms          wall clock at receipt minus the analytics frame's
+                          timeStamp, only when timeStamp is epoch-based
+                          (within a day of now). Includes the clock offset
+                          between this machine and the encoder.
+      reconnects          media sockets opened for the channel, minus one
+      analytics_alive     at least one JSON counters frame arrived
+      audio_fragments     fragments on the soun track
+      close               close code / reason when the socket closed
+      timeline            message type -> statuses on the timeline socket
+    """
+    out: dict = {
+        "online": False, "first_frame_ms": None, "frames": 0, "binary_frames": 0,
+        "fps_measured": None, "fps_configured": cfg.get("fps") if cfg else None,
+        "bitrate_kbps_measured": None, "bitrate_kbps_configured": cfg.get("bitrate") if cfg else None,
+        "resolution_delivered": None,
+        "resolution_configured": f"{cfg.get('width')}x{cfg.get('height')}" if cfg else None,
+        "codec_delivered": None, "codec_configured": None, "keyframes": 0,
+        "keyframe_interval_s": None, "keyframe_method": None, "timestamp_gaps": None,
+        "latency_ms": None, "reconnects": max(len(sockets) - 1, 0), "analytics_alive": False,
+        "analytics_frames": 0, "audio_fragments": 0, "close": None, "timeline": {},
+        "mismatches": [], "stream_index": None, "mime": None,
+    }
+    if cfg:
+        ct = cfg.get("codecType")
+        out["codec_configured"] = f"{CODEC_TYPES.get(ct, 'unknown')} (codecType {ct})"
+    out["timeline"] = _timeline_summary(timeline_text)
+    if not sockets:
+        out["note"] = "no media socket opened"
+        return out
+
+    primary = max(sockets, key=lambda s: sum(1 for f in s["frames"] if f["opcode"] == 2))
+    out["stream_index"] = primary["name"].get("stream")
+    out["close"] = primary.get("close")
+    out["socket_error"] = primary.get("error")
+    frames = primary["frames"]
+    t_open = primary["t_open"] if primary["t_open"] is not None else (frames[0]["t"] if frames else None)
+
+    init = None
+    video: list[dict] = []
+    text: list[dict] = []
+    for f in frames:
+        if f["opcode"] != 2:
+            text.append(f)
+            continue
+        out["binary_frames"] += 1
+        data = f["data"]
+        if data[4:8] == b"ftyp":
+            init = parse_init_segment(data)
+            continue
+        frag = parse_fragment(data)
+        if not frag:
+            continue
+        handler = (init or {}).get("tracks", {}).get(frag["track"], {}).get("handler")
+        if handler == "soun":
+            out["audio_fragments"] += 1
+        elif handler == "vide" or init is None:
+            frag["t"] = f["t"]
+            frag["data"] = data
+            video.append(frag)
+
+    vinfo = (init or {}).get("video") or {}
+    sps = vinfo.get("sps") or {}
+    if vinfo:
+        out["codec_delivered"] = f"{vinfo.get('codec')} ({vinfo.get('entry')})"
+    if sps:
+        out["resolution_delivered"] = f"{sps['width']}x{sps['height']}"
+    elif vinfo:
+        out["resolution_delivered"] = f"coded {vinfo.get('coded_width')}x{vinfo.get('coded_height')}"
+    if video:
+        out["online"] = True
+        if t_open is not None:
+            out["first_frame_ms"] = round((video[0]["t"] - t_open) * 1000)
+        out["frames"] = len(video)
+        timescale = (init or {}).get("tracks", {}).get(vinfo.get("track"), {}).get("timescale")
+        _video_rates(out, video, timescale, cfg)
+        _keyframes(out, video, timescale, vinfo)
+    _analytics(out, text, primary, t_open)
+    _mismatches(out)
+    return out
+
+
+def _video_rates(out: dict, video: list[dict], timescale: int | None, cfg: dict | None) -> None:
+    times = [v["time"] for v in video if "time" in v]
+    samples = sum(v.get("samples", 0) for v in video)
+    if timescale and len(times) > 1 and times[-1] != times[0]:
+        span = (times[-1] - times[0]) / timescale
+        out["span_s"] = round(span, 2)
+        out["fps_measured"] = round((samples - 1) / span, 2)
+        out["bitrate_kbps_measured"] = round(sum(v.get("mdat", 0) for v in video) * 8 / span / 1000)
+    deltas = ([(b - a) / timescale * 1000 for a, b in itertools.pairwise(times)]
+              if timescale else [])
+    if cfg and cfg.get("fps"):
+        nominal, basis = 1000 / cfg["fps"], "1000 / configured fps"
+    elif deltas:
+        nominal, basis = statistics.median(deltas), "median tfdt delta (no configured fps)"
+    else:
+        nominal, basis = None, "no tfdt deltas"
+    gaps = [d for d in deltas if nominal and d > 2 * nominal]
+    out["timestamp_gaps"] = {
+        "count": len(gaps), "nominal_ms": round(nominal, 1) if nominal else None, "basis": basis,
+        "worst_delta_ms": round(max(deltas)) if deltas else None,
+        "backwards": sum(1 for d in deltas if d < 0), "examples_ms": [round(g) for g in gaps[:10]],
+    }
+
+
+def _keyframes(out: dict, video: list[dict], timescale: int | None, vinfo: dict) -> None:
+    hevc = vinfo.get("entry") in ("hev1", "hvc1")
+    nal_len = vinfo.get("nal_length_size", 4)
+    by_nal = [keyframe_by_nal(v["data"], v["mdat_body"], nal_len, hevc) if "mdat_body" in v else None
+              for v in video]
+    if vinfo and all(k is not None for k in by_nal):
+        flags = by_nal
+        out["keyframe_method"] = "IRAP/IDR NAL type inside each mdat (exact)"
+    elif any(v.get("flags") is not None for v in video):
+        flags = [v.get("flags") is not None and ((v["flags"] >> 16) & 1) == 0 for v in video]
+        out["keyframe_method"] = "sample_is_non_sync_sample == 0 in trun/tfhd flags"
+    else:
+        sizes = [v.get("mdat", 0) for v in video]
+        median = statistics.median(sizes) if sizes else 0
+        flags = [s > 3 * median for s in sizes]
+        out["keyframe_method"] = "mdat larger than 3x the median (approximate)"
+    key_times = [v.get("time") for v, k in zip(video, flags, strict=False) if k and "time" in v]
+    out["keyframes"] = sum(1 for k in flags if k)
+    if timescale and len(key_times) > 1:
+        gaps = [(b - a) / timescale for a, b in itertools.pairwise(key_times)]
+        out["keyframe_interval_s"] = round(statistics.mean(gaps), 2)
+
+
+def _analytics(out: dict, text: list[dict], primary: dict, t_open: float | None) -> None:
+    counters: list[tuple[float, dict]] = []
+    for f in text:
+        try:
+            msg = json.loads(f["text"])
+        except ValueError:
+            continue
+        if isinstance(msg, dict) and msg.get("type") == "mse":
+            out["mime"] = msg.get("value")
+            continue
+        for row in msg if isinstance(msg, list) else [msg]:
+            if isinstance(row, dict) and "timeStamp" in row:
+                counters.append((f["t"], row))
+    out["analytics_frames"] = len(counters)
+    out["analytics_alive"] = bool(counters)
+    if not counters:
+        return
+    out["counters_max"] = {k: max(r.get(k) or 0 for _, r in counters)
+                           for k in ("vehicleCount", "peopleCount")}
+    if primary.get("wall_open") is None or t_open is None:
+        out["latency_ms"] = {"median": None, "basis": "no handshake wallTime for this socket"}
+        return
+    lat, basis = [], None
+    for t, row in counters:
+        stamp = row["timeStamp"]
+        if not isinstance(stamp, int | float):
+            basis = f"timeStamp is {type(stamp).__name__}, not numeric"
+            break
+        if 1e12 <= stamp <= 4e12:
+            stamp_ms, basis = stamp, "timeStamp is epoch ms"
+        elif 1e9 <= stamp <= 4e9:
+            stamp_ms, basis = stamp * 1000, "timeStamp is epoch s"
+        else:
+            basis = f"timeStamp {stamp} is not epoch-based"
+            break
+        lat.append((primary["wall_open"] + (t - t_open)) * 1000 - stamp_ms)
+    if lat and abs(statistics.median(lat)) < 86_400_000:
+        out["latency_ms"] = {
+            "median": round(statistics.median(lat)), "min": round(min(lat)), "max": round(max(lat)),
+            "samples": len(lat), "basis": f"{basis} (verified within a day of the wall clock); "
+            "wall clock at receipt minus timeStamp"}
+    else:
+        out["latency_ms"] = {"median": None, "basis": basis or "timeStamp more than a day off"}
+
+
+def _mismatches(out: dict) -> None:
+    fm, fc = out["fps_measured"], out["fps_configured"]
+    if fm and fc and abs(fm - fc) / fc > 0.1:
+        out["mismatches"].append(f"fps {fm} vs {fc}")
+    rd, rc = out["resolution_delivered"], out["resolution_configured"]
+    if rd and rc and not rd.startswith("coded") and rd != rc:
+        out["mismatches"].append(f"resolution {rd} vs {rc}")
+    cd, cc = out["codec_delivered"] or "", out["codec_configured"] or ""
+    if cd and cc and "unknown" not in cc and cc.split(" ")[0] not in cd:
+        out["mismatches"].append(f"codec {cd} vs {cc}")
+
+
+def _timeline_summary(texts: list[str]) -> dict:
+    seen: dict[str, list] = {}
+    for txt in texts:
+        try:
+            msg = json.loads(txt)
+        except ValueError:
+            continue
+        typ = msg.get("type") if isinstance(msg, dict) else None
+        if not typ:
+            continue
+        body = msg.get(typ)
+        if isinstance(body, dict):
+            status = body.get("status", "?")
+        elif isinstance(body, list):
+            status = f"{len(body)} rows"
+        else:
+            status = "?"
+        if status not in seen.setdefault(typ, []):
+            seen[typ].append(status)
+    return seen
+
+
+def collect_sockets(cap: Capture, hook: dict | None, want_channel: str, exclude: set[str]) -> list[dict]:
+    """Media socket bundles for one channel, close info merged from the hook by uuid."""
+    hook_by_uuid = {}
+    for w in (hook or {}).get("ws", []):
+        m = UUID_RE.search(w["url"])
+        if m:
+            hook_by_uuid[m.group(0)] = w
+    socks = []
+    for url in cap.media_urls():
+        if url in exclude:
+            continue
+        name = parse_ws_name(url)
+        if name.get("channel") != want_channel:
+            continue
+        t_open, wall_open = cap.opened.get(url, (None, None))
+        m = UUID_RE.search(url)
+        hk = hook_by_uuid.get(m.group(0)) if m else None
+        socks.append({"url": url, "name": name, "t_open": t_open, "wall_open": wall_open,
+                      "frames": cap.frames[url], "close": (hk or {}).get("close"),
+                      "closed_t": cap.closed.get(url), "error": cap.errors.get(url)})
+    socks.sort(key=lambda s: s["t_open"] or 0)
+    return socks
+
+
+def browser_health(channels: list[dict], seconds: int, timeout_s: int, headed: bool,
+                   browser_channel: str | None) -> dict[int, dict]:
+    """Drop each camera on Views in turn and bundle its sockets. Returns id -> bundle."""
+    results: dict[int, dict] = {}
+    lower = [c["name"].strip().lower() for c in channels]
+    with sync_playwright() as p:
+        browser, page, views, cap = open_browser(p, headed, browser_channel)
+        for i, ch in enumerate(channels):
+            cid, name = ch["id"], ch["name"]
+            bundle: dict = {"sockets": [], "timeline_text": [], "note": None}
+            results[cid] = bundle
+            if lower.index(name.strip().lower()) != i:
+                bundle["note"] = "duplicate camera name: the tree drop cannot pick this id (use --no-browser)"
+                continue
+            if i:
+                # a full reload drops the previous tile so the next drop lands on tile 0
+                page.reload()
+                page.locator("text=Views").first.wait_for(state="visible", timeout=30000)
+                views.navigate()
+                views.wait_for_page_load()
+                views.expand_site_and_show_cameras(None)
+            before = set(cap.frames)
+            try:
+                ok = drop_camera(page, views, cap, name, str(cid), timeout_s)
+            except SystemExit as e:
+                bundle["note"] = str(e)
+                continue
+            if ok:
+                page.wait_for_timeout(seconds * 1000)
+            else:
+                bundle["note"] = f"no media socket for channel {cid} within {timeout_s}s"
+            hook = page.evaluate("() => window.__streamProbe")
+            bundle["sockets"] = collect_sockets(cap, hook, str(cid), before)
+            bundle["timeline_text"] = [
+                f["text"] for u, fl in cap.frames.items()
+                if TIMELINE_WS in u and u.endswith(f"/channel/{cid}") and u not in before
+                for f in fl if "text" in f]
+            got = sum(1 for s in bundle["sockets"] for f in s["frames"] if f["opcode"] == 2)
+            print(f"[health] {i + 1}/{len(channels)} {name} ({cid}): "
+                  f"{len(bundle['sockets'])} socket(s), {got} binary frames")
+        browser.close()
+    return results
+
+
+# --------------------------------------------------------------- direct ---
+def media_url(site: int, channel: int, stream: int, app: int = 0, live: int = 1,
+              timestamp: int = 0, uid: str | None = None, with_src: bool = True,
+              with_name: bool = True) -> str:
+    """The media socket URL the app builds (name= and src= carry the same path)."""
+    uid = uid or str(uuid_mod.uuid4())
+    name = f"{site}/{channel}/{app}/{live}/{stream}/{timestamp}/{uid}"
+    params = []
+    if with_name:
+        params.append("name=" + quote(name, safe=""))
+    if with_src:
+        params.append("src=" + quote(SRC_PREFIX + name, safe=""))
+    return f"{STREAM_HOST}/v3/api/ws?" + "&".join(params)
+
+
+async def direct_socket(url: str, headers: dict, seconds: float, handshake: str | None = HANDSHAKE) -> dict:
+    """Open one WebSocket from Python, send the handshake, collect frames for `seconds`."""
+    import aiohttp
+
+    rec: dict = {"url": url, "name": parse_ws_name(url), "t_open": None, "wall_open": None,
+                 "frames": [], "close": None, "error": None, "http_status": None}
+    async with aiohttp.ClientSession() as session:
+        rec["t_open"], rec["wall_open"] = time.monotonic(), time.time()
+        try:
+            ws = await asyncio.wait_for(
+                session.ws_connect(url, headers=headers, ssl=False, autoping=True), 15)
+        except aiohttp.WSServerHandshakeError as e:
+            rec["error"] = f"handshake refused: HTTP {e.status} {e.message}"
+            rec["http_status"] = e.status
+            return rec
+        except Exception as e:
+            rec["error"] = f"{type(e).__name__}: {e}"[:200]
+            return rec
+        rec["http_status"] = 101
+        deadline = rec["t_open"] + seconds
+        try:
+            if handshake:
+                await ws.send_str(handshake)
+        except aiohttp.ClientError as e:
+            # the server can drop the socket before the handshake goes out
+            rec["close"] = {"code": ws.close_code, "reason": str(e)[:120], "type": "SEND_FAILED",
+                            "after_s": round(time.monotonic() - rec["t_open"], 1)}
+            return rec
+        while (left := deadline - time.monotonic()) > 0:
+            try:
+                msg = await asyncio.wait_for(ws.receive(), timeout=left)
+            except TimeoutError:
+                break
+            except aiohttp.ClientError as e:
+                rec["error"] = f"{type(e).__name__}: {e}"[:200]
+                break
+            now = time.monotonic()
+            if msg.type == aiohttp.WSMsgType.BINARY:
+                rec["frames"].append({"opcode": 2, "t": now, "data": msg.data})
+            elif msg.type == aiohttp.WSMsgType.TEXT:
+                rec["frames"].append({"opcode": 1, "t": now, "text": msg.data})
+            else:
+                reason = msg.extra if isinstance(msg.extra, str) else str(msg.data)[:120]
+                rec["close"] = {"code": ws.close_code, "reason": reason, "type": msg.type.name,
+                                "after_s": round(now - rec["t_open"], 1)}
+                break
+        if not ws.closed:
+            await ws.close()
+    return rec
+
+
+def timeline_command() -> str:
+    now_ms = int(time.time() * 1000)
+    return json.dumps({"commandId": str(uuid_mod.uuid4()), "domainMin": now_ms - 3_600_000,
+                       "domainMax": now_ms, "pivotPoint": 0, "displayMin": 0, "displayMax": 0})
+
+
+async def direct_timeline(site: int, channel: int, headers: dict, seconds: float) -> dict:
+    url = f"{STREAM_HOST}/ws/timeline/site/{site}/channel/{channel}"
+    return await direct_socket(url, headers, seconds, handshake=timeline_command())
+
+
+def app_headers(token: str | None) -> dict:
+    h = {"Origin": config["base_url"],
+         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/128.0 Safari/537.36"}
+    if token:
+        h["Cookie"] = f"JSESSIONID={token}"
+    return h
+
+
+def direct_health(channels: list[dict], site: int, token: str, seconds: int,
+                  stream: int) -> dict[int, dict]:
+    """Open every channel's media and timeline sockets from Python, five at a time."""
+    headers = app_headers(token)
+    sem = asyncio.Semaphore(5)
+
+    async def one(ch):
+        async with sem:
+            media, tl = await asyncio.gather(
+                direct_socket(media_url(site, ch["id"], stream), headers, seconds),
+                direct_timeline(site, ch["id"], headers, min(seconds, 8)))
+        got = sum(1 for f in media["frames"] if f["opcode"] == 2)
+        print(f"[health] {ch['name']} ({ch['id']}): {got} binary frames"
+              + (f", error {media['error']}" if media["error"] else ""))
+        return ch["id"], {"sockets": [media], "note": media["error"],
+                          "timeline_text": [f["text"] for f in tl["frames"] if "text" in f],
+                          "timeline_error": tl["error"]}
+
+    async def run():
+        return dict(await asyncio.gather(*(one(c) for c in channels)))
+
+    return asyncio.run(run())
+
+
+def browser_free_experiment(api: InternalApi, token: str, site: int, channel_id: int,
+                            stream: int, seconds: int) -> dict:
+    """Which part of the app's request lets media frames flow without a browser."""
+    ua_only = {"User-Agent": app_headers(None)["User-Agent"]}
+    variants = [
+        ("app-like: Cookie JSESSIONID + Origin + src=", app_headers(token), True, None, None),
+        ("no Cookie (Origin + src=)", app_headers(None), True, None, None),
+        ("no Cookie, no Origin (src= only)", ua_only, True, None, None),
+        ("bare: no Cookie, no Origin, no src=", ua_only, False, None, None),
+        ("bare, no User-Agent", {}, False, None, None),
+        ("uuid replaced by 'probe' (Origin, no Cookie)", app_headers(None), True, None, "probe"),
+        ("src= only, no name= (Origin, no Cookie)", app_headers(None), True, False, None),
+    ]
+
+    async def run():
+        rows = []
+        for label, headers, with_src, with_name, uid in variants:
+            url = media_url(site, channel_id, stream, uid=uid, with_src=with_src,
+                            with_name=with_name is not False)
+            rec = await direct_socket(url, headers, seconds)
+            m = health_metrics([rec], [], None)
+            rows.append({"variant": label, "url": UUID_RE.sub("<uuid>", url),
+                         "http_status": rec["http_status"], "error": rec["error"],
+                         "mime": m["mime"], "binary_frames": m["binary_frames"],
+                         "video_fragments": m["frames"], "audio_fragments": m["audio_fragments"],
+                         "analytics_frames": m["analytics_frames"],
+                         "first_frame_ms": m["first_frame_ms"], "close": rec["close"]})
+            print(f"[direct] {label}: http {rec['http_status']} mime={m['mime']!r} "
+                  f"video {m['frames']} audio {m['audio_fragments']} analytics "
+                  f"{m['analytics_frames']} close={rec['close']} error={rec['error']}")
+        tl = await direct_timeline(site, channel_id, app_headers(None), 6)
+        return rows, tl
+
+    rows, tl = asyncio.run(run())
+    return {
+        "url_pattern": f"{STREAM_HOST}/v3/api/ws?name=<site>/<channel>/0/1/<stream>/0/<uuid4>"
+                       "&src=videonetics://<videoneticsAddr>/<same path>  "
+                       "(app=0, live=1, timestamp=0 for live, uuid random v4; values from the "
+                       "08/25 browser capture)",
+        "handshake": HANDSHAKE,
+        "login_cookie_domains": [(c.name, c.domain) for c in api.session.cookies],
+        "variants": rows,
+        "timeline": {"http_status": tl["http_status"], "error": tl["error"],
+                     "messages": _timeline_summary([f["text"] for f in tl["frames"] if "text" in f]),
+                     "headers": "Origin + User-Agent, no Cookie"},
+    }
+
+
+def print_health_table(rows: list[dict]) -> None:
+    cols = [("channel", 24), ("online", 7), ("first_ms", 8), ("frames", 6), ("fps m/c", 12),
+            ("kbps m/c", 11), ("res deliv/cfg", 22), ("codec", 8), ("kf_s", 5), ("gaps", 4),
+            ("lat_ms", 7), ("recon", 5), ("analyt", 6), ("audio", 5), ("close", 22)]
+    print("  ".join(h.ljust(w) for h, w in cols))
+    print("-" * (sum(w for _, w in cols) + 2 * (len(cols) - 1)))
+    for r in rows:
+        lat = (r.get("latency_ms") or {}).get("median")
+        gaps = (r.get("timestamp_gaps") or {}).get("count")
+        close = r.get("close") or {}
+        cells = [
+            f"{r['name']} ({r['channel_id']})", str(r["online"]), _s(r["first_frame_ms"]),
+            str(r["frames"]), f"{_s(r['fps_measured'])}/{_s(r['fps_configured'])}",
+            f"{_s(r['bitrate_kbps_measured'])}/{_s(r['bitrate_kbps_configured'])}",
+            f"{_s(r['resolution_delivered'])}/{_s(r['resolution_configured'])}",
+            (r["codec_delivered"] or "-").split(" ")[0], _s(r["keyframe_interval_s"]), _s(gaps),
+            _s(lat), str(r["reconnects"]), str(r["analytics_frames"]), str(r["audio_fragments"]),
+            (f"{close.get('code')} {close.get('reason') or ''}"[:22] if close else "-"),
+        ]
+        print("  ".join(c[:w].ljust(w) for c, (_, w) in zip(cells, cols, strict=False)))
+    for r in rows:
+        if r.get("note") or r.get("mismatches"):
+            print(f"  {r['name']} ({r['channel_id']}): "
+                  + "; ".join(filter(None, [r.get("note"), *r.get("mismatches", [])])))
+
+
+def _s(v) -> str:
+    return "-" if v is None else str(v)
 
 
 # --------------------------------------------------------------- report ---
@@ -733,19 +1384,121 @@ def _jsonable(o):
     return o
 
 
+def pick_channels(api: InternalApi, site_id: int, camera: str | None, all_cameras: bool) -> list[dict]:
+    channels = api.get(f"/REST/site/{site_id}/channel")
+    if all_cameras:
+        return sorted(channels, key=lambda c: c["id"])
+    match = [c for c in channels if c.get("name", "").strip().lower() == camera.strip().lower()]
+    if not match:
+        match = [c for c in channels if camera.lower() in c.get("name", "").lower()]
+    if not match:
+        names = sorted(c.get("name") for c in channels)
+        raise SystemExit(f"No channel named '{camera}' on site {site_id}. Present: {names}")
+    return match[:1]
+
+
+def run_health(args) -> int:
+    seconds = args.seconds or 20
+    api = InternalApi(config["base_url"], args.site_id)
+    token = api.login(os.environ["QA_USER"], os.environ["QA_PASSWORD"])
+    channels = pick_channels(api, args.site_id, args.camera, args.all_cameras)
+    cfgs: dict[int, dict | None] = {}
+    cfg_errors: dict[int, str] = {}
+    stream = args.stream if args.no_browser else 1  # a tile always opens stream 1
+    for ch in channels:
+        try:
+            rows = api.post(f"/REST/site/{args.site_id}/getCameraStreamingParameters",
+                            {"channelId": ch["id"], "streamType": stream})
+            cfgs[ch["id"]] = rows[0] if rows else None
+        except ApiError as e:
+            cfgs[ch["id"]] = None
+            cfg_errors[ch["id"]] = str(e)
+    print(f"[health] {len(channels)} channel(s), {seconds}s sample, "
+          f"{'direct socket' if args.no_browser else 'browser tile'} capture, stream {stream}")
+    started = time.monotonic()
+    if args.no_browser:
+        bundles = direct_health(channels, args.site_id, token, seconds, stream)
+    else:
+        bundles = browser_health(channels, seconds, args.timeout, args.headed, args.channel)
+    elapsed = round(time.monotonic() - started)
+
+    rows = []
+    for ch in channels:
+        b = bundles.get(ch["id"], {"sockets": [], "timeline_text": [], "note": "not captured"})
+        m = health_metrics(b["sockets"], b["timeline_text"], cfgs.get(ch["id"]))
+        m = {"channel_id": ch["id"], "name": ch["name"], "model": ch.get("model"), **m}
+        notes = [n for n in (b.get("note"), m.get("note"), cfg_errors.get(ch["id"])) if n]
+        m["note"] = "; ".join(notes) or None
+        if b.get("timeline_error"):
+            m["timeline"]["error"] = b["timeline_error"]
+        rows.append(m)
+    print()
+    print_health_table(rows)
+    online = sum(1 for r in rows if r["online"])
+    print(f"\n{online} online, {len(rows) - online} offline of {len(rows)}; capture took {elapsed}s")
+    if args.json:
+        doc = {"mode": "health", "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+               "site_id": args.site_id, "sample_seconds": seconds,
+               "capture": "direct aiohttp socket" if args.no_browser else "browser tile over CDP",
+               "stream_index": stream, "capture_seconds": elapsed, "online": online,
+               "offline": len(rows) - online, "channels": rows}
+        args.json.parent.mkdir(parents=True, exist_ok=True)
+        args.json.write_text(json.dumps(_jsonable(doc), indent=1), encoding="utf-8")
+        print(f"health json: {args.json}")
+    return 0
+
+
+def run_experiment(args) -> int:
+    seconds = args.seconds or 8
+    api = InternalApi(config["base_url"], args.site_id)
+    token = api.login(os.environ["QA_USER"], os.environ["QA_PASSWORD"])
+    ch = pick_channels(api, args.site_id, args.camera, False)[0]
+    print(f"[direct] channel {ch['id']} '{ch['name']}', stream {args.stream}, {seconds}s per variant")
+    result = browser_free_experiment(api, token, args.site_id, ch["id"], args.stream, seconds)
+    print(f"\nurl pattern: {result['url_pattern']}")
+    print(f"login cookies: {result['login_cookie_domains']}")
+    print(f"timeline socket (no cookie): http {result['timeline']['http_status']} "
+          f"messages {result['timeline']['messages']} error {result['timeline']['error']}")
+    working = [v["variant"] for v in result["variants"] if v["video_fragments"]]
+    print(f"variants that delivered video: {working or 'none'}")
+    if args.json:
+        args.json.parent.mkdir(parents=True, exist_ok=True)
+        args.json.write_text(json.dumps(_jsonable(result), indent=1), encoding="utf-8")
+        print(f"experiment json: {args.json}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--camera", default=config.get("test_camera_name"),
                         help="camera name as shown in the Views tree")
     parser.add_argument("--site-id", type=int, default=int(os.environ.get("TEST_SITE_ID", "16")))
-    parser.add_argument("--seconds", type=int, default=12, help="capture window per player")
+    parser.add_argument("--seconds", type=int, default=None,
+                        help="capture window per player (facts: 12, health: 20)")
     parser.add_argument("--fullscreen", action="store_true", help="also open full screen (stream 0)")
     parser.add_argument("--no-api", action="store_true", help="skip the internal API reads")
     parser.add_argument("--headed", action="store_true")
     parser.add_argument("--channel", help="Playwright browser channel, e.g. chrome or msedge, "
                         "to check decode support outside the bundled Chromium")
     parser.add_argument("--json", type=Path, help="write all raw facts here")
+    parser.add_argument("--health", action="store_true",
+                        help="per-channel health table instead of the facts rows")
+    parser.add_argument("--all-cameras", action="store_true",
+                        help="health for every channel on the site")
+    parser.add_argument("--no-browser", action="store_true",
+                        help="open the media socket from Python (aiohttp); alone it runs the "
+                             "authorisation experiment, with --health it is the capture path")
+    parser.add_argument("--stream", type=int, default=1,
+                        help="stream index for --no-browser (1 = tile, 0 = full screen)")
+    parser.add_argument("--timeout", type=int, default=20,
+                        help="seconds to wait for the media socket before a channel is offline")
     args = parser.parse_args()
+
+    if args.no_browser and not args.health:
+        return run_experiment(args)
+    if args.health:
+        return run_health(args)
+    args.seconds = args.seconds or 12
 
     api_data = None
     if not args.no_api:
