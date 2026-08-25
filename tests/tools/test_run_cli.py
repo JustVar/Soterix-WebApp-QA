@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -76,3 +78,26 @@ def test_cli_without_flag_sends_no_rerun(monkeypatch):
     assert len(seen) == 1
     assert '--reruns' not in seen[0]
     assert '--only-rerun' not in seen[0]
+
+
+def test_check_runs_the_reachability_gate_only(monkeypatch):
+    """--check runs tools/pre_run_check.py for the env with the optional
+    integrations skipped, and stops the run when it fails."""
+    seen: list[list[str]] = []
+
+    class Done:
+        returncode = 0
+
+    def fake_run(cmd, **kwargs):
+        seen.append(list(cmd))
+        return Done()
+
+    monkeypatch.setattr(run.subprocess, 'run', fake_run)
+    monkeypatch.setenv('ENV', 'stage')
+    run._check()
+    assert seen[0][1:] == [str(run.ROOT / 'tools' / 'pre_run_check.py'), '--env', 'stage',
+                           '--skip-qatouch', '--skip-qa-ops']
+
+    Done.returncode = 1
+    with pytest.raises(SystemExit):
+        run._check()
