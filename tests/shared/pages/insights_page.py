@@ -279,8 +279,13 @@ class InsightsPage:
         # Select Description (dropdown index 2) - skip for Person
         if category_name.lower() != "person":
             dropdowns.nth(2).click()
-            # The description section expands in place with no signal
-            self.page.wait_for_timeout(500)
+            # The section's own controls rendering is the expanded
+            # signal: the vehicle icons or the description checkboxes
+            desc_controls = self.page.locator(
+                # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
+                "img[src*='media/carIcon'], .PrivateSwitchBase-input"
+            ).filter(visible=True)
+            self._appears(desc_controls.first, timeout=5000)
 
             if category_name.lower() == "vehicle":
                 # Select car and bike icons
@@ -312,8 +317,8 @@ class InsightsPage:
             arrows = self.accordion_arrows
             if arrows.count() > 2:
                 arrows.nth(2).click()
-                # The accordion collapse is a CSS animation, no DOM signal
-                self.page.wait_for_timeout(500)
+                # The section's controls hiding is the collapsed signal
+                self._appears_hidden(desc_controls.first, timeout=5000)
 
         # Select Site (index 3 - stable, before camera expansion)
         dropdowns.nth(3).click()
@@ -331,8 +336,9 @@ class InsightsPage:
             dropdowns.nth(cam_idx).click()
         else:
             dropdowns.nth(4).click()
-        # The camera section expands in place with no signal
-        self.page.wait_for_timeout(500)
+        # The All Cameras entry showing is the expanded signal
+        all_cameras = self.page.get_by_text("All Cameras", exact=True).first
+        self._appears(all_cameras, timeout=5000)
 
         if "heat" in graph_name.lower():
             # Heat map requires a single specific camera (not "All
@@ -358,8 +364,17 @@ class InsightsPage:
                     }
                 }
             }""")
-            # React applies the JS-clicked selection with no DOM signal
-            self.page.wait_for_timeout(500)
+            # The picked row gains camera-selected: the applied signal
+            # (probe 08/25/2026); a miss is logged and the widget's
+            # success toast decides
+            if not self._appears(
+                self.page.locator(
+                    ".location-popup-accordian.camera-selected"
+                ).first,
+                timeout=5000,
+            ):
+                print("[INSIGHTS] heat map camera pick: no camera-selected "
+                      "row within 5s")
         else:
             # Non-heat: click first visible checkbox ("All Cameras")
             self._click_first_visible_checkbox()
@@ -377,8 +392,8 @@ class InsightsPage:
                 }
                 return -1;
             }""")
-            # The accordion collapse is a CSS animation with no signal
-            self.page.wait_for_timeout(500)
+            # The All Cameras entry hiding is the collapsed signal
+            self._appears_hidden(all_cameras, timeout=5000)
 
         # Select Duration - use label-based lookup (index shifts
         # after camera expansion adds extra MuiPaper-root)
