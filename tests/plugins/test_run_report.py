@@ -412,7 +412,7 @@ def test_build_run_report_orders_sections_and_links_evidence(tmp_path):
             < page.index('id="passed"') < page.index('id="skipped"'))
     assert 'Failures (1)' in page
     # Header facts and links, the link text capitalized like the index's.
-    for fact in ('tests/ui/views', '101.8', '<a href="report.html">Raw pytest-html</a>',
+    for fact in ('tests/ui/views', '1 min 42 s', '<a href="report.html">Raw pytest-html</a>',
                  '<a href="../index.html">Archive Index</a>', '<a href="./">Folder</a>'):
         assert fact in page
     assert 'all runs' not in page
@@ -420,7 +420,7 @@ def test_build_run_report_orders_sections_and_links_evidence(tmp_path):
     (tmp_path / 'health.html').write_text('x', encoding='utf-8')
     assert '<a href="../health.html">Health</a>' in rr.build_run_report(run)
     for key, value in (('passed', '1'), ('failed', '1'), ('skipped', '1'), ('errors', '0')):
-        assert f'class="chip {key}">{key}: {value}</span>' in page
+        assert f'class="chip {key}">{key.capitalize()}: {value}</span>' in page
     # The failure card: message, call log, actions, console, evidence.
     card = page[page.index('<div class="card failed"'):page.index('id="advisories"')]
     assert 'Locator.click: Timeout 30000ms exceeded.' in card
@@ -486,7 +486,7 @@ def test_build_run_report_survives_an_empty_folder(tmp_path):
     page = rr.build_run_report(run)
     assert 'Failures (0)' in page
     assert 'No failures in this run.' in page
-    assert 'Duration: - s' in page
+    assert 'Duration: -</span>' in page
     assert 'Outcome: -' in page
     assert '<summary>Passed (0)</summary>' in page
     assert 'all' in page  # the target from the folder name
@@ -677,8 +677,8 @@ def test_build_run_report_shows_titles_facts_and_change_chips(tmp_path):
     assert 'chip delta new-test">New test<' in page
     assert '<h4 class="module">ui/c2c/test_cams.py (1)</h4>' in page
     # Header provenance, the verdict, and the plain-language delta note.
-    for fact in ('ENV: <code>qa</code>', 'app.example.com', 'abc1234', 'chromium / chrome',
-                 'playwright 1.62.0, pytest-playwright 0.9.0'):
+    for fact in ('Env: <code>QA</code>', 'app.example.com', 'abc1234', 'Chromium / Chrome',
+                 'Playwright 1.62.0, Pytest-Playwright 0.9.0'):
         assert fact in page
     assert '<p class="verdict">1 of 3 tests failed - 1 new failure, 1 fixed; 1 test skipped.</p>' in page
     assert ('Changes since the <a href="../2026-08-23_10-00-00__tests-ui-views/run.html">'
@@ -1031,10 +1031,10 @@ def test_page_names_the_product_in_title_and_header(tmp_path, monkeypatch):
     rows = [dict(r, product='NexaiQ-Neurosen') for r in _summary_test_rows()]
     _add_summary_tests(run, rows, {'env': 'qa', 'product': 'NexaiQ-Neurosen'})
     page = rr.build_run_report(run)
-    assert '<title>NexaiQ-Neurosen - Test run Aug 24, 2026, 10:00 AM</title>' in page
+    assert '<title>NexaiQ-Neurosen - Test Run Aug 24, 2026, 10:00 AM</title>' in page
     header = page[page.index('<body>'):page.index('id="failures"')]
     assert '<span class="product">Product: NexaiQ-Neurosen</span>' in header
-    assert header.index('Product: NexaiQ-Neurosen') < header.index('ENV: <code>qa</code>')
+    assert header.index('Product: NexaiQ-Neurosen') < header.index('Env: <code>QA</code>')
     assert page.count('Product: ') == 1
     # The product is a word the filter box matches.
     assert 'nexaiq-neurosen' in re.search(r'data-test="([^"]*)"', page).group(1)
@@ -1048,7 +1048,7 @@ def test_mixed_run_names_the_product_on_every_test(tmp_path):
     rows[1]['product'] = rows[2]['product'] = 'NexaiQ-Camera 2 Cloud'
     _add_summary_tests(run, rows, {'product': 'Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core'})
     page = rr.build_run_report(run)
-    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test run' in page
+    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test Run' in page
     card = page[page.index('<div class="card failed"'):page.index('id="advisories"')]
     assert '<span class="product">Product: NexaiQ-Core</span>' in card
     rows_html = page[page.index('id="passed"'):]
@@ -1062,14 +1062,14 @@ def test_older_archive_derives_the_product_from_the_node_ids(tmp_path, monkeypat
     run = _make_run(tmp_path)
     page = rr.build_run_report(run)
     # NODEID is a views test, the twins are c2c tests.
-    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test run' in page
+    assert '<title>Mixed: NexaiQ-Camera 2 Cloud, NexaiQ-Core - Test Run' in page
     assert 'Product: NexaiQ-Camera 2 Cloud</span>' in page
     monkeypatch.setenv('QATOUCH_PROJECT_ID', 'P0BK')
     later = tmp_path / '2026-08-25_10-00-00__tests-ui-views'
     later.mkdir()
     (later / 'report.html').write_text(_report_html({NODEID: [_row('Passed')]}), encoding='utf-8')
     page = rr.build_run_report(later)
-    assert '<title>NexaiQ-Neurosen - Test run' in page
+    assert '<title>NexaiQ-Neurosen - Test Run' in page
     assert rr.summary_product({}) == ''
     assert rr.summary_product({'provenance': 'no'}) == ''
     assert rr.summary_product({'provenance': {'product': 'X'}}) == 'X'
@@ -1220,3 +1220,9 @@ def test_friendly_stamp_reads_as_a_date_with_the_year():
     assert rr.friendly_stamp('2026-08-25_14-27-25') == 'Aug 25, 2026, 2:27 PM'
     assert rr.friendly_stamp('') == '-'
     assert rr.friendly_stamp('yesterday') == 'yesterday'
+
+
+def test_format_seconds_carries_the_minute():
+    """119.6 s is 2 min 0 s, never 1 min 60 s."""
+    assert rr.format_seconds(119.6) == '2 min 0 s'
+    assert rr.format_seconds(12.34) == '12.3 s'
