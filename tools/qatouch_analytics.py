@@ -70,17 +70,52 @@ def snapshot_path(project_key: str, date_str: str) -> Path:
     return SNAPSHOTS_DIR / project_key / f'snapshot_{date_str}.json'
 
 
-def take_snapshot(project_key: str = DEFAULT_PROJECT_KEY) -> dict:
+def take_snapshot(project_key: str = DEFAULT_PROJECT_KEY, force: bool = False) -> dict:
     """Pull all test cases for one project and save a timestamped snapshot.
 
     These snapshots are the only backup of the human-written step content
-    in QA Touch, so they are tracked in git. sort_keys keeps the diff
-    between two snapshots readable and lets git store them compactly.
+    in QA Touch, so they are tracked in git and this function fails loud
+    rather than persisting a partial capture.
+
+    Two checks, both of which a backup tool needs and neither of which
+    paginate-until-empty can do on its own:
+
+    - Completeness: the server reports meta.total on the first page. A pull
+      that returns fewer cases than that is truncated, and writing it would
+      quietly shrink the backup.
+    - No silent shrink: if the previous snapshot for this project held
+      cases and this pull is empty or more than 10 percent smaller, stop.
+      A token that lost project scope returns 200 with no data, which would
+      otherwise overwrite a good snapshot with an empty one.
+
+    --force overrides both, for a real deletion.
     """
     client = QATouchClient()
     print(f'Pulling all test cases from QA Touch ({project_key})...')
-    all_cases = client.list_all_test_cases(project_key)
+    all_cases, reported_total = client.list_all_test_cases(
+        project_key, expected_total=True)
     print(f'  Fetched {len(all_cases)} cases')
+
+    if reported_total is not None and len(all_cases) != reported_total and not force:
+        raise SystemExit(
+            f'REFUSING TO WRITE: {project_key} returned {len(all_cases)} cases but '
+            f'the server reports {reported_total}. The pull is truncated and '
+            f'writing it would shrink the only backup of the step content. '
+            f'Retry, or pass --force if the difference is real.')
+
+    previous = previous_snapshot_count(project_key)
+    if previous and not force:
+        if not all_cases:
+            raise SystemExit(
+                f'REFUSING TO WRITE: {project_key} returned 0 cases but the last '
+                f'snapshot held {previous}. Check the API key and its project '
+                f'scope, then retry, or pass --force if the project really was '
+                f'emptied.')
+        if len(all_cases) < previous * 0.9:
+            raise SystemExit(
+                f'REFUSING TO WRITE: {project_key} returned {len(all_cases)} cases, '
+                f'down from {previous} in the last snapshot (more than 10 percent). '
+                f'Confirm the drop is real, then pass --force.')
 
     today = datetime.now().strftime('%Y-%m-%d')
     snapshot = {
@@ -99,6 +134,20 @@ def take_snapshot(project_key: str = DEFAULT_PROJECT_KEY) -> dict:
         encoding='utf-8')
     print(f'  Saved to {path.relative_to(SNAPSHOTS_DIR.parent)}')
     return snapshot
+
+
+def previous_snapshot_count(project_key: str) -> int | None:
+    """Case count in the newest existing snapshot for a project, or None."""
+    folder = SNAPSHOTS_DIR if project_key == DEFAULT_PROJECT_KEY         else SNAPSHOTS_DIR / project_key
+    if not folder.exists():
+        return None
+    files = sorted(folder.glob('snapshot_*.json'))
+    if not files:
+        return None
+    try:
+        return json.loads(files[-1].read_text(encoding='utf-8')).get('total_cases')
+    except (OSError, ValueError):
+        return None
 
 
 def load_snapshot(date_str: str | None = None) -> dict | None:
@@ -453,15 +502,17 @@ def generate_dashboard_json(snapshot: dict | None = None) -> dict:
 # ---------------------------------------------------------------------------
 # CLI commands
 # ---------------------------------------------------------------------------
-def cmd_snapshot(projects: list[str] | None = None):
+def cmd_snapshot(projects: list[str] | None = None, force: bool = False):
     """Take a new snapshot per project; report on the default project."""
     projects = projects or [DEFAULT_PROJECT_KEY]
     default_snap = None
     for key in projects:
-        snap = take_snapshot(key)
+        snap = take_snapshot(key, force=force)
         if key == DEFAULT_PROJECT_KEY:
             default_snap = snap
     if default_snap is None:
+        print(f'{DEFAULT_PROJECT_KEY} was not in the set, so the summary and '
+              f'dashboard metrics were skipped.')
         return
     metrics = analyze_snapshot(default_snap)
     _print_summary(metrics)
@@ -566,16 +617,25 @@ def main():
     parser.add_argument('command', nargs='?', default='report',
                         choices=['snapshot', 'report', 'dashboard-json', 'history'],
                         help='Command to run (default: report)')
-    parser.add_argument('--project', action='append', metavar='KEY',
-                        help='QA Touch project key for `snapshot` (repeatable). '
-                             f'Default: {DEFAULT_PROJECT_KEY}')
-    parser.add_argument('--all', action='store_true',
-                        help='`snapshot` every project in ALL_PROJECT_KEYS')
+    parser.add_argument('--only', action='append', metavar='KEY', dest='only',
+                        help='snapshot just this project (repeatable). Default: '
+                             'every project, because the snapshot is the only '
+                             f'backup of the step content. Valid: {", ".join(ALL_PROJECT_KEYS)}')
+    parser.add_argument('--force', action='store_true',
+                        help='snapshot: write even if the pull is short or smaller '
+                             'than the last one')
     args = parser.parse_args()
 
+    if args.command != 'snapshot' and (args.only or args.force):
+        parser.error('--only and --force apply to `snapshot` only')
+
     if args.command == 'snapshot':
-        projects = ALL_PROJECT_KEYS if args.all else args.project
-        cmd_snapshot(projects)
+        projects = args.only or ALL_PROJECT_KEYS
+        unknown = [k for k in projects if k not in ALL_PROJECT_KEYS]
+        if unknown:
+            parser.error(f'unknown project key(s): {", ".join(unknown)}. '
+                         f'Valid: {", ".join(ALL_PROJECT_KEYS)}')
+        cmd_snapshot(projects, force=args.force)
     elif args.command == 'report':
         cmd_report()
     elif args.command == 'dashboard-json':

@@ -100,3 +100,49 @@ def test_orphaned_nodeids_catches_a_move_between_files(tmp_path):
         'tests/test_old.py::test_moved': {'case_key': 'K2'},   # now lives in test_new.py
     })
     assert qm.orphaned_nodeids(p, root=tmp_path) == ['tests/test_old.py::test_moved']
+
+
+def test_nodeids_in_file_handles_a_non_utf8_source(tmp_path):
+    """A latin-1 source with a coding declaration parses instead of crashing.
+
+    Reading as utf-8 raised UnicodeDecodeError, which is a ValueError and
+    so was caught by neither OSError nor SyntaxError: the guard crashed
+    rather than reporting.
+    """
+    tdir = tmp_path / 'tests'
+    tdir.mkdir()
+    f = tdir / 'test_latin.py'
+    f.write_bytes('# -*- coding: latin-1 -*-\n# caf\xe9\ndef test_x():\n    pass\n'.encode('latin-1'))
+    found, error = qm.nodeids_in_file(f, 'tests/test_latin.py')
+    assert error is None
+    assert found == {'tests/test_latin.py::test_x'}
+
+
+def test_orphaned_nodeids_sees_a_nested_class(tmp_path):
+    """A test in a nested class is found, not reported as an orphan."""
+    tdir = tmp_path / 'tests'
+    tdir.mkdir()
+    (tdir / 'test_a.py').write_text(
+        'class TestOuter:\n'
+        '    class TestInner:\n'
+        '        def test_deep(self):\n'
+        '            pass\n', encoding='utf-8')
+    p = _write_mapping(tmp_path, {
+        'tests/test_a.py::TestOuter::TestInner::test_deep': {'case_key': 'K1'},
+    })
+    assert qm.orphaned_nodeids(p, root=tmp_path) == []
+
+
+def test_a_syntax_error_is_reported_separately_not_as_orphans(tmp_path):
+    """A file that cannot be parsed does not become a wall of phantom renames."""
+    tdir = tmp_path / 'tests'
+    tdir.mkdir()
+    (tdir / 'test_broken.py').write_text('def test_a(:\n    pass\n', encoding='utf-8')
+    p = _write_mapping(tmp_path, {
+        'tests/test_broken.py::test_a': {'case_key': 'K1'},
+        'tests/test_broken.py::test_b': {'case_key': 'K2'},
+    })
+    orphans, unparseable = qm.orphaned_and_unparseable(p, root=tmp_path)
+    assert orphans == []
+    assert 'tests/test_broken.py' in unparseable
+    assert 'SyntaxError' in unparseable['tests/test_broken.py']

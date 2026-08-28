@@ -23,7 +23,9 @@ Selection (any mix, node ids are de-duplicated):
   --test         one node id, repeatable
   --file         every test in one file
   --exclude-dir  a folder under tests/ui to skip (default: c2c, whose
-                 project 60W5 has no snapshot)
+                 project 60W5 is snapshotted separately under
+                 config/qatouch_snapshots/60W5/ and is not what
+                 latest_snapshot() returns)
 
 Output: logs/qatouch_new_cases_<date>.csv, one row per test in the
 column order of tools/qa_touch_import_test.csv, plus

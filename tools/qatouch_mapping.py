@@ -72,25 +72,40 @@ def function_base(nodeid: str) -> str:
     return _PARAM_RE.sub('', nodeid)
 
 
-def nodeids_in_file(file_path: Path, rel: str) -> set[str]:
-    """Test node ids defined in one file, without params.
+def nodeids_in_file(file_path: Path, rel: str) -> tuple[set[str], str | None]:
+    """Test node ids defined in one file, without params, and any parse error.
 
-    Parsed with ast, so nothing imports or runs. Class-aware: a method's
-    node id carries its class, which is what makes a class rename visible.
+    Parsed with ast, so nothing imports or runs. Class-aware, and it
+    recurses into nested classes, because a method's node id carries its
+    class path: that is what makes a class rename visible.
+
+    Reads bytes rather than text so ast honours a source's own coding
+    declaration. Reading as utf-8 raised UnicodeDecodeError on a latin-1
+    file, and UnicodeDecodeError is a ValueError, so neither OSError nor
+    SyntaxError caught it and the guard crashed instead of reporting.
+
+    Returns (nodeids, error). A file that cannot be read or parsed yields
+    an empty set AND an error string, so the caller can say "could not
+    parse" instead of reporting every row in that file as a rename.
     """
-    found: set[str] = set()
     try:
-        tree = ast.parse(file_path.read_text(encoding='utf-8-sig'), filename=rel)
-    except (OSError, SyntaxError):
-        return found
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-            found.add(f'{rel}::{node.name}')
-        elif isinstance(node, ast.ClassDef):
-            for sub in node.body:
-                if isinstance(sub, ast.FunctionDef | ast.AsyncFunctionDef):
-                    found.add(f'{rel}::{node.name}::{sub.name}')
-    return found
+        tree = ast.parse(file_path.read_bytes(), filename=rel)
+    except FileNotFoundError:
+        return set(), None                      # a deleted file IS a real orphan
+    except (OSError, SyntaxError, ValueError) as exc:
+        return set(), f'{type(exc).__name__}: {exc}'
+
+    found: set[str] = set()
+
+    def walk(node: ast.AST, prefix: str) -> None:
+        for child in node.body:
+            if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef):
+                found.add(f'{rel}::{prefix}{child.name}')
+            elif isinstance(child, ast.ClassDef):
+                walk(child, f'{prefix}{child.name}::')
+
+    walk(tree, '')
+    return found, None
 
 
 def orphaned_nodeids(path: Path = MAPPING_PATH, root: Path = ROOT) -> list[str]:
@@ -107,16 +122,36 @@ def orphaned_nodeids(path: Path = MAPPING_PATH, root: Path = ROOT) -> list[str]:
     guard still reported all-clear. Measured against four realistic
     refactors, the text check caught none and this one catches all four.
     """
+    orphans, _ = orphaned_and_unparseable(path, root)
+    return orphans
+
+
+def orphaned_and_unparseable(
+    path: Path = MAPPING_PATH, root: Path = ROOT,
+) -> tuple[list[str], dict[str, str]]:
+    """Orphaned rows, and the files that could not be parsed.
+
+    Kept separate on purpose. A file with a syntax error yields no node
+    ids, so folding it into the orphan list reports every row in it as a
+    rename and hides the real cause: a typo in a work-in-progress file
+    would print a wall of phantom renames.
+    """
     mappings = load_raw(path).get('mappings', {})
-    orphans = []
+    orphans: list[str] = []
+    unparseable: dict[str, str] = {}
     file_cache: dict[str, set[str]] = {}
     for nodeid in mappings:
         rel = nodeid.split('::')[0]
         if rel not in file_cache:
-            file_cache[rel] = nodeids_in_file(root / rel, rel)
+            found, error = nodeids_in_file(root / rel, rel)
+            file_cache[rel] = found
+            if error:
+                unparseable[rel] = error
+        if rel in unparseable:
+            continue
         if function_base(nodeid) not in file_cache[rel]:
             orphans.append(nodeid)
-    return orphans
+    return orphans, unparseable
 
 
 def shared_across_functions(mappings: dict) -> dict[str, list[str]]:

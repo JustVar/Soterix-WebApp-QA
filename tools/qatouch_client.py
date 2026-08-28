@@ -358,21 +358,29 @@ class QATouchClient:
         payload['data'] = [add_legacy_case_aliases(c) for c in payload.get('data', [])]
         return payload
 
-    def list_all_test_cases(self, project_key: str,
-                            module_key: str | None = None) -> list[dict[str, Any]]:
-        """Paginate through ALL test cases in the project. Returns flat list.
+    def list_all_test_cases(self, project_key: str, module_key: str | None = None,
+                            expected_total: bool = False) -> list[dict[str, Any]]:
+        """Paginate through ALL test cases in the project.
 
-        Pass module_key to fetch one module only.
+        With expected_total=True, returns (cases, total) where total is the
+        server's own meta.total from the first page. Callers that persist
+        the result (the snapshot backup) compare the two: paginating until
+        an empty batch cannot tell a complete pull from a truncated one.
         """
         all_cases: list[dict[str, Any]] = []
         page = 1
+        total: int | None = None
         while True:
             data = self.list_test_cases(project_key, page=page, module_key=module_key)
+            if total is None:
+                total = (data.get('meta') or {}).get('total')
             batch = data.get('data', [])
             if not batch:
                 break
-            all_cases.extend(batch)
+            all_cases.extend(add_legacy_case_aliases(c) for c in batch)
             page += 1
+        if expected_total:
+            return all_cases, total
         return all_cases
 
     def get_case_test_runs(self, case_key: str) -> list[dict[str, Any]]:

@@ -108,7 +108,10 @@ config/audit_reports/
 # Maintainer-local working notes (not part of the shared repo)
 docs/local/
 
-# Generated audit and snapshot output (contains captured account data)
+# Generated audit output (contains captured account data)
 config/audit_reports/
+# QA Touch snapshots are deliberately NOT ignored: they are the only backup
+# of the authored step content. They carry work email addresses in the
+# per-case author fields, which is accepted because both repos are private.
 tools/audit_reports/
 verification_output/
