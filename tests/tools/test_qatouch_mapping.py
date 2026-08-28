@@ -146,3 +146,45 @@ def test_a_syntax_error_is_reported_separately_not_as_orphans(tmp_path):
     assert orphans == []
     assert 'tests/test_broken.py' in unparseable
     assert 'SyntaxError' in unparseable['tests/test_broken.py']
+
+
+def test_base_keyed_collapses_the_parametrization():
+    """A stored [chromium] key resolves for any parametrization.
+
+    377 of 378 mapping rows carry [chromium] because pytest.ini pins it.
+    The reporter stripped the param from the runtime nodeid but not from
+    the stored key, so a run under another browser matched 0 of 121
+    reviewed rows.
+    """
+    mapping = {
+        'tests/a.py::test_x[chromium]': 'K1',
+        'tests/a.py::test_y': 'K2',
+    }
+    base = qm.base_keyed(mapping)
+    assert base['tests/a.py::test_x'] == 'K1'   # firefox / no-param now resolve
+    assert base['tests/a.py::test_y'] == 'K2'
+
+
+def test_base_keyed_agrees_across_params_of_one_function():
+    """Params of one function pointing at one case collapse to that case."""
+    mapping = {
+        'tests/a.py::test_x[chromium]': 'K1',
+        'tests/a.py::test_x[firefox]': 'K1',
+    }
+    assert qm.base_keyed(mapping) == {'tests/a.py::test_x': 'K1'}
+
+
+def test_base_keyed_drops_an_ambiguous_base():
+    """Params of one function pointing at DIFFERENT cases are left out.
+
+    Guessing would write a status onto the wrong case; the exact match has
+    to settle it.
+    """
+    mapping = {
+        'tests/a.py::test_x[chromium]': 'K1',
+        'tests/a.py::test_x[firefox]': 'K2',
+        'tests/a.py::test_y[chromium]': 'K3',
+    }
+    base = qm.base_keyed(mapping)
+    assert 'tests/a.py::test_x' not in base
+    assert base['tests/a.py::test_y'] == 'K3'

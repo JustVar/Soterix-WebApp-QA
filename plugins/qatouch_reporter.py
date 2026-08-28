@@ -133,6 +133,10 @@ class QATouchReporter:
         self.screenshots: dict[str, bytes] = {}  # case_key -> PNG bytes (failures only)
         self.nodeid_outcomes: dict[str, dict] = {}  # nodeid -> {outcome, duration, case_key}
         self.mapping = self._load_mapping()
+        # Parametrization-agnostic fallback. See tools/qatouch_mapping.base_keyed:
+        # stored keys carry [chromium], so a run under another browser (or an
+        # Appium suite with no bracket) matches nothing without this.
+        self.mapping_by_base = self._base_index(self.mapping)
         self.case_to_run_key: dict[str, str] = {}  # case_key -> run_key (for API-created runs)
         self.use_playwright_endpoint = os.environ.get(
             'QATOUCH_USE_PLAYWRIGHT_ENDPOINT', '').lower() in ('1', 'true', 'yes')
@@ -214,6 +218,16 @@ class QATouchReporter:
         except Exception as e:
             log.error(f'QA Touch: Could not build the case-code mapping: {e}. '
                       f'Uploads would silently do nothing, so they will be skipped.')
+
+    @staticmethod
+    def _base_index(mapping: dict[str, str]) -> dict[str, str]:
+        """Parametrization-collapsed view of the mapping, or empty on failure."""
+        try:
+            from tools.qatouch_mapping import base_keyed
+            return base_keyed(mapping)
+        except Exception as e:  # noqa: BLE001 - reporting must never fail a run
+            log.warning(f'QA Touch: could not build the base mapping index: {e}')
+            return {}
 
     def _nodeid_variants(self, nodeid: str) -> list[str]:
         """Generate nodeid variants for flexible matching.
@@ -331,6 +345,11 @@ class QATouchReporter:
                 if variant in self.mapping:
                     case_key = self.mapping[variant]
                     break
+            else:
+                # Both sides collapsed to the bare function: matches a stored
+                # [chromium] key when running under any other parametrization.
+                base = nodeid.split('[')[0]
+                case_key = self.mapping_by_base.get(base)
 
         # Always record the per-nodeid outcome - the post-run bug filer keys off
         # nodeid (not case_key), and unmapped failures still deserve a bug.

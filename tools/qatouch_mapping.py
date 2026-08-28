@@ -154,6 +154,33 @@ def orphaned_and_unparseable(
     return orphans, unparseable
 
 
+def base_keyed(mapping: dict[str, str]) -> dict[str, str]:
+    """function_base(nodeid) -> case_key, for rows that agree.
+
+    Mapping keys carry the parametrization they were generated under: 377
+    of 378 rows end in [chromium], because that is what pytest.ini pins.
+    The reporter strips the param from the RUNTIME nodeid but the stored
+    key keeps it, so running under another browser matched 0 of 121
+    reviewed rows, and an Appium suite (no bracket at all) would match
+    none either.
+
+    Collapsing both sides to the bare function makes the mapping
+    parametrization-agnostic. A base whose rows disagree on the case key is
+    left out: that is a genuine ambiguity the exact match must settle, and
+    guessing would write a status onto the wrong case.
+    """
+    collapsed: dict[str, str] = {}
+    conflicting: set[str] = set()
+    for nodeid, case_key in mapping.items():
+        base = function_base(nodeid)
+        if base in collapsed and collapsed[base] != case_key:
+            conflicting.add(base)
+        collapsed[base] = case_key
+    for base in conflicting:
+        collapsed.pop(base, None)
+    return collapsed
+
+
 def shared_across_functions(mappings: dict) -> dict[str, list[str]]:
     """case_key -> nodeids, for keys claimed by MORE THAN ONE test function.
 
