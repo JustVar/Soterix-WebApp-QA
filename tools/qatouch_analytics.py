@@ -41,7 +41,13 @@ from tools.qatouch_client import QATouchClient
 SNAPSHOTS_DIR = ROOT / 'config' / 'qatouch_snapshots'
 MAPPING_PATH = ROOT / 'config' / 'qatouch_case_mapping.json'
 DASHBOARD_JSON_PATH = ROOT / 'config' / 'qatouch_dashboard_metrics.json'
-PROJECT_KEY = 'JlW1'
+DEFAULT_PROJECT_KEY = 'JlW1'
+PROJECT_KEY = DEFAULT_PROJECT_KEY  # kept: other functions in this file use it
+
+# Every QA Touch project, so `snapshot --all` backs up all of them. QA Touch
+# is the only home for the authored step content, so a project missing here
+# has no backup at all.
+ALL_PROJECT_KEYS = ['JlW1', 'P0BK', '60w8', '70l1', 'K5kB', '60W5']
 
 SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -49,25 +55,49 @@ SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
 # ---------------------------------------------------------------------------
 # Snapshot management
 # ---------------------------------------------------------------------------
-def take_snapshot() -> dict:
-    """Pull all test cases from QA Touch and save a timestamped snapshot."""
+def snapshot_path(project_key: str, date_str: str) -> Path:
+    """Where a project's snapshot lives.
+
+    The default project keeps the flat, historic filename because five
+    tools find the newest snapshot with sorted(glob('snapshot_*.json'))[-1].
+    Every other project writes into its own subdirectory, which that
+    non-recursive glob cannot see: a flat 'snapshot_K5kB_...json' would
+    sort after 'snapshot_2026-08-17.json' and silently become "latest"
+    for all of them.
+    """
+    if project_key == DEFAULT_PROJECT_KEY:
+        return SNAPSHOTS_DIR / f'snapshot_{date_str}.json'
+    return SNAPSHOTS_DIR / project_key / f'snapshot_{date_str}.json'
+
+
+def take_snapshot(project_key: str = DEFAULT_PROJECT_KEY) -> dict:
+    """Pull all test cases for one project and save a timestamped snapshot.
+
+    These snapshots are the only backup of the human-written step content
+    in QA Touch, so they are tracked in git. sort_keys keeps the diff
+    between two snapshots readable and lets git store them compactly.
+    """
     client = QATouchClient()
-    print('Pulling all test cases from QA Touch...')
-    all_cases = client.list_all_test_cases(PROJECT_KEY)
+    print(f'Pulling all test cases from QA Touch ({project_key})...')
+    all_cases = client.list_all_test_cases(project_key)
     print(f'  Fetched {len(all_cases)} cases')
 
     today = datetime.now().strftime('%Y-%m-%d')
     snapshot = {
         'snapshot_date': today,
         'snapshot_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'project_key': project_key,
         'total_cases': len(all_cases),
         'cases': all_cases,
     }
 
     # Save with date-based filename (idempotent for same day)
-    path = SNAPSHOTS_DIR / f'snapshot_{today}.json'
-    path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding='utf-8')
-    print(f'  Saved to {path.name}')
+    path = snapshot_path(project_key, today)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(snapshot, indent=2, ensure_ascii=False, sort_keys=True),
+        encoding='utf-8')
+    print(f'  Saved to {path.relative_to(SNAPSHOTS_DIR.parent)}')
     return snapshot
 
 
@@ -423,12 +453,19 @@ def generate_dashboard_json(snapshot: dict | None = None) -> dict:
 # ---------------------------------------------------------------------------
 # CLI commands
 # ---------------------------------------------------------------------------
-def cmd_snapshot():
-    """Take a new snapshot and generate dashboard metrics."""
-    snap = take_snapshot()
-    metrics = analyze_snapshot(snap)
+def cmd_snapshot(projects: list[str] | None = None):
+    """Take a new snapshot per project; report on the default project."""
+    projects = projects or [DEFAULT_PROJECT_KEY]
+    default_snap = None
+    for key in projects:
+        snap = take_snapshot(key)
+        if key == DEFAULT_PROJECT_KEY:
+            default_snap = snap
+    if default_snap is None:
+        return
+    metrics = analyze_snapshot(default_snap)
     _print_summary(metrics)
-    generate_dashboard_json(snap)
+    generate_dashboard_json(default_snap)
 
 
 def cmd_report():
@@ -529,10 +566,16 @@ def main():
     parser.add_argument('command', nargs='?', default='report',
                         choices=['snapshot', 'report', 'dashboard-json', 'history'],
                         help='Command to run (default: report)')
+    parser.add_argument('--project', action='append', metavar='KEY',
+                        help='QA Touch project key for `snapshot` (repeatable). '
+                             f'Default: {DEFAULT_PROJECT_KEY}')
+    parser.add_argument('--all', action='store_true',
+                        help='`snapshot` every project in ALL_PROJECT_KEYS')
     args = parser.parse_args()
 
     if args.command == 'snapshot':
-        cmd_snapshot()
+        projects = ALL_PROJECT_KEYS if args.all else args.project
+        cmd_snapshot(projects)
     elif args.command == 'report':
         cmd_report()
     elif args.command == 'dashboard-json':

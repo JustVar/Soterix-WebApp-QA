@@ -109,7 +109,6 @@ config/audit_reports/
 docs/local/
 
 # Generated audit and snapshot output (contains captured account data)
-config/qatouch_snapshots/
 config/audit_reports/
 tools/audit_reports/
 verification_output/
