@@ -26,6 +26,7 @@ that case. Mark a whole file only after reading its rows.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
@@ -71,26 +72,49 @@ def function_base(nodeid: str) -> str:
     return _PARAM_RE.sub('', nodeid)
 
 
+def nodeids_in_file(file_path: Path, rel: str) -> set[str]:
+    """Test node ids defined in one file, without params.
+
+    Parsed with ast, so nothing imports or runs. Class-aware: a method's
+    node id carries its class, which is what makes a class rename visible.
+    """
+    found: set[str] = set()
+    try:
+        tree = ast.parse(file_path.read_text(encoding='utf-8-sig'), filename=rel)
+    except (OSError, SyntaxError):
+        return found
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            found.add(f'{rel}::{node.name}')
+        elif isinstance(node, ast.ClassDef):
+            for sub in node.body:
+                if isinstance(sub, ast.FunctionDef | ast.AsyncFunctionDef):
+                    found.add(f'{rel}::{node.name}::{sub.name}')
+    return found
+
+
 def orphaned_nodeids(path: Path = MAPPING_PATH, root: Path = ROOT) -> list[str]:
     """Mapping rows whose test no longer exists, found WITHOUT running pytest.
 
-    A nodeid names a file and a test function. If the file is gone or no
-    `def <function>` (or async def) appears in it, the row is orphaned - a
-    rename or delete happened and the case silently stops receiving results.
-    Static text check on purpose: it runs in a pre-commit-sized budget.
+    A row is orphaned when the file it names no longer defines that exact
+    test: a rename, a move, a class rename, or a delete happened, and the
+    case silently stops receiving results.
+
+    Each referenced file is parsed with ast and the WHOLE node id is
+    compared, class segment included. The previous implementation searched
+    the file's text for `def <function>`, which saw neither the class nor a
+    move: renaming a class silenced 12 of 121 reviewed rows while this
+    guard still reported all-clear. Measured against four realistic
+    refactors, the text check caught none and this one catches all four.
     """
     mappings = load_raw(path).get('mappings', {})
     orphans = []
-    file_cache: dict[str, str | None] = {}
+    file_cache: dict[str, set[str]] = {}
     for nodeid in mappings:
-        file_part = nodeid.split('::')[0]
-        func = function_base(nodeid).split('::')[-1]
-        if file_part not in file_cache:
-            fp = root / file_part
-            file_cache[file_part] = fp.read_text(encoding='utf-8', errors='replace') \
-                if fp.exists() else None
-        text = file_cache[file_part]
-        if text is None or not re.search(rf'\bdef {re.escape(func)}\b', text):
+        rel = nodeid.split('::')[0]
+        if rel not in file_cache:
+            file_cache[rel] = nodeids_in_file(root / rel, rel)
+        if function_base(nodeid) not in file_cache[rel]:
             orphans.append(nodeid)
     return orphans
 

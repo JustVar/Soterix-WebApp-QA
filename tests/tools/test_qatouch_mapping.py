@@ -69,3 +69,34 @@ def test_real_mapping_has_no_orphans_and_gate_is_seeded():
     _reviewed, counts = qm.reviewed_lookup()
     assert counts['reviewed'] > 0, 'review gate not bootstrapped'
     assert qm.orphaned_nodeids() == [], 'a mapped test was renamed or deleted'
+
+
+def test_orphaned_nodeids_catches_a_class_rename(tmp_path):
+    """A renamed class orphans its methods.
+
+    The previous text-based guard searched only for `def <function>`, so a
+    class rename left it reporting all-clear while the mapped case stopped
+    receiving results.
+    """
+    tdir = tmp_path / 'tests'
+    tdir.mkdir()
+    (tdir / 'test_a.py').write_text(
+        'class TestWidget:\n    def test_alpha(self):\n        pass\n', encoding='utf-8')
+    p = _write_mapping(tmp_path, {
+        'tests/test_a.py::TestThing::test_alpha': {'case_key': 'K1'},   # class was renamed
+        'tests/test_a.py::TestWidget::test_alpha': {'case_key': 'K2'},  # current name
+    })
+    assert qm.orphaned_nodeids(p, root=tmp_path) == ['tests/test_a.py::TestThing::test_alpha']
+
+
+def test_orphaned_nodeids_catches_a_move_between_files(tmp_path):
+    """A test that moved to another file orphans its old node id."""
+    tdir = tmp_path / 'tests'
+    tdir.mkdir()
+    (tdir / 'test_old.py').write_text('def test_kept():\n    pass\n', encoding='utf-8')
+    (tdir / 'test_new.py').write_text('def test_moved():\n    pass\n', encoding='utf-8')
+    p = _write_mapping(tmp_path, {
+        'tests/test_old.py::test_kept': {'case_key': 'K1'},
+        'tests/test_old.py::test_moved': {'case_key': 'K2'},   # now lives in test_new.py
+    })
+    assert qm.orphaned_nodeids(p, root=tmp_path) == ['tests/test_old.py::test_moved']
