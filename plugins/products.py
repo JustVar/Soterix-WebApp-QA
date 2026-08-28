@@ -21,6 +21,13 @@ run, health, and index pages show it. Stdlib only.
 """
 from __future__ import annotations
 
+# Duplicated in soterix-qa-shared (soterix_qa_shared/reporting/products.py).
+# At migration step 6 this file becomes a shim and the duplication ends.
+#
+# Until then: change BOTH, or neither. One difference is deliberate and must
+# stay - the package ships PATH_RULES empty and this repo injects the c2c
+# rule through configure_path_rules(), because a rule about tests/ui/c2c/ is
+# meaningless in the API repo.
 import os
 from collections.abc import Iterable
 

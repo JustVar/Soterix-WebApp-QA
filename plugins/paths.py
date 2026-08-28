@@ -21,6 +21,9 @@ camera id, the PASSED/FAILED label). Stdlib only.
 """
 from __future__ import annotations
 
+# Duplicated in soterix-qa-shared (soterix_qa_shared/reporting/paths.py),
+# byte-for-byte apart from the docstrings. At migration step 6 this file
+# becomes a shim. Until then: change both, or neither.
 import hashlib
 import os
 from pathlib import Path

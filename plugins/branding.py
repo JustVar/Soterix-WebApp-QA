@@ -8,6 +8,13 @@ they were built with. A missing file simply leaves the page unbranded.
 """
 from __future__ import annotations
 
+# Duplicated in soterix-qa-shared (soterix_qa_shared/reporting/branding.py).
+# At migration step 6 this file becomes a shim.
+#
+# One difference is deliberate. Here the logo paths are relative to the
+# working directory, which works only because every caller runs from the
+# repo root. The package takes a root through configure(), because after
+# installation there is no such guarantee.
 import base64
 from functools import lru_cache
 from html import escape
