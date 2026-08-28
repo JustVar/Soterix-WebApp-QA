@@ -67,6 +67,14 @@ def reviewed_lookup(path: Path = MAPPING_PATH) -> tuple[dict[str, str], dict[str
     }
 
 
+# function_base and base_keyed are duplicated in soterix-qa-shared
+# (soterix_qa_shared/qatouch/mapping.py), because the reporter needs them and
+# the reporter now lives there. At migration step 6 these two become
+# re-exports from the package and this comment goes away.
+#
+# Until then: change BOTH, or neither. Nothing detects the drift, and the
+# docstrings had already diverged within a day of the copy being made - which
+# is how long it takes.
 def function_base(nodeid: str) -> str:
     """Strip the [param] suffix: file::Class::test_x[chromium] -> file::Class::test_x."""
     return _PARAM_RE.sub('', nodeid)
