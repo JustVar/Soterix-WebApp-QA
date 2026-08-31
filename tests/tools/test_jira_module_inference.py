@@ -9,7 +9,6 @@ from __future__ import annotations
 # The imports below run AFTER the repo root goes on sys.path, which they
 # have to: tools/ is not importable otherwise.
 # ruff: noqa: E402
-
 import json
 import sys
 from pathlib import Path
