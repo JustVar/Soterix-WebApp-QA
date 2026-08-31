@@ -4,7 +4,6 @@ Import this path as before; it resolves to soterix_qa_shared.reporting.products.
 See that repo's docs/RULES.md for why the shim has this exact shape.
 """
 import sys
-from pathlib import Path
 
 try:
     from soterix_qa_shared.reporting import products as _mod
@@ -15,8 +14,6 @@ except ModuleNotFoundError as exc:
         "soterix-qa-shared is not installed. "
         "Run: pip install -e ../soterix-qa-shared"
     ) from None
-
-_ROOT = Path(__file__).resolve().parent.parent
 
 # This repo's folders, not the package's. A rule about tests/ui/c2c/ is
 # meaningless in the API repo, so the package ships none.

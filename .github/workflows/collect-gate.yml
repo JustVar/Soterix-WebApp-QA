@@ -17,6 +17,11 @@ on:
     branches: [main]
   pull_request:
 
+# This job only checks out and runs tests. qa-nightly.yml beside it already
+# scopes its token to read; this should not be looser.
+permissions:
+  contents: read
+
 concurrency:
   group: collect-gate-${{ github.ref }}
   cancel-in-progress: true
