@@ -105,7 +105,7 @@ venv\Scripts\python.exe -m pytest tests/ui/views --headed         # watch the br
 venv\Scripts\python.exe -m pytest tests/ui/views --headed --slowmo 500
 venv\Scripts\python.exe -m pytest tests/ui/views -s               # see page-object output live
 venv\Scripts\python.exe -m pytest -n 4 --dist loadfile tests/ui   # parallel (read-mostly modules only)
-venv\Scripts\python.exe -m pytest --collect-only -q tests/ui      # list tests, run nothing
+venv\Scripts\python.exe -m pytest --collect-only tests/ui         # list tests, run nothing
 ```
 
 Hardware-disrupting tests skip unless you pass `--run-destructive`.

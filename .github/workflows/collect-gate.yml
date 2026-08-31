@@ -51,11 +51,18 @@ jobs:
       # would turn a two-second gate into a multi-minute one.
       - name: Imports and fixture wiring, whole repo
         run: |
-          pytest --collect-only -q
-          pytest --setup-plan -q
+          pytest --collect-only
+          pytest --setup-plan
+
+      # pytest exits 5 on zero collected, so the step above already catches a
+      # suite that vanishes. Nothing catches one that SHRINKS. Tests have gone
+      # missing here twice: a company-remote merge reverted unopposed files,
+      # and the shared-package extraction moved hundreds between repos.
+      - name: Collected-test floor
+        run: python tools/collect_floor.py
 
       - name: Offline suites
-        run: pytest tests/plugins tests/tools -q
+        run: pytest tests/plugins tests/tools
 
       # Not `ruff check`, which finds 627 things here and would fail every
       # pull request from day one. This fails only when a FILE gains
@@ -70,4 +77,4 @@ jobs:
       # reaching the running code. Skipped until the shims land in step 6.
       - name: Shim guards
         if: hashFiles('tests/plugins/test_shims.py') != ''
-        run: pytest tests/plugins/test_shims.py -q
+        run: pytest tests/plugins/test_shims.py

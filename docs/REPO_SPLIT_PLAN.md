@@ -99,7 +99,7 @@ fresh start means the API repo carries none of the webapp repo's weight.
 1. **Fresh venv**, `pip install -r requirements.txt` - must complete in seconds
    and must NOT install playwright.
 2. `python -c "import playwright"` -> **ImportError expected.**
-3. `pytest tests/ -q` -> expect **45 passed, 1 skipped, 1 failed** (the known
+3. `pytest tests/` -> expect **45 passed, 1 skipped, 1 failed** (the known
    pre-existing `test_event_search` contract bug - tracked in Backlog below).
 4. Chrome process count unchanged across the run.
 

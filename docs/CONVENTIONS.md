@@ -407,6 +407,8 @@ so testers can see the drag in headed mode. The current implementation is
 - Always use page objects. Centralize selectors.
 - Reuse the cached auth state in `.auth_state.json`.
 - `legacy/` and `legacy-selenium-tests/` are excluded from test runs.
+- Never add `-q` to a pytest command. `pytest.ini` already has one, and
+  two make `-qq`, which hides the pass count. See `tools/collect_floor.py`.
 
 ## Linting (ruff)
 
