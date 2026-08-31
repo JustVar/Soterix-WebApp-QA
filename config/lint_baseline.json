@@ -1,11 +1,10 @@
 {
   "comment": "Per-file ruff finding counts. Lower is always fine; higher needs a reason. See tools/lint_baseline.py.",
-  "total": 627,
+  "total": 644,
   "files": {
     "config/base_config.py": 1,
-    "plugins/qatouch_reporter.py": 10,
+    "conftest.py": 30,
     "plugins/verification_runner.py": 4,
-    "tests/plugins/test_qatouch_reporter.py": 1,
     "tests/plugins/test_run_report.py": 1,
     "tests/shared/helpers/role_helper.py": 9,
     "tests/shared/pages/admin_page.py": 26,
@@ -102,7 +101,6 @@
     "tools/qatouch_api_tag_update.py": 9,
     "tools/qatouch_browser.py": 28,
     "tools/qatouch_c2c_step_split.py": 8,
-    "tools/qatouch_client.py": 2,
     "tools/qatouch_dedup.py": 5,
     "tools/qatouch_full_audit.py": 7,
     "tools/qatouch_gap_analysis.py": 11,

@@ -195,8 +195,15 @@ class JiraClient:
             'description': description,
             'issuetype': {'name': issue_type},
         }
-        if labels:
-            fields['labels'] = labels
+        # The delete-me marker rides on the CREATE, not only on the update
+        # below. The update is inside a try/except that logs and continues,
+        # so when it fails a test bug lands in NC's backlog with nothing
+        # saying it is disposable. Same shape as the package's client.
+        issue_labels = list(labels or [])
+        if "[TEST]" in summary and 'automation-test-DELETE-ME' not in issue_labels:
+            issue_labels.append('automation-test-DELETE-ME')
+        if issue_labels:
+            fields['labels'] = issue_labels
 
         # Auto-populate NC mandatory Bug fields from QA Touch data
         if qa_touch_data and qa_touch_mapper and issue_type == 'Bug':
@@ -270,10 +277,25 @@ _MODULE_MAP = {
 
 
 def _infer_module_from_nodeid(nodeid: str) -> str:
-    """Best-effort module inference from pytest nodeid path components."""
-    nodeid_lower = nodeid.lower()
+    """The NC Module a test belongs to, from its file path.
+
+    The path first, and only then the rest of the node id. Matching the
+    WHOLE node id let a test's own name outrank the file it lives in:
+    measured across 819 collected UI tests, 29 were filed under the wrong
+    module, including test_admin_users.py::test_search_user going to Search
+    rather than Admin. Module is a required NC field, so a wrong value is
+    not a blank to be filled in later - it routes the bug to another team.
+
+    The function name is still a fallback. When the path carries no keyword
+    at all, "the test searches something" beats "Other".
+    """
+    path = nodeid.split("::", 1)[0].lower()
     for keyword, module_name in _MODULE_MAP.items():
-        if keyword in nodeid_lower:
+        if keyword in path:
+            return module_name
+    rest = nodeid.lower()
+    for keyword, module_name in _MODULE_MAP.items():
+        if keyword in rest:
             return module_name
     return "Other"
 

@@ -191,8 +191,17 @@ def test_row_has_every_column_and_reference_is_nodeid(synthetic):
     info = gen.scan_file(path, root)['tests/ui/thing/test_thing.py::TestThing::test_params']
     row = gen.build_row(info, gen.parse_docstring(info.docstring, info.nodeid), '2026-08-25')
     assert list(row) == gen.COLUMNS
-    header = (REPO_ROOT / 'tools' / 'qa_touch_import_test.csv').read_text(
-        encoding='utf-8-sig').splitlines()[0].split(',')
+
+    # Cross-check against the real QA Touch import file when a working copy
+    # has one. tools/*.csv is gitignored, so it is in no clean checkout and
+    # this assertion cannot run in CI. Reading it unconditionally made this
+    # test pass on a developer machine and raise FileNotFoundError on every
+    # CI run - the shape of failure that gets a whole gate switched off.
+    sample = REPO_ROOT / 'tools' / 'qa_touch_import_test.csv'
+    if not sample.exists():
+        pytest.skip('tools/qa_touch_import_test.csv is gitignored and absent; '
+                    'gen.COLUMNS is still checked above')
+    header = sample.read_text(encoding='utf-8-sig').splitlines()[0].split(',')
     assert list(row) == header
     assert row['Reference'] == 'tests/ui/thing/test_thing.py::TestThing::test_params'
     assert row['Test Case Title'] == 'Verify a widget per graph and category'

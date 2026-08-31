@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Fail when a file gains lint findings. Ignore the ones it already had.
 
-This repo carries 627 ruff findings. A gate that demands zero would fail
-every pull request from day one and be switched off within a week, so it
-would protect nothing. A gate that demands "no more than before" is one a
-change can actually pass, and it stops the count growing.
+This repo carries several hundred ruff findings. A gate that demands zero
+would fail every pull request from day one and be switched off within a
+week, so it would protect nothing. A gate that demands "no more than
+before" is one a change can actually pass, and it stops the count growing.
+The current total is in config/lint_baseline.json; do not quote it here,
+because a number in a docstring goes stale and this one already did.
 
 The count is per file, not a repo total. A repo total lets a change fix five
 findings in one file and add five in another and call it even, which is how
@@ -15,9 +17,9 @@ This is not hygiene. Ruff had been reporting the Jira create bug for months:
     tools/smart_jira_bug_creator.py:152:5: RET503 Missing explicit `return`
     at the end of function able to return non-None value
 
-Nobody saw it, because that one file held 50 findings and the repo held 627.
-The signal existed and drowned. Capping each file is what makes the next one
-audible.
+Nobody saw it, because that one file held 50 findings and the repo held
+hundreds. The signal existed and drowned. Capping each file is what makes
+the next one audible.
 
 Usage:
   python tools/lint_baseline.py            # check against the baseline
@@ -37,7 +39,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE = ROOT / 'config' / 'lint_baseline.json'
-TARGETS = ['plugins', 'tools', 'tests', 'config', 'run.py']
+# conftest.py is here because it was the whole gap: `ruff check .` finds
+# 644 and these targets found 614, and all 30 of the difference were in
+# that one file - the file that holds `pytest_plugins`, which is the
+# subject of the two shim rules the migration turns on.
+TARGETS = ['plugins', 'tools', 'tests', 'config', 'run.py', 'conftest.py']
 
 
 def current_counts() -> tuple[Counter, str | None]:
@@ -120,8 +126,8 @@ def main(argv: list[str] | None = None) -> int:
     if worse:
         print(f'\n{len(worse)} file(s) gained lint findings. Fix them, or say '
               f'why in the commit message and run --update.')
-        print('Rules: ruff.toml. A finding here is one that would have been '
-              'visible in a file with a clean baseline.')
+        print('Rules: pyproject.toml, [tool.ruff]. A finding here is one that '
+              'would have been visible in a file with a clean baseline.')
         return 1
 
     if better:
