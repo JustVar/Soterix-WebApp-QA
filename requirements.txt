@@ -16,4 +16,8 @@ msgraph-core==1.5.1
 PyYAML==6.0.3
 
 # Linting / formatting
-ruff>=0.15
+# Exact, like everything above it. Ruff moves rules between minor
+# releases, so a floating pin makes a lint verdict depend on when a
+# machine last installed. This repo had 0.16.1 while the API repo had
+# 0.16.2, both claiming ruff>=0.15.
+ruff==0.16.2

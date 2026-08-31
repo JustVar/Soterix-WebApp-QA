@@ -1,0 +1,58 @@
+name: collect-gate
+
+# The merge gate this repo did not have. Until now the only workflow was
+# qa-nightly, which runs on demand, so nothing checked a pull request and a
+# broken import reached main and was found by whoever ran the suite next.
+#
+# Cheap and credential-free by construction. Collection and setup-plan never
+# execute a test, launch a browser, or send a request: 1,446 tests collect in
+# under two seconds. The two suites it does run are offline unit tests of the
+# plugins and tools.
+#
+# This also gives Dependabot something to answer to. A pinned dependency that
+# nothing proves on bump is a pin that gets rubber-stamped.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: collect-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install -r requirements.txt
+
+      # No `playwright install`. Collection and fixture planning need the
+      # python package, not a browser binary, and downloading three browsers
+      # would turn a two-second gate into a multi-minute one.
+      - name: Imports and fixture wiring, whole repo
+        run: |
+          pytest --collect-only -q
+          pytest --setup-plan -q
+
+      - name: Offline suites
+        run: pytest tests/plugins tests/tools -q
+
+      # Not `ruff check`, which finds 627 things here and would fail every
+      # pull request from day one. This fails only when a FILE gains
+      # findings: a bar a change can pass, that still stops the count
+      # growing. See tools/lint_baseline.py for why per-file, and for the
+      # bug that hid in a file holding 50 findings.
+      - name: Lint, against the recorded baseline
+        run: python tools/lint_baseline.py
+
+      # A shim that stops being a module alias breaks silently: the repo's
+      # own suites stay green while every monkeypatch seam quietly stops
+      # reaching the running code. Skipped until the shims land in step 6.
+      - name: Shim guards
+        if: hashFiles('tests/plugins/test_shims.py') != ''
+        run: pytest tests/plugins/test_shims.py -q
