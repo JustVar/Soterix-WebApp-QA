@@ -41,13 +41,21 @@ python -m playwright install chromium
 0.8.0), so a fresh clone installs the same set the suite was verified against.
 Upgrade deliberately: change the pin, run a suite, then commit.
 
-The second line installs the shared QA pipeline from the sibling checkout of
-`soterix-qa-shared`: the QA Touch client, the result reporter and the Jira
-layer, which `plugins/` and `tools/` import through thin shims. Editable and
-local on purpose, so a change there can be tested here before it is tagged,
-and so no credential is needed. CI installs the same package from a pinned
-tag instead, over SSH with a read-only deploy key
-(`requirements-shared.txt`).
+The `pip install -e ../soterix-qa-shared` line is not optional. It installs
+the shared QA pipeline from the sibling checkout: the QA Touch client, the
+result reporter and the Jira layer, which `plugins/` and `tools/` import
+through thin shims. Without it every pytest run stops at `ImportError: ...
+soterix-qa-shared is not installed`. Clone it beside this repo first:
+
+```powershell
+cd ..
+git clone https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git soterix-qa-shared
+```
+
+Editable and local on purpose, so a change there can be tested here before
+it is tagged, and so no credential is needed. CI installs the same package
+from a pinned tag instead, over SSH with a read-only deploy key
+(`requirements-shared.txt`). Do not use that file locally.
 
 Copy the env template and fill in the automation credentials:
 
