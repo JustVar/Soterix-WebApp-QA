@@ -8,7 +8,7 @@ requests==2.34.2
 aiohttp==3.14.3  # tools/stream_probe.py --no-browser (direct media socket)
 paramiko==5.0.0
 scp==0.16.1
-pytest-rerunfailures==16.4
+pytest-rerunfailures==16.6
 jira==3.10.5
 lxml==6.1.1
 msal==1.37.0
@@ -20,4 +20,4 @@ PyYAML==6.0.3
 # releases, so a floating pin makes a lint verdict depend on when a
 # machine last installed. This repo had 0.16.1 while the API repo had
 # 0.16.2, both claiming ruff>=0.15.
-ruff==0.16.2
+ruff==0.16.5
