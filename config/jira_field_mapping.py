@@ -30,6 +30,12 @@ import json
 from pathlib import Path
 from typing import Any
 
+# Duplicated in soterix-qa-shared (soterix_qa_shared/jira/fields.py). At
+# migration step 6 this module becomes an import from there.
+#
+# Two differences are deliberate. The package takes MAPPING_JSON through
+# configure() rather than deriving it from __file__, and it caches the file
+# rather than re-reading it on every lookup. Until then: change both.
 ROOT = Path(__file__).resolve().parent.parent
 MAPPING_JSON = ROOT / "config" / "jira_field_mapping.json"
 

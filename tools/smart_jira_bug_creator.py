@@ -142,7 +142,15 @@ def compute_confidence(history: list[dict[str, Any]], env_ok: bool) -> float:
 
 
 class JiraClient:
-    """Placeholder Jira client. Replace create_issue() with real API integration."""
+    """Creates a Jira issue, or describes the one it would create.
+
+    Duplicated in soterix-qa-shared (soterix_qa_shared/jira/client.py). At
+    migration step 6 this class becomes an import from there and the
+    duplication ends. Until then: change both, or neither.
+
+    The package version is the same behaviour with the same two fixes,
+    factored into helpers and covered by 29 tests.
+    """
 
     def __init__(self, server: str = None, user: str = None, token: str = None):
         self.server = server or os.environ.get('JIRA_URL')
@@ -210,37 +218,36 @@ class JiraClient:
                 except Exception as e:
                     LOG.warning('Failed to attach %s: %s', path, e)
 
-        # Link to story if provided (simple comment or issue link attempt)
+        # Link to story if provided (best effort: a comment naming it).
         if story_link:
             try:
-                # If story_link is an issue key, create an issue link
-                if '-' in story_link and story_link.isupper() is False:
-                    # best-effort: add comment with link
-                    jira.add_comment(issue, f'Related story: {story_link}')
-                else:
-                    jira.add_comment(issue, f'Related story: {story_link}')
+                jira.add_comment(issue, f'Related story: {story_link}')
             except Exception:
-                pass
+                LOG.warning('Failed to link story %s to %s', story_link, issue_key)
 
-            # If this is a test issue (summary includes [TEST]) add special label and admin comment
+        # A test issue gets a delete-me label and an admin comment, so it is
+        # not mistaken for a real bug in somebody's backlog.
+        #
+        # This block and the return below used to sit INSIDE `if story_link:`.
+        # A real create without a story link therefore returned None while the
+        # issue existed in Jira: the review loop raised on issue.get('key'),
+        # caught it, said "Item remains pending", and a second approval filed
+        # a duplicate. A test bug filed the same way carried no label at all.
+        # Dormant only because BUG_CREATION_ENABLED is false everywhere.
+        if "[TEST]" in summary:
             try:
-                if "[TEST]" in summary:
-                    try:
-                        jira.add_comment(issue, "Admin: Please delete this test bug")
-                    except Exception:
-                        LOG.warning('Failed to add admin deletion comment to %s', issue_key)
-                    # ensure label exists on the issue
-                    try:
-                        current = list(getattr(issue.fields, 'labels', []) or [])
-                        if 'automation-test-DELETE-ME' not in current:
-                            current.append('automation-test-DELETE-ME')
-                            issue.update(fields={'labels': current})
-                    except Exception:
-                        LOG.warning('Failed to add label to %s', issue_key)
+                jira.add_comment(issue, "Admin: Please delete this test bug")
             except Exception:
-                LOG.debug('Post-create test issue handling failed', exc_info=True)
+                LOG.warning('Failed to add admin deletion comment to %s', issue_key)
+            try:
+                current = list(getattr(issue.fields, 'labels', []) or [])
+                if 'automation-test-DELETE-ME' not in current:
+                    current.append('automation-test-DELETE-ME')
+                    issue.update(fields={'labels': current})
+            except Exception:
+                LOG.warning('Failed to add label to %s', issue_key)
 
-            return {'key': issue_key, 'self': getattr(issue, 'self', None)}
+        return {'key': issue_key, 'self': getattr(issue, 'self', None)}
 
 
 VALID_SEVERITIES = ["Critical", "High", "Medium", "Low"]
