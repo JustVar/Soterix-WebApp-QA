@@ -78,3 +78,36 @@ jobs:
       - name: Shim guards
         if: hashFiles('tests/plugins/test_shims.py') != ''
         run: pytest tests/plugins/test_shims.py
+
+  # A shim is a module alias, and aliasing is import-system behaviour. The
+  # gate above pins ONE interpreter, so until this job the guards had only
+  # ever run on that one, and no interpreter had run both repos' shims: the
+  # UI gate is on 3.14 and the API gate on 3.12, while the package claims
+  # >=3.11 and proves it across 3.11 to 3.14. This closes step 0 of the
+  # foundations plan, which does not close without it.
+  #
+  # Only the shim guards, not the whole gate. Running everything four times
+  # buys little and costs four times as much; what varies by interpreter
+  # here is module identity, patch reachability and CLI dispatch, and those
+  # are exactly what the guards assert.
+  #
+  # fail-fast is off on purpose. "3.11 broke" and "every version broke" are
+  # different diagnoses and a cancelled matrix cannot tell them apart.
+  shim-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
+      - run: pip install -r requirements.txt
+      - run: pip install -r requirements-shared.txt
+      - name: Shim guards on ${{ matrix.python-version }}
+        run: pytest tests/plugins/test_shims.py
