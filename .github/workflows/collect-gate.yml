@@ -4,9 +4,10 @@ name: collect-gate
 # qa-nightly, which runs on demand, so nothing checked a pull request and a
 # broken import reached main and was found by whoever ran the suite next.
 #
-# Cheap and credential-free by construction. Collection and setup-plan never
-# execute a test, launch a browser, or send a request: 1,446 tests collect in
-# under two seconds. The two suites it does run are offline unit tests of the
+# Cheap by construction. Collection and setup-plan never execute a test,
+# launch a browser, or send a request: the whole suite collects in under two
+# seconds. It needs ONE credential, a read-only deploy key for the private
+# shared package, and sends no live traffic of any kind. The two suites it does run are offline unit tests of the
 # plugins and tools.
 #
 # This also gives Dependabot something to answer to. A pinned dependency that
@@ -34,7 +35,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
+      # requirements-shared.txt installs the package from a private repo
+      # over SSH. The deploy key is read-only and scoped to that repo alone:
+      # it cannot push, and it cannot read this repository. It is separate
+      # from requirements.txt so a local `pip install -r requirements.txt`
+      # keeps working with no credential at all.
+      - uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
       - run: pip install -r requirements.txt
+      - run: pip install -r requirements-shared.txt
 
       # No `playwright install`. Collection and fixture planning need the
       # python package, not a browser binary, and downloading three browsers
