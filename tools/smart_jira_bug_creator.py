@@ -270,10 +270,25 @@ _MODULE_MAP = {
 
 
 def _infer_module_from_nodeid(nodeid: str) -> str:
-    """Best-effort module inference from pytest nodeid path components."""
-    nodeid_lower = nodeid.lower()
+    """The NC Module a test belongs to, from its file path.
+
+    The path first, and only then the rest of the node id. Matching the
+    WHOLE node id let a test's own name outrank the file it lives in:
+    measured across 819 collected UI tests, 29 were filed under the wrong
+    module, including test_admin_users.py::test_search_user going to Search
+    rather than Admin. Module is a required NC field, so a wrong value is
+    not a blank to be filled in later - it routes the bug to another team.
+
+    The function name is still a fallback. When the path carries no keyword
+    at all, "the test searches something" beats "Other".
+    """
+    path = nodeid.split("::", 1)[0].lower()
     for keyword, module_name in _MODULE_MAP.items():
-        if keyword in nodeid_lower:
+        if keyword in path:
+            return module_name
+    rest = nodeid.lower()
+    for keyword, module_name in _MODULE_MAP.items():
+        if keyword in rest:
             return module_name
     return "Other"
 
