@@ -19,4 +19,4 @@
 # [project] version does not match it, because installing an unchanged
 # version against a new pin is a silent exit-0 no-op that leaves the old
 # code in place.
-soterix-qa-shared @ git+ssh://git@github.com/Soterix-Systems/SOTERIX-QA-SHARED.git@v0.19.0
+soterix-qa-shared @ git+ssh://git@github.com/Soterix-Systems/SOTERIX-QA-SHARED.git@v0.20.0
