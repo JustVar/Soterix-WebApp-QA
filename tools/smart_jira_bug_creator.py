@@ -195,8 +195,15 @@ class JiraClient:
             'description': description,
             'issuetype': {'name': issue_type},
         }
-        if labels:
-            fields['labels'] = labels
+        # The delete-me marker rides on the CREATE, not only on the update
+        # below. The update is inside a try/except that logs and continues,
+        # so when it fails a test bug lands in NC's backlog with nothing
+        # saying it is disposable. Same shape as the package's client.
+        issue_labels = list(labels or [])
+        if "[TEST]" in summary and 'automation-test-DELETE-ME' not in issue_labels:
+            issue_labels.append('automation-test-DELETE-ME')
+        if issue_labels:
+            fields['labels'] = issue_labels
 
         # Auto-populate NC mandatory Bug fields from QA Touch data
         if qa_touch_data and qa_touch_mapper and issue_type == 'Bug':
