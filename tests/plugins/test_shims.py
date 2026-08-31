@@ -70,17 +70,20 @@ def _real(p) -> Path:
 # --- 1. module identity -----------------------------------------------------
 
 def test_reporter_shim_is_the_package_module():
+    """The reporter's old import path IS the package module, not a copy."""
     assert shim_reporter is pkg_reporter, (
         'plugins.qatouch_reporter is not the package module. A star-import or '
         'a copied file leaves every monkeypatch seam pointing at a dead object.')
 
 
 def test_client_shim_is_the_package_module():
+    """The client's old import path IS the package module, not a copy."""
     assert shim_client is pkg_client, (
         'tools.qatouch_client is not the package module.')
 
 
 def test_retry_shim_is_the_package_module():
+    """The retry CLI's old import path IS the package module, not a copy."""
     assert shim_retry is pkg_retry, (
         'tools.retry_uploads is not the package module.')
 
@@ -150,6 +153,7 @@ def test_patching_the_old_client_path_reaches_the_upload(monkeypatch, tmp_path):
 
 
 def test_patching_the_old_path_moves_the_failure_log(monkeypatch, tmp_path):
+    """Patching the failure-log path on the old module reaches the sink."""
     target = tmp_path / 'upload_failures.json'
     monkeypatch.setattr(shim_reporter, 'FAILURE_LOG_PATH', target)
 
@@ -167,6 +171,7 @@ def test_patching_the_old_path_moves_the_failure_log(monkeypatch, tmp_path):
     'HISTORY_DIR',
 ])
 def test_writer_paths_resolve_inside_this_repo(name):
+    """Every path the package writes to lands in this repo, not site-packages."""
     value = getattr(pkg_reporter, name)
     assert value is not None, (
         f'{name} is None - reporter.configure(root) never ran. The plugin '
@@ -221,6 +226,7 @@ def test_the_retry_cli_actually_runs_through_the_shim():
 # onto a case no test verifies.
 
 def test_the_injected_policy_is_this_repos_gate(tmp_path):
+    """The shim injected THIS repo's mapping policy, not a permissive default."""
     policy = pkg_reporter.MAPPING_POLICY
     assert policy is not None, (
         'no MAPPING_POLICY injected - the shim must set it before it swaps '
