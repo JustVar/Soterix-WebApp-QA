@@ -1,51 +1,25 @@
-"""Company branding for the generated report pages.
+"""Compatibility shim. The code moved to soterix-qa-shared.
 
-Two PNGs under assets/branding/ carry the logo (see the README there):
-logo-wide.png for page headers, logo-square.png for the browser tab icon.
-Replace the files to change the logo everywhere; the pages embed the bytes
-at build time, so they stay self-contained and older reports keep the logo
-they were built with. A missing file simply leaves the page unbranded.
+Import this path as before; it resolves to soterix_qa_shared.reporting.branding.
+See that repo's docs/RULES.md for why the shim has this exact shape.
 """
-from __future__ import annotations
-
-# Duplicated in soterix-qa-shared (soterix_qa_shared/reporting/branding.py).
-# At migration step 6 this file becomes a shim.
-#
-# One difference is deliberate. Here the logo paths are relative to the
-# working directory, which works only because every caller runs from the
-# repo root. The package takes a root through configure(), because after
-# installation there is no such guarantee.
-import base64
-from functools import lru_cache
-from html import escape
+import sys
 from pathlib import Path
 
-BRAND_DIR = Path('assets') / 'branding'
-WIDE_LOGO = BRAND_DIR / 'logo-wide.png'
-SQUARE_LOGO = BRAND_DIR / 'logo-square.png'
-COMPANY = 'Soterix Systems'
+try:
+    from soterix_qa_shared.reporting import branding as _mod
+except ModuleNotFoundError as exc:
+    if (exc.name or "").split(".")[0] != "soterix_qa_shared":
+        raise                    # a dependency of the package is missing
+    raise ModuleNotFoundError(
+        "soterix-qa-shared is not installed. "
+        "Run: pip install -e ../soterix-qa-shared"
+    ) from None
 
+_ROOT = Path(__file__).resolve().parent.parent
 
-@lru_cache(maxsize=4)
-def _data_uri(path: str) -> str:
-    """The file as a PNG data URI, or '' when it is not there."""
-    p = Path(path)
-    try:
-        return 'data:image/png;base64,' + base64.b64encode(p.read_bytes()).decode('ascii')
-    except OSError:
-        return ''
+# The logos live in THIS repo. The package resolves nothing from __file__,
+# which after installation points into site-packages.
+_mod.configure(_ROOT)
 
-
-def favicon_link() -> str:
-    """The <link rel="icon"> tag for a page head, or '' without a square logo."""
-    uri = _data_uri(str(SQUARE_LOGO))
-    return f'<link rel="icon" type="image/png" href="{uri}">' if uri else ''
-
-
-def header_logo(height_px: int = 44) -> str:
-    """The <img> for a page header, or '' without a wide logo."""
-    uri = _data_uri(str(WIDE_LOGO))
-    if not uri:
-        return ''
-    return (f'<img class="brand" src="{uri}" alt="{escape(COMPANY)}" '
-            f'height="{height_px}" style="height:{height_px}px;width:auto">')
+sys.modules[__name__] = _mod
