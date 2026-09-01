@@ -1,10 +1,10 @@
 # conftest.py
 import importlib
 import logging
-from logging.handlers import RotatingFileHandler
 import os
 import re
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Dict
 
@@ -335,16 +335,23 @@ def _finish_video(video, keep_as: str | None) -> None:
 
 
 @pytest.fixture(scope="session")
-def auth_state_path():
+def auth_state_path(base_url):
     """Path to the cached authentication state file.
 
-    Under pytest-xdist each worker gets its own file so workers never race
-    on a shared cache (each worker is a separate process and session).
+    Scoped to the ENVIRONMENT (its base_url), and under pytest-xdist to the
+    worker. A session is only valid for the host it was created against, so
+    the cache filename carries a slug of the base_url: a run against the US
+    tenant must not load the India tenant's session, and two envs running on
+    one machine at the same time must not fight over one file. On different
+    domains the reused cookies simply do not apply and a stale cache is
+    caught and refreshed; on shared cookie domains (staging vs prod under
+    *.app.example.invalid) a stage session could otherwise pass validation
+    against prod, which is the case a per-env file prevents outright.
     """
+    slug = re.sub(r"[^a-z0-9]+", "-", (base_url or "").lower()).strip("-") or "default"
     worker = os.environ.get("PYTEST_XDIST_WORKER")
-    if worker:
-        return f".auth_state.{worker}.json"
-    return AUTH_STATE_FILE
+    suffix = f".{worker}" if worker else ""
+    return f".auth_state.{slug}{suffix}.json"
 
 
 @pytest.fixture
