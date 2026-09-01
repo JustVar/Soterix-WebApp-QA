@@ -48,6 +48,7 @@ def test_a_genuine_mismatch_is_still_caught(tmp_path):
 
 
 def test_a_case_that_ran_but_is_not_in_the_run_is_flagged(tmp_path):
+    """A case with local results but absent from the run is a real problem."""
     p = _local(tmp_path, [{'nodeid': 't::a', 'outcome': 'passed', 'case_key': 'K9'}])
     with patch.object(vr, 'RUN_RESULTS_PATH', p):
         _, problems = vr._reconcile_local([], 'R')
@@ -55,6 +56,7 @@ def test_a_case_that_ran_but_is_not_in_the_run_is_flagged(tmp_path):
 
 
 def test_unmapped_records_are_counted_not_reconciled(tmp_path):
+    """A record with no case key is a mapping gap, not a reconciliation."""
     p = _local(tmp_path, [{'nodeid': 't::a', 'outcome': 'passed', 'case_key': None}])
     with patch.object(vr, 'RUN_RESULTS_PATH', p):
         checked, problems = vr._reconcile_local([], 'R')
