@@ -1,0 +1,14 @@
+#!/bin/sh
+# Prune QA run evidence older than 30 days. Policy: Soterix-WebApp-QA
+# docs/RUN_WORKFLOWS.md. The permanent history is the git ledger, not the
+# evidence, and everything here is regenerable by re-running the tests.
+# Only run folders (timestamp-prefixed) are candidates; index.html and
+# health.html at the top level are never touched.
+set -u
+ROOT=/data/qa/runs
+LOG=/data/qa/prune.log
+[ -d "$ROOT" ] || exit 0
+find "$ROOT" -maxdepth 1 -type d -name "20*__*" -mtime +30 | while read -r d; do
+    echo "$(date -Is) pruned $d" >> "$LOG"
+    rm -rf "$d"
+done

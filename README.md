@@ -284,6 +284,7 @@ gates before every commit.
 ## More Documentation
 
 - `docs/RUN_WORKFLOWS.md` - what happens after a run: the pane of glass, triage, hosting plan
+- `docs/AUDIT_FINDINGS.md` - the 2026-09 adversarial audit: 30 findings with disposition (fixed/deferred)
 - `docs/CONVENTIONS.md` - engineering conventions: page objects, waits, step capture, markers, adding tests
 - `docs/FAILURE_TRIAGE.md` - reading failure traces (GUI + terminal)
 - `docs/TEAM_CHANGES.md` - reviewing teammates' script changes before refactors (`tools/team_changes.py`)
