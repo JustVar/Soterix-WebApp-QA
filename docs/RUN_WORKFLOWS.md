@@ -97,9 +97,18 @@ folders older than that. `summary.json` files may be kept longer (they
 are kilobytes, and `health.html` reads them). The permanent history is
 the git ledger, not the evidence.
 
-**Manual runs stay local by default.** Publishing a local run to spartan1
-is opt-in, one command, for runs worth sharing. Same philosophy as
-arming: the deliberate act is the filter.
+**Manual runs stay local by default.** Publishing a local run is opt-in,
+one command, for runs worth sharing. Same philosophy as arming: the
+deliberate act is the filter.
+
+```powershell
+venv\Scripts\python.exe tools\publish_run.py            # newest run
+venv\Scripts\python.exe tools\publish_run.py --dry-run  # show, send nothing
+```
+
+The command copies the run folder plus the archive's front-door pages and
+prints the resulting URL. Host and paths are overridable with
+`QA_RUNS_HOST` / `QA_RUNS_DIR` / `QA_RUNS_URL`.
 
 **Until spartan1 is set up:** CI runs upload `reports/` as a GitHub
 artifact with 7-day retention (`qa-nightly.yml` does this today). That is
@@ -114,8 +123,9 @@ the interim, not the goal: an artifact is a zip download, not a page.
 | Git ledger (`history/`) | working, first rows committed |
 | Jira approval queue | working, double-gated |
 | GitHub artifact on CI runs | working, 7-day retention |
-| nginx on spartan1 | planned, not set up |
+| nginx on spartan1 | working: http://10.2.0.2/qa-runs/ (since 09/01/2026) |
+| 30-day prune cron on spartan1 | working, mutation-tested in both directions |
 | Self-hosted runner on spartan1 | planned, after the smoke probe passes by hand |
-| Publish-a-local-run command | planned, after the host exists |
+| Publish-a-local-run command | working: `tools/publish_run.py`, proven with a real publish |
 | Scheduled nightly | commented out in `qa-nightly.yml` until the above |
 | Email report | broken until the Azure secret rotates |
