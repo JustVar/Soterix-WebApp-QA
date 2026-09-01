@@ -10,7 +10,7 @@ folder name may still be the old one.
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
 - **1416 tests collected** across 79 test files, 59 of them UI suites (API tests live in Soterix-API-QA), with `legacy-selenium-tests/` excluded from collection. The c2c hardware tests parametrize over the camera registry, so the count moves with it. `tools/collect_floor.py` holds the current floor and fails a run that collects fewer.
 
-## How we run today
+## How We Run Today
 
 **Run the tests, read the report, report results manually.** That's the current process.
 
@@ -109,14 +109,14 @@ trace out before the next run if you want to keep it. Full guide:
 
 To email the HTML report to someone, see `docs/EMAIL_REPORTS.md`.
 
-### Parallel runs (experimental)
+### Parallel Runs (Experimental)
 
 `pytest <files> -n 2 --dist loadfile` runs one test file per worker. A
 2-worker run against the QA tenant worked without session conflicts, but
 shared tenant data and hardware suites set limits. Read
 [docs/PARALLEL_EXECUTION.md](docs/PARALLEL_EXECUTION.md) before using `-n`.
 
-### Verification mode (QA reviewer flow)
+### Verification Mode (QA Reviewer Flow)
 
 ```powershell
 # Captures per-step screenshots into verification_output/screenshots/
@@ -169,13 +169,13 @@ docs/                      # Setup guides, integration plans, maintenance remind
 
 `legacy-selenium-tests/` exists for reference but is excluded from test collection via `pytest.ini`'s `norecursedirs`, which also still names `legacy/` from before that directory was removed.
 
-## Optional integrations (work in progress)
+## Optional Integrations (Work in Progress)
 
 > **Not part of the current workflow.** Everything below is built but still being fine-tuned.
 > None of it runs unless you explicitly opt in - a plain `pytest` run never contacts QA
 > Touch or Jira. Results are reported manually today.
 
-### QA Touch result upload - WIP
+### QA Touch Result Upload - WIP
 
 Opt in with `pytest --qatouch-upload --qatouch-run <KEY>`, or run the orchestrated
 pipeline with `python tools/run_suite.py smoke` (clones the per-suite template into a
@@ -195,7 +195,7 @@ fresh run key so history is preserved; `--dry-run` prints what would happen).
 - **Retry:** 3 attempts with exponential backoff. On final failure results land in
   `logs/upload_failures.json` for retry via `tools/retry_uploads.py`.
 
-### Automatic Jira bug filing - WIP, off by default
+### Automatic Jira Bug Filing - WIP, Off by Default
 
 Gated by `BUG_CREATION_ENABLED`, which defaults to `false`. In that state the filer
 dry-runs and returns fake `AUTO-XXXX` issue dicts so payloads can be inspected without
@@ -220,7 +220,7 @@ Tests may opt into the `step_capture` fixture to mark logical steps (one `.mark(
 
 Convention details + examples: `docs/CONVENTIONS.md` under Step capture.
 
-## Markers (65 defined in `pytest.ini`)
+## Markers (64 Defined in `pytest.ini`)
 
 - **Type:** `smoke`, `sanity`, `regression`, `api`, `ui`
 - **Feature:** `admin`, `views_devices`, `events`, `search`, `media`, `maps`, `chats`, `licenses`, `insights`, `notifications`, `sequences`, etc.
