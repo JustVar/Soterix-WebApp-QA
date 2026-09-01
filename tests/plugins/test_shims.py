@@ -52,9 +52,17 @@ from soterix_qa_shared.qatouch.results import (
 from soterix_qa_shared.qatouch.upload import QATouchUploadSink
 
 from soterix_qa_shared.reporting import email as pkg_email
+from soterix_qa_shared.reporting import health as pkg_health
+from soterix_qa_shared.reporting import media as pkg_media
+from soterix_qa_shared.reporting import run_archive as pkg_run_archive
+from soterix_qa_shared.reporting import run_report as pkg_run_report
 
 from plugins import qatouch_reporter as shim_reporter
+from plugins import report_media as shim_media
+from plugins import run_archive as shim_run_archive
+from plugins import run_report as shim_run_report
 from tools import email_client as shim_email
+from tools import health_summary as shim_health
 from tools import qatouch_client as shim_client
 from tools import retry_uploads as shim_retry
 
@@ -95,6 +103,28 @@ def test_email_client_shim_is_the_package_module():
     """The Graph email client's old import path IS the package module."""
     assert shim_email is pkg_email, (
         'tools.email_client is not the package module.')
+
+
+def test_report_media_shim_is_the_package_module():
+    """The media plugin's old path IS the package module. A copy would keep
+    capturing while the package's capture evolved without it."""
+    assert shim_media is pkg_media, 'plugins.report_media is not the package module.'
+
+
+def test_run_archive_shim_is_the_package_module():
+    """The archive plugin's old path IS the package module."""
+    assert shim_run_archive is pkg_run_archive, 'plugins.run_archive is not the package module.'
+
+
+def test_run_report_shim_is_the_package_module():
+    """The run-report writer's old path IS the package module."""
+    assert shim_run_report is pkg_run_report, 'plugins.run_report is not the package module.'
+
+
+def test_health_summary_shim_is_the_package_module():
+    """The health CLI's old path IS the package module, so its functions
+    stay importable and its CLI still runs for this repo's root."""
+    assert shim_health is pkg_health, 'tools.health_summary is not the package module.'
 
 
 def test_shim_is_registered_under_one_name_only(pytestconfig):

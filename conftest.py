@@ -10,10 +10,15 @@ from typing import Dict
 
 import pytest
 
+# Register plugins
+# The products path rule (tests/ui/c2c -> Camera 2 Cloud) lives in the
+# products shim, which self-configures on import. The reporting modules
+# now import the PACKAGE products directly, so nothing else triggers that
+# side effect - import it here so the rule is set for the session.
+import plugins.products
 from config.base_config import config  # dict resolved from ENV
 from plugins.paths import fit_name
 
-# Register plugins
 pytest_plugins = ['plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
                   'plugins.run_archive', 'plugins.single_run_guard',
                   'tests.shared.api.fixtures']

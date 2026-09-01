@@ -108,10 +108,16 @@ def test_suffix_for_uncaptured_phases(when, outcome):
 # ---------------------------------------------------------------------------
 
 def test_expected_trace_path_shape():
-    """The expected trace path is reports/artifacts/<stem>-trace.zip."""
+    """The expected trace path ends reports/artifacts/<stem>-trace.zip.
+
+    Since the package extraction, the plugin roots its paths at the repo
+    (configure() runs in pytest_sessionstart), so the path is absolute
+    rather than CWD-relative. It resolves to the same file when run from the
+    repo root; the tail is what this pins."""
     nodeid = 'tests/ui/x.py::test_t[chromium]'
-    assert rm._expected_trace_path(nodeid) == \
-        Path('reports') / 'artifacts' / 'tests-ui-x.py-test_t-chromium-trace.zip'
+    got = rm._expected_trace_path(nodeid)
+    assert got.parent.parts[-2:] == ('reports', 'artifacts')
+    assert got.name == 'tests-ui-x.py-test_t-chromium-trace.zip'
 
 
 def test_expected_trace_path_keeps_the_150_cap():
