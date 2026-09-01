@@ -95,21 +95,38 @@ def publish(run_dir: Path, host: str, dest: str,
     not bound as a default, so a test's monkeypatch of subprocess.run
     actually intercepts.
 
+    Atomic on the host: the folder is scp'd to a hidden `.pub-tmp-<name>`
+    first, then moved into place with a single `mv`, which is atomic on one
+    filesystem. An scp interrupted mid-transfer (a dropped WireGuard tunnel)
+    therefore leaves only a hidden temp - never a partial run folder that
+    the archive lists and a reviewer opens as if it were complete. The temp
+    name starts with a dot, so nginx's dotfile-deny never serves it either.
+
     scp runs with BatchMode (never drops to an interactive password prompt on
     a revoked key) and a connect timeout (an unreachable-but-not-refusing
     host fails fast instead of hanging the publish).
     """
-    scp = ['scp', '-q', '-r', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10']
+    opts = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10']
+    tmp = f'{dest}/.pub-tmp-{run_dir.name}'
+    final = f'{dest}/{run_dir.name}'
     if dry_run:
-        print(f'  would stage {run_dir.name} without traces/ or *.webm, then '
-              + ' '.join(scp) + f' <staged> {host}:{dest}/')
+        print(f'  would stage {run_dir.name} without traces/ or *.webm, scp it '
+              f'to {host}:{tmp}, then mv it to {final}')
         return 0
     import shutil
+    run = runner or subprocess.run
     staged = _staged_copy(run_dir)
     try:
-        proc = (runner or subprocess.run)(
-            [*scp, str(staged), f'{host}:{dest}/'], check=False)
-        return 0 if proc.returncode == 0 else 1
+        # Clear any leftover temp from a prior interrupted publish, copy, then
+        # atomically swing it into place (removing an old copy first, since mv
+        # onto a non-empty dir is not a replace).
+        run(['ssh', *opts, host, f'rm -rf {tmp}'], check=False)
+        scp = run(['scp', '-q', '-r', *opts, str(staged), f'{host}:{tmp}'], check=False)
+        if scp.returncode != 0:
+            run(['ssh', *opts, host, f'rm -rf {tmp}'], check=False)
+            return 1
+        mv = run(['ssh', *opts, host, f'rm -rf {final} && mv {tmp} {final}'], check=False)
+        return 0 if mv.returncode == 0 else 1
     finally:
         shutil.rmtree(staged.parent, ignore_errors=True)
 

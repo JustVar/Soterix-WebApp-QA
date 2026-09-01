@@ -79,8 +79,15 @@ def _reconcile_local(rows: list[dict], run_key: str) -> tuple[int, list[str]]:
         return 0, []
 
     by_case = {r.get('case_id'): normalize_status_name(r.get('status')) for r in rows}
-    problems: list[str] = []
-    checked = 0
+
+    # Fold to the WORST outcome per case first. 42 case keys are shared by
+    # more than one node id, and the upload sends the worst of them (a fail
+    # wins over a pass). Comparing each record on its own therefore flagged
+    # a false FAIL: the passing test that shares a case with a failing one
+    # saw the run's (correct) Failed and reported a mismatch. Reconcile the
+    # case the way it was uploaded.
+    rank = {'passed': 0, 'skipped': 1, 'failed': 2}
+    worst: dict[str, str] = {}
     unmapped = 0
     for rec in local.get('results') or []:
         outcome = rec.get('outcome')
@@ -90,7 +97,11 @@ def _reconcile_local(rows: list[dict], run_key: str) -> tuple[int, list[str]]:
         if not case_key:
             unmapped += 1
             continue
-        checked += 1
+        if rank.get(outcome, -1) > rank.get(worst.get(case_key), -1):
+            worst[case_key] = outcome
+
+    problems: list[str] = []
+    for case_key, outcome in worst.items():
         want = normalize_status_name(STATUS_NAMES[PYTEST_TO_QATOUCH[outcome]])
         got = by_case.get(case_key)
         if got is None:
@@ -100,7 +111,7 @@ def _reconcile_local(rows: list[dict], run_key: str) -> tuple[int, list[str]]:
     if unmapped:
         print(f'  [{WARN}] {unmapped} local result(s) had no QA Touch case - '
               f'nothing was uploaded for them (mapping gap)')
-    return checked, problems
+    return len(worst), problems
 
 
 def validate_run(run_key: str, project_key: str, local_count: int | None = None) -> int:

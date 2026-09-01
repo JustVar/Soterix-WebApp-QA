@@ -50,11 +50,16 @@ def _capture(monkeypatch):
     return calls
 
 
+def _scp_call(calls):
+    """The scp command among the ssh/scp sequence (ssh rm, scp, ssh mv)."""
+    return next(c for c in calls if c and c[0] == 'scp')
+
+
 def test_default_is_the_newest_run(runs, monkeypatch, capsys):
     """With no argument, the newest archived run is the one published."""
     calls = _capture(monkeypatch)
     assert pr.main([]) == 0
-    cmd = calls[0]
+    cmd = _scp_call(calls)
     assert any('2026-09-01_10-39-03__tests-ui-licenses' in a for a in cmd)
     assert not any('2026-08-31' in a for a in cmd)
 
@@ -68,8 +73,9 @@ def test_traces_and_videos_are_never_sent(runs, monkeypatch, tmp_path):
     class Proc:
         returncode = 0
     def fake_run(cmd, check):
-        staged = pr.Path(cmd[-2])            # the source arg to scp
-        staged_paths.append(sorted(p.name for p in staged.rglob('*')))
+        if cmd and cmd[0] == 'scp':
+            staged = pr.Path(cmd[-2])        # the source arg to scp
+            staged_paths.append(sorted(p.name for p in staged.rglob('*')))
         return Proc()
     monkeypatch.setattr(pr.subprocess, 'run', fake_run)
     assert pr.main([]) == 0
@@ -86,7 +92,7 @@ def test_the_local_index_is_not_pushed_over_the_hosts(runs, monkeypatch):
     is partial and must not overwrite the host's fuller view."""
     calls = _capture(monkeypatch)
     assert pr.main([]) == 0
-    joined = ' '.join(str(a) for a in calls[0])
+    joined = ' '.join(str(a) for c in calls for a in c)
     assert 'index.html' not in joined
     assert 'health.html' not in joined
 
@@ -95,7 +101,7 @@ def test_a_named_run_is_published_exactly(runs, monkeypatch):
     """Naming a run publishes that run, not the newest."""
     calls = _capture(monkeypatch)
     assert pr.main(['2026-08-31_12-00-00__tests']) == 0
-    assert any('2026-08-31_12-00-00__tests' in a for a in calls[0])
+    assert any('2026-08-31_12-00-00__tests' in a for a in _scp_call(calls))
 
 
 def test_a_missing_run_refuses_with_the_available_names(runs, monkeypatch, capsys):
@@ -136,10 +142,12 @@ def test_dry_run_runs_nothing(runs, monkeypatch, capsys):
 
 
 def test_scp_failure_is_exit_1_with_a_hint(runs, monkeypatch, capsys):
-    """A failed copy exits 1 and tells the reader about key setup."""
-    class Proc:
-        returncode = 1
-    monkeypatch.setattr(pr.subprocess, 'run', lambda cmd, check: Proc())
+    """A failed copy exits 1 and tells the reader about key setup. The partial
+    temp is cleaned up rather than left as a half-run."""
+    def fake_run(cmd, check):
+        rc = 1 if cmd and cmd[0] == 'scp' else 0
+        return type('P', (), {'returncode': rc})()
+    monkeypatch.setattr(pr.subprocess, 'run', fake_run)
     assert pr.main([]) == 1
     assert 'key installed' in capsys.readouterr().out
 
@@ -150,4 +158,5 @@ def test_host_and_dir_come_from_the_environment(runs, monkeypatch):
     monkeypatch.setenv('QA_RUNS_DIR', '/srv/runs')
     calls = _capture(monkeypatch)
     assert pr.main([]) == 0
-    assert calls[0][-1] == 'me@elsewhere:/srv/runs/'
+    scp = _scp_call(calls)
+    assert scp[-1].startswith('me@elsewhere:/srv/runs/.pub-tmp-')
