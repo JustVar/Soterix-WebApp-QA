@@ -29,6 +29,12 @@ the next run can overwrite anything. Three pages make the archive readable:
   tests to watch, each module's last run. Regenerate it with
   `python run.py health`.
 
+The hosted archive at http://10.2.0.2/qa-runs/ is behind HTTP basic auth
+(user `qa`; the password is in the team password store, not in git). It is
+one shared read-only viewing credential, so a dropped WireGuard unit or a
+new reviewer needs no per-person setup. The publish command below uses SSH,
+not this credential, so publishing is unaffected.
+
 The archive is local to the machine that ran the tests, and gitignored on
 purpose: a week of evidence measured 4.4 GB before pruning, and all of it
 is regenerable by re-running. The plugin already prunes locally, keeping
@@ -138,7 +144,7 @@ either direction. GitHub-HOSTED runs (`qa-nightly.yml` today) upload
 | Git ledger (`history/`) | working, first rows committed |
 | Jira approval queue | working, double-gated |
 | GitHub artifact on CI runs | working, 7-day retention |
-| nginx on spartan1 | working: http://10.2.0.2/qa-runs/ (since 09/01/2026) |
+| nginx on spartan1 | working: http://10.2.0.2/qa-runs/ (since 09/01/2026), HTTP basic auth (user `qa`), dotfiles denied |
 | 30-day prune cron on spartan1 | working, mutation-tested in both directions |
 | Nightly cron on spartan1 (`/data/qa/ci/nightly.sh`) | working: proven end to end, first schedule 09/02 04:00 Chicago |
 | Self-hosted GitHub runner | deferred by comparison; adopt when PR-triggered or on-demand GitHub runs are wanted |
