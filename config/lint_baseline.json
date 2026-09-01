@@ -1,6 +1,6 @@
 {
   "comment": "Per-file ruff finding counts. Lower is always fine; higher needs a reason. See tools/lint_baseline.py.",
-  "total": 643,
+  "total": 641,
   "files": {
     "config/base_config.py": 1,
     "conftest.py": 29,
@@ -87,7 +87,6 @@
     "tools/debug_oauth_token.py": 1,
     "tools/detect_merged_steps.py": 2,
     "tools/detect_merged_steps_rest.py": 2,
-    "tools/email_client.py": 2,
     "tools/excel_step_importer.py": 5,
     "tools/generate_step_stubs.py": 2,
     "tools/independent_audit.py": 25,

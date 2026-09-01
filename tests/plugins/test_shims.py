@@ -51,7 +51,10 @@ from soterix_qa_shared.qatouch.results import (
 )
 from soterix_qa_shared.qatouch.upload import QATouchUploadSink
 
+from soterix_qa_shared.reporting import email as pkg_email
+
 from plugins import qatouch_reporter as shim_reporter
+from tools import email_client as shim_email
 from tools import qatouch_client as shim_client
 from tools import retry_uploads as shim_retry
 
@@ -86,6 +89,12 @@ def test_retry_shim_is_the_package_module():
     """The retry CLI's old import path IS the package module, not a copy."""
     assert shim_retry is pkg_retry, (
         'tools.retry_uploads is not the package module.')
+
+
+def test_email_client_shim_is_the_package_module():
+    """The Graph email client's old import path IS the package module."""
+    assert shim_email is pkg_email, (
+        'tools.email_client is not the package module.')
 
 
 def test_shim_is_registered_under_one_name_only(pytestconfig):

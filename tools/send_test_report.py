@@ -1,90 +1,32 @@
-"""Send test run report via email.
+"""Send a test run report by email. Thin CLI over the shared package.
 
 Usage:
   python tools/send_test_report.py [report_file] [recipient_email]
 
-The recipient comes from the second argument, or from REPORT_RECIPIENT in your
-.env / environment. There is no built-in default address, so a report is never
-mailed to someone unexpected.
-
-Examples:
-  python tools/send_test_report.py reports/report.html qa-reports@soterixsystems.com
-  REPORT_RECIPIENT=qa-reports@soterixsystems.com python tools/send_test_report.py
+The recipient comes from the second argument or REPORT_RECIPIENT. The report
+path is relative to this repo's root; the package's send_report takes the
+absolute path. Credentials come from .env (AZURE_* / EMAIL_FROM), loaded
+here because this is the entry point.
 """
-import os
+from __future__ import annotations
+
 import sys
-from datetime import datetime
 from pathlib import Path
 
-from email_client import GraphEmailClient
+from dotenv import load_dotenv
+from soterix_qa_shared.reporting.email import send_report
 
-DEFAULT_REPORT = "reports/report.html"
 ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_REPORT = 'reports/report.html'
 
 
-def send_report(report_file: str = DEFAULT_REPORT, recipient: str | None = None):
-    """Send HTML test report via email.
-
-    Args:
-        report_file: Path to HTML report file
-        recipient: Email address to send to. Falls back to REPORT_RECIPIENT.
-    """
-    recipient = recipient or os.environ.get("REPORT_RECIPIENT")
-    if not recipient:
-        print("[ERROR] No recipient. Pass one as the 2nd argument or set "
-              "REPORT_RECIPIENT in .env.")
-        return False
-
-    report_path = ROOT / report_file
-
-    if not report_path.exists():
-        print("[ERROR] Report file not found: " + str(report_path))
-        return False
-
-    # Read the HTML report
-    html_content = report_path.read_text(encoding="utf-8", errors="replace")
-
-    # Extract title from HTML for email subject
-    title = "Test Run Report"
-    if "<title>" in html_content:
-        start = html_content.find("<title>") + 7
-        end = html_content.find("</title>")
-        title = html_content[start:end].strip()
-
-    # Create email body with embedded report
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    email_body = f"""
-    <h2>{title}</h2>
-    <p><strong>Generated:</strong> {timestamp}</p>
-    <hr>
-    {html_content}
-    """
-
-    try:
-        client = GraphEmailClient()
-        status = client.send_email(
-            to=recipient,
-            subject=f"Test Report: {title}",
-            body_html=email_body,
-            attachments=[str(report_path)]
-        )
-        print("[SUCCESS] Email sent to " + recipient)
-        print("   Report: " + report_file)
-        print("   Status: " + str(status))
-        return True
-    except Exception as e:
-        print("[ERROR] Failed to send email: " + str(e))
-        return False
+def main(argv: list[str] | None = None) -> int:
+    load_dotenv(ROOT / '.env')
+    argv = sys.argv[1:] if argv is None else argv
+    report = argv[0] if argv else DEFAULT_REPORT
+    recipient = argv[1] if len(argv) > 1 else None
+    return 0 if send_report(ROOT / report, recipient) else 1
 
 
-if __name__ == "__main__":
-    report = DEFAULT_REPORT
-    recipient = None
-
-    if len(sys.argv) > 1:
-        report = sys.argv[1]
-    if len(sys.argv) > 2:
-        recipient = sys.argv[2]
-
-    success = send_report(report, recipient)
-    sys.exit(0 if success else 1)
+if __name__ == '__main__':
+    sys.exit(main())
