@@ -21,3 +21,21 @@ PyYAML==6.0.3
 # machine last installed. This repo had 0.16.1 while the API repo had
 # 0.16.2, both claiming ruff>=0.15.
 ruff==0.16.5
+
+# The shared QA pipeline: the QA Touch client, the result reporter, the Jira
+# layer and the CI gates. `plugins/` and `tools/` here are thin shims over it,
+# so without it pytest cannot even collect.
+#
+# Over HTTPS on purpose, so `pip install -r requirements.txt` is the ONLY
+# setup step. The team's git already speaks HTTPS to github.com, so the
+# credential you use for `git clone` is the one pip uses here. You need read
+# access to the repo, which is separate from access to this one.
+#
+# Pinned to a TAG, not a branch, because a run's results are only comparable
+# if everyone is on the same pipeline.
+#
+# CHANGING THE PACKAGE: clone it beside this repo and install it editable,
+# which overrides the pin until you reinstall:
+#     git clone https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git ../soterix-qa-shared
+#     pip install -e ../soterix-qa-shared
+soterix-qa-shared @ git+https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git@v0.20.0

@@ -35,16 +35,23 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
-      # requirements-shared.txt installs the package from a private repo
-      # over SSH. The deploy key is read-only and scoped to that repo alone:
-      # it cannot push, and it cannot read this repository. It is separate
-      # from requirements.txt so a local `pip install -r requirements.txt`
-      # keeps working with no credential at all.
+      # requirements.txt names the shared package over HTTPS, which is what a
+      # developer's git already speaks, so `pip install -r requirements.txt`
+      # is the only setup step locally. CI has no HTTPS credential for a
+      # private repo, so it loads the read-only deploy key below and rewrites
+      # that ONE url to SSH. The key cannot push and cannot read this
+      # repository. The rewrite is scoped to the single repo on purpose: a
+      # blanket github.com rewrite would also catch anything else in this job
+      # that clones over HTTPS.
       - uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
+      - name: Send the shared package over the deploy key
+        run: >
+          git config --global
+          url."git@github.com:Soterix-Systems/SOTERIX-QA-SHARED.git".insteadOf
+          "https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git"
       - run: pip install -r requirements.txt
-      - run: pip install -r requirements-shared.txt
 
       # No `playwright install`. Collection and fixture planning need the
       # python package, not a browser binary, and downloading three browsers
@@ -107,7 +114,11 @@ jobs:
       - uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
+      - name: Send the shared package over the deploy key
+        run: >
+          git config --global
+          url."git@github.com:Soterix-Systems/SOTERIX-QA-SHARED.git".insteadOf
+          "https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git"
       - run: pip install -r requirements.txt
-      - run: pip install -r requirements-shared.txt
       - name: Shim guards on ${{ matrix.python-version }}
         run: pytest tests/plugins/test_shims.py

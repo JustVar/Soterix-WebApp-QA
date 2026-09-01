@@ -33,29 +33,35 @@ python -m venv venv
 venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-pip install -e ../soterix-qa-shared      # the shared QA pipeline
 python -m playwright install chromium
 ```
+
+That is the whole setup. `requirements.txt` pulls in the shared QA pipeline
+(`soterix-qa-shared`) for you, over HTTPS, using the same GitHub login your
+`git clone` used. You need read access to that repo, which is granted
+separately from this one: if pip reports a 404, ask for it rather than
+hunting for a token.
 
 `requirements.txt` pins exact versions (playwright 1.62.0, pytest-playwright
 0.8.0), so a fresh clone installs the same set the suite was verified against.
 Upgrade deliberately: change the pin, run a suite, then commit.
 
-The `pip install -e ../soterix-qa-shared` line is not optional. It installs
-the shared QA pipeline from the sibling checkout: the QA Touch client, the
-result reporter and the Jira layer, which `plugins/` and `tools/` import
-through thin shims. Without it every pytest run stops at `ImportError: ...
-soterix-qa-shared is not installed`. Clone it beside this repo first:
+`requirements.txt` pins the shared pipeline to a TAG, so everyone runs the
+same reporter and the same client. `plugins/` and `tools/` here are thin
+shims over it, which is why nothing collects without it.
+
+**Only if you need to change the shared package**, clone it beside this repo
+and install it editable. That overrides the pinned copy until you reinstall,
+so you can test a package change here before tagging it:
 
 ```powershell
 cd ..
 git clone https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git soterix-qa-shared
+cd playwright-soterix-qa
+pip install -e ../soterix-qa-shared
 ```
 
-Editable and local on purpose, so a change there can be tested here before
-it is tagged, and so no credential is needed. CI installs the same package
-from a pinned tag instead, over SSH with a read-only deploy key
-(`requirements-shared.txt`). Do not use that file locally.
+Most people never need this.
 
 Copy the env template and fill in the automation credentials:
 
