@@ -21,11 +21,21 @@ from tools import publish_run as pr  # noqa: E402
 
 @pytest.fixture
 def runs(tmp_path, monkeypatch):
-    """A fake archive with two runs and the front-door pages."""
+    """A fake archive with two runs. The newest carries the sensitive
+    evidence (a trace zip and a video) plus the safe pages, so the exclusion
+    can be checked."""
     d = tmp_path / 'runs'
     d.mkdir()
     (d / '2026-08-31_12-00-00__tests').mkdir()
-    (d / '2026-09-01_10-39-03__tests-ui-licenses').mkdir()
+    newest = d / '2026-09-01_10-39-03__tests-ui-licenses'
+    newest.mkdir()
+    (newest / 'run.html').write_text('run', encoding='utf-8')
+    (newest / 'summary.json').write_text('{}', encoding='utf-8')
+    (newest / 'traces').mkdir()
+    (newest / 'traces' / 'test-trace.zip').write_bytes(b'PK\x03\x04secret-cookie')
+    (newest / 'test-video.webm').write_bytes(b'\x1avideo')
+    (newest / 'screenshots').mkdir()
+    (newest / 'screenshots' / 'shot.png').write_bytes(b'\x89PNG')
     (d / 'index.html').write_text('index', encoding='utf-8')
     (d / 'health.html').write_text('health', encoding='utf-8')
     monkeypatch.setattr(pr, 'RUNS', d)
@@ -49,13 +59,36 @@ def test_default_is_the_newest_run(runs, monkeypatch, capsys):
     assert not any('2026-08-31' in a for a in cmd)
 
 
-def test_the_front_door_pages_ride_along(runs, monkeypatch):
-    """index.html and health.html keep the host's entry point current."""
+def test_traces_and_videos_are_never_sent(runs, monkeypatch, tmp_path):
+    """The trace zip carries a live session cookie and a fresh-login test's
+    trace carries the account password; the video shows the authenticated
+    session. Neither leaves the machine. What is staged for the host is the
+    run.html, summary.json and screenshots only."""
+    staged_paths = []
+    class Proc:
+        returncode = 0
+    def fake_run(cmd, check):
+        staged = pr.Path(cmd[-2])            # the source arg to scp
+        staged_paths.append(sorted(p.name for p in staged.rglob('*')))
+        return Proc()
+    monkeypatch.setattr(pr.subprocess, 'run', fake_run)
+    assert pr.main([]) == 0
+    names = staged_paths[0]
+    assert 'test-trace.zip' not in names
+    assert 'traces' not in names
+    assert 'test-video.webm' not in names
+    assert 'run.html' in names
+    assert 'shot.png' in names               # screenshots still go
+
+
+def test_the_local_index_is_not_pushed_over_the_hosts(runs, monkeypatch):
+    """Each machine sees only its own runs, so a local index.html/health.html
+    is partial and must not overwrite the host's fuller view."""
     calls = _capture(monkeypatch)
     assert pr.main([]) == 0
-    joined = ' '.join(calls[0])
-    assert 'index.html' in joined
-    assert 'health.html' in joined
+    joined = ' '.join(str(a) for a in calls[0])
+    assert 'index.html' not in joined
+    assert 'health.html' not in joined
 
 
 def test_a_named_run_is_published_exactly(runs, monkeypatch):
@@ -85,9 +118,10 @@ def test_a_non_run_folder_is_refused(runs, monkeypatch, capsys):
 
 def test_an_empty_archive_is_an_error_not_a_publish(runs, monkeypatch):
     """No archived runs means exit 2 and no copy, not an empty publish."""
+    import shutil
     for p in list(runs.iterdir()):
         if p.is_dir():
-            p.rmdir()
+            shutil.rmtree(p)
     calls = _capture(monkeypatch)
     assert pr.main([]) == 2
     assert calls == []
@@ -98,7 +132,7 @@ def test_dry_run_runs_nothing(runs, monkeypatch, capsys):
     calls = _capture(monkeypatch)
     assert pr.main(['--dry-run']) == 0
     assert calls == []
-    assert 'would run: scp' in capsys.readouterr().out
+    assert 'would stage' in capsys.readouterr().out
 
 
 def test_scp_failure_is_exit_1_with_a_hint(runs, monkeypatch, capsys):

@@ -8,10 +8,14 @@ This is that decision, as one command:
   python tools/publish_run.py 2026-09-01_10-39-03__tests-ui-licenses  # named
   python tools/publish_run.py --dry-run   # show what would be copied
 
-What it copies: the run's folder, plus the archive's index.html and
-health.html when they exist, so the front door on the host stays current.
-Nothing is deleted on the host; the 30-day prune there is the only thing
-that removes runs. The full workflow: docs/RUN_WORKFLOWS.md.
+What it copies: the run's folder, MINUS traces/ and videos. A Playwright
+trace carries a live session cookie and, on a fresh-login test, the account
+password, so it never leaves the machine that made it - keep it local for
+`playwright show-trace`. The local index.html/health.html are not sent
+either: each machine sees only its own runs, so they are partial. nginx
+autoindex lists the runs on the host. Nothing is deleted on the host; the
+30-day prune there is the only thing that removes runs. The full workflow:
+docs/RUN_WORKFLOWS.md.
 
 The destination defaults to soterix@10.2.0.2:/data/qa/runs and can be
 overridden with QA_RUNS_HOST / QA_RUNS_DIR. Copying uses scp, which every
@@ -53,31 +57,61 @@ def newest_run(runs_dir: Path | None = None) -> Path | None:
     return max(candidates, key=lambda p: p.name) if candidates else None
 
 
-def sources(run_dir: Path, runs_dir: Path | None = None) -> list[Path]:
-    """The run folder plus the front-door pages that exist."""
-    runs_dir = RUNS if runs_dir is None else runs_dir
-    out = [run_dir]
-    for name in ('index.html', 'health.html'):
-        page = runs_dir / name
-        if page.exists():
-            out.append(page)
-    return out
+# Never leaves the machine that produced it. A Playwright trace records the
+# full network log, so an authenticated request carries a live
+# `Cookie: JSESSIONID=...` and a fresh-login test's trace carries the login
+# POST body with the account password. Videos show the authenticated
+# session. The shared host is for triage-by-glance (run.html, screenshots,
+# logs); the trace stays local for `playwright show-trace`.
+EXCLUDE_DIRS = {'traces'}
+EXCLUDE_SUFFIXES = {'.webm'}
 
 
-def publish(paths: list[Path], host: str, dest: str,
+def _staged_copy(run_dir: Path) -> Path:
+    """A copy of the run folder with traces and videos removed, in a temp
+    dir. The caller scps this instead of the original."""
+    import shutil
+    import tempfile
+
+    def ignore(_directory, names):
+        drop = {n for n in names if n in EXCLUDE_DIRS}
+        drop |= {n for n in names if Path(n).suffix in EXCLUDE_SUFFIXES}
+        return drop
+
+    tmp = Path(tempfile.mkdtemp(prefix='qa-publish-'))
+    staged = tmp / run_dir.name
+    shutil.copytree(run_dir, staged, ignore=ignore)
+    return staged
+
+
+def publish(run_dir: Path, host: str, dest: str,
             dry_run: bool = False, runner=None) -> int:
-    """scp each source to the host. Returns the exit code.
+    """Copy a run folder to the host, minus the sensitive evidence.
 
-    `runner` is resolved at CALL time, not bound as a default, so a test's
-    monkeypatch of subprocess.run actually intercepts. The first version
-    bound it in the signature, and two "offline" tests fired real scp.
+    Only the run folder is sent, never the local index.html/health.html: each
+    machine sees only its own runs, so a local index is always partial and
+    would overwrite the host's fuller view. nginx autoindex lists the runs,
+    and the host rebuilds the real index. `runner` is resolved at CALL time,
+    not bound as a default, so a test's monkeypatch of subprocess.run
+    actually intercepts.
+
+    scp runs with BatchMode (never drops to an interactive password prompt on
+    a revoked key) and a connect timeout (an unreachable-but-not-refusing
+    host fails fast instead of hanging the publish).
     """
-    cmd = ['scp', '-q', '-r', *[str(p) for p in paths], f'{host}:{dest}/']
+    scp = ['scp', '-q', '-r', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10']
     if dry_run:
-        print('  would run: ' + ' '.join(cmd))
+        print(f'  would stage {run_dir.name} without traces/ or *.webm, then '
+              + ' '.join(scp) + f' <staged> {host}:{dest}/')
         return 0
-    proc = (runner or subprocess.run)(cmd, check=False)
-    return 0 if proc.returncode == 0 else 1
+    import shutil
+    staged = _staged_copy(run_dir)
+    try:
+        proc = (runner or subprocess.run)(
+            [*scp, str(staged), f'{host}:{dest}/'], check=False)
+        return 0 if proc.returncode == 0 else 1
+    finally:
+        shutil.rmtree(staged.parent, ignore_errors=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -110,10 +144,9 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         run_dir = found
 
-    paths = sources(run_dir)
-    print(f'  publishing {run_dir.name} (+{len(paths) - 1} front-door page(s)) '
+    print(f'  publishing {run_dir.name} (traces and videos stay local) '
           f'to {host}:{dest}')
-    code = publish(paths, host, dest, dry_run=args.dry_run)
+    code = publish(run_dir, host, dest, dry_run=args.dry_run)
     if code == 0 and not args.dry_run:
         print(f'  done: {url}/{run_dir.name}/run.html')
     elif code != 0:

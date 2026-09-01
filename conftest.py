@@ -348,7 +348,13 @@ def auth_state_path(base_url):
     *.app.example.invalid) a stage session could otherwise pass validation
     against prod, which is the case a per-env file prevents outright.
     """
-    slug = re.sub(r"[^a-z0-9]+", "-", (base_url or "").lower()).strip("-") or "default"
+    # base_url AND box. The India and US tenants share one base_url on
+    # ENV=qa (both hit qa.example.invalid) and differ only by which
+    # account BOX selects, so keying on base_url alone would let one box
+    # load the other's session. box is part of the key too.
+    box = os.environ.get("BOX", "").strip().lower()
+    parts = "-".join(p for p in (base_url or "", box) if p)
+    slug = re.sub(r"[^a-z0-9]+", "-", parts.lower()).strip("-") or "default"
     worker = os.environ.get("PYTEST_XDIST_WORKER")
     suffix = f".{worker}" if worker else ""
     return f".auth_state.{slug}{suffix}.json"

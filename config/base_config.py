@@ -56,8 +56,15 @@ def load_config():
 
 # Helpers to expose box/credential and safety checks
 def get_active_box():
-    """Get the active box name from environment or default."""
-    return os.environ.get("BOX", "us").strip().lower()
+    """Get the active box name from environment or default.
+
+    The default matches config['default_box'] for the active env, so an
+    unset BOX resolves the same way here and in get_box_config. It used to
+    hardcode 'us' while the env config defaulted to 'india', so the two
+    disagreed on which tenant an unset BOX meant.
+    """
+    default = config.get("default_box", "us")
+    return os.environ.get("BOX", default).strip().lower()
 
 
 def get_credentials():
