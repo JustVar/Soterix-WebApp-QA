@@ -8,7 +8,7 @@ folder name may still be the old one.
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **830 tests collected** across 59 files (UI only; API tests live in Soterix-API-QA), with `legacy/` and `legacy-selenium-tests/` excluded from collection. The c2c hardware tests parametrize over the camera registry, so the count moves with it.
+- **1416 tests collected** across 79 test files, 59 of them UI suites (API tests live in Soterix-API-QA), with `legacy-selenium-tests/` excluded from collection. The c2c hardware tests parametrize over the camera registry, so the count moves with it. `tools/collect_floor.py` holds the current floor and fails a run that collects fewer.
 
 ## How we run today
 
@@ -143,7 +143,7 @@ config/
 ├── jira_field_mapping.py  # QA Touch -> Jira Bug field mapping
 └── qatouch_snapshots/     # Historical case snapshots
 tests/
-├── ui/                    # 58 test files organized by module
+├── ui/                    # 59 test files organized by module
 │   ├── admin/ (incl. LPR)   chats/   c2c/   events/   insights/
 │   ├── licenses/   login/   maps/    media/   notifications/
 │   ├── search/   sequences/   views/
@@ -157,7 +157,7 @@ plugins/
 ├── qatouch_reporter.py    # --qatouch-upload --qatouch-run <KEY>
 └── verification_runner.py # --verify-mode + --step-review
 tools/                     # about 70 utility scripts (one-offs under tools/archive/)
-├── run_suite.py           # WIP orchestration: clone + pytest + bug filing
+├── tools/run_suite.py     # WIP orchestration: clone + pytest + bug filing
 ├── qatouch_*.py           # WIP: QA Touch CRUD, scaffolding, audits, analytics
 ├── smart_jira_bug_creator.py  # WIP: auto-file Jira bugs on failure
 ├── update_failure_history.py  # JUnit XML -> flaky_tests.json (used in CI paths)
@@ -167,7 +167,7 @@ tools/                     # about 70 utility scripts (one-offs under tools/arch
 docs/                      # Setup guides, integration plans, maintenance reminders
 ```
 
-`legacy/` and `legacy-selenium-tests/` exist for reference but are excluded from test collection via `pytest.ini`'s `norecursedirs`.
+`legacy-selenium-tests/` exists for reference but is excluded from test collection via `pytest.ini`'s `norecursedirs`, which also still names `legacy/` from before that directory was removed.
 
 ## Optional integrations (work in progress)
 
