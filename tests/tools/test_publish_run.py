@@ -41,6 +41,7 @@ def _capture(monkeypatch):
 
 
 def test_default_is_the_newest_run(runs, monkeypatch, capsys):
+    """With no argument, the newest archived run is the one published."""
     calls = _capture(monkeypatch)
     assert pr.main([]) == 0
     cmd = calls[0]
@@ -58,12 +59,14 @@ def test_the_front_door_pages_ride_along(runs, monkeypatch):
 
 
 def test_a_named_run_is_published_exactly(runs, monkeypatch):
+    """Naming a run publishes that run, not the newest."""
     calls = _capture(monkeypatch)
     assert pr.main(['2026-08-31_12-00-00__tests']) == 0
     assert any('2026-08-31_12-00-00__tests' in a for a in calls[0])
 
 
 def test_a_missing_run_refuses_with_the_available_names(runs, monkeypatch, capsys):
+    """A typo in the run name is refused, and the reply lists real ones."""
     calls = _capture(monkeypatch)
     assert pr.main(['2026-01-01_00-00-00__nope']) == 2
     assert calls == []
@@ -81,6 +84,7 @@ def test_a_non_run_folder_is_refused(runs, monkeypatch, capsys):
 
 
 def test_an_empty_archive_is_an_error_not_a_publish(runs, monkeypatch):
+    """No archived runs means exit 2 and no copy, not an empty publish."""
     for p in list(runs.iterdir()):
         if p.is_dir():
             p.rmdir()
@@ -90,6 +94,7 @@ def test_an_empty_archive_is_an_error_not_a_publish(runs, monkeypatch):
 
 
 def test_dry_run_runs_nothing(runs, monkeypatch, capsys):
+    """--dry-run prints the scp command and executes nothing."""
     calls = _capture(monkeypatch)
     assert pr.main(['--dry-run']) == 0
     assert calls == []
@@ -97,6 +102,7 @@ def test_dry_run_runs_nothing(runs, monkeypatch, capsys):
 
 
 def test_scp_failure_is_exit_1_with_a_hint(runs, monkeypatch, capsys):
+    """A failed copy exits 1 and tells the reader about key setup."""
     class Proc:
         returncode = 1
     monkeypatch.setattr(pr.subprocess, 'run', lambda cmd, check: Proc())
@@ -105,6 +111,7 @@ def test_scp_failure_is_exit_1_with_a_hint(runs, monkeypatch, capsys):
 
 
 def test_host_and_dir_come_from_the_environment(runs, monkeypatch):
+    """QA_RUNS_HOST and QA_RUNS_DIR override the destination."""
     monkeypatch.setenv('QA_RUNS_HOST', 'me@elsewhere')
     monkeypatch.setenv('QA_RUNS_DIR', '/srv/runs')
     calls = _capture(monkeypatch)
