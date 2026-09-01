@@ -1,0 +1,1 @@
+{"at": "2026-09-01T15:39:03+00:00", "branch": "main", "commit": "6b47f80", "counts": {"failed": 0, "passed": 19, "skipped": 1}, "dur_s": 258.3, "env": "unknown", "exit": 0, "failed": [], "project_key": "JlW1", "run_key": "9e8Q7", "target": ["tests/ui/licenses/test_license_navigation.py", "tests/ui/licenses/test_license_search.py"]}
