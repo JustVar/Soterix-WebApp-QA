@@ -110,9 +110,24 @@ The command copies the run folder plus the archive's front-door pages and
 prints the resulting URL. Host and paths are overridable with
 `QA_RUNS_HOST` / `QA_RUNS_DIR` / `QA_RUNS_URL`.
 
-**Until spartan1 is set up:** CI runs upload `reports/` as a GitHub
-artifact with 7-day retention (`qa-nightly.yml` does this today). That is
-the interim, not the goal: an artifact is a zip download, not a page.
+**Scheduled runs live on spartan1 as plain cron** (since 09/01/2026):
+`/data/qa/ci/nightly.sh`, daily 04:00 America/Chicago. It pulls main,
+installs pins, runs `tests/ui` headless, and copies the archive into the
+served directory, so the run is browsable at the URL above when it
+finishes. Unarmed for now: no QA Touch write until the nightly run-key
+strategy is decided. Logs: `/data/qa/ci/nightly.log` on the box.
+
+Vendor-free on purpose. A GitHub self-hosted runner was compared and
+deferred, not rejected: self-hosted runner minutes are free today, but
+everything a runner would give a SCHEDULED run (execution, archive,
+publish), cron already does with zero external dependency. What a runner
+adds is GitHub-side triggers and logs: on-demand runs from the Actions
+tab, PR-triggered browser runs, secrets management. Adopt it when someone
+needs those, by registering a runner on this same box and flipping
+`qa-nightly.yml` to `runs-on: [self-hosted, qa-lab]` - the pipeline
+underneath does not change, which is what makes the migration cheap in
+either direction. GitHub-HOSTED runs (`qa-nightly.yml` today) upload
+`reports/` as a 7-day artifact: a zip download, kept only as the fallback.
 
 ## Status of Each Piece
 
@@ -125,7 +140,8 @@ the interim, not the goal: an artifact is a zip download, not a page.
 | GitHub artifact on CI runs | working, 7-day retention |
 | nginx on spartan1 | working: http://10.2.0.2/qa-runs/ (since 09/01/2026) |
 | 30-day prune cron on spartan1 | working, mutation-tested in both directions |
-| Self-hosted runner on spartan1 | planned, after the smoke probe passes by hand |
+| Nightly cron on spartan1 (`/data/qa/ci/nightly.sh`) | working: proven end to end, first schedule 09/02 04:00 Chicago |
+| Self-hosted GitHub runner | deferred by comparison; adopt when PR-triggered or on-demand GitHub runs are wanted |
 | Publish-a-local-run command | working: `tools/publish_run.py`, proven with a real publish |
-| Scheduled nightly | commented out in `qa-nightly.yml` until the above |
+| Scheduled nightly (GitHub-hosted path) | stays commented out in `qa-nightly.yml`; the box cron is the live schedule |
 | Email report | broken until the Azure secret rotates |
