@@ -38,4 +38,4 @@ ruff==0.16.5
 # which overrides the pin until you reinstall:
 #     git clone https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git ../soterix-qa-shared
 #     pip install -e ../soterix-qa-shared
-soterix-qa-shared @ git+https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git@v0.24.0
+soterix-qa-shared @ git+https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git@v0.25.0
