@@ -546,14 +546,19 @@ class ViewsPage:
         my_views_btn = self.page.locator("img[src*='myviews']")
         my_views_btn.click()
 
-        # Find saved view
-        view_span = self.page.locator(f"span[title='{view_name}']").first
+        # Find saved view. get_by_title escapes the name (a view named with
+        # an apostrophe would break an interpolated span[title='{name}']).
+        view_span = self.page.get_by_title(view_name, exact=True).and_(
+            self.page.locator("span")).first
         view_span.wait_for(state="visible", timeout=20000)
 
         # JS hover to reveal checkbox
         self.page.evaluate(
             """(title) => {
-                const span = document.querySelector(`span[title='${title}']`);
+                // exact title match without interpolating into a selector,
+                // so an apostrophe in the name cannot break the query
+                const span = Array.from(document.querySelectorAll('span[title]'))
+                    .find(e => e.getAttribute('title') === title);
                 if (span) {
                     let parent = span.parentElement;
                     for (let i = 0; i < 5; i++) {
@@ -622,7 +627,8 @@ class ViewsPage:
 
     def delete_view(self, view_name: str):
         """Delete a saved view by name."""
-        view_element = self.page.locator(f"span[title='{view_name}']")
+        view_element = self.page.get_by_title(view_name, exact=True).and_(
+            self.page.locator("span"))
         view_element.hover()
         self.delete_button.click()
         self.confirm_yes_button.click()
@@ -640,16 +646,15 @@ class ViewsPage:
         the verdict with their own oracles. Only a fallback that
         cannot even dispatch raises.
         """
-        view_selector = f"span[title='{view_name}']"
-        view_element = self.page.locator(view_selector)
+        view_element = self.page.get_by_title(view_name, exact=True).and_(
+            self.page.locator("span"))
         target_tile = self.drag_drop_tiles.nth(tile_index)
         # A drop can open the view as its own tab whose grid holds the
         # same number of placeholders; the tab appearing is that
         # outcome's landed signal, and without it a second drop would
         # be fired at a view that already opened
-        view_tab = self.page.locator(
-            f"button.tabItem:has(div[title='{view_name}'])"
-        )
+        view_tab = self.page.locator("button.tabItem").filter(
+            has=self.page.get_by_title(view_name, exact=True))
         tabs_before = view_tab.count()
 
         def tab_opened():
@@ -667,10 +672,10 @@ class ViewsPage:
         if not landed:
             print("[VIEWS] view drag: mouse drag did not consume a tile; "
                   "trying JS DataTransfer fallback")
-            self._simulate_drag_via_js(view_selector, tile_index,
+            self._simulate_drag_via_js(view_name, tile_index,
                                        extra_signal=tab_opened)
 
-    def _simulate_drag_via_js(self, view_selector: str, tile_index: int = 0,
+    def _simulate_drag_via_js(self, view_name: str, tile_index: int = 0,
                               extra_signal=None):
         """Simulate HTML5 drag-and-drop using DataTransfer via page.evaluate.
 
@@ -678,10 +683,12 @@ class ViewsPage:
         application's drop handlers (common with React drag libraries).
         """
         script = r"""
-        ([viewSelector, tileIndex]) => {
-            // The dragstart listener sits on the draggable ancestor,
-            // not the name label the selector finds
-            const label = document.querySelector(viewSelector);
+        ([viewName, tileIndex]) => {
+            // The dragstart listener sits on the draggable ancestor, not the
+            // name label. Match the title exactly rather than interpolating
+            // the name into a selector, so an apostrophe cannot break it.
+            const label = Array.from(document.querySelectorAll('span[title]'))
+                .find(e => e.getAttribute('title') === viewName);
             if (!label) return {ok:false, reason: 'source-not-found'};
             const src = label.closest('[draggable="true"]') || label;
 
@@ -692,7 +699,7 @@ class ViewsPage:
             if (!tgt) return {ok:false, reason: 'target-not-found'};
 
             const dt = new DataTransfer();
-            try { dt.setData('text/plain', viewSelector); } catch(e) {}
+            try { dt.setData('text/plain', viewName); } catch(e) {}
 
             function dispatch(el, name, extra={}){
                 const ev = new DragEvent(name, Object.assign({bubbles:true, cancelable:true, dataTransfer: dt}, extra));
@@ -712,7 +719,7 @@ class ViewsPage:
 
         before_tiles = self.drag_drop_tiles.count()
         # evaluate carries one serializable arg, so both go in a list
-        result = self.page.evaluate(script, [view_selector, tile_index])
+        result = self.page.evaluate(script, [view_name, tile_index])
         if not result.get("ok"):
             raise RuntimeError(
                 f"JS view drag could not dispatch: {result.get('reason')}"
@@ -1451,7 +1458,8 @@ class ViewsPage:
         # Scope to the camera's row (grandparent of the title span),
         # then find its favorite button. The old selector mixed XPath
         # into a CSS string and never parsed.
-        row_anchor = self.page.locator(f"span[title='{camera_name}']").first
+        row_anchor = self.page.get_by_title(camera_name, exact=True).and_(
+            self.page.locator("span")).first
         if not self._appears(row_anchor, timeout=3000):
             # The camera tree collapses itself shortly after expansion,
             # and the bare panel toggle reopens it collapsed (probe
@@ -1491,7 +1499,8 @@ class ViewsPage:
         would report not-favorited for a favorited camera and make the
         caller invert its toggle.
         """
-        row_anchor = self.page.locator(f"span[title='{camera_name}']").first
+        row_anchor = self.page.get_by_title(camera_name, exact=True).and_(
+            self.page.locator("span")).first
         if not self._appears(row_anchor, timeout=3000):
             self.expand_site_and_show_cameras(None)
             row_anchor.wait_for(state="visible", timeout=10000)
@@ -1553,7 +1562,8 @@ class ViewsPage:
         panel's own card (.cameraThumbnailWrapper, probe 08/25/2026)
         rather than counting page text on the same tick.
         """
-        card = self.page.locator(f".cameraThumbnailWrapper span[title='{camera_name}']")
+        card = self.page.locator(".cameraThumbnailWrapper").get_by_title(
+            camera_name, exact=True)
         if present:
             return self._appears(card, timeout=timeout)
         try:
