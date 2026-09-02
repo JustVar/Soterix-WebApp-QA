@@ -394,7 +394,6 @@ class ViewsPage:
         Args:
             camera_name: The visible name of the camera to select.
         """
-        # Find the camera thumbnail by its visible name
         # get_by_title(exact=True) matches the thumbnail's name label exactly
         # and, unlike an interpolated span[title='{name}'] selector, escapes
         # the value - a camera named with an apostrophe returns no match
@@ -480,9 +479,8 @@ class ViewsPage:
             print(f"DEBUG add_first_camera_via_checkbox: Camera '{camera_name}' not found, using first camera")
             camera = self.page.locator(".cameraThumbnailWrapper").first
 
-        # Hover to reveal the checkbox. The reveal is flaky (React listens
-        # on a parent the pointer sometimes misses), so retry once with a
-        # pointer jiggle instead of letting the click hang its full timeout.
+        # Reveal, tile-consume wait and JS-click fallback rationale:
+        # see add_camera_via_checkbox
         camera.hover()
         checkbox = camera.locator(".sidebar-custom-checkbox")
         try:
@@ -492,17 +490,7 @@ class ViewsPage:
             camera.hover()
             checkbox.wait_for(state="visible", timeout=10000)
 
-        # Adding a camera consumes an empty tile - wait for that instead of
-        # sleeping, so a save that follows cannot race the add. Logged (not
-        # raised) on timeout: callers assert the outcome themselves and a
-        # camera-add that renders without consuming a tile should not fail
-        # here, but a silent swallow would hide the race this wait exists
-        # to close.
         before_tiles = self.drag_drop_tiles.count()
-        # JS-click fallback on the inner input: camera rows re-render
-        # with their snapshot refresh, so a pointer click can churn on
-        # the stability check until it times out (the same class the
-        # LPR panel checkbox hit); MUI handles the change on the input
         try:
             checkbox.click(timeout=5000)
         except PlaywrightError:
@@ -589,7 +577,6 @@ class ViewsPage:
 
         Clicks the Views nav link and verifies the page loaded by checking
         for the add tab button. Uses force=True to bypass any overlays.
-        Tests should start within 2 seconds after page elements are loaded.
         """
         max_attempts = 2
         for attempt in range(max_attempts):
@@ -623,7 +610,7 @@ class ViewsPage:
         # quick settle only: tile placeholder spinners can stay alive;
         # every caller waits on its own next element
         except Exception:
-            pass  # Loader may not exist or may have already hidden
+            pass
 
     def delete_view(self, view_name: str):
         """Delete a saved view by name."""
@@ -761,11 +748,8 @@ class ViewsPage:
             camera_name: The visible name of the camera to drag.
             tile_index: Target tile index (0-based). Default is first tile.
         """
-        # Find the camera thumbnail by name
-        # get_by_title(exact=True) matches the thumbnail's name label exactly
-        # and, unlike an interpolated span[title='{name}'] selector, escapes
-        # the value - a camera named with an apostrophe returns no match
-        # instead of crashing the CSS parser (probe 09/01/2026).
+        # Exact escaped title match - see add_camera_via_checkbox for
+        # why (probe 09/01/2026)
         camera = self.page.locator(".cameraThumbnailWrapper").filter(
             has=self.page.get_by_title(camera_name, exact=True)).first
         camera.wait_for(state="visible", timeout=10000)
@@ -1479,8 +1463,7 @@ class ViewsPage:
         favorite button.
         """
         # Scope to the camera's row (grandparent of the title span),
-        # then find its favorite button. The old selector mixed XPath
-        # into a CSS string and never parsed.
+        # then find its favorite button.
         row_anchor = self.page.get_by_title(camera_name, exact=True).and_(
             self.page.locator("span")).first
         if not self._appears(row_anchor, timeout=3000):

@@ -256,6 +256,17 @@ manually. Nothing below runs unless you opt in. Treat it as in development.
   execution time plus failure screenshots captured from the live page). Set
   `QATOUCH_CAPTURE_SCREENSHOTS=0` to turn off screenshots there.
 
+## Code notes
+
+- **No ticket keys in code.** Jira numbers change and go stale; code
+  outlives them. Comments, docstrings, and skip/error messages describe
+  the BEHAVIOR ("folder delete does not apply on the tenant") and point
+  at the register when a maintainer needs more; TEST_REPAIRS' App
+  defects section maps behavior to the current ticket.
+- **Comments follow the code's writing principles**: concise, direct,
+  nothing twice. Keep the why and the measured fact with its probe
+  date; drop history narration and anything the code already says.
+
 ## Verification steps
 
 - JSON sidecars in `tests/steps/` define step-by-step verification.

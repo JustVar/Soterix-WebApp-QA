@@ -95,7 +95,7 @@ class SequencePage:
         # and _cleanup_sequences calls this in teardown where a miss is only
         # logged
         except Exception:
-            pass  # Page may have different layout depending on existing sequences
+            pass
 
     # --- Search ---
 

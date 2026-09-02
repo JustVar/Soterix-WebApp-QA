@@ -325,11 +325,6 @@ class CameraHardwarePage:
           unavailable    - the camera has no Soterix Cloud section at all,
                            which is the case on unbranded VCA units
           unknown        - page loaded but matched none of the above
-
-        The previous version only knew about registered / not-registered, so a
-        camera stuck on "Waiting for cloud registration..." reported both flags
-        False and read as unregistered - indistinguishable from a camera that
-        had actively declined to register.
         """
         result = {"is_registered": False, "is_unregistered": False,
                   "state": "unknown", "cloud_address": None}

@@ -135,7 +135,7 @@ class FullScreenPage:
         # the loader may already have cleared; the count-zero expect
         # below is the oracle
         except Exception:
-            pass  # Loader may have already finished
+            pass
         # every spinner must clear: a bare wait on the union is a
         # strict-mode violation when two spinners overlap (a tile
         # placeholder plus the player's), so wait on the count
@@ -412,9 +412,8 @@ class FullScreenPage:
                     and self.export_success_toast.first.is_visible()):
                 return "success toast"
             return "progress bar hidden"
-        # best-effort probe: either element can detach between the count
-        # and visibility reads; '' only means "not complete yet" and the
-        # caller's poll re-reads on the next tick
+        # either element can detach between reads; '' = not complete
+        # yet (see docstring)
         except PlaywrightError:
             pass
         return ""

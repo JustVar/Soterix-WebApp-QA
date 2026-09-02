@@ -36,12 +36,12 @@ use different auth:
       headers: api-token + domain
       Loaded from the environment / .env (QATOUCH_API_TOKEN +
       QATOUCH_DOMAIN), same as
-      tools/migrate_pp_cases_phase_a.py:load_rest_creds.
+      tools/archive/migrate_pp_cases_phase_a.py:load_rest_creds.
 
   Internal POST /v1/case/edit/p/{projectKey}/cid/{caseKey}
       headers: X-XSRF-TOKEN + Cookie
       Loaded from tools/.qatouch_creds.json (same shape as
-      tools/run_partner_admin_backfill.py). Refresh with:
+      tools/archive/run_partner_admin_backfill.py). Refresh with:
           python tools/qatouch_norun_update.py test
 
 Both must be valid. The pre-flight does a lightweight GET /v2 against the
@@ -176,7 +176,7 @@ class AuthCreds:
 def load_rest_creds() -> tuple[str, str]:
     """Load REST api-token + domain from the environment / .env.
 
-    Mirrors tools/migrate_pp_cases_phase_a.py:load_rest_creds so credential
+    Mirrors tools/archive/migrate_pp_cases_phase_a.py:load_rest_creds so credential
     resolution works the same way everywhere.
     """
     token = os.environ.get("QATOUCH_API_TOKEN") or os.environ.get("QATOUCH_API_KEY")
@@ -277,7 +277,7 @@ def internal_post(
 def verify_internal_auth(creds: AuthCreds) -> tuple[bool, str]:
     """GET /v2 with the lightweight HTML-accept shape used by the helper.
 
-    Mirrors run_partner_admin_backfill.verify_auth - 401/403 are the canonical
+    Mirrors archive/run_partner_admin_backfill.verify_auth - 401/403 are the canonical
     stale-auth signal; other non-2xx (except 404) is a soft warning.
     """
     url = f"https://{creds.domain}/v2"

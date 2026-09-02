@@ -49,9 +49,8 @@ TESTS_DIR = PROJECT_ROOT / "tests"
 REPORT_DIR = CONFIG_DIR / "audit_reports"
 
 # ── Product Area Mapping ─────────────────────────────────────────────
-# Maps QA Touch module names to top-level product areas (NexaiQ nav structure)
-# This is the canonical mapping between QA Touch's 470 sub-modules and
-# the actual product navigation hierarchy.
+# Canonical mapping: QA Touch module names -> top-level product areas
+# (NexaiQ nav).
 
 PRODUCT_AREAS = {
     "Views": {

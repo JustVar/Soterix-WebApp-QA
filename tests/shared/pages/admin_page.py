@@ -194,7 +194,7 @@ class AdminPage:
     def select_role(self, role_index: int = 1):
         """Open the role dropdown in the form and select a role by index.
 
-        Default index 1 = Admin (0-based in the sitesBox list, but li[2] in Selenium = index 1 here).
+        Default index 1 = Admin (0-based in the #sitesBox option list).
         """
         self.role_dropdown.click()
 
@@ -237,8 +237,6 @@ class AdminPage:
         list the caller has verified as filtered.
         """
         if match_text:
-            # same selector as options_icon: these render as img
-            # assets on this page (probed), not MUI svg icons
             icon = self.page.locator(
                 ".MuiPaper-root", has_text=match_text
             # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
@@ -536,8 +534,6 @@ class AdminPage:
         site_search.wait_for(state="visible", timeout=10000)
         site_search.clear()
         site_search.fill(search_text)
-        # Filtering has no completion signal (zero matches is valid);
-        # callers wait on the card or row they need next
 
     def toggle_to_list_view(self):
         """Switch to list view on the Sites page."""
@@ -1048,8 +1044,8 @@ class AdminPage:
             if save_visible:
                 save.click()
                 # Save prompts 'Name the Rule' in a dialog: the name
-                # lives THERE, not on any step (this is what rejected
-                # the old flow). Only the prompt's ABSENCE is optional;
+                # lives THERE, not on any step. Only the prompt's
+                # ABSENCE is optional;
                 # once it shows, the fill and confirm must succeed, and
                 # a failure past Save raises rather than reading as
                 # not-completed while the rule may exist server-side.

@@ -383,9 +383,8 @@ class VerificationCollector:
             case_key = self._resolve_case_key(nodeid)
             capture.set_case_key(case_key)
 
-            # Try to get the page from the test instance (set by test's setup fixture)
-            # The test must call step_capture.set_page(self.page) in setup,
-            # or we'll try to discover it from fixtures
+            # The page arrives only via step_capture.set_page(self.page)
+            # in the test's setup fixture - there is no auto-discovery
             self._captures[nodeid] = capture
 
         yield capture

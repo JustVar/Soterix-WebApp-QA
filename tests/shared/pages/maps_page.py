@@ -52,7 +52,6 @@ class MapsPage:
 
         # The dropdown title reads "...sites" while the site list
         # loads; it flipping to a real value is the loaded signal
-        # (the retrying expect replaces the old 3s poll loop)
         expect(self.dropdown_text).not_to_have_attribute(
             "title", re.compile(r"sites", re.IGNORECASE), timeout=60000
         )

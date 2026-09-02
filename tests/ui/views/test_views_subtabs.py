@@ -146,7 +146,6 @@ class TestViewsSubtabs:
         # advisory reports a dead stream (the QA tenant's stream may be down)
         health = self.views.content_health_snapshot()
 
-        # Exact-name checkbox add through the page object (item 14 fix path)
         self.views.add_camera_via_checkbox(camera_name)
 
         assert self._content_added(initial_tiles, content_sel, baseline), \

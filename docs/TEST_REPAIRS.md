@@ -21,7 +21,7 @@ section below with its number.
 | # | Item | Status | Needs |
 |---|------|--------|-------|
 | 1 | Event Wall display suite (tests/ui/event_wall/test_event_wall_display.py) | [BLOCKED] | Local-access wall user (Justin creating). Then: its own env vars in config/env, probe login + site-select, build the wall's markers. |
-| 2 | Media destructive set (clip/folder delete, grouping, move) | [INVESTIGATE] | Answer: does deleting a folder delete the clips grouped into it? Or a disposable measurement. |
+| 2 | Media destructive set (clip/folder delete, grouping, move) | [WIP 09/02] | Semantics answered (Justin): folder delete deletes contained clips permanently; "Remove From Folder" un-groups without deleting; destructive testing sanctioned on india. Tests built: lifecycle (group -> enter via thumbnail -> un-group -> delete tripwire -> outside-clips integrity), move+restore, clip delete with dialog contract. Live measurement: the server refuses BOTH clip and empty-folder deletes ("Data Not Deleted!" toast) - see App defects; move skipped ("no folder" in its dropdown despite folders existing - dropdown scope to probe when deletes heal). Lifecycle verified live 09/02: group, thumbnail entry, and Remove From Folder (clip returned un-deleted) all green, then the designed skip at the refused folder delete. Red clip-delete stands until the app fix; move stays skipped pending the dropdown-scope probe. |
 | 3 | Page-object sleeps | mostly [DONE] | Converted 08/14-08/25 across every page object (53 -> 11 commented pacing/poll settles); each tranche verified by baseline/after pairs, search neutrality A/B'd against HEAD during the endpoint outage. Remaining: camera_hardware_page (11) on the c2c hold. Signal lessons: CONVENTIONS (Waits), FAILURE_TRIAGE. |
 | 4 | c2c sleeps (3) | [BLOCKED] | Hardware session to verify a conversion. |
 | 5 | Sidecar step files: maps, media_operations, chats, events_search | [ARTIFACT] | Regenerate at next sidecar sync (case keys kept); events_search corrected steps need Justin's manual push to live QA Touch. |
@@ -96,6 +96,10 @@ singles that pass serially, and the 08/14 search outage below).
 - Media page serves stale state per page load: only the first rename
   commits; Vault tab misses same-load vaulting. Hard-reload between
   mutations. (Possible defect - Justin's list.)
+- Media folders: deleting a folder deletes the clips grouped in it
+  (permanent - the Delete Clip dialog says "cannot be retrieved");
+  "Remove From Folder" on a clip's row menu un-groups it back to the
+  level above WITHOUT deleting (confirmed by Justin, 09/02/2026).
 - Rule wizard hides cameras at rule capacity; a "missing" camera means
   leftover *_Auto_* rules on it.
 - Repeat search clicks need changed filters (by design, Justin
@@ -136,6 +140,21 @@ singles that pass serially, and the 08/14 search outage below).
   down Global Search, in-camera search, and Events tab search (same
   endpoint). Justin filed it; working again by 17:00. 21 tests catch
   it. Reference case: whole family red = check the app first.
+- NC-20325 (P1, Ready for Dev 08/17): media folder grouped with notes
+  and vaulted cannot be deleted. Confirmed broader 09/02 by probe: a
+  plain empty folder AND a plain clip both get the server refusal
+  toast "Error / Data Not Deleted!". The clip case is UNFILED - file
+  it (test_clip_delete stays red on exactly this until the fix).
+  Leftover automation folders on the tenant (undeletable until the
+  fix): Folder_1788363244835, Folder_1788362955471,
+  Folder_1788364176161, Folder_1788364279688. tenant_cleanup does not
+  know the Folder_* pattern yet - extend it once folder delete heals.
+- NC-19785 (P3, Ready for Dev 04/17): clips inside a folder are not
+  searchable from Media > All.
+- UNFILED (Justin, 09/02): deleting a media folder also deleted clips
+  OUTSIDE it. Not covered by NC-20325/NC-19785 - file when folder
+  delete works again; the destructive suite's outside-clip integrity
+  check is the repro.
 - Candidates on Justin's list: Media stale page state, one rename per
   load, chat group creation removed (confirm intentional), player
   overlay link label possibly misspelled ("Rafresh" - unconfirmed,
@@ -172,7 +191,8 @@ in run output (its premise is wrong):
 - `tools/convention_check.py` - runs on every commit; `--all` for
   standing debt. Rules: uncommented sleeps, no-oracle tests,
   early-exit passes, except-swallows, absolute counts, union picks,
-  img-src guesses, QA Touch marks in tests, tenant names.
+  img-src guesses, QA Touch marks in tests, tenant names, ticket
+  keys in code.
 - Discipline: review the uncommitted diff before the first commit;
   every review class becomes a checker rule; claims about app
   mechanisms come from probes, and a fix to a shared fact greps every

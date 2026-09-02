@@ -25,7 +25,7 @@ drift between detect and split.
 
 Auth model
 ----------
-Same as tools/run_partner_admin_backfill.py: read cookie+XSRF from
+Same as tools/archive/run_partner_admin_backfill.py: read cookie+XSRF from
 tools/.qatouch_creds.json (refresh via `python tools/qatouch_norun_update.py test`)
 and confirm with a lightweight GET /v2 ahead of any mutation.
 
@@ -103,18 +103,16 @@ DEFAULT_LOG_DIR = REPO / "logs"
 # splitter at tools/qa_post_import_split_and_position.py:146.
 STEP_PREFIX_RE = re.compile(r"(?im)^\s*Step\s*\d+\s*[:\.\)]\s*")
 # Numbered-list style (`1.` / `2)` / `3:`) used by camera-firmware /
-# spec-document authoring in 60W5 (Camera 2 Cloud). The dual-style match
-# was added 2026-06-29 after the REST baseline audit flagged 117 of
-# 60W5's 118 cases as merged-in-this-style - see memory note
-# qa-touch-merged-steps-baseline.md and detect_merged_steps_rest.py
-# for the matching detection logic.
+# spec-document authoring in 60W5 (Camera 2 Cloud); added 2026-06-29
+# after the REST baseline audit flagged 117 of 60W5's 118 cases as
+# merged-in-this-style. Matching detection: detect_merged_steps_rest.py.
 NUMBERED_PREFIX_RE = re.compile(r"(?m)^\s*\d+\s*[\.\):]\s+")
 MERGED_THRESHOLD = 3
 
 # Validator-accepted fallback for empty expected_result. The server-side
 # validator rejects empty with "Please Enter Expected Result"; a single
 # dash passes (probed 2026-06-25). Matches DASH_FALLBACK in
-# tools/migrate_pp_cases_phase_a_steps.py:175.
+# tools/archive/migrate_pp_cases_phase_a_steps.py:175.
 DASH_FALLBACK = "-"
 
 # Treat any HTTP 429 with this many seconds pause then a single retry.
@@ -130,7 +128,7 @@ REFRESH_INSTRUCTIONS = (
 
 
 # ---------------------------------------------------------------------------
-# Auth + HTTP plumbing (lifted from tools/run_partner_admin_backfill.py)
+# Auth + HTTP plumbing (lifted from tools/archive/run_partner_admin_backfill.py)
 # ---------------------------------------------------------------------------
 class AuthCreds:
     def __init__(self, xsrf_token: str, cookie_header: str, domain: str):

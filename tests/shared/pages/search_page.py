@@ -249,10 +249,7 @@ class SearchPage:
         The 2026-08 search page renders each filter as a
         p.select-box-headings label with a div.select-box-sub-heading
         value control next to it. Clicking the label does nothing; the
-        value control opens the panel. The old helpers clicked the
-        label and their JS fallbacks returned silently, which left
-        every filter unset while the tests kept running (probe
-        08/09/2026).
+        value control opens the panel (probe 08/09/2026).
         """
         heading = self.page.locator(
             f"p.select-box-headings:has-text('{label}')"
@@ -336,10 +333,8 @@ class SearchPage:
         }""")
 
         # Dismiss by clicking the value control again, then verify the
-        # section no longer reads 'Select' - the applied signal the old
-        # code never checked. This RAISES: a selection that did not
-        # apply makes every later assertion meaningless, and a print
-        # here would recreate the silent no-op this rebuild fixed.
+        # section no longer reads 'Select'. This RAISES: a selection
+        # that did not apply makes every later assertion meaningless.
         self._open_section("Locations & Cameras")
         try:
             expect(

@@ -99,10 +99,9 @@ class TestLprNavigation:
         Steps:
         1. Click Admin in the left sidebar, then click LPR.
            Expected: The LPR Lists page opens and shows the Create List button.
-        2. Click the View icon on the first list, click the Filter icon, then click Apply.
-           Expected: The Search Results view opens.
-        3. Click LPR in the breadcrumb.
-           Expected: The Lists page opens again with the Create List button.
+
+        The View -> Filter -> Apply -> breadcrumb-back leg is not
+        automated yet; the test verifies the Lists page state only.
         """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
@@ -212,10 +211,9 @@ class TestLprNavigation:
 
         # Get first available list
         self.step_capture.mark(2, "Find first available list")
-        # The table hydrates a beat after navigation: sampling .all() on
-        # the same tick skipped with "No LPR lists" on a tenant holding
-        # 107 rows (race, seen 09/02/2026). Wait for a data row first; a
-        # truly empty table times out and falls through to the skip.
+        # hydration race: wait for a data row before sampling .all()
+        # (same-tick sample skipped a 107-row table, 09/02/2026); a
+        # truly empty table times out and falls through to the skip
         with contextlib.suppress(PlaywrightTimeoutError):
             self.page.locator("tr").nth(1).wait_for(
                 state="visible", timeout=15000)
@@ -259,10 +257,9 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
-        # The table hydrates a beat after navigation: sampling .all() on
-        # the same tick skipped with "No LPR lists" on a tenant holding
-        # 107 rows (race, seen 09/02/2026). Wait for a data row first; a
-        # truly empty table times out and falls through to the skip.
+        # hydration race: wait for a data row before sampling .all()
+        # (same-tick sample skipped a 107-row table, 09/02/2026); a
+        # truly empty table times out and falls through to the skip
         with contextlib.suppress(PlaywrightTimeoutError):
             self.page.locator("tr").nth(1).wait_for(
                 state="visible", timeout=15000)
@@ -302,10 +299,9 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
-        # The table hydrates a beat after navigation: sampling .all() on
-        # the same tick skipped with "No LPR lists" on a tenant holding
-        # 107 rows (race, seen 09/02/2026). Wait for a data row first; a
-        # truly empty table times out and falls through to the skip.
+        # hydration race: wait for a data row before sampling .all()
+        # (same-tick sample skipped a 107-row table, 09/02/2026); a
+        # truly empty table times out and falls through to the skip
         with contextlib.suppress(PlaywrightTimeoutError):
             self.page.locator("tr").nth(1).wait_for(
                 state="visible", timeout=15000)
@@ -349,10 +345,9 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
-        # The table hydrates a beat after navigation: sampling .all() on
-        # the same tick skipped with "No LPR lists" on a tenant holding
-        # 107 rows (race, seen 09/02/2026). Wait for a data row first; a
-        # truly empty table times out and falls through to the skip.
+        # hydration race: wait for a data row before sampling .all()
+        # (same-tick sample skipped a 107-row table, 09/02/2026); a
+        # truly empty table times out and falls through to the skip
         with contextlib.suppress(PlaywrightTimeoutError):
             self.page.locator("tr").nth(1).wait_for(
                 state="visible", timeout=15000)

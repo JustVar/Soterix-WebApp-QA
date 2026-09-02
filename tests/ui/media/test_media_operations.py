@@ -7,22 +7,20 @@ Vault tab. The rename success toast is the server acknowledgment -
 the inline input updates optimistically and can show a rename that
 never committed (all measured 08/12/2026).
 
-Destructive operations on shared-tenant media (clip delete, folder
-delete, grouping, and move to folder - grouping and moving relocate
-the team's clips) stay skipped until the folder-delete semantics
-are measured: whether deleting a folder deletes the clips inside
-it. See the register.
+Destructive semantics measured 09/02/2026 (Justin): deleting a folder
+deletes the clips grouped in it - permanently ("cannot be retrieved");
+"Remove From Folder" un-groups a clip back to the level above without
+deleting. Destructive testing on the india tenant's media is
+sanctioned. Folder deletion currently fails on the tenant (filed; the
+register's App defects section maps behavior to tickets), so the
+folder-delete leg tripwires into a skip, and the lifecycle test
+doubles as the repro for the folder-delete-removes-outside-clips
+report. See the register, item 2.
 """
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Error as PlaywrightError, expect
 
 from tests.shared.pages.media_page import MediaPage
-
-DESTRUCTIVE_SKIP = (
-    "Operates on shared-tenant media with unmeasured delete semantics "
-    "(does deleting a folder delete its clips?) - held until measured; "
-    "see docs/TEST_REPAIRS.md"
-)
 
 
 class TestMediaClipOperations:
@@ -71,8 +69,89 @@ class TestMediaClipOperations:
     @pytest.mark.ui
     @pytest.mark.media
     def test_clip_grouping(self):
-        """Group clips into a folder (held: relocates team clips)."""
-        pytest.skip(DESTRUCTIVE_SKIP)
+        """Group a clip into a folder, un-group it, delete the folder.
+
+        One lifecycle on automation-created data measures every folder
+        semantic: Group Clips makes the folder, Remove From Folder must
+        return the clip WITHOUT deleting it, and deleting the emptied
+        folder must not touch any clip outside it (Justin reports it
+        once did; this assert is the repro). A folder that survives
+        its delete is the filed folder-delete defect (register, App
+        defects) and skips, leaving it for tools/tenant_cleanup.py.
+        """
+        first = self._first_clip_or_skip()
+        clips_before = self.media.item_names()
+
+        self.media.click_tab("Folders")
+        folders_before = set(self.media.item_names())
+        self.media.click_tab("Clips")
+
+        self.media.select_clip_by_index(1)
+        self.media.group_clips()
+
+        self.media.click_tab("Folders")
+        new_folders = set(self.media.item_names()) - folders_before
+        assert len(new_folders) == 1, (
+            f"Expected exactly one new folder after grouping, "
+            f"got {sorted(new_folders)}"
+        )
+        folder = new_folders.pop()
+
+        def _cleanup_folder():
+            # reload first: a failure inside the folder view leaves a
+            # tab-less context a nav click cannot reset
+            self.page.reload()
+            self.media.navigate()
+            self.media.select_date_filter("Last 30 Days")
+            self.media.click_tab("Folders")
+            if folder in self.media.item_names():
+                try:
+                    self.media.delete_item_named(folder)
+                # An undeletable folder is the tripwired app defect,
+                # not a failed restore - name it and move on
+                except (PlaywrightError, RuntimeError):
+                    print(f"[MEDIA] folder '{folder}' left on the "
+                          "tenant (folder-delete defect); "
+                          "tenant_cleanup will get it")
+
+        self._cleanup_actions.append(_cleanup_folder)
+
+        self.media.open_folder(folder)
+        assert first in self.media.item_names(), (
+            f"Grouped clip '{first}' is not inside folder '{folder}'"
+        )
+        self.media.remove_from_folder(first)
+
+        # A nav-link click is a no-op while already on /media, and the
+        # folder view keeps its context (no tab row) - the hard reload
+        # is the reset (known media stale-state behavior)
+        self.page.reload()
+        self.media.navigate()
+        self.media.select_date_filter("Last 30 Days")
+        self.media.click_tab("Clips")
+        assert first in self.media.item_names(), (
+            f"'Remove From Folder' must return '{first}' to the level "
+            "above without deleting it"
+        )
+
+        self.media.click_tab("Folders")
+        try:
+            self.media.delete_item_named(folder)
+        except (PlaywrightError, RuntimeError):
+            pytest.skip(
+                "Folder delete did not apply (filed defect - register "
+                f"App defects); folder '{folder}' left for tenant_cleanup"
+            )
+
+        # Repro for the unfiled report: deleting a folder must not
+        # remove clips OUTSIDE it
+        self.media.click_tab("Clips")
+        missing = set(clips_before) - set(self.media.item_names())
+        assert not missing, (
+            f"Deleting empty folder '{folder}' also removed clips "
+            f"outside it: {sorted(missing)} - file this report (no "
+            "existing ticket covers it; see the register)"
+        )
 
     @pytest.mark.ui
     @pytest.mark.media
@@ -128,14 +207,76 @@ class TestMediaClipOperations:
     @pytest.mark.ui
     @pytest.mark.media
     def test_clip_delete(self):
-        """Delete a clip (held: destroys shared-tenant media)."""
-        pytest.skip(DESTRUCTIVE_SKIP)
+        """Delete Clip dialog contract, then a real delete.
+
+        Cancel is proven non-destructive first, and the dialog must
+        carry its permanence wording (screenshot 09/02/2026: "deleted
+        permanently and cannot be retrieved"). The real delete then
+        consumes ONE tenant clip - sanctioned on the india media set
+        (Justin, 09/02/2026).
+        """
+        name = self._first_clip_or_skip()
+
+        row = self.media.item_row(name)
+        row.locator("img[src*='icon-options']").first.click()
+        self.media.click_menu_item("Delete")
+        expect(self.page.get_by_text("cannot be retrieved").first)\
+            .to_be_visible()
+        self.media.cancel_dialog()
+        assert name in self.media.item_names(), (
+            "Cancel on the Delete Clip dialog must keep the clip"
+        )
+
+        self.media.delete_item_named(name)
+        assert name not in self.media.item_names(), (
+            f"Clip '{name}' is still listed after Delete confirmed"
+        )
 
     @pytest.mark.ui
     @pytest.mark.media
     def test_clip_move_to_folder(self):
-        """Move a clip into a folder (held: relocates team clips)."""
-        pytest.skip(DESTRUCTIVE_SKIP)
+        """Move a clip into an existing folder, then un-group it back.
+
+        Restore is 'Remove From Folder', so the team's clip layout
+        survives. Skips when the tenant has no folder to move into.
+        """
+        name = self._first_clip_or_skip()
+
+        def _restore():
+            # Find the clip wherever it landed and un-group it
+            self.media.navigate()
+            self.media.select_date_filter("Last 30 Days")
+            self.media.click_tab("Clips")
+            if name in self.media.item_names():
+                return
+            self.media.click_tab("Folders")
+            for folder in self.media.item_names()[:5]:
+                self.media.open_folder(folder)
+                if name in self.media.item_names():
+                    self.media.remove_from_folder(name)
+                    return
+                self.media.navigate()
+                self.media.select_date_filter("Last 30 Days")
+                self.media.click_tab("Folders")
+            raise RuntimeError(
+                f"Restore could not find moved clip '{name}' in the "
+                "first 5 folders"
+            )
+
+        self.media.select_clip_by_index(1)
+        moved = self.media.move_clip_to_folder()
+        if not moved:
+            pytest.skip("No folder on the tenant to move a clip into")
+        self._cleanup_actions.append(_restore)
+
+        assert name not in self.media.item_names(), (
+            f"Clip '{name}' still listed at top level after the move"
+        )
+        _restore()
+        self._cleanup_actions.remove(_restore)
+        assert name in self.media.item_names(), (
+            f"'Remove From Folder' did not return '{name}' to Clips"
+        )
 
     @pytest.mark.ui
     @pytest.mark.media
@@ -287,8 +428,14 @@ class TestMediaFolderOperations:
     @pytest.mark.ui
     @pytest.mark.media
     def test_folder_delete(self):
-        """Delete a folder (held: unmeasured delete semantics)."""
-        pytest.skip(DESTRUCTIVE_SKIP)
+        """Held by design: folder deletion is covered end to end by
+        test_clip_grouping's lifecycle (create -> empty -> delete with
+        the defect tripwire). A standalone delete would have to eat a
+        TEAM folder - those are not automation data."""
+        pytest.skip(
+            "Covered by test_clip_grouping's folder lifecycle; team "
+            "folders stay untouched"
+        )
 
     @pytest.mark.ui
     @pytest.mark.media

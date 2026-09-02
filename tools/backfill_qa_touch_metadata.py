@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Reusable QA Touch metadata backfill via the internal /v1/case/update endpoint.
 
-Generalizes the OTA backfill pattern (build_ota_update_payloads_v2.py +
+Generalizes the OTA backfill pattern (tools/archive/build_ota_update_payloads_v2.py +
 tools/archive/qatouch_api_mode_update.py) so it works for ANY project + module + case set:
 
   - Reads a canonical CSV (one row per test case)
@@ -45,7 +45,7 @@ CSV columns (canonical - produced by tools/xlsx_to_csv stream):
   - Test Data          (optional plain text - sent as `test_data`)
 
   Columns NOT updated by this script:
-  - Steps / Expected_result (separate flow - see build_ota_update_payloads_v2.py
+  - Steps / Expected_result (separate flow - see tools/archive/build_ota_update_payloads_v2.py
     + qatouch_browser sync-steps; this script preserves the existing caseStep
     from the edit-form body and overlays metadata only, so step content is left
     untouched. Cases that already have empty caseStep at fetch time will fail
@@ -119,7 +119,7 @@ DEFAULT_TITLE_COL = "Test Case Title"
 # ---------------------------------------------------------------------------
 # Public REST API (api.qatouch.com) - used ONLY to enumerate live cases by
 # title. Read credentials are taken from the same QA Touch config that
-# build_ota_update_payloads_v2.py uses, since title->case_key resolution does
+# tools/archive/build_ota_update_payloads_v2.py uses, since title->case_key resolution does
 # not depend on the user's browser session.
 # ---------------------------------------------------------------------------
 REST_BASE = "https://api.qatouch.com/api/v1"
@@ -136,7 +136,7 @@ def internal_base(domain: str) -> str:
 # Enum-name -> encrypted-id mapping (built dynamically per project)
 # ---------------------------------------------------------------------------
 # Fallback for CSV Type values that aren't in QA Touch's enum. Mirrors the
-# decisions made in build_ota_update_payloads_v2.py.
+# decisions made in tools/archive/build_ota_update_payloads_v2.py.
 TYPE_NAME_FALLBACK = {
     "Negative": "Functional",  # negative tests ARE functional
     "Security": "Other",       # closest fit

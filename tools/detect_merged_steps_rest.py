@@ -68,7 +68,7 @@ STEP_PREFIX_RE = re.compile(r"(?im)^\s*Step\s*\d+\s*[:\.\)]\s*")
 # Numbered-list prefix style ("1." / "2)" / "1: " at line start).
 # Some authoring paths emit merged step bodies as a plain numbered list
 # instead of "Step N:". The OTA / camera-firmware cases in 60W5 use this
-# style (see memory: qa-touch-ota-cleanup-archived.md).
+# style (60W5 OTA/camera-firmware style).
 NUMBERED_PREFIX_RE = re.compile(r"(?m)^\s*\d+\s*[\.\):]\s+")
 MERGED_THRESHOLD = 3
 DEFAULT_REST_DOMAIN_SHORT = "soterixsystems"

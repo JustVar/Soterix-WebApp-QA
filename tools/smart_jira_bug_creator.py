@@ -232,15 +232,11 @@ class JiraClient:
             except Exception:
                 LOG.warning('Failed to link story %s to %s', story_link, issue_key)
 
-        # A test issue gets a delete-me label and an admin comment, so it is
-        # not mistaken for a real bug in somebody's backlog.
-        #
-        # This block and the return below used to sit INSIDE `if story_link:`.
-        # A real create without a story link therefore returned None while the
-        # issue existed in Jira: the review loop raised on issue.get('key'),
-        # caught it, said "Item remains pending", and a second approval filed
-        # a duplicate. A test bug filed the same way carried no label at all.
-        # Dormant only because BUG_CREATION_ENABLED is false everywhere.
+        # A test issue gets a delete-me label and an admin comment, so
+        # it is not mistaken for a real bug in somebody's backlog. Keep
+        # this OUTSIDE `if story_link:` - inside it, a no-story create
+        # returned None while the issue existed, and re-approval filed
+        # a duplicate.
         if "[TEST]" in summary:
             try:
                 jira.add_comment(issue, "Admin: Please delete this test bug")

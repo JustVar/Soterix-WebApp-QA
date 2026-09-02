@@ -327,11 +327,10 @@ class InsightsPage:
 
         # Select Site (index 3 - stable, before camera expansion)
         dropdowns.nth(3).click()
-        # Exact first: the dropdown renders LONG site names ellipsized in
-        # the DOM ('Example Corporat...', probe 09/02/2026), which is
-        # why this used a bare 10-char prefix. Prefer the exact escaped
-        # match; fall back to an anchored, escaped prefix only when the
-        # exact name is not on screen (a truncated long name).
+        # Exact first: long site names render ellipsized in the DOM
+        # ('Example Corporat...', probe 09/02/2026); when the exact
+        # name is not on screen, fall back to an anchored, escaped
+        # 10-char prefix.
         site_el = self.page.get_by_text(site_name, exact=True).and_(
             self.page.locator(".dropdownItem")).first
         if not site_el.count():
@@ -527,10 +526,9 @@ class InsightsPage:
             state="visible", timeout=30000
         )
 
-        # The browser download starting is the completion signal. The
-        # old success-toast wait swallowed its own timeout, so a
-        # silently failed download still passed - and the toast can
-        # show and dismiss unseen while a slow report generates.
+        # The browser download starting is the completion signal: a
+        # toast is no oracle - it can show and dismiss unseen while a
+        # slow report generates.
         try:
             with self.page.expect_download(timeout=90000):
                 try:

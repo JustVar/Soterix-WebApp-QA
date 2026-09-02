@@ -23,7 +23,6 @@ ENV_ALIAS = {
     "staging": "config.env.stage",
     "prod":  "config.env.prod",
     "production": "config.env.prod",
-    # keep room for future aliases if needed:
     "uat":   "config.env.stage",   # until a dedicated UAT file exists
     "demo":  "config.env.prod",
     "user":  "config.env.prod",
@@ -70,9 +69,7 @@ def get_active_box():
     """Get the active box name from environment or default.
 
     The default matches config['default_box'] for the active env, so an
-    unset BOX resolves the same way here and in get_box_config. It used to
-    hardcode 'us' while the env config defaulted to 'india', so the two
-    disagreed on which tenant an unset BOX meant.
+    unset BOX resolves the same way here and in get_box_config.
     """
     default = config.get("default_box", "us")
     return os.environ.get("BOX", default).strip().lower()

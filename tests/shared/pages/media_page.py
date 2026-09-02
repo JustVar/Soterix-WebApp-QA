@@ -182,8 +182,8 @@ class MediaPage:
     def select_clip_by_index(self, index: int = 1):
         """Select a clip checkbox by index.
 
-        Index 0 is typically a header/all selector; individual clips
-        start at index 1 in the Selenium tests.
+        Index 0 is the header select-all checkbox; individual clips
+        start at index 1.
         """
         checkboxes = self.clip_checkboxes
         count = checkboxes.count()
@@ -305,6 +305,74 @@ class MediaPage:
         self.click_menu_item("Delete")
         self.confirm_button.click()
         self.confirm_button.wait_for(state="hidden", timeout=15000)
+        self._wait_for_page_ready()
+
+    def delete_item_named(self, name: str):
+        """Delete a NAMED clip or folder: row options > Delete > confirm.
+
+        Row-scoped, unlike delete_item's page-first options icon. The
+        named input detaching from the list is the applied signal.
+        """
+        row = self.item_row(name)
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
+        row.locator("img[src*='icon-options']").first.click()
+        self.click_menu_item("Delete")
+        # The dialog renders Cancel before Delete, so a bare
+        # .btn-modalForm.first cancels (measured 09/02/2026)
+        delete_btn = self.page.locator(
+            "button:has-text('Delete'):visible"
+        ).last
+        delete_btn.click()
+        # The server can refuse the delete outright - the app answers
+        # with an error toast (probed 09/02/2026 on both a clip and an
+        # empty folder). Name that, not a timeout.
+        if self._appears(
+            self.page.get_by_text("Data Not Deleted!").first, timeout=3000
+        ):
+            raise RuntimeError(
+                f"Server refused to delete '{name}': 'Data Not "
+                "Deleted!' (app defect - register, App defects)"
+            )
+        delete_btn.wait_for(state="hidden", timeout=15000)
+        # The list can serve stale state until a reload (known app
+        # behavior); give the row one live cycle, then prove it via
+        # a fresh load
+        row_input = self.page.locator(f"input[value='{name}']").first
+        if not self._appears_hidden(row_input, timeout=5000):
+            self.page.reload()
+            self._wait_for_page_ready()
+        row_input.wait_for(state="detached", timeout=15000)
+        self._wait_for_page_ready()
+
+    def open_folder(self, name: str):
+        """Open a folder from the Folders tab by clicking its row.
+
+        Entry is the row's THUMBNAIL image - a row click lands on the
+        checkbox or the name input and stays on the list (probed
+        09/02/2026). The breadcrumb rendering the folder name as TEXT
+        is the opened signal (list names are inline inputs, invisible
+        to text engines, so a text match can only be the breadcrumb).
+        """
+        row = self.item_row(name)
+        row.locator("img:not([src*='icon'])").first.click()
+        self.page.get_by_text(name, exact=True).first.wait_for(
+            state="visible", timeout=10000
+        )
+        self._wait_for_page_ready()
+
+    def remove_from_folder(self, name: str):
+        """Un-group a named clip from the open folder view.
+
+        'Remove From Folder' returns the clip to the level above
+        WITHOUT deleting it (confirmed by Justin, 09/02/2026). The row
+        leaving the folder view is the applied signal.
+        """
+        row = self.item_row(name)
+        row.locator("img[src*='icon-options']").first.click()
+        self.click_menu_item("Remove From Folder")
+        self.page.locator(f"input[value='{name}']").first.wait_for(
+            state="detached", timeout=15000
+        )
         self._wait_for_page_ready()
 
     def open_create_link_dialog(self, name: str):

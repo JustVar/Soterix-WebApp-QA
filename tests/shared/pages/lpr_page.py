@@ -596,9 +596,9 @@ class LprPage:
 
         # No loader wait: empty tiles keep placeholder spinners alive
         # forever (same trap as in-camera search), so CircularProgress
-        # hidden can never finish. The new stream element is the signal;
-        # failed_before keeps a leftover failed tile from being blamed.
-        # A new stream element past the baseline is the played signal
+        # hidden can never finish. A new stream element past the baseline
+        # is the played signal; failed_before keeps a leftover failed
+        # tile from being blamed.
         try:
             self.page.locator("video").nth(before).wait_for(
                 state="attached", timeout=60000

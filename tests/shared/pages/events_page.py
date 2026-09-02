@@ -235,10 +235,8 @@ class EventsPage:
         menu = self.page.locator("#simple-menu")
         menu.wait_for(state="visible", timeout=10000)
 
-        # Expand the site node inside the menu
-        # The node's own text is name+camera-count ('Newtown Action Area10',
-        # probe 09/02/2026), so match the inner element that holds the exact
-        # bare name - escaped, and never a substring of another site.
+        # Exact bare-name node match - see select_camera for the DOM
+        # shape (probe 09/02/2026)
         site_node = menu.locator(".MuiListItemButton-root").filter(
             has=self.page.get_by_text(site_name, exact=True)).first
         site_node.click()
@@ -601,18 +599,17 @@ class EventsPage:
     def _wait_for_loader_finish(self, timeout: int = 60000):
         """Wait for the CircularProgress loader to appear then disappear."""
         try:
-            # Short appear grace: instant responses show no loader at
-            # all, and burning 5s on every fast search adds up
+            # Short appear grace: burning 5s on every fast search adds up
             self.loader.first.wait_for(state="visible", timeout=2000)
         # instant responses show no loader at all; its absence is not a failure
         except Exception:
-            pass  # Loader may have already finished
+            pass
         try:
             self.loader.first.wait_for(state="hidden", timeout=timeout)
         # the loader locator is page-global and a stray spinner can stay
         # visible; callers wait on the results or player as the real signal
         except Exception:
-            pass  # Some loaders may not fully disappear
+            pass
 
     def is_on_event_player_page(self) -> bool:
         """Check if the inline event player is active."""

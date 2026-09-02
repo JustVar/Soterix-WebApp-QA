@@ -5,8 +5,9 @@ uncommented sleeps, in-test QA Touch markers, absolute count oracles,
 icon locator guesses, hardcoded tenant names, except blocks that
 swallow failures into prints, test bodies with no oracle, early
 test-body returns (vacuous passes), .first/.last picks on union
-selectors, and new tests that land without a title, without a
-"Steps:" block, or without a QA Touch mapping row.
+selectors, new tests that land without a title, without a
+"Steps:" block, or without a QA Touch mapping row, and Jira ticket
+keys anywhere in code, comments, or docstrings.
 
 Every rule here started as a defect found in review; when a review
 finds a new class, it gets a detector so the class cannot recur.
@@ -43,6 +44,7 @@ EXCLUDE_PREFIXES = ("tests/legacy/",)
 UI_PREFIX = "tests/ui/"
 
 SLEEP_RE = re.compile(r"(?:wait_for_timeout|time\.sleep)\s*\(")
+TICKET_RE = re.compile(r"\bNC-\d+\b")
 QATOUCH_RE = re.compile(r"@pytest\.mark\.qatouch")
 ABS_COUNT_RE = re.compile(r"\.count\(\)\s*(?:>\s*0|>=\s*[01])\b")
 IMG_SRC_RE = re.compile(r"img\[src\*?=")
@@ -178,11 +180,20 @@ def check_line(path: str, lines: list[str], idx: int,
     the live mapping file."""
     line = lines[idx]
     stripped = line.strip()
-    if stripped.startswith("#"):
-        return []
-    if inside_triple_quote(lines, idx):
-        return []
     findings = []
+    # Checked before the comment/docstring early-returns: ticket keys
+    # live exactly there, and they go stale wherever they live
+    if TICKET_RE.search(line):
+        findings.append({
+            "sev": "MEDIUM", "rule": "ticket-in-code",
+            "msg": "Jira keys go stale in code. Describe the behavior; "
+                   "TEST_REPAIRS.md > App defects maps it to the ticket "
+                   "(CONVENTIONS.md > Code notes).",
+        })
+    if stripped.startswith("#") or inside_triple_quote(lines, idx):
+        for f in findings:
+            f["path"], f["line"], f["text"] = path, idx + 1, stripped
+        return findings
 
     if SLEEP_RE.search(line) and not line_is_excused(lines, idx):
         findings.append({

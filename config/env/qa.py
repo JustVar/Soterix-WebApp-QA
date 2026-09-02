@@ -20,7 +20,6 @@ config = {
     "test_chat_user_search": "QA Engineer B",
     "test_chat_user_name": "Chat Partner",
 
-    # Box configurations
     # Box configurations. Each box names the environment variables that hold
     # the account to use, so every tester signs in as themselves.
     "boxes": {
