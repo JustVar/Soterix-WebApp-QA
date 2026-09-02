@@ -110,7 +110,12 @@ class SearchPage:
         """Click a dropdown and select an item by text (same signals
         as the index variant)."""
         dropdown.click()
-        item = self.page.locator(f".dropdownItem:has-text('{text}')").first
+        # Exact and escaped (item 20): .dropdownItem holds the bare item
+        # text (probe 09/02/2026 on the same component in insights), and
+        # the page renders items of several dropdowns at once, so a
+        # substring could land in the wrong dropdown.
+        item = self.page.get_by_text(text, exact=True).and_(
+            self.page.locator(".dropdownItem")).first
         item.wait_for(state="visible", timeout=10000)
         item.click()
         self._dropdown_applied(dropdown, item)
@@ -293,7 +298,11 @@ class SearchPage:
         # Fail fast on a missing site instead of silently picking the
         # first row: the tenant renames sites, and a wrong-site search
         # passes on wrong data or fails with no hint of the cause
-        site_row = rows.filter(has_text=site_name).first
+        # Exact inner-element match (item 20): has_text was a substring,
+        # so a site name that prefixes another could land the wrong row.
+        # A 0-match still fails loud below with the on-screen names.
+        site_row = rows.filter(
+            has=self.page.get_by_text(site_name, exact=True)).first
         try:
             site_row.wait_for(state="visible", timeout=10000)
         except PlaywrightError:
@@ -551,8 +560,11 @@ class SearchPage:
         from config.base_config import config
         site = config.get("test_site_name")
         # Fail fast on a missing site: silently drawing on the first
-        # row's cameras would test the wrong site without a trace
-        site_row = rows.filter(has_text=site).first
+        # row's cameras would test the wrong site without a trace.
+        # Exact inner-element match (item 20): has_text was a substring,
+        # so a site name that prefixes another could land the wrong row.
+        site_row = rows.filter(
+            has=self.page.get_by_text(site, exact=True)).first
         try:
             site_row.wait_for(state="visible", timeout=10000)
         except PlaywrightError:

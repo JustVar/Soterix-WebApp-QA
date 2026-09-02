@@ -703,7 +703,14 @@ class LprPage:
     def wait_for_site_list(self, site_name: str):
         """Wait for site list to load."""
         print(f"[LPR] Waiting for site '{site_name}' to appear")
-        self.page.locator(f"text='{site_name}'").first.wait_for(state="visible", timeout=60000)
+        # Escaped exact match (item 20): a site named with a quote broke
+        # the old quoted text= selector string. Slightly narrower than
+        # that engine (audit 09/02): get_by_text needs an element whose
+        # whole text is the name, where text='...' also matched a name
+        # text node with sibling content - if this ever times out with
+        # the site on screen, that DOM shape is why (fails loud, 60s).
+        self.page.get_by_text(site_name, exact=True).first.wait_for(
+            state="visible", timeout=60000)
         print("[LPR] Site list loaded")
 
     def safe_reset_to_views(self):

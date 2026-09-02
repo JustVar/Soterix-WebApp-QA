@@ -1610,7 +1610,8 @@ def set_dropdown_value(page, label_text: str, target_value: str) -> bool:
 
     if not opened or not opened.get('opened'):
         # Fallback: check if value text is already displayed
-        current_el = page.locator(f'text="{target_value}"')
+        # exact like the old quoted text= engine, escaped (item 20)
+        current_el = page.get_by_text(target_value, exact=True)
         if current_el.count() > 0:
             print(f'    {label_text} appears already set to {target_value}')
             return True
