@@ -387,6 +387,9 @@ def check_early_exit_tests(path: str, lines: list[str]) -> list[dict]:
                 continue
             if not re.match(r"^\s*return\b", body_line):
                 continue
+            # a docstring line can open with the word 'return'
+            if inside_triple_quote(lines, i):
+                continue
             if "#" in body_line or (
                 i > 0 and lines[i - 1].strip().startswith("#")
             ):

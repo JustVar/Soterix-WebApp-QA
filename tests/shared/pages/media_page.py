@@ -368,6 +368,7 @@ class MediaPage:
         leaving the folder view is the applied signal.
         """
         row = self.item_row(name)
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         row.locator("img[src*='icon-options']").first.click()
         self.click_menu_item("Remove From Folder")
         self.page.locator(f"input[value='{name}']").first.wait_for(

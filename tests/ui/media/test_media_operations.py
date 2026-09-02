@@ -218,6 +218,7 @@ class TestMediaClipOperations:
         name = self._first_clip_or_skip()
 
         row = self.media.item_row(name)
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         row.locator("img[src*='icon-options']").first.click()
         self.media.click_menu_item("Delete")
         expect(self.page.get_by_text("cannot be retrieved").first)\
@@ -431,7 +432,8 @@ class TestMediaFolderOperations:
         """Held by design: folder deletion is covered end to end by
         test_clip_grouping's lifecycle (create -> empty -> delete with
         the defect tripwire). A standalone delete would have to eat a
-        TEAM folder - those are not automation data."""
+        TEAM folder - those are not automation data. No oracle by
+        design: the lifecycle test carries the assertions."""
         pytest.skip(
             "Covered by test_clip_grouping's folder lifecycle; team "
             "folders stay untouched"
