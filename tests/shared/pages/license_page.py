@@ -327,9 +327,11 @@ class LicensePage:
     def select_site_in_modal(self, site_name: str):
         """Select a site from the dropdown in the assign modal."""
         self.site_dropdown.click()
-        option = self.page.locator(
-            f"li[role='option']:has-text('{site_name}'), "
-            f"option:has-text('{site_name}')"
+        # get_by_role("option") covers both the MUI li[role='option'] and a
+        # native <option>; accessible-name match is exact and escaped (the
+        # option text is the bare site name, probe 09/02/2026).
+        option = self.page.get_by_role(
+            "option", name=site_name, exact=True
         ).first
         option.click()
         # Listbox hidden = MUI applied the selection (native selects

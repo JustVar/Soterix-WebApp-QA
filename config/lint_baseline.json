@@ -1,6 +1,6 @@
 {
   "comment": "Per-file ruff finding counts. Lower is always fine; higher needs a reason. See tools/lint_baseline.py.",
-  "total": 635,
+  "total": 634,
   "files": {
     "config/base_config.py": 1,
     "conftest.py": 29,
@@ -27,7 +27,7 @@
     "tests/ui/admin/test_admin_sites.py": 4,
     "tests/ui/admin/test_admin_users.py": 5,
     "tests/ui/admin/test_lpr_camera_selection.py": 2,
-    "tests/ui/admin/test_lpr_navigation.py": 3,
+    "tests/ui/admin/test_lpr_navigation.py": 2,
     "tests/ui/admin/test_lpr_operations.py": 4,
     "tests/ui/admin/test_lpr_views.py": 1,
     "tests/ui/admin/test_lpr_widgets.py": 1,

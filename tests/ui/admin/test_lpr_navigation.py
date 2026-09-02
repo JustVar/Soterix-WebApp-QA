@@ -7,7 +7,11 @@ Tests the ability to navigate between LPR pages and ensure correct page state:
 - Search Results (after applying filters)
 - Categories page
 """
+import contextlib
+
 import pytest
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+
 from tests.shared.pages.lpr_page import LprPage
 
 
@@ -208,6 +212,13 @@ class TestLprNavigation:
 
         # Get first available list
         self.step_capture.mark(2, "Find first available list")
+        # The table hydrates a beat after navigation: sampling .all() on
+        # the same tick skipped with "No LPR lists" on a tenant holding
+        # 107 rows (race, seen 09/02/2026). Wait for a data row first; a
+        # truly empty table times out and falls through to the skip.
+        with contextlib.suppress(PlaywrightTimeoutError):
+            self.page.locator("tr").nth(1).wait_for(
+                state="visible", timeout=15000)
         list_rows = self.page.locator("tr").all()
 
         if len(list_rows) == 0:
@@ -248,6 +259,13 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
+        # The table hydrates a beat after navigation: sampling .all() on
+        # the same tick skipped with "No LPR lists" on a tenant holding
+        # 107 rows (race, seen 09/02/2026). Wait for a data row first; a
+        # truly empty table times out and falls through to the skip.
+        with contextlib.suppress(PlaywrightTimeoutError):
+            self.page.locator("tr").nth(1).wait_for(
+                state="visible", timeout=15000)
         list_rows = self.page.locator("tr").all()
         if len(list_rows) < 2:
             pytest.skip("No LPR lists available")
@@ -284,6 +302,13 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
+        # The table hydrates a beat after navigation: sampling .all() on
+        # the same tick skipped with "No LPR lists" on a tenant holding
+        # 107 rows (race, seen 09/02/2026). Wait for a data row first; a
+        # truly empty table times out and falls through to the skip.
+        with contextlib.suppress(PlaywrightTimeoutError):
+            self.page.locator("tr").nth(1).wait_for(
+                state="visible", timeout=15000)
         list_rows = self.page.locator("tr").all()
         if len(list_rows) < 2:
             pytest.skip("No LPR lists available")
@@ -324,6 +349,13 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
+        # The table hydrates a beat after navigation: sampling .all() on
+        # the same tick skipped with "No LPR lists" on a tenant holding
+        # 107 rows (race, seen 09/02/2026). Wait for a data row first; a
+        # truly empty table times out and falls through to the skip.
+        with contextlib.suppress(PlaywrightTimeoutError):
+            self.page.locator("tr").nth(1).wait_for(
+                state="visible", timeout=15000)
         list_rows = self.page.locator("tr").all()
         if len(list_rows) < 2:
             pytest.skip("No LPR lists available")

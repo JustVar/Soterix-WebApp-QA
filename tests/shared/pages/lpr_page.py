@@ -213,8 +213,16 @@ class LprPage:
 
     def _open_list_by_name(self, list_name: str):
         """Open a specific list by name from Lists page."""
-        # Find the row containing the list name
-        list_row = self.page.locator(f"tr:has-text('{list_name}')").first
+        # Row whose NAME CELL (first td) holds the EXACT name. The old
+        # tr:has-text was a substring of the whole row text - has-text('ac')
+        # also matched every 'Black List' row (probe 09/02/2026) - and a
+        # quoted name (the tenant holds one) would crash the CSS parser.
+        # The has= locator is matched relative to each tr, so scoping it
+        # to td:first-child keeps a list NAMED 'Black List' from landing
+        # a row whose TYPE column says the same (audit 09/02).
+        list_row = self.page.locator("tr").filter(
+            has=self.page.locator("td:first-child").get_by_text(
+                list_name, exact=True)).first
         list_row.wait_for(state="visible", timeout=60000)
 
         # Click the View icon in that row
@@ -245,8 +253,13 @@ class LprPage:
         print("[LPR] Returned to Plate page")
 
     def get_list_row(self, list_name: str):
-        """Get a list row by name for further operations."""
-        return self.page.locator(f"tr:has-text('{list_name}')").first
+        """Get a list row by name for further operations.
+
+        Exact match on the name cell; see _open_list_by_name for why.
+        """
+        return self.page.locator("tr").filter(
+            has=self.page.locator("td:first-child").get_by_text(
+                list_name, exact=True)).first
 
     def click_view_icon_on_list(self, list_name: str):
         """Click View icon on a specific list."""

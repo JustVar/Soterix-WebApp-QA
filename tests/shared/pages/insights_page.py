@@ -270,9 +270,13 @@ class InsightsPage:
 
         # Select Category (dropdown index 1 - always stable)
         dropdowns.nth(1).click()
-        category_el = self.page.locator(
-            f".dropdownItem:has-text('{category_name}')"
-        ).first
+        # Exact text intersected with the item class: escaped, and the
+        # page renders 19 .dropdownItems across four dropdowns (graphs,
+        # categories, sites, widths - probe 09/02/2026), so a substring
+        # could land in the wrong dropdown entirely.
+        category_el = self.page.get_by_text(
+            category_name, exact=True
+        ).and_(self.page.locator(".dropdownItem")).first
         category_el.click()
         self._appears_hidden(category_el, timeout=3000)
 

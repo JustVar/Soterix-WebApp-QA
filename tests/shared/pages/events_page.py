@@ -115,8 +115,11 @@ class EventsPage:
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=10000)
 
-        option = listbox.locator(
-            f"li[role='option']:has-text('{rule_name}')"
+        # Accessible-name match: exact and escaped (option text is the
+        # bare rule name, probe 09/02/2026), so 'Occupancy' can never
+        # land a longer rule that merely contains it.
+        option = listbox.get_by_role(
+            "option", name=rule_name, exact=True
         ).first
         option.click()
         # Listbox hidden = MUI applied the selection
@@ -144,8 +147,11 @@ class EventsPage:
         listbox = self.page.locator("[role='listbox']")
         listbox.wait_for(state="visible", timeout=20000)
 
-        option = listbox.locator(
-            f"li[role='option']:has(span:has-text('{site_name}'))"
+        # Accessible-name match on the option (its text is the bare site
+        # name, probe 09/02/2026): exact and escaped, unlike the old
+        # span:has-text substring that also matched name-prefix sites.
+        option = listbox.get_by_role(
+            "option", name=site_name, exact=True
         ).first
 
         # Click the MuiMenuItem (li element) to trigger selection
@@ -179,9 +185,11 @@ class EventsPage:
         menu.wait_for(state="visible", timeout=10000)
 
         # Expand the site
-        site_node = menu.locator(
-            f".MuiListItemButton-root:has-text('{site_name}')"
-        ).first
+        # The node's own text is name+camera-count ('Newtown Action Area10',
+        # probe 09/02/2026), so match the inner element that holds the exact
+        # bare name - escaped, and never a substring of another site.
+        site_node = menu.locator(".MuiListItemButton-root").filter(
+            has=self.page.get_by_text(site_name, exact=True)).first
         site_node.click()
 
         # Site expansion reveals the "All Cameras" node
@@ -228,9 +236,11 @@ class EventsPage:
         menu.wait_for(state="visible", timeout=10000)
 
         # Expand the site node inside the menu
-        site_node = menu.locator(
-            f".MuiListItemButton-root:has-text('{site_name}')"
-        ).first
+        # The node's own text is name+camera-count ('Newtown Action Area10',
+        # probe 09/02/2026), so match the inner element that holds the exact
+        # bare name - escaped, and never a substring of another site.
+        site_node = menu.locator(".MuiListItemButton-root").filter(
+            has=self.page.get_by_text(site_name, exact=True)).first
         site_node.click()
 
         # Site expansion reveals the "All Cameras" node
