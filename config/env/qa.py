@@ -24,10 +24,18 @@ config = {
     # Box configurations. Each box names the environment variables that hold
     # the account to use, so every tester signs in as themselves.
     "boxes": {
+        # Per-box test_data overrides the top-level test_* keys when that
+        # box is active (BOX env var; overlay happens in
+        # config/base_config.py load_config), so config.get("test_site_name")
+        # is always the ACTIVE box's site and no test needs box logic.
         "india": {
             "email_env": "QA_INDIA_USER",
             "password_env": "QA_INDIA_PASSWORD",
             "default_site_id": None,
+            "test_data": {
+                "test_site_name": "Newtown Action Area",
+                "test_camera_name": "main gate",
+            },
         },
         # The US QA box signs in with the automation account
         # (test-auto-qa@soterixsystems.com, enterprise 132, site "Spartan0").
@@ -36,6 +44,12 @@ config = {
             "email_env": "QA_US_USER",
             "password_env": "QA_US_PASSWORD",
             "default_site_id": None,
+            "test_data": {
+                # Spartan0 is the box's only site (site id 156); the camera
+                # is a live streaming one (probe 09/01/2026, 22 cameras)
+                "test_site_name": "Spartan0",
+                "test_camera_name": "Soterix Multicam 1.15",
+            },
         },
     },
 

@@ -114,6 +114,24 @@ once independently in the wait conversion (August 2026). Use them:
 - **Tenant data names come from config**, never hardcoded in tests
   (`test_site_name`, `test_camera_name` in `config/env/`). The shared
   tenant renames things; a hardcoded name is a delayed test failure.
+  Config test data is per-box: `config/env/qa.py` boxes carry a
+  `test_data` overlay, so `config.get("test_site_name")` is always the
+  ACTIVE box's site (BOX=us resolves Spartan0) and tests stay box-agnostic.
+- **Identity lookups match the exact name, escaped** (locator series
+  09/2026, TEST_REPAIRS items 14 and 18-20). Finding a specific
+  camera/site/list/view by its name uses `get_by_text` / `get_by_title` /
+  `get_by_role(..., exact=True)` (or `.filter(has=...)` scoped to the
+  name cell), never an interpolated `:has-text('{name}')`, `text={name}`
+  or `[title='{name}']`: those are case-insensitive substrings that land
+  the wrong entity (`tr:has-text('ac')` matched every 'Black List' row;
+  'test1' lands 'test10') and a quoted name crashes the selector parser.
+  Probe the panel's DOM before converting - the name may sit in an inner
+  element beside a count, or render ellipsized. A deliberate prefix over
+  a fixed vocabulary ('Last 7', generated 'AutoTest<ts>' names) stays
+  fuzzy WITH a why-comment. Pair every exact identity wait with a loud
+  drift guard that names the on-screen entries. This is for identity;
+  label matching on fixed UI strings keeps `:has-text` (zero-width-space
+  caveat below).
 - **Every selection needs an applied signal.** After picking a site,
   duration, or option, wait for state the page shows: the control stops
   reading Select, the listbox hides, a count changes. A helper that

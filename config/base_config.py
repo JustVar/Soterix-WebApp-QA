@@ -51,6 +51,17 @@ def load_config():
     if not isinstance(cfg, dict):
         raise RuntimeError(f"{module_path} must define a dict named 'config'")
 
+    # Overlay the active box's test data onto the top-level keys, so
+    # config.get("test_site_name") etc. always name the ACTIVE box's
+    # tenant (BOX=us -> Spartan0) and tests stay box-agnostic. The env
+    # module's top-level test_* keys remain the default-box values.
+    box = os.environ.get("BOX", cfg.get("default_box", "")).strip().lower()
+    box_cfg = (cfg.get("boxes") or {}).get(box) or {}
+    overrides = box_cfg.get("test_data") or {}
+    if overrides:
+        cfg = {**cfg, **overrides}
+        logging.info(f"[ENV RESOLVED] box '{box}' test_data overlay: {sorted(overrides)}")
+
     logging.info(f"[ENV RESOLVED] ENV='{env}' APP_TYPE='{app_type}' -> {module_path} | base_url={cfg.get('base_url')}")
     return cfg
 

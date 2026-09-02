@@ -148,6 +148,15 @@ Locators
 - Page-wide checkbox locators inside an open modal resolve to
   switches BEHIND the modal; the backdrop intercepts the click for
   the full timeout. Scope to the modal panel.
+- Interpolated identity selectors bite twice: `:has-text('{name}')`
+  is a case-insensitive substring (`tr:has-text('ac')` matched every
+  'Black List' row, and a row filter can match the TYPE column, not
+  the name cell - scope `has=` to the name cell), and a name holding
+  a quote crashes the CSS parser mid-selector. The quoted `text='...'`
+  engine also matches a bare name text node with sibling content, so
+  replacing it with get_by_text(exact=True) narrows: the only new
+  failure mode is a loud 0-match timeout, never a wrong pick. Recipe
+  and verification evidence: TEST_REPAIRS items 14, 18-20.
 
 Waits and signals
 - Empty video tiles keep placeholder spinners alive forever - never
