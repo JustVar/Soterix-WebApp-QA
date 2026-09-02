@@ -29,6 +29,12 @@ concurrency:
 
 jobs:
   collect:
+    # Only the company repo holds the QA_SHARED_DEPLOY_KEY secret this gate
+    # needs to fetch the private shared package. On the JustVar mirror the
+    # ssh-agent step gets an empty key and the run fails, emailing the owner
+    # on every push and Dependabot PR. Skip there; the authoritative gate
+    # (and Dependabot's real check) runs on the company repo.
+    if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -101,6 +107,8 @@ jobs:
   # fail-fast is off on purpose. "3.11 broke" and "every version broke" are
   # different diagnoses and a cancelled matrix cannot tell them apart.
   shim-matrix:
+    # Same as collect: the deploy-key secret only exists on the company repo.
+    if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

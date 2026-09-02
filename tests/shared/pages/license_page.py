@@ -66,17 +66,6 @@ class LicensePage:
         # 08/24/2026), so the role matches nothing
         self.site_toggle_switches = page.locator(".MuiSwitch-root")
 
-        # Feature-level rows (inside expanded site)
-        self.feature_rows = page.locator(
-            "div[class*='feature-row'], tr[class*='feature'], "
-            "div[class*='nested'], div[class*='sub-row']"
-        )
-        # Class-keyed for the same reason as site_toggle_switches
-        self.feature_toggle_switches = page.locator(
-            "div[class*='feature'] .MuiSwitch-root, "
-            "div[class*='nested'] .MuiSwitch-root"
-        )
-
         # Device list (drill-down from feature)
         self.device_list_rows = page.locator(
             "tr[class*='device'], div[class*='device-row']"
@@ -256,26 +245,6 @@ class LicensePage:
     def toggle_site_enable(self, index: int = 0):
         """Toggle the enable/disable switch for a site."""
         self._toggle_switch(self.site_toggle_switches.nth(index))
-
-    # ----- Feature-Level -----
-
-    def get_feature_count(self) -> int:
-        """Count feature rows inside an expanded site."""
-        return self.feature_rows.count()
-
-    def toggle_feature_enable(self, index: int = 0):
-        """Toggle the enable/disable switch for a feature."""
-        self._toggle_switch(self.feature_toggle_switches.nth(index))
-
-    def click_feature_device_link(self, index: int = 0):
-        """Click a feature row to navigate to the device list."""
-        self.feature_rows.nth(index).click()
-        # The device list page shows a breadcrumb; sub-page loaders
-        # are covered by page-ready
-        if not self._appears(self.breadcrumb.first, timeout=10000):
-            print("[LICENSE] Feature row clicked but no breadcrumb "
-                  "appeared within 10s")
-        self._wait_for_page_ready()
 
     # ----- Device List -----
 

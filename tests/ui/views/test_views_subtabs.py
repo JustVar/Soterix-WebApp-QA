@@ -19,6 +19,7 @@ import time
 
 import pytest
 from playwright.sync_api import expect
+from config.base_config import config
 from tests.shared.pages.views_page import ViewsPage
 
 
@@ -123,8 +124,10 @@ class TestViewsSubtabs:
         Steps:
         1. Click Devices tab (default)
         2. Expand the configured site -> Click "All Cameras"
-        3. Hover camera thumbnail to reveal checkbox
-        4. Click checkbox
+        3. Add the configured camera through ViewsPage.add_camera_via_checkbox
+           (the page-object method: hover the named thumbnail, reveal and
+           click its checkbox). This test is the pytest that covers that
+           method, so it must call it, not re-implement the flow inline.
 
         Success: Tile count decreases OR video element appears
         """
@@ -134,23 +137,20 @@ class TestViewsSubtabs:
         # Devices is default tab - expand site and show cameras
         self.views.expand_site_and_show_cameras(None)
 
-        # Find camera thumbnail and add via checkbox
-        camera = self.page.locator(".cameraThumbnailWrapper").first
-        camera.wait_for(state="visible", timeout=10000)
+        camera_name = config.get("test_camera_name")
+        assert camera_name, "test_camera_name must be set in config/env for this test"
 
-        checkbox = self._reveal_checkbox(camera)
-        assert checkbox is not None, "Checkbox not visible on hover"
         content_sel = "video, canvas, [class*='video']"
         baseline = self._content_baseline(content_sel)
-        # advisory content-health baseline: the first sidebar camera is
-        # whichever the tenant lists first and may be offline, so the
-        # stream oracle stays off here - the tile settles, then the
-        # advisory reports a dead stream
+        # advisory content-health baseline: the tile settles, then the
+        # advisory reports a dead stream (the QA tenant's stream may be down)
         health = self.views.content_health_snapshot()
-        checkbox.click()
+
+        # Exact-name checkbox add through the page object (item 14 fix path)
+        self.views.add_camera_via_checkbox(camera_name)
 
         assert self._content_added(initial_tiles, content_sel, baseline), \
-            f"Camera not added. Tiles: {initial_tiles} -> {self.views.get_available_tile_count()}"
+            f"Camera '{camera_name}' not added. Tiles: {initial_tiles} -> {self.views.get_available_tile_count()}"
         self.views.wait_for_tiles_settled()
         self.views.log_new_content_issues(health, "camera add")
 

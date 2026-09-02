@@ -29,6 +29,9 @@ config = {
             "password_env": "QA_INDIA_PASSWORD",
             "default_site_id": None,
         },
+        # The US QA box signs in with the automation account
+        # (test-auto-qa@soterixsystems.com, enterprise 132, site "Spartan0").
+        # Set QA_US_USER / QA_US_PASSWORD in .env to those credentials.
         "us": {
             "email_env": "QA_US_USER",
             "password_env": "QA_US_PASSWORD",

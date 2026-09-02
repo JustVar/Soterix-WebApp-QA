@@ -395,7 +395,12 @@ class ViewsPage:
             camera_name: The visible name of the camera to select.
         """
         # Find the camera thumbnail by its visible name
-        camera = self.page.locator(f".cameraThumbnailWrapper:has-text('{camera_name}')").first
+        # get_by_title(exact=True) matches the thumbnail's name label exactly
+        # and, unlike an interpolated span[title='{name}'] selector, escapes
+        # the value - a camera named with an apostrophe returns no match
+        # instead of crashing the CSS parser (probe 09/01/2026).
+        camera = self.page.locator(".cameraThumbnailWrapper").filter(
+            has=self.page.get_by_title(camera_name, exact=True)).first
 
         # Hover to reveal the checkbox. The reveal is flaky (React listens
         # on a parent the pointer sometimes misses), so retry once with a
@@ -750,7 +755,12 @@ class ViewsPage:
             tile_index: Target tile index (0-based). Default is first tile.
         """
         # Find the camera thumbnail by name
-        camera = self.page.locator(f".cameraThumbnailWrapper:has-text('{camera_name}')").first
+        # get_by_title(exact=True) matches the thumbnail's name label exactly
+        # and, unlike an interpolated span[title='{name}'] selector, escapes
+        # the value - a camera named with an apostrophe returns no match
+        # instead of crashing the CSS parser (probe 09/01/2026).
+        camera = self.page.locator(".cameraThumbnailWrapper").filter(
+            has=self.page.get_by_title(camera_name, exact=True)).first
         camera.wait_for(state="visible", timeout=10000)
 
         target_tile = self.drag_drop_tiles.nth(tile_index)
@@ -780,7 +790,13 @@ class ViewsPage:
         ([cameraName, tileIndex]) => {
             // Find camera by text content
             const thumbnails = Array.from(document.querySelectorAll('.cameraThumbnailWrapper'));
-            const src = thumbnails.find(t => t.textContent && t.textContent.includes(cameraName));
+            // Exact match on the name label (span[title]), not a substring of
+            // textContent: 'test1' must not land 'test10'/'test11' (probe
+            // 09/01/2026 - the sidebar renders test8/test9/test10 together).
+            const src = thumbnails.find(t => {
+                const s = t.querySelector('span[title]');
+                return s && s.getAttribute('title') === cameraName;
+            });
             if (!src) return {ok:false, reason: 'camera-not-found'};
 
             // Find tiles by text content
