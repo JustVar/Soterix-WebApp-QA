@@ -590,9 +590,11 @@ class AdminPage:
         click that lands during list hydration is silently dropped,
         so the signal gets one retry.
         """
-        site = self.page.locator(
-            f"p.MuiTypography-root:text-is('{site_name}')"
-        ).first
+        # Same exact match as the old :text-is, but escaped: a site named
+        # with an apostrophe returns no match instead of crashing the
+        # selector parser (item 19 recipe).
+        site = self.page.get_by_text(site_name, exact=True).and_(
+            self.page.locator("p.MuiTypography-root")).first
         site.wait_for(state="visible", timeout=10000)
         site.click()
         detail = self.page.get_by_text("Groups:", exact=True).first
@@ -833,7 +835,11 @@ class AdminPage:
             raise RuntimeError(
                 "test_camera_name is not set for this ENV in config/env/."
             )
-        row = self.page.get_by_text(camera, exact=False).first
+        # Exact and escaped (item 19): this pick decides which device the
+        # rule is created against, so a substring landing 'main gate 2'
+        # for 'main gate' would build the rule on the wrong camera. A
+        # renamed camera now fails loud below with the on-screen names.
+        row = self.page.get_by_text(camera, exact=True).first
         try:
             row.wait_for(state="visible", timeout=10000)
         except Exception:

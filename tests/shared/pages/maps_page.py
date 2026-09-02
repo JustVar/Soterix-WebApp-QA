@@ -65,7 +65,10 @@ class MapsPage:
 
         # the options container's own wait is the opened signal
         self.dropdown_options.wait_for(state="visible", timeout=10000)
-        site_option = self.dropdown_options.locator(f"text={site_name}")
+        # Exact and escaped (item 19): each option's text-space div holds
+        # the bare site name (probe 09/02/2026); the old text= engine was
+        # a case-insensitive substring. Strictness kept - no .first.
+        site_option = self.dropdown_options.get_by_text(site_name, exact=True)
         site_option.scroll_into_view_if_needed()
         site_option.click()
 

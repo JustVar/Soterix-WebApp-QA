@@ -857,9 +857,29 @@ class ViewsPage:
             location_name: The visible name of the location/site to drag.
             tile_index: Target tile index (0-based). Default is first tile.
         """
-        # Find the location in the left panel (site tree)
-        location = self.page.locator(f"text={location_name}").first
-        location.wait_for(state="visible", timeout=10000)
+        # Find the location in the left panel (site tree). Exact and
+        # escaped: the old text= engine was a case-insensitive substring
+        # (item 19; sidebar node holds the exact bare name, probe 09/02).
+        location = self.page.get_by_text(location_name, exact=True).first
+        try:
+            location.wait_for(state="visible", timeout=10000)
+        except PlaywrightError:
+            # Tenant drift guard (audit 09/02): the only caller wraps this
+            # method in a skip, so a renamed site must fail LOUD here like
+            # click_site does - a silent 0-match would skip the test on
+            # every run instead of pointing at the one-line config fix.
+            visible = self.page.evaluate(
+                """() => [...document.querySelectorAll(
+                       "[class*='panel'] p, [role='treeitem'], button")]
+                   .map(e => (e.innerText || '').trim().split('\\n')[0])
+                   .filter((t, i, a) => t && t.length <= 60 && a.indexOf(t) === i)
+                   .slice(0, 20)"""
+            )
+            raise RuntimeError(
+                f"The location '{location_name}' is not in the panel. "
+                f"Entries on screen: {visible}. The tenant may have renamed "
+                f"it; update test_site_name in config/env/."
+            ) from None
 
         target_tile = self.drag_drop_tiles.nth(tile_index)
         target_tile.wait_for(state="visible", timeout=10000)
@@ -1156,7 +1176,10 @@ class ViewsPage:
             site_name: Specific site name, or None to click the first available site.
         """
         if site_name:
-            site = self.page.locator(f"text={site_name}").first
+            # Exact and escaped (item 19): the old text= engine was a
+            # case-insensitive substring, so a site name that prefixes
+            # another could land the wrong panel entry.
+            site = self.page.get_by_text(site_name, exact=True).first
             try:
                 site.wait_for(state="visible", timeout=15000)
             except Exception:

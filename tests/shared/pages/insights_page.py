@@ -5,6 +5,7 @@ switching to Widgets tab, widget creation with various graph types and
 categories, widget search, and widget operations (view, report, delete).
 """
 import datetime
+import re
 import time
 
 from playwright.sync_api import (
@@ -326,10 +327,16 @@ class InsightsPage:
 
         # Select Site (index 3 - stable, before camera expansion)
         dropdowns.nth(3).click()
-        site_partial = site_name[:10]
-        site_el = self.page.locator(
-            f"p:has-text('{site_partial}')"
-        ).first
+        # Exact first: the dropdown renders LONG site names ellipsized in
+        # the DOM ('Example Corporat...', probe 09/02/2026), which is
+        # why this used a bare 10-char prefix. Prefer the exact escaped
+        # match; fall back to an anchored, escaped prefix only when the
+        # exact name is not on screen (a truncated long name).
+        site_el = self.page.get_by_text(site_name, exact=True).and_(
+            self.page.locator(".dropdownItem")).first
+        if not site_el.count():
+            site_el = self.page.locator(".dropdownItem").filter(
+                has_text=re.compile("^" + re.escape(site_name[:10]))).first
         site_el.click()
         self._appears_hidden(site_el, timeout=3000)
 
