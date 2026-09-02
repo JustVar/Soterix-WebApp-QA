@@ -166,6 +166,7 @@ def test_existing_rules_still_fire():
 
 
 def test_ticket_rule_fires_in_comment_docstring_and_code():
+    """A ticket key is flagged wherever it sits: comment, docstring, code."""
     for line in ['# see NC-' + '12345 for details',
                  '"""NC-' + '9 tripwire"""',
                  'pytest.skip("NC-' + '20325 broke this")']:
@@ -174,15 +175,18 @@ def test_ticket_rule_fires_in_comment_docstring_and_code():
 
 
 def test_ticket_rule_ignores_the_bare_project_key():
+    """The bare project key is configuration, not a ticket reference."""
     assert not cc.check_line('x.py', ['JIRA_PROJECT_KEY = "NC"'], 0)
 
 
 def test_ticket_finding_in_comment_carries_path_and_line():
+    """A comment-line finding still names its file and line."""
     finding = cc.check_line('x.py', ['# NC-' + '1 stale'], 0)[0]
     assert (finding['path'], finding['line']) == ('x.py', 1)
 
 
 def test_early_exit_ignores_docstring_lines_opening_with_return():
+    """A docstring line may open with the word return."""
     lines = [
         'def test_ungroup(page):',
         '    """Remove From Folder must',
@@ -193,6 +197,7 @@ def test_early_exit_ignores_docstring_lines_opening_with_return():
 
 
 def test_early_exit_still_flags_a_bare_return():
+    """A real bare return in a test body stays flagged."""
     lines = [
         'def test_vacuous(page):',
         '    """Title."""',
