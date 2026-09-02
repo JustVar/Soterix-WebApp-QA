@@ -55,8 +55,15 @@ def load_config():
     # tenant (BOX=us -> Spartan0) and tests stay box-agnostic. The env
     # module's top-level test_* keys remain the default-box values.
     box = os.environ.get("BOX", cfg.get("default_box", "")).strip().lower()
-    box_cfg = (cfg.get("boxes") or {}).get(box) or {}
-    overrides = box_cfg.get("test_data") or {}
+    boxes = cfg.get("boxes") or {}
+    # A typo'd BOX must fail here, loudly, like get_box_config does -
+    # a silent fallback would run every test against the default
+    # box's tenant data while claiming the requested one
+    if box and boxes and box not in boxes:
+        raise RuntimeError(
+            f"Unknown BOX '{box}' for ENV '{env}'. "
+            f"Valid boxes: {', '.join(sorted(boxes))}")
+    overrides = (boxes.get(box) or {}).get("test_data") or {}
     if overrides:
         cfg = {**cfg, **overrides}
 

@@ -163,3 +163,41 @@ def test_existing_rules_still_fire():
     lines = ['def test_s():', '    """T."""', '    page.wait_for_' + 'timeout(500)']
     rules = [f['rule'] for f in cc.check_line(PATH, lines, 2, mapped=set())]
     assert rules == ['uncommented-sleep']
+
+
+def test_ticket_rule_fires_in_comment_docstring_and_code():
+    for line in ['# see NC-' + '12345 for details',
+                 '"""NC-' + '9 tripwire"""',
+                 'pytest.skip("NC-' + '20325 broke this")']:
+        rules = [f['rule'] for f in cc.check_line('x.py', [line], 0)]
+        assert 'ticket-in-code' in rules, line
+
+
+def test_ticket_rule_ignores_the_bare_project_key():
+    assert not cc.check_line('x.py', ['JIRA_PROJECT_KEY = "NC"'], 0)
+
+
+def test_ticket_finding_in_comment_carries_path_and_line():
+    finding = cc.check_line('x.py', ['# NC-' + '1 stale'], 0)[0]
+    assert (finding['path'], finding['line']) == ('x.py', 1)
+
+
+def test_early_exit_ignores_docstring_lines_opening_with_return():
+    lines = [
+        'def test_ungroup(page):',
+        '    """Remove From Folder must',
+        '    return the clip un-deleted."""',
+        '    assert page',
+    ]
+    assert not cc.check_early_exit_tests('x.py', lines)
+
+
+def test_early_exit_still_flags_a_bare_return():
+    lines = [
+        'def test_vacuous(page):',
+        '    """Title."""',
+        '    return',
+        '    assert page',
+    ]
+    rules = [f['rule'] for f in cc.check_early_exit_tests('x.py', lines)]
+    assert rules == ['early-exit-pass']

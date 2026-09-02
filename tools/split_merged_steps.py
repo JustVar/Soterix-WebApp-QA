@@ -112,7 +112,7 @@ MERGED_THRESHOLD = 3
 # Validator-accepted fallback for empty expected_result. The server-side
 # validator rejects empty with "Please Enter Expected Result"; a single
 # dash passes (probed 2026-06-25). Matches DASH_FALLBACK in
-# tools/archive/migrate_pp_cases_phase_a_steps.py:175.
+# tools/archive/migrate_pp_cases_phase_a_steps.py:174.
 DASH_FALLBACK = "-"
 
 # Treat any HTTP 429 with this many seconds pause then a single retry.

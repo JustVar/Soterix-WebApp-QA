@@ -104,15 +104,31 @@ class TestMediaClipOperations:
             self.media.navigate()
             self.media.select_date_filter("Last 30 Days")
             self.media.click_tab("Folders")
-            if folder in self.media.item_names():
-                try:
-                    self.media.delete_item_named(folder)
-                # An undeletable folder is the tripwired app defect,
-                # not a failed restore - name it and move on
-                except (PlaywrightError, RuntimeError):
-                    print(f"[MEDIA] folder '{folder}' left on the "
-                          "tenant (folder-delete defect); "
-                          "tenant_cleanup will get it")
+            if folder not in self.media.item_names():
+                return
+            # EMPTY the folder before deleting it: folder delete takes
+            # the clips inside with it, permanently - a mid-test
+            # failure must not cost the tenant its clip
+            try:
+                self.media.open_folder(folder)
+                if first in self.media.item_names():
+                    self.media.remove_from_folder(first)
+            except (PlaywrightError, RuntimeError):
+                print(f"[MEDIA] could not empty folder '{folder}'; "
+                      "NOT deleting it - the clip inside must survive")
+                return
+            self.page.reload()
+            self.media.navigate()
+            self.media.select_date_filter("Last 30 Days")
+            self.media.click_tab("Folders")
+            try:
+                self.media.delete_item_named(folder)
+            # An undeletable folder is the tripwired app defect,
+            # not a failed restore - name it and move on
+            except (PlaywrightError, RuntimeError):
+                print(f"[MEDIA] folder '{folder}' left on the "
+                      "tenant (folder-delete defect); "
+                      "tenant_cleanup will get it")
 
         self._cleanup_actions.append(_cleanup_folder)
 
@@ -144,13 +160,22 @@ class TestMediaClipOperations:
             )
 
         # Repro for the unfiled report: deleting a folder must not
-        # remove clips OUTSIDE it
+        # remove clips OUTSIDE it. Re-read on a fresh load before
+        # failing - the shared tenant churns and the Last-30-Days
+        # window rolls, so one stale read must not file a bug.
         self.media.click_tab("Clips")
         missing = set(clips_before) - set(self.media.item_names())
+        if missing:
+            self.page.reload()
+            self.media.navigate()
+            self.media.select_date_filter("Last 30 Days")
+            self.media.click_tab("Clips")
+            missing = set(clips_before) - set(self.media.item_names())
         assert not missing, (
-            f"Deleting empty folder '{folder}' also removed clips "
-            f"outside it: {sorted(missing)} - file this report (no "
-            "existing ticket covers it; see the register)"
+            f"Clips missing after deleting empty folder '{folder}': "
+            f"{sorted(missing)}. If no teammate removed them, this is "
+            "the folder-delete-removes-outside-clips report - verify "
+            "and file (see the register)."
         )
 
     @pytest.mark.ui
@@ -243,22 +268,28 @@ class TestMediaClipOperations:
         """
         name = self._first_clip_or_skip()
 
-        def _restore():
-            # Find the clip wherever it landed and un-group it
+        def _reset(tab):
+            # Only a hard reload leaves a folder view (tab-less
+            # context; nav clicks are no-ops on /media)
+            self.page.reload()
             self.media.navigate()
             self.media.select_date_filter("Last 30 Days")
-            self.media.click_tab("Clips")
+            self.media.click_tab(tab)
+
+        def _restore():
+            # Find the clip wherever it landed and un-group it; every
+            # hop out of a folder view goes through the reload reset
+            _reset("Clips")
             if name in self.media.item_names():
                 return
-            self.media.click_tab("Folders")
+            _reset("Folders")
             for folder in self.media.item_names()[:5]:
                 self.media.open_folder(folder)
                 if name in self.media.item_names():
                     self.media.remove_from_folder(name)
+                    _reset("Clips")
                     return
-                self.media.navigate()
-                self.media.select_date_filter("Last 30 Days")
-                self.media.click_tab("Folders")
+                _reset("Folders")
             raise RuntimeError(
                 f"Restore could not find moved clip '{name}' in the "
                 "first 5 folders"

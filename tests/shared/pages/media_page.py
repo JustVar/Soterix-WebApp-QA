@@ -334,14 +334,18 @@ class MediaPage:
                 "Deleted!' (app defect - register, App defects)"
             )
         delete_btn.wait_for(state="hidden", timeout=15000)
-        # The list can serve stale state until a reload (known app
-        # behavior); give the row one live cycle, then prove it via
-        # a fresh load
+        # No reload fallback here: a reload lands on the default
+        # tab/filter, where the row's ABSENCE proves nothing. A row
+        # that stays is either the stale-serving list or a refusal
+        # without a toast - either way the caller must decide with the
+        # view re-established, so fail loud with both readings.
         row_input = self.page.locator(f"input[value='{name}']").first
-        if not self._appears_hidden(row_input, timeout=5000):
-            self.page.reload()
-            self._wait_for_page_ready()
-        row_input.wait_for(state="detached", timeout=15000)
+        if not self._appears_hidden(row_input, timeout=15000):
+            raise RuntimeError(
+                f"'{name}' still listed after Delete confirmed: stale "
+                "view or a refusal without a toast. Re-establish the "
+                "tab/filter and re-check before trusting either."
+            )
         self._wait_for_page_ready()
 
     def open_folder(self, name: str):
@@ -358,6 +362,10 @@ class MediaPage:
         self.page.get_by_text(name, exact=True).first.wait_for(
             state="visible", timeout=10000
         )
+        # Corroborate: the folder view is tab-less (measured 09/02), so
+        # the Clips tab hiding rules out a stray text node elsewhere
+        # satisfying the name wait
+        self.tab_clips.wait_for(state="hidden", timeout=10000)
         self._wait_for_page_ready()
 
     def remove_from_folder(self, name: str):

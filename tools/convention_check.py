@@ -387,7 +387,11 @@ def check_early_exit_tests(path: str, lines: list[str]) -> list[dict]:
                 continue
             if not re.match(r"^\s*return\b", body_line):
                 continue
-            # a docstring line can open with the word 'return'
+            # a docstring line can open with the word 'return'.
+            # inside_triple_quote is a fence-parity count: a preceding
+            # line with an odd number of quote fences flips it for the
+            # rest of the file - acceptable for a lint heuristic, and
+            # pinned by the rule's self-tests
             if inside_triple_quote(lines, i):
                 continue
             if "#" in body_line or (

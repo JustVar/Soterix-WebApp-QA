@@ -99,10 +99,11 @@ class TestLprNavigation:
         Steps:
         1. Click Admin in the left sidebar, then click LPR.
            Expected: The LPR Lists page opens and shows the Create List button.
-
-        The View -> Filter -> Apply -> breadcrumb-back leg is not
-        automated yet; the test verifies the Lists page state only.
         """
+        # The View -> Filter -> Apply -> breadcrumb-back leg is not
+        # automated yet; the test verifies the Lists page state only.
+        # (Outside the docstring: the QA Touch generator would append
+        # trailing prose to step 1's Expected.)
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
 
