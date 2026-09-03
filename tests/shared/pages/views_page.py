@@ -438,46 +438,61 @@ class ViewsPage:
                       f"consumed within 10s (still {before_tiles} empty)")
 
     def add_first_camera_via_checkbox(self, camera_name: str = None):
-        """Select a camera by revealing its checkbox and clicking it.
+        """Add the CONFIGURED camera to a tile through its checkbox.
+
+        The name is historical: every caller takes the default, which is
+        test_camera_name, not whatever thumbnail sits first.
+
+        The name is matched EXACTLY on the thumbnail's title label. The
+        old code took a case-insensitive substring and, on a miss, fell
+        back to the first thumbnail without saying so - that ran whole
+        suites against a camera nobody chose and left a bookmark on one
+        (seen 09/02/2026). A camera that is not there now raises with
+        what IS on screen, so the fix is one config edit.
 
         Args:
-            camera_name: Specific camera name to select. If None, uses configured test_camera_name or first camera.
+            camera_name: camera to select; defaults to test_camera_name.
         """
-        # Use configured camera name if not specified
         if camera_name is None:
             from config.base_config import config
             camera_name = config.get("test_camera_name")
+        if not camera_name:
+            raise RuntimeError(
+                "test_camera_name is not set for this ENV in config/env/."
+            )
 
-        # Find camera thumbnail
-        camera_count = self.page.locator(".cameraThumbnailWrapper").count()
-        print(f"DEBUG add_first_camera_via_checkbox: Found {camera_count} camera(s), looking for: {camera_name}")
+        if self.page.locator(".cameraThumbnailWrapper").count() == 0:
+            raise RuntimeError(
+                "No cameras in the sidebar. Expand the site first, or the "
+                "account has no access to one."
+            )
 
-        if camera_count == 0:
-            raise RuntimeError("No cameras found in sidebar. User may not have access to any sites.")
+        # Resolve to a POSITIONAL locator: these rows re-render as their
+        # snapshots refresh, and a filter(has=...) re-evaluates its inner
+        # match on every action, which races that re-render and leaves
+        # the checkbox unreachable (measured against HEAD, 09/03/2026).
+        cameras = self.page.locator(".cameraThumbnailWrapper")
+        on_screen: list[str] = []
+        index = -1
+        for i in range(cameras.count()):
+            title = cameras.nth(i).locator("span[title]").first.get_attribute(
+                "title") or ""
+            on_screen.append(title)
+            if title == camera_name:
+                index = i
+                break
+        if index < 0:
+            raise RuntimeError(
+                f"The configured camera '{camera_name}' is not in the "
+                f"sidebar. On screen: {on_screen}. Update test_camera_name "
+                f"in config/env/ if the tenant renamed it."
+            )
+        camera = cameras.nth(index)
 
-        # Try to find camera by name if specified
-        camera = None
-        available_cameras = []
-        if camera_name:
-            # Search for camera with matching text
-            cameras = self.page.locator(".cameraThumbnailWrapper")
-            for i in range(camera_count):
-                cam = cameras.nth(i)
-                cam_text = cam.inner_text().strip()
-                available_cameras.append(cam_text)
-                if camera_name.lower() in cam_text.lower():
-                    camera = cam
-                    print(f"DEBUG add_first_camera_via_checkbox: Found camera by name: {camera_name}")
-                    break
-
-        # Print available cameras for debugging
-        if available_cameras:
-            print(f"DEBUG add_first_camera_via_checkbox: Available cameras: {available_cameras}")
-
-        # Fallback to first camera if not found by name
-        if camera is None:
-            print(f"DEBUG add_first_camera_via_checkbox: Camera '{camera_name}' not found, using first camera")
-            camera = self.page.locator(".cameraThumbnailWrapper").first
+        # The configured camera can sit below the fold - the sidebar
+        # lists every camera on the site - and a hover on an off-screen
+        # thumbnail never reveals its checkbox
+        camera.scroll_into_view_if_needed()
 
         # Reveal, tile-consume wait and JS-click fallback rationale:
         # see add_camera_via_checkbox

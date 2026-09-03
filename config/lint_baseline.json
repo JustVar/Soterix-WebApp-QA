@@ -1,6 +1,6 @@
 {
   "comment": "Per-file ruff finding counts. Lower is always fine; higher needs a reason. See tools/lint_baseline.py.",
-  "total": 634,
+  "total": 630,
   "files": {
     "config/base_config.py": 1,
     "conftest.py": 29,
@@ -54,7 +54,7 @@
     "tests/ui/sequences/test_camera_sequences.py": 5,
     "tests/ui/views/conftest.py": 1,
     "tests/ui/views/test_views_basic.py": 5,
-    "tests/ui/views/test_views_bookmarks.py": 5,
+    "tests/ui/views/test_views_bookmarks.py": 1,
     "tests/ui/views/test_views_drag_drop.py": 7,
     "tests/ui/views/test_views_favorites.py": 1,
     "tests/ui/views/test_views_fullscreen.py": 1,

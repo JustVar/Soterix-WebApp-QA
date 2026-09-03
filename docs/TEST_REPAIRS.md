@@ -52,6 +52,7 @@ keyword) and the lesson homes; rows here are the summary of record.
 | 18 | Locator series round 1: all views_page title='{name}' + JS fallbacks, lpr list rows (name-cell scoped), events rule/site/camera-menu, insights category, license modal -> escaped exact forms, each DOM-probed first. Also fixed the "No LPR lists" hydration race. | CONVENTIONS (identity lookups), FAILURE_TRIAGE |
 | 19 | Round 2: rule-wizard DEVICE pick, admin/views click_site, drag_location (+ drift guard), maps select_site, insights site pick (exact + ellipsis fallback). | same |
 | 20 | Round 3: search category + both Locations-panel row picks, lpr wait_for_site_list, qatouch_browser fallback; select_duration and toggle_user_status documented fuzzy-by-design. Two uncalled name branches stay open by choice. | same |
+| 21 | add_first_camera_via_checkbox matched by case-insensitive substring and, on a miss, silently fell back to the first thumbnail - whole suites ran against a camera nobody chose (a bookmark landed on a Uniview PTZ). Now exact on the title label, and absent means a loud raise listing what IS on screen. Verified US 2 passed; the india pair fails identically at HEAD (stream outage, not this change). | FAILURE_TRIAGE (re-render rows + filter) |
 
 Series verification: three adversarial audits (10->0, 15->0, 24->1
 fixed, 16->3 all addressed) plus live runs per row; US box (BOX=us,

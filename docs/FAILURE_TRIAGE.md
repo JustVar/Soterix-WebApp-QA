@@ -166,6 +166,12 @@ Waits and signals
   snapshot) never pass Playwright's stability check; use a bounded
   pointer click with a JS-click fallback (on the inner input for MUI
   checkboxes, on the element itself for custom ones).
+- Those same rows break `filter(has=...)`: its inner match is
+  re-evaluated on every action, races the repaint, and the child
+  (a reveal-on-hover checkbox) times out unreachable. Match the
+  name once, then act through a positional `.nth(i)`. Exact naming
+  and stability are not in conflict. A/B'd against HEAD 09/03/2026:
+  filter 1 failed, positional 2 passed, same names.
 - Toggle controls (chat icon, notification bell, LPR panel header,
   view tabs): open only when the open marker is absent, or the
   "open" click closes it.
