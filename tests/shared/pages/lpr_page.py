@@ -184,7 +184,14 @@ class LprPage:
         """
         self.ensure_lpr_lists_page()
         row = self.get_list_row(name)
-        if row.count() == 0:
+        # Wait before deciding the row is absent: the table hydrates a
+        # beat after the page settles, and an instant count() of 0 read
+        # a list that WAS there as already gone, which left it on the
+        # tenant (measured 09/03/2026, and the same hydration race as
+        # register item 18).
+        try:
+            row.wait_for(state="visible", timeout=10000)
+        except PlaywrightError:
             return
         # img asset icon: locate by src, not alt (CONVENTIONS > Locators)
         row.locator("img[src*='delete-icon']").first.click()

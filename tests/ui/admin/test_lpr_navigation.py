@@ -8,9 +8,10 @@ Tests the ability to navigate between LPR pages and ensure correct page state:
 - Categories page
 """
 import contextlib
+import datetime
 
 import pytest
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
 
 from tests.shared.pages.lpr_page import LprPage
 
@@ -24,6 +25,41 @@ class TestLprNavigation:
         self.step_capture = step_capture
         step_capture.set_page(self.page)
         self.lpr = LprPage(self.page)
+        self._owned_lists = []
+        yield
+        self._cleanup_lists()
+
+    def _own_a_list(self) -> str:
+        """Create an LPR list this test owns, and return its name.
+
+        Taking the tenant's first list made these tests pass only while
+        an earlier run had leaked one, and pointed edits and deletes at
+        a real user's data (register item 27).
+        """
+        name = "AutoTest List " + datetime.datetime.now().strftime("%H%M%S%f")[:12]
+        self.lpr.create_list(name)
+        self._owned_lists.append(name)
+        return name
+
+    def _cleanup_lists(self):
+        """Delete every list this test made, and say so when one stays.
+
+        The old body navigated and deleted nothing under a docstring
+        that said it deleted them, which is how Test_List_* rows built
+        up on the tenant.
+        """
+        errors = []
+        for name in reversed(self._owned_lists):
+            # typed: a refused delete or a row that never leaves is
+            # what this collects; anything else is a real fault and
+            # must not be swallowed by a teardown
+            try:
+                self.lpr.delete_list(name)
+            except (PlaywrightError, RuntimeError) as e:
+                errors.append(f"{name}: {e}")
+        self._owned_lists = []
+        if errors:
+            raise RuntimeError("LPR list cleanup failed: " + "; ".join(errors))
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -212,23 +248,11 @@ class TestLprNavigation:
 
         # Get first available list
         self.step_capture.mark(2, "Find first available list")
-        # hydration race: wait for a data row before sampling .all()
-        # (same-tick sample skipped a 107-row table, 09/02/2026); a
-        # truly empty table times out and falls through to the skip
-        with contextlib.suppress(PlaywrightTimeoutError):
-            self.page.locator("tr").nth(1).wait_for(
-                state="visible", timeout=15000)
-        list_rows = self.page.locator("tr").all()
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_list_row = self.lpr.get_list_row(list_name)
 
-        if len(list_rows) == 0:
-            pytest.skip("No LPR lists available to test")
-
-        # Get the first data row (skip header)
-        first_list_row = list_rows[1] if len(list_rows) > 1 else None
-        if not first_list_row:
-            pytest.skip("No LPR lists found")
-
-        list_name = first_list_row.locator("td").first.inner_text()
         self.step_capture.mark(3, f"Open list: {list_name}")
 
         # Click View icon
@@ -258,18 +282,10 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
-        # hydration race: wait for a data row before sampling .all()
-        # (same-tick sample skipped a 107-row table, 09/02/2026); a
-        # truly empty table times out and falls through to the skip
-        with contextlib.suppress(PlaywrightTimeoutError):
-            self.page.locator("tr").nth(1).wait_for(
-                state="visible", timeout=15000)
-        list_rows = self.page.locator("tr").all()
-        if len(list_rows) < 2:
-            pytest.skip("No LPR lists available")
-
-        first_list_row = list_rows[1]
-        list_name = first_list_row.locator("td").first.inner_text()
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_list_row = self.lpr.get_list_row(list_name)
 
         self.step_capture.mark(2, f"Open Plate page for list: {list_name}")
         view_icon = first_list_row.locator("img[aria-label='View']")
@@ -300,18 +316,10 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
-        # hydration race: wait for a data row before sampling .all()
-        # (same-tick sample skipped a 107-row table, 09/02/2026); a
-        # truly empty table times out and falls through to the skip
-        with contextlib.suppress(PlaywrightTimeoutError):
-            self.page.locator("tr").nth(1).wait_for(
-                state="visible", timeout=15000)
-        list_rows = self.page.locator("tr").all()
-        if len(list_rows) < 2:
-            pytest.skip("No LPR lists available")
-
-        first_list_row = list_rows[1]
-        list_name = first_list_row.locator("td").first.inner_text()
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_list_row = self.lpr.get_list_row(list_name)
 
         self.step_capture.mark(2, f"Open Plate page for list: {list_name}")
         view_icon = first_list_row.locator("img[aria-label='View']")
@@ -346,18 +354,10 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         # Get first available list
-        # hydration race: wait for a data row before sampling .all()
-        # (same-tick sample skipped a 107-row table, 09/02/2026); a
-        # truly empty table times out and falls through to the skip
-        with contextlib.suppress(PlaywrightTimeoutError):
-            self.page.locator("tr").nth(1).wait_for(
-                state="visible", timeout=15000)
-        list_rows = self.page.locator("tr").all()
-        if len(list_rows) < 2:
-            pytest.skip("No LPR lists available")
-
-        first_list_row = list_rows[1]
-        list_name = first_list_row.locator("td").first.inner_text()
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_list_row = self.lpr.get_list_row(list_name)
 
         self.step_capture.mark(2, f"Open Plate page with filter panel for list: {list_name}")
         view_icon = first_list_row.locator("img[aria-label='View']")

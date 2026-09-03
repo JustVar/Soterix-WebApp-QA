@@ -3,27 +3,12 @@
 Tests for LPR list creation, plate management, and filter operations.
 Covers core CRUD operations and state management.
 """
-import pytest
 import datetime
+
+import pytest
+from playwright.sync_api import Error as PlaywrightError
+
 from tests.shared.pages.lpr_page import LprPage
-
-
-def _list_rows(page):
-    """List rows after a bounded render wait.
-
-    An instant .all() right after navigation reads the table before
-    it renders and mis-skips on 'no lists' (caught live 08/14/2026);
-    a miss after the bound falls to the caller's skip for a genuinely
-    empty table.
-    """
-    rows = page.locator("table tbody tr")
-    try:
-        rows.first.wait_for(state="visible", timeout=10000)
-    # no row within the bound: the caller's skip covers the genuinely
-    # empty table
-    except Exception:
-        pass
-    return rows.all()
 
 
 class TestLprListOperations:
@@ -35,19 +20,41 @@ class TestLprListOperations:
         self.step_capture = step_capture
         step_capture.set_page(self.page)
         self.lpr = LprPage(self.page)
-        self._created_lists = []
+        self._owned_lists = []
         yield
         self._cleanup_lists()
 
+    def _own_a_list(self) -> str:
+        """Create an LPR list this test owns, and return its name.
+
+        Taking the tenant's first list made these tests pass only while
+        an earlier run had leaked one, and pointed edits and deletes at
+        a real user's data (register item 27).
+        """
+        name = "AutoTest List " + datetime.datetime.now().strftime("%H%M%S%f")[:12]
+        self.lpr.create_list(name)
+        self._owned_lists.append(name)
+        return name
+
     def _cleanup_lists(self):
-        """Delete any lists created during the test."""
-        if not self._created_lists:
-            return
-        try:
-            self.lpr.navigate_to_lpr()
-            # Could add cleanup logic here
-        except Exception as e:
-            print(f"[CLEANUP] Failed to cleanup lists: {e}")
+        """Delete every list this test made, and say so when one stays.
+
+        The old body navigated and deleted nothing under a docstring
+        that said it deleted them, which is how Test_List_* rows built
+        up on the tenant.
+        """
+        errors = []
+        for name in reversed(self._owned_lists):
+            # typed: a refused delete or a row that never leaves is
+            # what this collects; anything else is a real fault and
+            # must not be swallowed by a teardown
+            try:
+                self.lpr.delete_list(name)
+            except (PlaywrightError, RuntimeError) as e:
+                errors.append(f"{name}: {e}")
+        self._owned_lists = []
+        if errors:
+            raise RuntimeError("LPR list cleanup failed: " + "; ".join(errors))
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -84,8 +91,12 @@ class TestLprListOperations:
         2. Check the page controls.
            Expected: The Create List button, the List and Categories tabs, the lists table, and the Search field are all visible.
         """
+        # The table is one of the controls under test, and the page
+        # renders an empty state instead of a table when the tenant has
+        # no lists. So this test makes one rather than relying on
+        # another test's leftover, which is what it had been doing.
         self.step_capture.mark(1, "Navigate to LPR Lists page")
-        self.lpr.navigate_to_lpr()
+        self._own_a_list()
 
         self.step_capture.mark(2, "Verify Create List button")
         assert self.lpr.create_list_button.count() > 0, "Create List button missing"
@@ -146,7 +157,7 @@ class TestLprListOperations:
         name_field = self.page.locator("input#firstName[placeholder='Enter List Name']")
         name_field.wait_for(state="visible", timeout=30000)
         name_field.fill(list_name)
-        self._created_lists.append(list_name)
+        self._owned_lists.append(list_name)
         print(f"[STEP 3] List name entered: {list_name}")
 
         self.step_capture.mark(4, "Select list type")
@@ -197,12 +208,10 @@ class TestLprListOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find first list in table")
-        list_rows = _list_rows(self.page)
-        if len(list_rows) == 0:
-            pytest.skip("No LPR lists available to search")
-
-        first_row = list_rows[0]
-        list_name = first_row.locator("td").first.inner_text()
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_row = self.lpr.get_list_row(list_name)
 
         self.step_capture.mark(3, f"Search for list: {list_name}")
         search_field = self.page.locator("input[placeholder*='Search']").first
@@ -231,12 +240,10 @@ class TestLprListOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find first list")
-        list_rows = _list_rows(self.page)
-        if len(list_rows) == 0:
-            pytest.skip("No LPR lists available")
-
-        first_row = list_rows[0]
-        list_name = first_row.locator("td").first.inner_text()
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_row = self.lpr.get_list_row(list_name)
 
         self.step_capture.mark(3, f"Open list: {list_name}")
         view_icon = first_row.locator("img[aria-label='View']").first
@@ -267,11 +274,10 @@ class TestLprListOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find first list row")
-        list_rows = _list_rows(self.page)
-        if len(list_rows) == 0:
-            pytest.skip("No LPR lists available")
-
-        first_row = list_rows[0]
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_row = self.lpr.get_list_row(list_name)
 
         self.step_capture.mark(3, "Verify View icon")
         view_icon = first_row.locator("img[aria-label='View']")
@@ -303,11 +309,10 @@ class TestLprListOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find first list row")
-        list_rows = _list_rows(self.page)
-        if len(list_rows) == 0:
-            pytest.skip("No LPR lists available")
-
-        first_row = list_rows[0]
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_row = self.lpr.get_list_row(list_name)
 
         self.step_capture.mark(3, "Verify status toggle")
         toggle = first_row.locator("input[type='checkbox']")
@@ -327,6 +332,14 @@ class TestLprFilterOperations:
         self.step_capture = step_capture
         step_capture.set_page(self.page)
         self.lpr = LprPage(self.page)
+        self._owned_lists = []
+        yield
+        self._cleanup_lists()
+
+    # Same two helpers as TestLprListOperations: a filter test needs a
+    # list to filter, and it must be its own.
+    _own_a_list = TestLprListOperations._own_a_list
+    _cleanup_lists = TestLprListOperations._cleanup_lists
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -346,11 +359,10 @@ class TestLprFilterOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Find and open first list")
-        list_rows = _list_rows(self.page)
-        if len(list_rows) < 2:
-            pytest.skip("Not enough lists available")
-
-        first_row = list_rows[0]
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_row = self.lpr.get_list_row(list_name)
         first_row.locator("img[aria-label='View']").first.click()
         self.lpr.add_plate_button.first.wait_for(state="visible", timeout=30000)
 
@@ -386,11 +398,10 @@ class TestLprFilterOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Open first list and filter panel")
-        list_rows = _list_rows(self.page)
-        if len(list_rows) < 2:
-            pytest.skip("Not enough lists available")
-
-        first_row = list_rows[0]
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_row = self.lpr.get_list_row(list_name)
         first_row.locator("img[aria-label='View']").first.click()
         self.lpr.add_plate_button.first.wait_for(state="visible", timeout=30000)
 
@@ -436,11 +447,10 @@ class TestLprFilterOperations:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Open first list")
-        list_rows = _list_rows(self.page)
-        if len(list_rows) < 2:
-            pytest.skip("Not enough lists available")
-
-        first_row = list_rows[0]
+        # Make the list this test works on. Taking the tenant's
+        # first one passed only while a leaked list was there.
+        list_name = self._own_a_list()
+        first_row = self.lpr.get_list_row(list_name)
         first_row.locator("img[aria-label='View']").first.click()
         self.lpr.add_plate_button.first.wait_for(state="visible", timeout=30000)
 
