@@ -141,6 +141,70 @@ class LprPage:
         print("[LPR] Navigating to Lists page")
         self.navigate_to_lpr()
 
+    def create_list(self, name: str, list_type: str = "White List"):
+        """Create an LPR list and return its name.
+
+        Tests that need a list should make their own rather than take
+        the first one on the tenant: the shared box is not guaranteed to
+        hold one, and editing or deleting a borrowed list touches a real
+        user's data.
+        """
+        self.ensure_lpr_lists_page()
+        self.create_list_button.first.click()
+
+        name_field = self.page.locator(
+            "input#firstName[placeholder='Enter List Name']"
+        )
+        name_field.wait_for(state="visible", timeout=30000)
+        name_field.fill(name)
+
+        dropdown = self.page.locator(
+            "div.modalForm-input:has(span:has-text('Select'))"
+        )
+        dropdown.wait_for(state="visible", timeout=30000)
+        dropdown.click()
+        option = self.page.locator(
+            f"li[role='menuitem']:has-text('{list_type}')"
+        )
+        option.wait_for(state="visible", timeout=30000)
+        option.click()
+        # the option hiding again is the selection-applied signal
+        option.wait_for(state="hidden", timeout=5000)
+
+        self._click_modal_action("Save")
+        # the row appearing is the created signal
+        self.get_list_row(name).wait_for(state="visible", timeout=30000)
+        return name
+
+    def delete_list(self, name: str):
+        """Delete a named LPR list through its row icon.
+
+        Raises if the row is still listed afterwards, so a refused
+        delete fails where it happened rather than in the next test.
+        """
+        self.ensure_lpr_lists_page()
+        row = self.get_list_row(name)
+        if row.count() == 0:
+            return
+        # img asset icon: locate by src, not alt (CONVENTIONS > Locators)
+        row.locator("img[src*='delete-icon']").first.click()
+        self.page.get_by_text("Delete List", exact=True).wait_for(
+            state="visible", timeout=10000
+        )
+        self._click_modal_action("Delete")
+        self.get_list_row(name).wait_for(state="hidden", timeout=15000)
+
+    def _click_modal_action(self, label: str):
+        """Click a modal's action by its exact text.
+
+        The dialog's Cancel and Delete are MuiBox DIVs whose only
+        classes are build-generated emotion hashes (mui-1o2pdl3), so
+        they are not buttons and their classes change with the build.
+        Exact text is what stays true: 'Delete' does not match the
+        'Delete List' heading (measured 09/03/2026).
+        """
+        self.page.get_by_text(label, exact=True).last.click()
+
     def ensure_lpr_plate_page(self, list_name: str):
         """Ensure on LPR Plate page (inside a list).
 
