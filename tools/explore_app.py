@@ -8,6 +8,11 @@ Usage:
   python tools/explore_app.py                  # interactive REPL
   python tools/explore_app.py probe.py         # run a probe script
   python tools/explore_app.py --headed         # watch the browser
+  BOX=us python tools/explore_app.py probe.py  # probe the US tenant
+
+BOX picks the account, so it picks the tenant. Without it you get the
+default box; the tool prints the address it logs in as, which is the
+line to check when a probe shows sites you did not expect.
 
 In the REPL or probe script these names are in scope:
   page      - the Playwright page, logged in, on the app
@@ -43,7 +48,8 @@ sys.path.insert(0, str(REPO))
 os.chdir(REPO)
 load_dotenv()
 
-from config.base_config import config  # noqa: E402
+from config.base_config import config, get_credentials  # noqa: E402
+from tests.shared.auth_state import auth_state_filename  # noqa: E402
 from tests.shared.pages.login_page import LoginPage  # noqa: E402
 
 
@@ -57,7 +63,11 @@ def main() -> int:
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=not args.headed)
-        state = ".auth_state.json"
+        # Same per-tenant cache the tests use: a probe asked for one
+        # box must never reuse another box's session.
+        state = auth_state_filename(
+            config["base_url"], os.environ.get("BOX", "").strip().lower()
+        )
         context = (browser.new_context(storage_state=state)
                    if Path(state).exists() else browser.new_context())
         page = context.new_page()
@@ -65,9 +75,17 @@ def main() -> int:
         page.wait_for_timeout(4000)  # app bootstrap has no ready signal
         if "/auth/login" in page.url:
             print("[EXPLORE] Cached session stale, logging in fresh")
-            LoginPage(page).login(
-                os.environ["QA_USER"], os.environ["QA_PASSWORD"]
-            )
+            # The active box's account, so BOX=us probes the US tenant.
+            # Reading QA_USER directly sent every probe to the default
+            # box whatever BOX said (09/03/2026).
+            try:
+                box_creds = get_credentials()
+            except (KeyError, RuntimeError):
+                box_creds = {}
+            user = box_creds.get("email") or os.environ["QA_USER"]
+            password = box_creds.get("password") or os.environ["QA_PASSWORD"]
+            print(f"[EXPLORE] Logging in as {user}")
+            LoginPage(page).login(user, password)
 
         shots = REPO / "reports" / "probe_shots"
         counter = {"n": 0}

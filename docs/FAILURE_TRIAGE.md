@@ -193,6 +193,15 @@ Waits and signals
   over a rendering frame; click its refresh link once
   (`recover_stream_if_failed`).
 
+Tooling
+- A probe that reads QA_USER directly ignores BOX and logs into the
+  default tenant whatever you asked for; its screenshot then argues
+  about the wrong box. tools/explore_app.py did this until
+  09/03/2026. Session caches have the same trap: one shared file
+  lets an India session answer a US probe. Both now go through
+  tests/shared/auth_state.py, which keys the cache on base_url AND
+  box - the check is the login line the tool prints.
+
 Oracles
 - A test that `return`s early passes with its asserts unreachable;
   the checker's early-exit-pass rule flags bare returns.

@@ -58,6 +58,12 @@ def test_add_bookmark(authenticated_page):
     views.enter_fullscreen_on_tile(0)
     fs = FullScreenPage(page)
     fs.wait_for_stream_loaded(timeout=120000)
+    # A dead stream must say so here, named, the way the class fixture
+    # does. Without this the failure overlay simply covers the panel
+    # toggle and the test dies 30s later pointing at an icon, which
+    # reads as a locator bug and is not what --retry-streams matches
+    # (measured on US 09/03/2026).
+    fs.assert_stream_playing()
     fs.refresh_bookmarks_panel()
     before = fs.bookmark_texts()
 

@@ -18,6 +18,7 @@ import pytest
 import plugins.products
 from config.base_config import config  # dict resolved from ENV
 from plugins.paths import fit_name
+from tests.shared.auth_state import auth_state_filename
 
 pytest_plugins = ['plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
                   'plugins.run_archive', 'plugins.single_run_guard',
@@ -353,16 +354,11 @@ def auth_state_path(base_url):
     *.app.example.invalid) a stage session could otherwise pass validation
     against prod, which is the case a per-env file prevents outright.
     """
-    # base_url AND box. The India and US tenants share one base_url on
-    # ENV=qa (both hit qa.example.invalid) and differ only by which
-    # account BOX selects, so keying on base_url alone would let one box
-    # load the other's session. box is part of the key too.
-    box = os.environ.get("BOX", "").strip().lower()
-    parts = "-".join(p for p in (base_url or "", box) if p)
-    slug = re.sub(r"[^a-z0-9]+", "-", parts.lower()).strip("-") or "default"
-    worker = os.environ.get("PYTEST_XDIST_WORKER")
-    suffix = f".{worker}" if worker else ""
-    return f".auth_state.{slug}{suffix}.json"
+    return auth_state_filename(
+        base_url,
+        os.environ.get("BOX", "").strip().lower(),
+        os.environ.get("PYTEST_XDIST_WORKER") or "",
+    )
 
 
 @pytest.fixture

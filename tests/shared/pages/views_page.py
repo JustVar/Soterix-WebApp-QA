@@ -1269,13 +1269,19 @@ class ViewsPage:
                 return {clicked: null, candidates: found.slice(0, 15)};
             }""", list(known_labels))
             print(f"DEBUG click_site JS result: {result}")
-            # The site expanding shows its All Cameras entry; a click
-            # that landed nothing leaves it absent, and the bounded
-            # wait logs so the caller's next step decides
+            # A site expands into an All Cameras entry in the Devices
+            # panel, and straight into thumbnails in Maps. Either one
+            # means the click landed. Waiting only for All Cameras
+            # cried wolf on every maps run, passing ones included
+            # (measured 09/03/2026), which teaches readers to skip
+            # advisories.
+            expanded = self.page.locator("text=All Cameras").or_(
+                self.camera_thumbnails
+            )
             if result.get("clicked") and not self._appears(
-                self.page.locator("text=All Cameras"), timeout=5000
+                expanded, timeout=5000
             ):
-                print("[VIEWS] click_site: All Cameras did not show "
+                print("[VIEWS] click_site: the site did not expand "
                       "within 5s of the JS click")
             return result
 
