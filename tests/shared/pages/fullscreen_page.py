@@ -295,13 +295,64 @@ class FullScreenPage:
         except PlaywrightError:
             pass
 
+    def create_bookmark(self):
+        """Bookmark the current playback position, already in full
+        screen - the control a user clicks. The 'Bookmark Added' toast
+        is the saved proof: the panel's row count cannot tell a new
+        bookmark from one an earlier run left."""
+        self.wait_for_stream_loaded(timeout=30000)
+        self.video_container.locator("[class*='timeline'], svg").first.hover()
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
+        self.video_container.locator("img[src*='Bookmark']").click()
+        try:
+            self.page.get_by_text("Bookmark Added", exact=False).first.wait_for(
+                state="visible", timeout=10000)
+        except PlaywrightError:
+            raise AssertionError(
+                "No 'Bookmark Added' toast within 10s: the bookmark was "
+                "not saved"
+            ) from None
+
     def refresh_bookmarks_panel(self):
-        """Force the panel to re-fetch. It does not repaint in place: a
-        bookmark created or changed outside it, and a delete made in it,
-        show only after a re-open (probe 09/02/2026)."""
+        """Re-open the panel so it re-fetches. It does not repaint in
+        place: a rename's new label and a delete's removal appear only
+        after a re-open (probe 09/02/2026). Read the rows only through
+        this."""
         if self.bookmark_items.count() and self.bookmark_items.first.is_visible():
             self.close_bookmarks_panel()
         self.open_bookmarks_panel()
+        # rows paint a beat after the panel opens and an empty panel
+        # renders nothing to wait on, so there is no DOM settle signal
+        self.page.wait_for_timeout(1200)
+
+    def bookmark_texts(self) -> list[str]:
+        """The label+time text of every bookmark row, in panel order."""
+        return [self.bookmark_items.nth(i).inner_text().strip()
+                for i in range(self.bookmark_items.count())]
+
+    def new_bookmark_index(self, before_texts: list[str]) -> int:
+        """Index of the row that was not there before the create, or -1.
+
+        A fresh bookmark carries its own playback second, so its row
+        text is new even when the label repeats."""
+        before = list(before_texts)
+        for i, text in enumerate(self.bookmark_texts()):
+            if text in before:
+                before.remove(text)
+            else:
+                return i
+        return -1
+
+    def bookmark_stamp(self, index: int) -> str:
+        """The playback-time line of a row ('Sep 03, 2026, 09:40:08 AM').
+
+        The app writes it on creation and a rename leaves it alone, so
+        it is how a test keeps hold of its OWN bookmark: the editable
+        label changes, and a bare index could be a real user's row."""
+        lines = [ln.strip() for ln
+                 in self.bookmark_items.nth(index).inner_text().split('\n')
+                 if ln.strip()]
+        return lines[-1] if lines else ''
 
     def bookmark_index_by_name(self, name: str) -> int:
         """Index of the bookmark row whose text carries `name`, or -1.
@@ -481,8 +532,17 @@ class FullScreenPage:
         self.delete_confirm_button.wait_for(state="visible", timeout=10000)
         self.delete_confirm_button.click()
 
-    def verify_bookmark_deleted(self, bookmark_name: str, timeout: int = 10000):
-        """Verify a bookmark with the given name is no longer visible."""
-        # Target the bookmark item container to avoid strict mode violations
-        deleted_element = self.bookmark_items.filter(has_text=bookmark_name)
-        deleted_element.wait_for(state="hidden", timeout=timeout)
+    def verify_bookmark_deleted(self, bookmark_name: str, attempts: int = 8):
+        """The bookmark is no longer listed to a user.
+
+        Re-opens the panel between reads: a delete does not repaint the
+        open panel, and it reaches the list a beat later, so a single
+        look at the rows still shows the deleted bookmark."""
+        for _ in range(attempts):
+            self.refresh_bookmarks_panel()
+            if self.bookmark_index_by_name(bookmark_name) < 0:
+                return
+        raise AssertionError(
+            f"bookmark {bookmark_name!r} is still listed after "
+            f"{attempts} panel refreshes"
+        )
