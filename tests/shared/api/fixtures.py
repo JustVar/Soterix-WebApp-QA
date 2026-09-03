@@ -132,16 +132,25 @@ def location_tree(api: InternalApi) -> list[dict]:
 def api() -> InternalApi:
     """A logged-in InternalApi for the configured test site.
 
-    Needs QA_USER, QA_PASSWORD and TEST_SITE_ID. TEST_SITE_ID must be
-    the site that `test_site_name` in config/env/ names, or the API
-    writes to a site the UI tests never open. On QA the name
+    Box-aware: the active box's account and `default_site_id` win, so
+    BOX=us builds its data on that box's own site with that box's
+    credentials. Falls back to QA_USER / QA_PASSWORD / TEST_SITE_ID.
+
+    The site must be the one `test_site_name` in config/env/ names, or
+    the API writes to a site the UI tests never open. On QA the name
     "Newtown Action Area" resolved to siteId 16 while a local .env
     said 17 (2026-08-24). The fixture reads GET /REST/site and skips
     with both values when they disagree.
     """
-    user = os.environ.get("QA_USER")
-    password = os.environ.get("QA_PASSWORD")
-    site_id = os.environ.get("TEST_SITE_ID")
+    from config.base_config import get_credentials
+    try:
+        box = get_credentials()
+    # an unknown or unconfigured box falls back to QA_USER below
+    except (KeyError, RuntimeError):
+        box = {}
+    user = box.get("email") or os.environ.get("QA_USER")
+    password = box.get("password") or os.environ.get("QA_PASSWORD")
+    site_id = box.get("site_id") or os.environ.get("TEST_SITE_ID")
     missing = [
         key for key, value in
         (("QA_USER", user), ("QA_PASSWORD", password), ("TEST_SITE_ID", site_id))

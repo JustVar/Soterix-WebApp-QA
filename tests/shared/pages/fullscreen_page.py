@@ -295,6 +295,24 @@ class FullScreenPage:
         except PlaywrightError:
             pass
 
+    def refresh_bookmarks_panel(self):
+        """Force the panel to re-fetch. It does not repaint in place: a
+        bookmark created or changed outside it, and a delete made in it,
+        show only after a re-open (probe 09/02/2026)."""
+        if self.bookmark_items.count() and self.bookmark_items.first.is_visible():
+            self.close_bookmarks_panel()
+        self.open_bookmarks_panel()
+
+    def bookmark_index_by_name(self, name: str) -> int:
+        """Index of the bookmark row whose text carries `name`, or -1.
+
+        Rows have only a positional id, so a test targets its OWN
+        bookmark by name - a bare index could be a real user's."""
+        for i in range(self.bookmark_items.count()):
+            if name in self.bookmark_items.nth(i).inner_text():
+                return i
+        return -1
+
     def close_bookmarks_panel(self):
         """Close the bookmarks panel via the dots icon (toggle); the
         rows leaving is the closed signal when any were showing."""

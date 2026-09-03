@@ -30,7 +30,9 @@ config = {
         "india": {
             "email_env": "QA_INDIA_USER",
             "password_env": "QA_INDIA_PASSWORD",
-            "default_site_id": None,
+            # siteId of test_site_name below; the api fixture builds its
+            # data here, so it must be the site the UI tests open
+            "default_site_id": 16,
             "test_data": {
                 "test_site_name": "Newtown Action Area",
                 "test_camera_name": "main gate",
@@ -42,7 +44,8 @@ config = {
         "us": {
             "email_env": "QA_US_USER",
             "password_env": "QA_US_PASSWORD",
-            "default_site_id": None,
+            # siteId of Spartan0, this box's only site
+            "default_site_id": 156,
             "test_data": {
                 # Spartan0 is the box's only site (site id 156); the camera
                 # is a live streaming one (probe 09/01/2026, 22 cameras)

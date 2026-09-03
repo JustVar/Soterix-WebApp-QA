@@ -1,31 +1,42 @@
 """Bookmark tests - creation (tile level) and operations (full screen mode).
 
-test_add_bookmark creates a new bookmark on a streaming tile. The remaining
-tests operate on existing bookmarks in full screen mode. If no bookmarks
-exist, operation tests will skip gracefully.
+Every operation test provisions its OWN bookmark through the internal API
+(`api_bookmark`, named `AutoTest ...`, deleted at teardown) and finds it in
+the panel by that name. Two app behaviours force this shape:
+
+  - Panel rows carry only a positional id, so a bare index could be a real
+    user's bookmark on the shared camera. A destructive test must not guess.
+  - The panel does not repaint after a mutation, and a UI delete is a SOFT
+    delete, so the API is the oracle for a delete or a rename: "gone" means
+    deletedAt above 0 (`bookmark_deleted`), not a row leaving the panel.
 """
 import datetime
+import time
+
 import pytest
-from playwright.sync_api import Error as PlaywrightError, expect
-from tests.shared.pages.views_page import ViewsPage
+from playwright.sync_api import expect
+
+from tests.shared.api.fixtures import bookmark_deleted
 from tests.shared.pages.fullscreen_page import FullScreenPage
+from tests.shared.pages.views_page import ViewsPage
 
 
 @pytest.mark.ui
 @pytest.mark.bookmark
-def test_add_bookmark(authenticated_page):
-    """Create a new bookmark on a streaming video tile.
+def test_add_bookmark(authenticated_page, api):
+    """Create a bookmark on a streaming video tile.
 
-    This is a prerequisite for the bookmark operation tests below.
-    Navigates to Views, ensures a camera is streaming in a tile,
-    then clicks the bookmark icon from the tile's three-dot menu.
+    Steps:
+    1. Open Views and load the configured camera into a tile.
+       Expected: The camera streams in the first tile.
+    2. Add a bookmark on that tile from its bookmark control.
+       Expected: The site's bookmark list gains one live bookmark.
     """
     page = authenticated_page
     views = ViewsPage(page)
     views.navigate()
     views.wait_for_page_load()
 
-    # Ensure a camera is loaded in a tile
     video_tiles = page.locator(
         "[class*='video_container'][class*='new_video_player']"
     )
@@ -35,183 +46,211 @@ def test_add_bookmark(authenticated_page):
         # the tile appearing is the added signal
         video_tiles.first.wait_for(state="visible", timeout=30000)
 
-    # Add a bookmark on the first tile
+    listed = f"/REST/clipbookmark/{api.site_id}"
+    before = {row["bookmarkId"] for row in api.get(listed)}
+
     views.add_bookmark_on_tile(tile_index=0)
 
-    # Verify: enter fullscreen and check bookmarks panel has at least one entry
-    views.enter_fullscreen_on_tile(0)
-    fs = FullScreenPage(page)
-    fs.wait_for_stream_loaded(timeout=120000)
-    fs.open_bookmarks_panel()
-    # bookmark rows render async after the panel opens; the first row
-    # appearing is the signal
-    try:
-        fs.bookmark_items.first.wait_for(state="visible", timeout=10000)
-    # no row within the bound means no bookmarks - the assert fails
-    except PlaywrightError:
-        pass
-    assert fs.has_bookmarks(), "Bookmark was not created - no bookmarks found in panel"
+    # The API is the oracle: the panel cannot tell a new bookmark from one
+    # an earlier run left, and it does not repaint in place.
+    created = [row for row in api.get(listed)
+               if row["bookmarkId"] not in before and not bookmark_deleted(row)]
+    assert len(created) == 1, (
+        f"Expected exactly one new live bookmark after the add, got "
+        f"{[row['bookmarkId'] for row in created]}"
+    )
+
+    # Do not leak it onto the shared camera
+    api.delete(f"/REST/clipbookmark/{created[0]['bookmarkId']}")
 
 
 class TestViewsBookmarks:
-    """Tests for bookmark operations within full screen mode."""
+    """Bookmark operations in full screen mode, each on its own bookmark."""
 
     @pytest.fixture(autouse=True)
     def setup(self, fullscreen_page):
         self.page = fullscreen_page.page
         self.fs = fullscreen_page
-        self._renamed_bookmarks = []
-        yield
-        # Cleanup: revert any bookmark renames
-        for index, _name in reversed(self._renamed_bookmarks):
-            try:
-                self.fs.open_bookmarks_panel()
-                self.fs.rename_bookmark(index=index, new_name="Bookmark")
-            # best-effort revert: the verdict is already decided
-            except Exception:
-                pass
 
-    def _ensure_bookmarks_panel_open(self):
-        """Open bookmarks panel and skip if no bookmarks exist."""
-        self.fs.open_bookmarks_panel()
-        # bookmark rows render async; the first row appearing is the
-        # signal, and none appearing routes to the skip below
-        try:
-            self.fs.bookmark_items.first.wait_for(
-                state="visible", timeout=10000
-            )
-        # no row within the bound routes to the skip below
-        except PlaywrightError:
-            pass
+    # far enough back to be a real archive position: a bookmark stamped
+    # "now" seeks to the live edge, and the player stays in LIVE mode
+    ARCHIVE_LAG_MS = 180_000
 
-        if not self.fs.has_bookmarks():
-            pytest.skip(
-                "No bookmarks available on this camera. "
-                "Bookmarks are created by archive tests (prerequisite)."
-            )
-
-    @pytest.mark.ui
-    @pytest.mark.bookmark
-    @pytest.mark.views_fullscreen
-    def test_open_bookmarks_panel(self):
-        """Verify bookmarks panel opens when clicking the dots icon."""
-        self.fs.open_bookmarks_panel()
-
-        panel_visible = (
-            self.fs.bookmark_items.count() > 0
-            or self.fs.bookmarks_toggle.is_visible()
+    def _own(self, api_bookmark) -> dict:
+        """This test's own bookmark: provisioned through the API at an
+        archive position, then located in the panel by its AutoTest
+        name. Returns the row."""
+        row = api_bookmark(
+            timestamp_ms=int(time.time() * 1000) - self.ARCHIVE_LAG_MS)
+        # the panel re-fetches only on re-open, so a bookmark made
+        # outside it shows up only after a refresh
+        self.fs.refresh_bookmarks_panel()
+        assert self.fs.bookmark_index_by_name(row["comment"]) >= 0, (
+            f"provisioned bookmark {row['comment']!r} is not in the panel"
         )
-        assert panel_visible, "Bookmarks panel should be visible after clicking dots icon"
+        return row
+
+    def _idx(self, row: dict) -> int:
+        idx = self.fs.bookmark_index_by_name(row["comment"])
+        assert idx >= 0, f"{row['comment']!r} is not in the panel"
+        return idx
+
+    def _api_row(self, api, bookmark_id: int) -> dict | None:
+        for row in api.get(f"/REST/clipbookmark/{api.site_id}"):
+            if row["bookmarkId"] == bookmark_id:
+                return row
+        return None
 
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
-    def test_close_bookmarks_panel(self):
-        """Verify bookmarks panel closes when clicking the dots icon again."""
-        self.fs.open_bookmarks_panel()
-        # rows render async; count only after the first row lands (a
-        # zero count just skips the hidden check below)
-        try:
-            self.fs.bookmark_items.first.wait_for(
-                state="visible", timeout=10000
-            )
-        # no row within the bound leaves a zero count, which just
-        # skips the hidden check
-        except PlaywrightError:
-            pass
-        initial_count = self.fs.bookmark_items.count()
+    def test_open_bookmarks_panel(self, api_bookmark):
+        """Verify bookmarks panel opens when clicking the dots icon.
 
+        Steps:
+        1. Open a camera in full screen and click the bookmarks dots icon.
+           Expected: The bookmarks panel opens and lists the bookmark.
+        """
+        row = self._own(api_bookmark)
+        assert self.fs.bookmark_index_by_name(row["comment"]) >= 0, (
+            "Bookmarks panel should list the bookmark after opening"
+        )
+
+    @pytest.mark.ui
+    @pytest.mark.bookmark
+    @pytest.mark.views_fullscreen
+    def test_close_bookmarks_panel(self, api_bookmark):
+        """Verify bookmarks panel closes when clicking the dots icon again.
+
+        Steps:
+        1. With the bookmarks panel open, click the dots icon again.
+           Expected: The bookmark rows are no longer shown.
+        """
+        self._own(api_bookmark)
         self.fs.close_bookmarks_panel()
-
-        if initial_count > 0:
-            # the retrying expect absorbs the close animation
-            expect(self.fs.bookmark_items.first).to_be_hidden(timeout=5000)
+        # the retrying expect absorbs the close animation
+        expect(self.fs.bookmark_items.first).to_be_hidden(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
-    def test_play_bookmark(self):
-        """Verify clicking a bookmark navigates to that snapshot position."""
-        self._ensure_bookmarks_panel_open()
+    def test_play_bookmark(self, api_bookmark):
+        """Verify clicking a bookmark navigates to that snapshot position.
 
-        # Click the bookmark to navigate to its position
-        self.fs.play_bookmark(0)
-
-        # Verify the stream loaded and we're in archive mode (stream is available)
+        Steps:
+        1. Click a bookmark in the panel.
+           Expected: The player streams that archive position, not live.
+        """
+        row = self._own(api_bookmark)
+        self.fs.play_bookmark(self._idx(row))
         assert self.fs.is_streaming(), "Stream should be available after clicking bookmark"
         assert not self.fs.is_live_mode(), "Should be in archive mode after clicking bookmark"
 
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
-    def test_bookmark_options_menu(self):
-        """Verify the 3-dot options menu shows 4 options."""
-        self._ensure_bookmarks_panel_open()
+    def test_bookmark_options_menu(self, api_bookmark):
+        """Verify the 3-dot options menu shows 4 options.
 
-        self.fs.open_bookmark_options(0)
+        Steps:
+        1. Click the 3-dot icon on a bookmark row.
+           Expected: The menu shows Rename, Export, Share and Delete.
+        """
+        row = self._own(api_bookmark)
+        self.fs.open_bookmark_options(self._idx(row))
 
         option_count = self.fs.bookmark_options.count()
         assert option_count >= 4, (
-            f"Expected at least 4 bookmark options (Rename, Export, Share, Delete), "
-            f"got {option_count}"
+            f"Expected at least 4 bookmark options (Rename, Export, Share, "
+            f"Delete), got {option_count}"
         )
 
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
     @pytest.mark.slow
-    def test_export_bookmark(self):
-        """Verify a bookmark can be exported (export dialog completes)."""
-        self._ensure_bookmarks_panel_open()
+    def test_export_bookmark(self, api_bookmark):
+        """Verify a bookmark can be exported (export dialog completes).
 
+        Steps:
+        1. Choose Export on a bookmark, name the file and confirm.
+           Expected: The export progress bar appears and completes.
+        """
+        row = self._own(api_bookmark)
         filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        # oracle: export_bookmark raises unless the export dialog
-        # opens and the progress bar appears and completes
-        self.fs.export_bookmark(index=0, filename=filename)
+        # oracle: export_bookmark raises unless the export dialog opens
+        # and the progress bar appears and completes
+        self.fs.export_bookmark(index=self._idx(row), filename=filename)
 
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
-    def test_share_bookmark(self):
-        """Verify a bookmark can be shared (share dialog shows success)."""
-        self._ensure_bookmarks_panel_open()
+    def test_share_bookmark(self, api_bookmark):
+        """Verify a bookmark can be shared (share dialog shows success).
 
+        Steps:
+        1. Choose Share on a bookmark, enter an address and confirm.
+           Expected: The dialog reports the share succeeded.
+        """
+        row = self._own(api_bookmark)
         filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.fs.share_bookmark(
-            index=0,
+            index=self._idx(row),
             email="person@example.com",
-            filename=filename
+            filename=filename,
         )
-
         expect(self.fs.share_success).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
-    def test_rename_bookmark(self):
-        """Verify a bookmark can be renamed and the new name appears."""
-        self._ensure_bookmarks_panel_open()
+    def test_rename_bookmark(self, api_bookmark, api):
+        """Verify a bookmark can be renamed and the new name persists.
 
-        new_name = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        self._renamed_bookmarks.append((0, new_name))
-        applied_name = self.fs.rename_bookmark(index=0, new_name=new_name)
+        Steps:
+        1. Choose Rename on a bookmark, type a new name and save.
+           Expected: The bookmark keeps the new name.
+        """
+        row = self._own(api_bookmark)
+        new_name = f"AutoTest Renamed {datetime.datetime.now():%H%M%S}"
+        self.fs.rename_bookmark(index=self._idx(row), new_name=new_name)
 
-        renamed_element = self.page.locator(f"text={applied_name}")
-        expect(renamed_element).to_be_visible(timeout=5000)
+        # The API is the oracle: the panel does not repaint after a
+        # rename, so waiting for the new label there is flaky.
+        stored = self._api_row(api, row["bookmarkId"])
+        assert stored and stored.get("comment") == new_name, (
+            f"Rename did not persist: the API row holds "
+            f"{stored and stored.get('comment')!r}, expected {new_name!r}"
+        )
 
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
-    def test_delete_bookmark(self):
-        """Verify a bookmark can be deleted with confirmation."""
-        self._ensure_bookmarks_panel_open()
+    def test_delete_bookmark(self, api_bookmark, api):
+        """Verify a bookmark can be deleted with confirmation.
 
-        # Rename first so we have a unique identifier to verify deletion
-        unique_name = f"DEL_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-        self.fs.rename_bookmark(index=0, new_name=unique_name)
+        Steps:
+        1. Choose Delete on a bookmark and confirm.
+           Expected: The bookmark is no longer listed.
+        """
+        row = self._own(api_bookmark)
+        self.fs.delete_bookmark(index=self._idx(row))
 
-        self.page.locator(f"text={unique_name}").wait_for(state="visible", timeout=5000)
-
-        self.fs.delete_bookmark(index=0)
-
-        self.fs.verify_bookmark_deleted(unique_name, timeout=10000)
+        # A UI delete is a SOFT delete and it is ASYNC: the row stays
+        # listed with deletedAt above 0, and the confirm click returns
+        # before the server records it - so poll the API, the panel
+        # never decides this.
+        deadline = time.time() + 15
+        while True:
+            stored = self._api_row(api, row["bookmarkId"])
+            if stored is None or bookmark_deleted(stored):
+                # the oracle passed: soft-deleted (or purged) server-side
+                return
+            assert time.time() < deadline, (
+                f"Delete did not register within 15s: bookmark "
+                f"{row['bookmarkId']} still live (deletedAt "
+                f"{stored.get('deletedAt')})"
+            )
+            # no DOM signal to wait on - the panel is not the oracle
+            # here - so pace the API poll between reads
+            time.sleep(1)
