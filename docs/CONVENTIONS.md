@@ -206,6 +206,27 @@ Rules for any new fixture:
 5. Create the data before the page renders so the UI shows it without a
    reload, and open the site the API wrote to by name.
 
+## Missing artifacts and skips
+
+A test whose artifact is absent has proved nothing, so it must never
+report green. It does not today: a skip uploads to QA Touch as Blocked,
+never Passed. Skip is still the weakest outcome, and two rules keep it
+honest.
+
+1. Create what the UI can create. A clip, folder, bookmark, user or
+   saved view the test could have made is not a reason to skip. Make it,
+   prove the behaviour, remove it. Owning the artifact also keeps rename,
+   move and delete off a real user's data on the shared tenant.
+2. A skip must prove its precondition first. "No maps found" and "the
+   panel never loaded" read the same in a report, and yellow gets
+   scrolled past. Prove the surface loaded, then report absence; if it
+   did not load, fail. test_drag_location_to_tile had only ever skipped
+   (register item 13), and three maps tests skipped on every run until a
+   map existed (item 22).
+
+A test that skips on every run is dead coverage, not a passing test.
+Check the run record for skips that never turn green.
+
 ## Markers
 
 Defined in `pytest.ini`. The main groups:
