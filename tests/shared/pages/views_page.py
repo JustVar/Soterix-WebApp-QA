@@ -388,6 +388,50 @@ class ViewsPage:
             camera_name = camera_locator.inner_text().split("\n")[0]
             self._simulate_camera_drag_via_js(camera_name, tile_index)
 
+    def _tick_camera_checkbox(self, camera, camera_name: str):
+        """Reveal a camera row's checkbox and tick it.
+
+        The checkbox is not in the DOM until the row is hovered, and it
+        unmounts as soon as the pointer leaves. These rows also re-render
+        as their snapshots refresh, which can move the row out from under
+        the pointer between the hover and the click. So hover and click
+        are ONE attempt, retried, rather than a hover followed by a click
+        that assumes the reveal survived.
+
+        Measured 09/03/2026 on the US site: the configured camera sat
+        ~400px below the fold, scroll_into_view_if_needed moved it 17px,
+        and a reveal lost this way left the JS fallback waiting its full
+        30s default before failing at an unhelpful place.
+        """
+        # Rows live in a custom scroll container that
+        # scroll_into_view_if_needed barely moves, and a hover on an
+        # off-screen row reveals nothing, so centre it through the DOM.
+        camera.evaluate("el => el.scrollIntoView({block: 'center'})")
+        checkbox = camera.locator(".sidebar-custom-checkbox")
+        last = None
+        for _ in range(3):
+            try:
+                # Leave the row first: re-hovering a row the pointer is
+                # already on fires no new enter event.
+                self.page.mouse.move(0, 0)
+                camera.hover()
+                checkbox.wait_for(state="visible", timeout=5000)
+                try:
+                    checkbox.click(timeout=5000)
+                except PlaywrightError:
+                    # a custom checkbox with no inner input: click the
+                    # element itself, bounded so a reveal lost to a
+                    # re-render retries instead of hanging
+                    checkbox.first.evaluate("el => el.click()", timeout=5000)
+                return
+            except PlaywrightError as e:
+                last = e
+        raise RuntimeError(
+            f"The checkbox for '{camera_name}' never stayed revealed over "
+            f"3 hover attempts. These rows re-render with their snapshot; "
+            f"see docs/FAILURE_TRIAGE.md. Last error: {last}"
+        ) from last
+
     def add_camera_via_checkbox(self, camera_name: str):
         """Select a camera by revealing its checkbox and clicking it.
 
@@ -401,18 +445,6 @@ class ViewsPage:
         camera = self.page.locator(".cameraThumbnailWrapper").filter(
             has=self.page.get_by_title(camera_name, exact=True)).first
 
-        # Hover to reveal the checkbox. The reveal is flaky (React listens
-        # on a parent the pointer sometimes misses), so retry once with a
-        # pointer jiggle instead of letting the click hang its full timeout.
-        camera.hover()
-        checkbox = camera.locator(".sidebar-custom-checkbox")
-        try:
-            checkbox.wait_for(state="visible", timeout=5000)
-        except Exception:
-            self.page.mouse.move(0, 0)
-            camera.hover()
-            checkbox.wait_for(state="visible", timeout=10000)
-
         # Adding a camera consumes an empty tile - wait for that instead of
         # sleeping, so a save that follows cannot race the add. Logged (not
         # raised) on timeout: callers assert the outcome themselves and a
@@ -420,16 +452,7 @@ class ViewsPage:
         # here, but a silent swallow would hide the race this wait exists
         # to close.
         before_tiles = self.drag_drop_tiles.count()
-        # JS-click fallback on the inner input: camera rows re-render
-        # with their snapshot refresh, so a pointer click can churn on
-        # the stability check until it times out (the same class the
-        # LPR panel checkbox hit); MUI handles the change on the input
-        try:
-            checkbox.click(timeout=5000)
-        except PlaywrightError:
-            # no inner input on this custom checkbox - JS-click the
-            # element itself
-            checkbox.first.evaluate("el => el.click()")
+        self._tick_camera_checkbox(camera, camera_name)
         if before_tiles > 0:
             try:
                 expect(self.drag_drop_tiles).not_to_have_count(before_tiles, timeout=10000)
@@ -471,16 +494,18 @@ class ViewsPage:
         # snapshots refresh, and a filter(has=...) re-evaluates its inner
         # match on every action, which races that re-render and leaves
         # the checkbox unreachable (measured against HEAD, 09/03/2026).
+        # Read every title in ONE call. Asking row by row costs a round
+        # trip each (22 on the US site) and the camera tree collapses a
+        # few seconds after it expands, so a slow scan can lose the rows
+        # it is still reading.
         cameras = self.page.locator(".cameraThumbnailWrapper")
-        on_screen: list[str] = []
-        index = -1
-        for i in range(cameras.count()):
-            title = cameras.nth(i).locator("span[title]").first.get_attribute(
-                "title") or ""
-            on_screen.append(title)
-            if title == camera_name:
-                index = i
-                break
+        on_screen = cameras.evaluate_all(
+            """els => els.map(el => {
+                const s = el.querySelector('span[title]');
+                return s ? s.getAttribute('title') : '';
+            })"""
+        )
+        index = on_screen.index(camera_name) if camera_name in on_screen else -1
         if index < 0:
             raise RuntimeError(
                 f"The configured camera '{camera_name}' is not in the "
@@ -489,29 +514,8 @@ class ViewsPage:
             )
         camera = cameras.nth(index)
 
-        # The configured camera can sit below the fold - the sidebar
-        # lists every camera on the site - and a hover on an off-screen
-        # thumbnail never reveals its checkbox
-        camera.scroll_into_view_if_needed()
-
-        # Reveal, tile-consume wait and JS-click fallback rationale:
-        # see add_camera_via_checkbox
-        camera.hover()
-        checkbox = camera.locator(".sidebar-custom-checkbox")
-        try:
-            checkbox.wait_for(state="visible", timeout=5000)
-        except Exception:
-            self.page.mouse.move(0, 0)
-            camera.hover()
-            checkbox.wait_for(state="visible", timeout=10000)
-
         before_tiles = self.drag_drop_tiles.count()
-        try:
-            checkbox.click(timeout=5000)
-        except PlaywrightError:
-            # no inner input on this custom checkbox - JS-click the
-            # element itself
-            checkbox.first.evaluate("el => el.click()")
+        self._tick_camera_checkbox(camera, camera_name)
         if before_tiles > 0:
             try:
                 expect(self.drag_drop_tiles).not_to_have_count(before_tiles, timeout=10000)
