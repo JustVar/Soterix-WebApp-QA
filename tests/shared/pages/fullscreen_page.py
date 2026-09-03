@@ -401,7 +401,8 @@ class FullScreenPage:
 
     # --- Bookmark operations ---
 
-    def export_bookmark(self, index: int = 0, filename: str = None):
+    def export_bookmark(self, index: int = 0, filename: str = None,
+                        save_to_media: bool = False):
         """Export a bookmark via the options menu.
 
         Completion is the export progress bar no longer visible; the
@@ -413,6 +414,14 @@ class FullScreenPage:
         visible the full 120s on 08/21/2026 while manual export and a
         standalone run passed), so the wait polls up to 180s and prints
         the signal that fired and the elapsed time.
+
+        save_to_media writes a permanent copy into Media > Clips. It
+        defaults OFF because the server refuses every clip delete
+        ("Data Not Deleted!", measured on BOTH boxes 09/03/2026), so a
+        copy made here can never be cleaned up: this call ticked the box
+        unconditionally and left 12 clips on the US tenant in one day.
+        The export oracle is the progress bar, which does not need it.
+        Pass True only when a Media copy is the point.
         """
         if filename is None:
             filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -423,7 +432,8 @@ class FullScreenPage:
         # the popup's own visible wait is the opened signal
         self.export_popup.wait_for(state="visible", timeout=10000)
         self.export_filename_input.fill(filename)
-        self.export_save_to_media_toggle.click()
+        if save_to_media:
+            self.export_save_to_media_toggle.click()
         self.export_button.click()
         started = time.monotonic()
 
@@ -488,8 +498,12 @@ class FullScreenPage:
         return ""
 
     def share_bookmark(self, index: int = 0, email: str = "test@example.com",
-                       filename: str = None):
-        """Share a bookmark via the options menu."""
+                       filename: str = None, save_to_media: bool = False):
+        """Share a bookmark via the options menu.
+
+        save_to_media is off for the reason given on export_bookmark: a
+        Media copy cannot be deleted back off the tenant.
+        """
         if filename is None:
             filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
@@ -500,7 +514,8 @@ class FullScreenPage:
         self.share_popup.wait_for(state="visible", timeout=10000)
         self.share_email_input.fill(email)
         self.share_filename_input.fill(filename)
-        self.share_save_to_media_toggle.click()
+        if save_to_media:
+            self.share_save_to_media_toggle.click()
         self.share_button.click()
 
         self.share_success.wait_for(state="visible", timeout=30000)
