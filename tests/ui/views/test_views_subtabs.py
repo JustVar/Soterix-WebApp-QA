@@ -20,7 +20,12 @@ import time
 import pytest
 from playwright.sync_api import expect
 from config.base_config import config
+from tests.shared.helpers.surface import require_items
+from tests.shared.pages.insights_page import InsightsPage
 from tests.shared.pages.views_page import ViewsPage
+
+# The shared tenant renames sites, so the name lives in config
+SITE_NAME = config.get("test_site_name")
 
 
 class TestViewsSubtabs:
@@ -32,6 +37,8 @@ class TestViewsSubtabs:
         self.page = authenticated_page
         self.views = ViewsPage(self.page)
         self._saved_view_names = []
+        self._created_widgets = []
+        self.insights = InsightsPage(self.page)
 
         # Always click Views nav - fast if already there, navigates if not
         self.page.locator("text=Views").first.click(force=True)
@@ -39,6 +46,15 @@ class TestViewsSubtabs:
         # Wait for page ready indicator
         self.views.add_tab_button.wait_for(state="visible", timeout=10000)
         yield
+        # Cleanup: delete any insight widgets created during the test
+        for widget in reversed(self._created_widgets):
+            try:
+                self.insights.delete_widget(widget)
+            # cleanup only: a leftover widget must not fail a test that
+            # already passed - the failure is logged, and the name
+            # carries its own timestamp for a manual sweep
+            except Exception as e:
+                print(f"Cleanup: failed to delete widget '{widget}': {e}")
         # Cleanup: delete any saved views created during the test
         for name in reversed(self._saved_view_names):
             try:
@@ -287,10 +303,11 @@ class TestViewsSubtabs:
         )
         tabs_before = [loc.count() for loc in tab_locators]
         health = self.views.content_health_snapshot()
-        try:
-            self._visible_drag(saved_view, target_tile)
-        except Exception as e:
-            pytest.skip(f"View drag not supported: {e}")
+        # The drag is the behaviour under test. It used to run under a
+        # handler that skipped on any exception, and a drop that landed
+        # nothing skipped too, so this test had no failing path at all
+        # (register item 25).
+        self._visible_drag(saved_view, target_tile)
 
         # Give the drop a bounded window to land as either a tile or a tab
         filled = self._content_added(initial_tiles, content_sel, baseline, timeout_s=8.0)
@@ -300,9 +317,10 @@ class TestViewsSubtabs:
             for loc, before in zip(tab_locators, tabs_before, strict=True)
         )
 
-        # View drag may not work - skip if neither tile nor tab changed
-        if not filled and not tab_found:
-            pytest.skip("View drag-to-tile not supported - use checkbox method instead")
+        assert filled or tab_found, (
+            f"Dragging the saved view '{view_name}' onto a tile landed "
+            f"nothing: no tile filled and no new tab opened within 8s"
+        )
         self.views.log_new_content_issues(health, "view drag")
 
     # =========================================================================
@@ -326,19 +344,19 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles"
 
-        # Open Maps panel and expand the first available site to show maps
+        # Open Maps and expand the CONFIGURED site: click_site(None)
+        # picked whichever row its heuristic reached first, so the skip
+        # below named a site the test had never chosen (item 25).
         self.views.open_maps()
-        self.views.click_site(None)
+        self.views.click_site(SITE_NAME)
 
-        # Find map thumbnail (same class as cameras); wait briefly before
-        # deciding to skip - an instant count() races the panel render
-        map_thumb = self.page.locator(".cameraThumbnailWrapper").first
-        if not self.views._appears(map_thumb, timeout=5000):
-            pytest.skip("No maps available under the configured site")
+        map_thumb = self._require_map_thumbnails().first
 
         checkbox = self._reveal_checkbox(map_thumb)
-        if checkbox is None:
-            pytest.skip("No checkbox on map thumbnail")
+        assert checkbox is not None, (
+            "The map thumbnail exposes no hover checkbox, so the checkbox "
+            "add path this test covers is gone"
+        )
         content_sel = "[class*='leaflet'], iframe, [class*='map-container']"
         baseline = self._content_baseline(content_sel)
         checkbox.click()
@@ -366,11 +384,9 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
 
         self.views.open_maps()
-        self.views.click_site(None)
+        self.views.click_site(SITE_NAME)
 
-        map_thumb = self.page.locator(".cameraThumbnailWrapper").first
-        if not self.views._appears(map_thumb, timeout=5000):
-            pytest.skip("No maps available")
+        map_thumb = self._require_map_thumbnails().first
 
         target_tile = self.views.drag_drop_tiles.first
 
@@ -406,14 +422,13 @@ class TestViewsSubtabs:
         # Click Channels subtab (in .viewTabs, not left nav)
         self.views.open_channels()
 
-        # Find channel thumbnail; wait briefly before deciding to skip
-        channel = self.page.locator(".cameraThumbnailWrapper").first
-        if not self.views._appears(channel, timeout=5000):
-            pytest.skip("No channels available")
+        channel = self._require_channels().first
 
         checkbox = self._reveal_checkbox(channel)
-        if checkbox is None:
-            pytest.skip("No checkbox on channel")
+        assert checkbox is not None, (
+            "The channel thumbnail exposes no hover checkbox, so the "
+            "checkbox add path this test covers is gone"
+        )
         content_sel = "video, canvas"
         baseline = self._content_baseline(content_sel)
         checkbox.click()
@@ -439,9 +454,7 @@ class TestViewsSubtabs:
         # Click Channels subtab (in .viewTabs, not left nav)
         self.views.open_channels()
 
-        channel = self.page.locator(".cameraThumbnailWrapper").first
-        if not self.views._appears(channel, timeout=5000):
-            pytest.skip("No channels available")
+        channel = self._require_channels().first
 
         target_tile = self.views.drag_drop_tiles.first
 
@@ -479,12 +492,15 @@ class TestViewsSubtabs:
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles available"
 
+        # Widgets are user-created, so this test creates its own rather
+        # than skipping on an empty panel or borrowing a teammate's
+        # (register items 25 and 27).
+        self._own_a_widget()
+
         # Click Insights subtab (top bar within Views, not left nav)
         self.views.open_insights()
 
-        widget_card = self._find_insight_widget()
-        if widget_card is None:
-            pytest.skip("No insight widgets available - widgets are user-created")
+        widget_card = self._require_insight_widget()
 
         checkbox = self._reveal_checkbox(widget_card)
         if checkbox is None:
@@ -546,12 +562,14 @@ class TestViewsSubtabs:
 
         assert initial_tiles > 0, "No empty tiles available even after adding new tab"
 
+        # Widgets are user-created, so this test creates its own
+        # (register items 25 and 27).
+        self._own_a_widget()
+
         # Click Insights subtab (top bar within Views, not left nav)
         self.views.open_insights()
 
-        widget_card = self._find_insight_widget()
-        if widget_card is None:
-            pytest.skip("No insight widgets available - widgets are user-created")
+        widget_card = self._require_insight_widget()
 
         target_tile = self.views.drag_drop_tiles.first
         target_tile.wait_for(state="visible", timeout=10000)
@@ -573,6 +591,69 @@ class TestViewsSubtabs:
     # =========================================================================
     # HELPER METHODS
     # =========================================================================
+
+    def _require_map_thumbnails(self):
+        """Map thumbnails under the configured site, proved or explained.
+
+        An empty Maps panel is the tenant's data and skips; a panel that
+        never rendered is a fault and fails (register item 25).
+        """
+        thumbs = self.page.locator(".cameraThumbnailWrapper")
+        require_items(
+            thumbs,
+            container=self.page.get_by_text(SITE_NAME, exact=True),
+            surface=f"Views > Maps panel under site '{SITE_NAME}'",
+            artifact="map thumbnail",
+            empty_means="no map is published under this site",
+            timeout_ms=5000,
+        )
+        return thumbs
+
+    def _require_channels(self):
+        """Channel thumbnails in the Channels panel, proved or explained."""
+        channels = self.page.locator(".cameraThumbnailWrapper")
+        require_items(
+            channels,
+            container=self.views.channels_tab,
+            surface="Views > Channels panel",
+            artifact="channel thumbnail",
+            empty_means="this tenant has no channel published to Views",
+            timeout_ms=5000,
+        )
+        return channels
+
+    def _own_a_widget(self) -> str:
+        """Create an insight widget this test owns, and return its name.
+
+        Widgets are user-created, so the panel is empty on a clean
+        tenant and these tests skipped every run; on a busy one they
+        dragged a teammate's widget. Making one is the same fix the LPR
+        lists got (register items 25 and 27). Line/Person is the
+        cheapest shape the creation form offers.
+        """
+        name = self.insights.create_widget(
+            graph_name="Line", category_name="Person", site_name=SITE_NAME
+        )
+        self._created_widgets.append(name)
+        # The widget was made on the Insights page, so return to Views
+        # before the caller opens the Insights SUBTAB.
+        self.page.locator("text=Views").first.click(force=True)
+        self.views.add_tab_button.wait_for(state="visible", timeout=10000)
+        return name
+
+    def _require_insight_widget(self):
+        """The insight widget card this test made, or a loud failure.
+
+        _own_a_widget ran first, so an empty panel here means the widget
+        did not reach the Views subtab, which is a fault - not the
+        absent artifact the old skip reported (register item 25).
+        """
+        card = self._find_insight_widget()
+        assert card is not None, (
+            "The Views > Insights panel shows no widget card although this "
+            "test created one: the widget did not reach the subtab"
+        )
+        return card
 
     def _find_insight_widget(self):
         """Find an insight widget card; None when the tenant has no widgets.

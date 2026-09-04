@@ -2,7 +2,7 @@
 import datetime
 
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Error as PlaywrightError, expect
 
 from config.base_config import config
 from tests.shared.pages.admin_page import AdminPage
@@ -19,6 +19,11 @@ RULE_TYPES = [
 # The shared tenant renames sites, so the name lives in config
 SITE_NAME = config.get("test_site_name")
 
+# The type the edit, mute and delete tests make their own rule from.
+# Occupancy configures through the full-view switch, so the wizard walk
+# skips the canvas drawing the Entry-Exit family needs.
+OWNED_RULE_TYPE = "Occupancy"
+
 
 class TestAdminRules:
     """Tests for Admin > General > Rules section."""
@@ -31,6 +36,28 @@ class TestAdminRules:
         yield
         # Cleanup: delete created rules by name so runs do not leak
         # Auto rules into the shared tenant. Best effort by design.
+        if self._created_rules:
+            # A test that dies inside the wizard, or one that leaves the
+            # details drawer open, covers the list with a MuiBox
+            # backdrop: the rule search input is then unreachable and
+            # the delete never starts. Escape clears both. Do NOT add a
+            # reload here - measured 09/04/2026, reloading the Rules
+            # page leaves an overlay that swallows the Admin nav click
+            # for 30s, which is what made this teardown fail in the
+            # first place. Leaking one rule is not a tidiness problem:
+            # the wizard hides a camera at rule capacity, so a single
+            # leftover made the configured camera vanish from Select
+            # Devices and every later run failed there (register
+            # item 25; the capacity behaviour is in Known app
+            # behavior).
+            try:
+                self.page.keyboard.press("Escape")
+                if not self.admin.rule_search_input.is_visible():
+                    self._navigate_to_rules()
+            # teardown: an unreachable list must not mask the test
+            # result; the deletes below then report their own failure
+            except Exception as e:
+                print(f"Cleanup: could not return to the rules list: {e}")
         for rule_name in self._created_rules:
             try:
                 if not self.admin.delete_rule_by_name(rule_name):
@@ -44,6 +71,58 @@ class TestAdminRules:
         """Helper to navigate to Admin > General > Rules."""
         self.admin.navigate_to_admin()
         self.admin.navigate_to_rules()
+
+    def _require_rule_type_card(self, rule_type: str):
+        """Wait for the picker's card for `rule_type`, or say what it offers.
+
+        click_add_new_rule already proved the picker opened, but the
+        cards render a beat after it, so the old instant count() read
+        raced them and skipped on a card that was on its way (register
+        item 25). The skip now names the types the picker DOES show.
+        """
+        card = self.page.locator(f"p:text-is('{rule_type}')")
+        try:
+            card.first.wait_for(state="visible", timeout=5000)
+        # deliberate: click_add_new_rule proved the picker is open, so
+        # this timeout is the measured absence of one type's card, not
+        # a modal that failed to render
+        except PlaywrightError:
+            offered = [
+                t for t in RULE_TYPES
+                if self.page.locator(f"p:text-is('{t}')").count() > 0
+            ]
+            pytest.skip(
+                f"The rule picker does not offer '{rule_type}'. It shows: "
+                f"{offered or 'none of the known rule types'}"
+            )
+
+    def _own_a_rule(self) -> str:
+        """Create a rule this test owns, and return its name.
+
+        Edit, mute and delete used to run against index -1, the last
+        rule the tenant happens to hold, and skip "No rules with X
+        icons found" when the list was empty. That skipped on a clean
+        tenant and muted or deleted a real user's rule on a busy one -
+        the LPR list lesson (register items 25 and 27).
+
+        Occupancy is the cheapest type to make: it configures through
+        the full-view switch, so the wizard needs no canvas drawing.
+        """
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        rule_name = f"Owned_Auto_{timestamp}"
+        self.admin.click_add_new_rule()
+        self._created_rules.append(rule_name)
+        made = self.admin.complete_rule_wizard(
+            rule_type=OWNED_RULE_TYPE,
+            site_name=SITE_NAME,
+            rule_name=rule_name,
+        )
+        assert made, (
+            f"The rule wizard no longer offers '{OWNED_RULE_TYPE}', so these "
+            f"tests cannot make the rule they act on. Pick another type from "
+            f"RULE_TYPES that the picker still shows."
+        )
+        return rule_name
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -80,9 +159,7 @@ class TestAdminRules:
 
         self.admin.click_add_new_rule()
 
-        rule_label = self.page.locator(f"p:text-is('{rule_type}')")
-        if rule_label.count() == 0:
-            pytest.skip(f"Rule type '{rule_type}' not available in wizard")
+        self._require_rule_type_card(rule_type)
 
         self.admin.select_rule_type(rule_type)
 
@@ -117,15 +194,10 @@ class TestAdminRules:
         notification-edit form ever reappears so the flow gets rebuilt.
         """
         self._navigate_to_rules()
+        rule_name = self._own_a_rule()
 
-        # Wait for the list to render before deciding to skip
-        try:
-            self.admin.rule_edit_icons.first.wait_for(state="visible", timeout=5000)
-        except Exception:
-            pytest.skip("No rules with edit icons found")
-
-        # oracle: edit_rule raises unless the details drawer opens
-        self.admin.edit_rule(index=-1)
+        # oracle: edit_rule_by_name raises unless the details drawer opens
+        self.admin.edit_rule_by_name(rule_name)
 
         # tripwire on the form's controls reappearing (a state read)
         form_back = self.admin.notification_tab.or_(
@@ -136,6 +208,10 @@ class TestAdminRules:
                 "A notification-edit form is back in the rule drawer - "
                 "rebuild the notification edit flow against it"
             )
+        # Close what this test opened before it skips: the drawer's
+        # backdrop covers the rule list, and the teardown's delete
+        # cannot reach the search input underneath it.
+        self.admin.close_rule_details()
         pytest.skip(
             "The rule Edit icon opens a read-only details drawer "
             "(measured 08/17/2026); notification editing has no UI"
@@ -147,21 +223,22 @@ class TestAdminRules:
     def test_delete_rule(self):
         """Verify deleting the last rule with confirmation dialog."""
         self._navigate_to_rules()
+        rule_name = self._own_a_rule()
 
-        # Wait for the list to render before deciding to skip
-        try:
-            self.admin.rule_delete_icons.first.wait_for(state="visible", timeout=5000)
-        except Exception:
-            pytest.skip("No rules with delete icons found")
-
-        initial_count = self.admin.rule_delete_icons.count()
-
-        self.admin.delete_rule(index=-1)
-
-        # Verify one fewer rule (retries until the list refreshes)
-        expect(self.admin.rule_delete_icons).to_have_count(
-            initial_count - 1, timeout=10000
+        # Deleting index -1 took whichever rule the tenant listed last,
+        # so a run could delete a team-owned rule; the test now deletes
+        # the one it made (register item 25).
+        assert self.admin.delete_rule_by_name(rule_name), (
+            f"The rule '{rule_name}' this test created is not in the list, "
+            f"so there was nothing to delete"
         )
+        self._created_rules.remove(rule_name)
+
+        # Verify the rule is gone: the filter is the identity check,
+        # and zero surviving rows is the deleted signal
+        self.admin.search_rule(rule_name)
+        expect(self.admin.rule_delete_icons).to_have_count(0, timeout=15000)
+        self.admin.search_rule("")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -169,14 +246,10 @@ class TestAdminRules:
     def test_mute_rule_notification(self):
         """Verify muting a rule's notification via the mute icon."""
         self._navigate_to_rules()
+        rule_name = self._own_a_rule()
 
-        # Wait for the list to render before deciding to skip
-        try:
-            self.admin.mute_notification_icons.first.wait_for(state="visible", timeout=5000)
-        except Exception:
-            pytest.skip("No rules with mute notification icons found")
-
-        self.admin.mute_rule_notification(index=-1)
+        # oracle: mute_rule_by_name raises unless one Mute icon leaves
+        self.admin.mute_rule_by_name(rule_name)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -195,9 +268,7 @@ class TestAdminRules:
 
         self.admin.click_add_new_rule()
 
-        rule_label = self.page.locator(f"p:text-is('{rule_type}')")
-        if rule_label.count() == 0:
-            pytest.skip(f"Rule type '{rule_type}' not available in wizard")
+        self._require_rule_type_card(rule_type)
 
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         rule_name = f"{rule_type.replace(' ', '_')}_Auto_{timestamp}"

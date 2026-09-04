@@ -2,6 +2,7 @@
 import datetime
 import pytest
 from playwright.sync_api import expect
+from tests.shared.helpers.surface import require_items
 from tests.shared.pages.admin_page import AdminPage
 
 
@@ -110,12 +111,22 @@ class TestAdminUsers:
         # filter-applied signal - never touch the first switch on the page
         # before that, it can belong to another account.
         self.admin.search_user("AutoTest")
-        try:
-            self.page.get_by_text("AutoTest").first.wait_for(
-                state="visible", timeout=5000
-            )
-        except Exception:
-            pytest.skip("No users found with switch toggle")
+        # The filtered row is the artifact; the user table is the
+        # surface that proves the page is up. An empty table after a
+        # filter is the tenant's data, a table that never rendered is a
+        # fault, and the old handler reported both as the same skip
+        # (register item 25).
+        require_items(
+            self.page.get_by_text("AutoTest"),
+            # the user search box, not a row icon: a filter that
+            # matches nothing leaves zero row icons, and a row-level
+            # container would turn that data fact into a failure
+            container=self.admin.search_input,
+            surface="Admin > Users, filtered to 'AutoTest'",
+            artifact="AutoTest user row",
+            empty_means="this tenant holds no automation user to toggle",
+            timeout_ms=5000,
+        )
 
         # oracle: toggle_user_status raises unless the switch flips
         # (and fails loud when the switch never becomes usable)
@@ -214,10 +225,11 @@ class TestAdminUsers:
         if rows_before == 0:
             pytest.skip("No test users found to delete")
 
-        try:
-            self.admin.delete_user(match_text="AutoTest")
-        except Exception as e:
-            pytest.skip(f"Delete confirmation dialog not found: {e}")
+        # delete_user raising is a failure of the delete flow, not an
+        # absent artifact: the rows were already counted above. The old
+        # handler reported a missing confirmation dialog as Blocked
+        # (register item 25).
+        self.admin.delete_user(match_text="AutoTest")
 
         # An app-side refusal shown to the user is a legitimate skip
         error_msg = self.page.locator("text=/can.?t delete/i")

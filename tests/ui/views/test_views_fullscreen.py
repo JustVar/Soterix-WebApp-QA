@@ -99,13 +99,13 @@ class TestViewsFullscreen:
         """Verify video is actively streaming (no loader, no error state)."""
         fs = self._enter_fullscreen()
 
-        if not fs.is_streaming():
-            # Retry: stream may need extra time to stabilize
-            self.page.wait_for_timeout(5000)
-            if not fs.is_streaming():
-                pytest.skip(
-                    "Stream not active after extended wait - "
-                    "may be a transient camera/network issue"
-                )
-
+        # _enter_fullscreen already ran assert_stream_playing, so a
+        # player that does not read as streaming here contradicts it.
+        # The old body skipped instead, which meant the one test named
+        # for streaming could never report a dead stream (item 25).
+        # run.py --retry-streams reruns exactly this class.
+        assert fs.is_streaming(), (
+            "The fullscreen player passed assert_stream_playing but does "
+            "not read as streaming: the stream stopped inside the test"
+        )
         assert fs.streaming_failed.count() == 0, "No streaming failure messages expected"

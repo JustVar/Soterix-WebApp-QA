@@ -72,8 +72,12 @@ class TestViewsPlayback:
         """Verify the live indicator is shown for a live camera stream."""
         fs = self._enter_fullscreen()
 
-        if not fs.is_streaming():
-            pytest.skip("Stream not active - cannot verify live indicator")
+        # _enter_fullscreen already proved the stream plays, so this is
+        # a contradiction, not an absent precondition (item 25).
+        assert fs.is_streaming(), (
+            "The fullscreen player passed assert_stream_playing but does "
+            "not read as streaming, so the live indicator cannot be read"
+        )
 
         # Live cameras should show the Live. indicator icon
         assert fs.is_live_mode(), (
@@ -164,10 +168,10 @@ class TestViewsPlayback:
         video_tiles = self.page.locator(
             "[class*='video_container'][class*='new_video_player']"
         )
-        try:
-            video_tiles.nth(1).wait_for(state="visible", timeout=15000)
-        except PlaywrightError:
-            pytest.skip("Second camera tile not loaded")
+        # The checkbox click above landed, so a second tile that never
+        # appears is a failed add or a dead stream - both red, both
+        # counted. The old handler reported it as Blocked (item 25).
+        video_tiles.nth(1).wait_for(state="visible", timeout=15000)
 
         self.views.enter_fullscreen_on_tile(1)
         fs = FullScreenPage(self.page)

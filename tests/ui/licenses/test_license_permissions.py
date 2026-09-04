@@ -2,6 +2,8 @@
 and UI consistency checks."""
 import pytest
 from playwright.sync_api import expect
+
+from tests.shared.helpers.surface import require_items
 from tests.shared.pages.license_page import LicensePage
 
 
@@ -81,10 +83,16 @@ class TestLicensePermissions:
         self.license.navigate()
         self.license.switch_to_assigned_tab()
 
-        # Try to find a device menu to test dialog content
-        expand_icons = self.license.site_expand_icons
-        if expand_icons.count() == 0:
-            pytest.skip("No expandable sites for dialog test")
+        # The Assigned table is the surface: rows with no expand control
+        # are a regression, an empty table is the tenant's data
+        # (register item 25).
+        require_items(
+            self.license.site_expand_icons,
+            container=self.license.assigned_tab,
+            surface="Licenses > Assigned",
+            artifact="expandable site row",
+            empty_means="no licence is assigned on this tenant",
+        )
 
         self.license.expand_site(0)
 
@@ -94,13 +102,13 @@ class TestLicensePermissions:
             "div[class*='feature'] a, div[class*='nested'] a, "
             "td a, div[class*='clickable']"
         )
-        try:
-            feature_links.first.wait_for(state="visible", timeout=10000)
-        # absence routes to the skip below
-        except Exception:
-            pass
-        if feature_links.count() == 0:
-            pytest.skip("No feature links for device drill-down")
+        require_items(
+            feature_links,
+            container=self.license.assigned_tab,
+            surface="Licenses > Assigned, site expanded",
+            artifact="feature licence link",
+            empty_means="the assigned site carries no feature licence to open",
+        )
 
         feature_links.first.click()
         # the device-list breadcrumb is the navigated signal
@@ -108,9 +116,10 @@ class TestLicensePermissions:
             state="visible", timeout=15000
         )
 
+        # The breadcrumb wait above proves the device list opened, so a
+        # missing option icon is a regression (register item 25).
         options = self.license.options_icons
-        if options.count() == 0:
-            pytest.skip("No option icons in device list")
+        expect(options.first).to_be_visible(timeout=10000)
 
         self.license.open_device_menu(0)
 

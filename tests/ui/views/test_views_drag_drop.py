@@ -3,6 +3,7 @@ import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
 
 from config.base_config import config
+from tests.shared.helpers.surface import require_items
 from tests.shared.pages.views_page import ViewsPage
 
 
@@ -150,7 +151,10 @@ class TestViewsDragDrop:
             assert (new_tile_count < initial_tile_count or
                     video_elements.count() > video_baseline), f"Camera '{camera_name}' drag failed"
         else:
-            pytest.skip("Could not determine camera name for test")
+            pytest.skip(
+                "test_camera_name is not configured for this ENV "
+                "(see config/env/), so no camera can be dragged by name"
+            )
 
     @pytest.mark.ui
     @pytest.mark.dragdrop
@@ -209,26 +213,30 @@ class TestViewsDragDrop:
         video_elements = self.page.locator("video, canvas, [class*='video']")
         video_baseline = video_elements.count()
 
-        # Find and drag a location/site to a tile; the helper raises
-        # only when the JS fallback cannot dispatch, which routes into
-        # the skip - a drop that lands nothing falls through to the
-        # count check below
+        # The drag is the behaviour under test, so it raises. It used
+        # to run under a try that turned every failure into a skip,
+        # and a drop that landed nothing skipped as well: the test had
+        # no failing path at all (register item 25).
         health = self.views.content_health_snapshot()
-        try:
-            # the configured site row is the drag source; None made the
-            # locator 'text=None', so this test had only ever skipped
-            self.views.drag_location_to_tile(config.get("test_site_name"), tile_index=0)
-            self._wait_tile_consumed(initial_tile_count)
-        except Exception as e:
-            pytest.skip(f"Location drag not supported or failed: {e}")
+        # the configured site row is the drag source; None made the
+        # locator 'text=None', so this test had only ever skipped
+        site_name = config.get("test_site_name")
+        self.views.drag_location_to_tile(site_name, tile_index=0)
+        self._wait_tile_consumed(initial_tile_count)
         self.views.log_new_content_issues(health, "location drag")
 
         # Verify: tile count should decrease or video content should appear
         new_tile_count = self.views.get_available_tile_count()
 
-        # Location drag may load multiple cameras at once
-        if new_tile_count >= initial_tile_count and video_elements.count() <= video_baseline:
-            pytest.skip("Location drag-to-tile feature may not be supported in current app version")
+        # A location drop loads every camera under the site, so either
+        # signal counts; neither means the drop did not land.
+        assert (new_tile_count < initial_tile_count
+                or video_elements.count() > video_baseline), (
+            f"Dragging location '{site_name}' onto tile 0 landed nothing: "
+            f"empty tiles stayed at {new_tile_count} (was {initial_tile_count}) "
+            f"and content elements at {video_elements.count()} "
+            f"(was {video_baseline})"
+        )
 
     @pytest.mark.ui
     @pytest.mark.dragdrop
@@ -243,62 +251,69 @@ class TestViewsDragDrop:
         initial_tile_count = self.views.get_available_tile_count()
         assert initial_tile_count > 0, "No empty tiles available"
 
-        try:
-            # Step 1: Open maps panel
-            self.views.open_maps()
+        # The whole body used to run under `except Exception:
+        # pytest.skip(...)`, which caught the closing assert too: the
+        # test could pass or skip but never fail (register item 25).
+        # Step 1: Open maps panel
+        self.views.open_maps()
 
-            # Step 2: Click on site to expand maps
-            self.views.click_site(None)
+        # Step 2: Expand the CONFIGURED site, not whichever row the
+        # JS heuristic reaches first: a skip has to name the site it
+        # found no maps under. click_site raises here listing what IS
+        # in the panel, which doubles as this test's proof that the
+        # Maps panel rendered at all.
+        site_name = config.get("test_site_name")
+        self.views.click_site(site_name)
 
-            # Step 3: Map thumbnails render async after the expand;
-            # the first appearing is the signal, a miss skips below
-            map_thumbnails = self.page.locator(".cameraThumbnailWrapper")
-            try:
-                map_thumbnails.first.wait_for(
-                    state="visible", timeout=10000
-                )
-            # none within the bound routes to the skip below
-            except PlaywrightError:
-                pass
-            if map_thumbnails.count() == 0:
-                pytest.skip("No maps available under the site")
+        # Step 3: Map thumbnails render async after the expand. An
+        # empty panel is the tenant's data; a panel that never
+        # rendered is a fault, and require_items tells them apart.
+        map_thumbnails = self.page.locator(".cameraThumbnailWrapper")
+        found = require_items(
+            map_thumbnails,
+            container=self.page.get_by_text(site_name, exact=True),
+            surface=f"Views > Maps panel under site '{site_name}'",
+            artifact="map thumbnail",
+            empty_means="no map is published under this site",
+        )
 
-            print(f"Found {map_thumbnails.count()} map thumbnail(s)")
+        print(f"Found {found} map thumbnail(s)")
 
-            # Step 4: Add map via checkbox (same pattern as cameras);
-            # the click's actionability wait covers the hover render
-            map_thumbnail = map_thumbnails.first
-            map_thumbnail.hover()
+        # Step 4: Add map via checkbox (same pattern as cameras);
+        # the click's actionability wait covers the hover render
+        map_thumbnail = map_thumbnails.first
+        map_thumbnail.hover()
 
-            # Sidebar previews match content selectors page-wide, so only
-            # growth over this pre-add baseline counts as drop evidence
-            map_content = self.page.locator("[class*='leaflet'], iframe, [class*='map-container']")
-            map_baseline = map_content.count()
+        # Sidebar previews match content selectors page-wide, so only
+        # growth over this pre-add baseline counts as drop evidence
+        map_content = self.page.locator("[class*='leaflet'], iframe, [class*='map-container']")
+        map_baseline = map_content.count()
 
-            health = self.views.content_health_snapshot()
-            checkbox = map_thumbnail.locator(".sidebar-custom-checkbox")
-            if checkbox.count() > 0:
-                print("Using checkbox to add map")
-                checkbox.click()
-            else:
-                # Fallback: try drag
-                print("No checkbox - trying drag")
-                target_tile = self.views.drag_drop_tiles.first
-                map_thumbnail.drag_to(target_tile)
-            self._wait_tile_consumed(initial_tile_count)
-            self.views.log_new_content_issues(health, "map add")
+        health = self.views.content_health_snapshot()
+        checkbox = map_thumbnail.locator(".sidebar-custom-checkbox")
+        if checkbox.count() > 0:
+            print("Using checkbox to add map")
+            checkbox.click()
+        else:
+            # Fallback: try drag
+            print("No checkbox - trying drag")
+            target_tile = self.views.drag_drop_tiles.first
+            map_thumbnail.drag_to(target_tile)
+        self._wait_tile_consumed(initial_tile_count)
+        self.views.log_new_content_issues(health, "map add")
 
-            # Verify: tile count should decrease or map content visible
-            new_tile_count = self.views.get_available_tile_count()
+        # Verify: tile count should decrease or map content visible
+        new_tile_count = self.views.get_available_tile_count()
 
-            print(f"Tiles before: {initial_tile_count}, after: {new_tile_count}")
-            print(f"Map content elements: {map_content.count()}")
+        print(f"Tiles before: {initial_tile_count}, after: {new_tile_count}")
+        print(f"Map content elements: {map_content.count()}")
 
-            assert (new_tile_count < initial_tile_count or
-                    map_content.count() > map_baseline), "Map was not added to tile"
-
-        except Exception as e:
-            pytest.skip(f"Map drag test failed: {e}")
+        assert (new_tile_count < initial_tile_count
+                or map_content.count() > map_baseline), (
+            f"Map was not added to a tile: empty tiles stayed at "
+            f"{new_tile_count} (was {initial_tile_count}) and map content "
+            f"at {map_content.count()} (was {map_baseline})"
+        )
 
     @pytest.mark.ui
     @pytest.mark.dragdrop
@@ -313,75 +328,67 @@ class TestViewsDragDrop:
         initial_tile_count = self.views.get_available_tile_count()
         assert initial_tile_count > 0, "No empty tiles available"
 
-        try:
-            # Step 1: Click Channels tab in left panel
-            channels_tab = self.page.locator("text=Channels").first
-            channels_tab.wait_for(state="visible", timeout=10000)
-            channels_tab.click()
-            # channel entries render async; the first wrapper
-            # appearing is the signal, a miss falls to the hunt below
-            try:
-                self.page.locator(
-                    ".cameraThumbnailWrapper"
-                ).first.wait_for(state="visible", timeout=10000)
-            # the locator hunt below covers the other channel markups
-            except PlaywrightError:
-                pass
+        # The whole body used to run under `except Exception:
+        # pytest.skip(...)`, and its verdict was a print on success and
+        # a skip on failure: nothing here could ever go red
+        # (register item 25).
+        # Step 1: Click Channels tab in left panel
+        channels_tab = self.page.locator("text=Channels").first
+        channels_tab.wait_for(state="visible", timeout=10000)
+        channels_tab.click()
 
-            # Step 2: Look for channel thumbnails or list items
-            channel_locators = [
-                ".cameraThumbnailWrapper",  # Channels may use same wrapper
-                "[class*='channelThumbnail']",
-                "[class*='channel-item']",
-                ".sidebar-custom-checkbox",  # Checkboxes in channel list
-            ]
+        # Step 2: Look for channel thumbnails or list items. The panel
+        # has carried several markups, so the union stays; an empty
+        # panel is the tenant's data and a panel that never rendered
+        # is a fault, which require_items tells apart.
+        channels = self.page.locator(
+            ".cameraThumbnailWrapper, [class*='channelThumbnail'], "
+            "[class*='channel-item'], .sidebar-custom-checkbox"
+        )
+        require_items(
+            channels,
+            container=channels_tab,
+            surface="Views > Channels panel",
+            artifact="channel entry",
+            empty_means="this tenant has no channel published to Views",
+        )
+        channel_element = channels.first
 
-            channel_element = None
-            for locator in channel_locators:
-                elements = self.page.locator(locator)
-                if elements.count() > 0:
-                    channel_element = elements.first
-                    print(f"Found channel element with locator: {locator}")
-                    break
+        # Step 3: Add channel via checkbox; the click's
+        # actionability wait covers the hover render
+        channel_element.hover()
 
-            if channel_element is None:
-                pytest.skip("No channels available in Channels panel")
+        # Sidebar previews match [class*='video'] page-wide, so only
+        # growth over this pre-add baseline counts as drop evidence
+        video_elements = self.page.locator("video, canvas, [class*='video']")
+        video_baseline = video_elements.count()
 
-            # Step 3: Add channel via checkbox; the click's
-            # actionability wait covers the hover render
-            channel_element.hover()
+        health = self.views.content_health_snapshot()
+        checkbox = channel_element.locator(".sidebar-custom-checkbox")
+        if checkbox.count() > 0:
+            print("Using checkbox to add channel")
+            checkbox.click()
+        else:
+            # Direct click or drag
+            print("Trying direct interaction with channel")
+            target_tile = self.views.drag_drop_tiles.first
+            channel_element.drag_to(target_tile)
+        self._wait_tile_consumed(initial_tile_count)
+        self.views.log_new_content_issues(health, "channel add")
 
-            # Sidebar previews match [class*='video'] page-wide, so only
-            # growth over this pre-add baseline counts as drop evidence
-            video_elements = self.page.locator("video, canvas, [class*='video']")
-            video_baseline = video_elements.count()
+        # Verify
+        new_tile_count = self.views.get_available_tile_count()
 
-            health = self.views.content_health_snapshot()
-            checkbox = channel_element.locator(".sidebar-custom-checkbox")
-            if checkbox.count() > 0:
-                print("Using checkbox to add channel")
-                checkbox.click()
-            else:
-                # Direct click or drag
-                print("Trying direct interaction with channel")
-                target_tile = self.views.drag_drop_tiles.first
-                channel_element.drag_to(target_tile)
-            self._wait_tile_consumed(initial_tile_count)
-            self.views.log_new_content_issues(health, "channel add")
+        print(f"Tiles before: {initial_tile_count}, after: {new_tile_count}")
+        print(f"Video elements: {video_elements.count()}")
 
-            # Verify
-            new_tile_count = self.views.get_available_tile_count()
-
-            print(f"Tiles before: {initial_tile_count}, after: {new_tile_count}")
-            print(f"Video elements: {video_elements.count()}")
-
-            if new_tile_count < initial_tile_count or video_elements.count() > video_baseline:
-                print("Channel successfully added to tile!")
-            else:
-                pytest.skip("Channel add feature may work differently in this app version")
-
-        except Exception as e:
-            pytest.skip(f"Channel test failed: {e}")
+        assert (new_tile_count < initial_tile_count
+                or video_elements.count() > video_baseline), (
+            f"Adding a channel landed nothing on a tile: empty tiles "
+            f"stayed at {new_tile_count} (was {initial_tile_count}) and "
+            f"content elements at {video_elements.count()} "
+            f"(was {video_baseline})"
+        )
 
     @pytest.mark.ui
     @pytest.mark.checkbox

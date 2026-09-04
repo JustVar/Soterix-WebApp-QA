@@ -93,11 +93,20 @@ class TestEventsFilters:
         self.events.select_site(None)
 
         rules = self.events.get_rule_options()
-        # Find a rule that isn't "All Rules" or "Intrusion Detection"
+        # "All Rules" is always offered, so seeing it proves the dropdown
+        # loaded; without that proof an empty read and a broken dropdown
+        # skipped alike (register item 25).
+        assert "All Rules" in rules, (
+            f"The Events rule dropdown did not load: it offers {rules}, "
+            f"which does not include the standing 'All Rules' entry"
+        )
         other_rules = [r for r in rules
                        if r not in ("All Rules", "Intrusion Detection")]
         if not other_rules:
-            pytest.skip("No additional rule types available")
+            pytest.skip(
+                f"The Events rule dropdown offers only {rules}: this tenant "
+                f"has no other rule type to filter by"
+            )
 
         self.events.select_rule(other_rules[0])
         self.events.select_duration("Last 7")
@@ -179,7 +188,10 @@ class TestEventsFilters:
 
         count = self.events.get_event_count()
         if count < 2:
-            pytest.skip("Need at least 2 events to test multiple pins")
+            pytest.skip(
+                f"The Intrusion Detection search over the last 7 days "
+                f"returned {count} event(s); pinning two needs two"
+            )
 
         self.events.pin_event(0)
         pinned_text = self.events.get_pinned_count_text()
@@ -206,7 +218,10 @@ class TestEventsFilters:
 
         count = self.events.get_event_count()
         if count < 3:
-            pytest.skip("Need at least 3 events to test pin counter")
+            pytest.skip(
+                f"The Intrusion Detection search over the last 7 days "
+                f"returned {count} event(s); the pin counter needs three"
+            )
 
         self.events.pin_event(0)
         self.events.pin_event(1)

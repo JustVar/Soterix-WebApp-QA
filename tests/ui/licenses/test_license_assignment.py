@@ -3,6 +3,8 @@ feature drill-down, device list, assign/unassign/suspend workflows,
 and export functionality."""
 import pytest
 from playwright.sync_api import expect
+
+from tests.shared.helpers.surface import require_items
 from tests.shared.pages.license_page import LicensePage
 
 
@@ -19,6 +21,22 @@ class TestLicenseAssignedTab:
         """Navigate to Licenses > Assigned tab."""
         self.license.navigate()
         self.license.switch_to_assigned_tab()
+
+    def _require_expandable_site(self):
+        """A site row that can be expanded, proved or explained.
+
+        The Assigned TAB is the surface, not the table: a tenant with
+        no assigned licence renders an empty state and no table rows,
+        and a row-level container would turn that data fact into a
+        failure (register item 25).
+        """
+        require_items(
+            self.license.site_expand_icons,
+            container=self.license.assigned_tab,
+            surface="Licenses > Assigned",
+            artifact="expandable site row",
+            empty_means="no licence is assigned on this tenant",
+        )
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -62,17 +80,14 @@ class TestLicenseAssignedTab:
         """Verify expanding a site reveals feature-level licenses."""
         self._navigate_to_assigned()
 
-        expand_icons = self.license.site_expand_icons
-        if expand_icons.count() > 0:
-            rows = self.page.locator("tr.MuiTableRow-root")
-            initial_rows = rows.count()
-            self.license.expand_site(0)
-            # the row count leaving the baseline marks the expansion
-            expect(rows).not_to_have_count(initial_rows, timeout=10000)
-            expanded_rows = rows.count()
-            assert expanded_rows > initial_rows, "No additional rows shown after site expansion"
-        else:
-            pytest.skip("No expandable sites available")
+        self._require_expandable_site()
+        rows = self.page.locator("tr.MuiTableRow-root")
+        initial_rows = rows.count()
+        self.license.expand_site(0)
+        # the row count leaving the baseline marks the expansion
+        expect(rows).not_to_have_count(initial_rows, timeout=10000)
+        expanded_rows = rows.count()
+        assert expanded_rows > initial_rows, "No additional rows shown after site expansion"
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -85,9 +100,7 @@ class TestLicenseAssignedTab:
         """
         self._navigate_to_assigned()
 
-        expand_icons = self.license.site_expand_icons
-        if expand_icons.count() == 0:
-            pytest.skip("No expandable sites available")
+        self._require_expandable_site()
 
         rows = self.page.locator("tr.MuiTableRow-root")
         initial_rows = rows.count()
@@ -105,10 +118,18 @@ class TestLicenseAssignedTab:
         self._navigate_to_assigned()
 
         switches = self.license.site_toggle_switches
-        if switches.count() > 0:
-            expect(switches.first).to_be_visible(timeout=5000)
-        else:
-            pytest.skip("No site toggle switches found")
+        # The Assigned table is the surface; a table with rows but no
+        # switch is a regression, an empty table is the tenant's data
+        # (register item 25).
+        require_items(
+            switches,
+            container=self.license.assigned_tab,
+            surface="Licenses > Assigned",
+            artifact="site enable toggle",
+            empty_means="no licence is assigned on this tenant",
+            timeout_ms=5000,
+        )
+        expect(switches.first).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -153,14 +174,14 @@ class TestLicenseDeviceList:
         self.license = LicensePage(self.page)
         yield
 
+    _require_expandable_site = TestLicenseAssignedTab._require_expandable_site
+
     def _navigate_to_device_list(self):
         """Navigate to Licenses > Assigned > expand site > click feature."""
         self.license.navigate()
         self.license.switch_to_assigned_tab()
 
-        expand_icons = self.license.site_expand_icons
-        if expand_icons.count() == 0:
-            pytest.skip("No expandable sites available for device list drill-down")
+        self._require_expandable_site()
 
         self.license.expand_site(0)
 
@@ -171,19 +192,21 @@ class TestLicenseDeviceList:
             "div[class*='feature'] span[class*='link'], "
             "td a, div[class*='clickable']"
         )
-        try:
-            feature_links.first.wait_for(state="visible", timeout=10000)
-        # absence routes to the skip below
-        except Exception:
-            pass
-        if feature_links.count() > 0:
-            feature_links.first.click()
-            # the device-list breadcrumb is the navigated signal
-            expect(self.license.breadcrumb.first).to_be_visible(
-                timeout=15000
-            )
-        else:
-            pytest.skip("No feature links found for drill-down")
+        # The site expanded above, so its feature rows are the artifact
+        # and the expanded table is the proof the surface is up
+        # (register item 25).
+        require_items(
+            feature_links,
+            container=self.license.assigned_tab,
+            surface="Licenses > Assigned, site expanded",
+            artifact="feature licence link",
+            empty_means="the assigned site carries no feature licence to open",
+        )
+        feature_links.first.click()
+        # the device-list breadcrumb is the navigated signal
+        expect(self.license.breadcrumb.first).to_be_visible(
+            timeout=15000
+        )
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -203,11 +226,11 @@ class TestLicenseDeviceList:
         """Verify three-dot menu is available for each device."""
         self._navigate_to_device_list()
 
+        # _navigate_to_device_list only returns once the breadcrumb
+        # proves the device list opened, so a list with no option icon
+        # is a regression, not an absent artifact (register item 25).
         options = self.license.options_icons
-        if options.count() > 0:
-            expect(options.first).to_be_visible(timeout=5000)
-        else:
-            pytest.skip("No option icons found in device list")
+        expect(options.first).to_be_visible(timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
@@ -215,9 +238,11 @@ class TestLicenseDeviceList:
         """Verify Suspend License option is available in device menu."""
         self._navigate_to_device_list()
 
+        # The device list is proved open by _navigate_to_device_list's
+        # breadcrumb wait, so a missing option icon is a regression
+        # (register item 25).
         options = self.license.options_icons
-        if options.count() == 0:
-            pytest.skip("No option icons for device")
+        expect(options.first).to_be_visible(timeout=10000)
 
         self.license.open_device_menu(0)
 
@@ -237,9 +262,11 @@ class TestLicenseDeviceList:
         """Verify Unassign License option is available in device menu."""
         self._navigate_to_device_list()
 
+        # The device list is proved open by _navigate_to_device_list's
+        # breadcrumb wait, so a missing option icon is a regression
+        # (register item 25).
         options = self.license.options_icons
-        if options.count() == 0:
-            pytest.skip("No option icons for device")
+        expect(options.first).to_be_visible(timeout=10000)
 
         self.license.open_device_menu(0)
 
@@ -258,9 +285,11 @@ class TestLicenseDeviceList:
         """Verify Suspend License shows a confirmation popup."""
         self._navigate_to_device_list()
 
+        # The device list is proved open by _navigate_to_device_list's
+        # breadcrumb wait, so a missing option icon is a regression
+        # (register item 25).
         options = self.license.options_icons
-        if options.count() == 0:
-            pytest.skip("No option icons for device")
+        expect(options.first).to_be_visible(timeout=10000)
 
         self.license.suspend_device(0)
 
@@ -279,9 +308,11 @@ class TestLicenseDeviceList:
         """Verify Unassign License shows a confirmation popup."""
         self._navigate_to_device_list()
 
+        # The device list is proved open by _navigate_to_device_list's
+        # breadcrumb wait, so a missing option icon is a regression
+        # (register item 25).
         options = self.license.options_icons
-        if options.count() == 0:
-            pytest.skip("No option icons for device")
+        expect(options.first).to_be_visible(timeout=10000)
 
         self.license.open_device_menu(0)
         self.license.unassign_option.click()

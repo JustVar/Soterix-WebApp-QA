@@ -43,6 +43,9 @@ class TestLprEventPlayback:
         cards = self.lpr.event_cards()
         try:
             cards.first.wait_for(state="visible", timeout=30000)
+        # deliberate: this timeout means the feed is empty, and the
+        # branch below proves that before it skips - it fails loud when
+        # the feed HAS content and only the card anchor missed
         except PWTimeoutError:
             has_content = (
                 self.page.get_by_text(re.compile(r"\d+%")).count() > 0
@@ -238,6 +241,9 @@ class TestLprEventPlayback:
         speed = self.page.get_by_text(re.compile(r"^[0-9.]+x$"))
         try:
             speed.first.wait_for(state="visible", timeout=3000)
+        # deliberate: the player chrome is proved up by the timeline
+        # readout above, so this timeout is the measured absence of a
+        # speed control, not a page that failed to load
         except PWTimeoutError:
             self.lpr.close_event_player()
             # Measured 08/12/2026: the LPR clip player has no speed

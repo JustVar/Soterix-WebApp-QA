@@ -38,10 +38,10 @@ class TestAdminAuditTrail:
         card = self.page.locator(".MuiCard-root").filter(
             has_text="Audit Trail"
         ).first
-        try:
-            card.wait_for(state="visible", timeout=10000)
-        except PlaywrightError:
-            pytest.skip("Audit Trail card not found on Admin > General")
+        # General is already proved up by the Rules sub-tab wait above,
+        # so a missing card here is a regression in a permanent control,
+        # not an absent artifact (register item 25).
+        card.wait_for(state="visible", timeout=10000)
 
         # exact=True: the card blurb contains 'review', so a substring
         # 'View' match clicks prose instead of the button. A View
@@ -171,12 +171,13 @@ class TestAdminAuditTrail:
         )
         try:
             pagination.first.wait_for(state="visible", timeout=5000)
-        # none within the bound - the page may load all records or
-        # scroll; hold as a skip until measured with more data
+        # deliberate: the audit rows are proved up by _first_row above,
+        # so this timeout is the measured absence of the control
         except PlaywrightError:
             pytest.skip(
-                "No pagination control renders on the current audit "
-                "page (records may fit one page)"
+                "The audit table has rows but renders no pagination "
+                "control (checked .MuiPagination-root, "
+                ".MuiTablePagination-root and nav[aria-label*=pagination])"
             )
         expect(pagination.first).to_be_visible()
 
@@ -191,9 +192,14 @@ class TestAdminAuditTrail:
         )
         try:
             next_btn.first.wait_for(state="visible", timeout=5000)
-        # no control - same one-page state as the test above
+        # deliberate: the audit rows are proved up by _first_row above,
+        # so this timeout is the measured absence of the control
         except PlaywrightError:
-            pytest.skip("No next-page control on the current audit page")
+            pytest.skip(
+                "The audit table has rows but renders no next-page control "
+                "(checked button[aria-label*=next] and a Next button), so "
+                "there is no page to turn"
+            )
         next_btn.first.click()
         # the first row changing is the page-turned signal
         expect(self.rows.first).not_to_have_text(

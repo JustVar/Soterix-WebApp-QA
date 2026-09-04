@@ -1,5 +1,6 @@
 """Favorites tests - add/remove camera favorites and verify panel contents."""
 import pytest
+from playwright.sync_api import expect
 
 from config.base_config import config
 from tests.shared.pages.views_page import ViewsPage
@@ -39,8 +40,9 @@ class TestViewsFavorites:
         if camera_name:
             return camera_name
         thumbnails = self.page.locator(".cameraThumbnailWrapper")
-        if thumbnails.count() == 0:
-            pytest.skip("No camera thumbnails available")
+        # Reached only when test_camera_name is unset, so the panel
+        # being empty as well leaves nothing to name.
+        expect(thumbnails.first).to_be_visible(timeout=10000)
         return thumbnails.first.inner_text().strip().split("\n")[0].strip()
 
     @pytest.mark.ui

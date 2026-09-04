@@ -153,6 +153,9 @@ class TestMediaClipOperations:
         self.media.click_tab("Folders")
         try:
             self.media.delete_item_named(folder)
+        # deliberate: the server refuses folder deletes on this tenant
+        # (filed defect, register App defects), so this handler catches
+        # a known app state, not a test failure
         except (PlaywrightError, RuntimeError):
             pytest.skip(
                 "Folder delete did not apply (filed defect - register "

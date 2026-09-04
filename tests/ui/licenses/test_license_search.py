@@ -164,10 +164,10 @@ class TestLicenseExport:
             "button:has-text('CSV'), button:has-text('Export'), button:has-text('Download')"
         ).first
 
-        if download_elem.count() == 0:
-            pytest.skip("No download element found")
-
-        # Verify element is visible
+        # The export control is part of the Licenses page furniture, so
+        # its absence is a regression, not an absent artifact. The old
+        # count()==0 read raced the render and skipped either way
+        # (register item 25).
         expect(download_elem).to_be_visible(timeout=10000)
 
         # Hover over the download element to activate it; the click's
@@ -185,10 +185,13 @@ class TestLicenseExport:
             with self.page.expect_download(timeout=15000) as download_info:
                 download_elem.click(force=True)
             download = download_info.value
+        # deliberate: a missing download EVENT is the observation gap
+        # described above, not a failed export - the click landed and
+        # the filename assertion below stays outside this handler
         except PlaywrightTimeoutError:
             pytest.skip(
-                "Download event was not captured within 15s - the export may "
-                "still work, but this run cannot verify it."
+                "No download event reached Playwright within 15s of the "
+                "export click, so this run has no file to check."
             )
 
         assert download.suggested_filename.endswith(".csv"), \

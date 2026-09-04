@@ -3,7 +3,8 @@
 Ruff checks Python style. This tool checks the rules ruff cannot see:
 uncommented sleeps, in-test QA Touch markers, absolute count oracles,
 icon locator guesses, hardcoded tenant names, except blocks that
-swallow failures into prints, test bodies with no oracle, early
+swallow failures into prints, skips raised from an except handler,
+skip reasons that guess at the app, test bodies with no oracle, early
 test-body returns (vacuous passes), .first/.last picks on union
 selectors, new tests that land without a title, without a
 "Steps:" block, or without a QA Touch mapping row, and Jira ticket
@@ -55,6 +56,16 @@ UNION_PICK_RE = re.compile(
     r"locator\(\s*[\"'][^\"']*,[^\"']*[\"']\s*\)\s*\.\s*(?:first|last)\b"
 )
 EXCEPT_RE = re.compile(r"^\s*except\b.*:")
+SKIP_RE = re.compile(r"\bpytest\.skip\s*\(")
+# A skip reason that hedges about the app records a guess, not a
+# measurement: the run then reports "not supported" for a locator
+# that simply moved. Measure it with tools/explore_app.py and say
+# what IS there (register item 25).
+SPECULATIVE_SKIP_RE = re.compile(
+    r"\b(?:may|might|maybe|possibly|probably|perhaps|seems|likely)\b"
+    r"|\bnot supported\b|\bwork differently\b",
+    re.IGNORECASE,
+)
 TEST_DEF_RE = re.compile(r"^\s*def (test_\w+)")
 CLASS_DEF_RE = re.compile(r"^(\s*)class (\w+)")
 DOCSTRING_OPEN_RE = re.compile(r"""^[rRuUbB]{0,2}("{3}|'{3}|"|')""")
@@ -312,6 +323,71 @@ def check_except_blocks(path: str, lines: list[str]) -> list[dict]:
     return findings
 
 
+def check_skip_in_except(path: str, lines: list[str]) -> list[dict]:
+    """pytest.skip raised from an except handler.
+
+    The except-swallow rule catches a handler that prints or passes.
+    A handler that skips is the same defect wearing a report: the run
+    says "not supported" where the app actually raised, and nobody
+    reads a skip as a failure. Register item 25 found five of these -
+    a drag that threw, a dialog that never opened - each reported for
+    weeks as a missing feature.
+
+    A why-comment on the except line (or the line above) excuses the
+    deliberate ones: a fixture that skips because the environment is
+    genuinely absent, not because a step failed.
+    """
+    findings = []
+    for idx, line in enumerate(lines):
+        if not EXCEPT_RE.match(line):
+            continue
+        if "#" in line or (idx > 0 and lines[idx - 1].strip().startswith("#")):
+            continue
+        for i in _block_range(lines, idx):
+            if SKIP_RE.search(lines[i]) and not inside_triple_quote(lines, i):
+                findings.append({
+                    "sev": "HIGH", "rule": "skip-in-except",
+                    "path": path, "line": i + 1, "text": lines[i].strip(),
+                    "msg": "pytest.skip inside an except block: the app "
+                           "raised and the run reports SKIP. Let it fail, "
+                           "or comment why absence - not failure - is what "
+                           "this handler caught.",
+                })
+                break
+    return findings
+
+
+def check_speculative_skips(path: str, lines: list[str]) -> list[dict]:
+    """Skip reasons that guess at the app instead of stating a measurement.
+
+    "may not be supported in current app version" is a hypothesis
+    written into a green run. The reason line is the only record a
+    reader gets, so it has to say what was measured and what was on
+    screen instead. Probe it (tools/explore_app.py) and write the
+    finding, or let the test fail.
+    """
+    findings = []
+    for idx, line in enumerate(lines):
+        if not SKIP_RE.search(line):
+            continue
+        if inside_triple_quote(lines, idx):
+            continue
+        # the reason can run onto the following lines
+        block = " ".join(
+            lines[i] for i in range(idx, min(idx + 4, len(lines)))
+        )
+        reason = block[block.index("pytest.skip"):]
+        if SPECULATIVE_SKIP_RE.search(reason):
+            findings.append({
+                "sev": "MEDIUM", "rule": "speculative-skip-reason",
+                "path": path, "line": idx + 1, "text": line.strip(),
+                "msg": "skip reason guesses at the app (may/might/not "
+                       "supported). State what was measured and what was "
+                       "on screen instead, or let the test fail.",
+            })
+    return findings
+
+
 def check_no_oracle_tests(path: str, lines: list[str]) -> list[dict]:
     """Test functions whose body can never fail.
 
@@ -478,6 +554,8 @@ def main() -> int:
             for idx in range(len(lines)):
                 findings.extend(check_line(path, lines, idx))
             findings.extend(check_except_blocks(path, lines))
+            findings.extend(check_skip_in_except(path, lines))
+            findings.extend(check_speculative_skips(path, lines))
             findings.extend(check_no_oracle_tests(path, lines))
             findings.extend(check_early_exit_tests(path, lines))
     else:
@@ -490,6 +568,13 @@ def main() -> int:
             # Block rules anchor on the except/def line; only blocks
             # the diff touched are reported
             for f in check_except_blocks(path, lines):
+                if f["line"] in added:
+                    findings.append(f)
+            # both skip rules anchor on the skip line itself
+            for f in check_skip_in_except(path, lines):
+                if f["line"] in added:
+                    findings.append(f)
+            for f in check_speculative_skips(path, lines):
                 if f["line"] in added:
                     findings.append(f)
             for f in check_no_oracle_tests(path, lines):

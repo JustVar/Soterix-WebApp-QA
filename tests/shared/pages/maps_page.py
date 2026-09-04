@@ -59,7 +59,14 @@ class MapsPage:
     # --- Site selection ---
 
     def select_site(self, site_name: str):
-        """Open dropdown and select a site by name."""
+        """Open dropdown and select a site by name.
+
+        Raises listing the sites that ARE offered when the named one is
+        missing. The shared tenant renames sites under the tests, and
+        the old callers turned that into "No sites available in
+        dropdown" - a skip that read the same as a broken page
+        (register item 25).
+        """
         self.site_dropdown.click()
 
         # the options container's own wait is the opened signal
@@ -68,12 +75,39 @@ class MapsPage:
         # the bare site name (probe 09/02/2026); the old text= engine was
         # a case-insensitive substring. Strictness kept - no .first.
         site_option = self.dropdown_options.get_by_text(site_name, exact=True)
+        # typed: an absent option is the drift this guard reports; any
+        # other Playwright fault keeps its own message
+        try:
+            site_option.wait_for(state="visible", timeout=10000)
+        except PlaywrightError:
+            offered = self.list_site_options()
+            detail = offered or (
+                "none - the dropdown rendered empty, which is a broken "
+                "page, not a data gap"
+            )
+            raise AssertionError(
+                "The configured site " + repr(site_name) + " is not in the "
+                "Maps site dropdown. Sites offered: " + str(detail) + ". "
+                "Update test_site_name in config/env/ to match."
+            ) from None
         site_option.scroll_into_view_if_needed()
         site_option.click()
 
         # the first card is the loaded signal; the grid populates in
         # one render, so no further settle
         self.map_cards.first.wait_for(state="visible", timeout=60000)
+
+    def list_site_options(self) -> list:
+        """Site names in the ALREADY OPEN dropdown, for a failure message."""
+        options = self.dropdown_options.locator("p, div, span")
+        names = []
+        for i in range(options.count()):
+            # inner_text() may carry a count badge after a newline
+            text = options.nth(i).inner_text().strip().splitlines()
+            first = text[0].strip() if text else ""
+            if first and first not in names:
+                names.append(first)
+        return names
 
     def get_site_options(self) -> list:
         """Open dropdown and return available site names."""

@@ -163,6 +163,9 @@ def api() -> InternalApi:
     try:
         client.login(user, password)
         sites = {int(site["siteId"]): site["name"] for site in client.get("/REST/site")}
+    # deliberate: this fixture is optional test-data plumbing, so an
+    # internal API that is down blocks the tests that need it without
+    # failing a UI suite that does not (register item 25)
     except (ApiError, requests.RequestException) as e:
         pytest.skip(f"API login or site list failed on {config['base_url']}: {e}")
 

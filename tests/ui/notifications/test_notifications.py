@@ -1,6 +1,7 @@
 """Notification tests - mute notifications, clear all, admin rule mute."""
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
+from tests.shared.helpers.surface import require_items
 
 
 class TestNotifications:
@@ -84,16 +85,24 @@ class TestNotifications:
         rules_tab.wait_for(state="visible", timeout=10000)
         rules_tab.click()
 
-        # rule rows render async; the first mute icon is the signal,
-        # a miss routes to the skip below
+        # The mute icons are the artifact and the rules list is the
+        # surface that proves the page is up. A list with no rule is the
+        # tenant's data; a list that never rendered is a fault, and the
+        # old count()==0 read told them apart not at all (item 25).
+        # The rule-owning coverage of mute lives in
+        # test_admin_rules.test_mute_rule_notification, which makes its
+        # own rule; this test stays on whatever the tenant holds.
         mute_icons = self.page.locator("img[aria-label='Mute Notification']")
-        try:
-            mute_icons.first.wait_for(state="visible", timeout=10000)
-        # none within the bound means no rules carry the icon
-        except PlaywrightError:
-            pass
-        if mute_icons.count() == 0:
-            pytest.skip("No mute notification icons found (no rules exist)")
+        require_items(
+            mute_icons,
+            # the rule search bar, not the table: a tenant with no rule
+            # renders an empty state and NO table at all, so the table
+            # made an honest data skip fail (measured 09/04/2026)
+            container=self.page.locator("input.input-search-bar"),
+            surface="Admin > General > Rules",
+            artifact="rule with a Mute Notification icon",
+            empty_means="this tenant has no rule to mute",
+        )
 
         # Click the last mute icon (same as Selenium test)
         mute_icons.last.click()

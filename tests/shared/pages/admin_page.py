@@ -466,6 +466,13 @@ class AdminPage:
 
         Name-scoped so cleanup never deletes a team-owned rule on the
         shared tenant.
+
+        Raises when the rule is still listed afterwards. It used to
+        return True on a delete that never landed, and one surviving
+        rule is not a tidiness problem here: the wizard hides a camera
+        that is at rule capacity, so a single leftover made the
+        configured camera vanish from Select Devices and every later
+        run failed there (measured 09/04/2026, register item 25).
         """
         self.search_rule(name)
         try:
@@ -476,8 +483,60 @@ class AdminPage:
             self.search_rule("")
             return False
         self.delete_rule(0)
+        # The filter is still on the name, so zero delete icons is the
+        # deleted signal - and the oracle this method used to lack.
+        try:
+            expect(self.rule_delete_icons).to_have_count(0, timeout=15000)
+        except AssertionError:
+            self.search_rule("")
+            raise RuntimeError(
+                f"The rule '{name}' is still listed after its delete was "
+                f"confirmed. Delete it by hand: while it exists, its camera "
+                f"is at rule capacity and the wizard will not offer that "
+                f"camera to any later run."
+            ) from None
         self.search_rule("")
         return True
+
+    def edit_rule_by_name(self, name: str):
+        """Open the details drawer of the rule with the given name.
+
+        Name-scoped so a test never opens a team-owned rule on the
+        shared tenant (register item 25; the index form did).
+        """
+        self._only_row_named(name)
+        self.edit_rule(0)
+        self.search_rule("")
+
+    def close_rule_details(self):
+        """Close the rule details drawer.
+
+        Escape dismisses it (probed 09/04/2026); the drawer also has a
+        close icon. Leaving it open is not cosmetic: it covers the rule
+        list with a MuiBox backdrop that swallows clicks, so the next
+        search - a teardown's delete included - cannot reach the search
+        input at all (register item 25).
+        """
+        self.page.keyboard.press("Escape")
+        self.rule_details_panel.wait_for(state="hidden", timeout=10000)
+
+    def mute_rule_by_name(self, name: str):
+        """Mute the notification of the rule with the given name."""
+        self._only_row_named(name)
+        self.mute_rule_notification(0)
+        self.search_rule("")
+
+    def _only_row_named(self, name: str):
+        """Filter the rule list down to the one rule called `name`.
+
+        The list truncates the Name cell in the DOM, so the filter is
+        the identity check: exactly one row must survive it. Zero rows
+        means the rule is not there and more than one means the filter
+        did not settle - both are faults, and both used to read as
+        "no rules with icons found" (register item 25).
+        """
+        self.search_rule(name)
+        expect(self.rule_edit_icons).to_have_count(1, timeout=15000)
 
     def delete_rule(self, index: int = -1):
         """Delete a rule at the given index.

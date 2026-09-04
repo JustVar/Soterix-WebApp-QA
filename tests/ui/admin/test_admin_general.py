@@ -132,13 +132,11 @@ class TestAdminGeneral:
         """
         self._open_general()
 
-        # Wait for the tab before deciding to skip - an instant count()/
-        # is_visible() check races the General content render
+        # _open_general has already proved the section rendered, so a
+        # missing Audit Trail entry is a regression in a permanent
+        # control, not an absent artifact (register item 25).
         audit = self.page.get_by_text("Audit Trail", exact=False).first
-        try:
-            audit.wait_for(state="visible", timeout=10000)
-        except Exception:
-            pytest.skip("Audit Trail tab not found in General section")
+        audit.wait_for(state="visible", timeout=10000)
 
         audit.click()
 
@@ -161,13 +159,11 @@ class TestAdminGeneral:
         """Verify clicking Event Wall opens the event wall view."""
         self._open_general()
 
-        # Wait for the tab before deciding to skip - an instant count()/
-        # is_visible() check races the General content render
+        # _open_general has already proved the section rendered, so a
+        # missing Event Wall entry is a regression in a permanent
+        # control, not an absent artifact (register item 25).
         event_wall = self.page.get_by_text("Event Wall", exact=False).first
-        try:
-            event_wall.wait_for(state="visible", timeout=10000)
-        except Exception:
-            pytest.skip("Event Wall tab not found in General section")
+        event_wall.wait_for(state="visible", timeout=10000)
 
         event_wall.click()
 

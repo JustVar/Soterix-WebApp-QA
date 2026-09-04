@@ -48,10 +48,10 @@ class TestEventWallConfig:
         card = self.page.locator(".MuiCard-root").filter(
             has_text="Event Wall"
         ).first
-        try:
-            card.wait_for(state="visible", timeout=10000)
-        except PlaywrightError:
-            pytest.skip("Event Wall card not found on Admin > General")
+        # General is already proved up by the Rules sub-tab wait above,
+        # so a missing card here is a regression in a permanent control,
+        # not an absent artifact (register item 25).
+        card.wait_for(state="visible", timeout=10000)
         card.get_by_text("View", exact=True).first.click()
 
         # the Add Configuration button is the arrived signal
@@ -188,12 +188,14 @@ class TestEventWallConfig:
         )
         try:
             selectors.first.wait_for(state="visible", timeout=5000)
-        # none visible: the row itself may be the selection control
+        # deliberate: the panel and its expanded rows are proved up
+        # above, so this timeout is the measured absence of the control
         except PlaywrightError:
             self._close_add_form()
             pytest.skip(
-                "Expanded camera rows expose no checkbox on the "
-                "current form - selection may be row-click based"
+                "The Available Cameras panel shows its expanded camera rows "
+                "but no checkbox in them (checked input[type=checkbox], "
+                ".MuiCheckbox-root and input.PrivateSwitchBase-input)"
             )
         self._close_add_form()
 
@@ -215,10 +217,14 @@ class TestEventWallConfig:
         ).last.locator("input[type='checkbox']")
         try:
             boxes.first.wait_for(state="visible", timeout=5000)
-        # no checkbox: same current-form behavior as the test above
+        # deliberate: the panel and its camera row are proved up above,
+        # so this timeout is the measured absence of the control
         except PlaywrightError:
             self._close_add_form()
-            pytest.skip("No toggleable checkbox on the current form")
+            pytest.skip(
+                "The Available Cameras panel shows the camera row but no "
+                "input[type=checkbox] inside it to toggle"
+            )
         before = boxes.first.is_checked()
         boxes.first.click()
         if before:

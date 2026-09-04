@@ -206,3 +206,57 @@ def test_early_exit_still_flags_a_bare_return():
     ]
     rules = [f['rule'] for f in cc.check_early_exit_tests('x.py', lines)]
     assert rules == ['early-exit-pass']
+
+
+def test_skip_in_except_is_flagged_high():
+    """A handler that skips reports the app's failure as SKIP."""
+    lines = [
+        'def test_drag(page):',
+        '    """Title."""',
+        '    try:',
+        '        page.drag()',
+        '    except Exception as e:',
+        '        pytest.' + 'skip(f"drag not supported: {e}")',
+    ]
+    findings = cc.check_skip_in_except('x.py', lines)
+    assert [f['rule'] for f in findings] == ['skip-in-except']
+    assert findings[0]['sev'] == 'HIGH'
+    assert findings[0]['line'] == 6
+
+
+def test_skip_in_except_excused_by_a_why_comment():
+    """A commented handler is the deliberate one: absence, not failure."""
+    lines = [
+        '    # the wall account is not provisioned on this box',
+        '    except LookupError:',
+        '        pytest.' + 'skip("no wall account")',
+    ]
+    assert not cc.check_skip_in_except('x.py', lines)
+
+
+def test_speculative_skip_reasons_are_flagged():
+    """A hedged reason records a guess, not a measurement."""
+    for reason in ['"feature may not be supported"',
+                   '"drag not supported in this version"',
+                   '"channel add can work differently here"']:
+        lines = ['    pytest.' + f'skip({reason})']
+        rules = [f['rule'] for f in cc.check_speculative_skips('x.py', lines)]
+        assert rules == ['speculative-skip-reason'], reason
+
+
+def test_measured_skip_reason_is_clean():
+    """A reason that states what was measured raises nothing."""
+    lines = ['    pytest.' + 'skip("Licenses > Assigned rendered its empty '
+             'state: this tenant has no assigned licence")']
+    assert not cc.check_speculative_skips('x.py', lines)
+
+
+def test_speculative_reason_read_across_wrapped_lines():
+    """A reason wrapped onto the next line is still read."""
+    lines = [
+        '        pytest.' + 'skip(',
+        '            "No map card has cameras - may be a selector issue"',
+        '        )',
+    ]
+    rules = [f['rule'] for f in cc.check_speculative_skips('x.py', lines)]
+    assert rules == ['speculative-skip-reason']

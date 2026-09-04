@@ -5,6 +5,7 @@ Tests the in-camera search overlay that opens from the video player controls,
 allowing Person/Vehicle search with filters within a single camera's feed.
 """
 import pytest
+from playwright.sync_api import expect
 
 from tests.shared.pages.fullscreen_page import FullScreenPage
 from tests.shared.pages.incamera_search_page import InCameraSearchPage
@@ -37,15 +38,22 @@ class TestInCameraSearch:
             print(f"\nDEBUG: camera_thumbnails count = {thumb_count}")
             print(f"DEBUG: page URL = {self.page.url}")
 
-            if thumb_count == 0:
-                pytest.skip("No camera thumbnails available - cannot set up stream")
+            # expand_site_and_show_cameras only returns once cameras
+            # are visible, so an empty count here contradicts it: the
+            # panel is broken, not empty (register item 25).
+            assert thumb_count > 0, (
+                "The camera panel reports cameras visible but no "
+                ".cameraThumbnailWrapper is on screen, so no camera can be "
+                "added to set up the stream"
+            )
 
             # the tile appearing is the added signal
             self.views.add_first_camera_via_checkbox()
-            try:
-                video_tiles.first.wait_for(state="visible", timeout=30000)
-            except Exception:
-                pytest.skip("Camera stream did not load in time")
+            # A tile that never appears is the tenant's stream failure,
+            # and it goes red so it gets counted - run.py
+            # --retry-streams reruns exactly that class. The old
+            # handler reported it as Blocked (register item 25).
+            video_tiles.first.wait_for(state="visible", timeout=30000)
 
         # Enter fullscreen; the stream-loaded wait is the entered signal
         self.views.enter_fullscreen_on_tile(0)
@@ -67,9 +75,10 @@ class TestInCameraSearch:
         """
         ics = InCameraSearchPage(self.page)
 
-        # Open in-camera search
-        if ics.search_icon.count() == 0:
-            pytest.skip("In-camera search icon not available on this camera")
+        # The setup put the camera in fullscreen and waited for its
+        # stream, so the player chrome is up: a missing search icon is
+        # a regression, not an absent artifact (register item 25).
+        expect(ics.search_icon.first).to_be_visible(timeout=10000)
 
         ics.open_search()
 
@@ -98,8 +107,8 @@ class TestInCameraSearch:
         """
         ics = InCameraSearchPage(self.page)
 
-        if ics.search_icon.count() == 0:
-            pytest.skip("In-camera search icon not available on this camera")
+        # Same as above: the player chrome is proved up by the setup.
+        expect(ics.search_icon.first).to_be_visible(timeout=10000)
 
         ics.open_search()
         ics.select_category(index=0)
@@ -108,7 +117,15 @@ class TestInCameraSearch:
         ics.execute_search(timeout=60000)
 
         if not ics.has_results():
-            pytest.skip("No search results to play")
+            # The search ran to completion above, so this is the
+            # tenant's data: no Person/Male detection on this camera
+            # today. test_incamera_search asserts the same search DOES
+            # return results, so a standing skip here means that test
+            # is red too.
+            pytest.skip(
+                "The Person/Male/Today in-camera search returned no result "
+                "to play on this camera"
+            )
 
         # oracle: play_result raises unless the player's play button
         # appears after the result click

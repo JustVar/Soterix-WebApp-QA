@@ -7,6 +7,7 @@ import pytest
 from playwright.sync_api import expect
 
 from config.base_config import config
+from tests.shared.helpers.surface import require_items
 from tests.shared.pages.admin_page import AdminPage
 
 
@@ -61,14 +62,35 @@ class TestAdminSites:
         headers = self.page.locator(
             "*:has(> p.MuiTypography-root):has(img[alt='Options'])"
         )
-        try:
-            headers.first.wait_for(state="visible", timeout=10000)
-        except Exception:
-            pytest.skip("No site cards found on the Sites page")
+        # A tenant always has at least one site - it is what everything
+        # else hangs off - so an empty Sites page is a broken page, not
+        # an absent artifact. Both of these used to skip (register
+        # item 25).
+        headers.first.wait_for(state="visible", timeout=10000)
         name = headers.first.locator("p.MuiTypography-root").first.inner_text().strip()
-        if not name:
-            pytest.skip("Site card has no readable name")
+        assert name, (
+            "The first site card on Admin > Sites renders no name in its "
+            "header paragraph, so no site can be opened by name"
+        )
         self.admin.click_site(name)
+
+    def _require_online_site(self):
+        """An online site on the Sites page, proved or explained.
+
+        Site cards are the surface. Cards with no online marker are the
+        tenant's data; a page with no cards never rendered and is a
+        fault. The old `_appears` read reported both as one skip
+        (register item 25).
+        """
+        require_items(
+            self.admin.online_status_icons,
+            container=self.page.locator(
+                "*:has(> p.MuiTypography-root):has(img[alt='Options'])"
+            ),
+            surface="Admin > Sites",
+            artifact="site card with an online marker",
+            empty_means="every site on this tenant is offline",
+        )
 
     def _skip_if_redesigned_detail(self):
         """Legacy drift guard kept for test_camera_sorting only.
@@ -180,8 +202,7 @@ class TestAdminSites:
         """Verify clicking a site card navigates into the site detail view."""
         self._navigate_to_sites()
 
-        if not self._appears(self.admin.online_status_icons):
-            pytest.skip("No online sites found")
+        self._require_online_site()
 
         self._open_first_site()
 
@@ -202,15 +223,19 @@ class TestAdminSites:
         self._navigate_to_sites()
 
         # Navigate into a site first
-        if not self._appears(self.admin.online_status_icons):
-            pytest.skip("No online sites to test camera sorting")
+        self._require_online_site()
 
         self._open_first_site()
         self._skip_if_redesigned_detail()
 
-        # Sort A-Z
+        # Sort A-Z. The detail page is open (the helper above proved
+        # it), so this is the measured absence of a sort control on the
+        # current layout, not a page that failed to load.
         if not self._appears(self.admin.sort_az_icon):
-            pytest.skip("Sort icons not found in site detail")
+            pytest.skip(
+                "The site detail page renders no A-Z sort icon, so there is "
+                "no sort control to exercise on this layout"
+            )
 
         self.admin.click_sort_az()
         names_az = self.admin.get_camera_names()
@@ -341,9 +366,9 @@ class TestAdminSites:
             )
 
         self._navigate_to_sites()
-        if not self._appears(self.page.locator(
-                f"p.MuiTypography-root:text-is('{site_name}')")):
-            pytest.skip(f"Site '{site_name}' not on the Sites page")
+        # No pre-check: click_site raises naming every site that IS on
+        # the page, which is the tenant-rename fix in one line. The old
+        # pre-check turned that into a skip (register item 25).
         self.admin.click_site(site_name)
 
         # Camera rows render async after the detail marker; each row

@@ -210,8 +210,8 @@ Rules for any new fixture:
 
 A test whose artifact is absent has proved nothing, so it must never
 report green. It does not today: a skip uploads to QA Touch as Blocked,
-never Passed. Skip is still the weakest outcome, and two rules keep it
-honest.
+never Passed. Skip is still the weakest outcome, and four rules keep
+it honest.
 
 1. Create what the UI can create. A clip, folder, bookmark, user or
    saved view the test could have made is not a reason to skip. Make it,
@@ -223,9 +223,24 @@ honest.
    did not load, fail. test_drag_location_to_tile had only ever skipped
    (register item 13), and three maps tests skipped on every run until a
    map existed (item 22).
+   `tests/shared/helpers/surface.py` is that check in one call:
+   `require_items` waits for the rows, then decides between an empty
+   surface (skip) and a surface that never rendered (fail).
+3. A skip is never a failure handler. `except Exception: pytest.skip(...)`
+   reports the app's own error as Blocked, and it catches the test's
+   asserts too - test_drag_map_to_tile ran its closing assert inside one,
+   so the test could pass or skip but never fail. Let the failure raise.
+   The checker rule is `skip-in-except`; a why-comment on the handler
+   excuses the case where the exception really does mean absence.
+4. A skip reason states a measurement, not a guess. "may not be supported
+   in current app version" is a hypothesis written into a green run, and
+   it stays there for months because nobody reads a skip. Probe the
+   surface (`tools/explore_app.py`), then write what is on screen. The
+   checker rule is `speculative-skip-reason`.
 
 A test that skips on every run is dead coverage, not a passing test.
-Check the run record for skips that never turn green.
+Check the run record for skips that never turn green. Register item 25
+is the audit of every skip in the UI suite against these four rules.
 
 ## Markers
 
