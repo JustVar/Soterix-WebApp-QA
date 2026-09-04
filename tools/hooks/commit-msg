@@ -10,6 +10,10 @@
 # depends on remembering is a policy that fails; this one fails the
 # commit instead.
 #
+# A co-author line is matched only when it names an AI vendor or model:
+# dependabot and other real bots co-author legitimately, and four such
+# lines already sit in this history.
+#
 # Install: copy this file to .git/hooks/commit-msg (no extension) and
 # make it executable. Bypass only for a genuine emergency:
 # git commit --no-verify.
@@ -20,12 +24,12 @@ msg_file="$1"
 body=$(grep -v '^#' "$msg_file")
 
 if printf '%s' "$body" | grep -qiE \
-    'co-authored-by|generated with \[?claude|claude code|anthropic|noreply@anthropic|🤖'
+    'co-authored-by:.*(anthropic|claude|copilot|gpt|gemini)|generated with \[?claude|claude code|anthropic|noreply@anthropic|🤖'
 then
     echo "commit-msg: this message names an AI tool, model or co-author."
     echo ""
     printf '%s' "$body" | grep -inE \
-        'co-authored-by|generated with \[?claude|claude code|anthropic|noreply@anthropic|🤖' \
+        'co-authored-by:.*(anthropic|claude|copilot|gpt|gemini)|generated with \[?claude|claude code|anthropic|noreply@anthropic|🤖' \
         | sed 's/^/    /'
     echo ""
     echo "House rule (workspace CLAUDE.md > Commit Message Policy): commit"
