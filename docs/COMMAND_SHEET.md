@@ -186,9 +186,20 @@ venv\Scripts\python.exe tools/convention_check.py
 venv\Scripts\python.exe -m pytest tests/plugins tests/tools --html=logs/scratch.html
 ```
 
-The pre-commit hook runs the convention checker on every commit. A HIGH
-finding blocks the commit. Read `docs/CONVENTIONS.md` for the rules and
-`docs/TEAM_CHANGES.md` before you review a teammate's change.
+Two hooks live in `tools/hooks/`. Install both once, into `.git/hooks/`
+with no extension:
+
+```
+cp tools/hooks/pre-commit  .git/hooks/pre-commit
+cp tools/hooks/commit-msg  .git/hooks/commit-msg
+```
+
+`pre-commit` runs the convention checker on the lines the commit adds; a
+HIGH finding blocks it. `commit-msg` rejects any message naming an AI
+tool, model or co-author - the workspace CLAUDE.md forbids it and the
+rule had been broken 14 times before the gate existed. Read
+`docs/CONVENTIONS.md` for the rules and `docs/TEAM_CHANGES.md` before you
+review a teammate's change.
 
 ## 9. Quick fixes
 

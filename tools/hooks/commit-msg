@@ -1,0 +1,37 @@
+#!/bin/sh
+# Attribution gate: nothing this repo commits names an AI tool, model or
+# co-author. The rule is in the workspace CLAUDE.md ("Commit Message
+# Policy") and it is absolute - commit messages describe what the code
+# change does, not how it was produced.
+#
+# This hook exists because the rule was stated and still broken: 14
+# commits on 09/03-09/04 carry a Co-Authored-By line and were pushed to
+# both remotes before anyone noticed (register item 31). A policy that
+# depends on remembering is a policy that fails; this one fails the
+# commit instead.
+#
+# Install: copy this file to .git/hooks/commit-msg (no extension) and
+# make it executable. Bypass only for a genuine emergency:
+# git commit --no-verify.
+msg_file="$1"
+
+# Strip comment lines - git's own template mentions nothing we match,
+# but a reviewer's quoted text should not trip the gate.
+body=$(grep -v '^#' "$msg_file")
+
+if printf '%s' "$body" | grep -qiE \
+    'co-authored-by|generated with \[?claude|claude code|anthropic|noreply@anthropic|🤖'
+then
+    echo "commit-msg: this message names an AI tool, model or co-author."
+    echo ""
+    printf '%s' "$body" | grep -inE \
+        'co-authored-by|generated with \[?claude|claude code|anthropic|noreply@anthropic|🤖' \
+        | sed 's/^/    /'
+    echo ""
+    echo "House rule (workspace CLAUDE.md > Commit Message Policy): commit"
+    echo "messages and PR bodies describe WHAT THE CODE CHANGE DOES, never"
+    echo "how it was produced. No attribution, no model names, no tool names."
+    echo "Rewrite the message and commit again."
+    exit 1
+fi
+exit 0
