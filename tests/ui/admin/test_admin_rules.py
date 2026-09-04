@@ -51,7 +51,14 @@ class TestAdminRules:
             # item 25; the capacity behaviour is in Known app
             # behavior).
             try:
+                # Escape clears the details drawer; the wizard needs its
+                # own Exit button, which is what a test that died part
+                # way through the wizard leaves on screen. Measured
+                # 09/04/2026: Escape does nothing to the wizard and it
+                # shares the list's URL, so neither a key nor a goto
+                # gets out of it - only Exit does.
                 self.page.keyboard.press("Escape")
+                self.admin.leave_rule_wizard()
                 if not self.admin.rule_search_input.is_visible():
                     self._navigate_to_rules()
             # teardown: an unreachable list must not mask the test

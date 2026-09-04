@@ -508,6 +508,28 @@ class AdminPage:
         self.edit_rule(0)
         self.search_rule("")
 
+    def leave_rule_wizard(self):
+        """Return to the rules list from anywhere in the rule wizard.
+
+        Safe to call when the wizard is not open. A test that dies part
+        way through the wizard leaves it covering the list, and the
+        wizard is NOT a modal: Escape does nothing to it, and it shares
+        the /admin URL with the list, so a goto lands right back in it
+        (both probed 09/04/2026). Its own Exit button is the way out -
+        one click, no confirmation.
+
+        This is the teardown's only route back, and the teardown is
+        what stops a half-made rule from leaking onto the configured
+        camera and putting it at rule capacity (register item 28).
+        """
+        if self.rule_search_input.is_visible():
+            return
+        exit_button = self.page.get_by_text("Exit", exact=True)
+        if not exit_button.count():
+            return
+        exit_button.first.click()
+        self.rule_search_input.wait_for(state="visible", timeout=15000)
+
     def close_rule_details(self):
         """Close the rule details drawer.
 
