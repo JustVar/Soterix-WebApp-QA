@@ -19,10 +19,20 @@ command line, and a run with --delete-channel does just that step.
     python tools/tenant_cleanup.py --delete-channel 123 --delete-channel Google
     python tools/tenant_cleanup.py --apply --delete-channel 123
 
-Logs in fresh with QA_USER / QA_PASSWORD from .env (the same account the
-tests use), headless. Every delete goes through the admin page object's
-name-scoped helpers, so a list that is still filtering can never hand the
-delete a stranger's row.
+BOX picks the account, so BOX picks the TENANT this deletes from:
+
+    BOX=us python tools/tenant_cleanup.py --apply
+
+It logs in headless as the active box's account and prints that address
+and the site before it lists anything - read those two lines before you
+pass --apply. Reading QA_USER directly sent every run to the default box
+whatever BOX said, so `BOX=us ... --apply` would have deleted from India
+(register item 30; item 23 was the same defect in explore_app.py).
+
+The site is the box's configured test_site_name, not whichever card the
+Sites page happens to list first. Every delete goes through the admin
+page object's name-scoped helpers, so a list that is still filtering can
+never hand the delete a stranger's row.
 """
 from __future__ import annotations
 
@@ -42,7 +52,7 @@ load_dotenv(ROOT / '.env')
 
 from playwright.sync_api import sync_playwright  # noqa: E402
 
-from config.base_config import config  # noqa: E402
+from config.base_config import config, get_credentials  # noqa: E402
 
 GROUP_PATTERNS = [
     re.compile(r'^AutoTest Group\b'),
@@ -51,6 +61,8 @@ GROUP_PATTERNS = [
     re.compile(r'^2026.*AutomationEdited\b'),
 ]
 USER_PATTERN = re.compile(r'^AutoTest\b')
+# The user cards repeat one display name, so the e-mail is the identity
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 # A channel card is the grid item around its three-dots icon; the name
 # is its p.textEllipsis and the url its p.lineClampTwoLine (probed
@@ -76,21 +88,66 @@ GROUP_NAMES_JS = r"""() => [...document.querySelectorAll("img[alt='delete'].dele
 }).filter(Boolean)"""
 
 
+def active_account() -> tuple[str, str]:
+    """The active box's account, falling back to the default one.
+
+    A destructive tool must never guess its tenant. get_credentials()
+    reads the box BOX names; the QA_USER fallback keeps a config with no
+    box definitions working.
+    """
+    try:
+        creds = get_credentials()
+    except (KeyError, RuntimeError):
+        creds = {}
+    user = creds.get('email') or os.environ.get('QA_USER', '')
+    password = creds.get('password') or os.environ.get('QA_PASSWORD', '')
+    if not user or not password:
+        raise SystemExit(
+            'No account for this box. Set the box variables it names in '
+            '.env (see config/env/), or QA_USER / QA_PASSWORD.'
+        )
+    return user, password
+
+
 def _login(page):
     from tests.shared.pages.login_page import LoginPage
-    LoginPage(page, config['base_url']).login(os.environ['QA_USER'],
-                                             os.environ['QA_PASSWORD'])
+    user, password = active_account()
+    box = os.environ.get('BOX', '').strip().lower() or config.get('default_box', '')
+    print(f'Tenant:  box={box or "(default)"}  account={user}')
+    LoginPage(page, config['base_url']).login(user, password)
     page.wait_for_function(
         "() => !window.location.href.includes('/auth/login')", timeout=60000)
     page.wait_for_load_state('domcontentloaded', timeout=30000)
     page.locator('text=Views').first.wait_for(state='visible', timeout=30000)
 
 
-def _open_first_site(page, admin) -> str:
-    """Same structural card locator the sites tests use."""
+def _open_configured_site(page, admin) -> str:
+    """Open the box's configured site, or say which sites ARE listed.
+
+    Taking the first card meant a multi-site tenant got its groups
+    cleaned on whichever site the page happened to list first - the
+    same silent first-match this repo has repaired elsewhere. A
+    destructive tool names its target (register item 30).
+    """
     headers = page.locator("*:has(> p.MuiTypography-root):has(img[alt='Options'])")
     headers.first.wait_for(state='visible', timeout=15000)
-    name = headers.first.locator('p.MuiTypography-root').first.inner_text().strip()
+    listed = page.evaluate(
+        """() => [...document.querySelectorAll("*:has(> p.MuiTypography-root):has(img[alt='Options'])")]
+             .map(h => (h.querySelector('p.MuiTypography-root')?.innerText || '').trim())
+             .filter(Boolean)"""
+    )
+    name = config.get('test_site_name') or ''
+    if not name:
+        raise SystemExit(
+            'test_site_name is not set for this box in config/env/, so this '
+            f'run has no site to clean. Sites on the tenant: {listed}'
+        )
+    if name not in listed:
+        raise SystemExit(
+            f'The configured site {name!r} is not on the Sites page. '
+            f'Sites listed: {listed}. Either BOX names the wrong tenant or '
+            f'test_site_name is stale in config/env/.'
+        )
     admin.click_site(name)
     return name
 
@@ -101,16 +158,47 @@ def _group_candidates(page) -> list[str]:
 
 
 def _user_candidates(page, admin) -> list[str]:
+    """The automation's leftover users, identified by e-mail.
+
+    Returns e-mails, not names: every user the suite makes is called
+    "AutoTest Playwright", so a name identifies the whole set and could
+    hand a delete the wrong row. The e-mail carries the run stamp and
+    is unique per user.
+
+    The old reader read only the card's FIRST line and matched it
+    against ^AutoTest. That line is the avatar's initials ("AP"), so it
+    matched nothing and the tool reported "0 automation leftover(s)"
+    with ten of them on screen (measured 09/04/2026). A cleanup tool
+    that under-reports is worse than one that does not run: it makes
+    the leak look fixed.
+    """
     admin.search_user('AutoTest')
     # the filter has no completion signal; a bounded settle then a read
     page.wait_for_timeout(3000)
     cards = page.locator('.MuiPaper-root', has_text='AutoTest')
-    names = []
+    found = []
     for i in range(cards.count()):
-        first_line = cards.nth(i).inner_text().strip().split('\n')[0].strip()
-        if USER_PATTERN.match(first_line):
-            names.append(first_line)
-    return sorted(set(names))
+        email = user_email_from_card(cards.nth(i).inner_text())
+        if email:
+            found.append(email)
+    return sorted(set(found))
+
+
+def user_email_from_card(card_text: str) -> str | None:
+    """The e-mail of an automation user card, or None if it is not one.
+
+    Pure, so it can be pinned without a browser. A card reads
+    "AP / AutoTest Playwright / Remote User / Supervisor / <e-mail>":
+    the name is NOT on the first line, which is exactly what the old
+    first-line-only check tripped over.
+    """
+    lines = [ln.strip() for ln in (card_text or '').split('\n')]
+    if not any(USER_PATTERN.match(ln) for ln in lines):
+        return None
+    for ln in lines:
+        if EMAIL_RE.match(ln):
+            return ln
+    return None
 
 
 def _open_channels(page, admin):
@@ -229,7 +317,7 @@ def main() -> int:
         # --- groups ---
         admin.navigate_to_admin()
         admin.navigate_to_sites()
-        site = _open_first_site(page, admin)
+        site = _open_configured_site(page, admin)
         admin.open_groups_dropdown()
         all_groups = page.evaluate(GROUP_NAMES_JS)
         groups = _group_candidates(page)
@@ -257,6 +345,9 @@ def main() -> int:
         print(f'Users: {len(users)} automation leftover(s):')
         for name in users:
             print(f'  user   {name}')
+        if users and not args.apply:
+            print('  NOTE: the tenant refuses these deletes (register item '
+                  '11); expect them to survive --apply until the app fix.')
         if args.apply:
             for name in users:
                 admin.delete_user(match_text=name)
