@@ -36,6 +36,11 @@ config = {
             "test_data": {
                 "test_site_name": "Newtown Action Area",
                 "test_camera_name": "main gate",
+                # Chat partners differ per tenant: the accounts on one
+                # box do not exist on the other, so a shared name fails
+                # the chats tests everywhere but home (register item 29)
+                "test_chat_user_search": "QA Engineer B",
+                "test_chat_user_name": "Chat Partner",
             },
         },
         # The US QA box signs in with the automation account
@@ -51,6 +56,13 @@ config = {
                 # is a live streaming one (probe 09/01/2026, 22 cameras)
                 "test_site_name": "Spartan0",
                 "test_camera_name": "Soterix Multicam 1.15",
+                # 'Dallas QA Lab' is the one real chat account on this
+                # tenant; 'qa' matches it alone (probed 09/04/2026).
+                # The only other searchable names are our own leaked
+                # AutoTest users (register item 11), which are not a
+                # person to message.
+                "test_chat_user_search": "Dallas",
+                "test_chat_user_name": "Dallas QA Lab",
             },
         },
     },
