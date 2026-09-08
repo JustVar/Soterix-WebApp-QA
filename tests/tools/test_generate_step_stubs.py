@@ -8,6 +8,7 @@ dropped and reported.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -70,3 +71,31 @@ def test_a_brand_new_test_gets_an_empty_key():
                                   'steps': [{'n': 1, 'action': 's', 'expected': 'e'}]}}
     assert needs == []
     assert dropped == []
+
+
+def test_the_mapping_files_key_wins_over_the_sidecars():
+    """The mapping file is canonical; a stale sidecar key must not be synced."""
+    parsed = {'test_a': ParsedDoc('A', [Step('s', 'e')])}
+    tests, _needs, _dropped = gs.merge_from_docstrings(OLD, parsed, keys={'test_a': 'Canon'})
+    assert tests['test_a']['case_key'] == 'Canon'
+
+
+def test_a_sidecar_key_survives_when_the_mapping_has_none():
+    """No mapping row yet: the sidecar's key is the only one there is."""
+    parsed = {'test_a': ParsedDoc('A', [Step('s', 'e')])}
+    tests, _needs, _dropped = gs.merge_from_docstrings(OLD, parsed, keys={})
+    assert tests['test_a']['case_key'] == 'KeyA'
+
+
+def test_mapping_keys_reads_one_file_and_counts_claims(tmp_path):
+    """Keys come back by bare function name; claims span the whole mapping."""
+    mapping = tmp_path / 'm.json'
+    mapping.write_text(json.dumps({'mappings': {
+        'tests/ui/x/test_x.py::TestX::test_a[chromium]': {'case_key': 'K1'},
+        'tests/ui/x/test_x.py::TestX::test_b[chromium]': {'case_key': 'K2'},
+        'tests/ui/y/test_y.py::TestY::test_c[chromium]': {'case_key': 'K2'},
+    }}), encoding='utf-8')
+    keys, claims = gs.mapping_keys(gs.ROOT / 'tests' / 'ui' / 'x' / 'test_x.py', mapping)
+    assert keys == {'test_a': 'K1', 'test_b': 'K2'}
+    assert claims['K2'] == ['tests/ui/x/test_x.py::TestX::test_b',
+                           'tests/ui/y/test_y.py::TestY::test_c']

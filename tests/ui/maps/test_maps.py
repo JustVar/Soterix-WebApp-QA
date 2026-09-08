@@ -48,13 +48,25 @@ class TestMaps:
     @pytest.mark.ui
     @pytest.mark.maps
     def test_navigate_to_maps(self):
-        """Verify the Maps page loads with the site dropdown visible."""
+        """Verify the Maps page loads with the site dropdown visible.
+
+        Steps:
+        1. Click Maps in the left sidebar.
+           Expected: The Maps page opens and shows the site dropdown at the top.
+        """
         expect(self.maps.site_dropdown).to_be_visible(timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.maps
     def test_select_site(self):
-        """Verify selecting a site from the dropdown loads map cards."""
+        """Verify selecting a site from the dropdown loads map cards.
+
+        Steps:
+        1. Click Maps in the left sidebar.
+           Expected: The Maps page opens with the site dropdown.
+        2. Open the site dropdown and pick the configured site.
+           Expected: The dropdown shows the chosen site and at least one map card appears below it.
+        """
         self.maps.select_site(self.site_name)
 
         card_count = self.maps.get_map_card_count()
@@ -63,7 +75,14 @@ class TestMaps:
     @pytest.mark.ui
     @pytest.mark.maps
     def test_map_cards_have_cameras(self):
-        """Verify at least one map card has cameras (device count > 0)."""
+        """Verify at least one map card has cameras (device count > 0).
+
+        Steps:
+        1. Click Maps in the left sidebar, open the site dropdown and pick the configured site.
+           Expected: The site's map cards appear, each with a device count.
+        2. Read the device count on the cards.
+           Expected: At least one card shows a device count above zero.
+        """
         self.maps.select_site(self.site_name)
         map_with_cameras = self._map_with_cameras_or_skip()
         # the found card must be a real rendered card, not a hidden
@@ -73,7 +92,14 @@ class TestMaps:
     @pytest.mark.ui
     @pytest.mark.maps
     def test_open_map_with_cameras(self):
-        """Verify clicking a map card opens it and shows camera icons."""
+        """Verify clicking a map card opens it and shows camera icons.
+
+        Steps:
+        1. Click Maps in the left sidebar and pick the configured site.
+           Expected: The site's map cards appear.
+        2. Click a map card whose device count is above zero.
+           Expected: The map opens and camera icons are placed on it.
+        """
         self.maps.select_site(self.site_name)
         map_card = self._map_with_cameras_or_skip()
 
@@ -86,7 +112,14 @@ class TestMaps:
     @pytest.mark.maps
     @pytest.mark.slow
     def test_play_online_camera(self):
-        """Verify clicking an online camera icon plays its stream without failure."""
+        """Verify clicking an online camera icon plays its stream without failure.
+
+        Steps:
+        1. Click Maps in the left sidebar, pick the configured site, and open a map card that has cameras.
+           Expected: The map opens with its camera icons; an online camera shows a green icon.
+        2. Click an online (green) camera icon.
+           Expected: The camera's live stream starts playing and no "failed to load" message appears.
+        """
         self.maps.select_site(self.site_name)
         map_card = self._map_with_cameras_or_skip()
 

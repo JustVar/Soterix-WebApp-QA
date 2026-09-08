@@ -3,201 +3,76 @@
   "class": "TestMaps",
   "tests": {
     "test_navigate_to_maps": {
-      "title": "Verify the Maps page loads with the site dropdown visible.",
+      "title": "Verify the Maps page loads with the site dropdown visible",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Maps",
-          "expected": "Maps page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Available Locations list should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Available Locations list on the page",
-          "expected": "Available Locations list is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify Available Locations list displayed under Maps",
-          "expected": "Available Locations list displayed under Maps"
+          "action": "Click Maps in the left sidebar.",
+          "expected": "The Maps page opens and shows the site dropdown at the top."
         }
       ],
-      "case_key": "VKbQ42"
+      "case_key": "GdW97j"
     },
     "test_select_site": {
-      "title": "Verify selecting a site from the dropdown loads map cards.",
+      "title": "Verify selecting a site from the dropdown loads map cards",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click Maps in the left sidebar.",
+          "expected": "The Maps page opens with the site dropdown."
         },
         {
           "n": 2,
-          "action": "Navigate to Maps",
-          "expected": "Maps page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate selected site text updates on the page",
-          "expected": "selected site text updates is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of selected site text updates",
-          "expected": "selected site text updates is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: after site selection",
-          "expected": "Precondition is met (after site selection)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to selected site text updates"
+          "action": "Open the site dropdown and pick the configured site.",
+          "expected": "The dropdown shows the chosen site and at least one map card appears below it."
         }
       ],
       "case_key": "eJqj13"
     },
     "test_map_cards_have_cameras": {
-      "title": "Verify at least one map card has cameras (device count > 0).",
+      "title": "Verify at least one map card has cameras (device count > 0)",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click Maps in the left sidebar, open the site dropdown and pick the configured site.",
+          "expected": "The site's map cards appear, each with a device count."
         },
         {
           "n": 2,
-          "action": "Navigate to Maps",
-          "expected": "Maps page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where map cards should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate map cards on the page",
-          "expected": "map cards is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: after site selection",
-          "expected": "Precondition is met (after site selection)"
-        },
-        {
-          "n": 7,
-          "action": "Verify map cards visible",
-          "expected": "map cards visible"
+          "action": "Read the device count on the cards.",
+          "expected": "At least one card shows a device count above zero."
         }
       ],
-      "case_key": "vanmRn"
+      "case_key": "Z8xRpk"
     },
     "test_open_map_with_cameras": {
-      "title": "Verify clicking a map card opens it and shows camera icons.",
+      "title": "Verify clicking a map card opens it and shows camera icons",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click Maps in the left sidebar and pick the configured site.",
+          "expected": "The site's map cards appear."
         },
         {
           "n": 2,
-          "action": "Navigate to Maps",
-          "expected": "Maps page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for online cameras",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Online cameras detected",
-          "expected": "Online cameras detected (on map)"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on map",
-          "expected": "Precondition is met (on map)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Click a map card whose device count is above zero.",
+          "expected": "The map opens and camera icons are placed on it."
         }
       ],
       "case_key": "dypNzZ"
     },
     "test_play_online_camera": {
-      "title": "Verify clicking an online camera icon plays its stream without failure.",
+      "title": "Verify clicking an online camera icon plays its stream without failure",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click Maps in the left sidebar, pick the configured site, and open a map card that has cameras.",
+          "expected": "The map opens with its camera icons; an online camera shows a green icon."
         },
         {
           "n": 2,
-          "action": "Navigate to Maps",
-          "expected": "Maps page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for online cameras",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Online cameras detected",
-          "expected": "Online cameras detected (on map)"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on map",
-          "expected": "Precondition is met (on map)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Click an online (green) camera icon.",
+          "expected": "The camera's live stream starts playing and no \"failed to load\" message appears."
         }
       ],
       "case_key": "dypNzZ"

@@ -200,11 +200,17 @@ def find_test_files(paths: list[str] | None = None) -> list[Path]:
     return result
 
 
-def merge_from_docstrings(existing: dict | None, parsed: dict) -> tuple[dict, list[str], list[str]]:
+def merge_from_docstrings(existing: dict | None, parsed: dict,
+                          keys: dict | None = None) -> tuple[dict, list[str], list[str]]:
     """Pure: the sidecar rebuilt from parsed docstrings.
 
     existing  the sidecar file as loaded (None when there is none)
     parsed    func_name -> ParsedDoc (qatouch_cases_from_tests.parse_docstring)
+    keys      func_name -> case_key from config/qatouch_case_mapping.json,
+              the canonical store. It wins over the sidecar's own key:
+              the maps sidecar carried two keys the mapping did not
+              (measured 09/08/2026), and sync-steps writes steps to
+              whatever key the sidecar holds.
 
     Returns (tests, needs_steps, dropped). A parsed doc with a Steps
     block replaces the entry's title and steps and keeps its case_key;
@@ -228,10 +234,41 @@ def merge_from_docstrings(existing: dict | None, parsed: dict) -> tuple[dict, li
             entry.setdefault('title', doc.title)
             entry.setdefault('steps', [])
         entry.setdefault('case_key', '')
+        if keys and keys.get(name):
+            entry['case_key'] = keys[name]
         tests[name] = {'title': entry['title'], 'steps': entry['steps'],
                        'case_key': entry['case_key']}
     dropped = [n for n in old if n not in parsed]
     return tests, needs, dropped
+
+
+def mapping_keys(file_path: Path, mapping_path: Path | None = None) -> tuple[dict, dict]:
+    """(func_name -> case_key) for one test file, and (case_key -> every
+    node id in the mapping that claims it) for the whole mapping.
+
+    Node ids in the mapping carry their [param] suffix; the sidecar is
+    keyed by bare function name.
+    """
+    path = mapping_path or (ROOT / 'config' / 'qatouch_case_mapping.json')
+    try:
+        with open(path, encoding='utf-8') as f:
+            mappings = json.load(f).get('mappings') or {}
+    except (OSError, ValueError):
+        return {}, {}
+    prefix = file_path.relative_to(ROOT).as_posix() + '::'
+    keys: dict = {}
+    claims: dict = {}
+    for nodeid, row in mappings.items():
+        key = (row or {}).get('case_key') or ''
+        if not key:
+            continue
+        base = nodeid.split('[', 1)[0]
+        claims.setdefault(key, [])
+        if base not in claims[key]:
+            claims[key].append(base)
+        if base.startswith(prefix):
+            keys[base.rsplit('::', 1)[1]] = key
+    return keys, claims
 
 
 def process_from_docstrings(file_path: Path, dry_run: bool = False) -> bool:
@@ -249,7 +286,8 @@ def process_from_docstrings(file_path: Path, dry_run: bool = False) -> bool:
     if output_path.exists():
         with open(output_path, encoding='utf-8') as f:
             existing = json.load(f)
-    tests, needs, dropped = merge_from_docstrings(existing, parsed)
+    keys, claims = mapping_keys(file_path)
+    tests, needs, dropped = merge_from_docstrings(existing, parsed, keys)
     first = next(iter(infos.values()))
     stub = {
         'test_file': (existing or {}).get('test_file') or file_path.relative_to(ROOT).as_posix(),
@@ -264,6 +302,14 @@ def process_from_docstrings(file_path: Path, dry_run: bool = False) -> bool:
         print(f'    needs steps  {line}')
     for name in dropped:
         print(f'    dropped      {name} (not in the test file any more)')
+    for name, entry in tests.items():
+        others = [c for c in claims.get(entry['case_key'], [])
+                  if not c.endswith('::' + name)]
+        if others:
+            names = ', '.join(o.split('::', 1)[1] for o in others)
+            print('    SHARED KEY   ' + name + ': ' + entry['case_key']
+                  + ' is also claimed by ' + names
+                  + ' - a sync would write both tests into one case (register item 6)')
     if dry_run:
         return True
     output_path.parent.mkdir(parents=True, exist_ok=True)
