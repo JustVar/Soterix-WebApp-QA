@@ -30,7 +30,14 @@ class TestEventsSearch:
     @pytest.mark.events
     @pytest.mark.events_search
     def test_navigate_to_events(self):
-        """Verify clicking Events nav link loads the events page."""
+        """Verify clicking Events nav link loads the events page.
+
+        Steps:
+        1. Click the Events link in the sidebar navigation.
+           Expected: The Events page starts loading.
+        2. Verify events container is visible.
+           Expected: The event feed container renders without errors.
+        """
         self.events.navigate()
         self.step_capture.mark(1, "Click the Events link in the sidebar navigation")
         expect(self.events.events_container).to_be_visible(timeout=60000)
@@ -40,7 +47,16 @@ class TestEventsSearch:
     @pytest.mark.events
     @pytest.mark.events_search
     def test_select_site(self):
-        """Verify site dropdown opens and a site can be selected."""
+        """Verify site dropdown opens and a site can be selected.
+
+        Steps:
+        1. Navigate to Events page and wait for load.
+           Expected: Events page loads and the loader disappears.
+        2. Open the site dropdown and select the test site.
+           Expected: The dropdown lists sites; selecting one closes the list.
+        3. Verify the selected site name is visible on the page.
+           Expected: The chosen site name shows in the site selector.
+        """
         self.events.navigate()
         self.events.wait_for_page_load()
         self.step_capture.mark(1, "Navigate to Events page and wait for load")
@@ -66,6 +82,16 @@ class TestEventsSearch:
         KNOWN LIMITATION: The MUI Checkbox inside each camera container
         has zero-dimension elements (no bounding box) and cannot be
         toggled via Playwright. Search uses 'all cameras' by default.
+
+        Steps:
+        1. Navigate to Events and select the test site.
+           Expected: Events page loads with the site applied.
+        2. Open the Locations & Cameras dropdown.
+           Expected: A popover opens with the site tree.
+        3. Expand the site node, then All Cameras.
+           Expected: Individual camera entries are listed with thumbnails.
+        4. Dismiss the camera menu.
+           Expected: The popover closes and the search button is visible again.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
@@ -83,6 +109,14 @@ class TestEventsSearch:
         """Verify duration filter can be changed from default.
 
         Duration dropdown is disabled until a site is selected.
+
+        Steps:
+        1. Navigate to Events and select the test site.
+           Expected: Duration dropdown becomes enabled after site selection.
+        2. Open the duration dropdown and select Last 7 Days.
+           Expected: The option list closes after selection.
+        3. Verify the selected duration is shown.
+           Expected: The duration selector displays Last 7 Days.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
@@ -103,6 +137,14 @@ class TestEventsSearch:
 
         The 'All Rules' dropdown is an optional filter -- not required
         for search, but allows narrowing results by rule type.
+
+        Steps:
+        1. Navigate to Events and open the rule type dropdown.
+           Expected: The rule type option list opens.
+        2. Select Intrusion Detection.
+           Expected: The list closes and the selection applies.
+        3. Verify the rule combobox shows the selected rule.
+           Expected: The combobox text contains Intrusion Detection.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
@@ -123,6 +165,14 @@ class TestEventsSearch:
 
         Uses default 'all cameras' (no specific camera selection) to
         ensure results are returned regardless of per-camera event data.
+
+        Steps:
+        1. Navigate to Events, select the test site and Last 7 Days.
+           Expected: Filters are applied and search is available.
+        2. Click the search button and wait for results.
+           Expected: The loader runs and event thumbnails appear.
+        3. Verify at least one event result is returned.
+           Expected: The result grid shows one or more event thumbnails.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
@@ -138,7 +188,14 @@ class TestEventsSearch:
     @pytest.mark.events
     @pytest.mark.events_search
     def test_event_snapshots_valid(self):
-        """Verify event thumbnails have real images, not placeholders."""
+        """Verify event thumbnails have real images, not placeholders.
+
+        Steps:
+        1. Run an events search for the test site over Last 7 Days.
+           Expected: Event thumbnails appear in the result grid.
+        2. Inspect the first thumbnails' image sources.
+           Expected: Thumbnails are real images (blob or data URIs), not the No Image Available placeholder.
+        """
         self.events.navigate()
         self.events.wait_for_page_load()
 
@@ -155,7 +212,16 @@ class TestEventsSearch:
     @pytest.mark.events
     @pytest.mark.events_search
     def test_pin_event(self):
-        """Verify pinning an event updates the pinned clips counter."""
+        """Verify pinning an event updates the pinned clips counter.
+
+        Steps:
+        1. Run an events search for the test site over Last 7 Days.
+           Expected: Event thumbnails appear in the result grid.
+        2. Hover the first event card and click its pin icon.
+           Expected: The pin icon appears on hover and accepts the click.
+        3. Verify the pinned clips counter.
+           Expected: The counter shows 1 pinned clip.
+        """
         self.events.navigate()
         self.events.wait_for_page_load()
 
@@ -174,7 +240,16 @@ class TestEventsSearch:
     @pytest.mark.events
     @pytest.mark.events_search
     def test_review_pinned_clips_button(self):
-        """Verify 'Review Pinned Clips' button appears after pinning."""
+        """Verify 'Review Pinned Clips' button appears after pinning.
+
+        Steps:
+        1. Run an events search for the test site over Last 7 Days.
+           Expected: Event thumbnails appear in the result grid.
+        2. Pin the first event.
+           Expected: The pinned clips counter updates.
+        3. Verify the Review Pinned Clips button.
+           Expected: The button is visible once at least one clip is pinned.
+        """
         self.events.navigate()
         self.events.wait_for_page_load()
 
@@ -200,6 +275,16 @@ class TestEventsSearch:
         The channel is discovered from the unfiltered search response
         instead of hardcoded: the shared tenant renames sites and
         re-numbers channels, so a fixed channel is a delayed failure.
+
+        Steps:
+        1. Run an unfiltered events search and capture the API responses.
+           Expected: The response stream reveals a channel that has events.
+        2. Reload Events, reapply the site and duration filters.
+           Expected: A fresh search view is ready so the next search dispatches.
+        3. Search again with the request intercepted to that single channel.
+           Expected: The search request carries only the discovered channel.
+        4. Verify the API result stream for the filtered search.
+           Expected: Events are returned and every event belongs to the requested channel.
         """
         self.events.navigate()
         self.events.wait_for_page_load()

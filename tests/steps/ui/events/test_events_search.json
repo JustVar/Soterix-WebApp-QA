@@ -7,13 +7,13 @@
       "steps": [
         {
           "n": 1,
-          "action": "Click the Events link in the sidebar navigation",
-          "expected": "The Events page starts loading"
+          "action": "Click the Events link in the sidebar navigation.",
+          "expected": "The Events page starts loading."
         },
         {
           "n": 2,
-          "action": "Verify events container is visible",
-          "expected": "The event feed container renders without errors"
+          "action": "Verify events container is visible.",
+          "expected": "The event feed container renders without errors."
         }
       ],
       "case_key": "8V1vJn"
@@ -23,18 +23,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Navigate to Events page and wait for load",
-          "expected": "Events page loads and the loader disappears"
+          "action": "Navigate to Events page and wait for load.",
+          "expected": "Events page loads and the loader disappears."
         },
         {
           "n": 2,
-          "action": "Open the site dropdown and select the test site",
-          "expected": "The dropdown lists sites; selecting one closes the list"
+          "action": "Open the site dropdown and select the test site.",
+          "expected": "The dropdown lists sites; selecting one closes the list."
         },
         {
           "n": 3,
-          "action": "Verify the selected site name is visible on the page",
-          "expected": "The chosen site name shows in the site selector"
+          "action": "Verify the selected site name is visible on the page.",
+          "expected": "The chosen site name shows in the site selector."
         }
       ],
       "case_key": "0rzlE9"
@@ -44,23 +44,23 @@
       "steps": [
         {
           "n": 1,
-          "action": "Navigate to Events and select the test site",
-          "expected": "Events page loads with the site applied"
+          "action": "Navigate to Events and select the test site.",
+          "expected": "Events page loads with the site applied."
         },
         {
           "n": 2,
-          "action": "Open the Locations & Cameras dropdown",
-          "expected": "A popover opens with the site tree"
+          "action": "Open the Locations & Cameras dropdown.",
+          "expected": "A popover opens with the site tree."
         },
         {
           "n": 3,
-          "action": "Expand the site node, then All Cameras",
-          "expected": "Individual camera entries are listed with thumbnails"
+          "action": "Expand the site node, then All Cameras.",
+          "expected": "Individual camera entries are listed with thumbnails."
         },
         {
           "n": 4,
-          "action": "Dismiss the camera menu",
-          "expected": "The popover closes and the search button is visible again"
+          "action": "Dismiss the camera menu.",
+          "expected": "The popover closes and the search button is visible again."
         }
       ],
       "case_key": "M73wak"
@@ -70,18 +70,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Navigate to Events and select the test site",
-          "expected": "Duration dropdown becomes enabled after site selection"
+          "action": "Navigate to Events and select the test site.",
+          "expected": "Duration dropdown becomes enabled after site selection."
         },
         {
           "n": 2,
-          "action": "Open the duration dropdown and select Last 7 Days",
-          "expected": "The option list closes after selection"
+          "action": "Open the duration dropdown and select Last 7 Days.",
+          "expected": "The option list closes after selection."
         },
         {
           "n": 3,
-          "action": "Verify the selected duration is shown",
-          "expected": "The duration selector displays Last 7 Days"
+          "action": "Verify the selected duration is shown.",
+          "expected": "The duration selector displays Last 7 Days."
         }
       ],
       "case_key": "gQxXwN"
@@ -91,18 +91,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Navigate to Events and open the rule type dropdown",
-          "expected": "The rule type option list opens"
+          "action": "Navigate to Events and open the rule type dropdown.",
+          "expected": "The rule type option list opens."
         },
         {
           "n": 2,
-          "action": "Select Intrusion Detection",
-          "expected": "The list closes and the selection applies"
+          "action": "Select Intrusion Detection.",
+          "expected": "The list closes and the selection applies."
         },
         {
           "n": 3,
-          "action": "Verify the rule combobox shows the selected rule",
-          "expected": "The combobox text contains Intrusion Detection"
+          "action": "Verify the rule combobox shows the selected rule.",
+          "expected": "The combobox text contains Intrusion Detection."
         }
       ],
       "case_key": "pDpmba"
@@ -112,18 +112,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Navigate to Events, select the test site and Last 7 Days",
-          "expected": "Filters are applied and search is available"
+          "action": "Navigate to Events, select the test site and Last 7 Days.",
+          "expected": "Filters are applied and search is available."
         },
         {
           "n": 2,
-          "action": "Click the search button and wait for results",
-          "expected": "The loader runs and event thumbnails appear"
+          "action": "Click the search button and wait for results.",
+          "expected": "The loader runs and event thumbnails appear."
         },
         {
           "n": 3,
-          "action": "Verify at least one event result is returned",
-          "expected": "The result grid shows one or more event thumbnails"
+          "action": "Verify at least one event result is returned.",
+          "expected": "The result grid shows one or more event thumbnails."
         }
       ],
       "case_key": "dypXRb"
@@ -133,34 +133,34 @@
       "steps": [
         {
           "n": 1,
-          "action": "Run an events search for the test site over Last 7 Days",
-          "expected": "Event thumbnails appear in the result grid"
+          "action": "Run an events search for the test site over Last 7 Days.",
+          "expected": "Event thumbnails appear in the result grid."
         },
         {
           "n": 2,
-          "action": "Inspect the first thumbnails' image sources",
-          "expected": "Thumbnails are real images (blob or data URIs), not the No Image Available placeholder"
+          "action": "Inspect the first thumbnails' image sources.",
+          "expected": "Thumbnails are real images (blob or data URIs), not the No Image Available placeholder."
         }
       ],
-      "case_key": "vanZlz"
+      "case_key": "68lnPV"
     },
     "test_pin_event": {
       "title": "Verify pinning an event updates the pinned clips counter",
       "steps": [
         {
           "n": 1,
-          "action": "Run an events search for the test site over Last 7 Days",
-          "expected": "Event thumbnails appear in the result grid"
+          "action": "Run an events search for the test site over Last 7 Days.",
+          "expected": "Event thumbnails appear in the result grid."
         },
         {
           "n": 2,
-          "action": "Hover the first event card and click its pin icon",
-          "expected": "The pin icon appears on hover and accepts the click"
+          "action": "Hover the first event card and click its pin icon.",
+          "expected": "The pin icon appears on hover and accepts the click."
         },
         {
           "n": 3,
-          "action": "Verify the pinned clips counter",
-          "expected": "The counter shows 1 pinned clip"
+          "action": "Verify the pinned clips counter.",
+          "expected": "The counter shows 1 pinned clip."
         }
       ],
       "case_key": "M73wxx"
@@ -170,18 +170,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Run an events search for the test site over Last 7 Days",
-          "expected": "Event thumbnails appear in the result grid"
+          "action": "Run an events search for the test site over Last 7 Days.",
+          "expected": "Event thumbnails appear in the result grid."
         },
         {
           "n": 2,
-          "action": "Pin the first event",
-          "expected": "The pinned clips counter updates"
+          "action": "Pin the first event.",
+          "expected": "The pinned clips counter updates."
         },
         {
           "n": 3,
-          "action": "Verify the Review Pinned Clips button",
-          "expected": "The button is visible once at least one clip is pinned"
+          "action": "Verify the Review Pinned Clips button.",
+          "expected": "The button is visible once at least one clip is pinned."
         }
       ],
       "case_key": "lR2lkQ"
@@ -191,23 +191,23 @@
       "steps": [
         {
           "n": 1,
-          "action": "Run an unfiltered events search and capture the API responses",
-          "expected": "The response stream reveals a channel that has events"
+          "action": "Run an unfiltered events search and capture the API responses.",
+          "expected": "The response stream reveals a channel that has events."
         },
         {
           "n": 2,
-          "action": "Reload Events, reapply the site and duration filters",
-          "expected": "A fresh search view is ready so the next search dispatches"
+          "action": "Reload Events, reapply the site and duration filters.",
+          "expected": "A fresh search view is ready so the next search dispatches."
         },
         {
           "n": 3,
-          "action": "Search again with the request intercepted to that single channel",
-          "expected": "The search request carries only the discovered channel"
+          "action": "Search again with the request intercepted to that single channel.",
+          "expected": "The search request carries only the discovered channel."
         },
         {
           "n": 4,
-          "action": "Verify the API result stream for the filtered search",
-          "expected": "Events are returned and every event belongs to the requested channel"
+          "action": "Verify the API result stream for the filtered search.",
+          "expected": "Events are returned and every event belongs to the requested channel."
         }
       ],
       "case_key": "Drd9a9"
