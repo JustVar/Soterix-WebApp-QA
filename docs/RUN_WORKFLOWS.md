@@ -117,11 +117,24 @@ prints the resulting URL. Host and paths are overridable with
 `QA_RUNS_HOST` / `QA_RUNS_DIR` / `QA_RUNS_URL`.
 
 **Scheduled runs live on spartan1 as plain cron** (since 09/01/2026):
-`/data/qa/ci/nightly.sh`, daily 04:00 America/Chicago. It pulls main,
-installs pins, runs `tests/ui` headless, and copies the archive into the
-served directory, so the run is browsable at the URL above when it
-finishes. Unarmed for now: no QA Touch write until the nightly run-key
-strategy is decided. Logs: `/data/qa/ci/nightly.log` on the box.
+`/data/qa/ci/nightly.sh` (the copy of record is `deploy/spartan1/nightly.sh`),
+daily 04:00 America/Chicago. It resets the clone to `origin/main`, installs
+pins, runs `tests/ui` headless once per box (`india`, then `us`; a box
+whose `QA_<BOX>_USER` is not in the box's `.env` is skipped and said so),
+and copies each archive into the served directory, so the runs are
+browsable at the URL above when they finish. Each run's `run.html` and its
+index row name the box. Unarmed for now: no QA Touch write until the
+nightly run-key strategy is decided. Logs: `/data/qa/ci/nightly.log`.
+
+The first week (09/02-09/08/2026) taught the script its three guards.
+Every nightly hung on one drag that Playwright never timed out, the next
+night's cron started another beside it (seven runs and seven browsers were
+found alive at once), and `git pull --ff-only` had refused the rewritten
+history, so the box ran week-old code and archived nothing all week. Now:
+one nightly at a time (its own process group; the previous group is killed
+first), a ceiling on every test (`pytest-timeout`, 900 s, signal method)
+and on each box's run (`timeout`, 4 h), and `git reset --hard origin/main`
+instead of a pull.
 
 Vendor-free on purpose. A GitHub self-hosted runner was compared and
 deferred, not rejected: self-hosted runner minutes are free today, but
@@ -146,7 +159,7 @@ either direction. GitHub-HOSTED runs (`qa-nightly.yml` today) upload
 | GitHub artifact on CI runs | working, 7-day retention |
 | nginx on spartan1 | working: http://10.2.0.2/qa-runs/ (since 09/01/2026), HTTP basic auth (user `qa`), dotfiles denied |
 | 30-day prune cron on spartan1 | working, mutation-tested in both directions |
-| Nightly cron on spartan1 (`/data/qa/ci/nightly.sh`) | working: proven end to end, first schedule 09/02 04:00 Chicago |
+| Nightly cron on spartan1 (`/data/qa/ci/nightly.sh`) | proven end to end 09/01 on one file; hung every night 09/02-09/08 (no timeout, stale clone, runs piling up); rebuilt 09/08 with the three guards, both boxes, awaiting its first scheduled run |
 | Self-hosted GitHub runner | deferred by comparison; adopt when PR-triggered or on-demand GitHub runs are wanted |
 | Publish-a-local-run command | working: `tools/publish_run.py`, proven with a real publish |
 | Scheduled nightly (GitHub-hosted path) | stays commented out in `qa-nightly.yml`; the box cron is the live schedule |

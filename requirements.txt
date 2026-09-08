@@ -9,6 +9,11 @@ aiohttp==3.14.3  # tools/stream_probe.py --no-browser (direct media socket)
 paramiko==5.0.0
 scp==0.16.1
 pytest-rerunfailures==16.6
+# Per-test ceiling for scheduled runs (deploy/spartan1/nightly.sh passes
+# --timeout). Playwright cannot time out a driver call that never answers;
+# this can. Off unless asked for: on Windows the only method kills the
+# whole run at the first hang, so local runs do not pass it.
+pytest-timeout==2.4.0
 jira==3.10.5
 lxml==6.1.2
 msal==1.38.0
@@ -38,4 +43,4 @@ ruff==0.16.5
 # which overrides the pin until you reinstall:
 #     git clone https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git ../soterix-qa-shared
 #     pip install -e ../soterix-qa-shared
-soterix-qa-shared @ git+https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git@v0.25.0
+soterix-qa-shared @ git+https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git@v0.26.0

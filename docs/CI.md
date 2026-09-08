@@ -3,11 +3,14 @@
 One workflow: `.github/workflows/qa-nightly.yml`. It is the scheduler for
 everything that must not depend on one laptop. Two jobs:
 
-**Everything is manual for now (decided 2026-08-18).** Tests run by hand, and
-the canary's nightly cron is commented out in the workflow - automations are
-not fully built or in use yet, so a schedule would watch an API nobody is
-writing to. The workflow stays in the repo so the run button, the guards and
-the secrets story are ready the day scheduling starts.
+**The GitHub side is manual (decided 2026-08-18); the live schedule is a
+cron on spartan1** (since 2026-09-01, see `docs/RUN_WORKFLOWS.md` and
+`deploy/spartan1/README.md`). The canary's cron here is commented out, and
+neither job has ever been run from the Actions tab as of 2026-09-08 (zero
+runs in either org), so the hosted-runner reachability question the smoke
+job exists to answer is still open. The workflow stays in the repo so the run
+button, the guards and the secrets story are ready the day GitHub-side
+scheduling is wanted.
 
 | Job | When | What |
 |---|---|---|
