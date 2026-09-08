@@ -24,14 +24,25 @@ opened from the header chat icon. All mechanisms below were measured
 - Sent text renders as span.sentMsg in the thread - the delivered
   oracle. Callers pass run-unique text or the wait can match an older
   run's message.
-- Group creation has no entry point in the redesigned panel (probed
-  across fresh, search, result-click, thread, and hover states). The
-  mounted 'Add Members'/Update view serves group conversations, which
-  this account cannot create, so the group CRUD methods are retired
-  with the feature. group_creation_affordance() is the tripwire the
-  skipped CRUD tests check so the feature's return fails loud.
+- Group creation is a BOX difference (both probed 09/04/2026). The
+  india box has no entry point at all. The US box renders a real
+  'Create Group' button, and the whole flow works: a Create New Group
+  dialog (Group Name, Select Group members), a group thread with
+  edit, delete and info icons. group_creation_affordance() reports
+  which box this is; the group tests skip with proof on india and run
+  on US (register item 29).
+- Four group traps, each paid for with a probe: the panel SEARCH finds
+  users only, never a group, so the conversation list is the one
+  oracle for a created group; the member autocomplete popper stays
+  open over the Create button after a pick and needs an Escape; the
+  Delete Group confirm controls are div.MuiBox-root, not buttons; and
+  the panel does not repaint after a delete, so a row is read only
+  after refresh_panel() re-opens it (item 8's lesson again).
+- The group thread's edit icon is inert on the current build: no
+  input, no modal, no change (probed 09/08/2026). group_rename_control()
+  is the tripwire that fails loud the day it opens something.
 """
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, expect
 
 
 class ChatPage:
@@ -85,6 +96,27 @@ class ChatPage:
         ).filter(visible=True)
         self.sent_messages = self.panel.locator("span.sentMsg")
 
+        # Groups (US box). The button is the entry point; the dialog's
+        # two inputs each have a hidden mounted twin, so filter visible.
+        self.group_create_button = self.panel.locator(
+            "button.add-btn", has_text="Create Group"
+        )
+        self.group_name_input = page.locator(
+            "input[placeholder='Enter Group Name']"
+        ).filter(visible=True)
+        self.group_members_input = page.locator(
+            "input[placeholder='Select Group members']"
+        ).filter(visible=True)
+        self.group_member_options = page.locator(".group-result-item")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
+        self.thread_edit_icon = self.panel.locator("img[src*='edit']")
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
+        self.thread_delete_icon = self.panel.locator("img[src*='delete']")
+        # Body-level confirm; its controls are divs, not buttons
+        self.delete_group_modal = page.locator(".MuiModal-root").filter(
+            has_text="delete this Group"
+        )
+
     # --- Panel management ---
 
     def open_chat_panel(self, timeout: int = 10000):
@@ -102,6 +134,18 @@ class ChatPage:
         """Close via the header X; the marker leaving is the signal."""
         self.close_icon.click()
         self.search_input.wait_for(state="hidden", timeout=5000)
+
+    def refresh_panel(self):
+        """Close and re-open the panel so its list repaints.
+
+        The list does not repaint after a group mutation: a deleted
+        group's row stays on screen until the panel is re-opened, and
+        a delete verified on the stale panel reads as refused
+        (measured 09/04/2026 - the same trap the bookmarks panel has,
+        register item 8).
+        """
+        self.close_chat_panel()
+        self.open_chat_panel()
 
     def toggle_chat_icon(self):
         """Click the header icon with no open/close protection, for
@@ -189,17 +233,99 @@ class ChatPage:
             state="visible", timeout=15000
         )
 
-    # --- Group-creation tripwire ---
+    # --- Groups ---
 
     def group_creation_affordance(self) -> bool:
-        """True when a visible group-creation control exists.
+        """True when a visible Create Group control exists.
 
-        The redesign removed group creation; the skipped CRUD tests
-        call this so the feature's return fails loud and forces a
-        rebuild instead of skipping forever.
+        This is a box difference, not a version one: US shows the
+        button, india shows nothing (both probed 09/04/2026). The
+        group tests use it to skip with proof on india and run on US.
         """
-        candidates = self.panel.get_by_text("Create Group", exact=False)
-        return any(
-            candidates.nth(i).is_visible()
-            for i in range(candidates.count())
-        )
+        # is_visible() is False, not an error, when nothing matches
+        return self.group_create_button.first.is_visible()
+
+    def group_rows(self, name: str):
+        """The conversation-list rows for a group of this exact name.
+
+        The panel search matches users only - a group never appears in
+        its results - so this list is the only oracle for a group.
+        """
+        return self.panel.get_by_text(name, exact=True).filter(visible=True)
+
+    def create_group(self, name: str, member_search: str):
+        """Create a group with one member and wait for its row.
+
+        The member autocomplete is multi-select and its popper stays
+        open over the Create button after a pick, so it is dismissed
+        with Escape. The Create button is matched by exact role name:
+        a has-text('Create') also matches 'Create Group'. The row
+        appearing after refresh_panel() is the created signal.
+        """
+        self.group_create_button.first.click()
+        self.group_name_input.first.wait_for(state="visible", timeout=10000)
+        self.group_name_input.first.fill(name)
+        self.group_members_input.first.click()
+        self.group_members_input.first.fill(member_search)
+        self.group_member_options.first.wait_for(state="visible", timeout=10000)
+        self.group_member_options.first.click()
+        self.page.keyboard.press("Escape")
+        self.page.get_by_role("button", name="Create", exact=True).last.click()
+        self.refresh_panel()
+        self.group_rows(name).first.wait_for(state="visible", timeout=15000)
+
+    def open_group(self, name: str):
+        """Open the group's thread; the visible message input is the marker."""
+        self.group_rows(name).first.click()
+        self.message_input.first.wait_for(state="visible", timeout=10000)
+
+    def delete_group(self, name: str):
+        """Delete the group and prove it is gone.
+
+        Confirms in the body-level Delete Group modal, whose Delete
+        control is a div (get_by_role finds nothing), then re-opens
+        the panel and requires the row to be absent. Raises when it
+        survives: a group left behind is a real user's clutter and,
+        like every leftover on this tenant, a trap for the next run.
+        """
+        if not self.thread_open():
+            self.open_group(name)
+        self.thread_delete_icon.first.click()
+        confirm = self.delete_group_modal.get_by_text("Delete", exact=True)
+        confirm.first.wait_for(state="visible", timeout=10000)
+        confirm.first.click()
+        self.delete_group_modal.wait_for(state="hidden", timeout=10000)
+        self.refresh_panel()
+        # typed: a row that never leaves is what this reports
+        try:
+            self.group_rows(name).first.wait_for(state="hidden", timeout=10000)
+        except PlaywrightTimeoutError:
+            raise RuntimeError(
+                f"The group '{name}' is still listed after its delete was "
+                f"confirmed. Delete it by hand from the chat panel."
+            ) from None
+
+    def group_rename_control(self) -> bool:
+        """Click the open thread's edit icon; True if it opens anything
+        a name could be typed into.
+
+        Inert on the current build (probed 09/08/2026): no input, no
+        modal, no change. The rename test skips on False and fails
+        loud on True, so the flow gets a real test the day it appears.
+        """
+        # Baseline first: the Views page behind the panel always has
+        # visible inputs (the camera search, the tab title), so only
+        # growth over this count is something the icon opened. The
+        # first version read page-wide with no baseline and fired on
+        # those (09/08/2026).
+        editable = self.page.locator(
+            "input, [contenteditable='true'], textarea"
+        ).filter(visible=True)
+        before = editable.count()
+        self.thread_edit_icon.first.click()
+        try:
+            expect(editable).not_to_have_count(before, timeout=3000)
+            return editable.count() > before
+        # the timeout IS the measurement: nothing editable appeared
+        except AssertionError:
+            return False

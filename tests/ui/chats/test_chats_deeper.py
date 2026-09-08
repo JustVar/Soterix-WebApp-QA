@@ -14,9 +14,10 @@ from tests.shared.pages.chat_page import ChatPage
 CHAT_USER_SEARCH = config.get("test_chat_user_search", "QA Engineer B")
 CHAT_USER_NAME = config.get("test_chat_user_name", "Chat Partner")
 
-GROUPS_GONE = (
-    "Group creation has no entry point in the redesigned chat panel "
-    "(probed 08/13/2026, docs/TEST_REPAIRS.md chats row)"
+GROUPS_ABSENT = (
+    "The chat panel is open and shows no Create Group control: group "
+    "creation has no entry point on this box (india, probed 09/04/2026 - "
+    "the US box has it, register item 29)"
 )
 
 
@@ -67,16 +68,17 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_create_group_button_present(self):
-        """The redesign removed the Create Group control. Skip while
-        it stays gone; fail loud the day it returns so the group CRUD
-        tests get rebuilt."""
+        """The Create Group button is in the open panel on a box that has it.
+
+        Group creation is a box difference (register item 29): the US
+        box shows the button, india shows nothing. The open panel is
+        proved first, so the skip on india is the tenant's data and
+        not a panel that failed to open.
+        """
         self.chat.open_chat_panel()
-        if self.chat.group_creation_affordance():
-            pytest.fail(
-                "A group-creation control is visible in the chat panel "
-                "again - rebuild the group CRUD tests against it"
-            )
-        pytest.skip(GROUPS_GONE)
+        if not self.chat.group_creation_affordance():
+            pytest.skip(GROUPS_ABSENT)
+        expect(self.chat.group_create_button.first).to_be_visible()
 
     # --- Search functionality ---
 
