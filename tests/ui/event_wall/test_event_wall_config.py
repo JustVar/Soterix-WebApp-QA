@@ -208,7 +208,14 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_toggle_checkbox(self):
-        """A camera selection control can be toggled."""
+        """A camera selection control can be toggled.
+
+        Steps:
+        1. Open Admin > General, click View on the Event Wall card, click Add Configuration, then expand the configured site down to a camera group and click it.
+           Expected: The group's camera rows are listed under Available Cameras.
+        2. Tick a camera's checkbox, then untick it.
+           Expected: The checkbox changes state on each click.
+        """
         self._open_add_form()
         group_row = self._expand_site_to_groups()
         group_row.click()

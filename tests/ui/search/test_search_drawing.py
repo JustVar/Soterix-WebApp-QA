@@ -124,7 +124,14 @@ class TestSearchDrawing:
     @pytest.mark.ui
     @pytest.mark.search
     def test_line_search_returns_results(self):
-        """Verify Line search returns results after drawing and searching."""
+        """Verify Line search returns results after drawing and searching.
+
+        Steps:
+        1. Open Search, choose the Line category, open the drawing view for the configured camera, draw a line and click Done.
+           Expected: The line is accepted and the search filters are shown again.
+        2. Pick a duration and click Search.
+           Expected: At least one Line result appears in the result grid.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 

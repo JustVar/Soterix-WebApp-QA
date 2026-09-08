@@ -157,7 +157,14 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_record_has_action_info(self):
-        """A record's Action cell describes the activity."""
+        """A record's Action cell describes the activity.
+
+        Steps:
+        1. Open Admin > General and click View on the Audit Trail card.
+           Expected: Audit records are listed.
+        2. Read the first record's Action cell.
+           Expected: It describes the activity and is not empty.
+        """
         cells = self._first_row().locator("td")
         action_text = cells.last.inner_text().strip()
         assert action_text, (

@@ -290,67 +290,17 @@
       "case_key": "vanXBn"
     },
     "test_audit_trail_record_has_action_info": {
-      "title": "Verify audit records contain action/event type information",
+      "title": "A record's Action cell describes the activity",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > General and click View on the Audit Trail card.",
+          "expected": "Audit records are listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Audit Trail - LPR",
-          "expected": "Audit Trail - LPR page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the page displays any existing items",
-          "expected": "Page content loads (list, table, or empty state)"
-        },
-        {
-          "n": 4,
-          "action": "Click the create/add button for audit trail entry",
-          "expected": "Creation form or dialog opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify all required form fields are present and empty/default",
-          "expected": "Form fields are displayed with correct labels and placeholders"
-        },
-        {
-          "n": 6,
-          "action": "Fill in all required fields with valid test data",
-          "expected": "All fields accept the input without errors"
-        },
-        {
-          "n": 7,
-          "action": "Fill in any optional fields if applicable",
-          "expected": "Optional fields accept input"
-        },
-        {
-          "n": 8,
-          "action": "Review the filled form for correctness",
-          "expected": "All entered data is displayed correctly in the form"
-        },
-        {
-          "n": 9,
-          "action": "Click the Save/Submit/Create button",
-          "expected": "Form is submitted and a success message or indicator appears"
-        },
-        {
-          "n": 10,
-          "action": "Verify the newly created audit trail entry appears in the list or view",
-          "expected": "The new audit trail entry is visible with the correct data"
-        },
-        {
-          "n": 11,
-          "action": "Set up precondition: for LPR record edit",
-          "expected": "Precondition is met (for LPR record edit)"
-        },
-        {
-          "n": 12,
-          "action": "Verify no duplicate entries were created",
-          "expected": "Only one instance of the new audit trail entry exists"
+          "action": "Read the first record's Action cell.",
+          "expected": "It describes the activity and is not empty."
         }
       ],
       "case_key": "xm9jkm"

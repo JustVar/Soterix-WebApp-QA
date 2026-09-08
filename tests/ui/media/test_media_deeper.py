@@ -129,7 +129,12 @@ class TestMediaDeeper:
     @pytest.mark.media
     @pytest.mark.media_deeper
     def test_tab_round_trip_all_to_clips(self):
-        """Verify switching from All to Clips and back works."""
+        """Verify switching from All to Clips and back works.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, click the Clips tab, then click the All tab.
+           Expected: Each tab is selected in turn and the date filter stays shown.
+        """
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("Clips")
         self.media.click_tab("All")

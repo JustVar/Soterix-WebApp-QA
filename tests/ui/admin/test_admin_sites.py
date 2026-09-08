@@ -118,7 +118,12 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_navigate_to_admin_sites(self):
-        """Verify navigating to Admin > Sites loads the site list."""
+        """Verify navigating to Admin > Sites loads the site list.
+
+        Steps:
+        1. Open Admin and click Sites in the sidebar.
+           Expected: The Sites list opens with its search field and the site cards with their online or offline markers.
+        """
         self._navigate_to_sites()
 
         expect(self.admin.sites_tab.first).to_be_visible(timeout=10000)
@@ -231,7 +236,14 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_camera_sorting(self):
-        """Verify A-Z and Z-A camera sorting within a site."""
+        """Verify A-Z and Z-A camera sorting within a site.
+
+        Steps:
+        1. Open Admin > Sites and open an online site.
+           Expected: The site detail lists its cameras.
+        2. Click the A-Z sort icon, then the Z-A sort icon.
+           Expected: The camera order reverses between the two sorts when the site has more than one camera.
+        """
         self._navigate_to_sites()
 
         # Navigate into a site first

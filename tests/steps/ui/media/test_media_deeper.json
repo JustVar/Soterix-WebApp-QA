@@ -245,47 +245,12 @@
       "case_key": "eJXXK3"
     },
     "test_tab_round_trip_all_to_clips": {
-      "title": "Verify switching from All to Clips and back works.",
+      "title": "Verify switching from All to Clips and back works",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Media Listing & Actions",
-          "expected": "Media Listing & Actions page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate All tab displays clips, folders, and vault items on the page",
-          "expected": "All tab displays clips, folders, and vault items is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify All tab displays clips, folders, and vault items is displayed as expected",
-          "expected": "All tab displays clips, folders, and vault items is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open Media, set the date filter to Last 30 Days, click the Clips tab, then click the All tab.",
+          "expected": "Each tab is selected in turn and the date filter stays shown."
         }
       ],
       "case_key": "dypXww"

@@ -156,42 +156,12 @@
       "case_key": "8V1b0g"
     },
     "test_open_my_views": {
-      "title": "Verify My Views panel opens and shows saved views",
+      "title": "Verify the My Views panel opens",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > My Views",
-          "expected": "My Views page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate My Views tab on the page",
-          "expected": "My Views tab is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of My Views tab",
-          "expected": "My Views tab highlighted"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: when selected",
-          "expected": "Precondition is met (when selected)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to My Views tab"
+          "action": "On Views, click the My Views icon in the panel bar.",
+          "expected": "The My Views panel opens and shows its Presets and My Views sections."
         }
       ],
       "case_key": "vanZz1"

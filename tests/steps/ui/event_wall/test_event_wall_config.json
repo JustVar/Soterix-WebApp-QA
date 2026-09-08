@@ -280,42 +280,17 @@
       "case_key": "5BRDm7"
     },
     "test_event_wall_toggle_checkbox": {
-      "title": "Verify a checkbox on Event Wall can be toggled.",
+      "title": "A camera selection control can be toggled",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > General, click View on the Event Wall card, click Add Configuration, then expand the configured site down to a camera group and click it.",
+          "expected": "The group's camera rows are listed under Available Cameras."
         },
         {
           "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Event Wall page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Event Wall card should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Event Wall card on the page",
-          "expected": "Event Wall card is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on the General page",
-          "expected": "Precondition is met (on the General page)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Event Wall card displayed correctly",
-          "expected": "Event Wall card displayed correctly"
+          "action": "Tick a camera's checkbox, then untick it.",
+          "expected": "The checkbox changes state on each click."
         }
       ],
       "case_key": "B86ENR"

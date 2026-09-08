@@ -192,7 +192,12 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     def test_open_my_views(self):
-        """Verify the My Views panel opens."""
+        """Verify the My Views panel opens.
+
+        Steps:
+        1. On Views, click the My Views icon in the panel bar.
+           Expected: The My Views panel opens and shows its Presets and My Views sections.
+        """
         # Click My Views button
         my_views_button = self.page.locator("img[src*='myviews']")
         my_views_button.click()
