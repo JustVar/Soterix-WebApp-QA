@@ -139,7 +139,12 @@ class TestChatsDeeper:
     @pytest.mark.chats_deeper
     def test_chat_panel_has_content(self):
         """An open panel shows the search input plus either the
-        empty-state instruction or the recent-conversations list."""
+        empty-state instruction or the recent-conversations list.
+
+        Steps:
+        1. Click the chat icon in the header.
+           Expected: The panel opens with its search field and shows either the 'use the search bar' instruction or the recent conversations list.
+        """
         self.chat.open_chat_panel()
         expect(self.chat.search_input).to_be_visible()
 
@@ -187,7 +192,12 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_chat_panel_survives_page_refresh(self):
-        """The panel opens after a page refresh."""
+        """The panel opens after a page refresh.
+
+        Steps:
+        1. Refresh the browser, then click the chat icon in the header.
+           Expected: The panel opens with its search field.
+        """
         self.page.reload()
         # the app bootstrap has no ready signal; the opener's own
         # marker wait absorbs the remainder

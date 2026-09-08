@@ -41,45 +41,15 @@
           "expected": "No errors in the browser console related to Search button"
         }
       ],
-      "case_key": "dypXRb"
+      "case_key": "9e1bNZ"
     },
     "test_search_page_filters_visible": {
-      "title": "Verify all filter dropdowns are present on the Search page.",
+      "title": "Verify all filter dropdowns are present on the Search page",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search - Insights",
-          "expected": "Search - Insights page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Search input field should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Search input field on the page",
-          "expected": "Search input field is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on Insights page",
-          "expected": "Precondition is met (on Insights page)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Search input field visible and enabled",
-          "expected": "Search input field visible and enabled"
+          "action": "Click Search in the left sidebar.",
+          "expected": "The Category, Locations & Cameras and Duration filters are shown."
         }
       ],
       "case_key": "dypXvp"
@@ -126,42 +96,12 @@
       "case_key": "zvnVK9"
     },
     "test_select_duration": {
-      "title": "Verify the Duration dropdown opens and a duration is selectable.",
+      "title": "Verify the Duration dropdown opens and Today is selectable",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search Landing Page",
-          "expected": "Search Landing Page page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Duration filter should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Duration filter on the page",
-          "expected": "Duration filter is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: with Select placeholder",
-          "expected": "Precondition is met (with Select placeholder)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Duration filter displayed",
-          "expected": "Duration filter displayed"
+          "action": "Open Search and pick Today from the Duration dropdown.",
+          "expected": "The dropdown closes with Today selected and the Search button is shown."
         }
       ],
       "case_key": "gQxXwN"
@@ -205,7 +145,7 @@
           "expected": "Locations & Cameras filter displayed"
         }
       ],
-      "case_key": "n8jQvz"
+      "case_key": "jPnp2d"
     },
     "test_search_button_visible": {
       "title": "Verify the search execution button is visible on page load.",
@@ -246,7 +186,7 @@
           "expected": "No errors in the browser console related to Search button"
         }
       ],
-      "case_key": "dypXRb"
+      "case_key": "Ee69dB"
     }
   }
 }

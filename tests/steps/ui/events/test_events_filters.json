@@ -36,60 +36,20 @@
           "expected": "Maps site dropdown lists available sites is displayed as expected"
         }
       ],
-      "case_key": "DrdZ7x"
+      "case_key": "n8jvBz"
     },
     "test_site_selection_shows_site_name": {
-      "title": "Verify selecting a site shows its name in the filter bar.",
+      "title": "Verify selecting a site enables rules dropdown (site selection confirmed)",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Events and open the site dropdown.",
+          "expected": "At least one site is listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Search - Sites",
-          "expected": "Search - Sites page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for search by site name",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Select a site.",
+          "expected": "The rule dropdown becomes available and lists rules."
         }
       ],
       "case_key": "0rzlE9"
@@ -306,7 +266,7 @@
           "expected": "Clearing the filter restores the full unfiltered list"
         }
       ],
-      "case_key": "J8d9R1"
+      "case_key": "rGQPeW"
     },
     "test_rule_and_duration_combined": {
       "title": "Verify combining a specific rule and duration filters together.",
@@ -418,7 +378,7 @@
           "expected": "The deleted Reset Search clears Duration selection does not reappear after refresh"
         }
       ],
-      "case_key": "Z8xWjk"
+      "case_key": "K4nmWJ"
     },
     "test_pin_multiple_events": {
       "title": "Verify pinning multiple events increments the counter.",

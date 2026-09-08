@@ -41,7 +41,14 @@ class TestEventsFilters:
     @pytest.mark.events
     @pytest.mark.events_filters
     def test_site_selection_shows_site_name(self):
-        """Verify selecting a site enables rules dropdown (site selection confirmed)."""
+        """Verify selecting a site enables rules dropdown (site selection confirmed).
+
+        Steps:
+        1. Open Events and open the site dropdown.
+           Expected: At least one site is listed.
+        2. Select a site.
+           Expected: The rule dropdown becomes available and lists rules.
+        """
         # Get initial sites to verify we can select one
         initial_sites = self.events.get_site_options()
         assert len(initial_sites) > 0, "At least one site should be available"

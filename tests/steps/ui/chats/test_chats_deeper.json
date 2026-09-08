@@ -209,7 +209,7 @@
           "expected": "Search input field visible and enabled"
         }
       ],
-      "case_key": "dypXvp"
+      "case_key": "GdWznj"
     },
     "test_search_returns_results": {
       "title": "Verify searching for a known user returns results.",
@@ -265,7 +265,7 @@
           "expected": "Clearing the filter restores the full unfiltered list"
         }
       ],
-      "case_key": "J8d9R1"
+      "case_key": "jPnm3Z"
     },
     "test_search_with_no_match": {
       "title": "Verify searching for a nonexistent user shows no results.",
@@ -326,7 +326,7 @@
           "expected": "Clearing the filter restores the full unfiltered list"
         }
       ],
-      "case_key": "RgGQ4l"
+      "case_key": "pDpmEm"
     },
     "test_search_clear_resets_results": {
       "title": "Verify clearing the search input resets the search state.",
@@ -365,52 +365,12 @@
       "case_key": "VKbQJQ"
     },
     "test_chat_panel_has_content": {
-      "title": "Verify the chat panel contains some content (groups or conversations).",
+      "title": "An open panel shows the search input plus either the",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Notifications header area > Notification Panel",
-          "expected": "Notification Panel page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate notification panel contains content on the page",
-          "expected": "notification panel contains content is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify notification panel contains content is displayed as expected",
-          "expected": "notification panel contains content is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Set up precondition: when opened",
-          "expected": "Precondition is met (when opened)"
-        },
-        {
-          "n": 9,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Click the chat icon in the header.",
+          "expected": "The panel opens with its search field and shows either the 'use the search bar' instruction or the recent conversations list."
         }
       ],
       "case_key": "WEnMLM"
@@ -498,57 +458,12 @@
       "case_key": "5BRMbz"
     },
     "test_chat_panel_survives_page_refresh": {
-      "title": "Verify the chat panel can be opened after a page refresh.",
+      "title": "The panel opens after a page refresh",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Notifications header area > Notification Panel",
-          "expected": "Notification Panel page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Note the current state of notification panel survives page refresh before making changes",
-          "expected": "Initial state is observed and recorded"
-        },
-        {
-          "n": 4,
-          "action": "Perform the action that changes notification panel survives page refresh",
-          "expected": "Action is completed and change is reflected in the UI"
-        },
-        {
-          "n": 5,
-          "action": "Verify the change is displayed correctly before leaving the page",
-          "expected": "Updated state is visible on the current page"
-        },
-        {
-          "n": 6,
-          "action": "Refresh the page (F5 or browser reload)",
-          "expected": "Page reloads completely"
-        },
-        {
-          "n": 7,
-          "action": "Verify notification panel survives page refresh retained the changes after refresh",
-          "expected": "The change persisted through the page refresh"
-        },
-        {
-          "n": 8,
-          "action": "Navigate away to a different page",
-          "expected": "Different page loads successfully"
-        },
-        {
-          "n": 9,
-          "action": "Navigate back to Notification Panel page",
-          "expected": "Notification Panel page loads"
-        },
-        {
-          "n": 10,
-          "action": "Verify notification panel survives page refresh still reflects the saved changes",
-          "expected": "Changes persist after navigating away and back"
+          "action": "Refresh the browser, then click the chat icon in the header.",
+          "expected": "The panel opens with its search field."
         }
       ],
       "case_key": "8V1l8r"

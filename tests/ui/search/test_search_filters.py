@@ -27,7 +27,12 @@ class TestSearchFilters:
     @pytest.mark.ui
     @pytest.mark.search
     def test_search_page_filters_visible(self):
-        """Verify all filter dropdowns are present on the Search page."""
+        """Verify all filter dropdowns are present on the Search page.
+
+        Steps:
+        1. Click Search in the left sidebar.
+           Expected: The Category, Locations & Cameras and Duration filters are shown.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 
@@ -59,6 +64,10 @@ class TestSearchFilters:
         Index 2 is Today in the current option order (documented in
         select_duration_by_index); the old Selenium-era comment claimed
         index 4, which now selects Last 7 Days.
+
+        Steps:
+        1. Open Search and pick Today from the Duration dropdown.
+           Expected: The dropdown closes with Today selected and the Search button is shown.
         """
         self.search.navigate()
         self.search.wait_for_page_load()

@@ -24,7 +24,12 @@ class TestEventWallDisplay:
     @pytest.mark.event_wall
     @pytest.mark.event_wall_display
     def test_event_wall_event_images(self):
-        """The live wall displays event images for the selected site."""
+        """The live wall displays event images for the selected site.
+
+        Steps:
+        1. Log in with the event wall's local-access account and select a site.
+           Expected: The event wall appears and shows event images for that site.
+        """
         # oracle: none by design - an explicit hold until the wall's
         # special local-access login is provisioned for automation
         pytest.skip(

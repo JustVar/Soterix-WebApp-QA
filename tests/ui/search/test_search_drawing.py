@@ -1,4 +1,4 @@
-﻿"""Global Search zone and line drawing tests.
+"""Global Search zone and line drawing tests.
 
 Covers Zone and Line category searches where the user draws a polygon
 or line on a canvas before executing the search.
@@ -56,6 +56,12 @@ class TestSearchDrawing:
 
         Full flow: draw zone on canvas, select duration, execute search,
         and validate results are loaded.
+
+        Steps:
+        1. Open Search, choose the Zone category, open the drawing view for the configured camera, draw a zone and click Done.
+           Expected: The zone is accepted and the search filters are shown again.
+        2. Pick a duration and click Search.
+           Expected: At least one Zone result appears in the result grid.
         """
         self.search.navigate()
         self.search.wait_for_page_load()

@@ -1,0 +1,17 @@
+{
+  "test_file": "tests/ui/event_wall/test_event_wall_display.py",
+  "class": "TestEventWallDisplay",
+  "tests": {
+    "test_event_wall_event_images": {
+      "title": "The live wall displays event images for the selected site",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Log in with the event wall's local-access account and select a site.",
+          "expected": "The event wall appears and shows event images for that site."
+        }
+      ],
+      "case_key": "gQxw5N"
+    }
+  }
+}

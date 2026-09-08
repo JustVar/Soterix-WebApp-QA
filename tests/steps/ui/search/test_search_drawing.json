@@ -59,57 +59,17 @@
       "case_key": "LD3mGJ"
     },
     "test_zone_search_returns_results": {
-      "title": "Verify Zone search returns results after drawing and searching.",
+      "title": "Verify Zone search returns results after drawing and searching",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Search, choose the Zone category, open the drawing view for the configured camera, draw a zone and click Done.",
+          "expected": "The zone is accepted and the search filters are shown again."
         },
         {
           "n": 2,
-          "action": "Navigate to Search - Clips",
-          "expected": "Search - Clips page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for search by clip name returns matching results",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Pick a duration and click Search.",
+          "expected": "At least one Zone result appears in the result grid."
         }
       ],
       "case_key": "J8d9R1"
@@ -209,7 +169,7 @@
           "expected": "The deleted Reset Search clears Line category selection does not reappear after refresh"
         }
       ],
-      "case_key": "mBdpdb"
+      "case_key": "lR212J"
     },
     "test_line_search_returns_results": {
       "title": "Verify Line search returns results after drawing and searching.",

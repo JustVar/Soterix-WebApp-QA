@@ -332,37 +332,12 @@
       "case_key": "0rzxZb"
     },
     "test_timeline_elements_present": {
-      "title": "Verify timeline-related elements exist in fullscreen.",
+      "title": "Verify timeline-related elements exist in fullscreen",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where timeline elements should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate timeline elements on the page",
-          "expected": "timeline elements is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify timeline elements present in fullscreen playback",
-          "expected": "timeline elements present in fullscreen playback"
+          "action": "On Views, open a camera tile in fullscreen.",
+          "expected": "The stream plays and the player shows its timeline controls, with a pause control present (disabled in live mode, active in archive playback)."
         }
       ],
       "case_key": "kpZQr0"

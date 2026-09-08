@@ -72,7 +72,14 @@ class TestNotifications:
     @pytest.mark.ui
     @pytest.mark.notifications
     def test_admin_mute_rule_notification(self):
-        """Verify a rule notification can be muted from Admin > General > Rules."""
+        """Verify a rule notification can be muted from Admin > General > Rules.
+
+        Steps:
+        1. Open Admin > General > Rules.
+           Expected: The rules are listed, each with a Mute Notification icon.
+        2. Click a rule's Mute Notification icon.
+           Expected: The icon changes to Unmute Notification.
+        """
         # Navigate to Admin; the General tab appearing is the signal
         self.page.locator("a[href*='admin']").click()
         general_tab = self.page.locator("p:text-is('General')")

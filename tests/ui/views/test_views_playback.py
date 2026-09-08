@@ -191,6 +191,10 @@ class TestViewsPlayback:
 
         In LIVE mode, timeline controls are disabled but present.
         Verifies the pause icon is rendered (live-disabled or archive-active).
+
+        Steps:
+        1. On Views, open a camera tile in fullscreen.
+           Expected: The stream plays and the player shows its timeline controls, with a pause control present (disabled in live mode, active in archive playback).
         """
         fs = self._enter_fullscreen()
 
