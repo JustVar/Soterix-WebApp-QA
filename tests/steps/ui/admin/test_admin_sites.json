@@ -11,7 +11,7 @@
           "expected": "The Sites list opens with its search field and the site cards with their online or offline markers."
         }
       ],
-      "case_key": "rGQDWk"
+      "case_key": "8Vvv6J"
     },
     "test_search_site": {
       "title": "Verify the search input filters sites by name.",
@@ -187,7 +187,7 @@
           "expected": "The camera order reverses between the two sorts when the site has more than one camera."
         }
       ],
-      "case_key": "Drd9a9"
+      "case_key": "B899GN"
     },
     "test_create_camera_group": {
       "title": "Verify creating a new camera group with camera selection.",

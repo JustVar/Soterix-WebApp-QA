@@ -303,7 +303,7 @@
           "expected": "It describes the activity and is not empty."
         }
       ],
-      "case_key": "xm9jkm"
+      "case_key": "VKQQR2"
     },
     "test_audit_trail_pagination_visible": {
       "title": "Verify pagination controls are visible on the Audit Trail page",

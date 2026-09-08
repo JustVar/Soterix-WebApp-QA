@@ -37,7 +37,7 @@
           "expected": "The chosen site name shows in the site selector."
         }
       ],
-      "case_key": "0rzlE9"
+      "case_key": "eJXXgr"
     },
     "test_select_camera": {
       "title": "Verify camera dropdown opens and lists cameras",
@@ -105,7 +105,7 @@
           "expected": "The combobox text contains Intrusion Detection."
         }
       ],
-      "case_key": "pDpmba"
+      "case_key": "Dr99lm"
     },
     "test_search_events": {
       "title": "Verify search returns event results after selecting filters",

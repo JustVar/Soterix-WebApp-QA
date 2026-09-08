@@ -132,14 +132,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_navigate_to_admin_sites[chromium]": {
-      "case_key": "rGQDWk",
-      "case_title": "Verify that the user can successfully navigate to the Audio option under each camera listed for a site on the Admin - Sites page.",
-      "score": 1.0,
-      "module": "Configuration and Settings",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_search_site[chromium]": {
       "case_key": "n8jQRg",
       "case_title": "Verify Select Site dropdown resets on Reset Search",
@@ -161,14 +153,6 @@
       "case_title": "Verify tooltip on site status",
       "score": 0.67,
       "module": "Tooltip",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_camera_sorting[chromium]": {
-      "case_key": "Drd9a9",
-      "case_title": "Verify Search Camera input field is displayed",
-      "score": 0.5,
-      "module": "Devices Tab",
       "auto_matched": true,
       "reviewed": false
     },
@@ -468,14 +452,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/events/test_events_search.py::TestEventsSearch::test_select_site[chromium]": {
-      "case_key": "0rzlE9",
-      "case_title": "Verify search by site name",
-      "score": 0.5,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/events/test_events_search.py::TestEventsSearch::test_select_camera[chromium]": {
       "case_key": "M73wak",
       "case_title": "Verify Select Location & Cameras section header is visible",
@@ -491,14 +467,6 @@
       "module": "Search Landing Page",
       "auto_matched": true,
       "reviewed": false
-    },
-    "tests/ui/events/test_events_search.py::TestEventsSearch::test_select_rule[chromium]": {
-      "case_key": "pDpmba",
-      "case_title": "Open Select Rule dialog",
-      "score": 1.0,
-      "module": "Add New Rule",
-      "auto_matched": true,
-      "reviewed": true
     },
     "tests/ui/events/test_events_search.py::TestEventsSearch::test_pin_event[chromium]": {
       "case_key": "M73wxx",
@@ -841,14 +809,6 @@
       "case_title": "Verify only one view toggle remains active at a time",
       "score": 0.5,
       "module": "Grid/List Toggle",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_tab_round_trip_all_to_clips[chromium]": {
-      "case_key": "dypXww",
-      "case_title": "Verify All tab displays clips, folders, and vault items",
-      "score": 0.6,
-      "module": "Media Listing & Actions",
       "auto_matched": true,
       "reviewed": false
     },
@@ -1284,14 +1244,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/search/test_search_drawing.py::TestSearchDrawing::test_line_search_returns_results[chromium]": {
-      "case_key": "J8d9R1",
-      "case_title": "Verify search by clip name returns matching results",
-      "score": 0.75,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/search/test_search_drawing.py::TestSearchDrawing::test_line_search_play_result[chromium]": {
       "case_key": "wmjKjZ",
       "case_title": "Verify search returns results only when an object crosses Line direction configured for Line_1",
@@ -1411,14 +1363,6 @@
       "module": "Map Creation",
       "auto_matched": true,
       "reviewed": true
-    },
-    "tests/ui/views/test_views_basic.py::TestViewsBasic::test_open_my_views[chromium]": {
-      "case_key": "vanZz1",
-      "case_title": "Verify My Views tab is highlighted when selected",
-      "score": 0.67,
-      "module": "My Views",
-      "auto_matched": true,
-      "reviewed": false
     },
     "tests/ui/views/test_views_basic.py::TestViewsBasic::test_open_saved_view[chromium]": {
       "case_key": "8V1vGJ",
@@ -1900,14 +1844,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_action_info[chromium]": {
-      "case_key": "xm9jkm",
-      "case_title": "Verify audit trail entry is created for LPR record edit",
-      "score": 0.5,
-      "module": "Audit Trail",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_pagination_visible[chromium]": {
       "case_key": "8V1bJr",
       "case_title": "Verify general functionality behaves as expected - Audit Trail pagination works correctly across multiple",
@@ -1977,14 +1913,6 @@
       "case_title": "Verify selecting Camera Tamper filters Event Type correctly",
       "score": 0.5,
       "module": "Category - Event",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_toggle_checkbox[chromium]": {
-      "case_key": "B86ENR",
-      "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
-      "score": 0.5,
-      "module": "Event Wall",
       "auto_matched": true,
       "reviewed": false
     },
@@ -3090,6 +3018,87 @@
       "case_title": "MAPS: Drag map thumbnail directly to tile",
       "score": 1.0,
       "module": "Subtabs",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_action_info[chromium]": {
+      "case_key": "VKQQR2",
+      "case_title": "A record's Action cell describes the activity",
+      "score": 1.0,
+      "module": "Audit Trail",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_camera_sorting[chromium]": {
+      "case_key": "B899GN",
+      "case_title": "Verify A-Z and Z-A camera sorting within a site",
+      "score": 1.0,
+      "module": "Sites",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_navigate_to_admin_sites[chromium]": {
+      "case_key": "8Vvv6J",
+      "case_title": "Verify navigating to Admin > Sites loads the site list",
+      "score": 1.0,
+      "module": "Sites",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_toggle_checkbox[chromium]": {
+      "case_key": "M7wwyq",
+      "case_title": "A camera selection control can be toggled",
+      "score": 1.0,
+      "module": "Config",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/events/test_events_search.py::TestEventsSearch::test_select_rule[chromium]": {
+      "case_key": "Dr99lm",
+      "case_title": "Verify rule type filter opens and a rule can be selected",
+      "score": 1.0,
+      "module": "Search",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/events/test_events_search.py::TestEventsSearch::test_select_site[chromium]": {
+      "case_key": "eJXXgr",
+      "case_title": "Verify site dropdown opens and a site can be selected",
+      "score": 1.0,
+      "module": "Search",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_tab_round_trip_all_to_clips[chromium]": {
+      "case_key": "vaZZel",
+      "case_title": "Verify switching from All to Clips and back works",
+      "score": 1.0,
+      "module": "Deeper",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_drawing.py::TestSearchDrawing::test_line_search_returns_results[chromium]": {
+      "case_key": "bjXXz8",
+      "case_title": "Verify Line search returns results after drawing and searching",
+      "score": 1.0,
+      "module": "Drawing",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_basic.py::TestViewsBasic::test_open_my_views[chromium]": {
+      "case_key": "Z8QQJP",
+      "case_title": "Verify the My Views panel opens",
+      "score": 1.0,
+      "module": "Basic",
       "auto_matched": false,
       "reviewed": true,
       "source": "generated"

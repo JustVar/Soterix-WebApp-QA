@@ -164,7 +164,7 @@
           "expected": "The My Views panel opens and shows its Presets and My Views sections."
         }
       ],
-      "case_key": "vanZz1"
+      "case_key": "Z8QQJP"
     },
     "test_open_saved_view": {
       "title": "Verify a saved view can be reopened from My Views after page refresh",

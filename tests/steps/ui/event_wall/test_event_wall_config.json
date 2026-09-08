@@ -293,7 +293,7 @@
           "expected": "The checkbox changes state on each click."
         }
       ],
-      "case_key": "B86ENR"
+      "case_key": "M7wwyq"
     },
     "test_event_wall_save_or_apply": {
       "title": "Verify Event Wall has a save or apply button for configuration.",
