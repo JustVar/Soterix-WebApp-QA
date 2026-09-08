@@ -53,7 +53,12 @@ class TestAdminUsers:
     @pytest.mark.admin
     @pytest.mark.admin_users
     def test_navigate_to_admin_users(self):
-        """Verify navigating to Admin > Users section loads the user list."""
+        """Verify navigating to Admin > Users section loads the user list.
+
+        Steps:
+        1. Open Admin and click Users in the sidebar.
+           Expected: The Users list opens with its search field.
+        """
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 
@@ -139,7 +144,12 @@ class TestAdminUsers:
     @pytest.mark.admin
     @pytest.mark.admin_users
     def test_role_filter_options(self):
-        """Verify the role filter dropdown contains expected roles."""
+        """Verify the role filter dropdown contains expected roles.
+
+        Steps:
+        1. Open Admin > Users and open the role filter dropdown.
+           Expected: The dropdown offers Admin, Operator and Supervisor.
+        """
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 

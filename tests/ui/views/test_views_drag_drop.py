@@ -113,7 +113,14 @@ class TestViewsDragDrop:
     @pytest.mark.dragdrop
     @pytest.mark.views_devices
     def test_drag_camera_by_name_to_tile(self):
-        """Verify a specific camera can be dragged to a tile by name."""
+        """Verify a specific camera can be dragged to a tile by name.
+
+        Steps:
+        1. On Views, expand the configured site and show its cameras.
+           Expected: The site's camera thumbnails are listed.
+        2. Drag the configured camera's thumbnail onto an empty tile.
+           Expected: The tile fills and the camera's live video plays as a moving picture, not a still.
+        """
         # Expand site and show cameras (the call confirms cameras
         # visible on its own)
         self.views.expand_site_and_show_cameras(None)
@@ -165,6 +172,12 @@ class TestViewsDragDrop:
         The view comes from the API (tests/shared/api/fixtures.py):
         this test proves the drag, and test_views_basic proves the UI
         save. The fixture deletes the view at teardown.
+
+        Steps:
+        1. Create a saved view (the automation makes one through the API), reload Views and open My Views.
+           Expected: The saved view is listed.
+        2. Drag the saved view onto an empty tile.
+           Expected: The tile fills with the view's content, or the view opens as a new tab.
         """
         view_name = api_saved_view()["name"]
 
@@ -203,7 +216,12 @@ class TestViewsDragDrop:
     @pytest.mark.ui
     @pytest.mark.dragdrop
     def test_drag_location_to_tile(self):
-        """Verify a location/site can be dragged to an empty tile (shows all cameras)."""
+        """Verify a location/site can be dragged to an empty tile (shows all cameras).
+
+        Steps:
+        1. On Views, in the Devices panel, drag the configured site's row onto an empty tile.
+           Expected: The site's cameras load into the grid and empty tiles fill.
+        """
         # Get initial tile count
         initial_tile_count = self.views.get_available_tile_count()
         assert initial_tile_count > 0, "No empty tiles available"

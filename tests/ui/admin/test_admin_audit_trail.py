@@ -127,7 +127,14 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_record_has_date_info(self):
-        """A record carries a dd-mm-yyyy date and hh:mm time."""
+        """A record carries a dd-mm-yyyy date and hh:mm time.
+
+        Steps:
+        1. Open Admin > General, click View on the Audit Trail card.
+           Expected: Audit records are listed.
+        2. Read the first record.
+           Expected: It shows a date in dd-mm-yyyy form and a time in hh:mm form.
+        """
         text = self._first_row().inner_text()
         assert re.search(r"\d{2}-\d{2}-\d{4}", text), (
             f"No dd-mm-yyyy date in the first audit row: {text!r}"
@@ -210,7 +217,12 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_has_multiple_entries(self):
-        """The shared tenant's activity fills more than one record."""
+        """The shared tenant's activity fills more than one record.
+
+        Steps:
+        1. Open Admin > General, click View on the Audit Trail card.
+           Expected: At least one audit record is listed.
+        """
         self._first_row()
         assert self.rows.count() >= 1, "Expected at least one record"
 

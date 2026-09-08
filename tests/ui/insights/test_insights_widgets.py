@@ -70,7 +70,12 @@ class TestInsightsWidgetCreate:
         "graph_name,category_name", WIDGET_PARAMS, ids=WIDGET_IDS
     )
     def test_widget_create(self, graph_name, category_name):
-        """Verify a widget can be created with the given graph and category."""
+        """Verify a widget can be created with the given graph and category.
+
+        Steps:
+        1. Open Insights, switch to Widgets and click Create New Widget; choose the graph type and category under test, the configured site and camera, a duration and a size, then save.
+           Expected: A 'Widget created successfully' message appears and the widget is listed.
+        """
         widget_name = self.insights.create_widget(
             graph_name=graph_name,
             category_name=category_name,
@@ -150,7 +155,14 @@ class TestInsightsWidgetOperations:
         ids=["Line_Person", "Pie_Vehicle", "Heat_Person"],
     )
     def test_widget_delete(self, graph_name, category_name):
-        """Verify a widget can be deleted and no longer appears in search."""
+        """Verify a widget can be deleted and no longer appears in search.
+
+        Steps:
+        1. Open Insights, switch to Widgets and create a widget with the graph type and category under test.
+           Expected: The widget is listed.
+        2. Open the widget's options menu, choose Delete and confirm.
+           Expected: The widget no longer appears when searched for by name.
+        """
         widget_name = self.insights.create_widget(
             graph_name=graph_name,
             category_name=category_name,

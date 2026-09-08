@@ -31,7 +31,12 @@ class TestMediaNavigation:
     @pytest.mark.ui
     @pytest.mark.media
     def test_navigate_to_media_page(self):
-        """Verify navigation to the Media page via the sidebar."""
+        """Verify navigation to the Media page via the sidebar.
+
+        Steps:
+        1. Click Media in the left sidebar.
+           Expected: The Media page opens and shows its date filter.
+        """
         self.media.navigate()
 
         # SPA URL doesn't include 'media' in path - verify page content instead
@@ -67,7 +72,12 @@ class TestMediaNavigation:
     @pytest.mark.ui
     @pytest.mark.media
     def test_all_tab(self):
-        """Verify the All tab loads and shows content or empty state."""
+        """Verify the All tab loads and shows content or empty state.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days and click the All tab.
+           Expected: The All tab is selected and shows its content or its empty state, with the date filter still shown.
+        """
         self.media.navigate()
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("All")
@@ -77,7 +87,12 @@ class TestMediaNavigation:
     @pytest.mark.ui
     @pytest.mark.media
     def test_my_media_tab(self):
-        """Verify the My Media tab loads."""
+        """Verify the My Media tab loads.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days and click the My Media tab.
+           Expected: The My Media tab is selected, with the date filter still shown.
+        """
         self.media.navigate()
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("My Media")

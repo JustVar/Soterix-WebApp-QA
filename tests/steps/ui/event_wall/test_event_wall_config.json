@@ -89,8 +89,8 @@
       ],
       "case_key": "RgGBWd"
     },
-    "test_event_wall_site_selector": {
-      "title": "Verify Event Wall has a site selection dropdown.",
+    "test_event_wall_grid_layout": {
+      "title": "Verify Event Wall uses a grid or card-based layout for events.",
       "steps": [
         {
           "n": 1,
@@ -99,8 +99,8 @@
         },
         {
           "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Event Wall page loads without errors"
+          "action": "Navigate to Search Results",
+          "expected": "Search Results page loads without errors"
         },
         {
           "n": 3,
@@ -109,23 +109,29 @@
         },
         {
           "n": 4,
-          "action": "Scroll to the area where Event Wall card should appear",
+          "action": "Scroll to the area where event cards should appear",
           "expected": "The relevant section of the page is in view"
         },
         {
           "n": 5,
-          "action": "Locate Event Wall card on the page",
-          "expected": "Event Wall card is visible on the page"
+          "action": "Locate event cards on the page",
+          "expected": "event cards is visible on the page"
         },
         {
           "n": 6,
-          "action": "Set up precondition: on the General page",
-          "expected": "Precondition is met (on the General page)"
-        },
+          "action": "Verify event cards displayed in grid layout",
+          "expected": "event cards displayed in grid layout"
+        }
+      ],
+      "case_key": "xm9dgR"
+    },
+    "test_event_wall_site_selector": {
+      "title": "The Add form lists sites under Available Cameras",
+      "steps": [
         {
-          "n": 7,
-          "action": "Verify Event Wall card displayed correctly",
-          "expected": "Event Wall card displayed correctly"
+          "n": 1,
+          "action": "Open Admin > General, click View on the Event Wall card, then click Add Configuration.",
+          "expected": "The Add form opens with an Available Cameras panel that lists the configured site."
         }
       ],
       "case_key": "B86ENR"
@@ -314,98 +320,6 @@
       ],
       "case_key": "B86ENR"
     },
-    "test_event_wall_event_images": {
-      "title": "Verify Event Wall displays event images or thumbnails.",
-      "steps": [
-        {
-          "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Camera Search Filters",
-          "expected": "Camera Search Filters page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for Event search result images",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
-        }
-      ],
-      "case_key": "gQxw5N"
-    },
-    "test_event_wall_grid_layout": {
-      "title": "Verify Event Wall uses a grid or card-based layout for events.",
-      "steps": [
-        {
-          "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search Results",
-          "expected": "Search Results page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where event cards should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate event cards on the page",
-          "expected": "event cards is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify event cards displayed in grid layout",
-          "expected": "event cards displayed in grid layout"
-        }
-      ],
-      "case_key": "xm9dgR"
-    },
     "test_event_wall_save_or_apply": {
       "title": "Verify Event Wall has a save or apply button for configuration.",
       "steps": [
@@ -463,42 +377,12 @@
       "case_key": "VKbeN2"
     },
     "test_back_to_general_from_event_wall": {
-      "title": "Verify navigating back from Event Wall to General section works.",
+      "title": "The breadcrumb returns to the General cards page",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Event Wall page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Event Wall card should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Event Wall card on the page",
-          "expected": "Event Wall card is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on the General page",
-          "expected": "Precondition is met (on the General page)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Event Wall card displayed correctly",
-          "expected": "Event Wall card displayed correctly"
+          "action": "From the Event Wall configuration page, click the General breadcrumb.",
+          "expected": "The General cards page is shown again."
         }
       ],
       "case_key": "B86ENR"
@@ -639,7 +523,7 @@
           "expected": "Event Wall card displayed correctly"
         }
       ],
-      "case_key": "B86ENR"
+      "case_key": "J8dz4p"
     }
   }
 }

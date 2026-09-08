@@ -134,7 +134,12 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_site_selector(self):
-        """The Add form lists sites under Available Cameras."""
+        """The Add form lists sites under Available Cameras.
+
+        Steps:
+        1. Open Admin > General, click View on the Event Wall card, then click Add Configuration.
+           Expected: The Add form opens with an Available Cameras panel that lists the configured site.
+        """
         self._open_add_form()
         expect(self.page.get_by_text("Available Cameras", exact=True)
                ).to_be_visible(timeout=10000)
@@ -251,7 +256,12 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_back_to_general_from_event_wall(self):
-        """The breadcrumb returns to the General cards page."""
+        """The breadcrumb returns to the General cards page.
+
+        Steps:
+        1. From the Event Wall configuration page, click the General breadcrumb.
+           Expected: The General cards page is shown again.
+        """
         # oracle: _back_to_general_cards expects the cards visible
         self._back_to_general_cards()
 

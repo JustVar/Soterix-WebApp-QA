@@ -3,47 +3,12 @@
   "class": "TestAdminUsers",
   "tests": {
     "test_navigate_to_admin_users": {
-      "title": "Verify navigating to Admin > Users section loads the user list.",
+      "title": "Verify navigating to Admin > Users section loads the user list",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Configuration and Settings",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Configuration and Settings page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: for a site on the Admin - Sites page",
-          "expected": "Precondition is met (for a site on the Admin - Sites page)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Open Admin and click Users in the sidebar.",
+          "expected": "The Users list opens with its search field."
         }
       ],
       "case_key": "rGQDWk"
@@ -192,57 +157,12 @@
       "case_key": "B86EyN"
     },
     "test_role_filter_options": {
-      "title": "Verify the role filter dropdown contains expected roles.",
+      "title": "Verify the role filter dropdown contains expected roles",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Camera Search Filters",
-          "expected": "Camera Search Filters page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for Event category",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Open Admin > Users and open the role filter dropdown.",
+          "expected": "The dropdown offers Admin, Operator and Supervisor."
         }
       ],
       "case_key": "xm9E11"
@@ -304,42 +224,27 @@
       "case_key": "vanZWz"
     },
     "test_delete_user": {
-      "title": "Verify a user can be deleted via options menu > delete > confirm.",
+      "title": "Verify a user can be deleted via options menu > delete > confirm",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click Admin in the left sidebar, then click Users.",
+          "expected": "The Users list opens."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Delete User",
-          "expected": "Browser navigates to the target URL"
+          "action": "Type AutoTest in the user search field.",
+          "expected": "The list shrinks to the AutoTest users."
         },
         {
           "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Delete User page loads successfully without errors"
+          "action": "Click the options icon on an AutoTest user card, then click Delete.",
+          "expected": "A confirmation dialog opens."
         },
         {
           "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Click Delete in the dialog.",
+          "expected": "The user card is removed, the list shows one card fewer, and no error is shown."
         }
       ],
       "case_key": "xm9jZa"

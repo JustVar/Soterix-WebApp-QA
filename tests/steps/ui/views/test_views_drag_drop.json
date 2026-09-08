@@ -46,142 +46,47 @@
           "expected": "Same data appears after page refresh"
         }
       ],
-      "case_key": "3gjBw9"
+      "case_key": "Ee6103"
     },
     "test_drag_camera_by_name_to_tile": {
-      "title": "Verify a specific camera can be dragged to a tile by name.",
+      "title": "Verify a specific camera can be dragged to a tile by name",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Views, expand the configured site and show its cameras.",
+          "expected": "The site's camera thumbnails are listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > Empty Grid State",
-          "expected": "Empty Grid State page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate empty grid tile displays Drag & Drop Camera here text on the page",
-          "expected": "empty grid tile displays Drag & Drop Camera here text is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify empty grid tile displays Drag & Drop Camera here text is displayed as expected",
-          "expected": "empty grid tile displays Drag & Drop Camera here text is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Drag the configured camera's thumbnail onto an empty tile.",
+          "expected": "The tile fills and the camera's live video plays as a moving picture, not a still."
         }
       ],
       "case_key": "3gjBw9"
     },
     "test_drag_saved_view_to_tile": {
-      "title": "Verify a saved view can be dragged from My Views to an empty tile.",
+      "title": "Verify a saved view can be dragged from My Views to an empty tile",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Create a saved view (the automation makes one through the API), reload Views and open My Views.",
+          "expected": "The saved view is listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > Empty Grid State",
-          "expected": "Empty Grid State page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate empty grid tile displays Drag & Drop Camera here text on the page",
-          "expected": "empty grid tile displays Drag & Drop Camera here text is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify empty grid tile displays Drag & Drop Camera here text is displayed as expected",
-          "expected": "empty grid tile displays Drag & Drop Camera here text is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Drag the saved view onto an empty tile.",
+          "expected": "The tile fills with the view's content, or the view opens as a new tab."
         }
       ],
       "case_key": "3gjBw9"
     },
     "test_drag_location_to_tile": {
-      "title": "Verify a location/site can be dragged to an empty tile (shows all cameras).",
+      "title": "Verify a location/site can be dragged to an empty tile (shows all cameras)",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Empty Grid State",
-          "expected": "Empty Grid State page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate empty grid tile displays Drag & Drop Camera here text on the page",
-          "expected": "empty grid tile displays Drag & Drop Camera here text is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify empty grid tile displays Drag & Drop Camera here text is displayed as expected",
-          "expected": "empty grid tile displays Drag & Drop Camera here text is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "On Views, in the Devices panel, drag the configured site's row onto an empty tile.",
+          "expected": "The site's cameras load into the grid and empty tiles fill."
         }
       ],
       "case_key": "3gjBw9"
@@ -327,7 +232,7 @@
           "expected": "multiple camera tiles displayed simultaneously in the grid"
         }
       ],
-      "case_key": "xm9d6l"
+      "case_key": "Nj3zwa"
     }
   }
 }

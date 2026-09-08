@@ -37,7 +37,12 @@ class TestMediaDeeper:
     @pytest.mark.media
     @pytest.mark.media_deeper
     def test_date_filter_has_options(self):
-        """Verify the date filter dropdown has multiple filter options."""
+        """Verify the date filter dropdown has multiple filter options.
+
+        Steps:
+        1. Open Media and open the date filter dropdown.
+           Expected: The dropdown offers at least three date ranges.
+        """
         self.media.date_filter.click()
 
         listbox = self.page.locator("[role='listbox']")
@@ -103,7 +108,12 @@ class TestMediaDeeper:
     @pytest.mark.media
     @pytest.mark.media_deeper
     def test_grid_view_switch_round_trip(self):
-        """Verify grid view can be activated and page remains valid."""
+        """Verify grid view can be activated and page remains valid.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, switch to grid view and then back to list view.
+           Expected: The page keeps working and the date filter is still shown.
+        """
         self.media.select_date_filter("Last 30 Days")
         self.media.switch_to_grid_view()
 

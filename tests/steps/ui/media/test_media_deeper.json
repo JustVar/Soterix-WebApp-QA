@@ -39,57 +39,12 @@
       "case_key": "M73wDl"
     },
     "test_date_filter_has_options": {
-      "title": "Verify the date filter dropdown has multiple filter options.",
+      "title": "Verify the date filter dropdown has multiple filter options",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Events > Date Filter",
-          "expected": "Events Date Filter controls loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for default date filter",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Open Media and open the date filter dropdown.",
+          "expected": "The dropdown offers at least three date ranges."
         }
       ],
       "case_key": "bj0X3V"
@@ -279,42 +234,12 @@
       "case_key": "aj6ydD"
     },
     "test_grid_view_switch_round_trip": {
-      "title": "Verify grid view can be activated and page remains valid.",
+      "title": "Verify grid view can be activated and page remains valid",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > View Toggle - Modules",
-          "expected": "View Toggle - Modules page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for switch to Grid view",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify switch to Grid view is displayed and functions correctly",
-          "expected": "Switch to grid view is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Open Media, set the date filter to Last 30 Days, switch to grid view and then back to list view.",
+          "expected": "The page keeps working and the date filter is still shown."
         }
       ],
       "case_key": "11zlpR"
@@ -366,53 +291,33 @@
       "case_key": "dypXww"
     },
     "test_tab_round_trip_folders_to_shared": {
-      "title": "Verify switching from Folders to Shared with me and back works.",
+      "title": "Verify switching from Folders to Shared with me and back works",
       "steps": [
         {
           "n": 1,
-          "action": "Navigate to Media and select 'Last 30 Days' filter",
-          "expected": "Filter applied"
+          "action": "Click Media in the left sidebar, open the date filter, and choose Last 30 Days.",
+          "expected": "The list reloads for the last 30 days."
         },
         {
           "n": 2,
-          "action": "Click the Folders tab",
-          "expected": "Folders tab is selected"
-        },
-        {
-          "n": 3,
-          "action": "Click the 'Shared with me' tab",
-          "expected": "Shared with me tab is selected"
-        },
-        {
-          "n": 4,
-          "action": "Click the Folders tab again",
-          "expected": "Folders tab is re-selected"
-        },
-        {
-          "n": 5,
-          "action": "Verify page remains valid",
-          "expected": "URL still contains 'media'"
+          "action": "Click the Folders tab, then Shared with me, then Folders again.",
+          "expected": "Each tab loads and the date filter stays visible."
         }
       ],
       "case_key": "21z6aQ"
     },
     "test_core_tabs_accessible": {
-      "title": "Verify the core media tabs can be clicked without errors.",
+      "title": "Verify the core media tabs can be clicked without errors",
       "steps": [
         {
           "n": 1,
-          "action": "Navigate to Media and select 'Last 30 Days' filter",
-          "expected": "Filter applied"
+          "action": "Click Media in the left sidebar, open the date filter, and choose Last 30 Days.",
+          "expected": "The list reloads for the last 30 days."
         },
         {
           "n": 2,
-          "action": "Click each core tab: All, My Media, Shared with me, Clips, Folders",
-          "expected": "Each tab loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify page remains valid after cycling all tabs",
-          "expected": "URL still contains 'media'"
+          "action": "Click the All, My Media, Shared with me, Clips, and Folders tabs in turn.",
+          "expected": "Each tab loads without an error and the date filter stays visible."
         }
       ],
       "case_key": "5BRzE9"
@@ -520,57 +425,22 @@
       "case_key": "Pgw96K"
     },
     "test_search_clear_and_retry": {
-      "title": "Verify clearing search and searching again works.",
+      "title": "Verify clearing search and searching again works",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click Media in the left sidebar, open the date filter, and choose Last 30 Days.",
+          "expected": "The list reloads for the last 30 days."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Search - Users",
-          "expected": "Search - Users page loads without errors"
+          "action": "Type clip in the search field and press Enter.",
+          "expected": "The list reloads with the search applied."
         },
         {
           "n": 3,
-          "action": "Identify the Clear search input and restore role list to be deleted from the list",
-          "expected": "Clear search input and restore role list is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target Clear search input and restore role list",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the Clear search input and restore role list"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the Clear search input and restore role list no longer appears in the list",
-          "expected": "Clear search input and restore role list is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted Clear search input and restore role list does not reappear after refresh"
+          "action": "Clear the field, type 17, and press Enter.",
+          "expected": "The list reloads again and the date filter stays visible."
         }
       ],
       "case_key": "WEnvWV"

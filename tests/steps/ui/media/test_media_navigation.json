@@ -3,47 +3,12 @@
   "class": "TestMediaNavigation",
   "tests": {
     "test_navigate_to_media_page": {
-      "title": "Verify navigation to the Media page via the sidebar.",
+      "title": "Verify navigation to the Media page via the sidebar",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Configuration and Settings",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Configuration and Settings page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: for a site on the Admin - Sites page",
-          "expected": "Precondition is met (for a site on the Admin - Sites page)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Click Media in the left sidebar.",
+          "expected": "The Media page opens and shows its date filter."
         }
       ],
       "case_key": "rGQDWk"
@@ -82,7 +47,7 @@
           "expected": "No errors in the browser console related to selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter"
         }
       ],
-      "case_key": "M73wDl"
+      "case_key": "mBdXNV"
     },
     "test_switch_to_grid_view": {
       "title": "Verify switching from list to grid view.",
@@ -126,83 +91,23 @@
       "case_key": "11zlpR"
     },
     "test_all_tab": {
-      "title": "Verify the All tab loads and shows content or empty state.",
+      "title": "Verify the All tab loads and shows content or empty state",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Static Map Detail View",
-          "expected": "Static Map Detail View page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for closing map tab returns user to All Maps view",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify closing map tab returns user to All Maps view is displayed and functions correctly",
-          "expected": "Closing map tab returns user to all maps view is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Open Media, set the date filter to Last 30 Days and click the All tab.",
+          "expected": "The All tab is selected and shows its content or its empty state, with the date filter still shown."
         }
       ],
-      "case_key": "VKbQjx"
+      "case_key": "dypXww"
     },
     "test_my_media_tab": {
-      "title": "Verify the My Media tab loads.",
+      "title": "Verify the My Media tab loads",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > My Views",
-          "expected": "My Views page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate My Views tab on the page",
-          "expected": "My Views tab is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of My Views tab",
-          "expected": "My Views tab highlighted"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: when selected",
-          "expected": "Precondition is met (when selected)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to My Views tab"
+          "action": "Open Media, set the date filter to Last 30 Days and click the My Media tab.",
+          "expected": "The My Media tab is selected, with the date filter still shown."
         }
       ],
       "case_key": "vanZz1"
@@ -394,7 +299,7 @@
           "expected": "Same data appears after page refresh"
         }
       ],
-      "case_key": "VKbQZB"
+      "case_key": "8V1vlr"
     },
     "test_search_media": {
       "title": "Verify searching media by title/tags.",
@@ -450,7 +355,7 @@
           "expected": "The deleted clearing search input restores full media list does not reappear after refresh"
         }
       ],
-      "case_key": "68lDK8"
+      "case_key": "qzdMp4"
     }
   }
 }
