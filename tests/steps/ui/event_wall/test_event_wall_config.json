@@ -134,7 +134,7 @@
           "expected": "The Add form opens with an Available Cameras panel that lists the configured site."
         }
       ],
-      "case_key": "B86ENR"
+      "case_key": "QGQQEB"
     },
     "test_event_wall_site_dropdown_opens": {
       "title": "Verify the site dropdown can be opened on Event Wall.",
@@ -385,7 +385,7 @@
           "expected": "The General cards page is shown again."
         }
       ],
-      "case_key": "B86ENR"
+      "case_key": "ajyyd4"
     },
     "test_event_wall_to_audit_trail_round_trip": {
       "title": "Verify navigating from Event Wall to Audit Trail and back.",

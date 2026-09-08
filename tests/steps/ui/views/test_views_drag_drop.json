@@ -62,7 +62,7 @@
           "expected": "The tile fills and the camera's live video plays as a moving picture, not a still."
         }
       ],
-      "case_key": "3gjBw9"
+      "case_key": "qzMM04"
     },
     "test_drag_saved_view_to_tile": {
       "title": "Verify a saved view can be dragged from My Views to an empty tile",
@@ -78,7 +78,7 @@
           "expected": "The tile fills with the view's content, or the view opens as a new tab."
         }
       ],
-      "case_key": "3gjBw9"
+      "case_key": "3gBB2P"
     },
     "test_drag_location_to_tile": {
       "title": "Verify a location/site can be dragged to an empty tile (shows all cameras)",
@@ -89,7 +89,7 @@
           "expected": "The site's cameras load into the grid and empty tiles fill."
         }
       ],
-      "case_key": "3gjBw9"
+      "case_key": "XGQQ90"
     },
     "test_drag_map_to_tile": {
       "title": "Verify a map can be dragged to an empty tile.",

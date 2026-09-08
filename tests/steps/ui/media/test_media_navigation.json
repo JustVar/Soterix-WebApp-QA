@@ -11,7 +11,7 @@
           "expected": "The Media page opens and shows its date filter."
         }
       ],
-      "case_key": "rGQDWk"
+      "case_key": "Z8QQXk"
     },
     "test_select_date_filter": {
       "title": "Verify selecting 'Last 30 Days' from the date filter dropdown.",
@@ -99,7 +99,7 @@
           "expected": "The All tab is selected and shows its content or its empty state, with the date filter still shown."
         }
       ],
-      "case_key": "dypXww"
+      "case_key": "vaZZyn"
     },
     "test_my_media_tab": {
       "title": "Verify the My Media tab loads",
@@ -110,7 +110,7 @@
           "expected": "The My Media tab is selected, with the date filter still shown."
         }
       ],
-      "case_key": "vanZz1"
+      "case_key": "bjXXl9"
     },
     "test_shared_with_me_tab": {
       "title": "Verify the Shared with me tab loads.",

@@ -11,7 +11,7 @@
           "expected": "The rules list opens with its search field."
         }
       ],
-      "case_key": "rGQDWk"
+      "case_key": "pD88GG"
     },
     "test_add_new_rule_wizard_opens": {
       "title": "Verify clicking Add New Rule opens the wizard with rule type options",
@@ -22,7 +22,7 @@
           "expected": "The rule type picker opens and offers Entry-Exit among the types."
         }
       ],
-      "case_key": "pDpmba"
+      "case_key": "4188Nb"
     },
     "test_select_rule_type": {
       "title": "Verify selecting a rule type in the wizard advances to next step (parametrized: Entry-Exit, Heat Map, Loitering, Occupancy, Intrusion Detection, Line Crossing).",
@@ -69,7 +69,7 @@
           "expected": "The search field holds the typed text and the list filters to matching rules."
         }
       ],
-      "case_key": "VKbQJQ"
+      "case_key": "LDXXze"
     },
     "test_edit_rule_notification": {
       "title": "Verify editing a rule's notification settings (popUp + push).",

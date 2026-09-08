@@ -47,7 +47,7 @@
           "expected": "The dropdown offers at least three date ranges."
         }
       ],
-      "case_key": "bj0X3V"
+      "case_key": "Dr992x"
     },
     "test_date_filter_today": {
       "title": "Verify selecting 'Today' date filter works.",
@@ -242,7 +242,7 @@
           "expected": "The page keeps working and the date filter is still shown."
         }
       ],
-      "case_key": "11zlpR"
+      "case_key": "eJXXK3"
     },
     "test_tab_round_trip_all_to_clips": {
       "title": "Verify switching from All to Clips and back works.",

@@ -246,7 +246,7 @@
           "expected": "It shows a date in dd-mm-yyyy form and a time in hh:mm form."
         }
       ],
-      "case_key": "xm9jkm"
+      "case_key": "jPppXd"
     },
     "test_audit_trail_record_has_user_info": {
       "title": "Verify audit records contain user information",
@@ -461,7 +461,7 @@
           "expected": "At least one audit record is listed."
         }
       ],
-      "case_key": "8V1bJr"
+      "case_key": "K4993J"
     },
     "test_back_to_general_from_audit_trail": {
       "title": "Verify navigating back from Audit Trail to General section works",

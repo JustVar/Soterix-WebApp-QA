@@ -16,7 +16,7 @@
           "expected": "An empty tile fills with that camera's video."
         }
       ],
-      "case_key": "pDpvBJ"
+      "case_key": "mBXXyV"
     },
     "test_devices_drag_camera_to_tile": {
       "title": "DEVICES: Drag camera thumbnail directly to empty tile.",
@@ -125,7 +125,7 @@
           "expected": "An empty tile fills with the map."
         }
       ],
-      "case_key": "B869gN"
+      "case_key": "gQXX4N"
     },
     "test_maps_drag_map_to_tile": {
       "title": "MAPS: Drag map thumbnail directly to tile",
@@ -141,7 +141,7 @@
           "expected": "The tile fills with the map."
         }
       ],
-      "case_key": "B869gN"
+      "case_key": "Gd992y"
     },
     "test_channels_add_channel_via_checkbox": {
       "title": "CHANNELS: Add channel to tile using checkbox.",
@@ -274,7 +274,7 @@
           "expected": "An empty tile fills with the widget (on the current build the card offers no checkbox and drag is the add path, so the automated check stops there)."
         }
       ],
-      "case_key": "dypXMM"
+      "case_key": "n8QQyz"
     },
     "test_insights_drag_to_tile": {
       "title": "INSIGHTS: Drag insight widget card to tile.",

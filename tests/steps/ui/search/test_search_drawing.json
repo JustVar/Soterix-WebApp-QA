@@ -72,7 +72,7 @@
           "expected": "At least one Zone result appears in the result grid."
         }
       ],
-      "case_key": "J8d9R1"
+      "case_key": "68DD2V"
     },
     "test_zone_search_play_result": {
       "title": "Verify playing a Zone search result clip works.",

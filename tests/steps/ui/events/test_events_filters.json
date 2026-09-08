@@ -52,7 +52,7 @@
           "expected": "The rule dropdown becomes available and lists rules."
         }
       ],
-      "case_key": "0rzlE9"
+      "case_key": "B8992R"
     },
     "test_rule_dropdown_lists_available_rules": {
       "title": "Verify rule dropdown shows multiple rule type options.",

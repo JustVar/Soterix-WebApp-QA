@@ -11,7 +11,7 @@
           "expected": "The Users list opens with its search field."
         }
       ],
-      "case_key": "rGQDWk"
+      "case_key": "kpXX30"
     },
     "test_add_user": {
       "title": "Verify a new user can be added via the Add User form.",
@@ -165,7 +165,7 @@
           "expected": "The dropdown offers Admin, Operator and Supervisor."
         }
       ],
-      "case_key": "xm9E11"
+      "case_key": "11PPEB"
     },
     "test_select_role_filter": {
       "title": "Verify selecting a role from the filter dropdown works.",

@@ -92,35 +92,11 @@
       "auto_matched": true,
       "reviewed": true
     },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_navigate_to_rules[chromium]": {
-      "case_key": "rGQDWk",
-      "case_title": "Verify that the user can successfully navigate to the Audio option under each camera listed for a site on the Admin - Sites page.",
-      "score": 0.5,
-      "module": "Configuration and Settings",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_add_new_rule_wizard_opens[chromium]": {
-      "case_key": "pDpmba",
-      "case_title": "Open Select Rule dialog",
-      "score": 0.22,
-      "module": "Add New Rule",
-      "auto_matched": false,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Entry-Exit]": {
       "case_key": "Drd95P",
       "case_title": "Verify empty state message is displayed before selecting rule type",
       "score": 0.83,
       "module": "Empty State",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_search_rule[chromium]": {
-      "case_key": "VKbQJQ",
-      "case_title": "Verify Reset Search clears selected rule and resets to All Rules",
-      "score": 1.0,
-      "module": "All Rules Filter",
       "auto_matched": true,
       "reviewed": false
     },
@@ -188,22 +164,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_site_versions[chromium]": {
-      "case_key": "DrdZ7x",
-      "case_title": "Verify Maps site dropdown lists available sites",
-      "score": 0.5,
-      "module": "Maps",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_navigate_to_online_site[chromium]": {
-      "case_key": "rGQDWk",
-      "case_title": "Verify that the user can successfully navigate to the Audio option under each camera listed for a site on the Admin - Sites page.",
-      "score": 0.67,
-      "module": "Configuration and Settings",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_camera_sorting[chromium]": {
       "case_key": "Drd9a9",
       "case_title": "Verify Search Camera input field is displayed",
@@ -217,14 +177,6 @@
       "case_title": "Verifying map configuration list refresh after create or update action - Camera groups and cameras are displayed correctly",
       "score": 0.83,
       "module": "Map Editing",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_edit_camera_group[chromium]": {
-      "case_key": "gQxkdL",
-      "case_title": "Verify deleting a camera group with Yes confirmation",
-      "score": 0.67,
-      "module": "Sites",
       "auto_matched": true,
       "reviewed": false
     },
@@ -242,14 +194,6 @@
       "score": 1.0,
       "module": "Sites",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_users.py::TestAdminUsers::test_navigate_to_admin_users[chromium]": {
-      "case_key": "rGQDWk",
-      "case_title": "Verify that the user can successfully navigate to the Audio option under each camera listed for a site on the Admin - Sites page.",
-      "score": 0.67,
-      "module": "Configuration and Settings",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/admin/test_admin_users.py::TestAdminUsers::test_add_user[chromium]": {
@@ -273,14 +217,6 @@
       "case_title": "Verify Status toggle is visible for each list entry",
       "score": 0.67,
       "module": "List",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_users.py::TestAdminUsers::test_role_filter_options[chromium]": {
-      "case_key": "xm9E11",
-      "case_title": "Verify Event category does not show gender filter options",
-      "score": 0.67,
-      "module": "Camera Search Filters",
       "auto_matched": true,
       "reviewed": false
     },
@@ -396,14 +332,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/chats/test_chats_deeper.py::TestChatsDeeper::test_chat_panel_has_content[chromium]": {
-      "case_key": "WEnMLM",
-      "case_title": "Verify notification panel contains content when opened",
-      "score": 0.5,
-      "module": "Notification Panel",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/chats/test_chats_deeper.py::TestChatsDeeper::test_click_search_result_opens_chat[chromium]": {
       "case_key": "LD3mr1",
       "case_title": "Open one-to-one chat from search result",
@@ -420,28 +348,12 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/chats/test_chats_deeper.py::TestChatsDeeper::test_chat_panel_survives_page_refresh[chromium]": {
-      "case_key": "8V1l8r",
-      "case_title": "Verify notification panel survives page refresh",
-      "score": 0.8,
-      "module": "Notification Panel",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/events/test_events_filters.py::TestEventsFilters::test_site_dropdown_lists_available_sites[chromium]": {
       "case_key": "n8jvBz",
       "case_title": "Verify Events site dropdown lists available sites",
       "score": 0.67,
       "module": "Events Filter",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_site_selection_shows_site_name[chromium]": {
-      "case_key": "0rzlE9",
-      "case_title": "Verify search by site name",
-      "score": 0.6,
-      "module": "Search",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/events/test_events_filters.py::TestEventsFilters::test_rule_dropdown_lists_available_rules[chromium]": {
@@ -652,14 +564,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Line_Person]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_view[chromium-Line_Person]": {
       "case_key": "GdW9QX",
       "case_title": "Verify selecting View opens My Widget in expanded view",
@@ -674,14 +578,6 @@
       "score": 0.38,
       "module": "Report",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_delete[chromium-Line_Person]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/login/test_login_invalid.py::test_empty_fields[chromium]": {
@@ -916,14 +812,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_date_filter_has_options[chromium]": {
-      "case_key": "bj0X3V",
-      "case_title": "Verify default date filter is set to Today",
-      "score": 0.5,
-      "module": "Date Filter",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_date_filter_today[chromium]": {
       "case_key": "bj0X3V",
       "case_title": "Verify default date filter is set to Today",
@@ -953,14 +841,6 @@
       "case_title": "Verify only one view toggle remains active at a time",
       "score": 0.5,
       "module": "Grid/List Toggle",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_grid_view_switch_round_trip[chromium]": {
-      "case_key": "11zlpR",
-      "case_title": "Verify switch to Grid view",
-      "score": 0.6,
-      "module": "View Toggle",
       "auto_matched": true,
       "reviewed": false
     },
@@ -1004,14 +884,6 @@
       "auto_matched": true,
       "reviewed": true
     },
-    "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_navigate_to_media_page[chromium]": {
-      "case_key": "rGQDWk",
-      "case_title": "Verify that the user can successfully navigate to the Audio option under each camera listed for a site on the Admin - Sites page.",
-      "score": 0.67,
-      "module": "Configuration and Settings",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_select_date_filter[chromium]": {
       "case_key": "mBdXNV",
       "case_title": "Verify Last 30 Days date filter",
@@ -1025,22 +897,6 @@
       "case_title": "Verify switch to Grid view",
       "score": 1.0,
       "module": "View Toggle",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_all_tab[chromium]": {
-      "case_key": "dypXww",
-      "case_title": "Verify All tab displays clips, folders, and vault items",
-      "score": 0.51,
-      "module": "Media Listing & Actions",
-      "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_my_media_tab[chromium]": {
-      "case_key": "vanZz1",
-      "case_title": "Verify My Views tab is highlighted when selected",
-      "score": 0.67,
-      "module": "My Views",
       "auto_matched": true,
       "reviewed": false
     },
@@ -1196,14 +1052,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/notifications/test_notifications.py::TestNotifications::test_admin_mute_rule_notification[chromium]": {
-      "case_key": "mBdpwM",
-      "case_title": "Mute rule notifications from list",
-      "score": 0.62,
-      "module": "Rules - Notifications",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_closes_on_reclick[chromium]": {
       "case_key": "11zJRB",
       "case_title": "Verify notification panel closes when icon is clicked again",
@@ -1292,22 +1140,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_person_search[chromium]": {
-      "case_key": "dypXRb",
-      "case_title": "Verify Search button is enabled after applying mandatory filters",
-      "score": 0.5,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_person_search_results_valid[chromium]": {
-      "case_key": "Pgw47m",
-      "case_title": "Verify Person search result images have valid src attributes",
-      "score": 0.73,
-      "module": "Camera Search Filters",
-      "auto_matched": false,
-      "reviewed": false
-    },
     "tests/ui/search/test_search_categories.py::TestSearchCategories::test_person_search_play_result[chromium]": {
       "case_key": "kpZWpZ",
       "case_title": "Verify user can pin a Person search result",
@@ -1316,35 +1148,11 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_vehicle_search[chromium]": {
-      "case_key": "dypXRb",
-      "case_title": "Verify Search button is enabled after applying mandatory filters",
-      "score": 0.5,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/search/test_search_categories.py::TestSearchCategories::test_vehicle_search_play_result[chromium]": {
       "case_key": "gQxmzz",
       "case_title": "Verify Vehicle search results display camera name",
       "score": 0.75,
       "module": "Vehicle - Execution & Results",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_event_search[chromium]": {
-      "case_key": "dypXRb",
-      "case_title": "Verify Search button is enabled after applying mandatory filters",
-      "score": 0.5,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_event_search_play_result[chromium]": {
-      "case_key": "gQxw5N",
-      "case_title": "Verify Event search result images are valid",
-      "score": 0.75,
-      "module": "Camera Search Filters",
       "auto_matched": true,
       "reviewed": false
     },
@@ -1460,14 +1268,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/search/test_search_drawing.py::TestSearchDrawing::test_zone_search_returns_results[chromium]": {
-      "case_key": "J8d9R1",
-      "case_title": "Verify search by clip name returns matching results",
-      "score": 0.75,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/search/test_search_drawing.py::TestSearchDrawing::test_zone_search_play_result[chromium]": {
       "case_key": "dyp4pB",
       "case_title": "Verify empty state message is shown when Zone search returns no results",
@@ -1508,14 +1308,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/search/test_search_filters.py::TestSearchFilters::test_search_page_filters_visible[chromium]": {
-      "case_key": "dypXvp",
-      "case_title": "Verify Search input field is visible and enabled on Insights page",
-      "score": 0.75,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/search/test_search_filters.py::TestSearchFilters::test_select_category[chromium]": {
       "case_key": "zvnVK9",
       "case_title": "Verify Category filter is displayed with Select placeholder",
@@ -1523,14 +1315,6 @@
       "module": "Search Landing Page",
       "auto_matched": true,
       "reviewed": true
-    },
-    "tests/ui/search/test_search_filters.py::TestSearchFilters::test_select_duration[chromium]": {
-      "case_key": "gQxXwN",
-      "case_title": "Verify Duration filter is displayed with Select placeholder",
-      "score": 1.0,
-      "module": "Search Landing Page",
-      "auto_matched": true,
-      "reviewed": false
     },
     "tests/ui/search/test_search_filters.py::TestSearchFilters::test_select_locations_cameras[chromium]": {
       "case_key": "jPnp2d",
@@ -1692,30 +1476,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_drag_camera_by_name_to_tile[chromium]": {
-      "case_key": "3gjBw9",
-      "case_title": "Verify empty grid tile displays Drag & Drop Camera here text",
-      "score": 0.6,
-      "module": "Empty Grid State",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_drag_saved_view_to_tile[chromium]": {
-      "case_key": "3gjBw9",
-      "case_title": "Verify empty grid tile displays Drag & Drop Camera here text",
-      "score": 0.5,
-      "module": "Empty Grid State",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_drag_location_to_tile[chromium]": {
-      "case_key": "3gjBw9",
-      "case_title": "Verify empty grid tile displays Drag & Drop Camera here text",
-      "score": 0.67,
-      "module": "Empty Grid State",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_drag_map_to_tile[chromium]": {
       "case_key": "B869gN",
       "case_title": "Verify selecting a map adds it to an empty grid tile",
@@ -1860,28 +1620,12 @@
       "auto_matched": true,
       "reviewed": true
     },
-    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_timeline_elements_present[chromium]": {
-      "case_key": "kpZQr0",
-      "case_title": "Verify timeline elements are present in fullscreen playback",
-      "score": 1.0,
-      "module": "Live Playback Controls",
-      "auto_matched": true,
-      "reviewed": true
-    },
     "tests/ui/views/test_views_share.py::test_share_live_view[chromium]": {
       "case_key": "K4ndbd",
       "case_title": "Verify sharing a live camera view via email and copy link",
       "score": 0.83,
       "module": "Share Live View - Camera",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_devices_add_camera_via_checkbox[chromium]": {
-      "case_key": "pDpvBJ",
-      "case_title": "Verify selecting all cameras via Select All checkbox for sequencing",
-      "score": 0.5,
-      "module": "Camera Sequence",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_devices_drag_camera_to_tile[chromium]": {
@@ -1892,36 +1636,12 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_maps_add_map_via_checkbox[chromium]": {
-      "case_key": "B869gN",
-      "case_title": "Verify selecting a map adds it to an empty grid tile",
-      "score": 0.34,
-      "module": "Maps",
-      "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_maps_drag_map_to_tile[chromium]": {
-      "case_key": "B869gN",
-      "case_title": "Verify selecting a map adds it to an empty grid tile",
-      "score": 0.5,
-      "module": "Maps",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_channels_drag_channel_to_tile[chromium]": {
       "case_key": "zvnVlw",
       "case_title": "Verify Search Channels filters channel list",
       "score": 0.5,
       "module": "Channels",
       "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_insights_add_via_checkbox[chromium]": {
-      "case_key": "dypXMM",
-      "case_title": "Verify selecting an Insights widget adds it to an empty grid tile",
-      "score": 0.39,
-      "module": "Insights",
-      "auto_matched": false,
       "reviewed": false
     },
     "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_insights_drag_to_tile[chromium]": {
@@ -1956,14 +1676,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Line_Vehicle]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_view[chromium-Bar_Person]": {
       "case_key": "GdW9QX",
       "case_title": "Verify selecting View opens My Widget in expanded view",
@@ -1978,14 +1690,6 @@
       "score": 0.38,
       "module": "Report",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_delete[chromium-Pie_Vehicle]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/login/test_logout.py::test_logout_from_different_pages[chromium-/events-Events]": {
@@ -2028,28 +1732,12 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Line_Event]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_view[chromium-Pie_Person]": {
       "case_key": "GdW9QX",
       "case_title": "Verify selecting View opens My Widget in expanded view",
       "score": 0.46,
       "module": "My Widgets",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_delete[chromium-Heat_Person]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/login/test_logout.py::test_logout_from_different_pages[chromium-/insights-Insights]": {
@@ -2076,14 +1764,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Bar_Person]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Intrusion Detection]": {
       "case_key": "Drd95P",
       "case_title": "Verify empty state message is displayed before selecting rule type",
@@ -2100,14 +1780,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Bar_Vehicle]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Line Crossing]": {
       "case_key": "Drd95P",
       "case_title": "Verify empty state message is displayed before selecting rule type",
@@ -2122,54 +1794,6 @@
       "score": 0.54,
       "module": "Add New Rule",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Bar_Event]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Pie_Person]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Pie_Vehicle]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Pie_Event]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Heat_Person]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Heat_Vehicle]": {
-      "case_key": "RgGQ4a",
-      "case_title": "Verify Insights widget list is displayed when Insights tab is selected",
-      "score": 0.5,
-      "module": "Insights",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/events/test_events_playback.py::TestEventsPlayback::test_close_event_player[chromium]": {
@@ -2268,14 +1892,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_date_info[chromium]": {
-      "case_key": "xm9jkm",
-      "case_title": "Verify audit trail entry is created for LPR record edit",
-      "score": 0.5,
-      "module": "Audit Trail",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_user_info[chromium]": {
       "case_key": "vanXBn",
       "case_title": "Verify general functionality behaves as expected - User is navigated to the Audit Trail page successfully.",
@@ -2306,14 +1922,6 @@
       "score": 0.27,
       "module": "Audit Trail - Users",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_multiple_entries[chromium]": {
-      "case_key": "8V1bJr",
-      "case_title": "Verify general functionality behaves as expected - Audit Trail pagination works correctly across multiple",
-      "score": 0.6,
-      "module": "Audit Trail",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_back_to_general_from_audit_trail[chromium]": {
@@ -2356,14 +1964,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_site_selector[chromium]": {
-      "case_key": "B86ENR",
-      "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
-      "score": 0.5,
-      "module": "Event Wall",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_site_dropdown_opens[chromium]": {
       "case_key": "0rzlLl",
       "case_title": "Verify Event Type dropdown opens when clicked",
@@ -2388,14 +1988,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/event_wall/test_event_wall_display.py::TestEventWallDisplay::test_event_wall_event_images": {
-      "case_key": "gQxw5N",
-      "case_title": "Verify Event search result images are valid",
-      "score": 0.75,
-      "module": "Camera Search Filters",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_grid_layout[chromium]": {
       "case_key": "xm9dgR",
       "case_title": "Verify event cards are displayed in grid layout",
@@ -2408,14 +2000,6 @@
       "case_key": "VKbeN2",
       "case_title": "Verify general functionality behaves as expected - Event Wall configuration is saved successfully.",
       "score": 0.62,
-      "module": "Event Wall",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_back_to_general_from_event_wall[chromium]": {
-      "case_key": "B86ENR",
-      "case_title": "Verify general functionality behaves as expected - Event Wall card is displayed correctly on the General page.",
-      "score": 0.6,
       "module": "Event Wall",
       "auto_matched": true,
       "reviewed": false
@@ -3038,6 +2622,474 @@
       "case_title": "Verify a bookmark can be shared (share dialog shows success)",
       "score": 1.0,
       "module": "Bookmarks",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_multiple_entries[chromium]": {
+      "case_key": "K4993J",
+      "case_title": "The shared tenant's activity fills more than one record",
+      "score": 1.0,
+      "module": "Audit Trail",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_date_info[chromium]": {
+      "case_key": "jPppXd",
+      "case_title": "A record carries a dd-mm-yyyy date and hh:mm time",
+      "score": 1.0,
+      "module": "Audit Trail",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_add_new_rule_wizard_opens[chromium]": {
+      "case_key": "4188Nb",
+      "case_title": "Verify clicking Add New Rule opens the wizard with rule type options",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_navigate_to_rules[chromium]": {
+      "case_key": "pD88GG",
+      "case_title": "Verify navigating to Admin > General > Rules loads the rules list",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_search_rule[chromium]": {
+      "case_key": "LDXXze",
+      "case_title": "Verify searching for a rule by name filters the results",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_edit_camera_group[chromium]": {
+      "case_key": "wmRR4G",
+      "case_title": "Verify editing a camera group name",
+      "score": 1.0,
+      "module": "Sites",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_navigate_to_online_site[chromium]": {
+      "case_key": "yaxx89",
+      "case_title": "Verify clicking a site card navigates into the site detail view",
+      "score": 1.0,
+      "module": "Sites",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_site_versions[chromium]": {
+      "case_key": "0rJJGb",
+      "case_title": "Verify sites display version information",
+      "score": 1.0,
+      "module": "Sites",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_users.py::TestAdminUsers::test_navigate_to_admin_users[chromium]": {
+      "case_key": "kpXX30",
+      "case_title": "Verify navigating to Admin > Users section loads the user list",
+      "score": 1.0,
+      "module": "Users",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_users.py::TestAdminUsers::test_role_filter_options[chromium]": {
+      "case_key": "11PPEB",
+      "case_title": "Verify the role filter dropdown contains expected roles",
+      "score": 1.0,
+      "module": "Users",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/chats/test_chats_deeper.py::TestChatsDeeper::test_chat_panel_has_content[chromium]": {
+      "case_key": "5BMMK9",
+      "case_title": "An open panel shows the search input plus either the",
+      "score": 1.0,
+      "module": "Deeper",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/chats/test_chats_deeper.py::TestChatsDeeper::test_chat_panel_survives_page_refresh[chromium]": {
+      "case_key": "21WWlQ",
+      "case_title": "The panel opens after a page refresh",
+      "score": 1.0,
+      "module": "Deeper",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_back_to_general_from_event_wall[chromium]": {
+      "case_key": "ajyyd4",
+      "case_title": "The breadcrumb returns to the General cards page",
+      "score": 1.0,
+      "module": "Config",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_site_selector[chromium]": {
+      "case_key": "QGQQEB",
+      "case_title": "The Add form lists sites under Available Cameras",
+      "score": 1.0,
+      "module": "Config",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/event_wall/test_event_wall_display.py::TestEventWallDisplay::test_event_wall_event_images[chromium]": {
+      "case_key": "WEQQ4M",
+      "case_title": "The live wall displays event images for the selected site",
+      "score": 1.0,
+      "module": "Display",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/events/test_events_filters.py::TestEventsFilters::test_site_selection_shows_site_name[chromium]": {
+      "case_key": "B8992R",
+      "case_title": "Verify selecting a site enables rules dropdown (site selection confirmed)",
+      "score": 1.0,
+      "module": "Filters",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Line_Person]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Line_Vehicle]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Line_Event]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Bar_Person]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Bar_Vehicle]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Bar_Event]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Pie_Person]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Pie_Vehicle]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Pie_Event]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Heat_Person]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create[chromium-Heat_Vehicle]": {
+      "case_key": "8Vvv2r",
+      "case_title": "Verify a widget can be created with the given graph and category",
+      "score": 1.0,
+      "module": "Widget Create",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_delete[chromium-Line_Person]": {
+      "case_key": "M7wwv7",
+      "case_title": "Verify a widget can be deleted and no longer appears in search",
+      "score": 1.0,
+      "module": "Widget Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_delete[chromium-Pie_Vehicle]": {
+      "case_key": "M7wwv7",
+      "case_title": "Verify a widget can be deleted and no longer appears in search",
+      "score": 1.0,
+      "module": "Widget Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_delete[chromium-Heat_Person]": {
+      "case_key": "M7wwv7",
+      "case_title": "Verify a widget can be deleted and no longer appears in search",
+      "score": 1.0,
+      "module": "Widget Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_date_filter_has_options[chromium]": {
+      "case_key": "Dr992x",
+      "case_title": "Verify the date filter dropdown has multiple filter options",
+      "score": 1.0,
+      "module": "Deeper",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_grid_view_switch_round_trip[chromium]": {
+      "case_key": "eJXXK3",
+      "case_title": "Verify grid view can be activated and page remains valid",
+      "score": 1.0,
+      "module": "Deeper",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_all_tab[chromium]": {
+      "case_key": "vaZZyn",
+      "case_title": "Verify the All tab loads and shows content or empty state",
+      "score": 1.0,
+      "module": "Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_my_media_tab[chromium]": {
+      "case_key": "bjXXl9",
+      "case_title": "Verify the My Media tab loads",
+      "score": 1.0,
+      "module": "Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_navigate_to_media_page[chromium]": {
+      "case_key": "Z8QQXk",
+      "case_title": "Verify navigation to the Media page via the sidebar",
+      "score": 1.0,
+      "module": "Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/notifications/test_notifications.py::TestNotifications::test_admin_mute_rule_notification[chromium]": {
+      "case_key": "RgQQxd",
+      "case_title": "Verify a rule notification can be muted from Admin > General > Rules",
+      "score": 1.0,
+      "module": "Notifications",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_event_search[chromium]": {
+      "case_key": "dyXXWZ",
+      "case_title": "Verify Event category search returns results",
+      "score": 1.0,
+      "module": "Categories",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_event_search_play_result[chromium]": {
+      "case_key": "xmddy1",
+      "case_title": "Verify playing an Event search result clip works",
+      "score": 1.0,
+      "module": "Categories",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_person_search[chromium]": {
+      "case_key": "VKQQ6P",
+      "case_title": "Verify Person search with Male description returns results",
+      "score": 1.0,
+      "module": "Categories",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_person_search_results_valid[chromium]": {
+      "case_key": "J899ML",
+      "case_title": "Verify Person search results contain valid images",
+      "score": 1.0,
+      "module": "Categories",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_categories.py::TestSearchCategories::test_vehicle_search[chromium]": {
+      "case_key": "Pg99Rm",
+      "case_title": "Verify Vehicle search returns results",
+      "score": 1.0,
+      "module": "Categories",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_drawing.py::TestSearchDrawing::test_zone_search_returns_results[chromium]": {
+      "case_key": "68DD2V",
+      "case_title": "Verify Zone search returns results after drawing and searching",
+      "score": 1.0,
+      "module": "Drawing",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_filters.py::TestSearchFilters::test_search_page_filters_visible[chromium]": {
+      "case_key": "7Eee2e",
+      "case_title": "Verify all filter dropdowns are present on the Search page",
+      "score": 1.0,
+      "module": "Filters",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/search/test_search_filters.py::TestSearchFilters::test_select_duration[chromium]": {
+      "case_key": "9ebb2Z",
+      "case_title": "Verify the Duration dropdown opens and Today is selectable",
+      "score": 1.0,
+      "module": "Filters",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_drag_camera_by_name_to_tile[chromium]": {
+      "case_key": "qzMM04",
+      "case_title": "Verify a specific camera can be dragged to a tile by name",
+      "score": 1.0,
+      "module": "Drag Drop",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_drag_location_to_tile[chromium]": {
+      "case_key": "XGQQ90",
+      "case_title": "Verify a location/site can be dragged to an empty tile (shows all cameras)",
+      "score": 1.0,
+      "module": "Drag Drop",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_drag_saved_view_to_tile[chromium]": {
+      "case_key": "3gBB2P",
+      "case_title": "Verify a saved view can be dragged from My Views to an empty tile",
+      "score": 1.0,
+      "module": "Drag Drop",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_timeline_elements_present[chromium]": {
+      "case_key": "zvVV19",
+      "case_title": "Verify timeline-related elements exist in fullscreen",
+      "score": 1.0,
+      "module": "Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_devices_add_camera_via_checkbox[chromium]": {
+      "case_key": "mBXXyV",
+      "case_title": "DEVICES: Add camera to tile using checkbox selection",
+      "score": 1.0,
+      "module": "Subtabs",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_insights_add_via_checkbox[chromium]": {
+      "case_key": "n8QQyz",
+      "case_title": "INSIGHTS: Add insight widget to tile using checkbox",
+      "score": 1.0,
+      "module": "Subtabs",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_maps_add_map_via_checkbox[chromium]": {
+      "case_key": "gQXX4N",
+      "case_title": "MAPS: Add map to tile using checkbox",
+      "score": 1.0,
+      "module": "Subtabs",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_maps_drag_map_to_tile[chromium]": {
+      "case_key": "Gd992y",
+      "case_title": "MAPS: Drag map thumbnail directly to tile",
+      "score": 1.0,
+      "module": "Subtabs",
       "auto_matched": false,
       "reviewed": true,
       "source": "generated"

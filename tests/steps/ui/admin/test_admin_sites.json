@@ -190,7 +190,7 @@
           "expected": "Each site card shows a Version line."
         }
       ],
-      "case_key": "DrdZ7x"
+      "case_key": "0rJJGb"
     },
     "test_navigate_to_online_site": {
       "title": "Verify clicking a site card navigates into the site detail view",
@@ -206,7 +206,7 @@
           "expected": "The site detail opens with its Groups line, and the site list with its Version lines is gone."
         }
       ],
-      "case_key": "rGQDWk"
+      "case_key": "yaxx89"
     },
     "test_camera_sorting": {
       "title": "Verify A-Z and Z-A camera sorting within a site.",
@@ -309,7 +309,7 @@
           "expected": "The group is listed under the new name."
         }
       ],
-      "case_key": "gQxkdL"
+      "case_key": "wmRR4G"
     },
     "test_delete_camera_group": {
       "title": "Verify deleting a camera group with Yes confirmation.",

@@ -11,7 +11,7 @@
           "expected": "A 'Widget created successfully' message appears and the widget is listed."
         }
       ],
-      "case_key": "RgGQ4a"
+      "case_key": "8Vvv2r"
     },
     "test_widget_view": {
       "title": "Verify a widget can be viewed after creation.",
@@ -109,7 +109,7 @@
           "expected": "The widget no longer appears when searched for by name."
         }
       ],
-      "case_key": "RgGQ4a"
+      "case_key": "M7wwv7"
     }
   }
 }

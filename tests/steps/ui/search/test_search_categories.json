@@ -16,7 +16,7 @@
           "expected": "At least one Person result appears in the result grid."
         }
       ],
-      "case_key": "dypXRb"
+      "case_key": "VKQQ6P"
     },
     "test_person_search_results_valid": {
       "title": "Verify Person search results contain valid images",
@@ -32,7 +32,7 @@
           "expected": "It shows a real image, not a placeholder."
         }
       ],
-      "case_key": "Pgw47m"
+      "case_key": "J899ML"
     },
     "test_person_search_play_result": {
       "title": "Verify playing a Person search result clip works",
@@ -104,7 +104,7 @@
           "expected": "At least one Vehicle result appears in the result grid."
         }
       ],
-      "case_key": "dypXRb"
+      "case_key": "Pg99Rm"
     },
     "test_vehicle_search_play_result": {
       "title": "Verify playing a Vehicle search result clip works",
@@ -176,7 +176,7 @@
           "expected": "At least one Event result appears in the result grid."
         }
       ],
-      "case_key": "dypXRb"
+      "case_key": "dyXXWZ"
     },
     "test_event_search_play_result": {
       "title": "Verify playing an Event search result clip works",
@@ -192,7 +192,7 @@
           "expected": "The clip plays, and a Replay control appears when it ends."
         }
       ],
-      "case_key": "gQxw5N"
+      "case_key": "xmddy1"
     }
   }
 }

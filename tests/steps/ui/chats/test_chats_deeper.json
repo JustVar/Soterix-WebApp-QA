@@ -373,7 +373,7 @@
           "expected": "The panel opens with its search field and shows either the 'use the search bar' instruction or the recent conversations list."
         }
       ],
-      "case_key": "WEnMLM"
+      "case_key": "5BMMK9"
     },
     "test_click_search_result_opens_chat": {
       "title": "Verify clicking a search result opens the chat conversation.",
@@ -466,7 +466,7 @@
           "expected": "The panel opens with its search field."
         }
       ],
-      "case_key": "8V1l8r"
+      "case_key": "21WWlQ"
     }
   }
 }

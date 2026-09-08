@@ -52,7 +52,7 @@
           "expected": "The Category, Locations & Cameras and Duration filters are shown."
         }
       ],
-      "case_key": "dypXvp"
+      "case_key": "7Eee2e"
     },
     "test_select_category": {
       "title": "Verify the Category dropdown opens and a category is selectable.",
@@ -104,7 +104,7 @@
           "expected": "The dropdown closes with Today selected and the Search button is shown."
         }
       ],
-      "case_key": "gQxXwN"
+      "case_key": "9ebb2Z"
     },
     "test_select_locations_cameras": {
       "title": "Verify Locations & Cameras dropdown opens and site is selectable.",
