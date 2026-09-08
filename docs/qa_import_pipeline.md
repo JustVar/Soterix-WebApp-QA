@@ -47,6 +47,11 @@ python tools/backfill_qa_touch_metadata.py \
     --project-key <PROJECT_KEY>
 
 # Phase 5 - split the merged Step 1 into per-step rows with last-step expected
+#   Phase 5 is for the UI-upload path (phase 3), which merges steps.
+#   Cases created with tools/qatouch_csv_import.py (public API) arrive
+#   with steps already split - measured 09/08/2026 - so skip it there.
+#   Also 09/08: this script's case listing (/v1/case/list) answered 404;
+#   check it before relying on it.
 python tools/qa_post_import_split_and_position.py \
     --project-key <PROJECT_KEY> \
     --csv tests/data/<release>_<module>_canonical.csv

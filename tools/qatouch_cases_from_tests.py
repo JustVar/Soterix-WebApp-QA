@@ -730,10 +730,11 @@ def after_import(args) -> int:
         for ref, dup in ambiguous.items():
             print(f'    {ref}: {", ".join(dup)}')
     if keys:
-        print('\n  Next, if a case shows one merged step in QA Touch, split it:')
-        print(f'    python tools/qa_post_import_split_and_position.py '
-              f'--project-key {args.project} --csv {csv_path.as_posix()} '
-              f'--case-keys {",".join(keys)}')
+        # Measured 09/08/2026: cases created through the API importer
+        # arrive with their steps already split (14 of 14 matched their
+        # docstrings), so the phase-5 splitter is for the UI-upload path
+        # only - and its own case listing answered 404 that day.
+        print('\n  Steps arrive split through this path; no phase-5 split is needed.')
     return 0 if not (missing or ambiguous) else 1
 
 
