@@ -308,14 +308,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/chats/test_chats.py::TestChats::test_create_group[chromium]": {
-      "case_key": "Ee61zV",
-      "case_title": "Verify Create Group button visibility",
-      "score": 1.0,
-      "module": "Group UI",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/chats/test_chats.py::TestChats::test_search_and_send_group_message[chromium]": {
       "case_key": "RgGQ4l",
       "case_title": "Verify Search Views shows no matches message for invalid input",
@@ -596,22 +588,6 @@
       "auto_matched": true,
       "reviewed": true
     },
-    "tests/ui/events/test_events_search.py::TestEventsSearch::test_search_events[chromium]": {
-      "case_key": "dypXRb",
-      "case_title": "Verify Search button is enabled after applying mandatory filters",
-      "score": 0.5,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/events/test_events_search.py::TestEventsSearch::test_event_snapshots_valid[chromium]": {
-      "case_key": "68lnPV",
-      "case_title": "Verify Events search results have thumbnail images",
-      "score": 0.53,
-      "module": "Events Filter",
-      "auto_matched": false,
-      "reviewed": false
-    },
     "tests/ui/events/test_events_search.py::TestEventsSearch::test_pin_event[chromium]": {
       "case_key": "M73wxx",
       "case_title": "Verify hovering on event card reveals Pin icon",
@@ -627,14 +603,6 @@
       "module": "Pinned Clips Panel",
       "auto_matched": true,
       "reviewed": true
-    },
-    "tests/ui/events/test_events_search.py::TestEventsSearch::test_search_with_specific_camera[chromium]": {
-      "case_key": "Drd9a9",
-      "case_title": "Verify Search Camera input field is displayed",
-      "score": 0.67,
-      "module": "Devices Tab",
-      "auto_matched": true,
-      "reviewed": false
     },
     "tests/ui/insights/test_insights_navigation.py::TestInsightsNavigation::test_navigate_to_insights[chromium]": {
       "case_key": "B8692Q",
@@ -874,38 +842,6 @@
       "score": 0.62,
       "module": "Landing & Navigation",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/maps/test_maps.py::TestMaps::test_select_site[chromium]": {
-      "case_key": "eJqj13",
-      "case_title": "Verify selected site text updates after site selection",
-      "score": 0.75,
-      "module": "Maps",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/maps/test_maps.py::TestMaps::test_map_cards_have_cameras[chromium]": {
-      "case_key": "Z8xRpk",
-      "case_title": "Verify map card displays device count information",
-      "score": 0.59,
-      "module": "Maps",
-      "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/maps/test_maps.py::TestMaps::test_open_map_with_cameras[chromium]": {
-      "case_key": "dypNzZ",
-      "case_title": "Verify online cameras are detected on map",
-      "score": 0.67,
-      "module": "Maps",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/maps/test_maps.py::TestMaps::test_play_online_camera[chromium]": {
-      "case_key": "dypNzZ",
-      "case_title": "Verify online cameras are detected on map",
-      "score": 0.5,
-      "module": "Maps",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_site_dropdown_lists_sites[chromium]": {
@@ -1233,14 +1169,6 @@
       "case_title": "Verify deleting folder from Vault removes it permanently",
       "score": 0.88,
       "module": "Vault - Retention",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/media/test_media_operations.py::TestMediaFolderOperations::test_folder_share[chromium]": {
-      "case_key": "Nj3r6e",
-      "case_title": "Verify share icon is visible in fullscreen playback",
-      "score": 0.5,
-      "module": "Live Playback Controls",
       "auto_matched": true,
       "reviewed": false
     },
@@ -1740,52 +1668,12 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_close_bookmarks_panel[chromium]": {
-      "case_key": "yaWrV9",
-      "case_title": "Verify bookmarks toggle opens bookmark panel in fullscreen",
-      "score": 0.67,
-      "module": "Live Playback Controls",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_play_bookmark[chromium]": {
       "case_key": "Nj39ya",
       "case_title": "Verify clicking on a bookmark navigates playback to bookmarked timestamp",
       "score": 0.65,
       "module": "Bookmark Playback - Bookmarks",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_bookmark_options_menu[chromium]": {
-      "case_key": "rGQZz1",
-      "case_title": "Verify adding a bookmark on a video tile via three-dot menu",
-      "score": 0.67,
-      "module": "Bookmark",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_export_bookmark[chromium]": {
-      "case_key": "yaWrV9",
-      "case_title": "Verify bookmarks toggle opens bookmark panel in fullscreen",
-      "score": 0.5,
-      "module": "Live Playback Controls",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_share_bookmark[chromium]": {
-      "case_key": "Nj3r6e",
-      "case_title": "Verify share icon is visible in fullscreen playback",
-      "score": 0.5,
-      "module": "Live Playback Controls",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_rename_bookmark[chromium]": {
-      "case_key": "yaWrV9",
-      "case_title": "Verify bookmarks toggle opens bookmark panel in fullscreen",
-      "score": 0.5,
-      "module": "Live Playback Controls",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_delete_bookmark[chromium]": {
@@ -3027,6 +2915,132 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true
+    },
+    "tests/ui/chats/test_chats.py::TestChats::test_create_group[chromium]": {
+      "case_key": "Z8QQ9N",
+      "case_title": "Create a group and see it in the conversation list",
+      "score": 1.0,
+      "module": "Chats",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/events/test_events_search.py::TestEventsSearch::test_event_snapshots_valid[chromium]": {
+      "case_key": "RgQQRR",
+      "case_title": "Verify event thumbnails have real images, not placeholders",
+      "score": 1.0,
+      "module": "Search",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/events/test_events_search.py::TestEventsSearch::test_search_events[chromium]": {
+      "case_key": "dyXXlR",
+      "case_title": "Verify search returns event results after selecting filters",
+      "score": 1.0,
+      "module": "Search",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/events/test_events_search.py::TestEventsSearch::test_search_with_specific_camera[chromium]": {
+      "case_key": "xmddXg",
+      "case_title": "Verify search filters results by a single camera channel",
+      "score": 1.0,
+      "module": "Search",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/maps/test_maps.py::TestMaps::test_map_cards_have_cameras[chromium]": {
+      "case_key": "VKQQJd",
+      "case_title": "Verify at least one map card has cameras (device count > 0)",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/maps/test_maps.py::TestMaps::test_open_map_with_cameras[chromium]": {
+      "case_key": "J899BX",
+      "case_title": "Verify clicking a map card opens it and shows camera icons",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/maps/test_maps.py::TestMaps::test_play_online_camera[chromium]": {
+      "case_key": "Pg99bR",
+      "case_title": "Verify clicking an online camera icon plays its stream without failure",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/maps/test_maps.py::TestMaps::test_select_site[chromium]": {
+      "case_key": "68DD4r",
+      "case_title": "Verify selecting a site from the dropdown loads map cards",
+      "score": 1.0,
+      "module": "Maps",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_operations.py::TestMediaFolderOperations::test_folder_share[chromium]": {
+      "case_key": "7Eeepz",
+      "case_title": "Share a folder via email",
+      "score": 1.0,
+      "module": "Folder Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_bookmark_options_menu[chromium]": {
+      "case_key": "9ebb47",
+      "case_title": "Verify the 3-dot options menu shows 4 options",
+      "score": 1.0,
+      "module": "Bookmarks",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_close_bookmarks_panel[chromium]": {
+      "case_key": "qzMMWv",
+      "case_title": "Verify bookmarks panel closes when clicking the dots icon again",
+      "score": 1.0,
+      "module": "Bookmarks",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_export_bookmark[chromium]": {
+      "case_key": "XGQQ68",
+      "case_title": "Verify a bookmark can be exported (export dialog completes)",
+      "score": 1.0,
+      "module": "Bookmarks",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_rename_bookmark[chromium]": {
+      "case_key": "3gBB46",
+      "case_title": "Verify a bookmark can be renamed and the new name appears",
+      "score": 1.0,
+      "module": "Bookmarks",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_share_bookmark[chromium]": {
+      "case_key": "zvVVzD",
+      "case_title": "Verify a bookmark can be shared (share dialog shows success)",
+      "score": 1.0,
+      "module": "Bookmarks",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
     }
   }
 }

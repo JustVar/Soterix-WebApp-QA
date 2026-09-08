@@ -126,7 +126,7 @@
           "expected": "The result grid shows one or more event thumbnails."
         }
       ],
-      "case_key": "dypXRb"
+      "case_key": "dyXXlR"
     },
     "test_event_snapshots_valid": {
       "title": "Verify event thumbnails have real images, not placeholders",
@@ -142,7 +142,7 @@
           "expected": "Thumbnails are real images (blob or data URIs), not the No Image Available placeholder."
         }
       ],
-      "case_key": "68lnPV"
+      "case_key": "RgQQRR"
     },
     "test_pin_event": {
       "title": "Verify pinning an event updates the pinned clips counter",
@@ -210,7 +210,7 @@
           "expected": "Events are returned and every event belongs to the requested channel."
         }
       ],
-      "case_key": "Drd9a9"
+      "case_key": "xmddXg"
     }
   }
 }

@@ -66,6 +66,12 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from dotenv import load_dotenv  # noqa: E402
+
+# --after-import reads the project back through the API; the key
+# lives in .env like the import tool's does
+load_dotenv(ROOT / '.env')
+
 from plugins.run_report import readable_title  # noqa: E402
 from tools import qatouch_mapping as qm  # noqa: E402
 from tools.qatouch_mapping_audit import (  # noqa: E402

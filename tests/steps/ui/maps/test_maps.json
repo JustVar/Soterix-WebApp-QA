@@ -27,7 +27,7 @@
           "expected": "The dropdown shows the chosen site and at least one map card appears below it."
         }
       ],
-      "case_key": "eJqj13"
+      "case_key": "68DD4r"
     },
     "test_map_cards_have_cameras": {
       "title": "Verify at least one map card has cameras (device count > 0)",
@@ -43,7 +43,7 @@
           "expected": "At least one card shows a device count above zero."
         }
       ],
-      "case_key": "Z8xRpk"
+      "case_key": "VKQQJd"
     },
     "test_open_map_with_cameras": {
       "title": "Verify clicking a map card opens it and shows camera icons",
@@ -59,7 +59,7 @@
           "expected": "The map opens and camera icons are placed on it."
         }
       ],
-      "case_key": "dypNzZ"
+      "case_key": "J899BX"
     },
     "test_play_online_camera": {
       "title": "Verify clicking an online camera icon plays its stream without failure",
@@ -75,7 +75,7 @@
           "expected": "The camera's live stream starts playing and no \"failed to load\" message appears."
         }
       ],
-      "case_key": "dypNzZ"
+      "case_key": "Pg99bR"
     }
   }
 }

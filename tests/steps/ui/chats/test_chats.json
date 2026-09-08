@@ -62,7 +62,7 @@
           "expected": "The dialog closes and the new group is listed in the conversation list."
         }
       ],
-      "case_key": "Ee61zV"
+      "case_key": "Z8QQ9N"
     },
     "test_search_and_send_group_message": {
       "title": "Open a group from the list and send a message into it",
