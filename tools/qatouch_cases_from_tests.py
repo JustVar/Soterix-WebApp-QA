@@ -10,6 +10,7 @@ with no "Steps:" block is listed as "needs steps" and gets no row.
 
     python tools/qatouch_cases_from_tests.py --unmapped
     python tools/qatouch_cases_from_tests.py --shared-keys
+    python tools/qatouch_cases_from_tests.py --weak-mappings
     python tools/qatouch_cases_from_tests.py --dead-keys
     python tools/qatouch_cases_from_tests.py --test tests/ui/x.py::TestX::test_y
     python tools/qatouch_cases_from_tests.py --file tests/ui/admin/test_lpr_views.py
@@ -25,6 +26,16 @@ others already have a Steps block (a case can be made now) and which
 need one written first. A weak best match means the mapping is wrong,
 not just shared - the bulk match by title collapsed unrelated tests
 onto one case. It writes logs/qatouch_shared_keys_<date>.json.
+
+--weak-mappings is a REVIEW ORDER, not a verdict: every mapped test
+whose title reads unlike its case's, least alike first. Measured
+09/08/2026, the least-alike pairs were mostly the same case in other
+words ("empty username and password stays on the login page" against
+"login fails when both fields are empty"), so the score cannot say a
+mapping is wrong - only a person reading the pair can. Use it after
+the shared keys are split, when a wrong mapping has one claimant and
+--shared-keys can no longer see it. Writes
+logs/qatouch_weak_mappings_<date>.json.
 
 Selection (any mix, node ids are de-duplicated):
 
@@ -512,6 +523,62 @@ def shared_keys_worklist(mapping: dict, cases: dict, tests: dict[str, TestInfo])
     return out
 
 
+def weak_mappings(mapping: dict, cases: dict, tests: dict[str, TestInfo]) -> list[dict]:
+    """Pure: every mapped test whose title scores under WEAK_OWNER against its case."""
+    out = []
+    seen = set()
+    for nodeid, row in mapping.items():
+        key = (row or {}).get('case_key')
+        base = qm.function_base(nodeid)
+        if not key or base in seen:
+            continue
+        seen.add(base)
+        info = tests.get(base)
+        if info is None:
+            continue
+        doc = parse_docstring(info.docstring, base)
+        case = cases.get(key)
+        if case is None:
+            out.append({'nodeid': base, 'key': key, 'score': 0.0,
+                        'test_title': doc.title, 'case_title': '<not in snapshot>',
+                        'module': ''})
+            continue
+        ranked = rank_claimants(case.get('case_title', ''), [(base, doc.title, doc.ok)])
+        if ranked[0]['score'] < WEAK_OWNER:
+            out.append({'nodeid': base, 'key': key, 'score': ranked[0]['score'],
+                        'test_title': doc.title, 'case_title': case.get('case_title', ''),
+                        'module': case.get('module_name', '')})
+    out.sort(key=lambda r: (r['score'], r['nodeid']))
+    return out
+
+
+def cmd_weak_mappings(args) -> int:
+    from tools.qatouch_mapping_audit import latest_snapshot
+    tests = scan_tests()
+    mapping = qm.load_raw(args.mapping).get('mappings', {})
+    snap_path = latest_snapshot()
+    cases = {}
+    if snap_path:
+        cases = {c['case_key']: c
+                 for c in json.loads(snap_path.read_text(encoding='utf-8')).get('cases') or []}
+    rows = weak_mappings(mapping, cases, tests)
+    LOGS_DIR.mkdir(exist_ok=True)
+    out = LOGS_DIR / f'qatouch_weak_mappings_{dt.date.today().isoformat()}.json'
+    out.write_text(json.dumps(rows, indent=1), encoding='utf-8')
+    missing = [r for r in rows if r['case_title'] == '<not in snapshot>']
+    print(f'Mappings to review (titles read differently, least alike first): {len(rows)} of {len({qm.function_base(n) for n in mapping})} mapped tests '
+          f'(snapshot: {snap_path.name if snap_path else "none"}; '
+          f'{len(missing)} point at a case the snapshot does not hold - refresh it)')
+    print(f'  written: {out}')
+    print()
+    for r in rows:
+        print(f"{r['key']}  {r['score']:.2f}  [{r['module']}]")
+        print(f"    test: {r['test_title'][:70]}")
+        print(f"    case: {r['case_title'][:70]}")
+        print(f"          {r['nodeid'].replace('tests/ui/', '')}")
+    return 0
+
+
 def cmd_shared_keys(args) -> int:
     from tools.qatouch_mapping_audit import latest_snapshot
     tests = scan_tests()
@@ -746,6 +813,9 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__.split('Selection', 1)[0],
     )
+    parser.add_argument('--weak-mappings', action='store_true',
+                        help='every mapped test whose title does not read like its '
+                             "case's (register item 6); writes logs/qatouch_weak_mappings_<date>.json")
     parser.add_argument('--shared-keys', action='store_true',
                         help='worklist of case keys claimed by more than one test '
                              '(register item 6); writes logs/qatouch_shared_keys_<date>.json')
@@ -782,6 +852,8 @@ def main(argv: list[str] | None = None) -> int:
         return after_import(args)
     if args.shared_keys:
         return cmd_shared_keys(args)
+    if args.weak_mappings:
+        return cmd_weak_mappings(args)
     return generate(args)
 
 

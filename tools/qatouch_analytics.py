@@ -15,6 +15,7 @@ from __future__ import annotations
 import functools
 import json
 import sys
+import time
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -70,6 +71,39 @@ def snapshot_path(project_key: str, date_str: str) -> Path:
     return SNAPSHOTS_DIR / project_key / f'snapshot_{date_str}.json'
 
 
+def _pull_all_cases(client, project_key: str) -> tuple[list, int | None]:
+    """Every case in the project and the server's own total, paced for the API's burst limit.
+
+    The shared client's list_all_test_cases fires the pages back to back
+    and QA Touch answers 429 Too Many Attempts part way through a
+    3000-case project (measured 09/08/2026, three pulls in a row). A
+    short pause between pages and a wait-and-retry on 429 get the whole
+    project through; a snapshot is the only backup of the step content,
+    so a partial pull must never be written.
+    """
+    from soterix_qa_shared.qatouch.client import QATouchError
+    cases, page, retries, total = [], 1, 0, None
+    while True:
+        try:
+            data = client.list_test_cases(project_key, page=page)
+            if total is None:
+                total = (data.get('meta') or {}).get('total')
+        except QATouchError as e:
+            if '429' in str(e) and retries < 5:
+                retries += 1
+                wait = 20 * retries
+                print(f'  page {page}: rate limited, waiting {wait}s (retry {retries}/5)')
+                time.sleep(wait)
+                continue
+            raise
+        batch = data.get('data', [])
+        if not batch:
+            return cases, total
+        cases.extend(batch)
+        page += 1
+        time.sleep(0.4)  # pacing, not a wait for anything
+
+
 def take_snapshot(project_key: str = DEFAULT_PROJECT_KEY, force: bool = False) -> dict:
     """Pull all test cases for one project and save a timestamped snapshot.
 
@@ -92,8 +126,11 @@ def take_snapshot(project_key: str = DEFAULT_PROJECT_KEY, force: bool = False) -
     """
     client = QATouchClient()
     print(f'Pulling all test cases from QA Touch ({project_key})...')
-    all_cases, reported_total = client.list_all_test_cases(
-        project_key, expected_total=True)
+    # The shared client's list_all_test_cases returns only the flat list;
+    # the server's own count sits in page 1's meta.total, and the guard
+    # below needs it to catch a truncated pull (the old client returned
+    # both; this call broke when the client moved into the package).
+    all_cases, reported_total = _pull_all_cases(client, project_key)
     print(f'  Fetched {len(all_cases)} cases')
 
     if reported_total is not None and len(all_cases) != reported_total and not force:

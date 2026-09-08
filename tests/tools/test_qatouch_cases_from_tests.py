@@ -436,3 +436,32 @@ def test_shared_keys_worklist_reports_only_keys_with_two_claimants():
         "tests/ui/x/test_x.py::TestX::test_two",
     }
     assert rows[0]["owner_weak"] is True  # no test found, no title to match
+
+
+
+def test_weak_mappings_lists_a_test_whose_title_is_not_its_case():
+    """A single-claimant mapping whose case title shares nothing with the test
+    is listed for review; the score orders the list, a person decides."""
+    mapping = {
+        "tests/ui/x/test_x.py::TestX::test_navigate_to_media[chromium]": {"case_key": "K1"},
+        "tests/ui/x/test_x.py::TestX::test_audio_option[chromium]": {"case_key": "K2"},
+    }
+    cases = {
+        "K1": {"case_key": "K1", "case_title": "Verify the LPR plate list exports to CSV", "module_name": "LPR"},
+        "K2": {"case_key": "K2", "case_title": "Verify the Audio option is offered", "module_name": "Settings"},
+    }
+    tests = {
+        "tests/ui/x/test_x.py::TestX::test_navigate_to_media": gen.TestInfo(
+            nodeid="tests/ui/x/test_x.py::TestX::test_navigate_to_media", file="tests/ui/x/test_x.py",
+            area="x", class_name="TestX", func_name="test_navigate_to_media",
+            docstring="Verify navigation to the Media page via the sidebar.", skipped=False,
+            param_ids=None, parametrized=False),
+        "tests/ui/x/test_x.py::TestX::test_audio_option": gen.TestInfo(
+            nodeid="tests/ui/x/test_x.py::TestX::test_audio_option", file="tests/ui/x/test_x.py",
+            area="x", class_name="TestX", func_name="test_audio_option",
+            docstring="Verify the Audio option is offered.", skipped=False,
+            param_ids=None, parametrized=False),
+    }
+    rows = gen.weak_mappings(mapping, cases, tests)
+    assert [r["nodeid"].split("::")[-1] for r in rows] == ["test_navigate_to_media"]
+    assert rows[0]["key"] == "K1"
