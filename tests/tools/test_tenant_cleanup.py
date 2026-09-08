@@ -91,3 +91,27 @@ def test_card_reader_survives_empty_text():
     """An empty or missing card yields no candidate, never an exception."""
     assert tc.user_email_from_card("") is None
     assert tc.user_email_from_card(None) is None
+
+
+# ------------------------------------------------------------ rule / group names
+
+def test_rule_matcher_accepts_the_suites_names_truncated_or_not():
+    """The rules list cuts the name cell short; the match is start-anchored."""
+    for name in ("Owned_Auto_20260904_094850",
+                 "Entry-Exit_Auto_20260904_125217",
+                 "Owned_Auto_20260904_09...",
+                 "Intrusion_Detection_Auto_20260904_1..."):
+        assert tc.is_automation_rule(name), name
+
+
+def test_rule_matcher_rejects_a_real_rule_with_auto_in_its_name():
+    """Digits after _Auto_ are the suite's stamp; a human name has none."""
+    for name in ("Zone_Auto_Detect", "Auto_", "Occupancy", "", None):
+        assert not tc.is_automation_rule(name), name
+
+
+def test_group_matcher_is_exact_on_the_suites_shape():
+    """AutoGroup_<digits> and nothing looser."""
+    assert tc.is_automation_group("AutoGroup_0941158049")
+    for name in ("AutoGroup_", "AutoGroup_x", "Sales AutoGroup_1", "", None):
+        assert not tc.is_automation_group(name), name

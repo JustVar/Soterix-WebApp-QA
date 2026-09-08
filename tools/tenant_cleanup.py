@@ -6,6 +6,12 @@ Targets ONLY names the suite itself creates (docs/TEST_REPAIRS.md row 7):
   - camera groups on the first site: "AutoTest Group *", "AutoTest Edited *",
     "Edited Group *", "2026*AutomationEdited *"
   - users whose card starts with "AutoTest" (the users tests' own name)
+  - rules named "<type>_Auto_<stamp>" (the rules tests' own names). One
+    leftover rule puts its camera at rule capacity and the wizard hides
+    that camera from every later run (register item 28), so this step
+    matters more than tidiness.
+  - chat groups named "AutoGroup_<stamp>" (the chats tests' own names;
+    US box only - india has no group feature)
 
 Anything else on the tenant is somebody's real data and is never touched.
 
@@ -50,7 +56,7 @@ from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(ROOT / '.env')
 
-from playwright.sync_api import sync_playwright  # noqa: E402
+from playwright.sync_api import Error as PlaywrightError, sync_playwright  # noqa: E402
 
 from config.base_config import config, get_credentials  # noqa: E402
 
@@ -63,6 +69,11 @@ GROUP_PATTERNS = [
 USER_PATTERN = re.compile(r'^AutoTest\b')
 # The user cards repeat one display name, so the e-mail is the identity
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+# The rules list truncates the name cell ("Owned_Auto_20260904_09..."),
+# so the match is anchored at the start only and needs digits after
+# _Auto_: a real rule called "Zone_Auto_Detect" does not match.
+RULE_PATTERN = re.compile(r'^\S+_Auto_\d{4,}')
+GROUP_PATTERN = re.compile(r'^AutoGroup_\d+$')
 
 # A channel card is the grid item around its three-dots icon; the name
 # is its p.textEllipsis and the url its p.lineClampTwoLine (probed
@@ -270,6 +281,107 @@ def _delete_channel(page, name: str) -> bool:
     return True
 
 
+def is_automation_rule(name: str) -> bool:
+    """True for a rule name the suite itself creates (truncated or not)."""
+    return bool(RULE_PATTERN.match((name or '').strip()))
+
+
+def is_automation_group(name: str) -> bool:
+    """True for a chat group name the suite itself creates."""
+    return bool(GROUP_PATTERN.match((name or '').strip()))
+
+
+RULE_NAMES_JS = """() => [...document.querySelectorAll('tbody tr')]
+    .map(tr => ((tr.querySelector('td') || {}).innerText || '').trim())
+    .filter(Boolean)"""
+
+
+def _rules_step(page, admin, apply: bool) -> list[str]:
+    """List, and with --apply delete, the suite's own leftover rules.
+
+    Deletes one row at a time under a name filter and requires the
+    filtered count to drop, because the list truncates names: the
+    visible prefix is what the filter gets, and two rules can share
+    it. Every delete goes through delete_rule, whose confirm-hidden
+    wait is best effort, so the count is the oracle here.
+    """
+    from playwright.sync_api import expect
+    # From inside Admin the sidebar Rules tab is the way: the top nav's
+    # Admin link is covered by a MuiBox overlay there and the click hangs
+    # for 30s (measured 09/08/2026, the rules teardown hit it 09/04 too)
+    page.keyboard.press('Escape')
+    if '/admin' not in page.url:
+        admin.navigate_to_admin()
+    admin.navigate_to_rules()
+    admin.rule_search_input.wait_for(state='visible', timeout=20000)
+    # the list renders a beat after the search bar (item 18's race)
+    page.wait_for_timeout(2500)
+    listed = page.evaluate(RULE_NAMES_JS)
+    rules = [n for n in listed if is_automation_rule(n)]
+    print(f'Rules: {len(listed)} listed, {len(rules)} automation leftover(s):')
+    for name in rules:
+        print(f'  rule   {name}')
+    if not apply:
+        return rules
+    for name in rules:
+        prefix = name.rstrip('.')
+        admin.search_rule(prefix)
+        admin.rule_delete_icons.first.wait_for(state='visible', timeout=10000)
+        before = admin.rule_delete_icons.count()
+        admin.delete_rule(0)
+        expect(admin.rule_delete_icons).to_have_count(before - 1, timeout=15000)
+        admin.search_rule('')
+        print(f'  deleted  {name}')
+    page.wait_for_timeout(1500)
+    left = [n for n in page.evaluate(RULE_NAMES_JS) if is_automation_rule(n)]
+    print(f'  remaining automation rules: {len(left)}')
+    return rules
+
+
+GROUP_NAMES_IN_PANEL_JS = """() => {
+    const p = document.querySelector('div.chat-popup-box');
+    if (!p) return [];
+    const out = [];
+    for (const el of p.querySelectorAll('*')) {
+        if (el.children.length) continue;
+        const t = (el.innerText || '').trim();
+        const r = el.getBoundingClientRect();
+        if (t && r.width > 0 && !out.includes(t)) out.push(t);
+    }
+    return out;
+}"""
+
+
+def _groups_step(page, apply: bool) -> list[str]:
+    """List, and with --apply delete, the suite's own leftover chat groups.
+
+    The panel search never lists a group, so the conversation list is
+    read directly. A box without the group feature (india) has no
+    groups to find and the step reports zero.
+    """
+    from tests.shared.pages.chat_page import ChatPage
+    chat = ChatPage(page)
+    chat.open_chat_panel()
+    page.wait_for_timeout(2000)
+    groups = [n for n in page.evaluate(GROUP_NAMES_IN_PANEL_JS)
+              if is_automation_group(n)]
+    print(f'Chat groups: {len(groups)} automation leftover(s):')
+    for name in groups:
+        print(f'  group  {name}')
+    if apply:
+        for name in groups:
+            # delete_group re-opens the panel and raises if the row stays
+            chat.delete_group(name)
+            print(f'  deleted  {name}')
+        chat.refresh_panel()
+        page.wait_for_timeout(1500)
+        left = [n for n in page.evaluate(GROUP_NAMES_IN_PANEL_JS)
+                if is_automation_group(n)]
+        print(f'  remaining automation groups: {len(left)}')
+    chat.close_chat_panel()
+    return groups
+
+
 def _channels_step(page, admin, names: list[str], apply: bool) -> None:
     _open_channels(page, admin)
     listed = _channels(page)
@@ -335,11 +447,22 @@ def main() -> int:
                 left = _group_candidates(page)
                 print(f'  remaining automation groups: {len(left)}')
 
-        # --- users ---
         # the Groups dropdown is a MUI menu whose invisible backdrop
         # swallows clicks until it closes
         page.keyboard.press('Escape')
         page.locator('.MuiModal-backdrop').first.wait_for(state='hidden', timeout=5000)
+
+        # --- rules --- (before users: a leaked rule hides its camera from
+        # the wizard and fails every later run, register item 28, while
+        # the tenant refuses user deletes and that step must not abort
+        # the ones that matter)
+        rules = _rules_step(page, admin, args.apply)
+
+        # --- chat groups ---
+        chat_groups = _groups_step(page, args.apply)
+
+        # --- users ---
+        page.keyboard.press('Escape')
         admin.navigate_to_users()
         users = _user_candidates(page, admin)
         print(f'Users: {len(users)} automation leftover(s):')
@@ -350,12 +473,17 @@ def main() -> int:
                   '11); expect them to survive --apply until the app fix.')
         if args.apply:
             for name in users:
-                admin.delete_user(match_text=name)
-                print(f'  deleted  {name}')
+                # typed: a refused or stalled delete is reported and the
+                # run goes on; the users are the app defect's evidence
+                try:
+                    admin.delete_user(match_text=name)
+                    print(f'  deleted  {name}')
+                except PlaywrightError as e:
+                    print(f'  REFUSED  {name}: {str(e).splitlines()[0][:90]}')
 
         browser.close()
 
-    if not args.apply and (groups or users):
+    if not args.apply and (groups or users or rules or chat_groups):
         print('\nDry run - nothing deleted. Re-run with --apply to delete the above.')
     return 0
 
