@@ -78,6 +78,14 @@ class TestMediaClipOperations:
         once did; this assert is the repro). A folder that survives
         its delete is the filed folder-delete defect (register, App
         defects) and skips, leaving it for tools/tenant_cleanup.py.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.
+           Expected: A new folder appears on the Folders tab.
+        2. Open the new folder and choose Remove From Folder on the clip.
+           Expected: The clip returns to the Clips tab and is not deleted.
+        3. Delete the now-empty folder and confirm.
+           Expected: The folder is gone from the Folders tab and every clip outside it is still listed.
         """
         first = self._first_clip_or_skip()
         clips_before = self.media.item_names()
@@ -191,6 +199,12 @@ class TestMediaClipOperations:
         value updates optimistically, so the attribute expects only
         confirm the optimistic render); the reload at the end is
         what proves both renames reached the server.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Clips tab and rename a clip to a temporary name.
+           Expected: A success toast appears and, after a reload, the clip is listed under the new name.
+        2. Rename it back to its original name.
+           Expected: A success toast appears and, after a reload, the original name is listed again.
         """
         original = self._first_clip_or_skip()
         temp = f"{original}_t"
@@ -242,6 +256,12 @@ class TestMediaClipOperations:
         permanently and cannot be retrieved"). The real delete then
         consumes ONE tenant clip - sanctioned on the india media set
         (Justin, 09/02/2026).
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Clips tab, open a clip's options menu, choose Delete, then Cancel.
+           Expected: The dialog warns the clip will be deleted permanently and cannot be retrieved; after Cancel the clip is still listed.
+        2. Choose Delete again and confirm.
+           Expected: The clip is no longer listed.
         """
         name = self._first_clip_or_skip()
 
@@ -268,6 +288,12 @@ class TestMediaClipOperations:
 
         Restore is 'Remove From Folder', so the team's clip layout
         survives. Skips when the tenant has no folder to move into.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Clips tab, tick a clip, choose Move to Folder and pick an existing folder.
+           Expected: The clip leaves the top-level Clips list.
+        2. Open that folder and choose Remove From Folder on the clip.
+           Expected: The clip is listed on the Clips tab again.
         """
         name = self._first_clip_or_skip()
 
@@ -320,6 +346,12 @@ class TestMediaClipOperations:
 
         The dialog is cancelled so no orphan link is left behind
         (there is no delete-link flow to clean one up).
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Clips tab, open a clip's options menu and choose Create Link.
+           Expected: The Create Link dialog opens with Add Link Name, Set Expiration and Duration fields.
+        2. Click Cancel.
+           Expected: The dialog closes and no link is created.
         """
         name = self._first_clip_or_skip()
         self.media.open_create_link_dialog(name)
@@ -339,7 +371,14 @@ class TestMediaClipOperations:
     @pytest.mark.ui
     @pytest.mark.media
     def test_add_clip_to_vault(self):
-        """Vault a clip: its row moves from Clips to the Vault tab."""
+        """Vault a clip: its row moves from Clips to the Vault tab.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Clips tab, open a clip's options menu and choose Add to Vault.
+           Expected: The action is confirmed.
+        2. Reload the page and open the Vault tab.
+           Expected: The clip is listed in the Vault.
+        """
         name = self._first_clip_or_skip()
 
         def _restore():
@@ -375,6 +414,12 @@ class TestMediaClipOperations:
 
         Self-sufficient: vaults a clip first, so the tenant needs no
         pre-vaulted state.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days; vault a clip from the Clips tab, reload, and open the Vault tab.
+           Expected: The clip is listed in the Vault.
+        2. On the Vault tab choose Remove from Vault on that clip, reload, and open the Clips tab.
+           Expected: The clip is listed on the Clips tab again and no longer in the Vault.
         """
         name = self._first_clip_or_skip()
 
@@ -467,7 +512,12 @@ class TestMediaFolderOperations:
         test_clip_grouping's lifecycle (create -> empty -> delete with
         the defect tripwire). A standalone delete would have to eat a
         TEAM folder - those are not automation data. No oracle by
-        design: the lifecycle test carries the assertions."""
+        design: the lifecycle test carries the assertions.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu, choose Delete and confirm.
+           Expected: The folder is removed from the Folders tab (the automated check runs inside the clip grouping case, on a folder the automation created).
+        """
         pytest.skip(
             "Covered by test_clip_grouping's folder lifecycle; team "
             "folders stay untouched"
@@ -479,6 +529,12 @@ class TestMediaFolderOperations:
         """Verify the Create Link dialog opens for a folder.
 
         Cancelled so no orphan link is left behind.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Create Link.
+           Expected: The Create Link dialog opens with a Set Expiration field.
+        2. Click Cancel.
+           Expected: The dialog closes and no link is created.
         """
         name = self._first_folder_or_skip()
         self.media.open_create_link_dialog(name)
@@ -496,7 +552,14 @@ class TestMediaFolderOperations:
     @pytest.mark.ui
     @pytest.mark.media
     def test_add_folder_to_vault(self):
-        """Vault a folder: its row moves to the Vault tab."""
+        """Vault a folder: its row moves to the Vault tab.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Add to Vault.
+           Expected: The action is confirmed.
+        2. Reload the page and open the Vault tab.
+           Expected: The folder is listed in the Vault.
+        """
         name = self._first_folder_or_skip()
 
         def _restore():
@@ -531,6 +594,12 @@ class TestMediaFolderOperations:
         """Un-vault a folder: its row returns to the Folders tab.
 
         Self-sufficient: vaults the folder first.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days; vault a folder from the Folders tab, reload, and open the Vault tab.
+           Expected: The folder is listed in the Vault.
+        2. Choose Remove from Vault on that folder, reload, and open the Folders tab.
+           Expected: The folder is listed on the Folders tab again and no longer in the Vault.
         """
         name = self._first_folder_or_skip()
 
@@ -580,6 +649,10 @@ class TestMediaFolderOperations:
 
         The oracle lives in share_item: it raises when the success
         panel never appears.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu, choose Share, enter an e-mail address and send.
+           Expected: A success panel confirms the folder was shared.
         """
         name = self._first_folder_or_skip()
         self.media.share_item(name, "test@example.com")
@@ -591,6 +664,10 @@ class TestMediaFolderOperations:
 
         The oracle lives in export_item: a stuck export control
         raises.
+
+        Steps:
+        1. Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Export.
+           Expected: The export starts, and its progress control finishes and disappears.
         """
         name = self._first_folder_or_skip()
         self.media.export_item(name)

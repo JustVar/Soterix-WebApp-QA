@@ -3,649 +3,199 @@
   "class": "TestMediaClipOperations",
   "tests": {
     "test_clip_grouping": {
-      "title": "Verify clips can be grouped into a folder.",
+      "title": "Group a clip into a folder, un-group it, delete the folder",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.",
+          "expected": "A new folder appears on the Folders tab."
         },
         {
           "n": 2,
-          "action": "Navigate to Media > Accessibility - Media",
-          "expected": "Browser navigates to the target URL"
+          "action": "Open the new folder and choose Remove From Folder on the clip.",
+          "expected": "The clip returns to the Clips tab and is not deleted."
         },
         {
           "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Accessibility - Media page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: for clip selection",
-          "expected": "Precondition is met (for clip selection)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Delete the now-empty folder and confirm.",
+          "expected": "The folder is gone from the Folders tab and every clip outside it is still listed."
         }
       ],
-      "case_key": "eJqXyg"
+      "case_key": "11zPGK"
     },
     "test_clip_rename": {
-      "title": "Verify a clip can be renamed via the options menu.",
+      "title": "Rename a clip and rename it back, verifying each commit",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Clips tab and rename a clip to a temporary name.",
+          "expected": "A success toast appears and, after a reload, the clip is listed under the new name."
         },
         {
           "n": 2,
-          "action": "Navigate to Media > Rename",
-          "expected": "Rename page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify an existing Rename option allows updating clip name to edit from the list",
-          "expected": "At least one Rename option allows updating clip name is visible in the list"
-        },
-        {
-          "n": 4,
-          "action": "Click on the Rename option allows updating clip name or its edit button to open the edit form",
-          "expected": "Edit form or dialog opens with pre-populated data"
-        },
-        {
-          "n": 5,
-          "action": "Verify the existing data is correctly pre-filled in the form",
-          "expected": "All fields show the current values of the Rename option allows updating clip name"
-        },
-        {
-          "n": 6,
-          "action": "Modify the target field(s) with new valid data",
-          "expected": "The field(s) accept the new input"
-        },
-        {
-          "n": 7,
-          "action": "Verify the changes are reflected in the form before saving",
-          "expected": "Updated values are displayed in the form fields"
-        },
-        {
-          "n": 8,
-          "action": "Click the Save/Update button",
-          "expected": "Changes are saved and a success message or indicator appears"
-        },
-        {
-          "n": 9,
-          "action": "Verify the updated Rename option allows updating clip name reflects the new values in the list or detail view",
-          "expected": "The modified data is displayed correctly"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and verify the changes persisted",
-          "expected": "Updated values remain after page refresh"
+          "action": "Rename it back to its original name.",
+          "expected": "A success toast appears and, after a reload, the original name is listed again."
         }
       ],
       "case_key": "K4n9dr"
     },
     "test_clip_delete": {
-      "title": "Verify a clip can be deleted via the options menu.",
+      "title": "Delete Clip dialog contract, then a real delete",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Clips tab, open a clip's options menu, choose Delete, then Cancel.",
+          "expected": "The dialog warns the clip will be deleted permanently and cannot be retrieved; after Cancel the clip is still listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Media > Delete",
-          "expected": "Media Delete dialog loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify the Delete option removes clip to be deleted from the list",
-          "expected": "Delete option removes clip is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target Delete option removes clip",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the Delete option removes clip"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the Delete option removes clip no longer appears in the list",
-          "expected": "Delete option removes clip is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: after confirmation",
-          "expected": "Precondition is met (after confirmation)"
-        },
-        {
-          "n": 11,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted Delete option removes clip does not reappear after refresh"
+          "action": "Choose Delete again and confirm.",
+          "expected": "The clip is no longer listed."
         }
       ],
       "case_key": "jPnpWx"
     },
     "test_clip_move_to_folder": {
-      "title": "Verify a clip can be moved to an existing folder.",
+      "title": "Move a clip into an existing folder, then un-group it back",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Clips tab, tick a clip, choose Move to Folder and pick an existing folder.",
+          "expected": "The clip leaves the top-level Clips list."
         },
         {
           "n": 2,
-          "action": "Navigate to Media > Move to Folder",
-          "expected": "Move to Folder page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate Move to Folder option on the page",
-          "expected": "Move to Folder option is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of Move to Folder option",
-          "expected": "Move to Folder option enabled"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: for selected clips",
-          "expected": "Precondition is met (for selected clips)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to Move to Folder option"
+          "action": "Open that folder and choose Remove From Folder on the clip.",
+          "expected": "The clip is listed on the Clips tab again."
         }
       ],
       "case_key": "21zWE4"
     },
     "test_clip_create_link": {
-      "title": "Verify a shareable link can be created for a clip.",
+      "title": "Verify the Create Link dialog opens for a clip",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Clips tab, open a clip's options menu and choose Create Link.",
+          "expected": "The Create Link dialog opens with Add Link Name, Set Expiration and Duration fields."
         },
         {
           "n": 2,
-          "action": "Navigate to Events > Create Link - Events",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Create Link - Events page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Click Cancel.",
+          "expected": "The dialog closes and no link is created."
         }
       ],
       "case_key": "68lDR7"
     },
     "test_add_clip_to_vault": {
-      "title": "Verify a clip can be added to the Vault.",
+      "title": "Vault a clip: its row moves from Clips to the Vault tab",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Clips tab, open a clip's options menu and choose Add to Vault.",
+          "expected": "The action is confirmed."
         },
         {
           "n": 2,
-          "action": "Navigate to Media > Add to Vault - Notification",
-          "expected": "Add to Vault - Notification page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the page displays any existing items",
-          "expected": "Page content loads (list, table, or empty state)"
-        },
-        {
-          "n": 4,
-          "action": "Click the create/add button for Add to Vault option adds notification event clip to Vault",
-          "expected": "Creation form or dialog opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify all required form fields are present and empty/default",
-          "expected": "Form fields are displayed with correct labels and placeholders"
-        },
-        {
-          "n": 6,
-          "action": "Fill in all required fields with valid test data",
-          "expected": "All fields accept the input without errors"
-        },
-        {
-          "n": 7,
-          "action": "Fill in any optional fields if applicable",
-          "expected": "Optional fields accept input"
-        },
-        {
-          "n": 8,
-          "action": "Review the filled form for correctness",
-          "expected": "All entered data is displayed correctly in the form"
-        },
-        {
-          "n": 9,
-          "action": "Click the Save/Submit/Create button",
-          "expected": "Form is submitted and a success message or indicator appears"
-        },
-        {
-          "n": 10,
-          "action": "Verify the newly created Add to Vault option adds notification event clip to Vault appears in the list or view",
-          "expected": "The new Add to Vault option adds notification event clip to Vault is visible with the correct data"
-        },
-        {
-          "n": 11,
-          "action": "Verify no duplicate entries were created",
-          "expected": "Only one instance of the new Add to Vault option adds notification event clip to Vault exists"
+          "action": "Reload the page and open the Vault tab.",
+          "expected": "The clip is listed in the Vault."
         }
       ],
       "case_key": "dyp4KK"
     },
     "test_remove_clip_from_vault": {
-      "title": "Verify a clip can be removed from the Vault.",
+      "title": "Un-vault a clip: its row returns to the Clips tab",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days; vault a clip from the Clips tab, reload, and open the Vault tab.",
+          "expected": "The clip is listed in the Vault."
         },
         {
           "n": 2,
-          "action": "Navigate to Events > Pin/Unpin",
-          "expected": "Pin/Unpin page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify the clicking Unpin icon removes clip from Pinned Clips panel to be deleted from the list",
-          "expected": "clicking Unpin icon removes clip from Pinned Clips panel is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target clicking Unpin icon removes clip from Pinned Clips panel",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the clicking Unpin icon removes clip from Pinned Clips panel"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the clicking Unpin icon removes clip from Pinned Clips panel no longer appears in the list",
-          "expected": "clicking Unpin icon removes clip from Pinned Clips panel is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted clicking Unpin icon removes clip from Pinned Clips panel does not reappear after refresh"
+          "action": "On the Vault tab choose Remove from Vault on that clip, reload, and open the Clips tab.",
+          "expected": "The clip is listed on the Clips tab again and no longer in the Vault."
         }
       ],
       "case_key": "gQxXl3"
     },
     "test_folder_delete": {
-      "title": "Verify a folder can be deleted via the options menu.",
+      "title": "Held by design: folder deletion is covered end to end by",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Media Listing & Actions",
-          "expected": "Media Listing & Actions page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify the folder delete cancel action to be deleted from the list",
-          "expected": "folder delete cancel action is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target folder delete cancel action",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the folder delete cancel action"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the folder delete cancel action no longer appears in the list",
-          "expected": "folder delete cancel action is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted folder delete cancel action does not reappear after refresh"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu, choose Delete and confirm.",
+          "expected": "The folder is removed from the Folders tab (the automated check runs inside the clip grouping case, on a folder the automation created)."
         }
       ],
-      "case_key": "xm9d51"
+      "case_key": "VKbQvP"
     },
     "test_folder_create_link": {
-      "title": "Verify a shareable link can be created for a folder.",
+      "title": "Verify the Create Link dialog opens for a folder",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Create Link.",
+          "expected": "The Create Link dialog opens with a Set Expiration field."
         },
         {
           "n": 2,
-          "action": "Navigate to Events > Create Link - Events",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Create Link - Events page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Click Cancel.",
+          "expected": "The dialog closes and no link is created."
         }
       ],
-      "case_key": "Pgw9D6"
+      "case_key": "RgGQ8d"
     },
     "test_add_folder_to_vault": {
-      "title": "Verify a folder can be added to the Vault.",
+      "title": "Vault a folder: its row moves to the Vault tab",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Add to Vault.",
+          "expected": "The action is confirmed."
         },
         {
           "n": 2,
-          "action": "Navigate to Media > Vault - Add Action - Clips",
-          "expected": "Vault - Add Action - Clips page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where folder added to Vault appears under Vault tab should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate folder added to Vault appears under Vault tab on the page",
-          "expected": "folder added to Vault appears under Vault tab is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify folder added to Vault appears under Vault tab is displayed as expected",
-          "expected": "folder added to Vault appears under Vault tab is displayed as expected"
+          "action": "Reload the page and open the Vault tab.",
+          "expected": "The folder is listed in the Vault."
         }
       ],
       "case_key": "bj0XG9"
     },
     "test_remove_folder_from_vault": {
-      "title": "Verify a folder can be removed from the Vault.",
+      "title": "Un-vault a folder: its row returns to the Folders tab",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, set the date filter to Last 30 Days; vault a folder from the Folders tab, reload, and open the Vault tab.",
+          "expected": "The folder is listed in the Vault."
         },
         {
           "n": 2,
-          "action": "Navigate to Media > Vault - Retention",
-          "expected": "Vault - Retention page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify the deleting folder from Vault removes it permanently to be deleted from the list",
-          "expected": "deleting folder from Vault removes it permanently is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target deleting folder from Vault removes it permanently",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the deleting folder from Vault removes it permanently"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the deleting folder from Vault removes it permanently no longer appears in the list",
-          "expected": "deleting folder from Vault removes it permanently is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted deleting folder from Vault removes it permanently does not reappear after refresh"
+          "action": "Choose Remove from Vault on that folder, reload, and open the Folders tab.",
+          "expected": "The folder is listed on the Folders tab again and no longer in the Vault."
         }
       ],
       "case_key": "J8d93L"
     },
     "test_folder_share": {
-      "title": "Verify a folder can be shared via email.",
+      "title": "Share a folder via email",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where share icon should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate share icon on the page",
-          "expected": "share icon is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify share icon visible in fullscreen playback",
-          "expected": "share icon visible in fullscreen playback"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu, choose Share, enter an e-mail address and send.",
+          "expected": "A success panel confirms the folder was shared."
         }
       ],
       "case_key": "Nj3r6e"
     },
     "test_folder_export": {
-      "title": "Verify a folder can be exported.",
+      "title": "Export a folder; the export control leaving is the signal",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Media > Clip Actions - State",
-          "expected": "Clip Actions - State page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the page displays any existing items",
-          "expected": "Page content loads (list, table, or empty state)"
-        },
-        {
-          "n": 4,
-          "action": "Click the create/add button for action menu displays Export, Share Link, Discard, and Add to Vault options",
-          "expected": "Creation form or dialog opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify all required form fields are present and empty/default",
-          "expected": "Form fields are displayed with correct labels and placeholders"
-        },
-        {
-          "n": 6,
-          "action": "Fill in all required fields with valid test data",
-          "expected": "All fields accept the input without errors"
-        },
-        {
-          "n": 7,
-          "action": "Fill in any optional fields if applicable",
-          "expected": "Optional fields accept input"
-        },
-        {
-          "n": 8,
-          "action": "Review the filled form for correctness",
-          "expected": "All entered data is displayed correctly in the form"
-        },
-        {
-          "n": 9,
-          "action": "Click the Save/Submit/Create button",
-          "expected": "Form is submitted and a success message or indicator appears"
-        },
-        {
-          "n": 10,
-          "action": "Verify the newly created action menu displays Export, Share Link, Discard, and Add to Vault options appears in the list or view",
-          "expected": "The new action menu displays Export, Share Link, Discard, and Add to Vault options is visible with the correct data"
-        },
-        {
-          "n": 11,
-          "action": "Verify no duplicate entries were created",
-          "expected": "Only one instance of the new action menu displays Export, Share Link, Discard, and Add to Vault options exists"
+          "action": "Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Export.",
+          "expected": "The export starts, and its progress control finishes and disappears."
         }
       ],
       "case_key": "21zWNl"
