@@ -57,7 +57,7 @@
           "expected": "Other page elements remain in their expected state"
         }
       ],
-      "case_key": "n8jQRg"
+      "case_key": "0rzlE9"
     },
     "test_toggle_grid_list_view": {
       "title": "Verify toggling between grid and list view on the Sites page.",

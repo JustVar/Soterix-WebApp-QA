@@ -133,12 +133,13 @@
       "reviewed": false
     },
     "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_search_site[chromium]": {
-      "case_key": "n8jQRg",
+      "case_key": "0rzlE9",
       "case_title": "Verify Select Site dropdown resets on Reset Search",
       "score": 1.0,
       "module": "Select Site Dropdown",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": false,
+      "note": "re-pointed 09/08/2026: the test filters sites by name, which is case 0rzlE9 'Verify search by site name'; n8jQRg 'Select Site dropdown resets on Reset Search' describes a flow no test performs"
     },
     "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_toggle_grid_list_view[chromium]": {
       "case_key": "eJqXz3",
