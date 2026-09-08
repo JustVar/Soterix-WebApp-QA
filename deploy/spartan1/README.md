@@ -38,12 +38,15 @@ because it existed nowhere in git.
 ## Deploying a change
 
 The copy here is the one of record. Edit it here, run it through review
-like any other file, then copy it up; cron reads the file on each run, so
-nothing reloads:
+like any other file, push, then install it from the box's own clone; cron
+reads the file on each run, so nothing reloads. Copy from the clone, not
+from a Windows checkout: Git on Windows may hand you the file with CRLF
+line endings, and `/bin/sh` refuses a script whose first line ends in `\r`.
 
 ```bash
-scp deploy/spartan1/nightly.sh spartan1:/tmp/ && \
-  ssh spartan1 'sudo cp /tmp/nightly.sh /data/qa/ci/nightly.sh && sudo chmod 755 /data/qa/ci/nightly.sh'
+ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && git reset -q --hard origin/main && \
+  sudo cp deploy/spartan1/nightly.sh /data/qa/ci/nightly.sh && sudo chmod 755 /data/qa/ci/nightly.sh && \
+  sh -n /data/qa/ci/nightly.sh && echo installed'
 
 # nginx: after editing /etc/nginx/sites-enabled/default
 ssh spartan1 'sudo nginx -t && sudo systemctl reload nginx'
