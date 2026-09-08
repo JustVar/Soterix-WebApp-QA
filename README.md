@@ -8,7 +8,7 @@ folder name may still be the old one.
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **1416 tests collected** across 79 test files, 59 of them UI suites (API tests live in Soterix-API-QA), with `legacy-selenium-tests/` excluded from collection. The c2c hardware tests parametrize over the camera registry, so the count moves with it. `tools/collect_floor.py` holds the current floor and fails a run that collects fewer.
+- **437 UI test functions in 59 suite files** (09/08/2026), which pytest collects as 819 items: the 32 c2c hardware tests parametrize over the 12-camera registry into 384, and the rest carry the browser parameter. The other 390 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 637 pins live in the shared package. Whole repo: 1209. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message.
 
 ## How We Run Today
 
