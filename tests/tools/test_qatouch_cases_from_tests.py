@@ -396,3 +396,43 @@ def test_after_import_dry_run_saves_nothing(synthetic, tmp_path, monkeypatch, ca
     assert rc == 1   # the reference matched nothing
     assert mapping.read_text(encoding='utf-8') == original
     assert 'No case carries' in capsys.readouterr().out
+
+
+
+# ------------------------------------------------------------ shared keys
+
+def test_rank_claimants_puts_the_matching_title_first():
+    """The claimant whose title reads like the case's is the proposed owner."""
+    ranked = gen.rank_claimants(
+        "Verify online cameras are detected on map",
+        [("t::a", "Verify clicking an online camera icon plays its stream", True),
+         ("t::b", "Verify there are online (green) cameras on the map", False)],
+    )
+    assert [r["nodeid"] for r in ranked] == ["t::b", "t::a"]
+    assert ranked[0]["score"] > ranked[1]["score"]
+    assert ranked[1]["has_steps"] is True
+
+
+def test_rank_claimants_ties_break_on_nodeid():
+    """Equal scores come back in a stable order, so runs are comparable."""
+    ranked = gen.rank_claimants("x", [("t::b", "y", False), ("t::a", "y", False)])
+    assert [r["nodeid"] for r in ranked] == ["t::a", "t::b"]
+
+
+def test_shared_keys_worklist_reports_only_keys_with_two_claimants():
+    """One test per key is fine; two or more is the worklist, ranked."""
+    mapping = {
+        "tests/ui/x/test_x.py::TestX::test_one[chromium]": {"case_key": "K1"},
+        "tests/ui/x/test_x.py::TestX::test_two[chromium]": {"case_key": "K1"},
+        "tests/ui/x/test_x.py::TestX::test_alone[chromium]": {"case_key": "K2"},
+    }
+    cases = {"K1": {"case_key": "K1", "case_title": "Verify two things happen",
+                    "module_name": "X"}}
+    tests = {}
+    rows = gen.shared_keys_worklist(mapping, cases, tests)
+    assert [r["key"] for r in rows] == ["K1"]
+    assert {rows[0]["owner"]["nodeid"], *(o["nodeid"] for o in rows[0]["others"])} == {
+        "tests/ui/x/test_x.py::TestX::test_one",
+        "tests/ui/x/test_x.py::TestX::test_two",
+    }
+    assert rows[0]["owner_weak"] is True  # no test found, no title to match

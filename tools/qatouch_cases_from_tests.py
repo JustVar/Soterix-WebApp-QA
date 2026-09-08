@@ -9,12 +9,22 @@ tools/qatouch_csv_import.py sends. It never invents a step: a test
 with no "Steps:" block is listed as "needs steps" and gets no row.
 
     python tools/qatouch_cases_from_tests.py --unmapped
+    python tools/qatouch_cases_from_tests.py --shared-keys
     python tools/qatouch_cases_from_tests.py --dead-keys
     python tools/qatouch_cases_from_tests.py --test tests/ui/x.py::TestX::test_y
     python tools/qatouch_cases_from_tests.py --file tests/ui/admin/test_lpr_views.py
     python tools/qatouch_csv_import.py preview logs/qatouch_new_cases_<date>.csv
     python tools/qatouch_csv_import.py import logs/qatouch_new_cases_<date>.csv
     python tools/qatouch_cases_from_tests.py --after-import logs/qatouch_new_cases_<date>.csv
+
+--shared-keys is the worklist for splitting a case key claimed by more
+than one test (docs/TEST_REPAIRS.md item 6). For each such key it puts
+the case's own title beside each claimant's title, ranks the claimants
+by how well their title matches the case's, and says which of the
+others already have a Steps block (a case can be made now) and which
+need one written first. A weak best match means the mapping is wrong,
+not just shared - the bulk match by title collapsed unrelated tests
+onto one case. It writes logs/qatouch_shared_keys_<date>.json.
 
 Selection (any mix, node ids are de-duplicated):
 
@@ -435,6 +445,100 @@ def write_markdown(rows: list[dict[str, str]], needs: list[tuple[str, str]],
 
 # ------------------------------------------------------------ selection
 
+def _title_words(text: str) -> str:
+    """Lower-cased title without the filler the bulk match matched on."""
+    words = (text or '').lower().replace('.', ' ').split()
+    return ' '.join(w for w in words if w not in ('verify', 'that', 'the', 'a', 'an', 'is'))
+
+
+def rank_claimants(case_title: str, claimants: list[tuple[str, str, bool]]) -> list[dict]:
+    """Pure: the claimants of one key, best title match first.
+
+    claimants  (nodeid, test title, has_steps)
+    Returns dicts {nodeid, title, has_steps, score}. The first is the
+    proposed owner; a first score under WEAK_OWNER means no claimant is
+    the case (the mapping is wrong, not merely shared).
+    """
+    import difflib
+    ranked = []
+    for nodeid, title, has_steps in claimants:
+        score = difflib.SequenceMatcher(
+            None, _title_words(case_title), _title_words(title)).ratio()
+        ranked.append({'nodeid': nodeid, 'title': title,
+                       'has_steps': has_steps, 'score': round(score, 2)})
+    ranked.sort(key=lambda r: (-r['score'], r['nodeid']))
+    return ranked
+
+
+WEAK_OWNER = 0.45
+
+
+def shared_keys_worklist(mapping: dict, cases: dict, tests: dict[str, TestInfo]) -> list[dict]:
+    """Every case key claimed by more than one test, with its ranked claimants."""
+    claims: dict[str, list[str]] = {}
+    for nodeid, row in mapping.items():
+        key = (row or {}).get('case_key')
+        if not key:
+            continue
+        base = qm.function_base(nodeid)
+        claims.setdefault(key, [])
+        if base not in claims[key]:
+            claims[key].append(base)
+    out = []
+    for key, nodeids in claims.items():
+        if len(nodeids) < 2:
+            continue
+        case = cases.get(key, {})
+        claimants = []
+        for nodeid in nodeids:
+            info = tests.get(nodeid)
+            doc = parse_docstring(info.docstring, nodeid) if info else None
+            claimants.append((nodeid,
+                              doc.title if doc else '<test not found>',
+                              bool(doc and doc.ok)))
+        ranked = rank_claimants(case.get('case_title', ''), claimants)
+        out.append({'key': key,
+                    'case_title': case.get('case_title', '<not in snapshot>'),
+                    'module': case.get('module_name', ''),
+                    'owner': ranked[0], 'others': ranked[1:],
+                    'owner_weak': ranked[0]['score'] < WEAK_OWNER})
+    out.sort(key=lambda r: (-len(r['others']), r['key']))
+    return out
+
+
+def cmd_shared_keys(args) -> int:
+    from tools.qatouch_mapping_audit import latest_snapshot
+    tests = scan_tests()
+    mapping = qm.load_raw(args.mapping).get('mappings', {})
+    snap_path = latest_snapshot()
+    cases = {}
+    if snap_path:
+        cases = {c['case_key']: c
+                 for c in json.loads(snap_path.read_text(encoding='utf-8')).get('cases') or []}
+    rows = shared_keys_worklist(mapping, cases, tests)
+    LOGS_DIR.mkdir(exist_ok=True)
+    out = LOGS_DIR / f'qatouch_shared_keys_{dt.date.today().isoformat()}.json'
+    out.write_text(json.dumps(rows, indent=1), encoding='utf-8')
+    others = [o for r in rows for o in r['others']]
+    ready = [o for o in others if o['has_steps']]
+    weak = [r for r in rows if r['owner_weak']]
+    print(f'Shared keys: {len(rows)}  (snapshot: {snap_path.name if snap_path else "none"})')
+    print(f'  tests needing their own case: {len(others)}  '
+          f'- with a Steps block now: {len(ready)}  - need steps first: {len(others) - len(ready)}')
+    print(f'  keys where no claimant matches the case (mapping wrong): {len(weak)}')
+    print(f'  written: {out}')
+    print()
+    for r in rows:
+        flag = '  MAPPING WRONG' if r['owner_weak'] else ''
+        print(f"{r['key']}  [{r['module']}]  case: {r['case_title'][:64]}{flag}")
+        o = r['owner']
+        print(f"    owner {o['score']:.2f}  {o['nodeid'].replace('tests/ui/', '')}")
+        for o in r['others']:
+            need = 'steps ok   ' if o['has_steps'] else 'NEEDS STEPS'
+            print(f"    new   {o['score']:.2f}  {need}  {o['nodeid'].replace('tests/ui/', '')}")
+    return 0
+
+
 def select_nodeids(args, tests: dict[str, TestInfo]) -> list[str]:
     """Base node ids the flags name, de-duplicated, excluded folders out."""
     chosen: set[str] = set()
@@ -635,6 +739,9 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__.split('Selection', 1)[0],
     )
+    parser.add_argument('--shared-keys', action='store_true',
+                        help='worklist of case keys claimed by more than one test '
+                             '(register item 6); writes logs/qatouch_shared_keys_<date>.json')
     parser.add_argument('--unmapped', action='store_true',
                         help='tests under tests/ui with no mapping row')
     parser.add_argument('--dead-keys', action='store_true',
@@ -666,6 +773,8 @@ def main(argv: list[str] | None = None) -> int:
         args.exclude_dir = list(DEFAULT_EXCLUDE)
     if args.after_import:
         return after_import(args)
+    if args.shared_keys:
+        return cmd_shared_keys(args)
     return generate(args)
 
 
