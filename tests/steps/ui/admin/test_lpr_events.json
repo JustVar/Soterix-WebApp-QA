@@ -1,0 +1,180 @@
+{
+  "test_file": "tests/ui/admin/test_lpr_events.py",
+  "class": "TestLprEventPlayback",
+  "tests": {
+    "test_lpr_event_selection_play_pause_scrubber": {
+      "title": "Selecting an event opens its clip player, and close ends it",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens and the event feed lists plate cards."
+        },
+        {
+          "n": 2,
+          "action": "Click the first event card.",
+          "expected": "The clip player opens with a video and a position readout such as 00:00 / 00:20."
+        },
+        {
+          "n": 3,
+          "action": "Click the close icon on the player.",
+          "expected": "The player closes and no video remains."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_event_list_visibility": {
+      "title": "The live feed lists at least one event card",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 2,
+          "action": "Look at the event feed.",
+          "expected": "At least one event card shows a plate, a confidence, a camera, and a timestamp."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_event_scrubber_control": {
+      "title": "The clip player shows its timeline readout and seek controls",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar, then click the first event card in the feed.",
+          "expected": "The clip player opens with a video."
+        },
+        {
+          "n": 2,
+          "action": "Look at the player controls.",
+          "expected": "The player shows the position readout and the Backward and Forward seek icons."
+        },
+        {
+          "n": 3,
+          "action": "Click the close icon on the player.",
+          "expected": "The player closes."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_event_filter_by_type": {
+      "title": "The feed filter opens with camera and duration options",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 2,
+          "action": "Click the Filter icon above the event feed.",
+          "expected": "The filter panel opens with Cameras and Duration sections and an Apply button."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_event_timestamp_verification": {
+      "title": "Event cards carry a full time-and-date stamp",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The event feed lists at least one card."
+        },
+        {
+          "n": 2,
+          "action": "Read the timestamp line on the first card.",
+          "expected": "The line shows a time and a date, for example 1:37:38 AM | Aug 11 2026."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_event_details_panel": {
+      "title": "The clip player exposes the event's action controls",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar, then click the first event card in the feed.",
+          "expected": "The clip player opens with a video."
+        },
+        {
+          "n": 2,
+          "action": "Look at the action icons on the player.",
+          "expected": "The player shows Share, Export, and Create Link icons."
+        },
+        {
+          "n": 3,
+          "action": "Click the close icon on the player.",
+          "expected": "The player closes."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_playback_speed_control": {
+      "title": "Speed control on the clip player (absent in the current UI)",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar, then click the first event card in the feed.",
+          "expected": "The clip player opens with its position readout."
+        },
+        {
+          "n": 2,
+          "action": "Look for a playback speed control such as 1x.",
+          "expected": "No speed control is shown. The current player has none."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_event_navigation_next_prev": {
+      "title": "The seek controls act on the open clip without breaking it",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar, then click the first event card in the feed.",
+          "expected": "The clip player opens with a video."
+        },
+        {
+          "n": 2,
+          "action": "Click the Forward icon, then the Backward icon.",
+          "expected": "The video and the position readout stay visible."
+        },
+        {
+          "n": 3,
+          "action": "Click the close icon on the player.",
+          "expected": "The player closes."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_fullscreen_event_playback": {
+      "title": "Fullscreen engages and releases on the clip player",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar, then click the first event card in the feed.",
+          "expected": "The clip player opens with a video."
+        },
+        {
+          "n": 2,
+          "action": "Click the full screen icon.",
+          "expected": "The player fills the screen."
+        },
+        {
+          "n": 3,
+          "action": "Exit full screen.",
+          "expected": "The player returns to its inline size."
+        },
+        {
+          "n": 4,
+          "action": "Click the close icon on the player.",
+          "expected": "The player closes."
+        }
+      ],
+      "case_key": ""
+    }
+  }
+}

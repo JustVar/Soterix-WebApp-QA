@@ -41,7 +41,7 @@
           "expected": "No errors in the browser console related to Search button"
         }
       ],
-      "case_key": "dypXRb"
+      "case_key": "kpZBmZ"
     },
     "test_incamera_search_play_result": {
       "title": "Verify playing an in-camera search result.",

@@ -1,0 +1,51 @@
+{
+  "test_file": "tests/ui/c2c/test_c2c_camera.py",
+  "class": "TestC2CCameraSettings",
+  "tests": {
+    "test_image_adjustment_defaults_and_reset": {
+      "title": "Verify image adjustment defaults and reset to default",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_exposure_and_daynight_defaults": {
+      "title": "Verify exposure and day/night settings defaults",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_image_enhancement_and_backlight": {
+      "title": "Verify image enhancement mirror/flip, 3D NR, LDC, and backlight WDR",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_motion_detection_zones": {
+      "title": "Verify motion detection configuration and zones",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_privacy_mask_configuration": {
+      "title": "Verify privacy mask configuration page and controls",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_corridor_mode_options": {
+      "title": "Verify corridor mode warning and options without triggering reboot",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_smart_stream_disabled": {
+      "title": "Verify smart stream controls are disabled when feature is off",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_roi_configuration": {
+      "title": "Verify Region of Interest configuration page",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_white_balance_modes": {
+      "title": "Verify white balance configuration and modes",
+      "steps": [],
+      "case_key": ""
+    }
+  }
+}

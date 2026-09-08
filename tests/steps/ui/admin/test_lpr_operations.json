@@ -1,0 +1,201 @@
+{
+  "test_file": "tests/ui/admin/test_lpr_operations.py",
+  "class": "TestLprListOperations",
+  "tests": {
+    "test_click_admin_and_access_lpr": {
+      "title": "Verify navigation to Admin page and LPR menu visibility",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar.",
+          "expected": "The Admin menu shows an LPR entry."
+        },
+        {
+          "n": 2,
+          "action": "Click LPR.",
+          "expected": "The Lists page opens and shows the Create List button."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_lpr_page_ui_elements": {
+      "title": "Verify LPR page UI elements are present",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The Lists page opens."
+        },
+        {
+          "n": 2,
+          "action": "Check the page controls.",
+          "expected": "The Create List button, the List and Categories tabs, the lists table, and the Search field are all visible."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_create_lpr_list": {
+      "title": "Create a new LPR list with valid data",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The Lists page opens."
+        },
+        {
+          "n": 2,
+          "action": "Click Create List.",
+          "expected": "The Create List dialog opens with a List Name field and a type dropdown."
+        },
+        {
+          "n": 3,
+          "action": "Enter a unique name in the List Name field.",
+          "expected": "The field shows the name."
+        },
+        {
+          "n": 4,
+          "action": "Open the type dropdown and choose White List.",
+          "expected": "The dropdown closes and shows White List."
+        },
+        {
+          "n": 5,
+          "action": "Click Save.",
+          "expected": "The dialog closes."
+        },
+        {
+          "n": 6,
+          "action": "Find the new list in the table.",
+          "expected": "A row with the new name is listed."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_search_lpr_list_by_name": {
+      "title": "Search for LPR list by name",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The Lists page shows at least one list row."
+        },
+        {
+          "n": 2,
+          "action": "Type the name of the first list into the Search field.",
+          "expected": "The table shows a row with that name."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_open_list_and_verify_plate_page": {
+      "title": "Open a list and verify plate page UI",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The Lists page shows at least one list row."
+        },
+        {
+          "n": 2,
+          "action": "Click the View icon on the first list row.",
+          "expected": "The Plate page opens with the Add Plate button and a plate table."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_list_actions_visible": {
+      "title": "Verify View, Edit, and Delete actions are available for lists",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The Lists page shows at least one list row."
+        },
+        {
+          "n": 2,
+          "action": "Look at the action icons on the first list row.",
+          "expected": "The row shows View, Edit, and Delete icons."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_list_status_toggle": {
+      "title": "Verify list status toggle is present and interactive",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The Lists page shows at least one list row."
+        },
+        {
+          "n": 2,
+          "action": "Look at the first list row.",
+          "expected": "The row shows a status toggle."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_apply_filter_shows_search_results": {
+      "title": "Verify applying a filter shows Search Results view",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin, then LPR, and click the View icon on the first list row.",
+          "expected": "The Plate page for that list opens and shows the Add Plate button."
+        },
+        {
+          "n": 2,
+          "action": "Click the Filter icon.",
+          "expected": "The filter panel opens with the Apply button."
+        },
+        {
+          "n": 3,
+          "action": "Click Apply.",
+          "expected": "The Search Results view opens with its header."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_reset_filter_returns_to_plate": {
+      "title": "Verify resetting filter returns to Plate page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin, then LPR, and click the View icon on the first list row.",
+          "expected": "The Plate page for that list opens and shows the Add Plate button."
+        },
+        {
+          "n": 2,
+          "action": "Click the Filter icon, then click Apply.",
+          "expected": "The Search Results view opens."
+        },
+        {
+          "n": 3,
+          "action": "Click Reset.",
+          "expected": "The Plate page opens again with the Add Plate button."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_filter_panel_toggle": {
+      "title": "Verify filter panel can be opened and closed",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin, then LPR, and click the View icon on the first list row.",
+          "expected": "The Plate page for that list opens and shows the Add Plate button."
+        },
+        {
+          "n": 2,
+          "action": "Click the Filter icon.",
+          "expected": "The filter panel opens with the Apply and Reset buttons."
+        },
+        {
+          "n": 3,
+          "action": "Click the Filter icon again.",
+          "expected": "The filter panel closes and the Apply button is hidden."
+        }
+      ],
+      "case_key": ""
+    }
+  }
+}

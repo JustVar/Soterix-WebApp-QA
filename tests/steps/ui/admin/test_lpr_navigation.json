@@ -1,0 +1,193 @@
+{
+  "test_file": "tests/ui/admin/test_lpr_navigation.py",
+  "class": "TestLprNavigation",
+  "tests": {
+    "test_navigate_to_lpr_main_page": {
+      "title": "Verify navigation to Admin > LPR Lists page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The LPR Lists page opens and shows the Create List button."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_ensure_lpr_page_already_on_lists": {
+      "title": "Verify ensure_lpr_page returns when already on Lists page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The LPR Lists page opens and shows the Create List button."
+        },
+        {
+          "n": 2,
+          "action": "Click LPR again while the Lists page is open.",
+          "expected": "The Lists page stays as it is and the Create List button stays visible."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_ensure_lpr_lists_page_already_on_lists": {
+      "title": "Verify ensure_lpr_lists_page returns when already on Lists",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The LPR Lists page opens and shows the Create List button."
+        },
+        {
+          "n": 2,
+          "action": "Click LPR again while the Lists page is open.",
+          "expected": "The Lists page stays as it is and the Create List button stays visible."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_navigate_from_search_results_to_lists": {
+      "title": "Verify navigation from Search Results back to Lists via breadcrumb",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The LPR Lists page opens and shows the Create List button."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_categories_page_navigation": {
+      "title": "Verify navigation to Categories page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The LPR Lists page opens and shows the Create List button."
+        },
+        {
+          "n": 2,
+          "action": "Click the Categories tab.",
+          "expected": "The Categories page opens and shows the Add Category button."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_categories_page_already_on_categories": {
+      "title": "Verify ensure_lpr_categories_page returns when already on Categories",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, click LPR, then click the Categories tab.",
+          "expected": "The Categories page opens and shows the Add Category button."
+        },
+        {
+          "n": 2,
+          "action": "Click the Categories tab again.",
+          "expected": "The Categories page stays open and the Add Category button stays visible."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_navigate_back_to_lists_from_categories": {
+      "title": "Verify navigation back to Lists page from Categories via List tab",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, click LPR, then click the Categories tab.",
+          "expected": "The Categories page opens and shows the Add Category button."
+        },
+        {
+          "n": 2,
+          "action": "Click the List tab.",
+          "expected": "The Lists page opens and shows the Create List button."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_open_plate_page_from_lists": {
+      "title": "Verify opening Plate page by clicking View icon on a list",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The Lists page shows at least one list row."
+        },
+        {
+          "n": 2,
+          "action": "Click the View icon on the first list row.",
+          "expected": "The Plate page for that list opens and shows the Add Plate button."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_ensure_plate_page_already_on_plate": {
+      "title": "Verify ensure_lpr_plate_page returns when already on Plate page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin, then LPR, and click the View icon on the first list row.",
+          "expected": "The Plate page for that list opens and shows the Add Plate button."
+        },
+        {
+          "n": 2,
+          "action": "Open the same list again while its Plate page is open.",
+          "expected": "The Plate page stays open and the Add Plate button stays visible."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_filter_panel_navigation": {
+      "title": "Verify opening and closing filter panel on Plate page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin, then LPR, and click the View icon on the first list row.",
+          "expected": "The Plate page for that list opens and shows the Add Plate button."
+        },
+        {
+          "n": 2,
+          "action": "Click the Filter icon.",
+          "expected": "The filter panel opens and shows the Apply and Reset buttons."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_filter_panel_already_open": {
+      "title": "Verify ensure_lpr_filter_panel returns when panel already open",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin, then LPR, and click the View icon on the first list row.",
+          "expected": "The Plate page for that list opens and shows the Add Plate button."
+        },
+        {
+          "n": 2,
+          "action": "Click the Filter icon.",
+          "expected": "The filter panel opens and shows the Apply and Reset buttons."
+        },
+        {
+          "n": 3,
+          "action": "Open the filter panel again without closing it.",
+          "expected": "The panel stays open and the Apply button stays visible."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_ensure_in_search_results_not_in_results": {
+      "title": "Verify ensure_in_search_results raises exception when not in Search Results",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The Lists page opens and shows no Search Results header."
+        },
+        {
+          "n": 2,
+          "action": "Look for the Search Results view without applying a filter.",
+          "expected": "The Search Results header is not shown. The Lists page stays open."
+        }
+      ],
+      "case_key": ""
+    }
+  }
+}

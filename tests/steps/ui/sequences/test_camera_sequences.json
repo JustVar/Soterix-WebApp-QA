@@ -189,7 +189,7 @@
           "expected": "URL path corresponds to the expected page"
         }
       ],
-      "case_key": "qzdM3P"
+      "case_key": "LD3x9E"
     },
     "test_add_created_sequence_to_views": {
       "title": "Verify adding a created sequence to the views panel",
@@ -327,7 +327,7 @@
           "expected": "URL path corresponds to the expected page"
         }
       ],
-      "case_key": "qzdM3P"
+      "case_key": "0rzgKw"
     }
   }
 }

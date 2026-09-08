@@ -41,7 +41,7 @@
           "expected": "Insights widget list displayed"
         }
       ],
-      "case_key": "RgGQ4a"
+      "case_key": "B8692Q"
     },
     "test_system_status_link_visible": {
       "title": "Verify the System Status link is visible on the Insights page.",
@@ -121,25 +121,25 @@
       "case_key": "lR2lDP"
     },
     "test_close_system_status_tab": {
-      "title": "Verify the System Status tab can be closed.",
+      "title": "Verify the System Status tab can be closed",
       "steps": [
         {
           "n": 1,
-          "action": "Open the System Status dashboard for Driver Site",
-          "expected": "System Status dashboard is loaded"
+          "action": "Click Insights in the left sidebar, then click System Status.",
+          "expected": "The System Status dashboard opens with a site dropdown."
         },
         {
           "n": 2,
-          "action": "Close the System Status tab",
-          "expected": "Tab is closed"
+          "action": "Select the configured test site in the dropdown.",
+          "expected": "The dashboard shows the Devices section."
         },
         {
           "n": 3,
-          "action": "Verify the System Status link reappears on the landing page",
-          "expected": "System Status link is visible again (returned to landing)"
+          "action": "Click the close icon on the System Status tab.",
+          "expected": "The tab closes and the System Status link shows again."
         }
       ],
-      "case_key": "kpZQ60"
+      "case_key": "vaZZ4l"
     },
     "test_switch_to_widgets_tab": {
       "title": "Verify switching from Dashboard to Widgets tab.",
@@ -185,7 +185,7 @@
           "expected": "Other page elements remain in their expected state"
         }
       ],
-      "case_key": "9e1b7W"
+      "case_key": "Z8xQzQ"
     },
     "test_create_widget_button_visible": {
       "title": "Verify the 'Create New Widget' button is visible in Widgets tab.",
@@ -282,7 +282,7 @@
           "expected": "Clearing the filter restores the full unfiltered list"
         }
       ],
-      "case_key": "Pgw91d"
+      "case_key": "Pgw9x1"
     }
   }
 }

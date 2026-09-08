@@ -1,0 +1,16 @@
+{
+  "test_file": "tests/ui/c2c/test_c2c_auth.py",
+  "class": "TestC2CAuth",
+  "tests": {
+    "test_camera_login_and_live_view": {
+      "title": "Verify camera web UI login and session - happy path",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_camera_rejects_invalid_credentials": {
+      "title": "Verify camera rejects invalid credentials",
+      "steps": [],
+      "case_key": ""
+    }
+  }
+}

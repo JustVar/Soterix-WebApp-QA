@@ -1,0 +1,84 @@
+{
+  "test_file": "tests/ui/admin/test_lpr_widgets.py",
+  "class": "TestLprWidgets",
+  "tests": {
+    "test_create_new_insight_widget": {
+      "title": "Create an LPR insight widget with the shared Insights flow",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Insights in the left sidebar, then click the Widgets tab.",
+          "expected": "The Widgets tab opens with a Create New Widget button."
+        },
+        {
+          "n": 2,
+          "action": "Click Create New Widget and enter a unique widget name.",
+          "expected": "The widget form shows the name."
+        },
+        {
+          "n": 3,
+          "action": "Choose Line as the graph type, Event as the category, and License Plate Recognition as the description, then choose the configured test site.",
+          "expected": "The form shows the chosen values."
+        },
+        {
+          "n": 4,
+          "action": "Click Save.",
+          "expected": "A toast confirms the widget was created and the widget is listed by its name."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_verify_widget_in_lpr_dropdown": {
+      "title": "A created LPR widget appears in the camera page Widgets panel",
+      "steps": [
+        {
+          "n": 1,
+          "action": "On Insights, create a Line widget for the Event category with the License Plate Recognition description and the configured test site.",
+          "expected": "A toast confirms the widget was created."
+        },
+        {
+          "n": 2,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 3,
+          "action": "Click the Widgets header.",
+          "expected": "The Widgets panel opens and shows widget cards."
+        },
+        {
+          "n": 4,
+          "action": "Type the widget name in the panel's Search field.",
+          "expected": "Exactly one card is listed, and it carries the widget name."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_select_widget_checkbox": {
+      "title": "Place a widget on the LPR page by dragging its card to a tile",
+      "steps": [
+        {
+          "n": 1,
+          "action": "On Insights, create a Line widget for the Event category with the License Plate Recognition description and the configured test site.",
+          "expected": "A toast confirms the widget was created."
+        },
+        {
+          "n": 2,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 3,
+          "action": "Click the Widgets header, then type the widget name in the panel's Search field.",
+          "expected": "The widget card is listed."
+        },
+        {
+          "n": 4,
+          "action": "Drag the card onto the last empty tile.",
+          "expected": "The tile fills with the widget and one fewer empty tile remains."
+        }
+      ],
+      "case_key": ""
+    }
+  }
+}

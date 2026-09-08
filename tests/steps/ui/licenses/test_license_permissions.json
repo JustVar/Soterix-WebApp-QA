@@ -174,7 +174,7 @@
           "expected": "The deleted confirmation dialogs have clear messaging does not reappear after refresh"
         }
       ],
-      "case_key": "aj6n7a"
+      "case_key": "qzdKve"
     },
     "test_tooltip_text_for_icons": {
       "title": "Verify tooltip text exists for license-related icons.",

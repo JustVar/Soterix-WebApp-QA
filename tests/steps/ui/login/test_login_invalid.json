@@ -1,6 +1,6 @@
 {
   "test_file": "tests/ui/login/test_login_invalid.py",
-  "class": null,
+  "class": "",
   "tests": {
     "test_empty_fields": {
       "title": "Verify login fails with empty username and password",
@@ -41,7 +41,7 @@
           "expected": "No errors in the browser console related to Save & Preview button"
         }
       ],
-      "case_key": "RgGQLR"
+      "case_key": "J8dzQj"
     },
     "test_empty_username": {
       "title": "Verify login fails with empty username",
@@ -82,7 +82,7 @@
           "expected": "Page remains stable with no console errors"
         }
       ],
-      "case_key": "wmjREm"
+      "case_key": "Pgwl8v"
     },
     "test_empty_password": {
       "title": "Verify login fails with empty password",
@@ -260,7 +260,7 @@
           "expected": "Form submits successfully after correction"
         }
       ],
-      "case_key": "41VM9q"
+      "case_key": "VKbeZL"
     }
   }
 }

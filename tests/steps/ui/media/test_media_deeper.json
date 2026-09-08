@@ -269,7 +269,7 @@
           "expected": "Each tab loads and the date filter stays visible."
         }
       ],
-      "case_key": "21z6aQ"
+      "case_key": "xmddLW"
     },
     "test_core_tabs_accessible": {
       "title": "Verify the core media tabs can be clicked without errors",
@@ -285,7 +285,7 @@
           "expected": "Each tab loads without an error and the date filter stays visible."
         }
       ],
-      "case_key": "5BRzE9"
+      "case_key": "RgQQLl"
     },
     "test_search_input_visible": {
       "title": "Verify the search input is visible on the Media page.",
@@ -408,7 +408,7 @@
           "expected": "The list reloads again and the date filter stays visible."
         }
       ],
-      "case_key": "WEnvWV"
+      "case_key": "dyXXPW"
     },
     "test_media_page_after_refresh": {
       "title": "Verify the Media page loads correctly after a browser refresh.",

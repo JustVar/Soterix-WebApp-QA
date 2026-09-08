@@ -1,0 +1,16 @@
+{
+  "test_file": "tests/ui/c2c/test_c2c_network.py",
+  "class": "TestC2CNetwork",
+  "tests": {
+    "test_network_status": {
+      "title": "Verify network status displays correct configuration",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_rtsp_stream_configuration": {
+      "title": "Verify RTSP stream is accessible and configured correctly",
+      "steps": [],
+      "case_key": ""
+    }
+  }
+}

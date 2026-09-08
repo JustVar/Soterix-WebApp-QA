@@ -1,6 +1,6 @@
 {
   "test_file": "tests/ui/login/test_login_valid.py",
-  "class": null,
+  "class": "",
   "tests": {
     "test_valid_credentials": {
       "title": "Verify login with valid credentials succeeds",

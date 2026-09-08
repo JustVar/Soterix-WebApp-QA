@@ -41,7 +41,7 @@
           "expected": "Panel closes cleanly, returning to the previous view"
         }
       ],
-      "case_key": "bj04vQ"
+      "case_key": "11zJRB"
     },
     "test_notification_panel_reopen_after_close": {
       "title": "Verify notification panel can be reopened after closing.",
@@ -82,7 +82,7 @@
           "expected": "Page remains stable with no console errors"
         }
       ],
-      "case_key": "9e1ZRv"
+      "case_key": "5BRzq9"
     },
     "test_header_icons_present": {
       "title": "Verify the header right group has expected notification icons.",
@@ -236,7 +236,7 @@
           "expected": "Panel closes cleanly, returning to the previous view"
         }
       ],
-      "case_key": "bj04vQ"
+      "case_key": "WEnMLM"
     },
     "test_notification_panel_after_page_navigation": {
       "title": "Verify notification panel works after navigating to a different page.",

@@ -36,7 +36,7 @@
           "expected": "Page remains stable with no console errors"
         }
       ],
-      "case_key": "wmjg7G"
+      "case_key": "M73wpq"
     },
     "test_exit_fullscreen": {
       "title": "Verify exiting full screen returns to the views grid.",
@@ -72,7 +72,7 @@
           "expected": "Page remains stable with no console errors"
         }
       ],
-      "case_key": "wmjg7G"
+      "case_key": "Drd9pm"
     },
     "test_fullscreen_pause_play": {
       "title": "Verify timeline controls are present in full screen.",
@@ -108,7 +108,7 @@
           "expected": "Page remains stable with no console errors"
         }
       ],
-      "case_key": "J8d92n"
+      "case_key": "kpZQr0"
     },
     "test_fullscreen_controls_visible": {
       "title": "Verify player controls are visible in full screen.",

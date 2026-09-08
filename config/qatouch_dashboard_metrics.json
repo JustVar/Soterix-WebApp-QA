@@ -1,8 +1,8 @@
 {
-  "generated": "2026-09-08 11:43:56",
+  "generated": "2026-09-08 11:54:22",
   "snapshot_date": "2026-09-08",
-  "total_cases": 3164,
-  "total_modules": 466,
+  "total_cases": 3170,
+  "total_modules": 467,
   "automation": {
     "playwright_tests": 352,
     "mapped_to_qatouch": 378,
@@ -13,12 +13,12 @@
   "tags": {
     "smoke": 64,
     "sanity": 221,
-    "tagged_pct": 19.8
+    "tagged_pct": 19.7
   },
   "by_type": {
-    "Functional": 2380,
+    "Functional": 2377,
     "Acceptance": 628,
-    "Regression": 118,
+    "Regression": 127,
     "Accessibility": 29,
     "Usability": 6,
     "Performance": 2,
@@ -37,7 +37,7 @@
     },
     {
       "module": "Event Wall",
-      "count": 58,
+      "count": 57,
       "automated": 7
     },
     {
@@ -182,11 +182,11 @@
     },
     {
       "date": "2026-09-08",
-      "total_cases": 3164
+      "total_cases": 3170
     }
   ],
   "creation_dates": {
-    "2026-02-10": 2782,
+    "2026-02-10": 2779,
     "2026-02-19": 22,
     "2026-02-20": 73,
     "2026-02-21": 41,
@@ -194,14 +194,14 @@
     "2026-06-22": 1,
     "2026-06-24": 176,
     "2026-08-27": 5,
-    "2026-09-08": 63
+    "2026-09-08": 72
   },
   "delta": {
     "from_date": "2026-08-28",
     "to_date": "2026-09-08",
-    "net_new": 63,
-    "added": 63,
-    "removed": 0,
+    "net_new": 69,
+    "added": 72,
+    "removed": 3,
     "modified": 0
   }
 }

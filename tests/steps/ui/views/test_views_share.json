@@ -1,6 +1,6 @@
 {
   "test_file": "tests/ui/views/test_views_share.py",
-  "class": null,
+  "class": "",
   "tests": {
     "test_share_live_view": {
       "title": "Verify sharing a live view via email and copying the share link",
@@ -36,7 +36,7 @@
           "expected": "Share dialog closes and tile is still visible"
         }
       ],
-      "case_key": "dypXbB"
+      "case_key": "K4ndbd"
     }
   }
 }

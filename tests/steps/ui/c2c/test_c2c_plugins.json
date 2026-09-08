@@ -1,0 +1,26 @@
+{
+  "test_file": "tests/ui/c2c/test_c2c_plugins.py",
+  "class": "TestC2CVCA",
+  "tests": {
+    "test_vca_enabled_with_correct_tracker": {
+      "title": "Verify VCA is enabled with DL Object Tracker + Intrusion Detection",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_vca_rules_and_license": {
+      "title": "Verify VCA has active rules and valid ProAI license",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_cloud_connect_registered": {
+      "title": "Verify camera is registered to Soterix staging cloud",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_multi_lens_license_count_matches_lens_count": {
+      "title": "Verify multi-lens camera has one license assigned per lens",
+      "steps": [],
+      "case_key": ""
+    }
+  }
+}

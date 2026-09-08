@@ -1,0 +1,46 @@
+{
+  "test_file": "tests/ui/c2c/test_c2c_system.py",
+  "class": "TestC2CSystemInfo",
+  "tests": {
+    "test_system_info_device_details": {
+      "title": "Verify system information displays correct device details",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_device_name_and_location_editable": {
+      "title": "Verify device name and location are editable and persist",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_plugins_installed_and_running": {
+      "title": "Verify both SOTERIX and VCAedge-AI plugins are installed and running",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_plugin_storage_within_limits": {
+      "title": "Verify plugin storage usage is below 90%",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_firmware_and_diagnostics_accessible": {
+      "title": "Verify firmware version and system diagnostics are accessible",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_date_time_settings": {
+      "title": "Verify date/time settings and language options",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_configuration_backup_accessible": {
+      "title": "Verify configuration backup page is accessible",
+      "steps": [],
+      "case_key": ""
+    },
+    "test_camera_restart": {
+      "title": "Verify camera can restart cleanly and retains settings",
+      "steps": [],
+      "case_key": ""
+    }
+  }
+}

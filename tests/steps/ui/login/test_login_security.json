@@ -1,6 +1,6 @@
 {
   "test_file": "tests/ui/login/test_login_security.py",
-  "class": null,
+  "class": "",
   "tests": {
     "test_sql_injection_attempt": {
       "title": "Verify login rejects SQL injection payload",
@@ -102,23 +102,23 @@
           "expected": "User is redirected to the login page after logout"
         }
       ],
-      "case_key": "dyp4nK"
+      "case_key": "0rzlQG"
     },
     "test_password_too_short": {
-      "title": "Verify login rejects short password",
+      "title": "A three-character password does not log the user in",
       "steps": [
         {
           "n": 1,
-          "action": "Navigate to the login page",
-          "expected": "Login page is displayed"
+          "action": "Open the login page.",
+          "expected": "The Email and Password fields show."
         },
         {
           "n": 2,
-          "action": "Enter a valid email with a 3-character password and submit",
-          "expected": "Login fails with error or validation message"
+          "action": "Enter user@example.com as the email and 123 as the password, then click Login.",
+          "expected": "The user is not logged in. The login page stays open or shows a validation message."
         }
       ],
-      "case_key": "11zJpB"
+      "case_key": "bjXXV8"
     },
     "test_brute_force_protection": {
       "title": "Verify brute force protection activates after repeated failures",

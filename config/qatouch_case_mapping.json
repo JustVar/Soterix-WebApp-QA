@@ -213,14 +213,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_users.py::TestAdminUsers::test_delete_user[chromium]": {
-      "case_key": "xm9jZa",
-      "case_title": "Open Delete User confirmation popup",
-      "score": 1.0,
-      "module": "Delete User",
-      "auto_matched": true,
-      "reviewed": true
-    },
     "tests/ui/chats/test_chats.py::TestChats::test_open_chat_panel[chromium]": {
       "case_key": "mBdpnd",
       "case_title": "Verify Chat panel opens when clicking Chat icon",
@@ -242,14 +234,6 @@
       "case_title": "Send text message in one-to-one chat",
       "score": 0.67,
       "module": "One-to-One Chat",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/chats/test_chats.py::TestChats::test_edit_group_name[chromium]": {
-      "case_key": "RgGBkz",
-      "case_title": "Update first name in Edit User dialog",
-      "score": 0.67,
-      "module": "Edit User",
       "auto_matched": true,
       "reviewed": false
     },
@@ -693,14 +677,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/login/test_logout.py::test_logout_from_different_pages[chromium-/search-Search]": {
-      "case_key": "yaWrK9",
-      "case_title": "Verify logout works from Search page",
-      "score": 0.76,
-      "module": "Logout",
-      "auto_matched": false,
-      "reviewed": false
-    },
     "tests/ui/maps/test_maps.py::TestMaps::test_navigate_to_maps[chromium]": {
       "case_key": "GdW97j",
       "case_title": "Verify site selection dropdown is visible on Maps landing page",
@@ -825,14 +801,6 @@
       "case_key": "Pgw96K",
       "case_title": "Verify search with invalid input shows no results state",
       "score": 1.0,
-      "module": "Search",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_search_clear_and_retry[chromium]": {
-      "case_key": "WEnvWV",
-      "case_title": "Clear search input and restore role list",
-      "score": 0.67,
       "module": "Search",
       "auto_matched": true,
       "reviewed": false
@@ -1637,14 +1605,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/login/test_logout.py::test_logout_from_different_pages[chromium-/events-Events]": {
-      "case_key": "wmjgdG",
-      "case_title": "Verify logout works from Events page",
-      "score": 0.74,
-      "module": "Logout",
-      "auto_matched": false,
-      "reviewed": false
-    },
     "tests/ui/search/test_search_deeper.py::TestSearchDeeper::test_event_search_by_duration[chromium-Last 7 Days]": {
       "case_key": "n8jvrz",
       "case_title": "Verify Event search with Last 7 Days duration returns results",
@@ -1683,14 +1643,6 @@
       "score": 0.46,
       "module": "My Widgets",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/login/test_logout.py::test_logout_from_different_pages[chromium-/insights-Insights]": {
-      "case_key": "5BRDxX",
-      "case_title": "Select a different role from role list",
-      "score": 0.5,
-      "module": "Role Selection",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Occupancy]": {
@@ -1749,38 +1701,6 @@
       "auto_matched": true,
       "reviewed": true
     },
-    "tests/ui/insights/test_insights_navigation.py::TestInsightsNavigation::test_close_system_status_tab[chromium]": {
-      "case_key": "kpZQ60",
-      "case_title": "Verify closing system status tab returns to insights",
-      "score": 1.0,
-      "module": "Insights",
-      "auto_matched": false,
-      "reviewed": true
-    },
-    "tests/ui/login/test_login_security.py::test_password_too_short[chromium]": {
-      "case_key": "11zJpB",
-      "case_title": "Verify password too short shows validation error",
-      "score": 1.0,
-      "module": "Login Security",
-      "auto_matched": false,
-      "reviewed": true
-    },
-    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_core_tabs_accessible[chromium]": {
-      "case_key": "5BRzE9",
-      "case_title": "Verify core media tabs can be clicked without errors",
-      "score": 1.0,
-      "module": "Tabs",
-      "auto_matched": false,
-      "reviewed": true
-    },
-    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_tab_round_trip_folders_to_shared[chromium]": {
-      "case_key": "21z6aQ",
-      "case_title": "Verify switching from Folders to Shared with me and back works",
-      "score": 1.0,
-      "module": "Tabs",
-      "auto_matched": false,
-      "reviewed": true
-    },
     "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_channels_add_channel_via_checkbox[chromium]": {
       "case_key": "M73w4q",
       "case_title": "Verify selecting a channel adds it to the grid",
@@ -1796,14 +1716,6 @@
       "module": "My Views",
       "auto_matched": false,
       "reviewed": false
-    },
-    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_my_views_drag_saved_view_to_tile[chromium]": {
-      "case_key": "WEnMKM",
-      "case_title": "Verify dragging saved view to tile adds to grid",
-      "score": 1.0,
-      "module": "My Views",
-      "auto_matched": false,
-      "reviewed": true
     },
     "tests/ui/admin/test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_page_loads[chromium]": {
       "case_key": "Z8xWmk",
@@ -3100,6 +3012,105 @@
       "case_title": "Verify the My Views panel opens",
       "score": 1.0,
       "module": "Basic",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_users.py::TestAdminUsers::test_delete_user[chromium]": {
+      "case_key": "Dr993m",
+      "case_title": "Verify a user can be deleted via options menu > delete > confirm",
+      "score": 1.0,
+      "module": "Users",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/chats/test_chats.py::TestChats::test_edit_group_name[chromium]": {
+      "case_key": "eJXX6r",
+      "case_title": "The group thread's edit icon opens nothing on the current build",
+      "score": 1.0,
+      "module": "Chats",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/insights/test_insights_navigation.py::TestInsightsNavigation::test_close_system_status_tab[chromium]": {
+      "case_key": "vaZZ4l",
+      "case_title": "Verify the System Status tab can be closed",
+      "score": 1.0,
+      "module": "Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/login/test_login_security.py::test_password_too_short[chromium]": {
+      "case_key": "bjXXV8",
+      "case_title": "A three-character password does not log the user in",
+      "score": 1.0,
+      "module": "Security",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/login/test_logout.py::test_logout_from_different_pages[chromium-/search-Search]": {
+      "case_key": "Z8QQDP",
+      "case_title": "Verify logout works from various application pages",
+      "score": 1.0,
+      "module": "Logout",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/login/test_logout.py::test_logout_from_different_pages[chromium-/events-Events]": {
+      "case_key": "Z8QQDP",
+      "case_title": "Verify logout works from various application pages",
+      "score": 1.0,
+      "module": "Logout",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/login/test_logout.py::test_logout_from_different_pages[chromium-/insights-Insights]": {
+      "case_key": "Z8QQDP",
+      "case_title": "Verify logout works from various application pages",
+      "score": 1.0,
+      "module": "Logout",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_core_tabs_accessible[chromium]": {
+      "case_key": "RgQQLl",
+      "case_title": "Verify the core media tabs can be clicked without errors",
+      "score": 1.0,
+      "module": "Deeper",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_search_clear_and_retry[chromium]": {
+      "case_key": "dyXXPW",
+      "case_title": "Verify clearing search and searching again works",
+      "score": 1.0,
+      "module": "Deeper",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_tab_round_trip_folders_to_shared[chromium]": {
+      "case_key": "xmddLW",
+      "case_title": "Verify switching from Folders to Shared with me and back works",
+      "score": 1.0,
+      "module": "Deeper",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_my_views_drag_saved_view_to_tile[chromium]": {
+      "case_key": "VKQQk9",
+      "case_title": "MY VIEWS: Drag saved view directly to tile",
+      "score": 1.0,
+      "module": "Subtabs",
       "auto_matched": false,
       "reviewed": true,
       "source": "generated"

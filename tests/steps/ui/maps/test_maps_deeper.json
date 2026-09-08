@@ -251,7 +251,7 @@
           "expected": "Same data appears after page refresh"
         }
       ],
-      "case_key": "Z8xQl5"
+      "case_key": "RgGyEd"
     },
     "test_online_camera_count": {
       "title": "Verify there are online (green) cameras on the map.",

@@ -1,6 +1,6 @@
 {
   "test_file": "tests/ui/login/test_logout.py",
-  "class": null,
+  "class": "",
   "tests": {
     "test_profile_menu_opens": {
       "title": "Verify profile avatar menu opens",
@@ -143,7 +143,7 @@
           "expected": "Default state remains after page refresh"
         }
       ],
-      "case_key": "pDpmLx"
+      "case_key": "qzdVj4"
     },
     "test_login_form_visible_after_logout": {
       "title": "Verify login form is visible after logout",
@@ -322,53 +322,28 @@
           "expected": "URL path corresponds to the expected page"
         }
       ],
-      "case_key": "21zWgR"
+      "case_key": "pDpdMG"
     },
     "test_logout_from_different_pages": {
-      "title": "Verify logout works from various application pages (parametrized: Search, Events, Insights)",
+      "title": "Verify logout works from various application pages",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open the Search page from its URL.",
+          "expected": "The page renders with the profile avatar in the header."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Role Selection",
-          "expected": "Role Selection page loads without errors"
+          "action": "Click the avatar, then click Sign out.",
+          "expected": "The login page opens."
         },
         {
           "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate Select a different role from role list on the page",
-          "expected": "Select a different role from role list is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify Select a different role from role list is displayed as expected",
-          "expected": "Select a different role from role list is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Repeat from the Events page and from the Insights page.",
+          "expected": "The login page opens each time."
         }
       ],
-      "case_key": "5BRDxX"
+      "case_key": "Z8QQDP"
     }
   }
 }

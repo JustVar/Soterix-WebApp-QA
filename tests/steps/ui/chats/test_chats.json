@@ -130,7 +130,7 @@
           "expected": "No name field opens (measured 09/08/2026). The test skips; it fails loud the day a field appears so the rename gets a real test."
         }
       ],
-      "case_key": "RgGBkz"
+      "case_key": "eJXX6r"
     },
     "test_delete_group": {
       "title": "Delete a group and see it leave the conversation list",

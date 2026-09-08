@@ -301,7 +301,7 @@
           "expected": "Clearing the filter restores the full unfiltered list"
         }
       ],
-      "case_key": "xm9dNR"
+      "case_key": "J8d3mL"
     },
     "test_person_result_images_have_src": {
       "title": "Verify Person search result images have valid src attributes.",
@@ -413,7 +413,7 @@
           "expected": "Clearing the filter restores the full unfiltered list"
         }
       ],
-      "case_key": "J8d9R1"
+      "case_key": "n8jvrz"
     },
     "test_event_result_images_valid": {
       "title": "Verify Event search result images are visible.",
@@ -510,7 +510,7 @@
           "expected": "Page remains stable with no console errors"
         }
       ],
-      "case_key": "wmjKMb"
+      "case_key": "GdWPqy"
     },
     "test_change_duration_and_re_search": {
       "title": "Verify changing duration between searches works.",
@@ -566,7 +566,7 @@
           "expected": "The deleted Reset Search clears Duration selection does not reappear after refresh"
         }
       ],
-      "case_key": "Z8xWjk"
+      "case_key": "Ee6dkB"
     },
     "test_search_button_state_after_filters": {
       "title": "Verify search button is clickable after setting all filters.",

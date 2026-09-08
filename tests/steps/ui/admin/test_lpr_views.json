@@ -1,0 +1,64 @@
+{
+  "test_file": "tests/ui/admin/test_lpr_views.py",
+  "class": "TestLprViews",
+  "tests": {
+    "test_click_lpr_navigation": {
+      "title": "Navigate to LPR then to Views page and verify page loaded",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The LPR Lists page opens and shows the Create List button."
+        },
+        {
+          "n": 2,
+          "action": "Click Views in the left sidebar.",
+          "expected": "The Views page opens and shows a titled view tab."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_create_multiple_views": {
+      "title": "Create multiple view tabs by clicking view plus button",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, click LPR, then click Views in the left sidebar.",
+          "expected": "The Views page opens with its view tabs and a plus tab."
+        },
+        {
+          "n": 2,
+          "action": "Count the view tabs, then click the plus tab.",
+          "expected": "One new view tab appears next to the existing tabs."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_close_all_views_with_popup": {
+      "title": "Close views down to the last one, which refuses with an alert",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Views in the left sidebar.",
+          "expected": "The Views page opens with its view tabs."
+        },
+        {
+          "n": 2,
+          "action": "Click the plus tab.",
+          "expected": "One new view tab appears."
+        },
+        {
+          "n": 3,
+          "action": "Click the close icon on the last tab. Repeat until one tab remains.",
+          "expected": "Each click removes one tab."
+        },
+        {
+          "n": 4,
+          "action": "Click the close icon on the last remaining tab.",
+          "expected": "An alert reads Action not permitted and the tab stays open."
+        }
+      ],
+      "case_key": ""
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "test_file": "tests/ui/admin/test_lpr_camera_selection.py",
+  "class": "TestLprCameraSelection",
+  "tests": {
+    "test_select_multi_camera_by_site": {
+      "title": "The group row's hover checkbox starts the group's cameras",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens with empty tiles that read Drag & Drop Camera here."
+        },
+        {
+          "n": 2,
+          "action": "Click the Locations & Cameras header.",
+          "expected": "The panel opens and lists the configured test site."
+        },
+        {
+          "n": 3,
+          "action": "Click the test site.",
+          "expected": "The All Cameras group row shows under the site."
+        },
+        {
+          "n": 4,
+          "action": "Hover the group row and click its checkbox.",
+          "expected": "At least one new stream starts in a tile."
+        },
+        {
+          "n": 5,
+          "action": "Click Reset View.",
+          "expected": "Every tile is empty again."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_drag_drop_camera_to_grid": {
+      "title": "Dragging the group onto a tile starts its cameras",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens with empty tiles that read Drag & Drop Camera here."
+        },
+        {
+          "n": 2,
+          "action": "Click the Locations & Cameras header, then click the test site.",
+          "expected": "The All Cameras group row shows under the site."
+        },
+        {
+          "n": 3,
+          "action": "Drag the All Cameras group row onto the last empty tile.",
+          "expected": "At least one camera of the group starts streaming in a tile."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_hover_and_select_single_camera": {
+      "title": "A camera row's hover checkbox starts that camera",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens with empty tiles that read Drag & Drop Camera here."
+        },
+        {
+          "n": 2,
+          "action": "Click the Locations & Cameras header, click the test site, then click the All Cameras group.",
+          "expected": "The configured test camera row shows under the group."
+        },
+        {
+          "n": 3,
+          "action": "Hover the camera row and click its checkbox.",
+          "expected": "The camera starts streaming in a tile."
+        }
+      ],
+      "case_key": ""
+    }
+  }
+}

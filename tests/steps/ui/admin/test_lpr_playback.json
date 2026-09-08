@@ -1,0 +1,218 @@
+{
+  "test_file": "tests/ui/admin/test_lpr_playback.py",
+  "class": "TestLprCameraPlayback",
+  "tests": {
+    "test_navigate_to_lpr_camera_page": {
+      "title": "Navigate to LPR camera/playback page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens, the URL ends with /lpr, and a tile reads Drag & Drop Camera here."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_open_locations_dropdown": {
+      "title": "Verify Locations & Cameras dropdown opens and lists the site",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 2,
+          "action": "Click the Locations & Cameras header.",
+          "expected": "The panel opens and lists the configured test site."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_wait_for_site_list_loading": {
+      "title": "Verify site list loads correctly",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 2,
+          "action": "Click the Locations & Cameras header and wait for the list to load.",
+          "expected": "The configured test site appears in the panel."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_safe_reset_to_views": {
+      "title": "Verify safe reset lands on the Views page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Reload the browser page.",
+          "expected": "The application loads again."
+        },
+        {
+          "n": 2,
+          "action": "Click Views in the left sidebar.",
+          "expected": "The Views page opens and shows its subtab bar."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_camera_tile_activation": {
+      "title": "Play the configured camera, then activate its tile",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.",
+          "expected": "The camera streams in the tile."
+        },
+        {
+          "n": 2,
+          "action": "Click the streaming tile.",
+          "expected": "The tile shows the live icon."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_dismiss_backdrop": {
+      "title": "Verify backdrop dismissal leaves no click-blocking overlay",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 2,
+          "action": "Press Escape if a dialog backdrop covers the page.",
+          "expected": "No backdrop is visible and the page accepts clicks."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_open_playback_timeout_popup": {
+      "title": "Verify the timeout popup opens for a playing LPR stream",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.",
+          "expected": "The camera streams in the tile."
+        },
+        {
+          "n": 2,
+          "action": "Click the timer icon.",
+          "expected": "The Set Timeout Duration popup opens with a Cancel button."
+        },
+        {
+          "n": 3,
+          "action": "Click Cancel, then click Reset View.",
+          "expected": "The popup closes and the tiles are empty."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_open_lpr_playback_timeout_popup": {
+      "title": "Verify the LPR timeout popup opens and closes cleanly",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.",
+          "expected": "The camera streams in the tile."
+        },
+        {
+          "n": 2,
+          "action": "Click the timer icon.",
+          "expected": "The Set Timeout Duration popup opens with a Save button."
+        },
+        {
+          "n": 3,
+          "action": "Click Cancel, then click Reset View.",
+          "expected": "The popup closes and the tiles are empty."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_navigate_to_views_page": {
+      "title": "Verify navigation to Views page",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Views in the left sidebar.",
+          "expected": "The Views page opens and shows its subtab bar."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_safe_views_navigation_on_non_views_page": {
+      "title": "Verify safe navigation to Views works from non-Views pages",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click Admin in the left sidebar, then click LPR.",
+          "expected": "The LPR Lists page opens."
+        },
+        {
+          "n": 2,
+          "action": "Click Views in the left sidebar.",
+          "expected": "The Views page opens and shows its subtab bar."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_play_camera_by_location": {
+      "title": "Verify the configured camera plays from its site group",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 2,
+          "action": "Click the Locations & Cameras header, click the test site, then click the All Cameras group.",
+          "expected": "The configured test camera row is listed."
+        },
+        {
+          "n": 3,
+          "action": "Drag the camera row onto the last empty tile.",
+          "expected": "The camera streams in the tile."
+        },
+        {
+          "n": 4,
+          "action": "Click Reset View.",
+          "expected": "The tiles are empty."
+        }
+      ],
+      "case_key": ""
+    },
+    "test_play_all_cameras": {
+      "title": "Verify the whole camera group plays onto the tiles",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens."
+        },
+        {
+          "n": 2,
+          "action": "Click the Locations & Cameras header, then click the test site.",
+          "expected": "The All Cameras group row is listed."
+        },
+        {
+          "n": 3,
+          "action": "Drag the All Cameras group row onto the last empty tile.",
+          "expected": "At least one camera of the group streams in a tile."
+        },
+        {
+          "n": 4,
+          "action": "Click Reset View.",
+          "expected": "The tiles are empty."
+        }
+      ],
+      "case_key": ""
+    }
+  }
+}
