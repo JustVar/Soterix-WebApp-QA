@@ -27,7 +27,13 @@ because it existed nowhere in git.
   3.12 on the box) and Playwright's own Chromium
   (`venv/bin/python -m playwright install chromium`). There is no Google
   Chrome on the box; `nightly.sh` passes an empty `--browser-channel` so
-  the headless Chromium runs the tests.
+  the headless Chromium runs the tests. Known cost, measured on the first
+  trial (09/08/2026): Playwright's Chromium ships without the proprietary
+  video codecs, and the maps play test raised the tenant's stream-failure
+  overlay on US where the same test passes on Chrome locally. Expect the
+  stream-playing tests to fail on the box until Google Chrome is installed
+  there (`sudo venv/bin/python -m playwright install chrome`, then drop
+  the empty `--browser-channel` from `nightly.sh`).
 - `/data/qa/ci/Soterix-WebApp-QA/.env` (mode 600) with the QA Touch keys
   and one account per box the nightly runs: `QA_INDIA_USER`,
   `QA_INDIA_PASSWORD`, `QA_US_USER`, `QA_US_PASSWORD`. The suite reads the
@@ -65,12 +71,17 @@ The script kills its own predecessor, so a stuck nightly clears itself the
 next night. To clear one now, or one started by an older script:
 
 ```bash
-ssh spartan1 'pkill -u soterix -f /data/qa/ci/nightly.sh; \
-  pkill -u soterix -f "pytest tests/ui"; sleep 5; \
-  pkill -u soterix -KILL -f "playwright/driver/node"; pkill -u soterix -KILL -f ms-playwright; \
-  rm -rf /tmp/playwright-artifacts-* /data/qa/ci/nightly.pid; \
-  pgrep -u soterix -fc "nightly.sh|pytest tests/ui|ms-playwright"'   # expect 0
+ssh spartan1 'pkill -u soterix -f "[n]ightly.sh"; pkill -u soterix -f "[p]ytest tests/ui"; sleep 5; \
+  pkill -u soterix -KILL -f "[p]ytest tests/ui"; pkill -u soterix -KILL -f "playwright/driver/[n]ode"; \
+  pkill -u soterix -KILL -f "[m]s-playwright"; rm -rf /tmp/playwright-artifacts-* /data/qa/ci/nightly.pid; \
+  pgrep -u soterix -fc "[p]ytest tests/ui|[m]s-playwright"'   # expect 0
 ```
+
+The brackets are not decoration. `pkill -f "pytest tests/ui"` also matches
+the SSH shell running that very command line, kills it, and reports
+nothing; the runs survive. `[p]ytest` matches `pytest` in a process list
+but not the literal `[p]ytest` in its own command line (09/08/2026, learned
+the slow way).
 
 If the clone has drifted (the log says `Not possible to fast-forward`, or
 `code:` names an old commit), the script's reset fixes it on its next run;
