@@ -1,24 +1,24 @@
 {
-  "generated": "2026-08-28 13:19:53",
-  "snapshot_date": "2026-08-28",
-  "total_cases": 3101,
-  "total_modules": 449,
+  "generated": "2026-09-08 11:43:56",
+  "snapshot_date": "2026-09-08",
+  "total_cases": 3164,
+  "total_modules": 466,
   "automation": {
     "playwright_tests": 352,
     "mapped_to_qatouch": 378,
-    "coverage_pct": 12.2,
+    "coverage_pct": 11.9,
     "api_tests": 0,
     "ui_tests": 378
   },
   "tags": {
     "smoke": 64,
     "sanity": 221,
-    "tagged_pct": 20.2
+    "tagged_pct": 19.8
   },
   "by_type": {
     "Functional": 2380,
     "Acceptance": 628,
-    "Regression": 55,
+    "Regression": 118,
     "Accessibility": 29,
     "Usability": 6,
     "Performance": 2,
@@ -38,12 +38,12 @@
     {
       "module": "Event Wall",
       "count": 58,
-      "automated": 10
+      "automated": 7
     },
     {
       "module": "Search Landing Page",
       "count": 53,
-      "automated": 6
+      "automated": 5
     },
     {
       "module": "List",
@@ -53,7 +53,7 @@
     {
       "module": "Media Listing & Actions",
       "count": 49,
-      "automated": 8
+      "automated": 6
     },
     {
       "module": "Category - Person",
@@ -63,12 +63,17 @@
     {
       "module": "Audit Trail - Users",
       "count": 45,
-      "automated": 12
+      "automated": 11
     },
     {
       "module": "System Logs",
       "count": 37,
       "automated": 0
+    },
+    {
+      "module": "Categories",
+      "count": 36,
+      "automated": 6
     },
     {
       "module": "Map Editing",
@@ -84,11 +89,6 @@
       "module": "Test Authentication",
       "count": 32,
       "automated": 0
-    },
-    {
-      "module": "Categories",
-      "count": 31,
-      "automated": 1
     },
     {
       "module": "Attribute Mapping",
@@ -118,7 +118,7 @@
     {
       "module": "Camera Sequence - Fullscreen",
       "count": 24,
-      "automated": 6
+      "automated": 5
     },
     {
       "module": "Person - Results & Execution",
@@ -179,6 +179,10 @@
     {
       "date": "2026-08-28",
       "total_cases": 3101
+    },
+    {
+      "date": "2026-09-08",
+      "total_cases": 3164
     }
   ],
   "creation_dates": {
@@ -189,13 +193,14 @@
     "2026-04-30": 1,
     "2026-06-22": 1,
     "2026-06-24": 176,
-    "2026-08-27": 5
+    "2026-08-27": 5,
+    "2026-09-08": 63
   },
   "delta": {
-    "from_date": "2026-08-17",
-    "to_date": "2026-08-28",
-    "net_new": 5,
-    "added": 5,
+    "from_date": "2026-08-28",
+    "to_date": "2026-09-08",
+    "net_new": 63,
+    "added": 63,
     "removed": 0,
     "modified": 0
   }
