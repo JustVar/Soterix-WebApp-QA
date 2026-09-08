@@ -135,7 +135,12 @@ class TestAdminRules:
     @pytest.mark.admin
     @pytest.mark.admin_rules
     def test_navigate_to_rules(self):
-        """Verify navigating to Admin > General > Rules loads the rules list."""
+        """Verify navigating to Admin > General > Rules loads the rules list.
+
+        Steps:
+        1. Open Admin and click Rules in the sidebar.
+           Expected: The rules list opens with its search field.
+        """
         self._navigate_to_rules()
 
         # Rules tab should be visible and rule search bar should be present.
@@ -147,7 +152,12 @@ class TestAdminRules:
     @pytest.mark.admin
     @pytest.mark.admin_rules
     def test_add_new_rule_wizard_opens(self):
-        """Verify clicking Add New Rule opens the wizard with rule type options."""
+        """Verify clicking Add New Rule opens the wizard with rule type options.
+
+        Steps:
+        1. Open Admin > Rules and click Add New Rule.
+           Expected: The rule type picker opens and offers Entry-Exit among the types.
+        """
         self._navigate_to_rules()
 
         self.admin.click_add_new_rule()
@@ -177,7 +187,12 @@ class TestAdminRules:
     @pytest.mark.admin
     @pytest.mark.admin_rules
     def test_search_rule(self):
-        """Verify searching for a rule by name filters the results."""
+        """Verify searching for a rule by name filters the results.
+
+        Steps:
+        1. Open Admin > Rules and type Automation into the search field.
+           Expected: The search field holds the typed text and the list filters to matching rules.
+        """
         self._navigate_to_rules()
 
         self.admin.search_rule("Automation")

@@ -3,47 +3,17 @@
   "class": "TestViewsSubtabs",
   "tests": {
     "test_devices_add_camera_via_checkbox": {
-      "title": "DEVICES: Add camera to tile using checkbox selection.",
+      "title": "DEVICES: Add camera to tile using checkbox selection",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Views, open the Devices panel, expand the configured site and click All Cameras.",
+          "expected": "The site's camera thumbnails are listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > Camera Sequence - Fullscreen",
-          "expected": "Camera Sequence - Fullscreen page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for selecting all cameras via Select All checkbox",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify selecting all cameras via Select All checkbox is displayed and functions correctly",
-          "expected": "Selecting all cameras via select all checkbox is displayed as expected (for sequencing)"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: for sequencing",
-          "expected": "Precondition is met (for sequencing)"
-        },
-        {
-          "n": 8,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Hover the configured camera's thumbnail and tick its checkbox.",
+          "expected": "An empty tile fills with that camera's video."
         }
       ],
       "case_key": "pDpvBJ"
@@ -118,152 +88,57 @@
           "expected": "Tab with the view name exists"
         }
       ],
-      "case_key": "QGjLnB"
+      "case_key": "J8d9gp"
     },
     "test_my_views_drag_saved_view_to_tile": {
-      "title": "MY VIEWS: Drag saved view directly to tile.",
+      "title": "MY VIEWS: Drag saved view directly to tile",
       "steps": [
         {
           "n": 1,
-          "action": "Create and save a test view, reload page",
-          "expected": "View is saved and page is reloaded"
+          "action": "On Views, click the plus tab, rename the new tab, add the first camera with its checkbox, and click Save.",
+          "expected": "A toast reads View saved successfully."
         },
         {
           "n": 2,
-          "action": "Open My Views tab and find the saved view",
-          "expected": "Saved view is visible in the list"
+          "action": "Reload the page and click the My Views subtab.",
+          "expected": "The saved view is listed by its name."
         },
         {
           "n": 3,
-          "action": "Drag the saved view to the first empty tile",
-          "expected": "View is dragged to tile"
-        },
-        {
-          "n": 4,
-          "action": "Verify tile was filled or new tab was created",
-          "expected": "View content loaded (skips if drag not supported)"
+          "action": "Drag the saved view onto an empty tile.",
+          "expected": "The tile fills with the view content, or the view opens as a new tab."
         }
       ],
       "case_key": "WEnMKM"
     },
     "test_maps_add_map_via_checkbox": {
-      "title": "MAPS: Add map to tile using checkbox.",
+      "title": "MAPS: Add map to tile using checkbox",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Views, open the Maps panel and expand the configured site.",
+          "expected": "The site's map thumbnails are listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Maps > Validation - Maps",
-          "expected": "Validation - Maps page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Locate the form, input, or control where validation applies",
-          "expected": "The target input or form is visible"
-        },
-        {
-          "n": 4,
-          "action": "Enter invalid data or trigger the error condition for Verifying error behavior",
-          "expected": "The invalid input is accepted into the field"
-        },
-        {
-          "n": 5,
-          "action": "Attempt to submit or trigger the validation",
-          "expected": "Validation fires on submit or field blur"
-        },
-        {
-          "n": 6,
-          "action": "Verify an error message is displayed near the field or at the top of the form",
-          "expected": "A clear, descriptive error message appears"
-        },
-        {
-          "n": 7,
-          "action": "Verify the error message text is correct and helpful",
-          "expected": "Error message accurately describes the validation failure"
-        },
-        {
-          "n": 8,
-          "action": "Verify the form did not submit or the action was blocked",
-          "expected": "No data was saved; the user remains on the form"
-        },
-        {
-          "n": 9,
-          "action": "Correct the invalid input with valid data",
-          "expected": "The error message disappears when valid data is entered"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: when mandatory map fields are left empty - Dialog closes and no new map is added to the maps list",
-          "expected": "Precondition is met (when mandatory map fields are left empty - Dialog closes and no new map is added to the maps list)"
-        },
-        {
-          "n": 11,
-          "action": "Submit with the corrected data and verify success",
-          "expected": "Form submits successfully after correction"
+          "action": "Hover a map thumbnail and tick its checkbox.",
+          "expected": "An empty tile fills with the map."
         }
       ],
-      "case_key": "21zBxL"
+      "case_key": "B869gN"
     },
     "test_maps_drag_map_to_tile": {
-      "title": "MAPS: Drag map thumbnail directly to tile.",
+      "title": "MAPS: Drag map thumbnail directly to tile",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Views, open the Maps panel and expand the configured site.",
+          "expected": "The site's map thumbnails are listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Maps",
-          "expected": "Maps page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the page displays any existing items",
-          "expected": "Page content loads (list, table, or empty state)"
-        },
-        {
-          "n": 4,
-          "action": "Click the create/add button for selecting a map adds it to an empty grid tile",
-          "expected": "Creation form or dialog opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify all required form fields are present and empty/default",
-          "expected": "Form fields are displayed with correct labels and placeholders"
-        },
-        {
-          "n": 6,
-          "action": "Fill in all required fields with valid test data",
-          "expected": "All fields accept the input without errors"
-        },
-        {
-          "n": 7,
-          "action": "Fill in any optional fields if applicable",
-          "expected": "Optional fields accept input"
-        },
-        {
-          "n": 8,
-          "action": "Review the filled form for correctness",
-          "expected": "All entered data is displayed correctly in the form"
-        },
-        {
-          "n": 9,
-          "action": "Click the Save/Submit/Create button",
-          "expected": "Form is submitted and a success message or indicator appears"
-        },
-        {
-          "n": 10,
-          "action": "Verify the newly created selecting a map adds it to an empty grid tile appears in the list or view",
-          "expected": "The new selecting a map adds it to an empty grid tile is visible with the correct data"
-        },
-        {
-          "n": 11,
-          "action": "Verify no duplicate entries were created",
-          "expected": "Only one instance of the new selecting a map adds it to an empty grid tile exists"
+          "action": "Drag a map thumbnail onto an empty tile.",
+          "expected": "The tile fills with the map."
         }
       ],
       "case_key": "B869gN"
@@ -386,50 +261,20 @@
       "case_key": "zvnVlw"
     },
     "test_insights_add_via_checkbox": {
-      "title": "INSIGHTS: Add insight widget to tile using checkbox.",
+      "title": "INSIGHTS: Add insight widget to tile using checkbox",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Create an insight widget, then on Views open the Insights panel.",
+          "expected": "The widget's card is listed in the panel."
         },
         {
           "n": 2,
-          "action": "Navigate to Insights",
-          "expected": "Insights page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for selecting Insights widget",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify selecting Insights widget is displayed and functions correctly",
-          "expected": "Selecting insights widget is displayed as expected (when grid is full does not add widget)"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: when grid is full does not add widget",
-          "expected": "Precondition is met (when grid is full does not add widget)"
-        },
-        {
-          "n": 8,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Hover the widget card and tick its checkbox.",
+          "expected": "An empty tile fills with the widget (on the current build the card offers no checkbox and drag is the add path, so the automated check stops there)."
         }
       ],
-      "case_key": "xm9dwl"
+      "case_key": "dypXMM"
     },
     "test_insights_drag_to_tile": {
       "title": "INSIGHTS: Drag insight widget card to tile.",

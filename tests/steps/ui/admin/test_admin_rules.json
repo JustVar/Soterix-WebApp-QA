@@ -3,86 +3,26 @@
   "class": "TestAdminRules",
   "tests": {
     "test_navigate_to_rules": {
-      "title": "Verify navigating to Admin > General > Rules loads the rules list.",
+      "title": "Verify navigating to Admin > General > Rules loads the rules list",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Configuration and Settings",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Configuration and Settings page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: for a site on the Admin - Sites page",
-          "expected": "Precondition is met (for a site on the Admin - Sites page)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Open Admin and click Rules in the sidebar.",
+          "expected": "The rules list opens with its search field."
         }
       ],
       "case_key": "rGQDWk"
     },
     "test_add_new_rule_wizard_opens": {
-      "title": "Verify clicking Add New Rule opens the wizard with rule type options.",
+      "title": "Verify clicking Add New Rule opens the wizard with rule type options",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Channels - Integrations",
-          "expected": "Channels - Integrations page loads"
-        },
-        {
-          "n": 3,
-          "action": "Locate the Add New Channel button",
-          "expected": "Add New Channel button is visible on the page"
-        },
-        {
-          "n": 4,
-          "action": "Click the Add New Channel button",
-          "expected": "Add New Channel dialog opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify the dialog contains the expected fields (channel name, type, etc.)",
-          "expected": "Dialog displays all required input fields"
-        },
-        {
-          "n": 6,
-          "action": "Verify the dialog can be closed via Cancel or X button",
-          "expected": "Dialog closes without creating a channel"
+          "action": "Open Admin > Rules and click Add New Rule.",
+          "expected": "The rule type picker opens and offers Entry-Exit among the types."
         }
       ],
-      "case_key": "lR21wR"
+      "case_key": "pDpmba"
     },
     "test_select_rule_type": {
       "title": "Verify selecting a rule type in the wizard advances to next step (parametrized: Entry-Exit, Heat Map, Loitering, Occupancy, Intrusion Detection, Line Crossing).",
@@ -121,37 +61,12 @@
       "case_key": "Drd95P"
     },
     "test_search_rule": {
-      "title": "Verify searching for a rule by name filters the results.",
+      "title": "Verify searching for a rule by name filters the results",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > All Rules Filter",
-          "expected": "All Rules Filter page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate Reset Search clears selected rule and resets to All Rules on the page",
-          "expected": "Reset Search clears selected rule and resets to All Rules is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of Reset Search clears selected rule and resets to All Rules",
-          "expected": "Reset Search clears selected rule and resets to All Rules is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to Reset Search clears selected rule and resets to All Rules"
+          "action": "Open Admin > Rules and type Automation into the search field.",
+          "expected": "The search field holds the typed text and the list filters to matching rules."
         }
       ],
       "case_key": "VKbQJQ"
@@ -378,7 +293,7 @@
           "expected": "Only one instance of the new full Entry-Exit rule creation wizard exists"
         }
       ],
-      "case_key": "21zEKm"
+      "case_key": "8V14w7"
     }
   }
 }

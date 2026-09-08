@@ -138,14 +138,10 @@ class TestViewsSubtabs:
         """DEVICES: Add camera to tile using checkbox selection.
 
         Steps:
-        1. Click Devices tab (default)
-        2. Expand the configured site -> Click "All Cameras"
-        3. Add the configured camera through ViewsPage.add_camera_via_checkbox
-           (the page-object method: hover the named thumbnail, reveal and
-           click its checkbox). This test is the pytest that covers that
-           method, so it must call it, not re-implement the flow inline.
-
-        Success: Tile count decreases OR video element appears
+        1. On Views, open the Devices panel, expand the configured site and click All Cameras.
+           Expected: The site's camera thumbnails are listed.
+        2. Hover the configured camera's thumbnail and tick its checkbox.
+           Expected: An empty tile fills with that camera's video.
         """
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles available"
@@ -335,11 +331,10 @@ class TestViewsSubtabs:
         """MAPS: Add map to tile using checkbox.
 
         Steps:
-        1. Click Maps tab
-        2. Click site to expand
-        3. Hover map thumbnail -> Click checkbox
-
-        Success: Tile count decreases OR map content (leaflet/iframe) appears
+        1. On Views, open the Maps panel and expand the configured site.
+           Expected: The site's map thumbnails are listed.
+        2. Hover a map thumbnail and tick its checkbox.
+           Expected: An empty tile fills with the map.
         """
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles"
@@ -376,10 +371,10 @@ class TestViewsSubtabs:
         """MAPS: Drag map thumbnail directly to tile.
 
         Steps:
-        1. Click Maps -> Expand site
-        2. Drag map thumbnail to empty tile
-
-        Success: Tile filled with map content
+        1. On Views, open the Maps panel and expand the configured site.
+           Expected: The site's map thumbnails are listed.
+        2. Drag a map thumbnail onto an empty tile.
+           Expected: The tile fills with the map.
         """
         initial_tiles = self.views.get_available_tile_count()
 
@@ -483,11 +478,10 @@ class TestViewsSubtabs:
         They appear as cards with chart preview images and can be added to tiles.
 
         Steps:
-        1. Click Insights tab
-        2. Find widget card (has chart preview and title)
-        3. Hover widget -> Click checkbox OR click widget directly
-
-        Success: Tile count decreases OR insight/chart content appears
+        1. Create an insight widget, then on Views open the Insights panel.
+           Expected: The widget's card is listed in the panel.
+        2. Hover the widget card and tick its checkbox.
+           Expected: An empty tile fills with the widget (on the current build the card offers no checkbox and drag is the add path, so the automated check stops there).
         """
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles available"

@@ -38,6 +38,12 @@ class TestSearchCategories:
 
         Selects Category=Person, Description=Male, site, duration,
         then executes search and validates results are loaded.
+
+        Steps:
+        1. Open Search, choose Category Person and Description Male, pick the configured site and cameras, and pick a duration.
+           Expected: The Search button becomes enabled.
+        2. Click Search.
+           Expected: At least one Person result appears in the result grid.
         """
         self.search.navigate()
         self.search.wait_for_page_load()
@@ -60,7 +66,14 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     def test_person_search_results_valid(self):
-        """Verify Person search results contain valid images."""
+        """Verify Person search results contain valid images.
+
+        Steps:
+        1. Open Search and run a Person/Male search for the configured site over a duration.
+           Expected: Person results appear in the result grid.
+        2. Look at the first result's image.
+           Expected: It shows a real image, not a placeholder.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 
@@ -101,6 +114,12 @@ class TestSearchCategories:
         """Verify Vehicle search returns results.
 
         Vehicle search skips Description (no gender filter).
+
+        Steps:
+        1. Open Search, choose Category Vehicle (it has no description filter), pick the configured site and cameras, and pick a duration.
+           Expected: The Search button becomes enabled.
+        2. Click Search.
+           Expected: At least one Vehicle result appears in the result grid.
         """
         self.search.navigate()
         self.search.wait_for_page_load()
@@ -136,7 +155,14 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     def test_event_search(self):
-        """Verify Event category search returns results."""
+        """Verify Event category search returns results.
+
+        Steps:
+        1. Open Search, choose Category Event, pick the configured site and cameras, and pick a duration.
+           Expected: The Search button becomes enabled.
+        2. Click Search.
+           Expected: At least one Event result appears in the result grid.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 
@@ -152,7 +178,14 @@ class TestSearchCategories:
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
     def test_event_search_play_result(self):
-        """Verify playing an Event search result clip works."""
+        """Verify playing an Event search result clip works.
+
+        Steps:
+        1. Open Search, run an Event search for the configured site over a duration.
+           Expected: Event results appear in the result grid.
+        2. Play the first result.
+           Expected: The clip plays, and a Replay control appears when it ends.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 

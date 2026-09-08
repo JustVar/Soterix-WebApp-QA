@@ -182,83 +182,28 @@
       "case_key": "WEnvKQ"
     },
     "test_site_versions": {
-      "title": "Verify sites display version information.",
+      "title": "Verify sites display version information",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Maps",
-          "expected": "Maps page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Maps site dropdown lists available sites should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Maps site dropdown lists available sites on the page",
-          "expected": "Maps site dropdown lists available sites is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify Maps site dropdown lists available sites is displayed as expected",
-          "expected": "Maps site dropdown lists available sites is displayed as expected"
+          "action": "Open Admin and click Sites in the sidebar.",
+          "expected": "Each site card shows a Version line."
         }
       ],
       "case_key": "DrdZ7x"
     },
     "test_navigate_to_online_site": {
-      "title": "Verify clicking a site card navigates into the site detail view.",
+      "title": "Verify clicking a site card navigates into the site detail view",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin and click Sites in the sidebar.",
+          "expected": "The site cards are listed and at least one shows the online marker."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Configuration and Settings",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Configuration and Settings page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: for a site on the Admin - Sites page",
-          "expected": "Precondition is met (for a site on the Admin - Sites page)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Click an online site's card.",
+          "expected": "The site detail opens with its Groups line, and the site list with its Version lines is gone."
         }
       ],
       "case_key": "rGQDWk"
@@ -351,62 +296,17 @@
       "case_key": "n8jmmP"
     },
     "test_edit_camera_group": {
-      "title": "Verify editing a camera group name.",
+      "title": "Verify editing a camera group name",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Sites, search the configured site, open it and open the Groups dropdown.",
+          "expected": "The camera group made for this test is listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Sites",
-          "expected": "Sites page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify the deleting a camera group to be deleted from the list",
-          "expected": "deleting a camera group is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target deleting a camera group",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the deleting a camera group"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the deleting a camera group no longer appears in the list",
-          "expected": "deleting a camera group is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: with Yes confirmation",
-          "expected": "Precondition is met (with Yes confirmation)"
-        },
-        {
-          "n": 11,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted deleting a camera group does not reappear after refresh"
+          "action": "Edit that group's name and save.",
+          "expected": "The group is listed under the new name."
         }
       ],
       "case_key": "gQxkdL"
@@ -516,7 +416,7 @@
           "expected": "Other page elements remain in their expected state"
         }
       ],
-      "case_key": "n8jQRg"
+      "case_key": "GdWvMK"
     }
   }
 }

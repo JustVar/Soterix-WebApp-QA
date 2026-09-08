@@ -184,7 +184,12 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_site_versions(self):
-        """Verify sites display version information."""
+        """Verify sites display version information.
+
+        Steps:
+        1. Open Admin and click Sites in the sidebar.
+           Expected: Each site card shows a Version line.
+        """
         self._navigate_to_sites()
 
         # Wait for version text; get_site_versions reads counts once
@@ -199,7 +204,14 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_navigate_to_online_site(self):
-        """Verify clicking a site card navigates into the site detail view."""
+        """Verify clicking a site card navigates into the site detail view.
+
+        Steps:
+        1. Open Admin and click Sites in the sidebar.
+           Expected: The site cards are listed and at least one shows the online marker.
+        2. Click an online site's card.
+           Expected: The site detail opens with its Groups line, and the site list with its Version lines is gone.
+        """
         self._navigate_to_sites()
 
         self._require_online_site()
@@ -289,6 +301,12 @@ class TestAdminSites:
         this test proves the UI rename, and test_create_camera_group
         proves the UI create. Renaming our own group, never the last
         existing one, keeps team-owned data on the shared tenant safe.
+
+        Steps:
+        1. Open Admin > Sites, search the configured site, open it and open the Groups dropdown.
+           Expected: The camera group made for this test is listed.
+        2. Edit that group's name and save.
+           Expected: The group is listed under the new name.
         """
         # Created before the page renders, so the Groups dropdown
         # loads it with the site detail and no reload is needed
