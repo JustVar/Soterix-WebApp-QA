@@ -16,6 +16,19 @@ Usage:
 
     # Show what would be generated (dry run)
     python tools/generate_step_stubs.py --dry-run
+
+    # Rebuild title + steps FROM THE DOCSTRINGS, keeping each case_key
+    python tools/generate_step_stubs.py --from-docstrings tests/ui/chats/test_chats.py
+
+--from-docstrings is the sidecar sync (docs/TEST_REPAIRS.md item 5).
+A test's docstring is its QA Touch case: the first line is the title,
+the "Steps:" block holds the tester steps and each "Expected:" line
+what the tester sees. This mode copies exactly that into the sidecar
+and keeps the existing case_key. It never invents a step: a test with
+no "Steps:" block keeps whatever entry it had and is listed as
+"needs steps", because writing those lines is a human's job. A test
+that left the file loses its entry (the mapping file is the canonical
+key store, so nothing is lost).
 """
 from __future__ import annotations
 
@@ -26,6 +39,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# run as a script, tools/ is on sys.path and the repo root is not
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 TESTS_DIR = ROOT / 'tests'
 STEPS_DIR = ROOT / 'tests' / 'steps'
 
@@ -184,12 +200,88 @@ def find_test_files(paths: list[str] | None = None) -> list[Path]:
     return result
 
 
+def merge_from_docstrings(existing: dict | None, parsed: dict) -> tuple[dict, list[str], list[str]]:
+    """Pure: the sidecar rebuilt from parsed docstrings.
+
+    existing  the sidecar file as loaded (None when there is none)
+    parsed    func_name -> ParsedDoc (qatouch_cases_from_tests.parse_docstring)
+
+    Returns (tests, needs_steps, dropped). A parsed doc with a Steps
+    block replaces the entry's title and steps and keeps its case_key;
+    one without keeps the old entry untouched and is named in
+    needs_steps; a name in the old file but not in parsed is dropped
+    and named.
+    """
+    old = dict((existing or {}).get('tests') or {})
+    tests: dict = {}
+    needs: list[str] = []
+    for name, doc in parsed.items():
+        entry = dict(old.get(name) or {})
+        if doc.ok:
+            entry['title'] = doc.title
+            entry['steps'] = [
+                {'n': i, 'action': st.text, 'expected': st.expected}
+                for i, st in enumerate(doc.steps, 1)
+            ]
+        else:
+            needs.append(f'{name}: {doc.problem}')
+            entry.setdefault('title', doc.title)
+            entry.setdefault('steps', [])
+        entry.setdefault('case_key', '')
+        tests[name] = {'title': entry['title'], 'steps': entry['steps'],
+                       'case_key': entry['case_key']}
+    dropped = [n for n in old if n not in parsed]
+    return tests, needs, dropped
+
+
+def process_from_docstrings(file_path: Path, dry_run: bool = False) -> bool:
+    """Rebuild one sidecar from its test file's docstrings."""
+    from tools.qatouch_cases_from_tests import parse_docstring, scan_file
+    relative = file_path.relative_to(TESTS_DIR)
+    output_path = STEPS_DIR / relative.with_suffix('.json')
+    infos = scan_file(file_path, ROOT)
+    if not infos:
+        print(f'  Skip (no tests): {relative}')
+        return False
+    parsed = {info.func_name: parse_docstring(info.docstring, nodeid)
+              for nodeid, info in infos.items()}
+    existing = None
+    if output_path.exists():
+        with open(output_path, encoding='utf-8') as f:
+            existing = json.load(f)
+    tests, needs, dropped = merge_from_docstrings(existing, parsed)
+    first = next(iter(infos.values()))
+    stub = {
+        'test_file': (existing or {}).get('test_file') or file_path.relative_to(ROOT).as_posix(),
+        'class': (existing or {}).get('class') or first.class_name,
+        'tests': tests,
+    }
+    rebuilt = len(tests) - len(needs)
+    verb = 'Would rebuild' if dry_run else 'Rebuilt'
+    print(f'  {verb}: {output_path.relative_to(ROOT)} '
+          f'({rebuilt} from docstrings, {len(needs)} kept as-is, {len(dropped)} dropped)')
+    for line in needs:
+        print(f'    needs steps  {line}')
+    for name in dropped:
+        print(f'    dropped      {name} (not in the test file any more)')
+    if dry_run:
+        return True
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(stub, f, indent=2, ensure_ascii=False)
+        f.write('\n')
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Generate step definition stub JSON files from test source files.')
     parser.add_argument('files', nargs='*', help='Specific test files or directories')
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing step files')
+    parser.add_argument('--from-docstrings', action='store_true',
+                        help='rebuild title and steps from the test docstrings, '
+                             'keeping each case_key (the sidecar sync)')
     parser.add_argument('--dry-run', action='store_true',
                         help='Show what would be generated without writing files')
     parser.add_argument('--summary', action='store_true',
@@ -204,7 +296,11 @@ def main():
     print(f'Processing {len(test_files)} test files...')
     created = 0
     for tf in test_files:
-        if process_file(tf, overwrite=args.overwrite, dry_run=args.dry_run):
+        if args.from_docstrings:
+            ok = process_from_docstrings(tf, dry_run=args.dry_run)
+        else:
+            ok = process_file(tf, overwrite=args.overwrite, dry_run=args.dry_run)
+        if ok:
             created += 1
 
     print(f'\nDone: {created} step files {"would be " if args.dry_run else ""}generated.')
