@@ -183,7 +183,7 @@ Set these in `.env` or in the shell for one run.
 ```
 venv\Scripts\python.exe -m ruff check .
 venv\Scripts\python.exe tools/convention_check.py
-venv\Scripts\python.exe -m pytest tests/plugins tests/tools --html=logs/scratch.html
+venv\Scripts\python.exe -m pytest tests/plugins tests/tools tests/helpers --html=logs/scratch.html
 ```
 
 Two hooks live in `tools/hooks/`. Install both once, into `.git/hooks/`

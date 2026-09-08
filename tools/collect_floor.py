@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # likely to shrink by a path typo, because they are named explicitly.
 SUITES = {
     'whole repo': [],
-    'offline suites': ['tests/plugins', 'tests/tools'],
+    'offline suites': ['tests/plugins', 'tests/tools', 'tests/helpers'],
 }
 
 if __name__ == '__main__':

@@ -212,6 +212,15 @@ Oracles
 - Search results stream in and the grid reflows as cards land;
   `SearchPage._results_settled` waits for two seconds of unchanged
   count before anyone hovers a result.
+- A search (Events page, or any Search category) is followed by its
+  server job, not by the first thumbnail (tests/shared/helpers/
+  search_job.py). Read the line it leaves: "search job N (EVENT, 22
+  channels, 7.0 days): 12 polls in 14.2 s, 100% complete, 0 events
+  counted" is a SKIP and means the tenant has no such data; "no search
+  job was sent within 15 s" is a FAIL and means the filters did not
+  change (the app ignores a repeat search); "never reported the job
+  complete" is a FAIL on the server side. A "Locator.wait_for: Timeout
+  60000ms" on a search is what this looked like before 09/08/2026.
 - Search dropdown picks apply on the same tick (value text flips off
   'Select', item unmounts); no settle is needed after a pick.
 - Verify page-object conversions on a QUIET tenant: a timed-out run

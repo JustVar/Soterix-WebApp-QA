@@ -9,6 +9,13 @@ import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 
+from tests.shared.helpers.search_job import (
+    SearchJob,
+    require_finished,
+    require_results,
+    watch_search,
+)
+
 
 class SearchPage:
     """Page object for the Global Search page."""
@@ -157,48 +164,70 @@ class SearchPage:
         dropdown = self._get_dropdown_by_text("Description")
         return dropdown is not None and dropdown.is_visible()
 
+    # --- Search execution ---
+    #
+    # Every search here follows the server's job (tests/shared/helpers/
+    # search_job.py) rather than waiting on the first thumbnail. `timeout`
+    # caps the server's work, so a search that answers in ten seconds
+    # costs ten seconds, and a finished empty search reads as data, not as
+    # a locator timeout. Every category (Event, Vehicle, Line, Zone) runs
+    # the same job, measured 09/08/2026.
+
+    def execute_search(self, timeout: int = 60000) -> SearchJob:
+        """Click Search and return once results are on screen and settled.
+
+        A search that completes with nothing skips with the measurements
+        (the tenant holds nothing for these filters); a search that never
+        ran or never finished fails, naming which.
+        """
+        job = watch_search(self.page, self.search_button.click, timeout_ms=timeout)
+        require_results(job, surface="Search")
+        self._show_results()
+        return job
+
     def execute_search_safe(self, timeout: int = 60000) -> bool:
-        """Click search and return True if results appear, False otherwise."""
-        self.search_button.click()
-        try:
-            self.result_images.first.wait_for(state="visible", timeout=timeout)
-            self._results_settled()
-            return True
-        except Exception:
-            return False
+        """Click Search; True when it returned results, False when it finished empty.
+
+        For flows that accept an empty answer. A search that never ran or
+        never finished still fails: "no crash" is not the oracle, "the
+        server answered" is.
+        """
+        job = watch_search(self.page, self.search_button.click, timeout_ms=timeout)
+        has_results = require_finished(job, surface="Search")
+        if has_results:
+            self._show_results()
+        return has_results
 
     def execute_search_dispatched(self, timeout: int = 60000) -> bool:
-        """Click search, require the request to actually dispatch, then
-        wait for results.
+        """Click Search on a view that already shows results; prove it re-ran.
 
-        For re-searches on a view that already shows results: stale
-        thumbnails satisfy a visibility wait instantly, so only the
-        outgoing request proves the click did anything. Raises when no
-        request leaves within 15s. KNOWN APP BEHAVIOR: a search only
-        re-runs after filters change; an unchanged or partially re-set
-        view ignores the click by design (see TEST_REPAIRS.md). Prefer
-        a fresh view with all filters re-applied; use this method when
-        a test genuinely needs to prove a warm re-search dispatched.
-        Returns False when the search dispatched but produced no
-        visible results.
+        Stale thumbnails satisfy a visibility wait instantly, so only the
+        outgoing job proves the click did anything. Raises RuntimeError when
+        no job leaves within 15 s. KNOWN APP BEHAVIOR: a search only re-runs
+        after filters change; an unchanged or partially re-set view ignores
+        the click by design (see TEST_REPAIRS.md). Prefer a fresh view with
+        all filters re-applied; use this when a test genuinely needs to
+        prove a warm re-search dispatched. Returns False when the search
+        ran and finished empty.
         """
-        try:
-            with self.page.expect_request(
-                lambda r: "/REST/" in r.url and "search" in r.url.lower(),
-                timeout=15000,
-            ):
-                self.search_button.click()
-        except PlaywrightError:
+        job = watch_search(self.page, self.search_button.click, timeout_ms=timeout)
+        if job.outcome == "no_request":
             raise RuntimeError(
                 "Search click dispatched no request within 15s. The app "
                 "re-runs a search only after filters change; re-apply "
                 "the filters or start from a fresh view."
-            ) from None
-        try:
-            self.result_images.first.wait_for(state="visible", timeout=timeout)
-            return True
-        except PlaywrightError:
-            return False
+            )
+        has_results = require_finished(job, surface="Search (re-run)")
+        if has_results:
+            self._show_results()
+        return has_results
+
+    def _show_results(self) -> None:
+        """After the server delivered results, wait for the grid to draw and settle."""
+        # the server has delivered at least one result; the grid's first
+        # card is a render away, not a network wait
+        self.result_images.first.wait_for(state="visible", timeout=10000)
+        self._results_settled()
 
     # --- Filters ---
 
@@ -459,12 +488,6 @@ class SearchPage:
         self._appears_hidden(self.done_button, timeout=10000)
 
     # --- Search execution ---
-
-    def execute_search(self, timeout: int = 60000):
-        """Click the search button and wait for results to load."""
-        self.search_button.click()
-        self.result_images.first.wait_for(state="visible", timeout=timeout)
-        self._results_settled()
 
     def _results_settled(self, timeout_s: float = 8.0):
         """Wait for the result grid to hold still for two seconds.

@@ -114,18 +114,11 @@ class TestInCameraSearch:
         ics.select_category(index=0)
         ics.select_description_gender("Male")
         ics.select_duration(index=4)
+        # execute_search returns only with results on screen: a search the
+        # server finished with nothing skips there, with the job's counts
+        # (no Person/Male detection on this camera today is the tenant's
+        # data, and test_incamera_search goes yellow on the same fact).
         ics.execute_search(timeout=60000)
-
-        if not ics.has_results():
-            # The search ran to completion above, so this is the
-            # tenant's data: no Person/Male detection on this camera
-            # today. test_incamera_search asserts the same search DOES
-            # return results, so a standing skip here means that test
-            # is red too.
-            pytest.skip(
-                "The Person/Male/Today in-camera search returned no result "
-                "to play on this camera"
-            )
 
         # oracle: play_result raises unless the player's play button
         # appears after the result click

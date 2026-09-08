@@ -226,6 +226,14 @@ it honest.
    `tests/shared/helpers/surface.py` is that check in one call:
    `require_items` waits for the rows, then decides between an empty
    surface (skip) and a surface that never rendered (fail).
+   When the artifact comes from a server job rather than a panel, the
+   proof is the job's own answer: `tests/shared/helpers/search_job.py`
+   follows the Events and Search pages' search job (start, polls,
+   completion) and `require_results` skips only on a job that reached
+   100% with nothing, naming the job, its scope and its counts; a click
+   that sent no job, a job that never finished, or a bad response fails.
+   Before it, 24 of the 49 failures in the 09/04/2026 full run were
+   "Timeout 60000ms" on a box that simply had no events.
 3. A skip is never a failure handler. `except Exception: pytest.skip(...)`
    reports the app's own error as Blocked, and it catches the test's
    asserts too - test_drag_map_to_tile ran its closing assert inside one,

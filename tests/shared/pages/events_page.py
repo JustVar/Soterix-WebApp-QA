@@ -9,6 +9,13 @@ import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 
+from tests.shared.helpers.search_job import (
+    SearchJob,
+    require_finished,
+    require_results,
+    watch_search,
+)
+
 
 class EventsPage:
     """Page object for the Events page and its sub-flows."""
@@ -320,34 +327,41 @@ class EventsPage:
         listbox.wait_for(state="hidden", timeout=5000)
         return texts
 
-    def search_events_safe(self, timeout: int = 60000) -> bool:
-        """Click search and return True if results appear, False if no results.
-
-        Unlike search_events() this does not raise on zero results.
-        """
-        self.search_button.click()
-        try:
-            self.event_results.first.wait_for(state="visible", timeout=timeout)
-            self._results_settled()
-            return True
-        except Exception:
-            return False
-
     # --- Search ---
+    #
+    # Every search here follows the server's job (tests/shared/helpers/
+    # search_job.py) rather than waiting on the first thumbnail. `timeout`
+    # caps the server's work, so a search that answers in ten seconds
+    # costs ten seconds, and a finished empty search reads as data, not as
+    # a locator timeout.
 
-    def search_events(self, timeout: int = 60000):
-        """Click the search button and wait for event results to load."""
-        self.search_button.click()
+    def search_events(self, timeout: int = 60000) -> SearchJob:
+        """Click Search and return once results are on screen and settled.
 
-        # Wait for the loader to appear then disappear (API call completes)
-        self._wait_for_loader_finish(timeout)
+        A search that completes with nothing skips with the measurements
+        (the tenant holds no events for these filters); a search that never
+        ran or never finished fails, naming which.
+        """
+        job = watch_search(self.page, self.search_button.click, timeout_ms=timeout)
+        require_results(job, surface="Events search")
+        self._show_results()
+        return job
 
-        # Wait for results to appear, then for the streamed count to settle
-        self.event_results.first.wait_for(state="visible", timeout=timeout)
-        self._results_settled()
+    def search_events_safe(self, timeout: int = 60000) -> bool:
+        """Click Search; True when it returned results, False when it finished empty.
+
+        For flows that accept an empty answer. A search that never ran or
+        never finished still fails: "no crash" is not the oracle, "the
+        server answered" is.
+        """
+        job = watch_search(self.page, self.search_button.click, timeout_ms=timeout)
+        has_results = require_finished(job, surface="Events search")
+        if has_results:
+            self._show_results()
+        return has_results
 
     def search_events_for_channels(self, channel_list: list[int],
-                                   timeout: int = 60000):
+                                   timeout: int = 60000) -> SearchJob:
         """Search events filtered to specific camera channels via route intercept.
 
         Intercepts the search API POST and replaces channelList with
@@ -373,13 +387,19 @@ class EventsPage:
 
         self.page.route("**/v-apiserver/REST/site/search**", modify_search)
         try:
-            self.search_button.click()
-            self.event_results.first.wait_for(
-                state="visible", timeout=timeout
-            )
-            self._results_settled()
+            job = watch_search(self.page, self.search_button.click, timeout_ms=timeout)
         finally:
             self.page.unroute("**/v-apiserver/REST/site/search**")
+        require_results(job, surface=f"Events search on channels {channel_list}")
+        self._show_results()
+        return job
+
+    def _show_results(self) -> None:
+        """After the server delivered events, wait for the grid to draw and settle."""
+        # the server has delivered at least one event; the grid's first
+        # thumbnail is a render away, not a network wait
+        self.event_results.first.wait_for(state="visible", timeout=10000)
+        self._results_settled()
 
     def get_event_count(self) -> int:
         """Return the number of event result thumbnails."""

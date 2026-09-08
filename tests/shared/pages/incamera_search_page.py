@@ -6,6 +6,8 @@ camera's feed using category, description, and duration filters.
 """
 from playwright.sync_api import Error as PlaywrightError, Page
 
+from tests.shared.helpers.search_job import SearchJob, require_results, watch_search
+
 
 class InCameraSearchPage:
     """Page object for the in-camera search overlay."""
@@ -104,29 +106,23 @@ class InCameraSearchPage:
 
     # --- Search & Results ---
 
-    def execute_search(self, timeout: int = 60000):
-        """Click the search button and wait for results."""
-        self.search_button.click()
+    def execute_search(self, timeout: int = 60000) -> SearchJob:
+        """Click Search and return once the server's job has delivered results.
 
-        # Wait for loader to finish. Bounded and non-fatal: the page
-        # keeps several CircularProgress spinners alive (tile
-        # placeholders never stop), so the results wait below is the
-        # real signal.
-        try:
-            self.loader.first.wait_for(state="visible", timeout=5000)
-        # the loader may never show on a fast search; the results wait
-        # below is the oracle
-        except Exception:
-            pass
-        try:
-            self.loader.first.wait_for(state="hidden", timeout=15000)
-        # tile placeholder spinners never stop; the results wait below
-        # is the oracle
-        except Exception:
-            pass
-
-        # Wait for results
-        self.result_images.first.wait_for(state="visible", timeout=timeout)
+        The in-camera search runs the same server job as the Search page
+        (tests/shared/helpers/search_job.py), scoped to the one camera.
+        `timeout` caps the server's work. A search that finishes with
+        nothing skips with the measurements; one that never ran or never
+        finished fails, naming which. The page's own spinners are not
+        consulted: tile placeholder spinners never stop, so they were never
+        a signal.
+        """
+        job = watch_search(self.page, self.search_button.click, timeout_ms=timeout)
+        require_results(job, surface="In-camera search")
+        # the server has delivered at least one result; the grid's first
+        # card is a render away, not a network wait
+        self.result_images.first.wait_for(state="visible", timeout=10000)
+        return job
 
     def get_result_count(self) -> int:
         """Return the number of search result images."""
