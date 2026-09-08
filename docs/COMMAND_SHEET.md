@@ -184,7 +184,14 @@ Set these in `.env` or in the shell for one run.
 venv\Scripts\python.exe -m ruff check .
 venv\Scripts\python.exe tools/convention_check.py
 venv\Scripts\python.exe -m pytest tests/plugins tests/tools tests/helpers --html=logs/scratch.html
+venv\Scripts\python.exe tools/test_inventory.py --check
 ```
+
+The last line fails when `docs/TEST_INVENTORY.md` no longer matches the
+tests: after adding, renaming or mapping a test, run
+`venv\Scripts\python.exe tools/test_inventory.py --record` to rewrite the
+page and append the day's counts to the growth ledger
+(`history/test_counts.jsonl`); it appends only when the counts moved.
 
 Two hooks live in `tools/hooks/`. Install both once, into `.git/hooks/`
 with no extension:

@@ -8,7 +8,7 @@ folder name may still be the old one.
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **437 UI test functions in 59 suite files** (09/08/2026), which pytest collects as 819 items: the 32 c2c hardware tests parametrize over the 12-camera registry into 384, and the rest carry the browser parameter. The other 390 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 637 pins live in the shared package. Whole repo: 1209. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message.
+- **437 UI test functions in 59 suite files** (09/08/2026), which pytest collects as 819 items: the 32 c2c hardware tests parametrize over the 12-camera registry into 384, and the rest carry the browser parameter. The other 390 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 637 pins live in the shared package. Whole repo: 1209. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message. `docs/TEST_INVENTORY.md` lists every product test by product and module, with its growth week by week since 02/2026 (`history/test_counts.jsonl`, appended by `tools/test_inventory.py --record`).
 
 ## How We Run Today
 

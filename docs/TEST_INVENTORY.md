@@ -15,6 +15,26 @@ test carries the browser parameter.
 | NexaiQ-Core | 13 | 405 | 168 | 348 |
 | **Total** | | **437** | **168** | **348** |
 
+## Growth
+
+Test functions per product at the last commit of each week (`history/test_counts.jsonl`).
+Rows marked record also carry how many tests had Steps and a QA Touch case that day;
+backfilled rows count functions only. Append a row with `--record` after a batch of tests lands.
+
+| Date | Commit | NexaiQ-Camera 2 Cloud | NexaiQ-Core | NexaiQ-Core API | Total | With Steps | Mapped | Source |
+|---|---|---|---|---|---|---|---|---|
+| 2026-09-08 | 50bccc1 | 32 | 405 | 71 | 508 | 168 | 348 | record |
+| 2026-09-04 | 77148d5 | 32 | 405 | 71 | 508 | - | - | backfill |
+| 2026-08-28 | 990e1e6 | 32 | 405 | 58 | 495 | - | - | backfill |
+| 2026-08-21 | 7a05592 | 32 | 405 | 34 | 471 | - | - | backfill |
+| 2026-08-14 | f93464a | 32 | 405 | 33 | 470 | - | - | backfill |
+| 2026-08-09 | d7d9a10 | 32 | 405 | 33 | 470 | - | - | backfill |
+| 2026-07-31 | 8fcfa7c | 32 | 405 | 47 | 484 | - | - | backfill |
+| 2026-07-14 | 129a885 | 32 | 348 | 47 | 427 | - | - | backfill |
+| 2026-03-27 | 671d260 | - | 348 | 16 | 364 | - | - | backfill |
+| 2026-03-12 | b7b5e39 | - | 348 | 16 | 364 | - | - | backfill |
+| 2026-02-21 | 4916e57 | - | 348 | 16 | 364 | - | - | backfill |
+
 ## NexaiQ-Camera 2 Cloud
 
 ### c2c (32 tests)

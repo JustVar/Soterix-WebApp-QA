@@ -77,6 +77,11 @@ jobs:
       - name: Offline suites
         run: pytest tests/plugins tests/tools tests/helpers
 
+      # The inventory page is generated from the tests and the mapping; a
+      # test that lands without regenerating it leaves the page lying.
+      - name: Test inventory is current
+        run: python tools/test_inventory.py --check
+
       # Not `ruff check`, which finds 627 things here and would fail every
       # pull request from day one. This fails only when a FILE gains
       # findings: a bar a change can pass, that still stops the count
