@@ -3,483 +3,183 @@
   "class": "TestLicenseNavigation",
   "tests": {
     "test_navigate_to_licenses": {
-      "title": "Verify navigating to Licenses page loads successfully.",
+      "title": "Verify Admin > Licenses lands on the two licence tabs with Available selected",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Licenses page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Open Admin from the sidebar and click Licenses.",
+          "expected": "The page shows exactly two tabs, Available Licenses and Assigned Licenses, with Available Licenses selected."
         }
       ],
       "case_key": "8V1lbn"
     },
     "test_default_layout": {
-      "title": "Verify Licenses page default layout renders correctly.",
+      "title": "Verify the licence summary reconciles: Total equals Active plus Available plus Suspended",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and read the Total Licenses block.",
+          "expected": "Total Licenses, Active, Available and Suspended are all whole numbers."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Note the initial/default state of default layout",
-          "expected": "Default state is observed and recorded"
-        },
-        {
-          "n": 4,
-          "action": "Make a change to default layout (modify a setting, apply a filter, etc.)",
-          "expected": "The change is applied and visible in the UI"
-        },
-        {
-          "n": 5,
-          "action": "Verify the modified state is different from the default",
-          "expected": "UI reflects the changed state"
-        },
-        {
-          "n": 6,
-          "action": "Perform the reset/revert/default action",
-          "expected": "Reset action is triggered"
-        },
-        {
-          "n": 7,
-          "action": "Verify default layout is retained correctly",
-          "expected": "Default layout is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Verify the state returned to the original default",
-          "expected": "default layout matches the initial default state recorded in step 3"
-        },
-        {
-          "n": 9,
-          "action": "Refresh the page to confirm the reset persisted",
-          "expected": "Default state remains after page refresh"
+          "action": "Add Active, Available and Suspended.",
+          "expected": "The sum equals Total Licenses."
         }
       ],
       "case_key": "M73EzN"
     },
     "test_total_licenses_widget_visible": {
-      "title": "Verify Total Licenses widget is displayed.",
+      "title": "Verify Total Licenses equals the Quantity column of the Available table",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and read Total Licenses.",
+          "expected": "A whole number."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where total licenses widget visible should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate total licenses widget visible on the page",
-          "expected": "total licenses widget visible is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify total licenses widget visible is displayed as expected",
-          "expected": "total licenses widget visible is displayed as expected"
+          "action": "Add the Quantity column of every row on the Available Licenses tab.",
+          "expected": "The sum equals Total Licenses, and the Available and Active columns add up to the summary's Available and Active."
         }
       ],
       "case_key": "DrdZz4"
     },
     "test_license_counts_displayed": {
-      "title": "Verify Active, Available and Suspended license counts are shown.",
+      "title": "Verify every feature row's Available and Active fit inside its Quantity",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and read each row of the Available Licenses table.",
+          "expected": "Quantity, Available and Active are whole numbers on every row."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where license counts displayed should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate license counts displayed on the page",
-          "expected": "license counts displayed is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify license counts displayed is displayed as expected",
-          "expected": "license counts displayed is displayed as expected"
+          "action": "Compare the columns row by row.",
+          "expected": "Available plus Active never exceeds Quantity, and neither is negative."
         }
       ],
       "case_key": "eJqjmn"
     },
     "test_counts_persist_after_refresh": {
-      "title": "Verify license summary persists after page refresh.",
+      "title": "Verify the licence summary reads the same numbers after a page reload",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and note Total, Active, Available and Suspended.",
+          "expected": "Four whole numbers."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate counts persist on the page",
-          "expected": "counts persist is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify counts persist is displayed as expected",
-          "expected": "counts persist is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Set up precondition: after refresh",
-          "expected": "Precondition is met (after refresh)"
-        },
-        {
-          "n": 9,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Reload the browser page and open Admin > Licenses again.",
+          "expected": "The four numbers are the same as before the reload."
         }
       ],
       "case_key": "vanmXV"
     },
     "test_available_tab_is_default": {
-      "title": "Verify Available Licenses tab is the default selected tab.",
+      "title": "Verify Available Licenses is the selected tab on landing and Assigned is not",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses without clicking a tab.",
+          "expected": "The Available Licenses tab is selected and the Assigned Licenses tab is not."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where available tab should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate available tab on the page",
-          "expected": "available tab is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify available tab default",
-          "expected": "available tab default"
+          "action": "Read the table headers.",
+          "expected": "Feature, Quantity, Available, Active (the Available table)."
         }
       ],
       "case_key": "bj0G4q"
     },
     "test_switch_between_tabs": {
-      "title": "Verify switching between Available and Assigned Licenses tabs.",
+      "title": "Verify switching tabs moves the selection and swaps the table",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and click Assigned Licenses.",
+          "expected": "Assigned Licenses is selected, Available Licenses is not, and the table headers are the Assigned columns (No., Site / Device, License Item(SKU), Quantity, Issue Date, Expiry Date, License Key, Status)."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for switch between tabs",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify switch between tabs is displayed and functions correctly",
-          "expected": "Switch between tabs is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Click Available Licenses.",
+          "expected": "The selection returns to Available Licenses and the headers are Feature, Quantity, Available, Active again."
         }
       ],
       "case_key": "Z8xRWR"
     },
     "test_available_tab_displays_feature_list": {
-      "title": "Verify Available Licenses tab displays a list of license features.",
+      "title": "Verify the Available table lists named features, not the No Data row",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses on the Available Licenses tab.",
+          "expected": "At least one row with a feature name and three whole numbers; no row reads No Data!."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where available tab displays feature list should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate available tab displays feature list on the page",
-          "expected": "available tab displays feature list is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify available tab displays feature list is displayed as expected",
-          "expected": "available tab displays feature list is displayed as expected"
+          "action": "Read the feature names.",
+          "expected": "Every name is non-empty and each row is unique in full."
         }
       ],
       "case_key": "RgGyrK"
     },
     "test_available_tab_columns": {
-      "title": "Verify expected columns are displayed in Available Licenses tab.",
+      "title": "Verify the Available Licenses table has exactly the columns Feature, Quantity, Available, Active",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where available tab columns should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate available tab columns on the page",
-          "expected": "available tab columns is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify available tab columns is displayed as expected",
-          "expected": "available tab columns is displayed as expected"
+          "action": "Open Admin > Licenses on the Available Licenses tab and read the column headers.",
+          "expected": "Feature, Quantity, Available, Active, in that order and nothing else."
         }
       ],
       "case_key": "dypNdB"
     },
     "test_available_tab_retains_state_after_navigation": {
-      "title": "Verify Available Licenses tab retains state after navigation away and back.",
+      "title": "Verify the Available table shows the same rows after leaving for Views and coming back",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and note the Available Licenses rows.",
+          "expected": "At least one feature row."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where available tab retains state should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate available tab retains state on the page",
-          "expected": "available tab retains state is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: after navigation",
-          "expected": "Precondition is met (after navigation)"
-        },
-        {
-          "n": 7,
-          "action": "Verify available tab retains state is displayed as expected",
-          "expected": "available tab retains state is displayed as expected"
+          "action": "Click Views in the sidebar, then open Admin > Licenses again.",
+          "expected": "Available Licenses is selected and the rows read the same as before."
         }
       ],
       "case_key": "xm9E4m"
     },
     "test_search_bar_visible": {
-      "title": "Verify search bar is present on Licenses page.",
+      "title": "Verify the search box is empty, says what it searches, and takes text",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and read the search box.",
+          "expected": "It is empty and its placeholder reads 'Search by feature, availability.'."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where search bar visible should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate search bar visible on the page",
-          "expected": "search bar visible is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify search bar visible is displayed as expected",
-          "expected": "search bar visible is displayed as expected"
+          "action": "Type a word into it.",
+          "expected": "The box holds the word."
         }
       ],
       "case_key": "VKbBrV"
     },
     "test_license_module_accessible_after_refresh": {
-      "title": "Verify Licenses module remains accessible after multiple page refreshes.",
+      "title": "Verify three reloads in a row leave the licence summary unchanged",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and note the summary numbers.",
+          "expected": "Four whole numbers."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where license module accessible should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate license module accessible on the page",
-          "expected": "license module accessible is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: after refresh",
-          "expected": "Precondition is met (after refresh)"
-        },
-        {
-          "n": 7,
-          "action": "Verify license module accessible is displayed as expected",
-          "expected": "license module accessible is displayed as expected"
+          "action": "Reload the page and open Admin > Licenses again, three times.",
+          "expected": "The summary reads the same numbers after each reload."
         }
       ],
       "case_key": "J8d3rn"

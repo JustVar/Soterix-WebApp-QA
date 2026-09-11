@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 169 | 348 |
-| **Total** | | **59** | **437** | **201** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 211 | 348 |
+| **Total** | | **59** | **437** | **243** | **380** |
 
 ## Growth
 
@@ -65,7 +65,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `tests/legacy/` | 3 | 138 | no | Retired Selenium-era login and web-client tests, kept for reference. Excluded from collection by pytest.ini norecursedirs. |
 | `tests/plugins/` | 8 | 168 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
 | `tests/tools/` | 15 | 162 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
-| `soterix-qa-shared` | 21 | 525 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
+| `soterix-qa-shared` | 21 | 529 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
 | `Soterix-API-QA` | 1 | 11 | in Soterix-API-QA | Pins for the API repo's own plugins and shims. Run in that repo. |
 | **This repo** | **27** | **481** | | |
 
@@ -330,48 +330,48 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
-| `test_license_assignment.py::TestLicenseAssignModal::test_assign_button_visible` | Verify the Assign New button is visible on the Assigned tab | - | dypN4W |
-| `test_license_assignment.py::TestLicenseAssignModal::test_assign_modal_close_via_cancel` | Verify the assign modal dismisses via Escape | - | VKbBe9 |
-| `test_license_assignment.py::TestLicenseAssignModal::test_assign_modal_opens` | Verify the Assign New License panel opens on button click | - | xm9EjW |
-| `test_license_assignment.py::TestLicenseAssignModal::test_site_dropdown_in_modal` | Verify the Site select in the assign panel lists real sites | - | B86DEG |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_refresh_behavior` | Verify Assigned Licenses tab loads correctly after page refresh | - | 5BRzD7 |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_retains_state_after_navigation` | Verify Assigned Licenses tab retains state after navigation | - | 11zJl0 |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_shows_site_grouping` | Verify Assigned Licenses tab displays site-wise grouping | - | LD3gmJ |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_collapse_site_hides_features` | Verify collapsing a site hides feature-level details | - | 0rzxll |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_expand_site_shows_features` | Verify expanding a site reveals feature-level licenses | - | yaWrXx |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_multiple_sites_displayed` | Verify multiple sites are displayed correctly if available | - | wmjgKb |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_site_enable_toggle_visible` | Verify site enable toggle switch is available | - | kpZQW9 |
-| `test_license_assignment.py::TestLicenseDeviceList::test_device_list_has_three_dot_menu` | Verify three-dot menu is available for each device | - | eJqjmr |
-| `test_license_assignment.py::TestLicenseDeviceList::test_device_list_loads` | Verify navigation to device list from feature license works | - | DrdZzm |
-| `test_license_assignment.py::TestLicenseDeviceList::test_suspend_confirmation_popup` | Verify Suspend License shows a confirmation popup | - | Z8xRWP |
-| `test_license_assignment.py::TestLicenseDeviceList::test_suspend_option_available` | Verify Suspend License option is available in device menu | - | vanmXl |
-| `test_license_assignment.py::TestLicenseDeviceList::test_unassign_confirmation_popup` | Verify Unassign License shows a confirmation popup | - | RgGyBl |
-| `test_license_assignment.py::TestLicenseDeviceList::test_unassign_option_available` | Verify Unassign License option is available in device menu | - | bj0G48 |
-| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_columns` | Verify expected columns are displayed in Available Licenses tab | - | dypNdB |
-| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_displays_feature_list` | Verify Available Licenses tab displays a list of license features | - | RgGyrK |
-| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_is_default` | Verify Available Licenses tab is the default selected tab | - | bj0G4q |
-| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_retains_state_after_navigation` | Verify Available Licenses tab retains state after navigation away and back | - | xm9E4m |
-| `test_license_navigation.py::TestLicenseNavigation::test_counts_persist_after_refresh` | Verify license summary persists after page refresh | - | vanmXV |
-| `test_license_navigation.py::TestLicenseNavigation::test_default_layout` | Verify Licenses page default layout renders correctly | - | M73EzN |
-| `test_license_navigation.py::TestLicenseNavigation::test_license_counts_displayed` | Verify Active, Available and Suspended license counts are shown | - | eJqjmn |
-| `test_license_navigation.py::TestLicenseNavigation::test_license_module_accessible_after_refresh` | Verify Licenses module remains accessible after multiple page refreshes | - | J8d3rn |
-| `test_license_navigation.py::TestLicenseNavigation::test_navigate_to_licenses` | Verify navigating to Licenses page loads successfully | - | 8V1lbn |
-| `test_license_navigation.py::TestLicenseNavigation::test_search_bar_visible` | Verify search bar is present on Licenses page | - | VKbBrV |
-| `test_license_navigation.py::TestLicenseNavigation::test_switch_between_tabs` | Verify switching between Available and Assigned Licenses tabs | - | Z8xRWR |
-| `test_license_navigation.py::TestLicenseNavigation::test_total_licenses_widget_visible` | Verify Total Licenses widget is displayed | - | DrdZz4 |
-| `test_license_permissions.py::TestLicensePermissions::test_admin_can_access_licenses` | Verify Admin user can access Licenses module | - | Pgw4rw |
-| `test_license_permissions.py::TestLicensePermissions::test_confirmation_dialogs_have_clear_messaging` | Verify confirmation dialogs display clear messaging | - | qzdKve |
-| `test_license_permissions.py::TestLicensePermissions::test_consistent_layout_across_tabs` | Verify consistent UI layout across Licenses tabs | - | 21z6Bn |
-| `test_license_permissions.py::TestLicensePermissions::test_license_page_no_duplicate_records` | Verify the Licenses page does not render duplicate records | - | 68ln6w |
-| `test_license_permissions.py::TestLicensePermissions::test_tooltip_text_for_icons` | Verify tooltip text exists for license-related icons | - | QGjLwP |
-| `test_license_search.py::TestLicenseExport::test_csv_download_option_available` | Verify CSV download option is available on Licenses page | - | qzdV4P |
-| `test_license_search.py::TestLicenseExport::test_csv_download_triggers_file` | Verify CSV download button is available and functional | - | XGLew7 |
-| `test_license_search.py::TestLicenseSearch::test_clear_search_restores_list` | Verify clearing search restores full license list | - | 7ErG7L |
-| `test_license_search.py::TestLicenseSearch::test_empty_search_does_not_filter` | Verify empty search does not filter license data | - | 9e1N3r |
-| `test_license_search.py::TestLicenseSearch::test_invalid_search_shows_no_results` | Verify invalid search displays no results or empty state | - | M73Ezq |
-| `test_license_search.py::TestLicenseSearch::test_search_with_license_key` | Verify search using valid License Key | - | 8V1lbJ |
-| `test_license_search.py::TestLicenseSearch::test_search_with_partial_keyword` | Verify search using partial License Item keyword | - | B86DEN |
-| `test_license_search.py::TestLicenseSearch::test_search_with_valid_license_name` | Verify search using valid License Item name returns results | - | WEnMv2 |
+| `test_license_assignment.py::TestLicenseAssignModal::test_assign_button_visible` | Verify Assign New is offered on the Assigned tab and not on the Available tab | yes | dypN4W |
+| `test_license_assignment.py::TestLicenseAssignModal::test_assign_modal_close_via_cancel` | Verify Escape dismisses the assignment panel and frees the page | yes | VKbBe9 |
+| `test_license_assignment.py::TestLicenseAssignModal::test_assign_modal_opens` | Verify Assign New opens the assignment panel with its heading, both modes and its sections | yes | xm9EjW |
+| `test_license_assignment.py::TestLicenseAssignModal::test_site_dropdown_in_modal` | Verify the panel's Site select lists the tenant's sites, including the configured one | yes | B86DEG |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_refresh_behavior` | Verify the Assigned tab re-selects and shows the same site rows after a page reload | yes | 5BRzD7 |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_retains_state_after_navigation` | Verify the Assigned table shows the same site rows after leaving for Views and coming back | yes | 11zJl0 |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_shows_site_grouping` | Verify the Assigned table lists one well-formed row per site | yes | LD3gmJ |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_collapse_site_hides_features` | Verify collapsing a site removes exactly the feature rows it showed | yes | 0rzxll |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_expand_site_shows_features` | Verify expanding a site lists its feature licences and their quantities add up to the site's | yes | yaWrXx |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_multiple_sites_displayed` | Verify the site rows are numbered 1 to N in order, one per site | yes | wmjgKb |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_site_enable_toggle_visible` | Verify each site's switch agrees with its Status column | yes | kpZQW9 |
+| `test_license_assignment.py::TestLicenseDeviceList::test_device_list_has_three_dot_menu` | Verify every device row carries an options menu | yes | eJqjmr |
+| `test_license_assignment.py::TestLicenseDeviceList::test_device_list_loads` | Verify a feature licence opens its device list with a breadcrumb and device rows | yes | DrdZzm |
+| `test_license_assignment.py::TestLicenseDeviceList::test_suspend_confirmation_popup` | Verify Suspend asks for confirmation naming the action, and Cancel changes nothing | yes | Z8xRWP |
+| `test_license_assignment.py::TestLicenseDeviceList::test_suspend_option_available` | Verify a device's options menu offers Suspend and closes on Escape | yes | vanmXl |
+| `test_license_assignment.py::TestLicenseDeviceList::test_unassign_confirmation_popup` | Verify Unassign asks for confirmation naming the action, and Cancel changes nothing | yes | RgGyBl |
+| `test_license_assignment.py::TestLicenseDeviceList::test_unassign_option_available` | Verify a device's options menu offers Unassign and closes on Escape | yes | bj0G48 |
+| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_columns` | Verify the Available Licenses table has exactly the columns Feature, Quantity, Available, Active | yes | dypNdB |
+| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_displays_feature_list` | Verify the Available table lists named features, not the No Data row | yes | RgGyrK |
+| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_is_default` | Verify Available Licenses is the selected tab on landing and Assigned is not | yes | bj0G4q |
+| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_retains_state_after_navigation` | Verify the Available table shows the same rows after leaving for Views and coming back | yes | xm9E4m |
+| `test_license_navigation.py::TestLicenseNavigation::test_counts_persist_after_refresh` | Verify the licence summary reads the same numbers after a page reload | yes | vanmXV |
+| `test_license_navigation.py::TestLicenseNavigation::test_default_layout` | Verify the licence summary reconciles: Total equals Active plus Available plus Suspended | yes | M73EzN |
+| `test_license_navigation.py::TestLicenseNavigation::test_license_counts_displayed` | Verify every feature row's Available and Active fit inside its Quantity | yes | eJqjmn |
+| `test_license_navigation.py::TestLicenseNavigation::test_license_module_accessible_after_refresh` | Verify three reloads in a row leave the licence summary unchanged | yes | J8d3rn |
+| `test_license_navigation.py::TestLicenseNavigation::test_navigate_to_licenses` | Verify Admin > Licenses lands on the two licence tabs with Available selected | yes | 8V1lbn |
+| `test_license_navigation.py::TestLicenseNavigation::test_search_bar_visible` | Verify the search box is empty, says what it searches, and takes text | yes | VKbBrV |
+| `test_license_navigation.py::TestLicenseNavigation::test_switch_between_tabs` | Verify switching tabs moves the selection and swaps the table | yes | Z8xRWR |
+| `test_license_navigation.py::TestLicenseNavigation::test_total_licenses_widget_visible` | Verify Total Licenses equals the Quantity column of the Available table | yes | DrdZz4 |
+| `test_license_permissions.py::TestLicensePermissions::test_admin_can_access_licenses` | Verify the admin's sidebar offers Licenses under Admin and it opens the licence page | yes | Pgw4rw |
+| `test_license_permissions.py::TestLicensePermissions::test_confirmation_dialogs_have_clear_messaging` | Verify the Suspend confirmation names the action and offers Cancel (device-list tripwire) | yes | qzdKve |
+| `test_license_permissions.py::TestLicensePermissions::test_consistent_layout_across_tabs` | Verify the summary, the search box and the Download control are the same on both tabs | yes | 21z6Bn |
+| `test_license_permissions.py::TestLicensePermissions::test_license_page_no_duplicate_records` | Verify the Licenses page does not render duplicate records | yes | 68ln6w |
+| `test_license_permissions.py::TestLicensePermissions::test_tooltip_text_for_icons` | Verify the licence page's icons carry a name: the Download icon's alt and the expand arrow's test id | yes | QGjLwP |
+| `test_license_search.py::TestLicenseExport::test_csv_download_option_available` | Verify the Licenses page offers one Download control, labelled as such | yes | qzdV4P |
+| `test_license_search.py::TestLicenseExport::test_csv_download_triggers_file` | Verify clicking Download produces a CSV export | yes | XGLew7 |
+| `test_license_search.py::TestLicenseSearch::test_clear_search_restores_list` | Verify clearing the search brings back exactly the rows shown before it | yes | 7ErG7L |
+| `test_license_search.py::TestLicenseSearch::test_empty_search_does_not_filter` | Verify an empty search term changes nothing in the table | yes | 9e1N3r |
+| `test_license_search.py::TestLicenseSearch::test_invalid_search_shows_no_results` | Verify a term that matches nothing leaves only the No Data! row | yes | M73Ezq |
+| `test_license_search.py::TestLicenseSearch::test_search_with_license_key` | Verify searching an Available count lists the features with that count | yes | 8V1lbJ |
+| `test_license_search.py::TestLicenseSearch::test_search_with_partial_keyword` | Verify a partial feature name filters to the rows containing it | yes | B86DEN |
+| `test_license_search.py::TestLicenseSearch::test_search_with_valid_license_name` | Verify searching a feature's full name lists only rows carrying that name | yes | WEnMv2 |
 
 ### login (20 tests in 4 files)
 

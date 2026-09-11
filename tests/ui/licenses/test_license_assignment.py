@@ -1,11 +1,24 @@
-"""License Assignment tests - Assigned Licenses tab, site-wise grouping,
-feature drill-down, device list, assign/unassign/suspend workflows,
-and export functionality."""
+"""License Assignment tests - the Assigned Licenses tab (a site row per
+site, feature rows under an expanded site, the site switch), the
+Assign New License panel, and the device-list tripwires.
+
+Measured on both boxes 09/11/2026: a site row reads
+"1 | <site> | All Licenses | 18/74 | Enabled" and its expanded feature
+rows "1 | <feature> | 1 / 6 | <issued> | <expires> | <key> | Enabled";
+the site's a/b is the sum of its features' a/b. Neither box has a
+device-list drill-down: no cell in the Assigned table is a link and
+clicking one only toggles the expansion. The device-list tests stay as
+tripwires (register item 25): they skip on that measured absence and run
+the day a feature row links somewhere.
+"""
 import pytest
 from playwright.sync_api import expect
 
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.license_page import LicensePage
+
+NO_DRILL_DOWN = ("this build's Assigned table has no device-list drill-down: no cell "
+                 "of a feature row is a link (probed on both boxes 09/11/2026)")
 
 
 class TestLicenseAssignedTab:
@@ -41,132 +54,162 @@ class TestLicenseAssignedTab:
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assigned_tab_shows_site_grouping(self):
-        """Verify Assigned Licenses tab displays site-wise grouping."""
-        self._navigate_to_assigned()
+        """Verify the Assigned table lists one well-formed row per site.
 
-        # Should show at least one site row or group
-        site_content = self.page.locator(
-            "div[class*='site'], div[class*='group'], "
-            "tr[class*='site'], div[class*='expand']"
-        )
-        # site rows render async; a miss falls to the empty-state arm
-        try:
-            site_content.first.wait_for(state="visible", timeout=10000)
-        # absence routes to the empty-state check below
-        except Exception:
-            pass
-        # Either sites exist or empty state message
-        has_sites = site_content.count() > 0
-        has_empty = self.page.locator("text=No assigned licenses, text=No data").first.count() > 0
-        assert has_sites or has_empty, "Neither site grouping nor empty state found"
+        Steps:
+        1. Open Admin > Licenses and click Assigned Licenses.
+           Expected: The headers read No., Site / Device, License Item(SKU), Quantity, Issue Date, Expiry Date, License Key, Status.
+        2. Read the site rows.
+           Expected: Each has a site name, reads All Licenses, a Quantity of the form assigned/total with assigned no more than total, and a Status of Enabled or Disabled.
+        """
+        self._navigate_to_assigned()
+        assert self.license.table_headers() == LicensePage.ASSIGNED_HEADERS, self.license.table_headers()
+        self._require_expandable_site()
+        sites = self.license.site_entries()
+        assert sites, f"No site row parsed from the Assigned table: {self.license.data_rows()[:3]}"
+        bad = [s for s in sites if not s["site"] or s["assigned"] < 0 or s["assigned"] > s["total"]
+               or s["status"] not in ("Enabled", "Disabled")]
+        assert not bad, f"Malformed site rows: {bad}"
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_multiple_sites_displayed(self):
-        """Verify multiple sites are displayed correctly if available."""
-        self._navigate_to_assigned()
+        """Verify the site rows are numbered 1 to N in order, one per site.
 
-        # Count site-level expandable items
-        site_items = self.page.locator(
-            "div[class*='site'], div[class*='group'], "
-            "div[class*='expand'], div[class*='accordion']"
-        )
-        # Test that the structure renders (at least one grouping element)
-        assert site_items.count() >= 0, "Site grouping structure not found"
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses and read the No. column of the site rows.
+           Expected: The numbers run 1, 2, ... N with no gap or repeat, and no site name repeats.
+        """
+        self._navigate_to_assigned()
+        self._require_expandable_site()
+        sites = self.license.site_entries()
+        numbers = [s["no"] for s in sites]
+        assert numbers == [str(i) for i in range(1, len(sites) + 1)], f"Site numbering is {numbers}"
+        names = [s["site"] for s in sites]
+        assert len(names) == len(set(names)), f"A site is listed twice: {names}"
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_expand_site_shows_features(self):
-        """Verify expanding a site reveals feature-level licenses."""
-        self._navigate_to_assigned()
+        """Verify expanding a site lists its feature licences and their quantities add up to the site's.
 
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses and note the first site's Quantity (assigned/total).
+           Expected: A row reading All Licenses with a Quantity like 18/74.
+        2. Click the expand arrow on that site.
+           Expected: Feature rows appear under it, each with a name, a Quantity like 1 / 6, an issue date, an expiry date and a licence key.
+        3. Add the feature rows' assigned and total counts.
+           Expected: The sums equal the site row's assigned and total.
+        """
+        self._navigate_to_assigned()
         self._require_expandable_site()
+        site = self.license.site_entries()[0]
         rows = self.page.locator("tr.MuiTableRow-root")
         initial_rows = rows.count()
         self.license.expand_site(0)
-        # the row count leaving the baseline marks the expansion
         expect(rows).not_to_have_count(initial_rows, timeout=10000)
-        expanded_rows = rows.count()
-        assert expanded_rows > initial_rows, "No additional rows shown after site expansion"
+        features = self.license.wait_for_feature_rows()
+        assert features, f"No feature row parsed after expanding {site['site']!r}: {self.license.data_rows()[:4]}"
+        assert all(f["name"] and f["key"] and f["issued"] and f["expires"] for f in features), features
+        total = (sum(f["assigned"] for f in features), sum(f["total"] for f in features))
+        assert total == (site["assigned"], site["total"]), (
+            f"{site['site']!r} shows {site['assigned']}/{site['total']} but its features add up to {total[0]}/{total[1]}")
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_collapse_site_hides_features(self):
-        """Verify collapsing a site hides feature-level details.
+        """Verify collapsing a site removes exactly the feature rows it showed.
 
-        Expansion must add rows and collapse must restore the exact
-        pre-expand count - the old version clicked both ways without
-        checking either.
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses and click the expand arrow on the first site.
+           Expected: Feature rows appear under the site.
+        2. Click the arrow again.
+           Expected: The feature rows are gone and the table has the same rows as before the expansion.
         """
         self._navigate_to_assigned()
-
         self._require_expandable_site()
-
+        before = self.license.data_rows()
         rows = self.page.locator("tr.MuiTableRow-root")
-        initial_rows = rows.count()
-
         self.license.expand_site(0)
-        expect(rows).not_to_have_count(initial_rows, timeout=10000)
-
+        expect(rows).not_to_have_count(len(before) + 1, timeout=10000)
+        assert self.license.wait_for_feature_rows(), "Expanding showed no feature row"
         self.license.collapse_site(0)
-        expect(rows).to_have_count(initial_rows, timeout=10000)
+        expect(rows).to_have_count(len(before) + 1, timeout=10000)   # + the header row
+        assert self.license.feature_rows() == []
+        assert self.license.data_rows() == before
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_site_enable_toggle_visible(self):
-        """Verify site enable toggle switch is available."""
-        self._navigate_to_assigned()
+        """Verify each site's switch agrees with its Status column.
 
-        switches = self.license.site_toggle_switches
-        # The Assigned table is the surface; a table with rows but no
-        # switch is a regression, an empty table is the tenant's data
-        # (register item 25).
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses and read each site row's switch and Status.
+           Expected: One switch per site row; a switch that is on sits beside Enabled, a switch that is off beside Disabled.
+        """
+        self._navigate_to_assigned()
         require_items(
-            switches,
+            self.license.site_toggle_switches,
             container=self.license.assigned_tab,
             surface="Licenses > Assigned",
             artifact="site enable toggle",
             empty_means="no licence is assigned on this tenant",
             timeout_ms=5000,
         )
-        expect(switches.first).to_be_visible(timeout=5000)
+        sites = self.license.site_entries()
+        states = self.license.switch_states()
+        assert len(states) == len(sites), f"{len(states)} switches for {len(sites)} site rows"
+        mismatched = [(s["site"], s["status"], on) for s, on in zip(sites, states, strict=True)
+                      if on != (s["status"] == "Enabled")]
+        assert not mismatched, f"Switch and Status disagree: {mismatched}"
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assigned_tab_retains_state_after_navigation(self):
-        """Verify Assigned Licenses tab retains state after navigation."""
+        """Verify the Assigned table shows the same site rows after leaving for Views and coming back.
+
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses and note the site rows.
+           Expected: At least one site row.
+        2. Click Views in the sidebar, then open Admin > Licenses and click Assigned Licenses again.
+           Expected: Assigned Licenses is selected and the site rows read the same as before.
+        """
         self._navigate_to_assigned()
-
-        # Navigate away to dashboard
-        dashboard_link = self.page.get_by_text("Dashboard").first
-        if dashboard_link.count() > 0:
-            dashboard_link.click()
-
-        # Come back; the retrying expect below is the signal
-        self.license.navigate()
+        self._require_expandable_site()
+        before = self.license.site_entries()
+        self.license.go_to_views_and_back()
         self.license.switch_to_assigned_tab()
-        expect(self.license.assigned_tab).to_be_visible(timeout=10000)
+        assert self.license.selected_tab() == "Assigned Licenses"
+        assert self.license.site_entries() == before, "The site rows changed across the trip to Views"
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assigned_tab_refresh_behavior(self):
-        """Verify Assigned Licenses tab loads correctly after page refresh."""
+        """Verify the Assigned tab re-selects and shows the same site rows after a page reload.
+
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses and note the site rows.
+           Expected: At least one site row.
+        2. Reload the browser page, open Admin > Licenses and click Assigned Licenses.
+           Expected: Assigned Licenses is selected and the site rows read the same as before.
+        """
         self._navigate_to_assigned()
-
-        # Reload the page (reload waits for the load event on its own)
+        self._require_expandable_site()
+        before = self.license.site_entries()
         self.page.reload()
-
-        # Re-navigate to licenses and switch to Assigned tab
-        # (page reload doesn't preserve tab state, so we re-navigate)
         self.license.navigate()
         self.license.switch_to_assigned_tab()
-
-        # Verify Assigned tab is selected
         expect(self.license.assigned_tab).to_have_attribute("aria-selected", "true", timeout=10000)
+        assert self.license.site_entries() == before, "The site rows changed across a reload"
 
 
 class TestLicenseDeviceList:
-    """Tests for device list page (drill-down from feature license)."""
+    """Tripwires for a device list under a feature licence.
+
+    Neither box renders one today (module docstring): every test here
+    skips on that measured absence and runs the day a feature row links
+    somewhere. The oracles are written for that day.
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self, authenticated_page):
@@ -180,151 +223,128 @@ class TestLicenseDeviceList:
         """Navigate to Licenses > Assigned > expand site > click feature."""
         self.license.navigate()
         self.license.switch_to_assigned_tab()
-
         self._require_expandable_site()
-
         self.license.expand_site(0)
-
-        # Feature rows render with the expansion; a miss falls to the
-        # skip below
-        feature_links = self.page.locator(
-            "div[class*='feature'] a, div[class*='nested'] a, "
-            "div[class*='feature'] span[class*='link'], "
-            "td a, div[class*='clickable']"
-        )
-        # The site expanded above, so its feature rows are the artifact
-        # and the expanded table is the proof the surface is up
-        # (register item 25).
+        feature_links = self.page.locator("table a, table button:not(.MuiSwitch-root button), td [role='link']")
         require_items(
             feature_links,
             container=self.license.assigned_tab,
             surface="Licenses > Assigned, site expanded",
             artifact="feature licence link",
-            empty_means="the assigned site carries no feature licence to open",
+            empty_means=NO_DRILL_DOWN,
         )
         feature_links.first.click()
-        # the device-list breadcrumb is the navigated signal
-        expect(self.license.breadcrumb.first).to_be_visible(
-            timeout=15000
-        )
+        expect(self.license.breadcrumb.first).to_be_visible(timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_device_list_loads(self):
-        """Verify navigation to device list from feature license works."""
-        self._navigate_to_device_list()
+        """Verify a feature licence opens its device list with a breadcrumb and device rows.
 
-        # Device list page should show device-related content
-        content = self.page.locator(
-            "text=Device, text=Serial, text=Status, text=License"
-        ).first
-        expect(content).to_be_visible(timeout=10000)
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses, expand the first site and click a feature licence.
+           Expected: A device list opens under a breadcrumb naming the site and the feature.
+        2. Read the device table.
+           Expected: A Device column and a Status column, and at least one device row.
+        """
+        self._navigate_to_device_list()
+        headers = self.license.table_headers()
+        assert any("Device" in h for h in headers), headers
+        assert any("Status" in h for h in headers), headers
+        assert self.license.data_rows(), "The device list has no rows"
+        assert not self.license.is_no_data(), self.license.data_rows()[:2]
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_device_list_has_three_dot_menu(self):
-        """Verify three-dot menu is available for each device."""
-        self._navigate_to_device_list()
+        """Verify every device row carries an options menu.
 
-        # _navigate_to_device_list only returns once the breadcrumb
-        # proves the device list opened, so a list with no option icon
-        # is a regression, not an absent artifact (register item 25).
-        options = self.license.options_icons
-        expect(options.first).to_be_visible(timeout=5000)
+        Steps:
+        1. Open a feature licence's device list.
+           Expected: The list shows its device rows.
+        2. Count the three-dot options icons.
+           Expected: One per device row.
+        """
+        self._navigate_to_device_list()
+        rows = [r for r in self.license.data_rows() if LicensePage.NO_DATA not in r]
+        expect(self.license.options_icons).to_have_count(len(rows), timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_suspend_option_available(self):
-        """Verify Suspend License option is available in device menu."""
+        """Verify a device's options menu offers Suspend and closes on Escape.
+
+        Steps:
+        1. Open a feature licence's device list and click the first device's three-dot icon.
+           Expected: A menu opens listing Suspend.
+        2. Press Escape.
+           Expected: The menu closes.
+        """
         self._navigate_to_device_list()
-
-        # The device list is proved open by _navigate_to_device_list's
-        # breadcrumb wait, so a missing option icon is a regression
-        # (register item 25).
-        options = self.license.options_icons
-        expect(options.first).to_be_visible(timeout=10000)
-
         self.license.open_device_menu(0)
-
-        suspend = self.page.locator(
-            "li:has-text('Suspend'), div:has-text('Suspend')"
-        ).first
-        expect(suspend).to_be_visible(timeout=5000)
-
-        # Close menu by pressing Escape; the menu item leaving is the
-        # closed signal
+        items = [li.inner_text().strip() for li in self.page.locator("[role='menu']:visible li").all()]
+        assert any(i.startswith("Suspend") for i in items), f"Menu items: {items}"
         self.page.keyboard.press("Escape")
-        suspend.wait_for(state="hidden", timeout=5000)
+        expect(self.page.locator("[role='menu']:visible")).to_have_count(0, timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_unassign_option_available(self):
-        """Verify Unassign License option is available in device menu."""
+        """Verify a device's options menu offers Unassign and closes on Escape.
+
+        Steps:
+        1. Open a feature licence's device list and click the first device's three-dot icon.
+           Expected: A menu opens listing Unassign.
+        2. Press Escape.
+           Expected: The menu closes.
+        """
         self._navigate_to_device_list()
-
-        # The device list is proved open by _navigate_to_device_list's
-        # breadcrumb wait, so a missing option icon is a regression
-        # (register item 25).
-        options = self.license.options_icons
-        expect(options.first).to_be_visible(timeout=10000)
-
         self.license.open_device_menu(0)
-
-        unassign = self.page.locator(
-            "li:has-text('Unassign'), div:has-text('Unassign')"
-        ).first
-        expect(unassign).to_be_visible(timeout=5000)
-
-        # the menu item leaving is the closed signal
+        items = [li.inner_text().strip() for li in self.page.locator("[role='menu']:visible li").all()]
+        assert any(i.startswith("Unassign") for i in items), f"Menu items: {items}"
         self.page.keyboard.press("Escape")
-        unassign.wait_for(state="hidden", timeout=5000)
+        expect(self.page.locator("[role='menu']:visible")).to_have_count(0, timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_suspend_confirmation_popup(self):
-        """Verify Suspend License shows a confirmation popup."""
+        """Verify Suspend asks for confirmation naming the action, and Cancel changes nothing.
+
+        Steps:
+        1. Open a feature licence's device list, open the first device's menu and choose Suspend.
+           Expected: A confirmation dialog opens whose text mentions suspending, with Cancel and a confirm button.
+        2. Click Cancel.
+           Expected: The dialog closes and the device row reads as before.
+        """
         self._navigate_to_device_list()
-
-        # The device list is proved open by _navigate_to_device_list's
-        # breadcrumb wait, so a missing option icon is a regression
-        # (register item 25).
-        options = self.license.options_icons
-        expect(options.first).to_be_visible(timeout=10000)
-
+        before = self.license.data_rows()
         self.license.suspend_device(0)
-
-        # Confirmation dialog should appear
-        confirm_dialog = self.page.locator(
-            "div[role='dialog'], div[class*='modal'], div[class*='confirm']"
-        )
-        expect(confirm_dialog.first).to_be_visible(timeout=5000)
-
-        # Cancel to avoid actual suspension
+        dialog = self.page.locator("div[role='dialog'], div[class*='modal']").first
+        expect(dialog).to_be_visible(timeout=5000)
+        assert "suspend" in dialog.inner_text().lower(), dialog.inner_text()
         self.license.cancel_action()
+        assert self.license.data_rows() == before
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_unassign_confirmation_popup(self):
-        """Verify Unassign License shows a confirmation popup."""
+        """Verify Unassign asks for confirmation naming the action, and Cancel changes nothing.
+
+        Steps:
+        1. Open a feature licence's device list, open the first device's menu and choose Unassign.
+           Expected: A confirmation dialog opens whose text mentions unassigning, with Cancel and a confirm button.
+        2. Click Cancel.
+           Expected: The dialog closes and the device row reads as before.
+        """
         self._navigate_to_device_list()
-
-        # The device list is proved open by _navigate_to_device_list's
-        # breadcrumb wait, so a missing option icon is a regression
-        # (register item 25).
-        options = self.license.options_icons
-        expect(options.first).to_be_visible(timeout=10000)
-
+        before = self.license.data_rows()
         self.license.open_device_menu(0)
         self.license.unassign_option.click()
-
-        # the retrying expect below absorbs the dialog render
-        confirm_dialog = self.page.locator(
-            "div[role='dialog'], div[class*='modal'], div[class*='confirm']"
-        )
-        expect(confirm_dialog.first).to_be_visible(timeout=5000)
-
-        # Cancel to avoid actual unassignment
+        dialog = self.page.locator("div[role='dialog'], div[class*='modal']").first
+        expect(dialog).to_be_visible(timeout=5000)
+        assert "unassign" in dialog.inner_text().lower(), dialog.inner_text()
         self.license.cancel_action()
+        assert self.license.data_rows() == before
 
 
 class TestLicenseAssignModal:
@@ -332,8 +352,8 @@ class TestLicenseAssignModal:
 
     The 2026-08 app renders assignment as a customMuiModal overlay
     (heading 'Assign New License', Bulk/Individual toggle, Site select,
-    Features, Devices). The 'Assign New' button only exists on the
-    Assigned Licenses tab. Test names keep the historical 'modal'
+    Features, Devices, Assign). The 'Assign New' button only exists on
+    the Assigned Licenses tab. Test names keep the historical 'modal'
     wording so QA Touch nodeid mappings stay stable. Each test closes
     the modal it opens: contexts are per-test, but a lingering backdrop
     would block every later step inside the same test.
@@ -348,72 +368,92 @@ class TestLicenseAssignModal:
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assign_button_visible(self):
-        """Verify the Assign New button is visible on the Assigned tab."""
+        """Verify Assign New is offered on the Assigned tab and not on the Available tab.
+
+        Steps:
+        1. Open Admin > Licenses on the Available Licenses tab.
+           Expected: No Assign New button.
+        2. Click Assigned Licenses.
+           Expected: A button reading Assign New is shown and enabled.
+        """
         self.license.navigate()
+        expect(self.license.assign_button).to_have_count(0)
         self.license.switch_to_assigned_tab()
         expect(self.license.assign_button).to_be_visible(timeout=10000)
+        expect(self.license.assign_button).to_have_text("Assign New")
+        expect(self.license.assign_button).to_be_enabled()
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assign_modal_opens(self):
-        """Verify the Assign New License panel opens on button click."""
-        self.license.navigate()
+        """Verify Assign New opens the assignment panel with its heading, both modes and its sections.
 
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses and click Assign New.
+           Expected: A panel headed Assign New License opens, offering Assign to Bulk and Assign to Individual, a Site select reading Select, Features and Devices sections, and an Assign button.
+        2. Press Escape.
+           Expected: The panel closes.
+        """
+        self.license.navigate()
         if not self.license.open_assign_panel():
             pytest.skip("Assign New is not available on this tenant")
-
-        expect(self.license.assign_panel).to_be_visible()
-        expect(
-            self.page.get_by_text("Assign to Bulk").first
-        ).to_be_visible()
-
-        # Close what the test opened: a lingering backdrop blocks any
-        # later step in this test
+        panel = self.page.locator(".customMuiModal, div[class*='modal']:visible").first
+        expect(panel).to_be_visible()
+        text = " ".join(panel.inner_text().split())
+        for part in ("Assign New License", "Assign to Bulk", "Assign to Individual", "Site", "Features", "Devices"):
+            assert part in text, f"{part!r} missing from the panel: {text[:200]}"
+        expect(panel.get_by_text("Select", exact=True).first).to_be_visible()
+        expect(panel.locator("button:has-text('Assign')").last).to_be_visible()
         self.license.close_assign_modal()
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_assign_modal_close_via_cancel(self):
-        """Verify the assign modal dismisses via Escape.
+        """Verify Escape dismisses the assignment panel and frees the page.
 
-        The customMuiModal has no Cancel button; its backdrop blocks
-        the page (tab clicks included), and Escape dismisses it.
+        The customMuiModal has no Cancel button; its backdrop blocks the
+        page (tab clicks included), and Escape dismisses it.
+
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses, click Assign New, then press Escape.
+           Expected: The panel is gone.
+        2. Click Available Licenses.
+           Expected: The tab responds: Available Licenses becomes the selected tab.
         """
         self.license.navigate()
-
         if not self.license.open_assign_panel():
             pytest.skip("Assign New is not available on this tenant")
-
         expect(self.license.assign_panel).to_be_visible()
-
         self.license.close_assign_modal()
         expect(self.license.assign_panel).to_be_hidden(timeout=10000)
+        self.license.switch_to_available_tab()
+        assert self.license.selected_tab() == "Available Licenses", "The page stayed blocked after Escape"
 
     @pytest.mark.ui
     @pytest.mark.licenses
     def test_site_dropdown_in_modal(self):
-        """Verify the Site select in the assign panel lists real sites."""
+        """Verify the panel's Site select lists the tenant's sites, including the configured one.
+
+        Steps:
+        1. Open Admin > Licenses > Assigned Licenses, click Assign New and open the Site select.
+           Expected: The options are the placeholder Select followed by the tenant's site names, the configured test site among them, with no name repeated.
+        2. Press Escape twice.
+           Expected: The list and the panel close.
+        """
         from config.base_config import config
 
         self.license.navigate()
-
         if not self.license.open_assign_panel():
             pytest.skip("Assign New is not available on this tenant")
-
-        # The Site select shows the 'Select' placeholder until opened
-        self.page.get_by_text("Select", exact=True).first.click()
-
-        # Scope the assertion to the option list: the Assigned tab's
-        # table underneath also renders site names, and a page-wide
-        # text match could pass without the select ever opening
-        site_name = config.get("test_site_name")
-        option = self.page.locator(
-            f"li:has-text('{site_name}'), "
-            f"[role='option']:has-text('{site_name}')"
-        ).first
-        expect(option).to_be_visible(timeout=10000)
-
-        # Close the option list, then the modal, so no backdrop blocks
-        # any later step in this test
+        panel = self.page.locator(".customMuiModal, div[class*='modal']:visible").first
+        panel.get_by_text("Select", exact=True).first.click()
+        options = self.page.locator("[role='option']")
+        expect(options.first).to_be_visible(timeout=10000)
+        names = [o.inner_text().strip() for o in options.all()]
+        assert names[0] == "Select", names
+        sites = names[1:]
+        assert sites, f"Site options: {names}"
+        assert len(sites) == len(set(sites)), f"A site is offered twice: {names}"
+        assert config.get("test_site_name") in sites, f"{config.get('test_site_name')!r} not in {sites}"
         self.page.keyboard.press("Escape")
         self.license.close_assign_modal()

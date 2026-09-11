@@ -4,6 +4,7 @@ Shared page object for Licenses module - Available Licenses, Assigned Licenses,
 device list, assign/unassign/suspend workflows, and CSV export.
 Used by all License test modules.
 """
+import re
 import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
@@ -162,6 +163,10 @@ class LicensePage:
         # ready, so the wait does not burn its timeout on sub-pages.
         ready = self.total_licenses_widget.or_(self.breadcrumb.first)
         self._appears(ready.first, timeout=20000)
+        # The table lands after the summary and re-renders once its data
+        # arrives (india: ten rows, read as none 09/11/2026): wait for rows
+        # and for their count to hold.
+        self._table_settled()
 
     # ----- Tab switching -----
 
@@ -367,6 +372,156 @@ class LicensePage:
         if links.count() > 0:
             links.first.click()
             self._wait_for_page_ready()
+
+    # ----- Readers: the numbers and names the tests reconcile -----
+    #
+    # Measured on both boxes 09/11/2026. The summary block reads
+    # "Total Licenses 100  Active : 22  Available : 78  Suspended : 0"
+    # (after the Sites and Site Admins blocks, which carry their own
+    # Active/Suspended pairs); the Available table has the columns
+    # Feature, Quantity, Available, Active; the Assigned table has eight
+    # columns, a site row per site ("All Licenses", "18/74", Enabled) and,
+    # once expanded, a feature row per licence ("1 / 6", issue and expiry
+    # dates, the key, Enabled). A filter that matches nothing renders one
+    # data row that reads "No Data!". The tabs are MUI tabs (role=tab,
+    # aria-selected).
+
+    AVAILABLE_HEADERS = ["Feature", "Quantity", "Available", "Active"]
+    ASSIGNED_HEADERS = ["No.", "Site / Device", "License Item(SKU)", "Quantity",
+                        "Issue Date", "Expiry Date", "License Key", "Status"]
+    NO_DATA = "No Data!"
+    SITE_ROW_ITEM = "All Licenses"
+    # the stats are separated by a literal "|" in the rendered text
+    _SUMMARY_RE = re.compile(
+        r"Total Licenses\s*(\d+)[\s|]*Active\s*:\s*(\d+)[\s|]*Available\s*:\s*(\d+)[\s|]*Suspended\s*:\s*(\d+)")
+
+    def summary_counts(self) -> dict[str, int]:
+        """The licence summary as numbers: total, active, available, suspended.
+
+        Walks up from the 'Total Licenses' label until the block's text
+        carries all four numbers, so a re-nested layout still reads; a
+        block that never matches raises with the text it saw.
+        """
+        label = self.page.locator("text=Total Licenses").first
+        label.wait_for(state="visible", timeout=10000)
+        seen = ""
+        for level in range(1, 7):
+            seen = " ".join(label.locator(f"xpath=ancestor::*[{level}]").inner_text().split())
+            m = self._SUMMARY_RE.search(seen)
+            if m:
+                total, active, available, suspended = (int(x) for x in m.groups())
+                return {"total": total, "active": active,
+                        "available": available, "suspended": suspended}
+        raise AssertionError(
+            f"The licence summary did not read as 'Total Licenses N Active : a "
+            f"Available : b Suspended : c'; the block reads: {seen[:200]!r}")
+
+    def tab_names(self) -> list[str]:
+        return [t.inner_text().strip() for t in self.page.locator("[role='tab']").all()]
+
+    def selected_tab(self) -> str:
+        """The text of the tab that is aria-selected, '' when none is."""
+        selected = self.page.locator("[role='tab'][aria-selected='true']")
+        return selected.first.inner_text().strip() if selected.count() else ""
+
+    def table_headers(self) -> list[str]:
+        return [h.inner_text().strip() for h in self.page.locator("th").all() if h.inner_text().strip()]
+
+    def data_rows(self) -> list[list[str]]:
+        """Every table row that has cells, as its cells' texts (whitespace collapsed)."""
+        rows = self.page.locator("tr:has(td)")
+        out = []
+        for i in range(rows.count()):
+            cells = rows.nth(i).locator("td")
+            out.append([" ".join(cells.nth(j).inner_text().split()) for j in range(cells.count())])
+        return out
+
+    def is_no_data(self) -> bool:
+        """True when the table shows exactly the 'No Data!' row and nothing else."""
+        rows = self.data_rows()
+        return len(rows) == 1 and any(c == self.NO_DATA for c in rows[0])
+
+    def available_rows(self) -> list[dict]:
+        """The Available table as [{name, quantity, available, active}]; the
+        'No Data!' row is left out."""
+        out = []
+        for cells in self.data_rows():
+            if len(cells) == 4 and cells[1].isdigit():
+                out.append({"name": cells[0], "quantity": int(cells[1]),
+                            "available": int(cells[2]), "active": int(cells[3])})
+        return out
+
+    @staticmethod
+    def _split_quantity(text: str) -> tuple[int, int] | None:
+        m = re.fullmatch(r"(\d+)\s*/\s*(\d+)", text)
+        return (int(m.group(1)), int(m.group(2))) if m else None
+
+    def site_entries(self) -> list[dict]:
+        """The Assigned table's site rows: [{no, site, assigned, total, status}].
+        (site_rows is the raw locator the expand helpers count.)"""
+        out = []
+        for cells in self.data_rows():
+            if len(cells) == 8 and cells[2] == self.SITE_ROW_ITEM:
+                assigned, total = self._split_quantity(cells[3]) or (-1, -1)
+                out.append({"no": cells[0], "site": cells[1], "assigned": assigned,
+                            "total": total, "status": cells[7]})
+        return out
+
+    def feature_rows(self) -> list[dict]:
+        """The expanded feature rows: [{no, name, assigned, total, issued, expires, key, status}]."""
+        out = []
+        for cells in self.data_rows():
+            if len(cells) == 8 and cells[2] != self.SITE_ROW_ITEM and self._split_quantity(cells[3]):
+                assigned, total = self._split_quantity(cells[3])
+                out.append({"no": cells[0], "name": cells[2], "assigned": assigned, "total": total,
+                            "issued": cells[4], "expires": cells[5], "key": cells[6], "status": cells[7]})
+        return out
+
+    def wait_for_feature_rows(self, timeout_s: float = 10.0) -> list[dict]:
+        """The feature rows once the expansion has rendered them all.
+
+        expand_site returns when the row count moves, which is the
+        collapse container; its nested table lands a moment later and
+        grows row by row (india: 2 of 15 read on the first tick), so the
+        answer is the count that held for a second.
+        """
+        deadline = time.monotonic() + timeout_s
+        last, stable = -1, 0
+        while time.monotonic() < deadline:
+            rows = self.feature_rows()
+            stable = stable + 1 if rows and len(rows) == last else 0
+            if stable >= 4:
+                return rows
+            last = len(rows)
+            self.page.wait_for_timeout(250)  # poll tick for the nested table
+        return self.feature_rows()
+
+    def _table_settled(self, timeout_s: float = 15.0) -> None:
+        """Wait for data rows to exist and their count to hold for a second."""
+        rows = self.page.locator("tr:has(td)")
+        deadline = time.monotonic() + timeout_s
+        last, stable = -1, 0
+        while time.monotonic() < deadline:
+            n = rows.count()
+            stable = stable + 1 if n and n == last else 0
+            if stable >= 4:
+                return
+            last = n
+            self.page.wait_for_timeout(250)  # poll tick for the table data
+
+    def switch_states(self) -> list[bool]:
+        """Each site switch's checked state, in table order."""
+        return [s.locator("input[type='checkbox']").first.is_checked()
+                for s in self.site_toggle_switches.all()]
+
+    def go_to_views_and_back(self):
+        """Leave the Licenses page through the Views nav link and come back."""
+        # the Views link's href is "/" (the app's home), so it is found by its text
+        views = self.page.locator("a:has-text('Views')").first
+        views.wait_for(state="visible", timeout=10000)
+        views.click(force=True)
+        self.page.locator("text=Total Licenses").first.wait_for(state="hidden", timeout=10000)
+        self.navigate()
 
     # ----- Wait helpers -----
 

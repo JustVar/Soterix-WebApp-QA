@@ -3,216 +3,86 @@
   "class": "TestLicensePermissions",
   "tests": {
     "test_admin_can_access_licenses": {
-      "title": "Verify Admin user can access Licenses module.",
+      "title": "Verify the admin's sidebar offers Licenses under Admin and it opens the licence page",
       "steps": [
         {
           "n": 1,
-          "action": "Open the application login page",
-          "expected": "Login page loads with username and password fields"
+          "action": "Click Admin in the sidebar.",
+          "expected": "A Licenses entry is shown, linking to the licence route."
         },
         {
           "n": 2,
-          "action": "Log in with the required user role/credentials",
-          "expected": "User is authenticated and redirected to the default page"
-        },
-        {
-          "n": 3,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads (or access denied, depending on the test)"
-        },
-        {
-          "n": 4,
-          "action": "Verify the access behavior matches the expected permission level",
-          "expected": "User can access or is correctly blocked from the feature"
-        },
-        {
-          "n": 5,
-          "action": "Verify admin can access licenses",
-          "expected": "Admin access licenses"
-        },
-        {
-          "n": 6,
-          "action": "Verify no unauthorized data or controls are exposed",
-          "expected": "Only permitted content is visible to the current user role"
-        },
-        {
-          "n": 7,
-          "action": "Log out and verify the session ends cleanly",
-          "expected": "User is redirected to the login page after logout"
+          "action": "Click Licenses.",
+          "expected": "The page shows the Total Licenses summary with a whole number and the two licence tabs."
         }
       ],
       "case_key": "Pgw4rw"
     },
     "test_license_page_no_duplicate_records": {
-      "title": "Verify Licenses page does not display duplicate records.",
+      "title": "Verify the Licenses page does not render duplicate records",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and read every row of the Available Licenses table.",
+          "expected": "At least one row."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for license page no duplicate records",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Verify license page no duplicate records is displayed and functions correctly",
-          "expected": "License page no duplicate records is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Compare the rows with each other, whole row against whole row.",
+          "expected": "No two rows are identical in every column."
         }
       ],
       "case_key": "68ln6w"
     },
     "test_consistent_layout_across_tabs": {
-      "title": "Verify consistent UI layout across Licenses tabs.",
+      "title": "Verify the summary, the search box and the Download control are the same on both tabs",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and note the summary numbers, the search box and the Download icon.",
+          "expected": "All three are present on the Available Licenses tab."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for consistent layout across tabs",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify consistent layout across tabs is displayed and functions correctly",
-          "expected": "Consistent layout across tabs is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Click Assigned Licenses.",
+          "expected": "The summary reads the same numbers, the search box and the Download icon are still there, and Assigned Licenses is the selected tab."
         }
       ],
       "case_key": "21z6Bn"
     },
     "test_confirmation_dialogs_have_clear_messaging": {
-      "title": "Verify confirmation dialogs display clear messaging.",
+      "title": "Verify the Suspend confirmation names the action and offers Cancel (device-list tripwire)",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses > Assigned Licenses, expand the first site and click a feature licence.",
+          "expected": "The device list opens under a breadcrumb."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
+          "action": "Open the first device's three-dot menu and choose Suspend.",
+          "expected": "A confirmation dialog whose text mentions the suspension and the device, with a Cancel button."
         },
         {
           "n": 3,
-          "action": "Identify the confirmation dialogs have clear messaging to be deleted from the list",
-          "expected": "confirmation dialogs have clear messaging is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target confirmation dialogs have clear messaging",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the confirmation dialogs have clear messaging"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the confirmation dialogs have clear messaging no longer appears in the list",
-          "expected": "confirmation dialogs have clear messaging is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted confirmation dialogs have clear messaging does not reappear after refresh"
+          "action": "Click Cancel.",
+          "expected": "The dialog closes."
         }
       ],
       "case_key": "qzdKve"
     },
     "test_tooltip_text_for_icons": {
-      "title": "Verify tooltip text exists for license-related icons.",
+      "title": "Verify the licence page's icons carry a name: the Download icon's alt and the expand arrow's test id",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Licenses and read the Download icon.",
+          "expected": "Its alt text reads Download."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for tooltip text",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Verify tooltip text is displayed and functions correctly",
-          "expected": "Tooltip text is displayed as expected (for icons)"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: for icons",
-          "expected": "Precondition is met (for icons)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Click Assigned Licenses and read the expand arrow on a site row.",
+          "expected": "It is the ExpandMoreIcon."
         }
       ],
       "case_key": "QGjLwP"
