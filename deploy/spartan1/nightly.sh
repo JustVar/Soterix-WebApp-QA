@@ -32,7 +32,8 @@ SERVE=/data/qa/runs
 LOG=/data/qa/ci/nightly.log
 PIDFILE=/data/qa/ci/nightly.pid
 TARGET="${TARGET:-tests/ui}"
-BOXES="${BOXES:-india us}"
+BOXES="${BOXES-india us}"             # `-` not `:-`: an explicit BOXES= means no box (cameras only);
+                                      # 09/11 a trial meant that way ran both boxes instead
 TEST_TIMEOUT="${TEST_TIMEOUT:-600}"   # seconds per test, setup and teardown included
 RUN_TIMEOUT="${RUN_TIMEOUT:-4h}"      # per box; a full run measured about an hour at 4 workers
 WORKERS="${WORKERS:-4}"
