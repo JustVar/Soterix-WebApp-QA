@@ -260,3 +260,78 @@ def test_speculative_reason_read_across_wrapped_lines():
     ]
     rules = [f['rule'] for f in cc.check_speculative_skips('x.py', lines)]
     assert rules == ['speculative-skip-reason']
+
+
+# ---------------------------------------------------------------------------
+# 09/11/2026: the four rules the coverage assessment earned
+# ---------------------------------------------------------------------------
+
+def test_except_without_why_is_high_unless_the_handler_raises_or_is_explained():
+    """A bare handler that returns False is HIGH; a raising one or a commented one is not."""
+    silent = ['def go(self):', '    try:', '        self.x()', '    except Exception:', '        return False']
+    assert [(f['rule'], f['sev'], f['line']) for f in cc.check_except_without_why('p.py', silent)] == [
+        ('except-without-why', 'HIGH', 4)]
+    raising = ['def go(self):', '    try:', '        self.x()', '    except PlaywrightError as e:',
+               '        raise AssertionError(f"x: {e}") from None']
+    assert cc.check_except_without_why('p.py', raising) == []
+    failing = ['def go(self):', '    try:', '        self.x()', '    except Exception:', '        pytest.fail("x")']
+    assert cc.check_except_without_why('p.py', failing) == []
+    explained = ['def go(self):', '    try:', '        self.x()',
+                 '    except Exception:  # why: the toast is optional, the row count below is the oracle',
+                 '        pass']
+    assert cc.check_except_without_why('p.py', explained) == []
+    explained_above = ['def go(self):', '    try:', '        self.x()',
+                       '    # the loader is optional; the container wait is the arrival signal',
+                       '    except Exception:', '        pass']
+    assert cc.check_except_without_why('p.py', explained_above) == []
+
+
+def test_presence_only_oracle_flags_visibility_only_bodies():
+    """A body whose only checks are visibility is flagged; a comparison, a negative or a text expectation clears it."""
+    weak = ['def test_panel(self):', '    """Title."""', '    self.page.click()',
+            '    expect(self.panel).to_be_visible()', '    assert self.rows.first.is_visible()']
+    assert [(f['rule'], f['sev']) for f in cc.check_presence_only_tests(PATH, weak)] == [
+        ('presence-only-oracle', 'MEDIUM')]
+    for strong_line in ('    expect(self.rows).to_have_count(before + 1)',
+                        '    assert name in self.titles()',
+                        '    expect(self.panel).not_to_be_visible()',
+                        '    expect(self.title).to_have_text("Spartan0")',
+                        '    expect(self.page).to_have_url(re.compile("/insights"))'):
+        strong = [*weak[:-1], strong_line]
+        assert cc.check_presence_only_tests(PATH, strong) == [], strong_line
+
+
+def test_presence_only_leaves_no_oracle_bodies_and_delegations_alone():
+    """No oracle at all belongs to no-oracle-test; an 'oracle' comment names a raising call."""
+    none = ['def test_a(self):', '    """Title."""', '    self.page.click()']
+    assert cc.check_presence_only_tests(PATH, none) == []
+    assert [f['rule'] for f in cc.check_no_oracle_tests(PATH, none)] == ['no-oracle-test']
+    delegated = ['def test_b(self):', '    """Title."""',
+                 '    # oracle: delete_group raises when the row survives the refresh',
+                 '    self.chat.delete_group(name)', '    expect(self.panel).to_be_visible()']
+    assert cc.check_presence_only_tests(PATH, delegated) == []
+
+
+def test_long_blind_wait_flags_a_minute_and_spares_thirty_seconds():
+    """A 60 s or longer DOM wait is flagged unless commented; 30 s is not."""
+    lines = ['        self.result_images.first.wait_for(state="visible", timeout=60000)',
+             '        self.loader.wait_for(state="hidden", timeout=120000)',
+             '        expect(self.replay).to_be_visible(timeout=30000)',
+             '        # the export job itself runs a minute; its progress bar has no request to follow',
+             '        self.progress.wait_for(state="hidden", timeout=90000)']
+    hits = [f['line'] for f in [f for i in range(len(lines)) for f in cc.check_line('p.py', lines, i)]
+            if f['rule'] == 'long-blind-wait']
+    assert hits == [1, 2]
+
+
+def test_first_on_text_lookup_flags_substring_identity():
+    """.first on get_by_text or has_text is flagged unless commented; exact and scoped lookups are not."""
+    lines = ['        row = self.page.get_by_text("main gate").first',
+             '        card = self.cards.filter(has_text=name).first.click()',
+             '        row = self.page.get_by_text("main gate", exact=True)',
+             '        cell = self.rows.filter(has=self.page.locator("span[title=\'main gate\']")).first',
+             '        # the tenant has exactly one card with this word; measured 09/11',
+             '        card = self.cards.filter(has_text="Spartan").first']
+    hits = [f['line'] for f in [f for i in range(len(lines)) for f in cc.check_line('p.py', lines, i)]
+            if f['rule'] == 'first-on-text-lookup']
+    assert hits == [1, 2]

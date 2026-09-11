@@ -8,7 +8,11 @@ skip reasons that guess at the app, test bodies with no oracle, early
 test-body returns (vacuous passes), .first/.last picks on union
 selectors, new tests that land without a title, without a
 "Steps:" block, or without a QA Touch mapping row, and Jira ticket
-keys anywhere in code, comments, or docstrings.
+keys anywhere in code, comments, or docstrings. Added 09/11/2026 from
+the coverage assessment (docs/TEST_COVERAGE_ASSESSMENT.md): except
+handlers with no why-comment that neither re-raise nor fail, DOM waits
+of a minute or more, .first on a text lookup, and test bodies whose
+only oracle is that something is visible.
 
 Every rule here started as a defect found in review; when a review
 finds a new class, it gets a detector so the class cannot recur.
@@ -80,6 +84,24 @@ ORACLE_RE = re.compile(
     r"pytest\.(?:fail|raises|xfail)|"
     r"\.wait_for\s*\(|wait_for_function\s*\("
 )
+# An oracle that says what CHANGED, not just that something is on screen:
+# a comparison, a text/count/url/attribute expectation, a negative
+# expectation, a state, or an explicit failure. Everything ORACLE_RE
+# matches that this does not is presence only (visible, attached, a wait).
+STRONG_ORACLE_RE = re.compile(
+    r"\bassert\b[^#]*(?:==|!=|<=|>=|<|>|\bin\b|\bnot\b|\bis\b)|"
+    r"to_have_\w+|to_contain_text|not_to_\w+|"
+    r"to_be_(?:checked|disabled|enabled|editable|empty|focused|hidden|in_viewport)|"
+    r"pytest\.(?:fail|raises)|wait_for\s*\(\s*state\s*=\s*[\"'](?:hidden|detached)"
+)
+# A DOM wait of a minute or more: 60000-99999 or any six-digit timeout.
+LONG_WAIT_RE = re.compile(
+    r"\.(?:wait_for|to_be_visible|to_be_attached|to_be_hidden|wait_for_selector|"
+    r"wait_for_url|wait_for_load_state|wait_for_function)\s*\([^)]*"
+    r"timeout\s*=\s*(?:[6-9]\d{4}|\d{6,})\b"
+)
+# .first on a text lookup: identity by substring (register items 14, 21).
+TEXT_FIRST_RE = re.compile(r"(?:get_by_text\s*\(|has_text\s*=)[^\n]*\.first\b")
 
 
 def line_is_excused(lines: list[str], idx: int, pattern=SLEEP_RE) -> bool:
@@ -276,6 +298,24 @@ def check_line(path: str, lines: list[str], idx: int,
                    "hidden copy of the OTHER selector. Split the union or "
                    "scope it to a container.",
         })
+    if LONG_WAIT_RE.search(line) and not line_is_excused(lines, idx, LONG_WAIT_RE):
+        findings.append({
+            "sev": "MEDIUM", "rule": "long-blind-wait",
+            "msg": "a DOM wait of a minute or more hides what the server said: "
+                   "24 of the 49 failures on 09/04/2026 were this on a tenant "
+                   "with no events. Follow the request instead "
+                   "(tests/shared/helpers/search_job.py), or comment why the "
+                   "wait is that long.",
+        })
+    if TEXT_FIRST_RE.search(line) and not line_is_excused(lines, idx, TEXT_FIRST_RE):
+        findings.append({
+            "sev": "MEDIUM", "rule": "first-on-text-lookup",
+            "msg": ".first on a text lookup picks whichever element mentions "
+                   "the words first (register items 14 and 21: the wrong "
+                   "camera, the wrong rule). Match exactly (exact=True, "
+                   "title=, span[title=]) or scope to the row, or comment "
+                   "why the first match is the one.",
+        })
 
     for f in findings:
         f["path"], f["line"], f["text"] = path, idx + 1, stripped
@@ -430,6 +470,74 @@ def check_no_oracle_tests(path: str, lines: list[str]) -> list[dict]:
     return findings
 
 
+def check_except_without_why(path: str, lines: list[str]) -> list[dict]:
+    """Except handlers that neither re-raise nor fail and carry no why.
+
+    A handler that returns False, sets None, continues or passes turns
+    the app's failure into a branch the test never reports. The coverage
+    assessment (docs/TEST_COVERAGE_ASSESSMENT.md, 09/08/2026) found 135
+    such handlers in the suite, 107 with no comment; each is a place a
+    real defect reads as a pass. A why-comment on the except line or the
+    line above excuses the deliberate ones; a body that raises,
+    pytest.fails or asserts needs none.
+    """
+    findings = []
+    for idx, line in enumerate(lines):
+        if not EXCEPT_RE.match(line) or inside_triple_quote(lines, idx):
+            continue
+        if "#" in line or (idx > 0 and lines[idx - 1].strip().startswith("#")):
+            continue
+        body = [lines[i].strip() for i in _block_range(lines, idx)]
+        code = [s for s in body if s and not s.startswith("#")]
+        if any(re.match(r"raise\b|pytest\.fail\s*\(|assert\b", s) for s in code):
+            continue
+        findings.append({
+            "sev": "HIGH", "rule": "except-without-why",
+            "path": path, "line": idx + 1, "text": line.strip(),
+            "msg": "except handler with no why-comment that neither re-raises "
+                   "nor fails: the app's failure becomes a branch the test "
+                   "never reports. Re-raise, pytest.fail, or comment on the "
+                   "except line why this branch is the right answer "
+                   "(CONVENTIONS.md > Missing artifacts and skips).",
+        })
+    return findings
+
+
+def check_presence_only_tests(path: str, lines: list[str]) -> list[dict]:
+    """Test bodies whose every oracle is that something is visible.
+
+    294 of the 508 product tests read this way on 09/08/2026
+    (docs/TEST_COVERAGE_ASSESSMENT.md): they prove the page shows a thing,
+    not that the action changed it, and most of them restate the wait
+    their own setup already made. A strong oracle compares a value, a
+    count against a baseline, a URL, a text, or a state, or expects a
+    negative. A body line mentioning 'oracle' excuses a deliberate
+    delegation to a raising page-object call.
+    """
+    findings = []
+    for idx, line in enumerate(lines):
+        m = TEST_DEF_RE.match(line)
+        if not m or inside_triple_quote(lines, idx):
+            continue
+        body = [lines[i] for i in _block_range(lines, idx)]
+        if any("oracle" in b.lower() for b in body):
+            continue
+        code = [b for b in body if b.strip() and not b.strip().startswith(("#", '"', "'"))]
+        if not any(ORACLE_RE.search(b) for b in code):
+            continue  # no-oracle-test reports this one
+        if any(STRONG_ORACLE_RE.search(b) for b in code):
+            continue
+        findings.append({
+            "sev": "MEDIUM", "rule": "presence-only-oracle",
+            "path": path, "line": idx + 1, "text": line.strip(),
+            "msg": f"{m.group(1)} only checks that something is visible or "
+                   "attached. Say what the action changed: compare a value, a "
+                   "count against a baseline, a URL, a text, a state, or expect "
+                   "a negative (docs/TEST_COVERAGE_ASSESSMENT.md > oracle scale).",
+        })
+    return findings
+
+
 def check_early_exit_tests(path: str, lines: list[str]) -> list[dict]:
     """Bare return statements inside test bodies.
 
@@ -554,9 +662,11 @@ def main() -> int:
             for idx in range(len(lines)):
                 findings.extend(check_line(path, lines, idx))
             findings.extend(check_except_blocks(path, lines))
+            findings.extend(check_except_without_why(path, lines))
             findings.extend(check_skip_in_except(path, lines))
             findings.extend(check_speculative_skips(path, lines))
             findings.extend(check_no_oracle_tests(path, lines))
+            findings.extend(check_presence_only_tests(path, lines))
             findings.extend(check_early_exit_tests(path, lines))
     else:
         for path, line_nums in added_lines_since(args.base).items():
@@ -577,16 +687,26 @@ def main() -> int:
             for f in check_speculative_skips(path, lines):
                 if f["line"] in added:
                     findings.append(f)
-            for f in check_no_oracle_tests(path, lines):
+            for f in check_no_oracle_tests(path, lines) + check_presence_only_tests(path, lines):
                 block = _block_range(lines, f["line"] - 1)
                 if f["line"] in added or any(
                     (i + 1) in added for i in block
                 ):
                     findings.append(f)
+            # the except rule anchors on the except line
+            for f in check_except_without_why(path, lines):
+                if f["line"] in added:
+                    findings.append(f)
             # early-exit findings anchor on the return line itself
             for f in check_early_exit_tests(path, lines):
                 if f["line"] in added:
                     findings.append(f)
+        # A NEW test lands with its Steps block (CONVENTIONS.md > Adding a
+        # test): on added lines that rule blocks. Whole-repo scans keep it
+        # a warning, because 269 existing tests still owe theirs.
+        for f in findings:
+            if f["rule"] == "test-without-steps":
+                f["sev"] = "HIGH"
 
     high = [f for f in findings if f["sev"] == "HIGH"]
     medium = [f for f in findings if f["sev"] == "MEDIUM"]

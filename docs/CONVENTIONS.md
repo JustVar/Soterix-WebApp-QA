@@ -396,6 +396,41 @@ manually. Nothing below runs unless you opt in. Treat it as in development.
    above. The mapping lives in `config/qatouch_case_mapping.json`, never
    in an in-test marker.
 
+**Build on the foundations, not beside them.** Each of these exists because
+a class of tests failed or lied for weeks before it did (register items 14,
+21, 25, 28, 29, 35, 37; docs/TEST_COVERAGE_ASSESSMENT.md). A new test that
+needs one of them uses it; the checker flags the hand-rolled version.
+
+- **An artifact that may be absent:** `require_items` in
+  `tests/shared/helpers/surface.py`. It proves the surface rendered, then
+  skips with a measured reason or fails. Never `if count == 0: skip`.
+- **A search or any server job:** `watch_search` and `require_results` in
+  `tests/shared/helpers/search_job.py`, through the page object's
+  `execute_search` / `search_events`. Never a minute-long wait on the first
+  thumbnail.
+- **Tenant data the test needs:** the active box's `test_data` in
+  `config/env/qa.py` (`config.get("test_site_name")`), never a literal
+  site or camera name. Data a box lacks goes in its `without` map, by
+  marker, with the reason.
+- **Data the test creates:** own it and delete it, and let the teardown
+  raise when the thing survives (`_own_a_rule`, `_own_a_group`,
+  `_own_a_widget` in the admin, chats and views suites are the pattern).
+  One leftover rule hides a camera from the wizard for every later test.
+- **Identity:** exact matches (`exact=True`, `title=`, `span[title=]`,
+  scoped to the row), never `.first` on a substring.
+- **The oracle:** say what the action changed. A count against a baseline
+  taken before the action, a name that appears or disappears, a URL, a
+  state, a negative expectation. "It is visible" after a wait that already
+  required it proves nothing; the assessment graded 294 of 508 tests that
+  way.
+- **Waits:** the DOM signal that means done, or the request behind it;
+  a sleep needs its why. A wait over a minute needs its why too.
+- **Failure paths:** let them raise. An except handler earns its place
+  with a why-comment on the except line, or by re-raising.
+
+Run `python tools/convention_check.py` before committing; the pre-commit
+hook runs it on the added lines and blocks on HIGH.
+
 ## Step capture (for tests in the verification pipeline)
 
 `step_capture.mark()` feeds the QA verification pipeline. Those tests run
@@ -518,15 +553,30 @@ python tools/convention_check.py
 ```
 
 - **HIGH, blocks the commit:** a sleep (`wait_for_timeout` or `time.sleep`)
-  with no why-comment, and `@pytest.mark.qatouch` in a test file.
+  with no why-comment; `@pytest.mark.qatouch` in a test file; a
+  `pytest.skip` raised from an except handler; an except handler with no
+  why-comment that neither re-raises nor fails (`except-without-why`); and,
+  on added lines, a new UI test without a `Steps:` block.
 - **MEDIUM, warns:** absolute `count() > 0` oracles, `img[src]` icon locator
-  guesses, hardcoded tenant data names, and a new test without a title,
-  without a `Steps:` block, or without a mapping row.
+  guesses, hardcoded tenant data names, a skip reason that guesses at the
+  app, a test body with no oracle or with presence-only oracles
+  (`presence-only-oracle`: every check is "visible" or "attached"), a DOM
+  wait of a minute or more (`long-blind-wait`), `.first` on a text lookup
+  (`first-on-text-lookup`), `.first`/`.last` on a union selector, bare
+  early returns, Jira keys in code, and a new test without a title or
+  without a mapping row.
 
 The default mode checks only the lines added since HEAD, so debt in files
 you did not touch never blocks you. `--base <ref>` widens the diff (use it
 before pushing a branch: `--base origin/main`). `--all` scans every test
-file and reports the standing debt.
+file and reports the standing debt; on 09/11/2026 that was 190
+presence-only oracles, 90 uncommented except handlers, 82 `.first` text
+lookups and 15 minute-long waits, the worklist the coverage assessment
+left behind (docs/TEST_COVERAGE_ASSESSMENT.md).
+
+Every rule started as a defect found in review or in a run. When a review
+finds a new class, it gets a rule the same day, so the class cannot recur
+in new code while the old instances are worked down.
 
 A sleep earns its comment by naming the missing signal ("canvas pacing",
 "server ack has no DOM signal"), not by restating the sleep.
