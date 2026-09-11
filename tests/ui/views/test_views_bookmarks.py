@@ -80,6 +80,9 @@ def test_add_bookmark(authenticated_page):
     fs.verify_bookmark_deleted(stamp)
 
 
+# The class setup drops the camera on a tile and waits for it to play, so
+# every test here needs frames (six setup errors a night on the box, 09/11).
+@pytest.mark.livestream
 class TestViewsBookmarks:
     """Bookmark operations in full screen mode, each on its own bookmark."""
 

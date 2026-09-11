@@ -501,7 +501,9 @@ class MediaPage:
         self.email_input.fill(email)
 
         self.share_button.click()
-        self.share_success.first.wait_for(state="visible", timeout=10000)
+        # india 09/11: the e-mail dialog opened for a folder but no success
+        # panel followed; name what the page answered instead of a timeout
+        self._dialog_or_answer(self.share_success.first, f"Sharing '{name}'")
 
     # --- Export ---
 
