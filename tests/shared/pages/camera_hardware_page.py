@@ -11,8 +11,8 @@ Access: http://<IP>/cgi-bin/index.cgi (main), /cgi-bin/admin/setup_main.cgi (set
 Auth: HTTP Basic Auth (handled by browser context, not URL)
 """
 import os
-import time
 import re
+import time
 
 from playwright.sync_api import BrowserContext, Page, expect
 
