@@ -17,7 +17,7 @@ Example runs:
     pytest tests/c2c/ -m c2c_hardware
 
     # Single camera via env var
-    C2C_CAMERA_IP=192.168.1.149 pytest tests/c2c/
+    C2C_CAMERA_IP=10.2.0.129 pytest tests/c2c/
 
     # Specific camera by id
     pytest tests/c2c/ -k "bc-5v-1-qa-lab"
@@ -38,7 +38,7 @@ import yaml
 # Default fallback config when no YAML registry is used
 DEFAULT_CAMERA = {
     "id": "default",
-    "ip": os.environ.get("C2C_CAMERA_IP", "192.168.1.149"),
+    "ip": os.environ.get("C2C_CAMERA_IP", "10.2.0.129"),
     "user": os.environ.get("C2C_CAMERA_USER", "root"),
     "password": os.environ.get("C2C_CAMERA_PASS", ""),
     "model": "BC-5V-1",

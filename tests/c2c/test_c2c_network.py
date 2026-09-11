@@ -2,6 +2,8 @@
 
 Verify network status, IP configuration, and RTSP stream endpoint.
 """
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -30,7 +32,7 @@ class TestC2CNetwork:
         1. Open Setup > NETWORK > STATUS.
            Expected: The NETWORK STATUS page is shown.
         2. Read the addresses.
-           Expected: A MAC address is shown, the IP address is the camera's IP, the subnet mask is 255.255.255.0 and a default gateway on the lab network (192.168.x.x) is shown.
+           Expected: A MAC address is shown, the IP address is the camera's IP, the subnet mask is 255.255.255.0 and a default gateway (a dotted IPv4 address) is shown.
         3. Read the ports.
            Expected: HTTP 80, HTTPS 443 and RTSP 554 are listed.
         """
@@ -50,7 +52,10 @@ class TestC2CNetwork:
         expect(self.page.locator("text='255.255.255.0'")).to_be_visible()
 
         self.step_capture.mark(5, "Verify Default gateway is populated")
-        expect(self.page.locator("text=/192\\.168\\.\\d+\\.\\d+/").first).to_be_visible()
+        # any dotted IPv4: the lab moved from 192.168.1.0/24 to 10.2.0.0/24 on
+        # 2026-05-01 and the old pattern failed every camera (09/11 nightly)
+        gateway_row = self.page.locator("text=Default gateway").locator("xpath=..")
+        expect(gateway_row).to_contain_text(re.compile(r"\d{1,3}(\.\d{1,3}){3}"))
 
         self.step_capture.mark(6, "Verify HTTP=80, HTTPS=443, RTSP=554")
         page_text = self.page.locator("body").inner_text()

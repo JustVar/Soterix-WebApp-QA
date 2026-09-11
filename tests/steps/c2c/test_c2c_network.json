@@ -13,7 +13,7 @@
         {
           "n": 2,
           "action": "Read the addresses.",
-          "expected": "A MAC address is shown, the IP address is the camera's IP, the subnet mask is 255.255.255.0 and a default gateway on the lab network (192.168.x.x) is shown."
+          "expected": "A MAC address is shown, the IP address is the camera's IP, the subnet mask is 255.255.255.0 and a default gateway (a dotted IPv4 address) is shown."
         },
         {
           "n": 3,
@@ -21,7 +21,7 @@
           "expected": "HTTP 80, HTTPS 443 and RTSP 554 are listed."
         }
       ],
-      "case_key": ""
+      "case_key": "n8a7b8"
     },
     "test_rtsp_stream_configuration": {
       "title": "Verify RTSP stream is accessible and configured correctly",
@@ -42,7 +42,7 @@
           "expected": "Audio and Meta options are present, and a Copy button is beside the URI."
         }
       ],
-      "case_key": ""
+      "case_key": "gQKR2z"
     }
   }
 }
