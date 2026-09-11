@@ -507,6 +507,19 @@ def head_commit(repo: Path = ROOT) -> str:
     return _git(repo, 'rev-parse', '--short', 'HEAD').strip() or 'unknown'
 
 
+def comparable(text: str) -> str:
+    """The page with the sibling-repo rows removed, for --check.
+
+    Those two rows count pins in repos checked out beside this one, which
+    a CI runner does not have; with them in the comparison the collect
+    gate called the page stale on every push (09/08-09/11/2026). Everything
+    else on the page comes from this repo and the committed ledgers, and
+    stays under the check.
+    """
+    labels = tuple(f'| `{label}`' for _, _, label in SIBLING_KINDS)
+    return '\n'.join(line for line in text.splitlines() if not line.startswith(labels))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--out', type=Path, default=OUT)
@@ -542,7 +555,7 @@ def main(argv: list[str] | None = None) -> int:
     text = build(args.history)
     if args.check:
         current = args.out.read_text(encoding='utf-8').replace('\r\n', '\n') if args.out.exists() else ''
-        if current != text:
+        if comparable(current) != comparable(text):
             print(f'{args.out} is stale. Run: python tools/test_inventory.py')
             return 1
         print(f'{args.out} is current.')
