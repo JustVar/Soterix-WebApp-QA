@@ -44,7 +44,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from plugins import products  # noqa: E402  (the shim configures this repo's path rules)
-from tools import (
+from tools import (  # noqa: E402
     qatouch_ledger,
     qatouch_mapping as qm,
 )
