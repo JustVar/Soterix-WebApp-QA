@@ -55,7 +55,7 @@ class TestC2CNetwork:
         # any dotted IPv4: the lab moved from 192.168.1.0/24 to 10.2.0.0/24 on
         # 2026-05-01 and the old pattern failed every camera (09/11 nightly)
         gateway_row = self.page.locator("text=Default gateway").locator("xpath=..")
-        expect(gateway_row).to_contain_text(re.compile(r"\d{1,3}(\.\d{1,3}){3}"))
+        expect(gateway_row).to_contain_text(re.compile(r"\d{1,3}(\.\d{1,3}){3}"))
 
         self.step_capture.mark(6, "Verify HTTP=80, HTTPS=443, RTSP=554")
         page_text = self.page.locator("body").inner_text()
