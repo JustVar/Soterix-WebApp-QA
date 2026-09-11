@@ -47,6 +47,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_share_icon_visible_in_fullscreen(self):
         """Verify the share icon is visible in fullscreen player."""
         fs = self._enter_fullscreen()
@@ -54,6 +55,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_settings_icon_visible_in_fullscreen(self):
         """Verify the settings icon is visible in fullscreen player."""
         fs = self._enter_fullscreen()
@@ -61,6 +63,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_overlays_icon_visible_in_fullscreen(self):
         """Verify the overlays icon is visible in fullscreen player."""
         fs = self._enter_fullscreen()
@@ -68,6 +71,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_live_indicator_in_fullscreen(self):
         """Verify the live indicator is shown for a live camera stream."""
         fs = self._enter_fullscreen()
@@ -86,6 +90,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_control_container_visible(self):
         """Verify the main control container is rendered in fullscreen."""
         fs = self._enter_fullscreen()
@@ -95,6 +100,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_volume_control_clickable(self):
         """Verify clicking volume control doesn't crash (mute toggle)."""
         fs = self._enter_fullscreen()
@@ -112,6 +118,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_exit_and_reenter_fullscreen(self):
         """Verify exiting fullscreen and re-entering works."""
         fs = self._enter_fullscreen()
@@ -127,6 +134,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_bookmarks_toggle_opens_panel(self):
         """Verify the bookmarks dots icon opens/closes the panel."""
         fs = self._enter_fullscreen()
@@ -143,6 +151,7 @@ class TestViewsPlayback:
     @pytest.mark.ui
     @pytest.mark.views_playback
     @pytest.mark.flaky(reruns=1)
+    @pytest.mark.livestream
     def test_fullscreen_second_tile(self):
         """Verify fullscreen works on a second camera tile.
 

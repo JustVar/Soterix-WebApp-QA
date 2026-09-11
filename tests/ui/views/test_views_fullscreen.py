@@ -40,6 +40,7 @@ class TestViewsFullscreen:
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
+    @pytest.mark.livestream
     def test_enter_fullscreen(self):
         """Verify clicking zoom icon enters full screen and video streams."""
         fs = self._enter_fullscreen()
@@ -49,6 +50,7 @@ class TestViewsFullscreen:
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
+    @pytest.mark.livestream
     def test_exit_fullscreen(self):
         """Verify exiting full screen returns to the views grid."""
         fs = self._enter_fullscreen()
@@ -61,6 +63,7 @@ class TestViewsFullscreen:
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
+    @pytest.mark.livestream
     def test_fullscreen_pause_play(self):
         """Verify timeline controls are present in full screen.
 
@@ -80,6 +83,7 @@ class TestViewsFullscreen:
     @pytest.mark.ui
     @pytest.mark.fullscreen
     @pytest.mark.views_fullscreen
+    @pytest.mark.livestream
     def test_fullscreen_controls_visible(self):
         """Verify player controls are visible in full screen."""
         fs = self._enter_fullscreen()

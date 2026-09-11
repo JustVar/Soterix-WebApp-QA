@@ -80,6 +80,7 @@ class TestSearchDrawing:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
+    @pytest.mark.livestream
     def test_zone_search_play_result(self):
         """Verify playing a Zone search result clip works."""
         self.search.navigate()
@@ -149,6 +150,7 @@ class TestSearchDrawing:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
+    @pytest.mark.livestream
     def test_line_search_play_result(self):
         """Verify playing a Line search result clip works."""
         self.search.navigate()

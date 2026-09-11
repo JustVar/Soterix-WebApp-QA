@@ -89,6 +89,7 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
+    @pytest.mark.livestream
     def test_person_search_play_result(self):
         """Verify playing a Person search result clip works."""
         self.search.navigate()
@@ -134,6 +135,7 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
+    @pytest.mark.livestream
     def test_vehicle_search_play_result(self):
         """Verify playing a Vehicle search result clip works."""
         self.search.navigate()
@@ -177,6 +179,7 @@ class TestSearchCategories:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.flaky(reruns=1)
+    @pytest.mark.livestream
     def test_event_search_play_result(self):
         """Verify playing an Event search result clip works.
 

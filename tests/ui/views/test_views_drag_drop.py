@@ -112,6 +112,7 @@ class TestViewsDragDrop:
     @pytest.mark.ui
     @pytest.mark.dragdrop
     @pytest.mark.views_devices
+    @pytest.mark.livestream
     def test_drag_camera_by_name_to_tile(self):
         """Verify a specific camera can be dragged to a tile by name.
 

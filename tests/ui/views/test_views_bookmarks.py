@@ -30,6 +30,7 @@ def _unique_name() -> str:
 
 @pytest.mark.ui
 @pytest.mark.bookmark
+@pytest.mark.livestream
 def test_add_bookmark(authenticated_page):
     """Create a bookmark on a streaming video tile.
 
@@ -151,6 +152,7 @@ class TestViewsBookmarks:
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
+    @pytest.mark.livestream
     def test_play_bookmark(self):
         """Verify clicking a bookmark navigates to that snapshot position.
 
