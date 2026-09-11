@@ -545,6 +545,10 @@ def cmd_snapshot(projects: list[str] | None = None, force: bool = False):
     default_snap = None
     for key in projects:
         snap = take_snapshot(key, force=force)
+        # the growth ledger: one row per project per snapshot date
+        from tools import qatouch_ledger
+        row = qatouch_ledger.record(snap)
+        print(f"  Ledger: {row['product']} {row['cases']} cases, {row['automated']} automated")
         if key == DEFAULT_PROJECT_KEY:
             default_snap = snap
     if default_snap is None:

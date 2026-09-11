@@ -36,6 +36,23 @@ backfilled rows count functions only. Append a row with `--record` after a batch
 | 2026-03-12 | b7b5e39 | - | 348 | 16 | 364 | 48 | - | - | backfill |
 | 2026-02-21 | 4916e57 | - | 348 | 16 | 364 | 48 | - | - | backfill |
 
+### QA Touch cases per project
+
+Cases per QA Touch project at each snapshot (`history/qatouch_counts.jsonl`,
+appended by `qatouch_analytics.py snapshot`). "Automated" is the cases whose key
+the mapping file points a test at; a product with no snapshot that day shows "-".
+
+| Date | NexaiQ-Camera 2 Cloud | NexaiQ-Core | NexaiQ-Neurosen | NexaiQ-Partner Admin Tool | NexaiQ-Technician App | NexiaQ-Mobile | Total cases | Automated |
+|---|---|---|---|---|---|---|---|---|
+| 2026-09-08 | 118 | 3170 | 0 | 772 | 0 | 10 | 4070 | 354 |
+| 2026-08-28 | 118 | 3101 | 0 | 772 | 0 | 10 | 4001 | 282 |
+| 2026-08-17 | - | 3096 | - | - | - | - | 3096 | 282 |
+| 2026-03-27 | - | 3134 | - | - | - | - | 3134 | 282 |
+| 2026-03-02 | - | 3011 | - | - | - | - | 3011 | 282 |
+| 2026-03-01 | - | 3011 | - | - | - | - | 3011 | 282 |
+| 2026-02-21 | - | 3011 | - | - | - | - | 3011 | 282 |
+| 2026-02-20 | - | 2969 | - | - | - | - | 2969 | 241 |
+
 ## Harness and other tests
 
 Tests that are not product tests, so the product counts above stay honest and
@@ -47,10 +64,10 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `tests/helpers/` | 1 | 13 | yes | Pins for tests/shared/helpers (surface, search_job). Collected by bare pytest. |
 | `tests/legacy/` | 3 | 138 | no | Retired Selenium-era login and web-client tests, kept for reference. Excluded from collection by pytest.ini norecursedirs. |
 | `tests/plugins/` | 7 | 152 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
-| `tests/tools/` | 12 | 136 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
+| `tests/tools/` | 13 | 143 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
 | `soterix-qa-shared` | 19 | 504 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
 | `Soterix-API-QA` | 1 | 10 | in Soterix-API-QA | Pins for the API repo's own plugins and shims. Run in that repo. |
-| **This repo** | **26** | **575** | | |
+| **This repo** | **27** | **582** | | |
 
 ## NexaiQ-Camera 2 Cloud
 

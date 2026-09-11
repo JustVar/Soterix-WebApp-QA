@@ -192,6 +192,10 @@ tests: after adding, renaming or mapping a test, run
 `venv\Scripts\python.exe tools/test_inventory.py --record` to rewrite the
 page and append the day's counts to the growth ledger
 (`history/test_counts.jsonl`); it appends only when the counts moved.
+The QA Touch side has its own ledger, `history/qatouch_counts.jsonl`:
+`qatouch_analytics.py snapshot` appends a row per project it snapshots,
+and `tools/qatouch_ledger.py --backfill` rebuilds it from the snapshots
+on disk. Both ledgers render on the inventory page under Growth.
 
 Two hooks live in `tools/hooks/`. Install both once, into `.git/hooks/`
 with no extension:

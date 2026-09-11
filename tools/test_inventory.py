@@ -44,7 +44,10 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from plugins import products  # noqa: E402  (the shim configures this repo's path rules)
-from tools import qatouch_mapping as qm  # noqa: E402
+from tools import (
+    qatouch_ledger,
+    qatouch_mapping as qm,
+)
 from tools.qatouch_cases_from_tests import TestInfo, parse_docstring, scan_tests  # noqa: E402
 
 OUT = ROOT / 'docs' / 'TEST_INVENTORY.md'
@@ -139,9 +142,9 @@ def _short(nodeid: str) -> str:
 
 
 def render(rows: list[Row], history: list[dict] | None = None,
-           other: list[dict] | None = None) -> str:
-    """The Markdown page. Totals first, then growth, then the non-product tests,
-    then one table per product and module."""
+           other: list[dict] | None = None, qatouch_history: list[dict] | None = None) -> str:
+    """The Markdown page. Totals first, then growth (tests, then QA Touch cases),
+    then the non-product tests, then one table per product and module."""
     by_product: dict[str, list[Row]] = defaultdict(list)
     for r in rows:
         by_product[r.product].append(r)
@@ -170,6 +173,7 @@ def render(rows: list[Row], history: list[dict] | None = None,
                f"**{sum(r.has_steps for r in rows)}** | **{sum(bool(r.case_keys) for r in rows)}** |")
     out.append('')
     out += render_growth(history or [])
+    out += qatouch_ledger.render_growth(qatouch_history or [])
     out += render_other(other or [])
     for product, prows in sorted(by_product.items()):
         out += [f'## {product}', '']
@@ -495,7 +499,8 @@ def current_rows() -> list[Row]:
 
 
 def build(history_path: Path = HISTORY) -> str:
-    return render(current_rows(), load_history(history_path), collect_other())
+    return render(current_rows(), load_history(history_path), collect_other(),
+                  qatouch_ledger.load_history())
 
 
 def head_commit(repo: Path = ROOT) -> str:
