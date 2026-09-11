@@ -326,12 +326,12 @@ def test_long_blind_wait_flags_a_minute_and_spares_thirty_seconds():
 
 def test_first_on_text_lookup_flags_substring_identity():
     """.first on get_by_text or has_text is flagged unless commented; exact and scoped lookups are not."""
-    lines = ['        row = self.page.get_by_text("main gate")' + '.first',
-             '        card = self.cards.filter(has_text=name)' + '.first.click()',
+    lines = ['        row = self.page.get_by_' + 'text("main gate").first',
+             '        card = self.cards.filter(has_' + 'text=name).first.click()',
              '        row = self.page.get_by_text("main gate", exact=True)',
              '        cell = self.rows.filter(has=self.page.locator("span[title=\'main gate\']")).first',
              '        # the tenant has exactly one card with this word; measured 09/11',
-             '        card = self.cards.filter(has_text="Spartan")' + '.first']
+             '        card = self.cards.filter(has_' + 'text="Spartan").first']
     hits = [f['line'] for f in [f for i in range(len(lines)) for f in cc.check_line('p.py', lines, i)]
             if f['rule'] == 'first-on-text-lookup']
     assert hits == [1, 2]
