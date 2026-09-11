@@ -459,11 +459,18 @@ def other_kinds(file_counts: dict[str, int],
 
 
 def collect_other(root: Path = ROOT) -> list[dict]:
-    """Walk this repo's test files and the sibling repos' pins."""
+    """This repo's tracked test files and the sibling repos' pins.
+
+    Tracked files only (`git ls-files`): a gitignored directory such as a
+    local copy of legacy-selenium-tests/ is not part of the repo, and
+    counting it made the page differ between a workstation and the CI
+    runner (found 09/11/2026).
+    """
     file_counts: dict[str, int] = {}
-    for base in ('tests', 'legacy-selenium-tests'):
-        for path in sorted((root / base).rglob('test_*.py')):
-            file_counts[path.relative_to(root).as_posix()] = count_functions(path)
+    for rel in _git(root, 'ls-files', 'tests', 'legacy-selenium-tests').splitlines():
+        rel = rel.strip().replace('\\', '/')
+        if rel and Path(rel).name.startswith('test_') and rel.endswith('.py'):
+            file_counts[rel] = count_functions(root / rel)
     siblings = []
     for folder, what, label in SIBLING_KINDS:
         if folder.exists():
@@ -556,7 +563,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.check:
         current = args.out.read_text(encoding='utf-8').replace('\r\n', '\n') if args.out.exists() else ''
         if comparable(current) != comparable(text):
+            import difflib
             print(f'{args.out} is stale. Run: python tools/test_inventory.py')
+            # the first differing lines, so a CI log says WHAT moved
+            diff = difflib.unified_diff(comparable(current).splitlines(), comparable(text).splitlines(),
+                                        'committed', 'rendered', lineterm='', n=0)
+            for line in list(diff)[:14]:
+                print('  ' + line[:160])
             return 1
         print(f'{args.out} is current.')
         return 0

@@ -68,6 +68,18 @@ def test_page_totals_headings_and_rows():
     assert '| `test_c2c_auth.py::TestAuth::test_login (parametrized)` | Camera login accepts the admin password | - | - |' in page
 
 
+def test_comparable_drops_only_the_sibling_repo_rows():
+    """The two rows that count pins in repos beside this one leave the comparison; nothing else does."""
+    page = '\n'.join([
+        '| `tests/tools/` | 12 | 136 | yes | Pins. |',
+        '| `soterix-qa-shared` | 19 | 504 | in soterix-qa-shared | Pins for the package. |',
+        '| `Soterix-API-QA` | 1 | 10 | in Soterix-API-QA | Pins. |',
+        '| **This repo** | **26** | **571** | | |',
+    ])
+    kept = ti.comparable(page).splitlines()
+    assert kept == ['| `tests/tools/` | 12 | 136 | yes | Pins. |', '| **This repo** | **26** | **571** | | |']
+
+
 def test_check_mode_tells_a_stale_page_from_a_current_one(tmp_path, monkeypatch, capsys):
     """--check exits 1 when the file differs from a fresh render, 0 when it matches."""
     monkeypatch.setattr(ti, 'build', lambda *_: 'fresh\n')
