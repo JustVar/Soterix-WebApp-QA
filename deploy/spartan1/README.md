@@ -33,6 +33,27 @@ because it existed nowhere in git.
   tests that need a playing tile cannot pass on this box; the session
   stream guard (tests/shared/helpers/stream_health.py) skips them here with
   that measurement, and they run on a Windows or Mac runner.
+
+  The box has an NVIDIA RTX A400 (driver 610.57), whose NVDEC decodes
+  H.265, and the chain was tried on 09/11/2026 (all still installed, all
+  harmless to leave): `nvidia-vaapi-driver` 0.0.8, `vainfo`, `libva2`,
+  `xvfb`, and `soterix` in the `render` and `video` groups. What each step
+  answered, so the next attempt starts where this one stopped:
+  - `vainfo` with `LIBVA_DRIVER_NAME=nvidia NVD_BACKEND=egl` lists
+    VAProfileHEVCMain (the `direct` backend fails to init on driver 610).
+  - Chrome headless, any flags: `MediaSource.isTypeSupported` false for HEVC.
+  - Chrome HEADED under `xvfb-run` with `CHROME_ARGS="--ignore-gpu-blocklist
+    --enable-features=VaapiOnNvidiaGPUs,VaapiVideoDecodeLinuxGL,PlatformHEVCDecoderSupport,VaapiIgnoreDriverChecks,AcceleratedVideoDecodeLinuxGL
+    --use-gl=angle --use-angle=gl"` (tools/stream_probe.py reads that variable):
+    isTypeSupported true for the tenant's exact type
+    (`hvc1.1.6.L153.B0,flac`), the tile's player reaches readyState 1 with
+    its 640x360 metadata, then `PIPELINE_ERROR_DECODE`; the VA driver log
+    shows profile queries and a terminate, never a decode session. The same
+    proof on a Windows Chrome plays at readyState 4 within 5 s.
+  - Not tried: the upstream driver built from source (Ubuntu ships 0.0.8;
+    the project does not support Chromium), a Windows VM with the GPU passed
+    through. Until one of those is proven, the livestream tests run from a
+    Windows or Mac Chrome.
 - `/data/qa/ci/Soterix-WebApp-QA/.env` (mode 600) with the QA Touch keys
   and one account per box the nightly runs: `QA_INDIA_USER`,
   `QA_INDIA_PASSWORD`, `QA_US_USER`, `QA_US_PASSWORD`. The suite reads the
