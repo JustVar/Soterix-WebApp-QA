@@ -38,7 +38,7 @@ class TestC2CVCA:
         self.step_capture.mark(1, "Navigate to VCA > ENABLE")
         self.camera.navigate_to_setup_section("VCA")
         self.camera.navigate_to_setup_subsection("ENABLE")
-        expect(self.page.locator("text='CONFIGURATION'")).to_be_visible()
+        expect(self.camera.heading("CONFIGURATION")).to_be_visible()
 
         self.step_capture.mark(2, "Verify Enable is set to On")
         page_text = self.page.locator("body").inner_text()
@@ -71,7 +71,7 @@ class TestC2CVCA:
         self.step_capture.mark(1, "Navigate to VCA > RULES")
         self.camera.navigate_to_setup_section("VCA")
         self.camera.navigate_to_setup_subsection("RULES")
-        expect(self.page.locator("text='RULES'").first).to_be_visible()
+        expect(self.camera.heading("RULES")).to_be_visible()
 
         self.step_capture.mark(2, "Verify at least one rule exists")
         page_text = self.page.locator("body").inner_text()
@@ -82,7 +82,7 @@ class TestC2CVCA:
 
         self.step_capture.mark(3, "Navigate to VCA > LICENSE")
         self.camera.navigate_to_setup_subsection("LICENSE")
-        expect(self.page.locator("text='LICENSE'").first).to_be_visible()
+        expect(self.camera.heading("LICENSE")).to_be_visible()
 
         expected_license = self.config["expected_license"]
         self.step_capture.mark(4, f"Verify {expected_license} license is activated")
@@ -133,7 +133,7 @@ class TestC2CSoterixCloud:
         self.camera.navigate_to_setup_subsection("CONNECT")
 
         self.step_capture.mark(2, "Verify Soterix Cloud Connect page loads with branding")
-        expect(self.page.locator("text='SOTERIX CLOUD CONNECT'")).to_be_visible(timeout=10000)
+        expect(self.camera.heading("SOTERIX CLOUD CONNECT")).to_be_visible(timeout=10000)
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         expect(self.page.locator("img[alt*='Soterix'], img[src*='logo']").first).to_be_visible()
 
@@ -202,7 +202,7 @@ class TestC2CMultiLens:
         self.step_capture.mark(1, "Navigate to VCA > LICENSE")
         self.camera.navigate_to_setup_section("VCA")
         self.camera.navigate_to_setup_subsection("LICENSE")
-        expect(self.page.locator("text='LICENSE'").first).to_be_visible()
+        expect(self.camera.heading("LICENSE")).to_be_visible()
 
         expected_count = self.config["expected_license_count"]
         total_lenses = self.config["total_lenses"]

@@ -37,7 +37,7 @@ class TestC2CCameraSettings:
         self.step_capture.mark(1, "Navigate to Image Adjustment")
         self.camera.navigate_to_setup_section("CAMERA")
         self.camera.navigate_to_setup_subsection("IMAGE ADJUSTMENT")
-        expect(self.page.locator("text='IMAGE ADJUSTMENT'")).to_be_visible()
+        expect(self.camera.heading("IMAGE ADJUSTMENT")).to_be_visible()
 
         self.step_capture.mark(2, "Verify default slider labels exist")
         page_text = self.page.locator("body").inner_text()
@@ -52,7 +52,7 @@ class TestC2CCameraSettings:
         self.step_capture.mark(4, "Click Default button to verify it resets values")
         self.camera.click_default()
         # Default should work without error
-        expect(self.page.locator("text='IMAGE ADJUSTMENT'")).to_be_visible()
+        expect(self.camera.heading("IMAGE ADJUSTMENT")).to_be_visible()
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
@@ -70,7 +70,7 @@ class TestC2CCameraSettings:
         self.step_capture.mark(1, "Navigate to Exposure Settings")
         self.camera.navigate_to_setup_section("CAMERA")
         self.camera.navigate_to_setup_subsection("EXPOSURE SETTINGS")
-        expect(self.page.locator("text='EXPOSURE SETTINGS'")).to_be_visible()
+        expect(self.camera.heading("EXPOSURE SETTINGS")).to_be_visible()
 
         self.step_capture.mark(2, "Verify Auto exposure options and AE metering")
         page_text = self.page.locator("body").inner_text()
@@ -79,7 +79,7 @@ class TestC2CCameraSettings:
 
         self.step_capture.mark(3, "Navigate to Day&Night Settings")
         self.camera.navigate_to_setup_subsection("DAY&NIGHT SETTINGS")
-        expect(self.page.locator("text='DAY&NIGHT SETTINGS'")).to_be_visible()
+        expect(self.camera.heading("DAY&NIGHT SETTINGS")).to_be_visible()
 
         self.step_capture.mark(4, "Verify Day & night mode options exist")
         page_text = self.page.locator("body").inner_text()
@@ -107,7 +107,7 @@ class TestC2CCameraSettings:
         self.step_capture.mark(1, "Navigate to Image Enhancement")
         self.camera.navigate_to_setup_section("CAMERA")
         self.camera.navigate_to_setup_subsection("IMAGE ENHANCEMENT")
-        expect(self.page.locator("text='IMAGE ENHANCEMENT'")).to_be_visible()
+        expect(self.camera.heading("IMAGE ENHANCEMENT")).to_be_visible()
 
         self.step_capture.mark(2, "Verify 3D noise reduction and LDC controls")
         page_text = self.page.locator("body").inner_text()
@@ -123,13 +123,13 @@ class TestC2CCameraSettings:
 
         self.step_capture.mark(5, "Navigate to Backlight Settings and verify WDR")
         self.camera.navigate_to_setup_subsection("BACKLIGHT SETTINGS")
-        expect(self.page.locator("text='BACKLIGHT SETTINGS'")).to_be_visible()
+        expect(self.camera.heading("BACKLIGHT SETTINGS")).to_be_visible()
         page_text = self.page.locator("body").inner_text()
         assert "WDR" in page_text
 
         self.step_capture.mark(6, "Navigate to Video Enhancement and verify Flickerless")
         self.camera.navigate_to_setup_subsection("VIDEO ENHANCEMENT")
-        expect(self.page.locator("text='VIDEO ENHANCEMENT'")).to_be_visible()
+        expect(self.camera.heading("VIDEO ENHANCEMENT")).to_be_visible()
         page_text = self.page.locator("body").inner_text()
         assert "Flickerless" in page_text
         assert "60Hz" in page_text
@@ -163,7 +163,7 @@ class TestC2CMotionDetection:
         self.step_capture.mark(1, "Navigate to Motion Detection")
         self.camera.navigate_to_setup_section("EVENTS")
         self.camera.navigate_to_setup_subsection("MOTION")
-        expect(self.page.locator("text='MOTION DETECTION CONFIGURATION'")).to_be_visible()
+        expect(self.camera.heading("MOTION DETECTION CONFIGURATION")).to_be_visible()
 
         self.step_capture.mark(2, "Verify 4 motion areas are available")
         page_text = self.page.locator("body").inner_text()
@@ -207,7 +207,7 @@ class TestC2CPrivacyMask:
         """
         self.step_capture.mark(1, "Navigate to Privacy Mask")
         self.camera.navigate_to_setup_subsection("PRIVACY MASK")
-        expect(self.page.locator("text='PRIVACY MASK CONFIGURATION'")).to_be_visible()
+        expect(self.camera.heading("PRIVACY MASK CONFIGURATION")).to_be_visible()
 
         self.step_capture.mark(2, "Verify Activation defaults to Off")
         page_text = self.page.locator("body").inner_text()
@@ -249,7 +249,7 @@ class TestC2CAdditionalSettings:
         """
         self.step_capture.mark(1, "Navigate to Corridor Setting")
         self.camera.navigate_to_setup_subsection("CORRIDOR SETTING")
-        expect(self.page.locator("text='CORRIDOR SETTING'")).to_be_visible()
+        expect(self.camera.heading("CORRIDOR SETTING")).to_be_visible()
 
         self.step_capture.mark(2, "Verify three options: Off, 90, 270")
         page_text = self.page.locator("body").inner_text()
@@ -273,7 +273,7 @@ class TestC2CAdditionalSettings:
         """
         self.step_capture.mark(1, "Navigate to Smart Stream")
         self.camera.navigate_to_setup_subsection("SMART STREAM")
-        expect(self.page.locator("text='SMART STREAM'")).to_be_visible()
+        expect(self.camera.heading("SMART STREAM")).to_be_visible()
 
         self.step_capture.mark(2, "Verify configuration fields are present")
         page_text = self.page.locator("body").inner_text()
@@ -291,7 +291,7 @@ class TestC2CAdditionalSettings:
         """
         self.step_capture.mark(1, "Navigate to ROI Configuration")
         self.camera.navigate_to_setup_subsection("ROI")
-        expect(self.page.locator("text='REGION OF INTEREST CONFIGURATION'")).to_be_visible()
+        expect(self.camera.heading("REGION OF INTEREST CONFIGURATION")).to_be_visible()
 
         self.step_capture.mark(2, "Verify Stream and Activation dropdowns exist")
         page_text = self.page.locator("body").inner_text()
@@ -315,7 +315,7 @@ class TestC2CAdditionalSettings:
         self.step_capture.mark(1, "Navigate to White Balance")
         self.camera.navigate_to_setup_section("CAMERA")
         self.camera.navigate_to_setup_subsection("WHITE BALANCE")
-        expect(self.page.locator("text='WHITE BALANCE'")).to_be_visible()
+        expect(self.camera.heading("WHITE BALANCE")).to_be_visible()
 
         self.step_capture.mark(2, "Verify Activation is On and mode is Auto")
         page_text = self.page.locator("body").inner_text()

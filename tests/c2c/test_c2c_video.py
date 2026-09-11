@@ -37,7 +37,7 @@ class TestC2CVideoConfig:
         """
         self.step_capture.mark(1, "Navigate to Video Configuration (default page)")
         # Setup page opens to VIDEO by default
-        expect(self.page.locator("text='VIDEO CONFIGURATION'")).to_be_visible()
+        expect(self.camera.heading("VIDEO CONFIGURATION")).to_be_visible()
 
         self.step_capture.mark(2, "Verify Stream 1: H.265, 2592x1944, 14 FPS")
         page_text = self.page.locator("body").inner_text()
@@ -73,7 +73,7 @@ class TestC2CVideoConfig:
            Expected: The original codec is restored (the test restores it even when a step fails).
         """
         self.step_capture.mark(1, "Navigate to Video Configuration")
-        expect(self.page.locator("text='VIDEO CONFIGURATION'")).to_be_visible()
+        expect(self.camera.heading("VIDEO CONFIGURATION")).to_be_visible()
 
         self.step_capture.mark(2, "Save original codec and resolution values")
         codec_select = self.page.locator("select").first
@@ -184,7 +184,7 @@ class TestC2CAudio:
         """
         self.step_capture.mark(1, "Navigate to Audio Configuration")
         self.camera.navigate_to_setup_subsection("AUDIO")
-        expect(self.page.locator("text='AUDIO CONFIGURATION'")).to_be_visible()
+        expect(self.camera.heading("AUDIO CONFIGURATION")).to_be_visible()
 
         self.step_capture.mark(2, "Verify Audio encode is set to On")
         page_text = self.page.locator("body").inner_text()

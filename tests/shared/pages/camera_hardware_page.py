@@ -64,17 +64,28 @@ class CameraHardwarePage:
         self.page.goto(self.setup_url, wait_until="domcontentloaded", timeout=15000)
         return self
 
+    # The setup page names a sub-section twice: the menu item (an <li> with
+    # the page href) and the content heading (a <span tkey=...> inside
+    # #tabs). A bare text='X' resolves to both once the page is open, and
+    # Playwright's strict mode refuses the click and the expect: 23 of 29
+    # tests per camera failed that way on the first run from spartan1
+    # (09/11/2026). Clicks go to the menu, checks to the heading.
     def navigate_to_setup_section(self, section_text: str):
         """Click a top-level nav section in Setup (e.g. 'CAMERA', 'NETWORK')."""
-        self.page.locator(f"text='{section_text}'").click()
-        self.page.wait_for_timeout(500)
+        self.page.locator(f"li:text-is('{section_text}')").first.click()
+        self.page.wait_for_timeout(500)  # the menu unfolds with no DOM signal of its own
         return self
 
     def navigate_to_setup_subsection(self, subsection_text: str):
-        """Click a sub-section link in Setup (e.g. 'VIDEO', 'OSD', 'ENABLE')."""
-        self.page.locator(f"text='{subsection_text}'").click()
-        self.page.wait_for_timeout(500)
+        """Click a sub-section link in Setup (e.g. 'VIDEO', 'OSD', 'ENABLE')
+        and wait for the content pane to carry that heading."""
+        self.page.locator(f"li:text-is('{subsection_text}')").first.click()
+        self.heading(subsection_text).wait_for(state="visible", timeout=10000)
         return self
+
+    def heading(self, text: str):
+        """The content pane's heading for a setup page, exact text."""
+        return self.page.locator("#tabs").get_by_text(text, exact=True)
 
     # ------------------------------------------------------------------ #
     #  Main Page - Live View assertions

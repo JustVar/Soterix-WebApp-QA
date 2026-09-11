@@ -39,7 +39,7 @@ class TestC2CNetwork:
         self.step_capture.mark(1, "Navigate to Network Status")
         self.camera.navigate_to_setup_section("NETWORK")
         self.camera.navigate_to_setup_subsection("STATUS")
-        expect(self.page.locator("text='NETWORK STATUS'")).to_be_visible()
+        expect(self.camera.heading("NETWORK STATUS")).to_be_visible()
 
         self.step_capture.mark(2, "Verify MAC address is displayed")
         expect(self.page.locator("text=/([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}/")).to_be_visible()
@@ -54,7 +54,7 @@ class TestC2CNetwork:
         self.step_capture.mark(5, "Verify Default gateway is populated")
         # any dotted IPv4: the lab moved from 192.168.1.0/24 to 10.2.0.0/24 on
         # 2026-05-01 and the old pattern failed every camera (09/11 nightly)
-        gateway_row = self.page.locator("text=Default gateway").locator("xpath=..")
+        gateway_row = self.page.locator("tr:has-text('Default gateway')").first
         expect(gateway_row).to_contain_text(re.compile(r"\d{1,3}(\.\d{1,3}){3}"))
 
         self.step_capture.mark(6, "Verify HTTP=80, HTTPS=443, RTSP=554")
@@ -80,7 +80,7 @@ class TestC2CNetwork:
         self.step_capture.mark(1, "Navigate to RTSP Information")
         self.camera.navigate_to_setup_section("NETWORK")
         self.camera.navigate_to_setup_subsection("RTSP INFORMATION")
-        expect(self.page.locator("text='RTSP INFORMATION'")).to_be_visible()
+        expect(self.camera.heading("RTSP INFORMATION")).to_be_visible()
 
         self.step_capture.mark(2, "Verify RTSP URI contains camera IP and channel")
         ip = self.config["ip"]
