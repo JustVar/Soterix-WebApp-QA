@@ -91,6 +91,8 @@ class CameraHardwarePage:
 
     def heading(self, text: str):
         """The content pane's heading for a setup page, exact text."""
+        # .first: the content pane carries one title div; the filter only
+        # guards against a stale duplicate while the pane re-renders
         return self.page.locator("#tabs .contentTitle").filter(has_text=text).first
 
     def current_heading(self) -> str:
