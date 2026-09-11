@@ -131,6 +131,26 @@ def pytest_collection_modifyitems(config, items):
                   or box_skip_reason(item.keywords, box_settings, box_name))
         if reason:
             item.add_marker(pytest.mark.skip(reason=reason))
+    stream_guard(config, items, box_name)
+
+
+def stream_guard(config, items, box_name: str) -> None:
+    """Measure the box's stream once and skip the `livestream` tests with the
+    measurement when the media socket delivers no frames (nine failures of
+    the 09/11/2026 full run were this one condition, each named after its
+    own timeout). Measures only when a livestream test was collected and
+    the run will execute it; a failed measurement skips nothing and says
+    so. See tests/shared/helpers/stream_health.py."""
+    from tests.shared.helpers import stream_health
+    targets = [item for item in items if stream_health.MARKER in item.keywords]
+    if not targets or not stream_health.guard_enabled() or config.getoption("--collect-only", default=False):
+        return
+    measure = stream_health.measure_stream(ENV_SETTINGS.get("test_camera_name"))
+    print(stream_health.describe(measure))  # noqa: T201 - the guard's one line for the terminal
+    reason = stream_health.stream_skip_reason(measure, box_name)
+    if reason:
+        for item in targets:
+            item.add_marker(pytest.mark.skip(reason=reason))
 
 
 def _from_env_or_config(env_key: str, cfg_key: str, default: str = "") -> str:

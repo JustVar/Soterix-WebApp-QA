@@ -120,6 +120,7 @@ class TestViewsBookmarks:
     @pytest.mark.ui
     @pytest.mark.bookmark
     @pytest.mark.views_fullscreen
+    @pytest.mark.livestream
     def test_open_bookmarks_panel(self):
         """Verify bookmarks panel opens when clicking the dots icon.
 

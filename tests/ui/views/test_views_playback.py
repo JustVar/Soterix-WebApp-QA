@@ -186,6 +186,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
+    @pytest.mark.livestream
     def test_timeline_elements_present(self):
         """Verify timeline-related elements exist in fullscreen.
 

@@ -411,6 +411,7 @@ class TestViewsDragDrop:
     @pytest.mark.ui
     @pytest.mark.checkbox
     @pytest.mark.views_devices
+    @pytest.mark.livestream
     def test_multiple_cameras_to_multiple_tiles(self):
         """Verify multiple cameras can be added to multiple tiles."""
         # Expand site and show cameras (the call confirms cameras

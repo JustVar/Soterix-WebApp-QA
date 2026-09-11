@@ -212,6 +212,7 @@ class TestViewsSubtabs:
     @pytest.mark.subtabs
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
+    @pytest.mark.livestream
     def test_my_views_add_saved_view_via_checkbox(self):
         """MY VIEWS: Add saved view to tile using checkbox.
 
@@ -258,6 +259,7 @@ class TestViewsSubtabs:
     @pytest.mark.subtabs
     @pytest.mark.views_myviews
     @pytest.mark.dragdrop
+    @pytest.mark.livestream
     def test_my_views_drag_saved_view_to_tile(self):
         """MY VIEWS: Drag saved view directly to tile.
 
@@ -529,6 +531,7 @@ class TestViewsSubtabs:
     @pytest.mark.subtabs
     @pytest.mark.views_insights
     @pytest.mark.dragdrop
+    @pytest.mark.livestream
     def test_insights_drag_to_tile(self):
         """INSIGHTS: Drag insight widget card to tile.
 

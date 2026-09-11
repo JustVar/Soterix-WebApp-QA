@@ -255,6 +255,15 @@ it honest.
    that sent no job, a job that never finished, or a bad response fails.
    Before it, 24 of the 49 failures in the 09/04/2026 full run were
    "Timeout 60000ms" on a box that simply had no events.
+   When the artifact is the stream itself, the proof is a measurement
+   made once per session: `tests/shared/helpers/stream_health.py` opens
+   one media socket to the box's test camera and counts the frames;
+   `conftest.stream_guard` skips the tests marked `livestream` with the
+   count when it is 0, and skips nothing when the measurement itself
+   failed. Nine of the 17 web-app failures of the 09/11/2026 full run
+   were that one condition read nine ways. Mark a test `livestream` when
+   it needs frames on a tile (Save on a view, a drag onto a tile, the
+   player, the bookmarks panel).
 3. A skip is never a failure handler. `except Exception: pytest.skip(...)`
    reports the app's own error as Blocked, and it catches the test's
    asserts too - test_drag_map_to_tile ran its closing assert inside one,

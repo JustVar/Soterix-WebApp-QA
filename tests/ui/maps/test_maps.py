@@ -111,6 +111,7 @@ class TestMaps:
     @pytest.mark.ui
     @pytest.mark.maps
     @pytest.mark.slow
+    @pytest.mark.livestream
     def test_play_online_camera(self):
         """Verify clicking an online camera icon plays its stream without failure.
 

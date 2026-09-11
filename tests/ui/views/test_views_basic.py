@@ -134,6 +134,7 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
+    @pytest.mark.livestream
     def test_save_view(self):
         """Verify a view can be saved with content using checkbox selection."""
         import datetime
@@ -211,6 +212,7 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
+    @pytest.mark.livestream
     def test_open_saved_view(self):
         """Verify a saved view can be reopened from My Views after page refresh."""
         import datetime
@@ -278,6 +280,7 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.views_myviews
     @pytest.mark.checkbox
+    @pytest.mark.livestream
     def test_delete_saved_view(self):
         """Verify a saved view can be deleted."""
         import datetime
