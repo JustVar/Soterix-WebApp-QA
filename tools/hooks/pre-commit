@@ -9,6 +9,9 @@
 # First the secret gate: no staged line may carry a credential value from
 # .env (the camera login reached two GitHub orgs through a QA Touch backup
 # on 08/28/2026 and nearly again through a conftest on 09/11). Then the
-# conventions.
+# inventory: docs/TEST_INVENTORY.md must match the tests on disk, which is
+# what CI's collect-gate checks; two commits reached it stale on 09/08 and
+# 09/11 because nothing asked before the push. Then the conventions.
 venv/Scripts/python.exe tools/secret_check.py || exit 1
+venv/Scripts/python.exe tools/test_inventory.py --check || exit 1
 venv/Scripts/python.exe tools/convention_check.py

@@ -205,8 +205,10 @@ cp tools/hooks/pre-commit  .git/hooks/pre-commit
 cp tools/hooks/commit-msg  .git/hooks/commit-msg
 ```
 
-`pre-commit` runs the convention checker on the lines the commit adds; a
-HIGH finding blocks it. `commit-msg` rejects any message naming an AI
+`pre-commit` runs three gates: no staged line may carry a credential
+value from `.env`, `docs/TEST_INVENTORY.md` must match the tests on disk
+(regenerate with `python tools/test_inventory.py`), and the convention
+checker reads the lines the commit adds; a HIGH finding blocks it. `commit-msg` rejects any message naming an AI
 tool, model or co-author - the workspace CLAUDE.md forbids it and the
 rule had been broken 14 times before the gate existed. Read
 `docs/CONVENTIONS.md` for the rules and `docs/TEAM_CHANGES.md` before you
