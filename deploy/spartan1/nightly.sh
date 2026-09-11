@@ -97,14 +97,17 @@ fi
     fi
   done
 
-  # Publish run folders, additive only, MINUS traces and videos. A trace
+  # Publish run folders, additive only, MINUS the trace zips. A trace
   # carries a live session cookie and a fresh-login test's trace carries the
-  # account password, so it never reaches the served directory. rsync keeps
-  # the exclusion in one place; cp has no --exclude. The 30-day prune on the
-  # host is the only thing that deletes.
+  # account password in a request body, so it never reaches the served
+  # directory. The failure VIDEOS beside them do get published: run.html
+  # links each one, and they show the screen (a password field shows dots).
+  # Until 09/11/2026 the whole traces/ folder was skipped and every video
+  # link on the served pages was dead. The 30-day prune on the host is the
+  # only thing that deletes.
   for d in reports/runs/20*/; do
     [ -d "$d" ] || continue
-    rsync -a --exclude="traces/" --exclude="*.webm" "$d" "$SERVE/$(basename "$d")/"
+    rsync -a --exclude="*.zip" "$d" "$SERVE/$(basename "$d")/"
   done
   # The served index and health page must list what the SERVED directory
   # holds. The archive plugin rebuilds only the clone's own index, and the

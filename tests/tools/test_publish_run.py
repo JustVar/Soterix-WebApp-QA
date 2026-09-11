@@ -33,7 +33,8 @@ def runs(tmp_path, monkeypatch):
     (newest / 'summary.json').write_text('{}', encoding='utf-8')
     (newest / 'traces').mkdir()
     (newest / 'traces' / 'test-trace.zip').write_bytes(b'PK\x03\x04secret-cookie')
-    (newest / 'test-video.webm').write_bytes(b'\x1avideo')
+    # the archive keeps a failure's video beside its trace, in traces/
+    (newest / 'traces' / 'test-video.webm').write_bytes(b'\x1avideo')
     (newest / 'screenshots').mkdir()
     (newest / 'screenshots' / 'shot.png').write_bytes(b'\x89PNG')
     (d / 'index.html').write_text('index', encoding='utf-8')
@@ -64,11 +65,12 @@ def test_default_is_the_newest_run(runs, monkeypatch, capsys):
     assert not any('2026-08-31' in a for a in cmd)
 
 
-def test_traces_and_videos_are_never_sent(runs, monkeypatch, tmp_path):
+def test_trace_zips_stay_local_and_videos_travel(runs, monkeypatch, tmp_path):
     """The trace zip carries a live session cookie and a fresh-login test's
-    trace carries the account password; the video shows the authenticated
-    session. Neither leaves the machine. What is staged for the host is the
-    run.html, summary.json and screenshots only."""
+    trace carries the account password, so it never leaves the machine. The
+    failure video beside it does: run.html links it, and a password field
+    shows dots. Staged for the host: run.html, summary.json, screenshots,
+    and the traces/ folder holding only the videos."""
     staged_paths = []
     class Proc:
         returncode = 0
@@ -81,8 +83,8 @@ def test_traces_and_videos_are_never_sent(runs, monkeypatch, tmp_path):
     assert pr.main([]) == 0
     names = staged_paths[0]
     assert 'test-trace.zip' not in names
-    assert 'traces' not in names
-    assert 'test-video.webm' not in names
+    assert 'traces' in names                 # the folder travels, holding the videos
+    assert 'test-video.webm' in names
     assert 'run.html' in names
     assert 'shot.png' in names               # screenshots still go
 

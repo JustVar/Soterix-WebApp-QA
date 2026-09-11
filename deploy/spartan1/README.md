@@ -104,7 +104,11 @@ by hand it is `git -C /data/qa/ci/Soterix-WebApp-QA fetch origin && git -C
 
 - Evidence is pruned after 30 days on the box. The permanent record is the
   git ledger (`history/*.jsonl`), not the evidence.
-- Traces and videos never reach the box: they carry live session cookies
-  and, on a fresh-login test, the account password. `nightly.sh` rsyncs with
-  `--exclude=traces/ --exclude=*.webm`, and `tools/publish_run.py` stages a
-  filtered copy. Keep traces local for `playwright show-trace`.
+- Trace zips never reach the box: a trace carries live session cookies
+  and, on a fresh-login test, the account password in a request body.
+  `nightly.sh` rsyncs with `--exclude=*.zip`, and `tools/publish_run.py`
+  stages a copy without them. Keep traces local for `playwright
+  show-trace`. The failure videos beside the traces DO travel: run.html
+  links each one, and a password field shows dots on screen. Until
+  09/11/2026 the whole traces/ folder was held back, so every video link on
+  the served pages was dead.

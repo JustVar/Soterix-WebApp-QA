@@ -8,10 +8,11 @@ This is that decision, as one command:
   python tools/publish_run.py 2026-09-01_10-39-03__tests-ui-licenses  # named
   python tools/publish_run.py --dry-run   # show what would be copied
 
-What it copies: the run's folder, MINUS traces/ and videos. A Playwright
-trace carries a live session cookie and, on a fresh-login test, the account
+What it copies: the run's folder, MINUS the trace zips. A Playwright trace
+carries a live session cookie and, on a fresh-login test, the account
 password, so it never leaves the machine that made it - keep it local for
-`playwright show-trace`. The local index.html/health.html are not sent
+`playwright show-trace`. The failure videos beside the traces are copied:
+run.html links them. The local index.html/health.html are not sent
 either: each machine sees only its own runs, so they are partial. nginx
 autoindex lists the runs on the host. Nothing is deleted on the host; the
 30-day prune there is the only thing that removes runs. The full workflow:
@@ -60,15 +61,17 @@ def newest_run(runs_dir: Path | None = None) -> Path | None:
 # Never leaves the machine that produced it. A Playwright trace records the
 # full network log, so an authenticated request carries a live
 # `Cookie: JSESSIONID=...` and a fresh-login test's trace carries the login
-# POST body with the account password. Videos show the authenticated
-# session. The shared host is for triage-by-glance (run.html, screenshots,
-# logs); the trace stays local for `playwright show-trace`.
-EXCLUDE_DIRS = {'traces'}
-EXCLUDE_SUFFIXES = {'.webm'}
+# POST body with the account password. The trace stays local for
+# `playwright show-trace`. The failure VIDEO beside it does travel: it shows
+# the screen (a password field shows dots), and run.html links it. Until
+# 09/11/2026 the whole traces/ folder was held back and every video link on
+# the shared host was dead.
+EXCLUDE_DIRS: set[str] = set()
+EXCLUDE_SUFFIXES = {'.zip'}
 
 
 def _staged_copy(run_dir: Path) -> Path:
-    """A copy of the run folder with traces and videos removed, in a temp
+    """A copy of the run folder with the trace zips removed, in a temp
     dir. The caller scps this instead of the original."""
     import shutil
     import tempfile
@@ -110,7 +113,7 @@ def publish(run_dir: Path, host: str, dest: str,
     tmp = f'{dest}/.pub-tmp-{run_dir.name}'
     final = f'{dest}/{run_dir.name}'
     if dry_run:
-        print(f'  would stage {run_dir.name} without traces/ or *.webm, scp it '
+        print(f'  would stage {run_dir.name} without the trace zips, scp it '
               f'to {host}:{tmp}, then mv it to {final}')
         return 0
     import shutil
@@ -161,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         run_dir = found
 
-    print(f'  publishing {run_dir.name} (traces and videos stay local) '
+    print(f'  publishing {run_dir.name} (trace zips stay local, videos travel) '
           f'to {host}:{dest}')
     code = publish(run_dir, host, dest, dry_run=args.dry_run)
     if code == 0 and not args.dry_run:
