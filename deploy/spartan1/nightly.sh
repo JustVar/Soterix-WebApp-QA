@@ -31,9 +31,10 @@ LOG=/data/qa/ci/nightly.log
 PIDFILE=/data/qa/ci/nightly.pid
 TARGET="${TARGET:-tests/ui}"
 BOXES="${BOXES:-india us}"
-TEST_TIMEOUT="${TEST_TIMEOUT:-900}"   # seconds per test, setup and teardown included
+TEST_TIMEOUT="${TEST_TIMEOUT:-600}"   # seconds per test, setup and teardown included
 RUN_TIMEOUT="${RUN_TIMEOUT:-4h}"      # per box; a full run measured about an hour at 4 workers
 WORKERS="${WORKERS:-4}"
+MAXFAIL="${MAXFAIL:-120}"             # failures+errors that end a box's run early; ~15% of the suite
 
 # Guard 1: become a process group of our own, so one kill reaches pytest,
 # the Playwright driver and every browser it started. `-w` keeps a manual
@@ -75,12 +76,25 @@ fi
     started=$(date +%s)
     # Guard 2. `timeout` exit 124 means the run cap ended it. The empty
     # browser channel overrides pytest.ini's Chrome: the box has none, so
-    # Playwright's own headless Chromium runs the tests.
+    # Playwright's own headless Chromium runs the tests. --maxfail ends a
+    # run whose failures are systemic (every test erroring at setup) while
+    # pytest can still write its summary and archive: the first three
+    # scheduled runs (09/09-09/11/2026) all hit the run cap instead, and
+    # the cap's kill threw the evidence away. -rfEs lists every failure,
+    # error and skip in this log at the end.
     BOX="$box" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" \
-      -n "$WORKERS" --browser-channel "" \
+      -n "$WORKERS" --browser-channel "" -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?
     echo "=== $box pytest exit: $rc after $(( $(date +%s) - started ))s (124 = run cap)"
+    if [ "$rc" = 124 ]; then
+      # The archive is written at session end, which a kill never reaches.
+      # Keep what exists: labelled screenshots and the live log. Traces and
+      # videos stay off the served directory (session cookies, passwords).
+      part="$SERVE/$(date +%Y-%m-%d_%H-%M-%S)__tests-ui-$box-PARTIAL-run-cap"
+      mkdir -p "$part" && rsync -a reports/screenshots logs/run.log "$part/" 2>/dev/null
+      echo "=== $box run cap hit: partial evidence kept at $part"
+    fi
   done
 
   # Publish run folders, additive only, MINUS traces and videos. A trace

@@ -132,9 +132,20 @@ night's cron started another beside it (seven runs and seven browsers were
 found alive at once), and `git pull --ff-only` had refused the rewritten
 history, so the box ran week-old code and archived nothing all week. Now:
 one nightly at a time (its own process group; the previous group is killed
-first), a ceiling on every test (`pytest-timeout`, 900 s, signal method)
+first), a ceiling on every test (`pytest-timeout`, 600 s, signal method)
 and on each box's run (`timeout`, 4 h), and `git reset --hard origin/main`
 instead of a pull.
+
+The first three scheduled two-box runs (09/09-09/11/2026) all hit the 4 h
+cap on both boxes: the first ~370 items pass at the local pace, then the
+stream-playing tests each wait out their full timeout on the box's
+codec-less Chromium and the run never reaches its end, and the cap's kill
+threw the evidence away. Two more guards followed: a box's run ends after
+120 failures (`--maxfail`) so pytest still writes its summary and archive,
+and a run the cap does end keeps its labelled screenshots and live log as
+`<stamp>__tests-ui-<box>-PARTIAL-run-cap` in the served directory. The
+cure for the slow tail itself is Google Chrome on the box
+(deploy/spartan1/README.md > What the box needs).
 
 Vendor-free on purpose. A GitHub self-hosted runner was compared and
 deferred, not rejected: self-hosted runner minutes are free today, but
