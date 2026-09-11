@@ -79,9 +79,10 @@ fi
       continue
     fi
     started=$(date +%s)
-    # Guard 2. `timeout` exit 124 means the run cap ended it. The empty
-    # browser channel overrides pytest.ini's Chrome: the box has none, so
-    # Playwright's own headless Chromium runs the tests. --maxfail ends a
+    # Guard 2. `timeout` exit 124 means the run cap ended it. Google Chrome
+    # is on the box since 09/11/2026 (playwright install chrome), so
+    # pytest.ini's channel applies; note Chrome on Linux has no H.265
+    # decoder, so the livestream tests skip here by measurement. --maxfail ends a
     # run whose failures are systemic (every test erroring at setup) while
     # pytest can still write its summary and archive: the first three
     # scheduled runs (09/09-09/11/2026) all hit the run cap instead, and
@@ -91,7 +92,7 @@ fi
     # into the served directory, so the archive index and health page at
     # http://10.2.0.2/qa-runs/ show the run in progress and its estimate.
     BOX="$box" QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" \
-      -n "$WORKERS" --browser-channel "" -rfEs --maxfail="$MAXFAIL" \
+      -n "$WORKERS" -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?
     echo "=== $box pytest exit: $rc after $(( $(date +%s) - started ))s (124 = run cap)"
@@ -117,7 +118,7 @@ fi
   if [ "$C2C" = 1 ] && grep -q "^C2C_CAMERA_PASS=." .env 2>/dev/null; then
     started=$(date +%s)
     C2C_REQUIRE_HARDWARE=1 QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest tests/c2c \
-      --browser-channel "" -rfEs --maxfail="$MAXFAIL" \
+      -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?
     echo "=== c2c pytest exit: $rc after $(( $(date +%s) - started ))s (124 = run cap)"

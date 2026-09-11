@@ -145,7 +145,10 @@ def stream_guard(config, items, box_name: str) -> None:
     targets = [item for item in items if stream_health.MARKER in item.keywords]
     if not targets or not stream_health.guard_enabled() or config.getoption("--collect-only", default=False):
         return
-    measure = stream_health.measure_stream(ENV_SETTINGS.get("test_camera_name"))
+    # Two facts: the socket's frame count, and whether THIS browser decodes
+    # what the channel streams (Chrome on Linux has no H.265 decoder).
+    measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"),
+                                   config.getoption("--browser-channel", default=None))
     print(stream_health.describe(measure))  # noqa: T201 - the guard's one line for the terminal
     reason = stream_health.stream_skip_reason(measure, box_name)
     if reason:

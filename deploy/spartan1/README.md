@@ -24,16 +24,15 @@ because it existed nowhere in git.
 ## What the box needs
 
 - The clone at `/data/qa/ci/Soterix-WebApp-QA` with a venv (`venv/`, Python
-  3.12 on the box) and Playwright's own Chromium
-  (`venv/bin/python -m playwright install chromium`). There is no Google
-  Chrome on the box; `nightly.sh` passes an empty `--browser-channel` so
-  the headless Chromium runs the tests. Known cost, measured on the first
-  trial (09/08/2026): Playwright's Chromium ships without the proprietary
-  video codecs, and the maps play test raised the tenant's stream-failure
-  overlay on US where the same test passes on Chrome locally. Expect the
-  stream-playing tests to fail on the box until Google Chrome is installed
-  there (`sudo venv/bin/python -m playwright install chrome`, then drop
-  the empty `--browser-channel` from `nightly.sh`).
+  3.12 on the box) and Google Chrome, installed 09/11/2026 with
+  `sudo venv/bin/python -m playwright install chrome` (153 at the time), so
+  pytest.ini's `--browser-channel chrome` applies as it does on a laptop.
+  Measured the same day: Chrome on Linux answers false to
+  `MediaSource.isTypeSupported` for H.265 (hvc1/hev1) while Windows Chrome
+  answers true, and the QA tenants stream H.265 (codecType 8). So the
+  tests that need a playing tile cannot pass on this box; the session
+  stream guard (tests/shared/helpers/stream_health.py) skips them here with
+  that measurement, and they run on a Windows or Mac runner.
 - `/data/qa/ci/Soterix-WebApp-QA/.env` (mode 600) with the QA Touch keys
   and one account per box the nightly runs: `QA_INDIA_USER`,
   `QA_INDIA_PASSWORD`, `QA_US_USER`, `QA_US_PASSWORD`. The suite reads the
