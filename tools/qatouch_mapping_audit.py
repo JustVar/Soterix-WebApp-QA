@@ -21,7 +21,7 @@ and reports:
   suspect    test title and case title share too few words (below the
              threshold), with the best-matching cases as candidates
   shared     one case key claimed by more than one test function
-  unmapped   tests under tests/ui with no mapping row (counts only)
+  unmapped   tests under the product roots with no mapping row (counts only)
 
 The score is the larger of a word-overlap ratio and difflib's sequence
 ratio on the two titles, 0 to 1. It is a hint, not a verdict: a row that
@@ -53,11 +53,12 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from config.products import PRODUCT_ROOTS, area_of  # noqa: E402
 from plugins.run_report import readable_title  # noqa: E402
 from tools.qatouch_mapping import MAPPING_PATH, function_base, load_raw  # noqa: E402
 
 SNAPSHOTS_DIR = ROOT / 'config' / 'qatouch_snapshots'
-TESTS_ROOT = ROOT / 'tests' / 'ui'
+TESTS_ROOTS = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS]   # config/products.py
 
 DEFAULT_THRESHOLD = 0.45
 DEFAULT_CANDIDATES = 3
@@ -74,7 +75,7 @@ STOP_WORDS = frozenset((
 ))
 
 # Words in a module name that say which area a test file belongs to.
-# Keyed by the folder under tests/ui. Used only to rank candidates.
+# Keyed by the module (config/products.py area_of). Used only to rank candidates.
 AREA_WORDS = {
     'admin': ('admin', 'user', 'users', 'site', 'sites', 'rule', 'rules',
               'audit', 'general', 'event wall', 'camera group'),
@@ -97,16 +98,18 @@ AREA_WORDS = {
 
 # ------------------------------------------------------------------ inputs
 
-def collect_tests(root: Path = TESTS_ROOT) -> dict[str, dict]:
-    """Every test function under root, keyed by base node id (no params).
+def collect_tests(root: Path | None = None) -> dict[str, dict]:
+    """Every test function under root (default: every product root), keyed
+    by base node id (no params).
 
     Parsed with ast, so nothing imports or runs. The title is the first
     docstring line, exactly as the run report shows it.
     """
     tests: dict[str, dict] = {}
-    for path in sorted(root.rglob('test_*.py')):
+    roots = [root] if root else TESTS_ROOTS
+    for path in sorted(p for r in roots for p in r.rglob('test_*.py')):
         rel = path.relative_to(ROOT).as_posix()
-        area = rel.split('/')[2] if rel.count('/') >= 2 else ''
+        area = area_of(rel) or ''
         tree = ast.parse(path.read_text(encoding='utf-8-sig'), filename=rel)
 
         def add(prefix: str, fn: ast.AST, rel=rel, area=area) -> None:
@@ -308,7 +311,7 @@ def print_report(result: dict, source: str, show_rows: bool) -> None:
     c = result['counts']
     print(f'\nQA Touch mapping audit   cases: {source}')
     print(f'  Mapping rows:          {c["entries"]}')
-    print(f'  Tests under tests/ui:  {c["tests"]}')
+    print(f'  Tests (product roots): {c["tests"]}')
     print(f'  Stale rows:            {c["stale"]}   (test no longer exists)')
     print(f'  Dead case keys:        {c["dead_key"]}   (case not in the snapshot)')
     print(f'  Title drift:           {c["drift"]}   (case renamed since the row was cached)')

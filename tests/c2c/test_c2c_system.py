@@ -237,7 +237,7 @@ class TestC2CSystemOps:
         DESTRUCTIVE: this reboots the physical camera, taking it off the
         network for a minute or two. It is skipped unless --run-destructive is
         passed, because the suite parametrises over every enabled camera in the
-        registry - without the guard, a routine `pytest tests/ui/c2c/` reboots
+        registry - without the guard, a routine `pytest tests/c2c/` reboots
         the entire lab fleet.
         """
         self.step_capture.mark(1, "Note current plugin status before restart")

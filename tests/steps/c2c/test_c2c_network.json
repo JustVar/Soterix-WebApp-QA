@@ -1,5 +1,5 @@
 {
-  "test_file": "tests/ui/c2c/test_c2c_network.py",
+  "test_file": "tests/c2c/test_c2c_network.py",
   "class": "TestC2CNetwork",
   "tests": {
     "test_network_status": {

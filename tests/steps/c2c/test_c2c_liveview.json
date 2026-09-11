@@ -1,5 +1,5 @@
 {
-  "test_file": "tests/ui/c2c/test_c2c_liveview.py",
+  "test_file": "tests/c2c/test_c2c_liveview.py",
   "class": "TestC2CLiveView",
   "tests": {
     "test_live_view_controls": {

@@ -39,11 +39,11 @@ logs/qatouch_weak_mappings_<date>.json.
 
 Selection (any mix, node ids are de-duplicated):
 
-  --unmapped     tests under tests/ui with no row in the mapping file
+  --unmapped     tests under the product roots with no row in the mapping file
   --dead-keys    tests whose mapping row points at a case no snapshot holds
   --test         one node id, repeatable
   --file         every test in one file
-  --exclude-dir  a folder under tests/ui to skip (default: c2c, whose
+  --exclude-dir  a module to skip (default: c2c, whose
                  project 60W5 is snapshotted separately under
                  config/qatouch_snapshots/60W5/ and is not what
                  latest_snapshot() returns)
@@ -79,6 +79,8 @@ if str(ROOT) not in sys.path:
 
 from dotenv import load_dotenv  # noqa: E402
 
+from config.products import PRODUCT_ROOTS, area_of  # noqa: E402
+
 # --after-import reads the project back through the API; the key
 # lives in .env like the import tool's does
 load_dotenv(ROOT / '.env')
@@ -93,9 +95,12 @@ from tools.qatouch_mapping_audit import (  # noqa: E402
     unmapped_nodeids,
 )
 
-TESTS_ROOT = ROOT / 'tests' / 'ui'
+TESTS_ROOTS = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS]   # config/products.py
 LOGS_DIR = ROOT / 'logs'
 DEFAULT_PROJECT = 'JlW1'
+# The Camera 2 Cloud tests (tests/c2c) report to their own project, so the
+# Core flow skips them by default. Theirs:
+#   --file tests/c2c/test_c2c_auth.py --exclude-dir none --project 60W5
 DEFAULT_EXCLUDE = ('c2c',)
 
 # The header of tools/qa_touch_import_test.csv, in its order. The
@@ -317,8 +322,7 @@ def _param_ids(decorators: list[ast.AST], env: dict) -> tuple[bool, list[str] | 
 def scan_file(path: Path, root: Path = ROOT) -> dict[str, TestInfo]:
     """Every test function in one file, keyed by base node id."""
     rel = path.relative_to(root).as_posix()
-    parts = rel.split('/')
-    area = parts[2] if len(parts) > 3 else ''
+    area = area_of(rel) or ''
     tree = ast.parse(path.read_text(encoding='utf-8-sig'), filename=rel)
     env = _module_env(tree)
     file_skipped = _module_skipped(tree)
@@ -353,12 +357,13 @@ def scan_file(path: Path, root: Path = ROOT) -> dict[str, TestInfo]:
 
 
 def scan_tests(root: Path | None = None, repo: Path | None = None) -> dict[str, TestInfo]:
-    """Every test function under tests/ui, keyed by base node id."""
-    root = root or TESTS_ROOT
+    """Every test function under the product roots, keyed by base node id."""
+    roots = [root] if root else TESTS_ROOTS
     repo = repo or ROOT
     found: dict[str, TestInfo] = {}
-    for path in sorted(root.rglob('test_*.py')):
-        found.update(scan_file(path, repo))
+    for r in roots:
+        for path in sorted(r.rglob('test_*.py')):
+            found.update(scan_file(path, repo))
     return found
 
 
@@ -379,8 +384,7 @@ def module_name(nodeid: str, classes_in_file: int = 1) -> str:
     the file holds more than one Test class. A level drops the words it
     repeats from the level above."""
     path, *rest = nodeid.split('::')
-    parts = path.replace('\\', '/').split('/')
-    area = parts[2] if len(parts) > 3 else ''
+    area = area_of(path) or ''
     stem = re.sub(r'^test_?', '', Path(path).stem)
     area_words = _words(area) if area else []
     stem_words = _words(stem)
@@ -617,7 +621,7 @@ def select_nodeids(args, tests: dict[str, TestInfo]) -> list[str]:
     chosen: set[str] = set()
     mappings = qm.load_raw(args.mapping).get('mappings', {})
     # collect_tests is the audit tool's view of the tree: same keys
-    audit_tests = collect_tests(TESTS_ROOT)
+    audit_tests = collect_tests()
     if args.unmapped:
         chosen.update(unmapped_nodeids(audit_tests, mappings))
     if args.dead_keys:
@@ -649,7 +653,7 @@ def generate(args) -> int:
     for nodeid in nodeids:
         info = tests.get(nodeid)
         if info is None:
-            needs.append((nodeid, 'test not found under tests/ui'))
+            needs.append((nodeid, 'test not found under the product roots'))
             continue
         parsed = parse_docstring(info.docstring, nodeid)
         if not parsed.ok:
@@ -820,7 +824,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help='worklist of case keys claimed by more than one test '
                              '(register item 6); writes logs/qatouch_shared_keys_<date>.json')
     parser.add_argument('--unmapped', action='store_true',
-                        help='tests under tests/ui with no mapping row')
+                        help='tests under the product roots with no mapping row')
     parser.add_argument('--dead-keys', action='store_true',
                         help='tests whose mapped case is in no snapshot')
     parser.add_argument('--test', action='append', metavar='NODEID',
@@ -830,7 +834,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--project', default=DEFAULT_PROJECT,
                         help=f'QA Touch project key (default {DEFAULT_PROJECT})')
     parser.add_argument('--exclude-dir', action='append', metavar='DIR',
-                        help=f'folder under tests/ui to skip (default {DEFAULT_EXCLUDE[0]})')
+                        help=f'module to skip (default {DEFAULT_EXCLUDE[0]}; none for no exclusion)')
     parser.add_argument('--cases', type=Path, default=None,
                         help='snapshot-shaped JSON of cases (default: newest snapshot; '
                              'with --after-import: use instead of reading QA Touch)')

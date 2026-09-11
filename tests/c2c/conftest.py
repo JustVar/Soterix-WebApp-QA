@@ -14,16 +14,16 @@ Override via environment variables (single-camera mode):
 
 Example runs:
     # All enabled cameras
-    pytest tests/ui/c2c/ -m c2c_hardware
+    pytest tests/c2c/ -m c2c_hardware
 
     # Single camera via env var
-    C2C_CAMERA_IP=192.168.1.149 pytest tests/ui/c2c/
+    C2C_CAMERA_IP=192.168.1.149 pytest tests/c2c/
 
     # Specific camera by id
-    pytest tests/ui/c2c/ -k "bc-5v-1-qa-lab"
+    pytest tests/c2c/ -k "bc-5v-1-qa-lab"
 
     # Multi-lens only
-    pytest tests/ui/c2c/ -k "multi-lens"
+    pytest tests/c2c/ -k "multi-lens"
 """
 import os
 import socket
@@ -51,7 +51,9 @@ DEFAULT_CAMERA = {
     "expected_license_count": 1,
 }
 
-CAMERAS_YAML = Path(__file__).parent.parent.parent / "data" / "c2c_cameras.yaml"
+# The registry sits beside this folder: tests/c2c/conftest.py -> tests/data/.
+# Resolved from the file, not the CWD, so a run from any directory finds it.
+CAMERAS_YAML = Path(__file__).resolve().parent.parent / "data" / "c2c_cameras.yaml"
 
 
 def _load_cameras():
@@ -61,7 +63,13 @@ def _load_cameras():
         return [DEFAULT_CAMERA]
 
     if not CAMERAS_YAML.exists():
-        return [DEFAULT_CAMERA]
+        # Loud on purpose. Until 09/11/2026 a missing registry fell back to
+        # one default camera, and the move to tests/c2c/ made the path miss:
+        # the suite collected 32 items instead of 320 and only the collect
+        # floor noticed. A wrong path is a defect, not a run.
+        raise FileNotFoundError(
+            f"C2C camera registry not found at {CAMERAS_YAML}. Run "
+            "tools/discover_c2c_cameras.py, or set C2C_CAMERA_IP for one camera.")
 
     with open(CAMERAS_YAML) as f:
         data = yaml.safe_load(f) or {}

@@ -1,5 +1,5 @@
 {
-  "test_file": "tests/ui/c2c/test_c2c_camera.py",
+  "test_file": "tests/c2c/test_c2c_camera.py",
   "class": "TestC2CCameraSettings",
   "tests": {
     "test_image_adjustment_defaults_and_reset": {

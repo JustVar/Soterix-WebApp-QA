@@ -1,5 +1,5 @@
 {
-  "test_file": "tests/ui/c2c/test_c2c_auth.py",
+  "test_file": "tests/c2c/test_c2c_auth.py",
   "class": "TestC2CAuth",
   "tests": {
     "test_camera_login_and_live_view": {

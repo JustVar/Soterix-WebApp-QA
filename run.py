@@ -3,6 +3,7 @@
 
     python run.py smoke                       # every test marked smoke
     python run.py module views                # tests/ui/views
+    python run.py module c2c                  # tests/c2c (the lab cameras, serial)
     python run.py test tests/ui/views/test_views_basic.py::TestViewsBasic::test_open_my_views
     python run.py rerun latest                # the failed tests of the newest archived run
     python run.py open latest                 # that run's run.html in the browser
@@ -33,6 +34,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+from config.products import PRODUCT_ROOTS  # noqa: E402
 from plugins.paths import long_root_warning  # noqa: E402
 from plugins.run_archive import RUN_DIR_RE, RUNS_DIR  # noqa: E402
 from plugins.run_report import (  # noqa: E402
@@ -44,6 +46,9 @@ from plugins.run_report import (  # noqa: E402
 
 PYTEST = [sys.executable, '-m', 'pytest']
 MODULES_DIR = Path('tests') / 'ui'
+# `module c2c` runs the Camera 2 Cloud tests, a product root of their own
+# (config/products.py) rather than a folder under tests/ui.
+PRODUCT_DIRS = {Path(p.rstrip('/')).name: Path(p.rstrip('/')) for p in PRODUCT_ROOTS if p != 'tests/ui/'}
 LIST_MAX = 10
 NEEDS_TARGET = ('module', 'test')
 # The one rerun the suite allows, and only on request: the tenant's
@@ -94,9 +99,9 @@ def _pytest_target(args: argparse.Namespace) -> list[str]:
     if args.verb == 'smoke':
         return ['-m', 'smoke']
     if args.verb == 'module':
-        folder = MODULES_DIR / args.target
+        folder = PRODUCT_DIRS.get(args.target, MODULES_DIR / args.target)
         if not folder.is_dir():
-            names = ', '.join(sorted(p.name for p in MODULES_DIR.iterdir() if p.is_dir()))
+            names = ', '.join(sorted({p.name for p in MODULES_DIR.iterdir() if p.is_dir()} | set(PRODUCT_DIRS)))
             sys.exit(f'No module folder at {folder}. Modules: {names}')
         return [folder.as_posix()]
     if args.verb == 'test':

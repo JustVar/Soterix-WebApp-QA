@@ -267,11 +267,11 @@ def test_generate_lists_needs_steps_and_writes_both_files(synthetic, tmp_path, m
     Steps block under Needs steps instead of inventing one."""
     root, _path = synthetic
     monkeypatch.setattr(gen, 'ROOT', root)
-    monkeypatch.setattr(gen, 'TESTS_ROOT', root / 'tests' / 'ui')
+    monkeypatch.setattr(gen, 'TESTS_ROOTS', [root / 'tests' / 'ui'])
     monkeypatch.setattr(gen, 'LOGS_DIR', tmp_path / 'logs')
     mapping = tmp_path / 'mapping.json'
     mapping.write_text(json.dumps({'version': 1, 'mappings': {}}), encoding='utf-8')
-    monkeypatch.setattr(gen, 'collect_tests', lambda _root: {
+    monkeypatch.setattr(gen, 'collect_tests', lambda _root=None: {
         n: {'nodeid': n} for n in gen.scan_tests(root / 'tests' / 'ui', root)})
     rc = gen.main(['--unmapped', '--mapping', str(mapping)])
     assert rc == 0
@@ -348,7 +348,7 @@ def test_after_import_writes_mapping_from_fake_case_list(synthetic, tmp_path, mo
     an old dead-key row of the same function is replaced."""
     root, path = synthetic
     monkeypatch.setattr(gen, 'ROOT', root)
-    monkeypatch.setattr(gen, 'TESTS_ROOT', root / 'tests' / 'ui')
+    monkeypatch.setattr(gen, 'TESTS_ROOTS', [root / 'tests' / 'ui'])
     base = 'tests/ui/thing/test_thing.py::TestThing::test_titled'
     found = gen.scan_file(path, root)
     row = gen.build_row(found[base], gen.parse_docstring(found[base].docstring, base),
@@ -379,7 +379,7 @@ def test_after_import_dry_run_saves_nothing(synthetic, tmp_path, monkeypatch, ca
     """--dry-run reports the match result and leaves the mapping file as it was."""
     root, path = synthetic
     monkeypatch.setattr(gen, 'ROOT', root)
-    monkeypatch.setattr(gen, 'TESTS_ROOT', root / 'tests' / 'ui')
+    monkeypatch.setattr(gen, 'TESTS_ROOTS', [root / 'tests' / 'ui'])
     base = 'tests/ui/thing/test_thing.py::TestThing::test_titled'
     found = gen.scan_file(path, root)
     row = gen.build_row(found[base], gen.parse_docstring(found[base].docstring, base),

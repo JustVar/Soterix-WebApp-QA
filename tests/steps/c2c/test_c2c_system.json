@@ -1,5 +1,5 @@
 {
-  "test_file": "tests/ui/c2c/test_c2c_system.py",
+  "test_file": "tests/c2c/test_c2c_system.py",
   "class": "TestC2CSystemInfo",
   "tests": {
     "test_system_info_device_details": {

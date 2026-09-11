@@ -8,7 +8,7 @@ folder name may still be the old one.
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **437 UI test functions in 59 suite files** (09/08/2026), which pytest collects as 819 items: the 32 c2c hardware tests parametrize over the 12-camera registry into 384, and the rest carry the browser parameter. The other 390 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 637 pins live in the shared package. Whole repo: 1209. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message. `docs/TEST_INVENTORY.md` lists every product test by product and module, with its growth week by week since 02/2026 (`history/test_counts.jsonl`, appended by `tools/test_inventory.py --record`).
+- **437 product test functions in 59 suite files** (09/11/2026): 405 NexaiQ-Core tests under `tests/ui/` and 32 Camera 2 Cloud tests under `tests/c2c/` (the cameras' own web UIs, run serially against the lab registry `tests/data/c2c_cameras.yaml`). pytest collects them as 755 items: the Core tests carry the browser parameter (435), and the c2c tests parametrize over the 10 enabled cameras into 320. The other 421 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 655 pins live in the shared package. Whole repo: 1176. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message. `docs/TEST_INVENTORY.md` lists every product test by product and module, with its growth week by week since 02/2026 (`history/test_counts.jsonl`, appended by `tools/test_inventory.py --record`).
 
 ## How We Run Today
 
@@ -143,10 +143,11 @@ config/
 ├── jira_field_mapping.py  # QA Touch -> Jira Bug field mapping
 └── qatouch_snapshots/     # Historical case snapshots
 tests/
-├── ui/                    # 59 test files organized by module
-│   ├── admin/ (incl. LPR)   chats/   c2c/   events/   insights/
+├── ui/                    # NexaiQ-Core: 52 test files by module (config/products.py)
+│   ├── admin/ (incl. LPR)   chats/   events/   insights/
 │   ├── licenses/   login/   maps/    media/   notifications/
 │   ├── search/   sequences/   views/
+├── c2c/                   # Camera 2 Cloud: 7 files against the cameras' own web UIs
 ├── shared/
 │   ├── pages/             # 17 Page Object Models
 │   ├── helpers/           # Role helper

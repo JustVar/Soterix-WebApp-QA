@@ -45,8 +45,13 @@ MAPPING_PATH = REPO / "config" / "qatouch_case_mapping.json"
 # (see pyproject.toml per-file ignores).
 INCLUDE_PREFIXES = ("tests/",)
 EXCLUDE_PREFIXES = ("tests/legacy/",)
-# The tests QA Touch cases are generated for and mapped to
-UI_PREFIX = "tests/ui/"
+# The tests QA Touch cases are generated for and mapped to: the product
+# roots (tests/ui/ for Core, tests/c2c/ for Camera 2 Cloud), never the
+# tooling and plugin pins.
+sys.path.insert(0, str(REPO))
+from config.products import PRODUCT_ROOTS  # noqa: E402 - after the path insert
+
+PRODUCT_PREFIXES = tuple(PRODUCT_ROOTS)
 
 SLEEP_RE = re.compile(r"(?:wait_for_timeout|time\.sleep)\s*\(")
 TICKET_RE = re.compile(r"\bNC-\d+\b")
@@ -268,7 +273,7 @@ def check_line(path: str, lines: list[str], idx: int,
             })
     # A QA Touch case exists for UI tests only: the tooling and plugin
     # pins under tests/tools and tests/plugins have no case to map
-    if TEST_DEF_RE.match(line) and path.startswith(UI_PREFIX):
+    if TEST_DEF_RE.match(line) and path.startswith(PRODUCT_PREFIXES):
         if not STEPS_HEADER_RE.search(test_docstring(lines, idx)):
             findings.append({
                 "sev": "MEDIUM", "rule": "test-without-steps",

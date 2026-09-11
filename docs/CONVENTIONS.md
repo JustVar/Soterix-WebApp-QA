@@ -384,7 +384,10 @@ manually. Nothing below runs unless you opt in. Treat it as in development.
   `--unmapped` and `--dead-keys` select the tests that still need a
   case across the tree.
 
-1. Create the test file in `tests/ui/{module}/`.
+1. Create the test file under its product root (`config/products.py`):
+   `tests/ui/{module}/` for NexaiQ-Core, `tests/c2c/` for Camera 2 Cloud. The
+   root decides the QA Touch project the run reports to and the sidecar path
+   (`tests/steps/ui/{module}/`, `tests/steps/c2c/`).
 2. Write the title and the `Steps:` block in the docstring.
 3. Add the relevant markers from `pytest.ini`.
 4. Use existing page objects, or create new ones in `tests/shared/pages/`.

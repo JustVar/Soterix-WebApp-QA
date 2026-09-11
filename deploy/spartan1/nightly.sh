@@ -6,6 +6,8 @@
 #   TARGET=tests/ui/licenses /data/qa/ci/nightly.sh   # narrow the scope
 #   BOXES=india /data/qa/ci/nightly.sh                # one box only
 #   TEST_TIMEOUT=120 /data/qa/ci/nightly.sh           # a trial with a short cap
+#   C2C=0 /data/qa/ci/nightly.sh                      # web app only, no camera run
+#   BOXES= /data/qa/ci/nightly.sh                     # cameras only
 #
 # Unarmed on purpose for now: no QA Touch write, no ledger row. Evidence
 # archives locally and is copied to the directory nginx serves, so each run
@@ -35,7 +37,8 @@ TEST_TIMEOUT="${TEST_TIMEOUT:-600}"   # seconds per test, setup and teardown inc
 RUN_TIMEOUT="${RUN_TIMEOUT:-4h}"      # per box; a full run measured about an hour at 4 workers
 WORKERS="${WORKERS:-4}"
 MAXFAIL="${MAXFAIL:-200}"             # failures+errors that end a box's run early; ~25% of the suite.
-                                      # 120 was too close: c2c runs early and 09/11 had 116 by mid-run
+                                      # 120 was too close: c2c ran early and 09/11 had 116 by mid-run
+C2C="${C2C:-1}"                      # 0 skips the Camera 2 Cloud run
 
 # Guard 1: become a process group of our own, so one kill reaches pytest,
 # the Playwright driver and every browser it started. `-w` keeps a manual
@@ -100,6 +103,31 @@ fi
       echo "=== $box run cap hit: partial evidence kept at $part"
     fi
   done
+
+  # Camera 2 Cloud: tests/c2c is a product root of its own (config/products.py),
+  # so the web-app target above never collects it. It runs once, not per box:
+  # the tests talk to the lab cameras' own web UIs (tests/data/c2c_cameras.yaml),
+  # never to a tenant. Serial on purpose: they reboot and reconfigure real
+  # devices (docs/PARALLEL_EXECUTION.md). C2C_REQUIRE_HARDWARE=1 makes an
+  # unreachable camera a failure instead of a skip, so a camera that went dark
+  # shows in the archive. The archive's path rule reports the results to the
+  # Camera 2 Cloud project. Without the shared lab password in .env the suite
+  # fails once per camera, loudly, so it is skipped here and said so.
+  if [ "$C2C" = 1 ] && grep -q "^C2C_CAMERA_PASS=." .env 2>/dev/null; then
+    started=$(date +%s)
+    C2C_REQUIRE_HARDWARE=1 QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest tests/c2c \
+      --browser-channel "" -rfEs --maxfail="$MAXFAIL" \
+      --timeout="$TEST_TIMEOUT" --timeout-method=signal
+    rc=$?
+    echo "=== c2c pytest exit: $rc after $(( $(date +%s) - started ))s (124 = run cap)"
+    if [ "$rc" = 124 ]; then
+      part="$SERVE/$(date +%Y-%m-%d_%H-%M-%S)__tests-c2c-PARTIAL-run-cap"
+      mkdir -p "$part" && rsync -a reports/screenshots logs/run.log "$part/" 2>/dev/null
+      echo "=== c2c run cap hit: partial evidence kept at $part"
+    fi
+  elif [ "$C2C" = 1 ]; then
+    echo "=== c2c skipped: C2C_CAMERA_PASS is not set in $REPO/.env"
+  fi
 
   # Publish run folders, additive only, MINUS the trace zips. A trace
   # carries a live session cookie and a fresh-login test's trace carries the

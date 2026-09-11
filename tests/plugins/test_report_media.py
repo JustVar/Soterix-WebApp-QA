@@ -155,8 +155,8 @@ def test_live_shortened_screenshot_name_matches_its_test(tmp_path, monkeypatch):
     run_report must still attach the file to the right parametrized twin,
     and a shortened mid-drag frame to its test."""
     monkeypatch.setattr(rm, 'SCREENSHOT_DIR', _deep_dir(tmp_path))
-    twins = ['tests/ui/c2c/test_cams.py::TestCams::test_reboot[camera-3]',
-             'tests/ui/c2c/test_cams.py::TestCams::test_reboot[camera-4]']
+    twins = ['tests/c2c/test_cams.py::TestCams::test_reboot[camera-3]',
+             'tests/c2c/test_cams.py::TestCams::test_reboot[camera-4]']
     safes = {rr._safe_name(n, rr.SAFE_NAME_MAX): n for n in twins}
     for nodeid in twins:
         name = rm._final_filename(nodeid, 'FAILED')

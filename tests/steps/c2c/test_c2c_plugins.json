@@ -1,5 +1,5 @@
 {
-  "test_file": "tests/ui/c2c/test_c2c_plugins.py",
+  "test_file": "tests/c2c/test_c2c_plugins.py",
   "class": "TestC2CVCA",
   "tests": {
     "test_vca_enabled_with_correct_tracker": {

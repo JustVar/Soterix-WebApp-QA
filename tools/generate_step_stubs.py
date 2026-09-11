@@ -42,6 +42,9 @@ ROOT = Path(__file__).resolve().parent.parent
 # run as a script, tools/ is on sys.path and the repo root is not
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+from config.products import PRODUCT_ROOTS  # noqa: E402
+
 TESTS_DIR = ROOT / 'tests'
 STEPS_DIR = ROOT / 'tests' / 'steps'
 
@@ -191,8 +194,8 @@ def find_test_files(paths: list[str] | None = None) -> list[Path]:
                 result.extend(sorted(path.rglob('test_*.py')))
         return result
 
-    # Default: all test files under tests/ui/ and tests/api/
-    test_dirs = [TESTS_DIR / 'ui', TESTS_DIR / 'api']
+    # Default: every product root (config/products.py) and tests/api/
+    test_dirs = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS] + [TESTS_DIR / 'api']
     result = []
     for d in test_dirs:
         if d.exists():

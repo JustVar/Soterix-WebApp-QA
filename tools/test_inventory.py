@@ -3,7 +3,7 @@
 
 The question it answers is "what do we actually test?", asked 09/08/2026 when
 a stale README line said 1,416 tests. The honest number is the count of test
-FUNCTIONS under tests/ui; pytest's collected count multiplies the c2c tests
+FUNCTIONS under the product roots (config/products.py); pytest's collected count multiplies the c2c tests
 over the camera registry and every UI test over the browser. Pins under
 tests/tools, tests/plugins and tests/helpers test the harness, not the
 product, and are not listed here.
@@ -43,7 +43,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from plugins import products  # noqa: E402  (the shim configures this repo's path rules)
+from config.products import area_of  # noqa: E402
+from plugins import products  # noqa: E402
 from tools import (  # noqa: E402
     qatouch_ledger,
     qatouch_mapping as qm,
@@ -210,7 +211,9 @@ def classify(path: str) -> str | None:
     p = path.replace('\\', '/')
     if not p.startswith('tests/') or p.startswith(HARNESS_DIRS):
         return None
-    if p.startswith('tests/ui/c2c/'):
+    # tests/ui/c2c/ is where the Camera 2 Cloud tests lived until 09/11/2026;
+    # the ledger's backfill classifies old commits, so both spellings count.
+    if p.startswith(('tests/c2c/', 'tests/ui/c2c/')):
         return PRODUCT_C2C
     if p.startswith('tests/ui/'):
         return PRODUCT_CORE
@@ -222,9 +225,12 @@ def classify(path: str) -> str | None:
 
 
 def module_of(path: str) -> str | None:
-    """The tests/ui module a file belongs to ('admin', 'c2c'), else None."""
-    parts = path.replace('\\', '/').split('/')
-    return parts[2] if len(parts) > 3 and parts[:2] == ['tests', 'ui'] else None
+    """The module a product test file belongs to ('admin' under tests/ui/,
+    'c2c' for tests/c2c/ and for the pre-09/11/2026 tests/ui/c2c/), else None."""
+    p = path.replace('\\', '/')
+    if p.startswith('tests/ui/c2c/'):
+        return 'c2c'
+    return area_of(p)
 
 
 def counts_from_files(file_counts: dict[str, int]) -> tuple[dict[str, int], dict[str, int]]:

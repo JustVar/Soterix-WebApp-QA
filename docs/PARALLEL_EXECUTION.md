@@ -36,7 +36,8 @@ risks below.
   (`--dist loadfile`) or serial.
 - **Concurrent sessions on one account.** The experiment below ran 2 sessions
   on the same account without a kick-out. Higher worker counts are untested.
-- **Hardware tests stay serial.** Never run `tests/ui/c2c/` or anything marked
+- **Hardware tests stay serial.** Never run `tests/c2c/` (its own product root
+  since 09/11/2026; the nightly runs it without `-n`) or anything marked
   `destructive` or `mutating` with `-n`. These touch real cameras.
 - **Load.** Each worker is a full Chrome instance. Video-heavy suites
   multiply CPU and bandwidth per worker.

@@ -11,7 +11,7 @@ from typing import Dict
 import pytest
 
 # Register plugins
-# The products path rule (tests/ui/c2c -> Camera 2 Cloud) lives in the
+# The products path rule (tests/c2c -> Camera 2 Cloud) lives in the
 # products shim, which self-configures on import. The reporting modules
 # now import the PACKAGE products directly, so nothing else triggers that
 # side effect - import it here so the rule is set for the session.
@@ -95,7 +95,7 @@ def active_box_settings(settings, box_name: str) -> dict:
 def pytest_collection_modifyitems(config, items):
     """Skip what this run may not execute.
 
-    Destructive tests need --run-destructive: a plain `pytest tests/ui/c2c/`
+    Destructive tests need --run-destructive: a plain `pytest tests/c2c/`
     parametrises over every enabled camera in the registry, so an unguarded
     reboot test takes out the whole lab fleet. Running it has to be a
     deliberate act, not the default.

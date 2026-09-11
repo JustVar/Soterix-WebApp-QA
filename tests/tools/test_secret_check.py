@@ -41,16 +41,16 @@ def test_find_secrets_names_the_key_and_line_never_the_value():
 def test_staged_added_lines_reads_paths_and_new_line_numbers(monkeypatch):
     """Only added lines count, each with its line number in the new file."""
     diff = '\n'.join([
-        'diff --git a/tests/ui/c2c/conftest.py b/tests/ui/c2c/conftest.py',
-        '--- a/tests/ui/c2c/conftest.py', '+++ b/tests/ui/c2c/conftest.py',
+        'diff --git a/tests/c2c/conftest.py b/tests/c2c/conftest.py',
+        '--- a/tests/c2c/conftest.py', '+++ b/tests/c2c/conftest.py',
         '@@ -10,2 +10,3 @@', ' context', '+    "password": camera_config["Lab-Cam-9"],', ' more',
         '@@ -40 +41 @@', '-old', '+new',
     ])
     monkeypatch.setattr(sc, '_git', lambda *a: diff)
     added = sc.staged_added_lines()
-    assert added == {'tests/ui/c2c/conftest.py': [(11, '    "password": camera_config["Lab-Cam-9"],'), (41, 'new')]}
+    assert added == {'tests/c2c/conftest.py': [(11, '    "password": camera_config["Lab-Cam-9"],'), (41, 'new')]}
     findings = sc.check_staged(sc.secret_values(ENV))
-    assert findings == [{'path': 'tests/ui/c2c/conftest.py', 'line': 11, 'key': 'C2C_CAMERA_PASS'}]
+    assert findings == [{'path': 'tests/c2c/conftest.py', 'line': 11, 'key': 'C2C_CAMERA_PASS'}]
 
 
 def test_main_blocks_on_a_staged_secret_and_passes_a_clean_diff(tmp_path, monkeypatch, capsys):

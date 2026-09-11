@@ -15,8 +15,11 @@ except ModuleNotFoundError as exc:
         "Run: pip install -e ../soterix-qa-shared"
     ) from None
 
-# This repo's folders, not the package's. A rule about tests/ui/c2c/ is
-# meaningless in the API repo, so the package ships none.
-_mod.configure_path_rules([('tests/ui/c2c/', '60W5')])
+# This repo's folders, not the package's. A rule about tests/c2c/ is
+# meaningless in the API repo, so the package ships none. The roots and
+# their projects live in config/products.py, one place for every tool.
+from config.products import PRODUCT_ROOTS
+
+_mod.configure_path_rules(list(PRODUCT_ROOTS.items()))
 
 sys.modules[__name__] = _mod

@@ -2,6 +2,7 @@
 grouped by product and module, with its title, Steps flag and case keys."""
 from __future__ import annotations
 
+from config.products import area_of
 from tools import test_inventory as ti
 from tools.qatouch_cases_from_tests import TestInfo
 
@@ -9,7 +10,7 @@ from tools.qatouch_cases_from_tests import TestInfo
 def info(nodeid, docstring, *, parametrized=False):
     file, _, rest = nodeid.partition('::')
     cls, _, func = rest.rpartition('::')
-    return TestInfo(nodeid=nodeid, file=file, area=file.split('/')[2], class_name=cls,
+    return TestInfo(nodeid=nodeid, file=file, area=area_of(file), class_name=cls,
                     func_name=func, docstring=docstring, skipped=False,
                     param_ids=None, parametrized=parametrized)
 
@@ -26,8 +27,8 @@ TESTS = {
         'tests/ui/views/test_views_basic.py::TestViews::test_open_saved_view', STEPPED),
     'tests/ui/views/test_views_basic.py::TestViews::test_no_doc': info(
         'tests/ui/views/test_views_basic.py::TestViews::test_no_doc', ''),
-    'tests/ui/c2c/test_c2c_auth.py::TestAuth::test_login': info(
-        'tests/ui/c2c/test_c2c_auth.py::TestAuth::test_login', 'Camera login accepts the admin password.',
+    'tests/c2c/test_c2c_auth.py::TestAuth::test_login': info(
+        'tests/c2c/test_c2c_auth.py::TestAuth::test_login', 'Camera login accepts the admin password.',
         parametrized=True),
 }
 MAPPING = {
@@ -97,7 +98,7 @@ def test_check_mode_tells_a_stale_page_from_a_current_one(tmp_path, monkeypatch,
 def test_classify_names_the_product_for_every_layout_the_repos_have_had():
     """UI files split into Core and Camera 2 Cloud; API files of any era are the API; pins are nothing."""
     assert ti.classify('tests/ui/admin/test_admin_users.py') == ti.PRODUCT_CORE
-    assert ti.classify('tests/ui/c2c/test_c2c_auth.py') == ti.PRODUCT_C2C
+    assert ti.classify('tests/c2c/test_c2c_auth.py') == ti.PRODUCT_C2C
     for api_path in ('tests/api/test_events.py', 'tests/internal_api/test_camera_apis.py',
                      'tests/integration_api/test_auth.py', 'tests/smoke/test_endpoints.py'):
         assert ti.classify(api_path) == ti.PRODUCT_API, api_path
@@ -110,7 +111,7 @@ def test_counts_roll_up_by_product_and_module_and_ignore_the_harness():
     """File counts become per-product and per-module totals; harness files do not count."""
     products, modules = ti.counts_from_files({
         'tests/ui/admin/test_admin_users.py': 5, 'tests/ui/admin/test_lpr_grid.py': 4,
-        'tests/ui/c2c/test_c2c_auth.py': 2, 'tests/api/test_events.py': 3,
+        'tests/c2c/test_c2c_auth.py': 2, 'tests/api/test_events.py': 3,
         'tests/tools/test_convention_check.py': 40, 'tests/ui/maps/test_maps.py': 0,
     })
     assert products == {ti.PRODUCT_C2C: 2, ti.PRODUCT_CORE: 9, ti.PRODUCT_API: 3}
@@ -155,7 +156,7 @@ def test_growth_table_lists_rows_newest_first_with_a_column_per_product():
 def test_files_are_counted_per_product_and_carried_in_the_ledger():
     """A product's file count is the number of its files holding tests; the ledger row keeps it."""
     files = ti.files_by_product({'tests/ui/admin/test_a.py': 3, 'tests/ui/admin/test_b.py': 0,
-                                 'tests/ui/c2c/test_c.py': 1, 'tests/tools/test_t.py': 9})
+                                 'tests/c2c/test_c.py': 1, 'tests/tools/test_t.py': 9})
     assert files == {ti.PRODUCT_C2C: 1, ti.PRODUCT_CORE: 1}
     import datetime
     row = ti.ledger_row(datetime.date(2026, 9, 8), 'abc1234', 'record',

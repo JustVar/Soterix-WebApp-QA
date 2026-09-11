@@ -1,5 +1,5 @@
 {
-  "test_file": "tests/ui/c2c/test_c2c_video.py",
+  "test_file": "tests/c2c/test_c2c_video.py",
   "class": "TestC2CVideoConfig",
   "tests": {
     "test_default_stream_configuration": {
