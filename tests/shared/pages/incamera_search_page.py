@@ -4,6 +4,8 @@ Models the in-camera forensic search that opens from within a video tile's
 player controls. Allows searching for Person/Vehicle events within a specific
 camera's feed using category, description, and duration filters.
 """
+import re
+
 from playwright.sync_api import Error as PlaywrightError, Page
 
 from tests.shared.helpers.search_job import SearchJob, require_results, watch_search
@@ -88,21 +90,32 @@ class InCameraSearchPage:
                 self.page.wait_for_timeout(500)
                 return
 
-    def select_duration(self, index: int = 4):
-        """Select a duration from the duration dropdown (4=Today)."""
+    def select_duration(self, label: str = "Today"):
+        """Pick a duration by its label ("Today", "Last 7 Days", ...).
+
+        The list is the Search page's (Last 1 Hour, Last 2 Hours, Today,
+        Yesterday, Last 7 Days, Last 30 Days, Custom). Picking by index
+        chose Last 7 Days once two options were added at the top, and that
+        row sits under the player's "camera failed to load" banner, so the
+        click never landed (09/11/2026).
+        """
         containers = self.filter_containers
         for i in range(containers.count()):
             text = containers.nth(i).inner_text()
             if "Category" not in text and "Description" not in text:
                 containers.nth(i).click()
-                # the first item rendering is the opened signal
-                self._appears(self.dropdown_items.first, timeout=10000)
-                if self.dropdown_items.count() > index:
-                    item = self.dropdown_items.nth(index)
-                    item.click()
-                    # the item hiding is the selection-applied signal
-                    self._appears_hidden(item, timeout=5000)
+                # the item rendering is the opened signal; a label the
+                # list does not offer fails here, by name
+                item = self.dropdown_items.filter(has_text=re.compile(
+                    rf"^\s*{re.escape(label)}\s*$"))
+                item.wait_for(state="visible", timeout=10000)
+                item.click()
+                # the item hiding is the selection-applied signal
+                self._appears_hidden(item, timeout=5000)
                 return
+        raise AssertionError(
+            "the in-camera search overlay has no Duration section "
+            "(Category and Description only)")
 
     # --- Search & Results ---
 

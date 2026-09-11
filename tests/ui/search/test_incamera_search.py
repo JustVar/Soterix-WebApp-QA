@@ -85,7 +85,7 @@ class TestInCameraSearch:
         # Select filters: Person, Male, Today
         ics.select_category(index=0)  # Person
         ics.select_description_gender("Male")
-        ics.select_duration(index=4)  # Today
+        ics.select_duration("Today")
 
         # Execute search
         ics.execute_search(timeout=60000)
@@ -114,7 +114,7 @@ class TestInCameraSearch:
         ics.open_search()
         ics.select_category(index=0)
         ics.select_description_gender("Male")
-        ics.select_duration(index=4)
+        ics.select_duration("Today")
         # execute_search returns only with results on screen: a search the
         # server finished with nothing skips there, with the job's counts
         # (no Person/Male detection on this camera today is the tenant's
