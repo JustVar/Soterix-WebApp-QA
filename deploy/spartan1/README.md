@@ -98,8 +98,11 @@ ssh spartan1 'TARGET=tests/ui/maps TEST_TIMEOUT=300 /data/qa/ci/nightly.sh; tail
 
 ## Recovering a stuck nightly
 
-The script kills its own predecessor, so a stuck nightly clears itself the
-next night. To clear one now, or one started by an older script:
+The script kills its own predecessor: the process group in its pid file,
+and since 09/11/2026 any pytest still running from the clone (a stalled run
+whose pid file was gone kept the single-run lock, and the next nightly's
+legs all exited in 0 s), then releases the in-repo run lock. So a stuck
+nightly clears itself the next night. To clear one now:
 
 ```bash
 ssh spartan1 'pkill -u soterix -f "[n]ightly.sh"; pkill -u soterix -f "[p]ytest tests/ui"; sleep 5; \

@@ -59,11 +59,28 @@ fi
       kill -KILL -- "-$old" 2>/dev/null
     fi
   fi
+  # The pid file is not the only witness: on 09/11/2026 a stalled run had
+  # no pid file (the run before it had removed the file at its own end),
+  # so nothing was killed, the stalled session kept the single-run lock,
+  # and every leg of the new nightly exited in 0 s. Whatever pytest is
+  # still running from the clone is an earlier nightly by definition:
+  # kill it, its drivers and browsers, and release the lock it held.
+  if pgrep -u "$(id -un)" -f "[p]ytest tests/" > /dev/null; then
+    echo "pytest from an earlier run still alive with no pid file: killing it"
+    pkill -u "$(id -un)" -TERM -f "[p]ytest tests/"
+    sleep 5
+    pkill -u "$(id -un)" -KILL -f "[p]ytest tests/"
+    pkill -u "$(id -un)" -KILL -f "playwright/driver/[n]ode"
+    pkill -u "$(id -un)" -KILL -f "[m]s-playwright|[c]hrome"
+  fi
   echo $$ > "$PIDFILE"
   # Live traces of a killed run. A finished run has moved its own.
   rm -rf /tmp/playwright-artifacts-*
 
   cd "$REPO" || exit 1
+  # Nothing of an earlier run is alive now, so its single-run lock (the
+  # in-repo guard that refused this nightly's legs on 09/11) is stale.
+  venv/bin/python tools/run_lock.py release --env qa --force > /dev/null 2>&1 || true
   # Guard 3.
   git fetch -q origin && git reset -q --hard origin/main
   echo "code: $(git log -1 --format='%h %s')"
