@@ -11,6 +11,7 @@ Access: http://<IP>/cgi-bin/index.cgi (main), /cgi-bin/admin/setup_main.cgi (set
 Auth: HTTP Basic Auth (handled by browser context, not URL)
 """
 import os
+import time
 import re
 
 from playwright.sync_api import BrowserContext, Page, expect
@@ -64,28 +65,50 @@ class CameraHardwarePage:
         self.page.goto(self.setup_url, wait_until="domcontentloaded", timeout=15000)
         return self
 
-    # The setup page names a sub-section twice: the menu item (an <li> with
-    # the page href) and the content heading (a <span tkey=...> inside
-    # #tabs). A bare text='X' resolves to both once the page is open, and
-    # Playwright's strict mode refuses the click and the expect: 23 of 29
-    # tests per camera failed that way on the first run from spartan1
-    # (09/11/2026). Clicks go to the menu, checks to the heading.
+    # The setup page (probed on camera .129, 09/11/2026): the sections are
+    # <ul id=...> under #sub_menu whose own text is the name ("> NETWORK"),
+    # the sub-sections are <li class=select_minor id=... href=...> inside
+    # them, and the content pane is #tabs with a <div class=contentTitle>
+    # heading whose text is NOT always the menu text ('MOTION' opens 'MOTION
+    # DETECTION CONFIGURATION'). A bare text='X' matched the menu item and
+    # the heading at once, and Playwright's strict mode refused the click
+    # and the expect: 23 of 29 tests per camera failed that way on the
+    # first real run from spartan1. Clicks go to the menu; checks to the
+    # heading; the navigated signal is the heading changing.
     def navigate_to_setup_section(self, section_text: str):
         """Click a top-level nav section in Setup (e.g. 'CAMERA', 'NETWORK')."""
-        self.page.locator(f"li:text-is('{section_text}')").first.click()
+        self.page.locator(f"#sub_menu >> text='{section_text}'").first.click()
         self.page.wait_for_timeout(500)  # the menu unfolds with no DOM signal of its own
         return self
 
     def navigate_to_setup_subsection(self, subsection_text: str):
         """Click a sub-section link in Setup (e.g. 'VIDEO', 'OSD', 'ENABLE')
-        and wait for the content pane to carry that heading."""
-        self.page.locator(f"li:text-is('{subsection_text}')").first.click()
-        self.heading(subsection_text).wait_for(state="visible", timeout=10000)
+        and wait for the content heading to change."""
+        before = self.current_heading()
+        self.page.locator(f"#sub_menu li:text-is('{subsection_text}')").first.click()
+        self._wait_heading_change(before)
         return self
 
     def heading(self, text: str):
         """The content pane's heading for a setup page, exact text."""
-        return self.page.locator("#tabs").get_by_text(text, exact=True)
+        return self.page.locator("#tabs .contentTitle").filter(has_text=text).first
+
+    def current_heading(self) -> str:
+        title = self.page.locator("#tabs .contentTitle").first
+        try:
+            return title.inner_text(timeout=2000).strip() if title.count() else ""
+        except Exception:  # noqa: BLE001 - why: no heading yet is a valid 'before' for the change wait
+            return ""
+
+    def _wait_heading_change(self, before: str, timeout_ms: int = 10000) -> None:
+        """Poll until the content heading reads something other than `before`.
+        A click on the page already open changes nothing; the wait then
+        ends at the timeout without raising, as the old fixed sleep did."""
+        deadline = time.monotonic() + timeout_ms / 1000
+        while time.monotonic() < deadline:
+            if self.current_heading() not in ("", before):
+                return
+            self.page.wait_for_timeout(200)  # poll tick for the content pane
 
     # ------------------------------------------------------------------ #
     #  Main Page - Live View assertions
