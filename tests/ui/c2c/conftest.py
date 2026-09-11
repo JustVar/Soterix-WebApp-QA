@@ -27,6 +27,8 @@ Example runs:
 """
 import os
 import socket
+import urllib.error
+import urllib.request
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -88,13 +90,23 @@ _reachable_cache: dict[str, bool] = {}
 
 
 def _camera_reachable(ip: str, port: int = 80) -> bool:
-    """True if a TCP connection to the camera's web UI succeeds quickly."""
+    """True if the camera's web UI answers an HTTP request quickly.
+
+    A TCP handshake is not enough: from the office network the lab cameras
+    accept the connection and then never serve a page, and on 09/11/2026
+    that let 222 c2c tests run from a laptop and each burn a 15 s page
+    timeout (172 goto timeouts, 45 click timeouts). Any HTTP status counts
+    as reachable, 401 included: the camera answered.
+    """
     if ip in _reachable_cache:
         return _reachable_cache[ip]
+    request = urllib.request.Request(f"http://{ip}:{port}/", method="HEAD")
     try:
-        with socket.create_connection((ip, port), timeout=REACHABILITY_TIMEOUT):
+        with urllib.request.urlopen(request, timeout=REACHABILITY_TIMEOUT):
             result = True
-    except OSError:
+    except urllib.error.HTTPError:  # why: 401/403/404 is the camera answering; the page will load
+        result = True
+    except (TimeoutError, urllib.error.URLError, OSError):  # why: no answer in time IS the measurement; the caller skips and names it
         result = False
     _reachable_cache[ip] = result
     return result
@@ -124,7 +136,7 @@ def camera_config(request):
     if not _camera_reachable(ip) and not os.environ.get("C2C_REQUIRE_HARDWARE"):
         pytest.skip(
             f"C2C camera {camera['id']} at {ip} is not reachable "
-            f"(no TCP connect within {REACHABILITY_TIMEOUT}s). These are "
+            f"(no HTTP answer within {REACHABILITY_TIMEOUT}s). These are "
             f"hardware tests - run them on the lab network, or set "
             f"C2C_REQUIRE_HARDWARE=1 to fail instead of skip."
         )

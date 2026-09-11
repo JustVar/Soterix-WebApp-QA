@@ -5,4 +5,10 @@
 #
 # Install: copy this file to .git/hooks/pre-commit (no extension).
 # Bypass only for a genuine emergency: git commit --no-verify.
+#
+# First the secret gate: no staged line may carry a credential value from
+# .env (the camera login reached two GitHub orgs through a QA Touch backup
+# on 08/28/2026 and nearly again through a conftest on 09/11). Then the
+# conventions.
+venv/Scripts/python.exe tools/secret_check.py || exit 1
 venv/Scripts/python.exe tools/convention_check.py
