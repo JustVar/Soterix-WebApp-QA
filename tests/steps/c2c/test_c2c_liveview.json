@@ -8,7 +8,7 @@
         {
           "n": 1,
           "action": "Open the camera's main page.",
-          "expected": "Soterix branding is shown and the live view timestamp shows the date and time."
+          "expected": "The Setup button is shown and Camera time shows a value."
         },
         {
           "n": 2,
@@ -21,7 +21,7 @@
           "expected": "Zoom, Focus and Auto focus are present, with Focus and Calibrate buttons."
         }
       ],
-      "case_key": ""
+      "case_key": "0r9mwl"
     },
     "test_speaker_and_alarm_controls": {
       "title": "Verify camera speaker and alarm controls on main page",
@@ -42,7 +42,7 @@
           "expected": "Camera time shows a date and time."
         }
       ],
-      "case_key": ""
+      "case_key": "kpaJn9"
     },
     "test_security_pages_accessible": {
       "title": "Verify user management and security configuration pages",
@@ -68,7 +68,7 @@
           "expected": "The HTTPS settings page is shown."
         }
       ],
-      "case_key": ""
+      "case_key": "41lEzw"
     }
   }
 }

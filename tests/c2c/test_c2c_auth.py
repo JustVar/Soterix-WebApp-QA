@@ -17,12 +17,10 @@ class TestC2CAuth:
 
         Steps:
         1. Open the camera's web UI (http://<camera IP>/cgi-bin/index.cgi) and sign in with the lab login when the browser asks.
-           Expected: The main page loads with the Soterix Systems branding.
-        2. Look at the live view.
-           Expected: A timestamp overlay with today's date is shown on the video.
-        3. Look for the Setup button.
-           Expected: The Setup button is shown.
-        4. Look at the live view controls.
+           Expected: The main page opens with the Setup button and the Channel select.
+        2. Read the Camera time.
+           Expected: A Camera time is shown.
+        3. Look at the live view controls.
            Expected: The Full screen button is shown.
         """
         context = browser.new_context(
@@ -42,16 +40,17 @@ class TestC2CAuth:
             timeout=15000,
         )
 
-        step_capture.mark(2, "Verify Soterix Systems branding is visible")
-        expect(page.locator("text=/SOTERIX/i").first).to_be_visible(timeout=5000)
+        # The branding is a CSS background on every model (no text, no img;
+        # probed 09/11/2026), so the login's proof is the main page itself:
+        # its Setup button and its Channel select.
+        step_capture.mark(2, "Verify the main page opened: Setup button and Channel select")
+        expect(page.locator("button:has-text('Setup')")).to_be_visible(timeout=10000)
+        expect(page.get_by_text("Channel select", exact=True)).to_be_visible()
 
-        step_capture.mark(3, "Verify camera timestamp overlay is present")
-        expect(page.locator("text=/\\d{4}-\\d{2}-\\d{2}/").first).to_be_visible(timeout=5000)
+        step_capture.mark(3, "Verify the camera time is shown")
+        expect(page.get_by_text("Camera time", exact=True)).to_be_visible(timeout=5000)
 
-        step_capture.mark(4, "Verify Setup button is accessible")
-        expect(page.locator("button:has-text('Setup')")).to_be_visible()
-
-        step_capture.mark(5, "Verify live view controls are present")
+        step_capture.mark(4, "Verify the Full screen control is present")
         expect(page.locator("button:has-text('Full screen')")).to_be_visible()
 
         context.close()

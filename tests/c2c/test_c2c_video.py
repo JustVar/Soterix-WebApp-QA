@@ -50,9 +50,10 @@ class TestC2CVideoConfig:
         self.step_capture.mark(4, "Verify Stream 3: M-JPEG, 640x360, 30 FPS")
         assert "M-JPEG" in page_text
 
-        self.step_capture.mark(5, "Verify Stream 1 details: VBR, 2560 Kbps, Quality 5, GOP 14")
-        # Check codec detail form values
-        codec_select = self.page.locator("select").first
+        self.step_capture.mark(5, "Verify the Stream 1 codec select reads H.265")
+        # the first select on the page is not the codec on every firmware
+        # (probed 09/11/2026): the codec select is the one offering H.265
+        codec_select = self.camera.codec_select()
         assert codec_select.input_value() == "H.265"
 
     @pytest.mark.regression
@@ -76,7 +77,7 @@ class TestC2CVideoConfig:
         expect(self.camera.heading("VIDEO CONFIGURATION")).to_be_visible()
 
         self.step_capture.mark(2, "Save original codec and resolution values")
-        codec_select = self.page.locator("select").first
+        codec_select = self.camera.codec_select()
         original_codec = codec_select.input_value()
         # Find resolution select
         res_selects = self.page.locator("select")
@@ -98,14 +99,13 @@ class TestC2CVideoConfig:
             self.camera.click_apply()
 
             self.step_capture.mark(5, "Verify codec change was saved")
-            self.page.wait_for_timeout(1000)
-            assert self.page.locator("select").first.input_value() == "H.264"
+            expect(self.camera.codec_select()).to_have_value("H.264", timeout=10000)
         finally:
             # Restore in a finally block: a failed verification previously left
             # the camera encoding H.264 instead of its configured codec.
             self.step_capture.mark(6, "Restore original codec and Apply")
             try:
-                self.page.locator("select").first.select_option(value=original_codec)
+                self.camera.codec_select().select_option(value=original_codec)
                 self.camera.click_apply()
             except Exception as restore_err:  # noqa: BLE001 - must not mask the real failure
                 pytest.fail(
@@ -139,7 +139,7 @@ class TestC2COSD:
         """
         self.step_capture.mark(1, "Navigate to OSD Configuration")
         self.camera.navigate_to_setup_subsection("OSD")
-        expect(self.page.locator("text=/ON SCREEN DISPLAY/")).to_be_visible()
+        expect(self.camera.heading("ON SCREEN DISPLAY")).to_be_visible()
 
         self.step_capture.mark(2, "Verify Date & time is set to On")
         page_text = self.page.locator("body").inner_text()

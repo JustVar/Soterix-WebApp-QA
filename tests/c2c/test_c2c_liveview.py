@@ -30,19 +30,23 @@ class TestC2CLiveView:
 
         Steps:
         1. Open the camera's main page.
-           Expected: Soterix branding is shown and the live view timestamp shows the date and time.
+           Expected: The Setup button is shown and Camera time shows a value.
         2. Read the page for the channel and screen controls.
            Expected: Channel select and the Full screen button are present.
         3. Read the page for the lens controls.
            Expected: Zoom, Focus and Auto focus are present, with Focus and Calibrate buttons.
         """
-        self.step_capture.mark(1, "Verify live video feed is displayed")
-        # The main page should have loaded via camera_page fixture
-        expect(self.page.locator("text=/SOTERIX/i").first).to_be_visible(timeout=5000)
+        self.step_capture.mark(1, "Verify the main page is up: the Setup button is shown")
+        # the branding is a CSS background on every model (probed 09/11/2026)
+        expect(self.page.locator("button:has-text('Setup')")).to_be_visible(timeout=5000)
 
-        self.step_capture.mark(2, "Verify camera timestamp overlay updates")
-        timestamp = self.page.locator("text=/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/").first
-        expect(timestamp).to_be_visible()
+        self.step_capture.mark(2, "Verify the Camera time is shown with a value")
+        # the format differs by model (BC-5M-1 and FC-12F-1 show no YYYY-MM-DD),
+        # so the check is the label and a non-empty value beside it
+        time_block = self.page.get_by_text("Camera time", exact=True).locator("xpath=..")
+        expect(time_block).to_be_visible()
+        assert len(time_block.inner_text().replace("Camera time", "").strip()) >= 8, (
+            f"Camera time shows no value: {time_block.inner_text()!r}")
 
         self.step_capture.mark(3, "Verify Channel select dropdown exists")
         page_text = self.page.locator("body").inner_text()
@@ -91,10 +95,11 @@ class TestC2CLiveView:
         self.step_capture.mark(5, "Verify Motion indicator exists")
         assert "Motion" in page_text
 
-        self.step_capture.mark(6, "Verify Camera time display matches timestamp")
+        self.step_capture.mark(6, "Verify Camera time is shown with a value")
         assert "Camera time" in page_text
-        # Camera time should show a date-time string
-        expect(self.page.locator("text=/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/").first).to_be_visible()
+        time_block = self.page.get_by_text("Camera time", exact=True).locator("xpath=..")
+        assert len(time_block.inner_text().replace("Camera time", "").strip()) >= 8, (
+            f"Camera time shows no value: {time_block.inner_text()!r}")
 
 
 class TestC2CSecurity:

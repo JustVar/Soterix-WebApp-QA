@@ -14,6 +14,7 @@ import os
 import re
 import time
 
+import pytest
 from playwright.sync_api import BrowserContext, Page, expect
 
 # Default camera config - used when no config dict provided (legacy env-var mode)
@@ -75,9 +76,36 @@ class CameraHardwarePage:
     # and the expect: 23 of 29 tests per camera failed that way on the
     # first real run from spartan1. Clicks go to the menu; checks to the
     # heading; the navigated signal is the heading changing.
+    def _menu_section(self, section_text: str):
+        """The <ul> under #sub_menu whose own first line is the section name.
+        Case-insensitive: the Soterix section renders as 'soterix'."""
+        pattern = re.compile(rf"^\s*[>\u2228v]?\s*{re.escape(section_text)}\s*(\n|$)", re.I)
+        # .first: the pattern is anchored to the ul's whole first line, one section has it
+        return self.page.locator("#sub_menu > ul").filter(has_text=pattern).first
+
+    def _menu_item(self, subsection_text: str):
+        """The <li> under #sub_menu whose whole text is the sub-section name.
+        Case-insensitive: 'RTSP authentication', 'Enable', 'connect' render
+        in mixed case while the tests name them in capitals."""
+        pattern = re.compile(rf"^\s*{re.escape(subsection_text)}\s*$", re.I)
+        # .first: the pattern is anchored to the li's whole text, one entry has it
+        return self.page.locator("#sub_menu li").filter(has_text=pattern).first
+
+    def has_subsection(self, subsection_text: str) -> bool:
+        """Does this camera's setup menu carry the entry at all? Firmware
+        differs by model: DC-5V-1 and BC-5V-1 have no VCA > RULES and no
+        Soterix > CONNECT entry (probed 09/11/2026)."""
+        return self._menu_item(subsection_text).count() > 0
+
+    def require_subsection(self, subsection_text: str) -> None:
+        """Skip, naming the measured absence, when the menu has no such entry."""
+        if not self.has_subsection(subsection_text):
+            pytest.skip(f"this camera's setup menu has no '{subsection_text}' entry "
+                        f"(measured on the page; firmware differs by model)")
+
     def navigate_to_setup_section(self, section_text: str):
         """Click a top-level nav section in Setup (e.g. 'CAMERA', 'NETWORK')."""
-        self.page.locator(f"#sub_menu >> text='{section_text}'").first.click()
+        self._menu_section(section_text).click()
         self.page.wait_for_timeout(500)  # the menu unfolds with no DOM signal of its own
         return self
 
@@ -85,9 +113,18 @@ class CameraHardwarePage:
         """Click a sub-section link in Setup (e.g. 'VIDEO', 'OSD', 'ENABLE')
         and wait for the content heading to change."""
         before = self.current_heading()
-        self.page.locator(f"#sub_menu li:text-is('{subsection_text}')").first.click()
+        item = self._menu_item(subsection_text)
+        if not item.count():
+            raise AssertionError(f"this camera's setup menu has no '{subsection_text}' entry")
+        item.click()
         self._wait_heading_change(before)
         return self
+
+    def codec_select(self):
+        """The Stream 1 codec select: the first select that offers H.265.
+        The page's first select is not the codec on every firmware."""
+        return self.page.locator("#tabs select").filter(
+            has=self.page.locator("option[value='H.265'], option:has-text('H.265')")).first
 
     def heading(self, text: str):
         """The content pane's heading for a setup page, exact text."""

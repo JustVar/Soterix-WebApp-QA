@@ -47,9 +47,11 @@ class TestC2CSystemInfo:
         self.step_capture.mark(3, f"Verify Manufacturer is {self.config['manufacturer']}")
         expect(self.page.locator(f"text='{self.config['manufacturer']}'")).to_be_visible()
 
-        self.step_capture.mark(4, "Verify Serial number is present")
-        serial = self.page.locator("text=/PC\\w+/").first
-        expect(serial).to_be_visible()
+        # the serial is the last part of the registry id (q300c5b44, pc00c5552);
+        # the old /PC\w+/ pattern only fitted the BC and FC units
+        serial = self.config["id"].rsplit("-", 1)[-1].upper()
+        self.step_capture.mark(4, f"Verify Serial number {serial} is shown")
+        expect(self.page.locator("#tabs").get_by_text(serial, exact=True)).to_be_visible()
 
         self.step_capture.mark(5, f"Verify Max resolution is {self.config['max_resolution']}")
         expect(self.page.locator(f"text='{self.config['max_resolution']}'").first).to_be_visible()
@@ -185,10 +187,10 @@ class TestC2CPlugins:
         self.camera.navigate_to_setup_subsection("PLUG-IN")
 
         self.step_capture.mark(2, "Check storage usage percentage")
-        storage_text = self.page.locator("text=/\\d+ %/").inner_text()
         import re
-        match = re.search(r"(\d+)", storage_text)
-        assert match, "Could not find storage percentage"
+        page_text = " ".join(self.page.locator("#tabs").inner_text().split())
+        match = re.search(r"(\d+)\s*%", page_text)
+        assert match, f"The Plug-in page shows no storage percentage; it reads: {page_text[:200]!r}"
         usage = int(match.group(1))
 
         self.step_capture.mark(3, "Verify storage is below 90% threshold")
@@ -223,18 +225,18 @@ class TestC2CSystemOps:
         self.step_capture.mark(1, "Navigate to Firmware Update page")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("FIRMWARE UPDATE")
-        expect(self.page.locator("text=/FIRMWARE/i")).to_be_visible()
+        expect(self.camera.heading("FIRMWARE UPDATE")).to_be_visible()
 
         self.step_capture.mark(2, "Verify firmware upload control exists")
         expect(self.page.locator("input[type='file'], button:has-text('Select'), text=/Select file/i").first).to_be_visible()
 
         self.step_capture.mark(3, "Navigate to System Diagnostics")
         self.camera.navigate_to_setup_subsection("SYSTEM DIAGNOSTICS")
-        expect(self.page.locator("text=/DIAGNOSTICS/i")).to_be_visible()
+        expect(self.camera.heading("SYSTEM DIAGNOSTICS")).to_be_visible()
 
         self.step_capture.mark(4, "Navigate to System Log")
         self.camera.navigate_to_setup_subsection("LOG")
-        expect(self.page.locator("text=/LOG/i").first).to_be_visible()
+        expect(self.camera.heading("SYSTEM LOG")).to_be_visible()
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
@@ -252,7 +254,7 @@ class TestC2CSystemOps:
         self.step_capture.mark(1, "Navigate to Date & Time Setting")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("DATE&TIME SETTING")
-        expect(self.page.locator("text=/DATE.*TIME/i").first).to_be_visible()
+        expect(self.camera.heading("DATE&TIME SETTING")).to_be_visible()
 
         self.step_capture.mark(2, "Verify time configuration options exist")
         # Should have NTP or manual time settings
@@ -261,11 +263,11 @@ class TestC2CSystemOps:
 
         self.step_capture.mark(3, "Navigate to DST Settings")
         self.camera.navigate_to_setup_subsection("DST SETTINGS")
-        expect(self.page.locator("text=/DST/i").first).to_be_visible()
+        expect(self.camera.heading("DST SETTINGS")).to_be_visible()
 
         self.step_capture.mark(4, "Navigate to Language settings")
         self.camera.navigate_to_setup_subsection("LANGUAGE")
-        expect(self.page.locator("text=/LANGUAGE/i").first).to_be_visible()
+        expect(self.camera.heading("LANGUAGE")).to_be_visible()
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
@@ -281,7 +283,7 @@ class TestC2CSystemOps:
         self.camera.navigate_to_setup_subsection("CONFIGURATION BACKUP")
 
         self.step_capture.mark(2, "Verify export/download option exists")
-        expect(self.page.locator("text=/CONFIGURATION BACKUP/i")).to_be_visible()
+        expect(self.camera.heading("CONFIGURATION BACKUP")).to_be_visible()
         # Should have backup/export and restore/import buttons
         page_text = self.page.locator("body").inner_text()
         assert "Backup" in page_text or "Export" in page_text or "Download" in page_text

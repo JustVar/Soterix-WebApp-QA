@@ -70,6 +70,8 @@ class TestC2CVCA:
         """
         self.step_capture.mark(1, "Navigate to VCA > RULES")
         self.camera.navigate_to_setup_section("VCA")
+        # DC-5V-1 and BC-5V-1 firmware has no RULES entry (probed 09/11/2026)
+        self.camera.require_subsection("RULES")
         self.camera.navigate_to_setup_subsection("RULES")
         expect(self.camera.heading("RULES")).to_be_visible()
 
@@ -130,6 +132,8 @@ class TestC2CSoterixCloud:
         """
         self.step_capture.mark(1, "Navigate to Soterix > CONNECT")
         self.camera.navigate_to_setup_section("Soterix")
+        # DC-5V-1 and BC-5V-1 firmware has no CONNECT entry (probed 09/11/2026)
+        self.camera.require_subsection("CONNECT")
         self.camera.navigate_to_setup_subsection("CONNECT")
 
         self.step_capture.mark(2, "Verify Soterix Cloud Connect page loads with branding")

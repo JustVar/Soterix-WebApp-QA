@@ -8,25 +8,20 @@
         {
           "n": 1,
           "action": "Open the camera's web UI (http://<camera IP>/cgi-bin/index.cgi) and sign in with the lab login when the browser asks.",
-          "expected": "The main page loads with the Soterix Systems branding."
+          "expected": "The main page opens with the Setup button and the Channel select."
         },
         {
           "n": 2,
-          "action": "Look at the live view.",
-          "expected": "A timestamp overlay with today's date is shown on the video."
+          "action": "Read the Camera time.",
+          "expected": "A Camera time is shown."
         },
         {
           "n": 3,
-          "action": "Look for the Setup button.",
-          "expected": "The Setup button is shown."
-        },
-        {
-          "n": 4,
           "action": "Look at the live view controls.",
           "expected": "The Full screen button is shown."
         }
       ],
-      "case_key": ""
+      "case_key": "dyVv1W"
     },
     "test_camera_rejects_invalid_credentials": {
       "title": "Verify camera rejects invalid credentials",
@@ -42,7 +37,7 @@
           "expected": "No camera page content is shown, and there is no Setup button."
         }
       ],
-      "case_key": ""
+      "case_key": "xmQWzW"
     }
   }
 }
