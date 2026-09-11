@@ -648,9 +648,22 @@ class Capture:
         return [u for u in self.frames if MEDIA_WS in u]
 
 
+def chrome_args() -> list[str]:
+    """Extra Chrome launch flags from CHROME_ARGS (space-separated).
+
+    spartan1 decodes H.265 only with its NVIDIA GPU behind VA-API, which
+    Chrome reaches headed on a virtual display with
+    --ignore-gpu-blocklist --enable-features=VaapiOnNvidiaGPUs,... --use-gl=angle
+    --use-angle=gl (measured 09/11/2026, deploy/spartan1/README.md). The
+    same variable feeds the test session's browser (conftest.py), so the
+    probe measures the browser the tests get.
+    """
+    return (os.environ.get("CHROME_ARGS") or "").split()
+
+
 def open_browser(p, headed: bool, channel: str | None):
     """Launch, hook, log in and land on Views. Returns (browser, page, views, capture)."""
-    browser = p.chromium.launch(headless=not headed, channel=channel)
+    browser = p.chromium.launch(headless=not headed, channel=channel, args=chrome_args())
     ctx = browser.new_context(ignore_https_errors=True, viewport={"width": 1600, "height": 900})
     ctx.add_init_script(HOOK)
     page = ctx.new_page()
