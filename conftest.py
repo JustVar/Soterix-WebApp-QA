@@ -67,6 +67,15 @@ def env_skip_reason(keywords, settings, env_name: str) -> str | None:
             if marker in keywords:
                 return (f"env {env_name}: {flag} is False in config/env/, so tests "
                         f"marked '{marker}' do not run here")
+    # An env's own `without` map (config/env/<env>.py > without): what the
+    # deployment itself lacks, by marker, with the reason. The Neurosen
+    # private cloud is a build of the web app without some Core features;
+    # a box's `without` says the same thing for one tenant inside an env.
+    without = (settings or {}).get("without") or {}
+    for marker, why in without.items():
+        if marker in keywords:
+            return (f"env {env_name} is without '{marker}': {why} "
+                    f"(config/env/{env_name}.py > without)")
     return None
 
 

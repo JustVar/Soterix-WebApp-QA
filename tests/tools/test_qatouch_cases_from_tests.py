@@ -475,3 +475,43 @@ def test_c2c_stays_one_acronym_in_class_names():
     assert gen._words('C2COSD') == ['C2C', 'OSD']
     nodeid = 'tests/c2c/test_c2c_camera.py::TestC2CAdditionalSettings::test_corridor_mode_options'
     assert gen.module_name(nodeid, classes_in_file=4) == 'C2C > Camera > Additional Settings'
+
+
+def test_after_import_for_another_project_adds_the_key_beside_the_home_rows(synthetic, tmp_path, monkeypatch):
+    """--project P0BK on a Core test with home rows: the Neurosen key lands under
+    case_keys on those rows; nothing is deleted and the Core key stays."""
+    root, path = synthetic
+    monkeypatch.setattr(gen, 'ROOT', root)
+    monkeypatch.setattr(gen, 'TESTS_ROOTS', [root / 'tests' / 'ui'])
+    base = 'tests/ui/thing/test_thing.py::TestThing::test_titled'
+    found = gen.scan_file(path, root)
+    row = gen.build_row(found[base], gen.parse_docstring(found[base].docstring, base), '2026-09-11')
+    csv_path = tmp_path / 'cases.csv'
+    gen.write_csv([row], csv_path)
+    cases_path = tmp_path / 'cases.json'
+    cases_path.write_text(json.dumps({'cases': [_case('NEURO1', base, title='Verify the thing', module='Thing')]}),
+                          encoding='utf-8')
+    mapping = tmp_path / 'mapping.json'
+    mapping.write_text(json.dumps({'version': 1, 'mappings': {
+        f'{base}[chromium]': {'case_key': 'CORE1', 'reviewed': True},
+    }}), encoding='utf-8')
+    rc = gen.main(['--after-import', str(csv_path), '--cases', str(cases_path),
+                   '--mapping', str(mapping), '--project', 'P0BK'])
+    assert rc == 0
+    rows = json.loads(mapping.read_text(encoding='utf-8'))['mappings']
+    assert rows[f'{base}[chromium]'] == {'case_key': 'CORE1', 'reviewed': True, 'case_keys': {'P0BK': 'NEURO1'}}
+
+
+def test_mapping_rows_for_a_foreign_project_file_the_key_under_case_keys(synthetic):
+    """A foreign project's key goes under case_keys; the home project's stays plain."""
+    root, path = synthetic
+    base = 'tests/ui/thing/test_thing.py::TestThing::test_titled'
+    info = gen.scan_file(path, root)[base]
+    rows = gen.mapping_rows(base, {'case_key': 'NEURO1', 'case_title': 'T', 'module_name': 'Thing'}, info,
+                            project='P0BK')
+    entry = rows[f'{base}[chromium]']
+    assert (entry['case_key'], entry['case_keys']) == ('', {'P0BK': 'NEURO1'})
+    home = gen.mapping_rows(base, {'case_key': 'CORE1', 'case_title': 'T', 'module_name': 'Thing'}, info,
+                            project='JlW1')[f'{base}[chromium]']
+    assert home['case_key'] == 'CORE1'
+    assert 'case_keys' not in home

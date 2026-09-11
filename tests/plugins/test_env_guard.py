@@ -238,3 +238,72 @@ def test_guarded_markers_are_registered_in_pytest_ini():
     registered = set(re.findall(r'^\s+(\w+)(?:\(\w+\))?:', text, re.MULTILINE))
     missing = [m for m in conftest.DELETE_MARKERS + conftest.WRITE_MARKERS if m not in registered]
     assert missing == []
+
+
+# ---------------------------------------------------------------------------
+# The env-level `without` map (config/env/neurosen.py)
+# ---------------------------------------------------------------------------
+
+NEUROSEN = {'allow_write': True, 'allow_delete': False,
+            'without': {'chats': 'Neurosen has no messaging (measured 2026-09-11)'}}
+
+
+def test_env_without_refuses_only_its_markers():
+    """An env's own `without` map skips the marked tests with the stated reason."""
+    reason = conftest.env_skip_reason({'chats': True, 'ui': True}, NEUROSEN, 'neurosen')
+    assert reason == ("env neurosen is without 'chats': Neurosen has no messaging (measured 2026-09-11) "
+                      "(config/env/neurosen.py > without)")
+    assert conftest.env_skip_reason({'views_myviews': True}, NEUROSEN, 'neurosen') is None
+    assert conftest.env_skip_reason({'chats': True}, QA, 'qa') is None
+
+
+def test_env_flags_speak_before_the_env_without_map():
+    """A test refused by allow_delete is reported by the flag, not the map."""
+    settings = {**NEUROSEN, 'without': {'mutating': 'x'}}
+    assert conftest.env_skip_reason({'mutating': True}, settings, 'neurosen').startswith(
+        'env neurosen: allow_delete is False')
+
+
+def test_hook_applies_the_env_without_map(monkeypatch):
+    """The collection hook reads the env's map and names the env in the skip reason."""
+    monkeypatch.setattr(conftest, 'ENV_SETTINGS', {**NEUROSEN, 'boxes': {'lab': {}}, 'default_box': 'lab'})
+    monkeypatch.setenv('ENV', 'neurosen')
+    monkeypatch.setenv('BOX', 'lab')
+    items = [FakeItem('chats', 'ui'), FakeItem('ui')]
+    conftest.pytest_collection_modifyitems(_config(), items)
+    assert items[0].skip_reasons == [
+        "env neurosen is without 'chats': Neurosen has no messaging (measured 2026-09-11) "
+        "(config/env/neurosen.py > without)"]
+    assert items[1].markers == []
+
+
+def test_neurosen_env_file_has_the_shape_the_guards_read():
+    """The env file's keys, so a rename there cannot silently switch a guard off."""
+    import importlib
+    mod = importlib.import_module('config.env.neurosen')
+    cfg = mod.config
+    assert cfg['qatouch_project'] == 'P0BK'
+    assert isinstance(cfg['without'], dict)
+    assert cfg['base_url_env'] == 'NEUROSEN_BASE_URL'
+    assert set(cfg['boxes']) == {'lab'}
+    assert cfg['default_box'] == 'lab'
+    assert cfg['boxes']['lab']['email_env'] == 'NEUROSEN_USER'
+    assert (cfg['allow_write'], cfg['allow_delete']) == (True, False)
+
+
+def test_neurosen_refuses_to_load_without_its_address(monkeypatch):
+    """ENV=neurosen with no NEUROSEN_BASE_URL fails at load, naming the variable."""
+    import importlib
+
+    from config import base_config
+    monkeypatch.setenv('ENV', 'neurosen')
+    monkeypatch.delenv('NEUROSEN_BASE_URL', raising=False)
+    monkeypatch.delenv('BOX', raising=False)
+    importlib.reload(importlib.import_module('config.env.neurosen'))
+    with pytest.raises(RuntimeError, match='NEUROSEN_BASE_URL'):
+        base_config.load_config()
+    monkeypatch.setenv('NEUROSEN_BASE_URL', 'https://neurosen.lab.example/')
+    importlib.reload(importlib.import_module('config.env.neurosen'))
+    cfg = base_config.load_config()
+    assert cfg['base_url'] == 'https://neurosen.lab.example'
+    assert cfg['api_base_url'] == 'https://neurosen.lab.example/v-apiserver'

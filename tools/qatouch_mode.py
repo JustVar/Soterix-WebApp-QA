@@ -142,8 +142,10 @@ def load_mapped_keys() -> dict[str, list[str]]:
     if counts['unreviewed']:
         print(f'  (mapping gate: {counts["unreviewed"]} unreviewed proposal(s) excluded)')
     out: dict[str, list[str]] = {}
-    for nodeid, case_key in reviewed.items():
-        out.setdefault(case_key, []).append(nodeid)
+    for nodeid, value in reviewed.items():
+        # a per-project row names one key per project; every one is automated
+        for case_key in (value.values() if isinstance(value, dict) else [value]):
+            out.setdefault(case_key, []).append(nodeid)
     return out
 
 

@@ -78,3 +78,9 @@ def test_record_writes_the_row_through_the_ledger_file(tmp_path, monkeypatch):
     assert ql.load_history(ledger) == [row]
     ql.record({**SNAP, 'cases': SNAP['cases'][:2]}, ledger)
     assert [r['cases'] for r in ql.load_history(ledger)] == [2]
+
+
+def test_mapped_keys_counts_every_project_key():
+    """A Core test's Neurosen key is automated too: the P0BK snapshot counts it."""
+    assert ql.mapped_keys({'t1': {'case_key': 'A', 'case_keys': {'P0BK': 'N1'}},
+                           't2': {'case_key': 'B'}}) == {'A', 'B', 'N1'}

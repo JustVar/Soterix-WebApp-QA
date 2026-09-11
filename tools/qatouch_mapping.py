@@ -52,6 +52,29 @@ def save_raw(data: dict, path: Path = MAPPING_PATH) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
 
 
+def row_value(nodeid: str, row: dict):
+    """What the reporter reads for a row: the plain case_key, or, when the
+    row also carries `case_keys` (other QA Touch projects' keys for the
+    same test - a Core test with a Neurosen case), one key per project
+    with the plain key filed under the test's home project
+    (config/products.py home_project). Empty keys are left out."""
+    others = {str(p): str(k) for p, k in (row.get('case_keys') or {}).items() if k}
+    if not others:
+        return row.get('case_key')
+    from config.products import home_project
+    keys = dict(others)
+    if row.get('case_key'):
+        keys[home_project(nodeid)] = str(row['case_key'])
+    return keys
+
+
+def row_keys(row: dict) -> list[str]:
+    """Every case key a row names, across projects."""
+    keys = [str(row['case_key'])] if (row or {}).get('case_key') else []
+    keys += [str(k) for k in ((row or {}).get('case_keys') or {}).values() if k]
+    return keys
+
+
 def reviewed_lookup(path: Path = MAPPING_PATH) -> tuple[dict[str, str], dict[str, int]]:
     """nodeid -> case_key for REVIEWED rows only, plus counts for reporting.
 
@@ -59,7 +82,7 @@ def reviewed_lookup(path: Path = MAPPING_PATH) -> tuple[dict[str, str], dict[str
     lookup is used, so skipped rows are never silent.
     """
     mappings = load_raw(path).get('mappings', {})
-    reviewed = {n: e['case_key'] for n, e in mappings.items() if e.get('reviewed') is True}
+    reviewed = {n: row_value(n, e) for n, e in mappings.items() if e.get('reviewed') is True}
     return reviewed, {
         'total': len(mappings),
         'reviewed': len(reviewed),

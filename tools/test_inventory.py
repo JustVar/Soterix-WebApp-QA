@@ -114,8 +114,8 @@ def inventory_rows(tests: dict[str, TestInfo], mapping: dict[str, dict]) -> list
     """One row per test function, sorted by product, module and node id."""
     keys: dict[str, set[str]] = defaultdict(set)
     for name, row in mapping.items():
-        if (row or {}).get('case_key'):
-            keys[qm.function_base(name)].add(row['case_key'])
+        for key in qm.row_keys(row or {}):
+            keys[qm.function_base(name)].add(key)
     rows = []
     for nodeid, info in tests.items():
         doc = parse_docstring(info.docstring, nodeid)

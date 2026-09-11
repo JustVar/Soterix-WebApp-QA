@@ -158,7 +158,12 @@ once independently in the wait conversion (August 2026). Use them:
 
 ## Environment config
 
-- The `ENV` var selects `config/env/{qa,stage,prod}.py`.
+- The `ENV` var selects `config/env/{qa,stage,prod,neurosen}.py`. `neurosen`
+  is the private cloud build in the lab: its address and account come from
+  `.env` (`NEUROSEN_BASE_URL`, `NEUROSEN_USER`, `NEUROSEN_PASSWORD`) and the
+  env refuses to load without the address. Its `qatouch_project` (P0BK)
+  re-points the shared `tests/ui/` root for the run, so the archive names
+  the product and results reach the Neurosen cases (`config/products.py`).
 - `APP_TYPE=partner` appends `_pat` to the module path.
 - The config dict holds `base_url`, `api_base_url`, `default_user`,
   `default_password`, `allow_write`, `allow_delete`.
@@ -174,6 +179,10 @@ once independently in the wait conversion (August 2026). Use them:
   feature. Before this the nine LPR tests failed on the US box every
   night for a data fact. The env guard (`allow_write`, `allow_delete`)
   speaks first; the box guard second.
+- An env has a `without` map of its own, same shape, for what the
+  deployment itself lacks (`config/env/neurosen.py`: a build of the web
+  app without some Core features). It is read by the env guard, before
+  the box guard.
 
 ## Test data through the API
 
@@ -279,7 +288,14 @@ Today the process is: run pytest, read `reports/report.html`, report results
 manually. Nothing below runs unless you opt in. Treat it as in development.
 
 - **Mapping lives in `config/qatouch_case_mapping.json` only** (nodeid to
-  case_key). The reporter also honors a `@pytest.mark.qatouch("KEY")` marker,
+  case_key). A row's `case_key` is the case in the test's home project
+  (its product root's project: Core for `tests/ui/`, Camera 2 Cloud for
+  `tests/c2c/`). A test that also has a case in another project (a Core
+  test run against Neurosen) carries it under `case_keys`, keyed by that
+  project; the reporter takes the key for the project the run reports to,
+  and none when the row has no key for it. `qatouch_cases_from_tests.py
+  --after-import <csv> --project P0BK` writes those rows.
+  The reporter also honors a `@pytest.mark.qatouch("KEY")` marker,
   but the shared test files deliberately carry none: QA Touch reporting is not
   part of the team's automation flow, so it stays out of the test code. Add new
   mappings to the JSON, never to a test file.

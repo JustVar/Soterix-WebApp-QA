@@ -188,3 +188,30 @@ def test_base_keyed_drops_an_ambiguous_base():
     base = qm.base_keyed(mapping)
     assert 'tests/a.py::test_x' not in base
     assert base['tests/a.py::test_y'] == 'K3'
+
+
+def test_reviewed_lookup_gives_one_key_per_project_when_a_row_has_case_keys(tmp_path):
+    """A row with `case_keys` (a Core test with a Neurosen case) resolves to a
+    per-project map, the plain key filed under the test's home project;
+    a row without stays a plain key."""
+    p = _write_mapping(tmp_path, {
+        'tests/ui/a.py::test_one[chromium]': {'case_key': 'K1', 'reviewed': True,
+                                              'case_keys': {'P0BK': 'N1'}},
+        'tests/ui/a.py::test_two[chromium]': {'case_key': 'K2', 'reviewed': True},
+        'tests/c2c/test_c.py::test_cam[chromium]': {'case_key': 'C1', 'reviewed': True,
+                                                     'case_keys': {'P0BK': ''}},
+    })
+    reviewed, counts = qm.reviewed_lookup(p)
+    assert reviewed == {
+        'tests/ui/a.py::test_one[chromium]': {'JlW1': 'K1', 'P0BK': 'N1'},
+        'tests/ui/a.py::test_two[chromium]': 'K2',
+        'tests/c2c/test_c.py::test_cam[chromium]': 'C1',       # an empty foreign key is no key
+    }
+    assert counts['reviewed'] == 3
+
+
+def test_row_keys_lists_every_project_key():
+    """Plain key first, then the other projects' keys, empties left out."""
+    assert qm.row_keys({'case_key': 'K1', 'case_keys': {'P0BK': 'N1', '60W5': ''}}) == ['K1', 'N1']
+    assert qm.row_keys({'case_keys': {'P0BK': 'N1'}}) == ['N1']
+    assert qm.row_keys({}) == []

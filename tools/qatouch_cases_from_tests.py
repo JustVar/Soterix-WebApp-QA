@@ -79,7 +79,7 @@ if str(ROOT) not in sys.path:
 
 from dotenv import load_dotenv  # noqa: E402
 
-from config.products import PRODUCT_ROOTS, area_of  # noqa: E402
+from config.products import PRODUCT_ROOTS, area_of, home_project  # noqa: E402
 
 # --after-import reads the project back through the API; the key
 # lives in .env like the import tool's does
@@ -725,15 +725,23 @@ def match_cases(rows: list[dict[str, str]], cases: list[dict]
     return matched, missing, ambiguous
 
 
-def mapping_rows(reference: str, case: dict, info: TestInfo | None) -> dict[str, dict]:
+def mapping_rows(reference: str, case: dict, info: TestInfo | None,
+                 project: str | None = None) -> dict[str, dict]:
     """nodeid -> mapping entry for one created case.
 
     Node ids carry the browser param the way the mapping stores them:
     base[chromium], or base[chromium-<id>] per parameter id. When the
     ids could not be read, the bare base is written: the reporter's
-    variant lookup strips the params and still finds it."""
+    variant lookup strips the params and still finds it.
+
+    A case created in a project other than the test's home project
+    (a Core test's Neurosen case) goes under `case_keys`, keyed by that
+    project; the plain `case_key` stays the home project's."""
+    key = str(case.get('case_key') or '')
+    foreign = bool(project) and project != home_project(reference)
     entry = {
-        'case_key': str(case.get('case_key') or ''),
+        'case_key': '' if foreign else key,
+        **({'case_keys': {project: key}} if foreign else {}),
         'case_title': str(case.get('case_title') or '').strip(),
         'score': 1.0,
         'module': str(case.get('module_name') or case.get('module name') or '').strip(),
@@ -777,13 +785,21 @@ def after_import(args) -> int:
     keys: list[str] = []
     for ref, case in matched.items():
         info = tests.get(ref)
+        old = [n for n in mappings if qm.function_base(n) == ref]
+        if args.project != home_project(ref) and old:
+            # A case in another project for a test that already has its
+            # home rows: add the key under case_keys, keep everything else.
+            for n in old:
+                mappings[n].setdefault('case_keys', {})[args.project] = str(case.get('case_key') or '')
+            written += len(old)
+            keys.append(str(case.get('case_key')))
+            continue
         # a dead-key row keyed by an old param id would survive beside
         # the new rows: drop every row of this function first
-        old = [n for n in mappings if qm.function_base(n) == ref]
         for n in old:
             del mappings[n]
         replaced += len(old)
-        new_rows = mapping_rows(ref, case, info)
+        new_rows = mapping_rows(ref, case, info, project=args.project)
         mappings.update(new_rows)
         written += len(new_rows)
         keys.append(str(case.get('case_key')))

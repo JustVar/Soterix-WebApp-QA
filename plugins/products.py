@@ -18,8 +18,12 @@ except ModuleNotFoundError as exc:
 # This repo's folders, not the package's. A rule about tests/c2c/ is
 # meaningless in the API repo, so the package ships none. The roots and
 # their projects live in config/products.py, one place for every tool.
-from config.products import PRODUCT_ROOTS
+# The env file may re-point the shared Core root at its own project
+# (config/env/neurosen.py: qatouch_project P0BK), so a run under
+# ENV=neurosen archives and uploads as Neurosen.
+from config.base_config import config as _env
+from config.products import path_rules
 
-_mod.configure_path_rules(list(PRODUCT_ROOTS.items()))
+_mod.configure_path_rules(path_rules(_env))
 
 sys.modules[__name__] = _mod

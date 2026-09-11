@@ -19,6 +19,7 @@ logging.basicConfig(filename=str(LOG_FILE), level=logging.INFO,
 # Map aliases to real environment modules
 ENV_ALIAS = {
     "qa":    "config.env.qa",
+    "neurosen": "config.env.neurosen",   # the private cloud build, in the lab
     "stage": "config.env.stage",
     "staging": "config.env.stage",
     "prod":  "config.env.prod",
@@ -49,6 +50,14 @@ def load_config():
     cfg = getattr(mod, "config", None)
     if not isinstance(cfg, dict):
         raise RuntimeError(f"{module_path} must define a dict named 'config'")
+    # An env whose address comes from .env (neurosen) must not run
+    # against '' and fail at the first goto with a bare Playwright
+    # error: refuse here and name the variable.
+    if not (cfg.get("base_url") or "").strip():
+        var = cfg.get("base_url_env")
+        raise RuntimeError(
+            f"ENV='{env}' has no base_url: "
+            + (f"set {var} in .env" if var else f"add base_url to {module_path}"))
 
     # Overlay the active box's test data onto the top-level keys, so
     # config.get("test_site_name") etc. always name the ACTIVE box's

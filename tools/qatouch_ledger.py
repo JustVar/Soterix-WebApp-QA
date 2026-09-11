@@ -44,7 +44,7 @@ def product_name(project_key: str) -> str:
 def mapped_keys(mapping: dict | None = None) -> set[str]:
     """Every case key the automation maps to, across projects."""
     rows = (mapping if mapping is not None else qm.load_raw().get('mappings', {}))
-    return {r['case_key'] for r in rows.values() if (r or {}).get('case_key')}
+    return {k for r in rows.values() for k in qm.row_keys(r or {})}
 
 
 def count_row(snapshot: dict, automated_keys: set[str], *,
