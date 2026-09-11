@@ -118,6 +118,10 @@ PRECONDITION = (
 PRECONDITION_BY_AREA = {
     'login': 'The QA tenant login page is open and no user is logged in '
              '(config/env/qa.py).',
+    # Camera 2 Cloud tests talk to the cameras' own web UIs, never to a tenant
+    'c2c': 'The camera is on the lab network and answers on port 80 '
+           '(tests/data/c2c_cameras.yaml). The shared lab login is in .env as '
+           'C2C_CAMERA_USER / C2C_CAMERA_PASS; it is never written into a case.',
 }
 TYPE = 'Regression'
 PRIORITY = 'Medium'

@@ -141,10 +141,27 @@ def load_mapped_keys() -> dict[str, list[str]]:
     reviewed, counts = reviewed_lookup(MAPPING_PATH)
     if counts['unreviewed']:
         print(f'  (mapping gate: {counts["unreviewed"]} unreviewed proposal(s) excluded)')
+    return keys_for_project(reviewed, PROJECT_KEY)
+
+
+def keys_for_project(reviewed: dict, project: str) -> dict[str, list[str]]:
+    """case_key -> [nodeids] for ONE project's cases.
+
+    The mapping file holds every product's rows (Core, Camera 2 Cloud, and
+    a Core test's Neurosen key under case_keys). A plain key belongs to
+    the test's home project (config/products.py); a per-project map names
+    its projects. Before this the tool sent every project's keys to the
+    one project it was pointed at: 216 updates for 31 cases on 09/11/2026,
+    rate-limited at 429 halfway.
+    """
+    from config.products import home_project
     out: dict[str, list[str]] = {}
     for nodeid, value in reviewed.items():
-        # a per-project row names one key per project; every one is automated
-        for case_key in (value.values() if isinstance(value, dict) else [value]):
+        if isinstance(value, dict):
+            case_key = value.get(project)
+        else:
+            case_key = value if home_project(nodeid) == project else None
+        if case_key:
             out.setdefault(case_key, []).append(nodeid)
     return out
 
