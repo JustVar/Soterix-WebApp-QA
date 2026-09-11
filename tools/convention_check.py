@@ -518,8 +518,14 @@ def check_presence_only_tests(path: str, lines: list[str]) -> list[dict]:
     count against a baseline, a URL, a text, or a state, or expects a
     negative. A body line mentioning 'oracle' excuses a deliberate
     delegation to a raising page-object call.
+
+    Product tests only: a tool or plugin pin that asserts a startswith
+    reads as presence to this heuristic, and the oracle scale was
+    written for tests of the product (09/11/2026).
     """
     findings = []
+    if not path.startswith(PRODUCT_PREFIXES):
+        return findings
     for idx, line in enumerate(lines):
         m = TEST_DEF_RE.match(line)
         if not m or inside_triple_quote(lines, idx):

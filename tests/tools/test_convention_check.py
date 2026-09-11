@@ -301,6 +301,16 @@ def test_presence_only_oracle_flags_visibility_only_bodies():
         assert cc.check_presence_only_tests(PATH, strong) == [], strong_line
 
 
+def test_presence_only_is_for_product_tests_only():
+    """A pin under tests/tools or tests/plugins is never read on the oracle scale."""
+    weak = ['def test_panel(self):', '    """Title."""', '    self.page.click()',
+            '    expect(self.panel).to_be_visible()']
+    assert cc.check_presence_only_tests('tests/tools/test_x.py', weak) == []
+    assert cc.check_presence_only_tests('tests/plugins/test_x.py', weak) == []
+    assert [f['rule'] for f in cc.check_presence_only_tests('tests/c2c/test_x.py', weak)] == [
+        'presence-only-oracle']
+
+
 def test_presence_only_leaves_no_oracle_bodies_and_delegations_alone():
     """No oracle at all belongs to no-oracle-test; an 'oracle' comment names a raising call."""
     none = ['def test_a(self):', '    """Title."""', '    self.page.click()']
