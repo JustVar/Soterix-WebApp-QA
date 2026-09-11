@@ -173,5 +173,6 @@ either direction. GitHub-HOSTED runs (`qa-nightly.yml` today) upload
 | Nightly cron on spartan1 (`/data/qa/ci/nightly.sh`) | proven end to end 09/01 on one file; hung every night 09/02-09/08 (no timeout, stale clone, runs piling up); rebuilt 09/08 with the three guards, both boxes, awaiting its first scheduled run |
 | Self-hosted GitHub runner | deferred by comparison; adopt when PR-triggered or on-demand GitHub runs are wanted |
 | Publish-a-local-run command | working: `tools/publish_run.py`, proven with a real publish |
+| Live notice on the archive pages | since 09/11/2026 (soterix-qa-shared v0.27.0): the plugin writes `live.json` beside the index from collection to session end, the index and health pages draw a banner from it (target, box, product, done of collected, counts, the test running now, elapsed, an estimate from the last five archived runs of that target and box), a heartbeat older than 15 min reads as stalled; the nightly also writes it into the served directory (`QA_RUNS_LIVE_DIR`) |
 | Scheduled nightly (GitHub-hosted path) | stays commented out in `qa-nightly.yml`; the box cron is the live schedule |
 | Email report | broken until the Azure secret rotates |

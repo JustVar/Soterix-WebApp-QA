@@ -83,7 +83,10 @@ fi
     # scheduled runs (09/09-09/11/2026) all hit the run cap instead, and
     # the cap's kill threw the evidence away. -rfEs lists every failure,
     # error and skip in this log at the end.
-    BOX="$box" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" \
+    # QA_RUNS_LIVE_DIR: the run's live record (live.json) is also written
+    # into the served directory, so the archive index and health page at
+    # http://10.2.0.2/qa-runs/ show the run in progress and its estimate.
+    BOX="$box" QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" \
       -n "$WORKERS" --browser-channel "" -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?
