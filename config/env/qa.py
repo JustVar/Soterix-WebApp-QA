@@ -51,6 +51,14 @@ config = {
             "password_env": "QA_US_PASSWORD",
             # siteId of Spartan0, this box's only site
             "default_site_id": 156,
+            # What this tenant does not have, by pytest marker. A test that
+            # carries one of these markers skips on this box at collection,
+            # with the reason given here, and still runs on the boxes that
+            # have it. The guard is box_skip_reason in conftest.py.
+            "without": {
+                "lpr": "Spartan0 has no LPR cameras and no plate activity "
+                       "(Justin, 09/08/2026); the LPR tests run on india",
+            },
             "test_data": {
                 # Spartan0 is the box's only site (site id 156); the camera
                 # is a live streaming one (probe 09/01/2026, 22 cameras)

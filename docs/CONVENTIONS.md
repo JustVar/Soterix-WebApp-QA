@@ -162,6 +162,18 @@ once independently in the wait conversion (August 2026). Use them:
 - `APP_TYPE=partner` appends `_pat` to the module path.
 - The config dict holds `base_url`, `api_base_url`, `default_user`,
   `default_password`, `allow_write`, `allow_delete`.
+- `BOX` selects a tenant inside the env (`boxes` in `config/env/qa.py`:
+  `india`, `us`). A box names its account variables, its site id, and the
+  `test_data` overlay, so `config.get("test_site_name")` is always the
+  active box's site and no test carries box logic.
+- A box that lacks a feature says so in its `without` map, by pytest
+  marker and with the measured or stated reason
+  (`"lpr": "Spartan0 has no LPR cameras ... (Justin, 09/08/2026)"`). The
+  collection hook skips those tests on that box with that reason, in
+  0.2 s and without a browser, and runs them on the boxes that have the
+  feature. Before this the nine LPR tests failed on the US box every
+  night for a data fact. The env guard (`allow_write`, `allow_delete`)
+  speaks first; the box guard second.
 
 ## Test data through the API
 

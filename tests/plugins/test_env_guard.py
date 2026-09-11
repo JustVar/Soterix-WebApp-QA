@@ -176,6 +176,59 @@ def test_hook_names_the_env_alias_the_user_typed(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# The box guard: what a tenant does not have, by marker
+# ---------------------------------------------------------------------------
+
+US_WITHOUT_LPR = {'without': {'lpr': 'Spartan0 has no LPR cameras (Justin, 09/08/2026)'}}
+BOXES = {**QA, 'boxes': {'us': US_WITHOUT_LPR, 'india': {}}}
+
+
+def test_box_without_refuses_only_its_markers():
+    """A box's `without` map refuses tests carrying those markers, with the stated reason."""
+    reason = conftest.box_skip_reason({'lpr': True, 'admin': True}, US_WITHOUT_LPR, 'us')
+    assert reason == ("box us is without 'lpr': Spartan0 has no LPR cameras (Justin, 09/08/2026) "
+                      "(config/env/ > boxes > us > without)")
+    assert conftest.box_skip_reason({'admin': True, 'ui': True}, US_WITHOUT_LPR, 'us') is None
+    assert conftest.box_skip_reason({}, US_WITHOUT_LPR, 'us') is None
+
+
+def test_box_with_no_without_map_refuses_nothing():
+    """A box entry without the map, or no entry at all, lets every test run."""
+    assert conftest.box_skip_reason({'lpr': True}, {}, 'india') is None
+    assert conftest.box_skip_reason({'lpr': True}, None, 'india') is None
+    assert conftest.active_box_settings(QA, 'us') == {}
+    assert conftest.active_box_settings(BOXES, 'us') == US_WITHOUT_LPR
+
+
+def test_hook_skips_by_box_and_lets_the_other_box_run(monkeypatch):
+    """With BOX=us the hook skips lpr tests naming the box; with BOX=india it does not."""
+    monkeypatch.setattr(conftest, 'ENV_SETTINGS', BOXES)
+    monkeypatch.setenv('ENV', 'qa')
+    monkeypatch.setenv('BOX', 'us')
+    items = [FakeItem('lpr', 'admin', 'ui'), FakeItem('admin', 'ui')]
+    conftest.pytest_collection_modifyitems(_config(), items)
+    assert items[0].skip_reasons == [
+        "box us is without 'lpr': Spartan0 has no LPR cameras (Justin, 09/08/2026) "
+        "(config/env/ > boxes > us > without)"]
+    assert items[1].markers == []
+    monkeypatch.setenv('BOX', 'india')
+    item = FakeItem('lpr', 'admin', 'ui')
+    conftest.pytest_collection_modifyitems(_config(), [item])
+    assert item.markers == []
+
+
+def test_env_guard_speaks_before_the_box_guard(monkeypatch):
+    """A test refused by the env is reported by the env, not the box."""
+    monkeypatch.setattr(conftest, 'ENV_SETTINGS', {**PROD, 'boxes': {'us': {'without': {'admin_users': 'x'}}}})
+    monkeypatch.setenv('ENV', 'prod')
+    monkeypatch.setenv('BOX', 'us')
+    item = FakeItem('admin_users')
+    conftest.pytest_collection_modifyitems(_config(), [item])
+    assert len(item.skip_reasons) == 1
+    assert item.skip_reasons[0].startswith('env prod:')
+
+
+# ---------------------------------------------------------------------------
 # The marker names exist
 # ---------------------------------------------------------------------------
 

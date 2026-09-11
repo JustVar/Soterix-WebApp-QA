@@ -70,6 +70,28 @@ def env_skip_reason(keywords, settings, env_name: str) -> str | None:
     return None
 
 
+def box_skip_reason(keywords, box_settings, box_name: str) -> str | None:
+    """Why the active box cannot host this test, or None to let it run.
+
+    A box's `without` map (config/env/<env>.py > boxes > <box>) names the
+    markers of what the tenant does not have, each with the measured or
+    stated reason. The reason is the skip text, so the report says which
+    box lacks what and on whose word, not just "skipped". A box with no
+    `without` map refuses nothing.
+    """
+    without = (box_settings or {}).get("without") or {}
+    for marker, why in without.items():
+        if marker in keywords:
+            return (f"box {box_name} is without '{marker}': {why} "
+                    f"(config/env/ > boxes > {box_name} > without)")
+    return None
+
+
+def active_box_settings(settings, box_name: str) -> dict:
+    """The active box's entry in the env's `boxes` map, or {} when the env has none."""
+    return ((settings or {}).get("boxes") or {}).get(box_name) or {}
+
+
 def pytest_collection_modifyitems(config, items):
     """Skip what this run may not execute.
 
@@ -86,10 +108,18 @@ def pytest_collection_modifyitems(config, items):
         reason="destructive: disrupts real hardware. Pass --run-destructive to run it."
     )
     env_name = (os.environ.get("ENV") or "qa").strip().lower()
+    # The box guard: a tenant that lacks a feature refuses that feature's
+    # tests at collection, saying which box lacks what (config/env/ >
+    # boxes > <box> > without). Resolved once; the box does not change
+    # inside a run.
+    from config.base_config import get_active_box
+    box_name = get_active_box()
+    box_settings = active_box_settings(ENV_SETTINGS, box_name)
     for item in items:
         if not run_destructive and "destructive" in item.keywords:
             item.add_marker(destructive_skip)
-        reason = env_skip_reason(item.keywords, ENV_SETTINGS, env_name)
+        reason = (env_skip_reason(item.keywords, ENV_SETTINGS, env_name)
+                  or box_skip_reason(item.keywords, box_settings, box_name))
         if reason:
             item.add_marker(pytest.mark.skip(reason=reason))
 
