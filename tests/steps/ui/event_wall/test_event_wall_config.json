@@ -224,57 +224,17 @@
       "case_key": "RgGBNa"
     },
     "test_event_wall_camera_checkboxes": {
-      "title": "Verify Event Wall has camera selection checkboxes.",
+      "title": "Every camera row of an expanded group carries a checkbox",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > General, click View on the Event Wall card, click Add Configuration, then expand the configured site down to a camera group and click it.",
+          "expected": "The group's camera rows are listed under Available Cameras, each with a checkbox."
         },
         {
           "n": 2,
-          "action": "Navigate to Search > Category - Event",
-          "expected": "Category - Event page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for selecting Camera Tamper filters Event Type correctly",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Count the checkboxes against the device count the group row shows.",
+          "expected": "One checkbox per device."
         }
       ],
       "case_key": "5BRDm7"

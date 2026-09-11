@@ -5,8 +5,13 @@ grid/list view toggle, clip and folder operations (group, rename, move,
 delete, create link, vault, share, export), and search.
 """
 import datetime
+import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
+
+# The app's toast containers (react-toastify and MUI alerts), for naming
+# what the page answered when an action opened no dialog.
+TOASTS = ".Toastify__toast, [role='alert'], .MuiAlert-message, .MuiSnackbarContent-message"
 
 
 class MediaPage:
@@ -394,9 +399,11 @@ class MediaPage:
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         row.locator("img[src*='icon-options']").first.click()
         self.click_menu_item("Create Link")
-        self.page.get_by_text("Add Link Name").first.wait_for(
-            state="visible", timeout=10000
-        )
+        # The tenant answers a folder with the toast 'Empty folder' even
+        # when the folder holds a clip (probed 09/11/2026 on US, the clip
+        # listed inside the folder): name that, not a timeout.
+        self._dialog_or_answer(self.page.get_by_text("Add Link Name").first,
+                               f"Create Link on '{name}'")
 
     def cancel_dialog(self):
         """Cancel the open dialog; its Cancel control leaving is the
@@ -488,7 +495,9 @@ class MediaPage:
         row = self.item_row(name)
         row.locator("img[alt='Share']").first.click()
 
-        self.email_input.wait_for(state="visible", timeout=10000)
+        # A folder's Share icon opens nothing on the tenant (probed
+        # 09/11/2026 on US); a clip's opens the e-mail dialog.
+        self._dialog_or_answer(self.email_input, f"Share on '{name}'")
         self.email_input.fill(email)
 
         self.share_button.click()
@@ -505,9 +514,29 @@ class MediaPage:
         row = self.item_row(name)
         row.locator("img[alt='Export']").first.click()
 
-        self.export_span.wait_for(state="visible", timeout=10000)
+        self._dialog_or_answer(self.export_span, f"Export on '{name}'")
         self.export_span.click()
         self.export_span.wait_for(state="hidden", timeout=10000)
+
+    def _dialog_or_answer(self, control, action: str, timeout: int = 10000) -> None:
+        """Wait for the control an action should open; when it never
+        comes, raise with what the page answered instead (its toasts),
+        so the report names the app's reply and not a bare timeout."""
+        # Polled, not a single wait: a toast lives a few seconds and is
+        # gone by the time a 10 s wait gives up, so it is read while waiting.
+        seen: set[str] = set()
+        deadline = time.monotonic() + timeout / 1000
+        while time.monotonic() < deadline:
+            if control.is_visible():
+                return
+            seen.update(t.inner_text().strip() for t in self.page.locator(TOASTS).all()
+                        if t.is_visible() and t.inner_text().strip())
+            self.page.wait_for_timeout(250)  # why: a poll tick; the toast is the only signal and it is transient
+        answer = f"the toast {sorted(seen)}" if seen else "nothing, no toast"
+        raise RuntimeError(
+            f"{action} opened no dialog within {timeout // 1000} s; the page answered "
+            f"{answer} (folder operations: app defect - register, App defects)"
+        )
 
     # --- Search ---
 

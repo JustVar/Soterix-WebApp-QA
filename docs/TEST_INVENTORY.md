@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 0 |
-| NexaiQ-Core | 13 | 52 | 405 | 168 | 348 |
-| **Total** | | **59** | **437** | **200** | **348** |
+| NexaiQ-Core | 13 | 52 | 405 | 169 | 348 |
+| **Total** | | **59** | **437** | **201** | **348** |
 
 ## Growth
 
@@ -251,7 +251,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 |---|---|---|---|
 | `test_event_wall_config.py::TestEventWallConfig::test_back_to_general_from_event_wall` | The breadcrumb returns to the General cards page | yes | ajyyd4 |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_after_refresh` | The admin section stays valid after a browser refresh | - | J8dzJp |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_camera_checkboxes` | Camera rows expose a selection control once a group expands | - | 5BRDm7 |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_camera_checkboxes` | Every camera row of an expanded group carries a checkbox | yes | 5BRDm7 |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_grid_layout` | The table shows data rows or the measured empty state | - | xm9dgR |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_configuration_area` | The configuration table renders its column headers | - | RgGBWd |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_rule_types` | The Add form carries the Select Rule dropdown | - | RgGBNa |

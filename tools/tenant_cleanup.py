@@ -74,6 +74,12 @@ EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 # _Auto_: a real rule called "Zone_Auto_Detect" does not match.
 RULE_PATTERN = re.compile(r'^\S+_Auto_\d{4,}')
 GROUP_PATTERN = re.compile(r'^AutoGroup_\d+$')
+# Media folders Group Clips creates get the default name Folder_<n>;
+# the folder tests own and delete theirs, and the ones that survive
+# (the folder-delete defect, register App defects) pile up as empty
+# first rows that made Create Link, Share and Export answer 'Empty
+# folder' in the 09/11/2026 full run.
+FOLDER_PATTERN = re.compile(r'^Folder_\d+$')
 
 # A channel card is the grid item around its three-dots icon; the name
 # is its p.textEllipsis and the url its p.lineClampTwoLine (probed
@@ -382,6 +388,49 @@ def _groups_step(page, apply: bool) -> list[str]:
     return groups
 
 
+def is_automation_folder(name: str) -> bool:
+    return bool(FOLDER_PATTERN.match(name))
+
+
+def _folders_step(page, apply: bool) -> list[str]:
+    """Media > Folders: the automation's Folder_<n> leftovers.
+
+    Each is emptied first (Remove From Folder returns a clip to the
+    Clips tab; a folder delete would take it along), then deleted. A
+    delete the server refuses is reported and the sweep goes on.
+    """
+    from tests.shared.pages.media_page import MediaPage
+    media = MediaPage(page)
+    media.navigate()
+    media.select_date_filter('Last 30 Days')
+    media.click_tab('Folders')
+    names = [] if media.is_page_empty(timeout=5000) else media.item_names()
+    folders = [n for n in names if is_automation_folder(n)]
+    print(f'Media folders: {len(names)} listed, {len(folders)} automation leftover(s):')
+    for name in folders:
+        print(f'  folder {name}')
+    if not apply:
+        return folders
+    for name in folders:
+        try:
+            media.open_folder(name)
+            for clip in media.item_names():
+                media.remove_from_folder(clip)
+            page.reload()
+            media.navigate()
+            media.select_date_filter('Last 30 Days')
+            media.click_tab('Folders')
+            media.delete_item_named(name)
+            print(f'  deleted  {name}')
+        except (PlaywrightError, RuntimeError) as e:
+            print(f'  REFUSED  {name}: {str(e).splitlines()[0][:90]}')
+            page.reload()
+            media.navigate()
+            media.select_date_filter('Last 30 Days')
+            media.click_tab('Folders')
+    return folders
+
+
 def _channels_step(page, admin, names: list[str], apply: bool) -> None:
     _open_channels(page, admin)
     listed = _channels(page)
@@ -461,6 +510,9 @@ def main() -> int:
         # --- chat groups ---
         chat_groups = _groups_step(page, args.apply)
 
+        # --- media folders ---
+        folders = _folders_step(page, args.apply)
+
         # --- users ---
         page.keyboard.press('Escape')
         admin.navigate_to_users()
@@ -483,7 +535,7 @@ def main() -> int:
 
         browser.close()
 
-    if not args.apply and (groups or users or rules or chat_groups):
+    if not args.apply and (groups or users or rules or chat_groups or folders):
         print('\nDry run - nothing deleted. Re-run with --apply to delete the above.')
     return 0
 

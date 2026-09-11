@@ -135,13 +135,23 @@
       "steps": [
         {
           "n": 1,
-          "action": "Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Create Link.",
-          "expected": "The Create Link dialog opens with a Set Expiration field."
+          "action": "Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.",
+          "expected": "A new folder holding the clip appears on the Folders tab."
         },
         {
           "n": 2,
+          "action": "Open that folder's options menu and choose Create Link.",
+          "expected": "The Create Link dialog opens with a Set Expiration field."
+        },
+        {
+          "n": 3,
           "action": "Click Cancel.",
           "expected": "The dialog closes and no link is created."
+        },
+        {
+          "n": 4,
+          "action": "Remove the clip from the folder and delete the folder.",
+          "expected": "The clip is back on the Clips tab and the folder is gone."
         }
       ],
       "case_key": "RgGQ8d"
@@ -183,8 +193,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu, choose Share, enter an e-mail address and send.",
+          "action": "Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.",
+          "expected": "A new folder holding the clip appears on the Folders tab."
+        },
+        {
+          "n": 2,
+          "action": "Click Share on that folder's row, enter an e-mail address and send.",
           "expected": "A success panel confirms the folder was shared."
+        },
+        {
+          "n": 3,
+          "action": "Remove the clip from the folder and delete the folder.",
+          "expected": "The clip is back on the Clips tab and the folder is gone."
         }
       ],
       "case_key": "7Eeepz"
@@ -194,8 +214,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Export.",
+          "action": "Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.",
+          "expected": "A new folder holding the clip appears on the Folders tab."
+        },
+        {
+          "n": 2,
+          "action": "Click Export on that folder's row and confirm.",
           "expected": "The export starts, and its progress control finishes and disappears."
+        },
+        {
+          "n": 3,
+          "action": "Remove the clip from the folder and delete the folder.",
+          "expected": "The clip is back on the Clips tab and the folder is gone."
         }
       ],
       "case_key": "21zWNl"

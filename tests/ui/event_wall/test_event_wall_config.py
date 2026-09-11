@@ -86,6 +86,29 @@ class TestEventWallConfig:
             has_text="Event Wall"
         ).first).to_be_visible(timeout=10000)
 
+    def _modal(self):
+        """The open Add Configuration modal (MUI keeps closed ones mounted)."""
+        # a MUI Dialog's root carries MuiModal-root too, so one class covers both
+        return self.page.locator(".MuiModal-root:visible").last
+
+    def _expand_group_to_cameras(self, group_row) -> int:
+        """Click a camera group and wait for its camera rows.
+
+        The rows' own checkboxes are the expanded signal, not a camera
+        name: the panel truncates names to 'Soterix Multica...' with no
+        title attribute, so a text wait on the configured camera never
+        matched (09/11/2026 full run, both tests). The search box above
+        the tree filters SITES, not cameras (probed the same day).
+        Returns the count the group row declares ('All Cameras 22').
+        """
+        group_row.click()
+        boxes = self._modal().locator("input[type='checkbox']")
+        boxes.first.wait_for(state="visible", timeout=10000)
+        # the group row reads 'All Cameras' then its device count
+        text = group_row.locator("xpath=..").inner_text()
+        digits = [t for t in text.split() if t.isdigit()]
+        return int(digits[0]) if digits else 0
+
     def _expand_site_to_groups(self):
         """In the Add form, expand the config site; sites expand to
         camera GROUPS (measured), cameras sit one level deeper."""
@@ -173,35 +196,19 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_camera_checkboxes(self):
-        """Camera rows expose a selection control once a group expands."""
+        """Every camera row of an expanded group carries a checkbox.
+
+        Steps:
+        1. Open Admin > General, click View on the Event Wall card, click Add Configuration, then expand the configured site down to a camera group and click it.
+           Expected: The group's camera rows are listed under Available Cameras, each with a checkbox.
+        2. Count the checkboxes against the device count the group row shows.
+           Expected: One checkbox per device.
+        """
         self._open_add_form()
         group_row = self._expand_site_to_groups()
-        group_row.click()
-        # the config camera appearing is the group-expanded signal
-        self.page.get_by_text(CAMERA_NAME, exact=False).first.wait_for(
-            state="visible", timeout=10000
-        )
-        # scope to the Available Cameras panel: page-wide checkbox
-        # locators resolve to switches BEHIND the modal, whose clicks
-        # the backdrop intercepts
-        panel = self.page.locator("div").filter(
-            has_text="Available Cameras"
-        ).last
-        selectors = panel.locator(
-            "input[type='checkbox'], .MuiCheckbox-root, "
-            "input.PrivateSwitchBase-input"
-        )
-        try:
-            selectors.first.wait_for(state="visible", timeout=5000)
-        # deliberate: the panel and its expanded rows are proved up
-        # above, so this timeout is the measured absence of the control
-        except PlaywrightError:
-            self._close_add_form()
-            pytest.skip(
-                "The Available Cameras panel shows its expanded camera rows "
-                "but no checkbox in them (checked input[type=checkbox], "
-                ".MuiCheckbox-root and input.PrivateSwitchBase-input)"
-            )
+        declared = self._expand_group_to_cameras(group_row)
+        boxes = self._modal().locator("input[type='checkbox']")
+        expect(boxes).to_have_count(declared, timeout=10000)
         self._close_add_form()
 
     @pytest.mark.ui
@@ -218,31 +225,20 @@ class TestEventWallConfig:
         """
         self._open_add_form()
         group_row = self._expand_site_to_groups()
-        group_row.click()
-        self.page.get_by_text(CAMERA_NAME, exact=False).first.wait_for(
-            state="visible", timeout=10000
-        )
-        # scope to the panel: switches behind the modal backdrop hang
-        # pointer clicks (measured)
-        boxes = self.page.locator("div").filter(
-            has_text="Available Cameras"
-        ).last.locator("input[type='checkbox']")
-        try:
-            boxes.first.wait_for(state="visible", timeout=5000)
-        # deliberate: the panel and its camera row are proved up above,
-        # so this timeout is the measured absence of the control
-        except PlaywrightError:
-            self._close_add_form()
-            pytest.skip(
-                "The Available Cameras panel shows the camera row but no "
-                "input[type=checkbox] inside it to toggle"
-            )
-        before = boxes.first.is_checked()
-        boxes.first.click()
+        self._expand_group_to_cameras(group_row)
+        # modal-scoped: switches behind the backdrop hang pointer clicks
+        box = self._modal().locator("input[type='checkbox']").first
+        before = box.is_checked()
+        box.click()
         if before:
-            expect(boxes.first).not_to_be_checked(timeout=5000)
+            expect(box).not_to_be_checked(timeout=5000)
         else:
-            expect(boxes.first).to_be_checked(timeout=5000)
+            expect(box).to_be_checked(timeout=5000)
+        box.click()
+        if before:
+            expect(box).to_be_checked(timeout=5000)
+        else:
+            expect(box).not_to_be_checked(timeout=5000)
         self._close_add_form()
 
     @pytest.mark.ui

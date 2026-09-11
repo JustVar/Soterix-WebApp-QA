@@ -490,6 +490,70 @@ class TestMediaFolderOperations:
                 "Tenant restore failed: " + "; ".join(errors)
             )
 
+    def _own_folder_with_clip(self) -> str:
+        """Make a folder from the first clip and return its name.
+
+        Create Link, Share and Export answered the toast 'Empty folder'
+        on the first listed folder in the 09/11/2026 full run: the first
+        folders were the suite's own empty leftovers (Folder_<n>). A test
+        of a folder operation must own a folder that holds a clip
+        (docs/CONVENTIONS.md > skips, rule 1). Same lifecycle as
+        test_clip_grouping: Group Clips makes the folder; the cleanup
+        empties it before deleting it, so the clip survives a failure.
+        """
+        self.media.navigate()
+        self.media.select_date_filter("Last 30 Days")
+        self.media.click_tab("Clips")
+        if self.media.is_page_empty(timeout=5000):
+            pytest.skip("No clips in Media - a folder needs a clip to hold")
+        names = self.media.item_names()
+        if not names and self.media.list_view_button.is_visible():
+            self.media.switch_to_list_view()
+            names = self.media.item_names()
+        if not names:
+            pytest.fail("Clips tab has content but no name inputs were read - "
+                        "the inline-input name pattern changed")
+        clip = names[0]
+        self.media.click_tab("Folders")
+        folders_before = set(self.media.item_names())
+        self.media.click_tab("Clips")
+        self.media.select_clip_by_index(1)
+        self.media.group_clips()
+        self.media.click_tab("Folders")
+        new_folders = set(self.media.item_names()) - folders_before
+        assert len(new_folders) == 1, (
+            f"Expected exactly one new folder after grouping, got {sorted(new_folders)}")
+        folder = new_folders.pop()
+
+        def _cleanup_folder():
+            self.page.reload()
+            self.media.navigate()
+            self.media.select_date_filter("Last 30 Days")
+            self.media.click_tab("Folders")
+            if folder not in self.media.item_names():
+                return
+            # empty it first: a folder delete takes its clips with it
+            try:
+                self.media.open_folder(folder)
+                if clip in self.media.item_names():
+                    self.media.remove_from_folder(clip)
+            except (PlaywrightError, RuntimeError):  # why: a folder that cannot be emptied must not be deleted, its clip would go with it
+                print(f"[MEDIA] could not empty folder '{folder}'; "
+                      "NOT deleting it - the clip inside must survive")
+                return
+            self.page.reload()
+            self.media.navigate()
+            self.media.select_date_filter("Last 30 Days")
+            self.media.click_tab("Folders")
+            try:
+                self.media.delete_item_named(folder)
+            except (PlaywrightError, RuntimeError):  # why: the refused folder delete is the filed app defect, not a failed restore; tenant_cleanup sweeps it
+                print(f"[MEDIA] folder '{folder}' left on the tenant "
+                      "(folder-delete defect); tenant_cleanup will get it")
+
+        self._cleanup_actions.append(_cleanup_folder)
+        return folder
+
     def _first_folder_or_skip(self) -> str:
         """Land on the Folders tab and return the first folder's name."""
         self.media.navigate()
@@ -528,15 +592,22 @@ class TestMediaFolderOperations:
     def test_folder_create_link(self):
         """Verify the Create Link dialog opens for a folder.
 
-        Cancelled so no orphan link is left behind.
+        Cancelled so no orphan link is left behind. The folder is the
+        test's own, with a clip in it. Known app defect (09/11/2026,
+        US): the tenant answers 'Empty folder' for a folder that holds
+        a clip; the test fails naming that until the app fix.
 
         Steps:
-        1. Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Create Link.
+        1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.
+           Expected: A new folder holding the clip appears on the Folders tab.
+        2. Open that folder's options menu and choose Create Link.
            Expected: The Create Link dialog opens with a Set Expiration field.
-        2. Click Cancel.
+        3. Click Cancel.
            Expected: The dialog closes and no link is created.
+        4. Remove the clip from the folder and delete the folder.
+           Expected: The clip is back on the Clips tab and the folder is gone.
         """
-        name = self._first_folder_or_skip()
+        name = self._own_folder_with_clip()
         self.media.open_create_link_dialog(name)
 
         # The helper raised on 'Add Link Name'; assert further fields
@@ -648,13 +719,19 @@ class TestMediaFolderOperations:
         """Share a folder via email.
 
         The oracle lives in share_item: it raises when the success
-        panel never appears.
+        panel never appears. The folder is the test's own, with a clip
+        in it. Known app defect (09/11/2026, US): a folder's Share icon
+        opens no dialog; the test fails naming that until the app fix.
 
         Steps:
-        1. Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu, choose Share, enter an e-mail address and send.
+        1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.
+           Expected: A new folder holding the clip appears on the Folders tab.
+        2. Click Share on that folder's row, enter an e-mail address and send.
            Expected: A success panel confirms the folder was shared.
+        3. Remove the clip from the folder and delete the folder.
+           Expected: The clip is back on the Clips tab and the folder is gone.
         """
-        name = self._first_folder_or_skip()
+        name = self._own_folder_with_clip()
         self.media.share_item(name, "test@example.com")
 
     @pytest.mark.ui
@@ -663,11 +740,17 @@ class TestMediaFolderOperations:
         """Export a folder; the export control leaving is the signal.
 
         The oracle lives in export_item: a stuck export control
-        raises.
+        raises. The folder is the test's own, with a clip in it. Known
+        app defect (09/11/2026, US): a folder's Export opens no control;
+        the test fails naming that until the app fix.
 
         Steps:
-        1. Open Media, set the date filter to Last 30 Days, open the Folders tab, open a folder's options menu and choose Export.
+        1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.
+           Expected: A new folder holding the clip appears on the Folders tab.
+        2. Click Export on that folder's row and confirm.
            Expected: The export starts, and its progress control finishes and disappears.
+        3. Remove the clip from the folder and delete the folder.
+           Expected: The clip is back on the Clips tab and the folder is gone.
         """
-        name = self._first_folder_or_skip()
+        name = self._own_folder_with_clip()
         self.media.export_item(name)
