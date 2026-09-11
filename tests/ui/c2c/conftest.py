@@ -128,6 +128,17 @@ def camera_config(request):
             f"hardware tests - run them on the lab network, or set "
             f"C2C_REQUIRE_HARDWARE=1 to fail instead of skip."
         )
+    if not camera["password"]:
+        # A reachable camera and no password is a configuration fault, not
+        # 47 product failures: on 09/11/2026 the lab runner had no
+        # C2C_CAMERA_PASS in its .env and every authenticated camera page
+        # answered "401 Unauthorized", one scattered failure per test.
+        pytest.fail(
+            f"C2C camera {camera['id']} at {ip} is reachable but "
+            f"C2C_CAMERA_PASS is not set, so every authenticated page "
+            f"answers 401. Set C2C_CAMERA_USER / C2C_CAMERA_PASS in .env "
+            f"(the shared lab login) on this machine."
+        )
     return camera
 
 

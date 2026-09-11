@@ -34,7 +34,8 @@ BOXES="${BOXES:-india us}"
 TEST_TIMEOUT="${TEST_TIMEOUT:-600}"   # seconds per test, setup and teardown included
 RUN_TIMEOUT="${RUN_TIMEOUT:-4h}"      # per box; a full run measured about an hour at 4 workers
 WORKERS="${WORKERS:-4}"
-MAXFAIL="${MAXFAIL:-120}"             # failures+errors that end a box's run early; ~15% of the suite
+MAXFAIL="${MAXFAIL:-200}"             # failures+errors that end a box's run early; ~25% of the suite.
+                                      # 120 was too close: c2c runs early and 09/11 had 116 by mid-run
 
 # Guard 1: become a process group of our own, so one kill reaches pytest,
 # the Playwright driver and every browser it started. `-w` keeps a manual

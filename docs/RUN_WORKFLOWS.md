@@ -141,7 +141,7 @@ cap on both boxes: the first ~370 items pass at the local pace, then the
 stream-playing tests each wait out their full timeout on the box's
 codec-less Chromium and the run never reaches its end, and the cap's kill
 threw the evidence away. Two more guards followed: a box's run ends after
-120 failures (`--maxfail`) so pytest still writes its summary and archive,
+200 failures (`--maxfail`) so pytest still writes its summary and archive,
 and a run the cap does end keeps its labelled screenshots and live log as
 `<stamp>__tests-ui-<box>-PARTIAL-run-cap` in the served directory. The
 cure for the slow tail itself is Google Chrome on the box
