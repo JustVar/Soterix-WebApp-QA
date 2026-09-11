@@ -543,8 +543,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f'{args.out} is current.')
         return 0
     args.out.write_text(text, encoding='utf-8', newline='\n')
-    rows = text.count('\n| `')
-    print(f'wrote {args.out} ({rows} tests)')
+    # product rows only: harness rows start with a directory, not test_
+    rows = text.count('\n| `test_')
+    print(f'wrote {args.out} ({rows} product tests)')
     return 0
 
 
