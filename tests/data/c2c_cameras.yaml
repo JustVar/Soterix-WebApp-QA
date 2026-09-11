@@ -339,10 +339,10 @@ cameras:
   manufacturer: SOTERIX SYSTEMS
   max_resolution: 2592x1944
   max_framerate: 30
-  lens_count: 1
+  lens_count: 4
   multi_lens: true
   expected_license: ProAI 1ch
-  expected_license_count: 1
+  expected_license_count: 4
   onvif_version: '24.06'
   onvif_profiles: S, T, M
   cloud_state: waiting
@@ -367,8 +367,8 @@ cameras:
     alarm_in: SUPPORTED
     relay_out: SUPPORTED
     cds: SUPPORTED
-  note: multi-lens unit per the lab inventory (Justin, 09/11/2026); the device page reports one sensor,
-    so lens_count and expected_license_count are as reported and need confirming on the device
+  note: multi-lens unit, 4 lenses (Justin, 09/11/2026); the device page reports one sensor, so lens_count
+    and expected_license_count are set by hand
 - id: ms-20v-1-q300c5b53
   enabled: true
   ip: 10.2.0.135
@@ -378,10 +378,10 @@ cameras:
   manufacturer: SOTERIX SYSTEMS
   max_resolution: 2592x1944
   max_framerate: 30
-  lens_count: 1
+  lens_count: 4
   multi_lens: true
   expected_license: ProAI 1ch
-  expected_license_count: 1
+  expected_license_count: 4
   onvif_version: '24.06'
   onvif_profiles: S, T, M
   cloud_state: waiting
@@ -406,8 +406,8 @@ cameras:
     alarm_in: SUPPORTED
     relay_out: SUPPORTED
     cds: SUPPORTED
-  note: multi-lens unit per the lab inventory (Justin, 09/11/2026); the device page reports one sensor,
-    so lens_count and expected_license_count are as reported and need confirming on the device
+  note: multi-lens unit, 4 lenses (Justin, 09/11/2026); the device page reports one sensor, so lens_count
+    and expected_license_count are set by hand
 - id: bc-5v-1-pc00c5555
   enabled: true
   ip: 10.2.0.136
