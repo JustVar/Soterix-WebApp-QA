@@ -126,7 +126,8 @@ MODE = 'Automation'
 # Words in a folder, file, or class name that read as acronyms, and the
 # words a module name keeps in lower case.
 ACRONYMS = {'lpr': 'LPR', 'ptz': 'PTZ', 'c2c': 'C2C', 'ldap': 'LDAP',
-            'ui': 'UI', 'api': 'API', 'ai': 'AI'}
+            'ui': 'UI', 'api': 'API', 'ai': 'AI', 'vca': 'VCA', 'osd': 'OSD',
+            'roi': 'ROI', 'rtsp': 'RTSP'}
 SMALL_WORDS = {'and', 'or', 'of', 'to', 'in', 'for'}
 
 STEPS_HEADER_RE = re.compile(r'^\s*Steps:\s*$')
@@ -374,7 +375,9 @@ def _words(name: str) -> list[str]:
     if '_' in name or name.islower():
         raw = [w for w in name.split('_') if w]
     else:
-        raw = re.findall(r'[A-Z]+(?=[A-Z][a-z]|\b)|[A-Z]?[a-z0-9]+', name)
+        # C2C first: the plain CamelCase split reads it as 'C2' + 'C' (the
+        # camera suite's classes are TestC2CVideoConfig, TestC2CVCA, ...)
+        raw = re.findall(r'C2C|[A-Z]+(?=[A-Z][a-z]|\b)|[A-Z]?[a-z0-9]+', name)
     words = [ACRONYMS.get(w.lower(), w.capitalize()) for w in raw]
     return [w.lower() if i and w.lower() in SMALL_WORDS else w for i, w in enumerate(words)]
 

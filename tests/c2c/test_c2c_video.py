@@ -25,7 +25,16 @@ class TestC2CVideoConfig:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_default_stream_configuration(self):
-        """Verify default video stream configuration across all 3 streams."""
+        """Verify default video stream configuration across all 3 streams.
+
+        Steps:
+        1. Open Setup (it opens on VIDEO CONFIGURATION).
+           Expected: The VIDEO CONFIGURATION page is shown.
+        2. Read the three streams.
+           Expected: Stream 1 is H.265 at 2592x1944, Stream 2 is at 640x360, and Stream 3 is M-JPEG.
+        3. Read the Stream 1 codec field.
+           Expected: It shows H.265.
+        """
         self.step_capture.mark(1, "Navigate to Video Configuration (default page)")
         # Setup page opens to VIDEO by default
         expect(self.page.locator("text='VIDEO CONFIGURATION'")).to_be_visible()
@@ -50,7 +59,19 @@ class TestC2CVideoConfig:
     @pytest.mark.c2c_hardware
     @pytest.mark.mutating
     def test_stream_codec_and_resolution_change(self):
-        """Verify stream codec and resolution can be changed and applied."""
+        """Verify the stream codec can be changed and applied.
+
+        MUTATING: changes the Stream 1 codec and puts it back. The resolution
+        is read, not changed.
+
+        Steps:
+        1. Open Setup > VIDEO CONFIGURATION and note the Stream 1 codec.
+           Expected: The codec field shows the current codec.
+        2. Change the codec to H.264 and click Apply.
+           Expected: After Apply, the codec field reads H.264.
+        3. Put the original codec back and click Apply.
+           Expected: The original codec is restored (the test restores it even when a step fails).
+        """
         self.step_capture.mark(1, "Navigate to Video Configuration")
         expect(self.page.locator("text='VIDEO CONFIGURATION'")).to_be_visible()
 
@@ -108,7 +129,14 @@ class TestC2COSD:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_osd_configuration(self):
-        """Verify OSD date/time overlay is enabled and configurable."""
+        """Verify OSD date/time overlay is enabled and configurable.
+
+        Steps:
+        1. On the Setup page, open OSD.
+           Expected: The ON SCREEN DISPLAY page shows the Date & time setting.
+        2. Read the text settings.
+           Expected: A text colour control is shown, Position X and Y fields are present, and a User text section with its Off/On toggle.
+        """
         self.step_capture.mark(1, "Navigate to OSD Configuration")
         self.camera.navigate_to_setup_subsection("OSD")
         expect(self.page.locator("text=/ON SCREEN DISPLAY/")).to_be_visible()
@@ -144,7 +172,16 @@ class TestC2CAudio:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_audio_configuration_defaults(self):
-        """Verify audio configuration defaults and controls."""
+        """Verify audio configuration defaults and controls.
+
+        Steps:
+        1. On the Setup page, open AUDIO.
+           Expected: The AUDIO CONFIGURATION page shows the Audio encode setting.
+        2. Read the encode settings.
+           Expected: Codec is G.711 ulaw, Volume is 10 and Sample rate is 8,000 Hz.
+        3. Read the audio out section.
+           Expected: Audio out (or Audio alarm) with channels and volume is shown, with 16,000 Hz among the output sample rates.
+        """
         self.step_capture.mark(1, "Navigate to Audio Configuration")
         self.camera.navigate_to_setup_subsection("AUDIO")
         expect(self.page.locator("text='AUDIO CONFIGURATION'")).to_be_visible()

@@ -26,7 +26,16 @@ class TestC2CLiveView:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_live_view_controls(self):
-        """Verify live view controls on main page."""
+        """Verify live view controls on main page.
+
+        Steps:
+        1. Open the camera's main page.
+           Expected: Soterix branding is shown and the live view timestamp shows the date and time.
+        2. Read the page for the channel and screen controls.
+           Expected: Channel select and the Full screen button are present.
+        3. Read the page for the lens controls.
+           Expected: Zoom, Focus and Auto focus are present, with Focus and Calibrate buttons.
+        """
         self.step_capture.mark(1, "Verify live video feed is displayed")
         # The main page should have loaded via camera_page fixture
         expect(self.page.locator("text=/SOTERIX/i").first).to_be_visible(timeout=5000)
@@ -56,7 +65,16 @@ class TestC2CLiveView:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_speaker_and_alarm_controls(self):
-        """Verify camera speaker and alarm controls on main page."""
+        """Verify camera speaker and alarm controls on main page.
+
+        Steps:
+        1. Open the camera's main page and read the controls under the live view.
+           Expected: PC speaker and Cam speaker controls are present.
+        2. Read the alarm section.
+           Expected: Alarm input, Relay out and Motion indicators are present.
+        3. Read the Camera time.
+           Expected: Camera time shows a date and time.
+        """
         self.step_capture.mark(1, "Verify PC speaker volume control exists")
         page_text = self.page.locator("body").inner_text()
         assert "PC speaker" in page_text
@@ -95,7 +113,18 @@ class TestC2CSecurity:
     @pytest.mark.security
     @pytest.mark.c2c_hardware
     def test_security_pages_accessible(self):
-        """Verify user management and security configuration pages."""
+        """Verify user management and security configuration pages.
+
+        Steps:
+        1. Open Setup > SYSTEM > USER MANAGEMENT.
+           Expected: The user list is shown and includes the root user.
+        2. Open Setup > SECURITY > RTSP AUTHENTICATION.
+           Expected: The RTSP authentication page is shown.
+        3. Open SECURITY > IP ADDRESS FILTER.
+           Expected: The IP address filter page is shown.
+        4. Open SECURITY > HTTPS.
+           Expected: The HTTPS settings page is shown.
+        """
         self.step_capture.mark(1, "Navigate to User Management")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("USER MANAGEMENT")

@@ -4,22 +4,81 @@
   "tests": {
     "test_default_stream_configuration": {
       "title": "Verify default video stream configuration across all 3 streams",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup (it opens on VIDEO CONFIGURATION).",
+          "expected": "The VIDEO CONFIGURATION page is shown."
+        },
+        {
+          "n": 2,
+          "action": "Read the three streams.",
+          "expected": "Stream 1 is H.265 at 2592x1944, Stream 2 is at 640x360, and Stream 3 is M-JPEG."
+        },
+        {
+          "n": 3,
+          "action": "Read the Stream 1 codec field.",
+          "expected": "It shows H.265."
+        }
+      ],
       "case_key": ""
     },
     "test_stream_codec_and_resolution_change": {
-      "title": "Verify stream codec and resolution can be changed and applied",
-      "steps": [],
+      "title": "Verify the stream codec can be changed and applied",
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > VIDEO CONFIGURATION and note the Stream 1 codec.",
+          "expected": "The codec field shows the current codec."
+        },
+        {
+          "n": 2,
+          "action": "Change the codec to H.264 and click Apply.",
+          "expected": "After Apply, the codec field reads H.264."
+        },
+        {
+          "n": 3,
+          "action": "Put the original codec back and click Apply.",
+          "expected": "The original codec is restored (the test restores it even when a step fails)."
+        }
+      ],
       "case_key": ""
     },
     "test_osd_configuration": {
       "title": "Verify OSD date/time overlay is enabled and configurable",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "On the Setup page, open OSD.",
+          "expected": "The ON SCREEN DISPLAY page shows the Date & time setting."
+        },
+        {
+          "n": 2,
+          "action": "Read the text settings.",
+          "expected": "A text colour control is shown, Position X and Y fields are present, and a User text section with its Off/On toggle."
+        }
+      ],
       "case_key": ""
     },
     "test_audio_configuration_defaults": {
       "title": "Verify audio configuration defaults and controls",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "On the Setup page, open AUDIO.",
+          "expected": "The AUDIO CONFIGURATION page shows the Audio encode setting."
+        },
+        {
+          "n": 2,
+          "action": "Read the encode settings.",
+          "expected": "Codec is G.711 ulaw, Volume is 10 and Sample rate is 8,000 Hz."
+        },
+        {
+          "n": 3,
+          "action": "Read the audio out section.",
+          "expected": "Audio out (or Audio alarm) with channels and volume is shown, with 16,000 Hz among the output sample rates."
+        }
+      ],
       "case_key": ""
     }
   }

@@ -24,7 +24,16 @@ class TestC2CCameraSettings:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_image_adjustment_defaults_and_reset(self):
-        """Verify image adjustment defaults and reset to default."""
+        """Verify image adjustment defaults and reset to default.
+
+        Steps:
+        1. Open Setup > CAMERA > IMAGE ADJUSTMENT.
+           Expected: The IMAGE ADJUSTMENT page shows sliders for Sharpness, Brightness, Contrast, Saturation and Hue.
+        2. Look for the page buttons.
+           Expected: Apply, Cancel and Default buttons are shown.
+        3. Click Default.
+           Expected: The page stays on IMAGE ADJUSTMENT with no error.
+        """
         self.step_capture.mark(1, "Navigate to Image Adjustment")
         self.camera.navigate_to_setup_section("CAMERA")
         self.camera.navigate_to_setup_subsection("IMAGE ADJUSTMENT")
@@ -48,7 +57,16 @@ class TestC2CCameraSettings:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_exposure_and_daynight_defaults(self):
-        """Verify exposure and day/night settings defaults."""
+        """Verify exposure and day/night settings defaults.
+
+        Steps:
+        1. Open Setup > CAMERA > EXPOSURE SETTINGS.
+           Expected: The page shows Auto exposure and AE metering options.
+        2. Open CAMERA > DAY&NIGHT SETTINGS.
+           Expected: The page shows the Auto, Day and Night mode options.
+        3. Read the IR settings.
+           Expected: IR mode and an IR strength slider are present.
+        """
         self.step_capture.mark(1, "Navigate to Exposure Settings")
         self.camera.navigate_to_setup_section("CAMERA")
         self.camera.navigate_to_setup_subsection("EXPOSURE SETTINGS")
@@ -76,7 +94,16 @@ class TestC2CCameraSettings:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_image_enhancement_and_backlight(self):
-        """Verify image enhancement mirror/flip, 3D NR, LDC, and backlight WDR."""
+        """Verify image enhancement mirror/flip, 3D NR, LDC, and backlight WDR.
+
+        Steps:
+        1. Open Setup > CAMERA > IMAGE ENHANCEMENT.
+           Expected: The page shows 3D noise reduction and LDC (lens distortion) controls, Mirror and Flip, and the note that changing mirror or flip resets the privacy mask.
+        2. Open CAMERA > BACKLIGHT SETTINGS.
+           Expected: The page shows the WDR setting.
+        3. Open CAMERA > VIDEO ENHANCEMENT.
+           Expected: The page shows Flickerless with the 60Hz option.
+        """
         self.step_capture.mark(1, "Navigate to Image Enhancement")
         self.camera.navigate_to_setup_section("CAMERA")
         self.camera.navigate_to_setup_subsection("IMAGE ENHANCEMENT")
@@ -123,7 +150,16 @@ class TestC2CMotionDetection:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_motion_detection_zones(self):
-        """Verify motion detection configuration and zones."""
+        """Verify motion detection configuration and zones.
+
+        Steps:
+        1. Open Setup > EVENTS > MOTION.
+           Expected: The MOTION DETECTION CONFIGURATION page lists Motion area1 to Motion area4.
+        2. Read the sensitivity of each area.
+           Expected: Each of the four areas shows the default sensitivity 70.
+        3. Look for the page buttons.
+           Expected: Apply and Cancel buttons are shown.
+        """
         self.step_capture.mark(1, "Navigate to Motion Detection")
         self.camera.navigate_to_setup_section("EVENTS")
         self.camera.navigate_to_setup_subsection("MOTION")
@@ -159,7 +195,16 @@ class TestC2CPrivacyMask:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_privacy_mask_configuration(self):
-        """Verify privacy mask configuration page and controls."""
+        """Verify privacy mask configuration page and controls.
+
+        Steps:
+        1. On the Setup page, open PRIVACY MASK.
+           Expected: The PRIVACY MASK CONFIGURATION page is shown with an Activation setting.
+        2. Open the Area dropdown.
+           Expected: It lists several areas (Area1 and more).
+        3. Look for the page buttons.
+           Expected: Clear area, Apply and Cancel buttons are shown.
+        """
         self.step_capture.mark(1, "Navigate to Privacy Mask")
         self.camera.navigate_to_setup_subsection("PRIVACY MASK")
         expect(self.page.locator("text='PRIVACY MASK CONFIGURATION'")).to_be_visible()
@@ -194,7 +239,14 @@ class TestC2CAdditionalSettings:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_corridor_mode_options(self):
-        """Verify corridor mode warning and options without triggering reboot."""
+        """Verify corridor mode warning and options without triggering reboot.
+
+        Steps:
+        1. On the Setup page, open CORRIDOR SETTING.
+           Expected: The page shows the options Off, 90 and 270.
+        2. Read the note on the page.
+           Expected: It warns that applying a change reboots the camera. Do not click Apply.
+        """
         self.step_capture.mark(1, "Navigate to Corridor Setting")
         self.camera.navigate_to_setup_subsection("CORRIDOR SETTING")
         expect(self.page.locator("text='CORRIDOR SETTING'")).to_be_visible()
@@ -213,7 +265,12 @@ class TestC2CAdditionalSettings:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_smart_stream_disabled(self):
-        """Verify smart stream controls are disabled when feature is off."""
+        """Verify the Smart Stream page shows its configuration fields.
+
+        Steps:
+        1. On the Setup page, open SMART STREAM.
+           Expected: The SMART STREAM page shows the fields Frame rate, GOP, Bitrate mode, Target bitrate, Hold on time and Trigger event.
+        """
         self.step_capture.mark(1, "Navigate to Smart Stream")
         self.camera.navigate_to_setup_subsection("SMART STREAM")
         expect(self.page.locator("text='SMART STREAM'")).to_be_visible()
@@ -226,7 +283,12 @@ class TestC2CAdditionalSettings:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_roi_configuration(self):
-        """Verify Region of Interest configuration page."""
+        """Verify Region of Interest configuration page.
+
+        Steps:
+        1. On the Setup page, open ROI.
+           Expected: The REGION OF INTEREST CONFIGURATION page shows Stream, Activation and Quality settings.
+        """
         self.step_capture.mark(1, "Navigate to ROI Configuration")
         self.camera.navigate_to_setup_subsection("ROI")
         expect(self.page.locator("text='REGION OF INTEREST CONFIGURATION'")).to_be_visible()
@@ -240,7 +302,16 @@ class TestC2CAdditionalSettings:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_white_balance_modes(self):
-        """Verify white balance configuration and modes."""
+        """Verify white balance configuration and modes.
+
+        Steps:
+        1. Open Setup > CAMERA > WHITE BALANCE.
+           Expected: The WHITE BALANCE page shows Activation and White balance mode settings.
+        2. Read the gain controls.
+           Expected: R Gain, G Gain and B Gain are present.
+        3. Open the White balance mode dropdown.
+           Expected: It offers Auto and Manual.
+        """
         self.step_capture.mark(1, "Navigate to White Balance")
         self.camera.navigate_to_setup_section("CAMERA")
         self.camera.navigate_to_setup_subsection("WHITE BALANCE")

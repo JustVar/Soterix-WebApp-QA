@@ -4,17 +4,70 @@
   "tests": {
     "test_live_view_controls": {
       "title": "Verify live view controls on main page",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open the camera's main page.",
+          "expected": "Soterix branding is shown and the live view timestamp shows the date and time."
+        },
+        {
+          "n": 2,
+          "action": "Read the page for the channel and screen controls.",
+          "expected": "Channel select and the Full screen button are present."
+        },
+        {
+          "n": 3,
+          "action": "Read the page for the lens controls.",
+          "expected": "Zoom, Focus and Auto focus are present, with Focus and Calibrate buttons."
+        }
+      ],
       "case_key": ""
     },
     "test_speaker_and_alarm_controls": {
       "title": "Verify camera speaker and alarm controls on main page",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open the camera's main page and read the controls under the live view.",
+          "expected": "PC speaker and Cam speaker controls are present."
+        },
+        {
+          "n": 2,
+          "action": "Read the alarm section.",
+          "expected": "Alarm input, Relay out and Motion indicators are present."
+        },
+        {
+          "n": 3,
+          "action": "Read the Camera time.",
+          "expected": "Camera time shows a date and time."
+        }
+      ],
       "case_key": ""
     },
     "test_security_pages_accessible": {
       "title": "Verify user management and security configuration pages",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > USER MANAGEMENT.",
+          "expected": "The user list is shown and includes the root user."
+        },
+        {
+          "n": 2,
+          "action": "Open Setup > SECURITY > RTSP AUTHENTICATION.",
+          "expected": "The RTSP authentication page is shown."
+        },
+        {
+          "n": 3,
+          "action": "Open SECURITY > IP ADDRESS FILTER.",
+          "expected": "The IP address filter page is shown."
+        },
+        {
+          "n": 4,
+          "action": "Open SECURITY > HTTPS.",
+          "expected": "The HTTPS settings page is shown."
+        }
+      ],
       "case_key": ""
     }
   }

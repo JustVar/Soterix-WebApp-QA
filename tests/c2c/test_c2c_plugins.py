@@ -28,6 +28,12 @@ class TestC2CVCA:
         """Verify VCA is enabled with DL Object Tracker + Intrusion Detection.
 
         This is the happy path for PVA to work on the Virtual Site.
+
+        Steps:
+        1. Open Setup > VCA > ENABLE.
+           Expected: The CONFIGURATION page is shown with Enable set to On.
+        2. Read the tracker selection.
+           Expected: DL Object Tracker is selected with Intrusion detection as its active option, and DL People Tracker is listed as the alternative.
         """
         self.step_capture.mark(1, "Navigate to VCA > ENABLE")
         self.camera.navigate_to_setup_section("VCA")
@@ -52,7 +58,16 @@ class TestC2CVCA:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_vca_rules_and_license(self):
-        """Verify VCA has active rules and valid ProAI license."""
+        """Verify VCA has active rules and valid ProAI license.
+
+        Steps:
+        1. Open Setup > VCA > RULES.
+           Expected: The RULES page lists the rules and has an Add button.
+        2. Open VCA > LICENSE.
+           Expected: The LICENSE page shows the camera's expected license (from the registry) under Activated License.
+        3. On a multi-lens camera, count the activated license rows.
+           Expected: One row per lens (four on the MS-20V-1 units).
+        """
         self.step_capture.mark(1, "Navigate to VCA > RULES")
         self.camera.navigate_to_setup_section("VCA")
         self.camera.navigate_to_setup_subsection("RULES")
@@ -103,7 +118,16 @@ class TestC2CSoterixCloud:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_cloud_connect_registered(self):
-        """Verify camera is registered to Soterix staging cloud."""
+        """Verify camera is registered to Soterix staging cloud.
+
+        Steps:
+        1. Open Setup > Soterix > CONNECT.
+           Expected: The SOTERIX CLOUD CONNECT page loads with the Soterix logo.
+        2. Wait a few seconds for the cloud status to load and read it.
+           Expected: Registered Cloud Address shows staging.example.invalid. "Waiting for cloud registration..." means the camera was never registered: finish provisioning (QR code) and run again.
+        3. Read the QR code section.
+           Expected: Upload QR Code with Select QR, Upload and Reset buttons.
+        """
         self.step_capture.mark(1, "Navigate to Soterix > CONNECT")
         self.camera.navigate_to_setup_section("Soterix")
         self.camera.navigate_to_setup_subsection("CONNECT")
@@ -163,7 +187,18 @@ class TestC2CMultiLens:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_multi_lens_license_count_matches_lens_count(self):
-        """Verify multi-lens camera has one license assigned per lens."""
+        """Verify multi-lens camera has one license assigned per lens.
+
+        Skipped on a single-lens camera.
+
+        Steps:
+        1. On a multi-lens camera, open Setup > VCA > LICENSE.
+           Expected: The LICENSE page is shown.
+        2. Compare the registry's expected license count with its lens count.
+           Expected: They match (four for the MS-20V-1 units).
+        3. Count the activated licenses marked assigned.
+           Expected: One assigned license per lens.
+        """
         self.step_capture.mark(1, "Navigate to VCA > LICENSE")
         self.camera.navigate_to_setup_section("VCA")
         self.camera.navigate_to_setup_subsection("LICENSE")

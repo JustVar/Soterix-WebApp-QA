@@ -4,12 +4,44 @@
   "tests": {
     "test_camera_login_and_live_view": {
       "title": "Verify camera web UI login and session - happy path",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open the camera's web UI (http://<camera IP>/cgi-bin/index.cgi) and sign in with the lab login when the browser asks.",
+          "expected": "The main page loads with the Soterix Systems branding."
+        },
+        {
+          "n": 2,
+          "action": "Look at the live view.",
+          "expected": "A timestamp overlay with today's date is shown on the video."
+        },
+        {
+          "n": 3,
+          "action": "Look for the Setup button.",
+          "expected": "The Setup button is shown."
+        },
+        {
+          "n": 4,
+          "action": "Look at the live view controls.",
+          "expected": "The Full screen button is shown."
+        }
+      ],
       "case_key": ""
     },
     "test_camera_rejects_invalid_credentials": {
       "title": "Verify camera rejects invalid credentials",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open the camera's web UI and sign in with a wrong username and password (admin / wrongpass).",
+          "expected": "The camera answers 401 Unauthorized."
+        },
+        {
+          "n": 2,
+          "action": "Look at the page.",
+          "expected": "No camera page content is shown, and there is no Setup button."
+        }
+      ],
       "case_key": ""
     }
   }

@@ -4,22 +4,81 @@
   "tests": {
     "test_vca_enabled_with_correct_tracker": {
       "title": "Verify VCA is enabled with DL Object Tracker + Intrusion Detection",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > VCA > ENABLE.",
+          "expected": "The CONFIGURATION page is shown with Enable set to On."
+        },
+        {
+          "n": 2,
+          "action": "Read the tracker selection.",
+          "expected": "DL Object Tracker is selected with Intrusion detection as its active option, and DL People Tracker is listed as the alternative."
+        }
+      ],
       "case_key": ""
     },
     "test_vca_rules_and_license": {
       "title": "Verify VCA has active rules and valid ProAI license",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > VCA > RULES.",
+          "expected": "The RULES page lists the rules and has an Add button."
+        },
+        {
+          "n": 2,
+          "action": "Open VCA > LICENSE.",
+          "expected": "The LICENSE page shows the camera's expected license (from the registry) under Activated License."
+        },
+        {
+          "n": 3,
+          "action": "On a multi-lens camera, count the activated license rows.",
+          "expected": "One row per lens (four on the MS-20V-1 units)."
+        }
+      ],
       "case_key": ""
     },
     "test_cloud_connect_registered": {
       "title": "Verify camera is registered to Soterix staging cloud",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > Soterix > CONNECT.",
+          "expected": "The SOTERIX CLOUD CONNECT page loads with the Soterix logo."
+        },
+        {
+          "n": 2,
+          "action": "Wait a few seconds for the cloud status to load and read it.",
+          "expected": "Registered Cloud Address shows staging.example.invalid. \"Waiting for cloud registration...\" means the camera was never registered: finish provisioning (QR code) and run again."
+        },
+        {
+          "n": 3,
+          "action": "Read the QR code section.",
+          "expected": "Upload QR Code with Select QR, Upload and Reset buttons."
+        }
+      ],
       "case_key": ""
     },
     "test_multi_lens_license_count_matches_lens_count": {
       "title": "Verify multi-lens camera has one license assigned per lens",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "On a multi-lens camera, open Setup > VCA > LICENSE.",
+          "expected": "The LICENSE page is shown."
+        },
+        {
+          "n": 2,
+          "action": "Compare the registry's expected license count with its lens count.",
+          "expected": "They match (four for the MS-20V-1 units)."
+        },
+        {
+          "n": 3,
+          "action": "Count the activated licenses marked assigned.",
+          "expected": "One assigned license per lens."
+        }
+      ],
       "case_key": ""
     }
   }

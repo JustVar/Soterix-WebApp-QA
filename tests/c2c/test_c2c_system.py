@@ -25,7 +25,18 @@ class TestC2CSystemInfo:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_system_info_device_details(self):
-        """Verify system information displays correct device details."""
+        """Verify system information displays correct device details.
+
+        Steps:
+        1. Open Setup > SYSTEM > SYSTEM INFORMATION.
+           Expected: Model name and Manufacturer match the registry entry for this camera, and a serial number starting with PC is shown.
+        2. Read the video capabilities.
+           Expected: Max resolution and Max framerate (fps) match the registry entry.
+        3. Read the feature list.
+           Expected: AI is SUPPORTED, and PTZ is listed for models the registry marks as not supporting it.
+        4. Read the ONVIF line.
+           Expected: It shows the ONVIF version from the registry (24.06 unless set) with its profiles.
+        """
         self.step_capture.mark(1, "Navigate to System Information page")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("SYSTEM INFORMATION")
@@ -69,6 +80,16 @@ class TestC2CSystemInfo:
         restore is in a finally block - previously it sat after the assertions,
         so a failed verification left the device permanently named
         "TEST-CAM-01" in "QA Lab".
+
+        Steps:
+        1. Open Setup > SYSTEM > SYSTEM INFORMATION and note the Device name and Location.
+           Expected: Both fields are editable.
+        2. Change Device name to TEST-CAM-01 and Location to QA Lab, then click Apply.
+           Expected: The change is accepted.
+        3. Refresh the page and reopen SYSTEM > SYSTEM INFORMATION.
+           Expected: Device name reads TEST-CAM-01 and Location reads QA Lab.
+        4. Put the original name and location back and click Apply.
+           Expected: The original values are restored (the test restores them even when a step fails).
         """
         self.step_capture.mark(1, "Navigate to System Information")
         self.camera.navigate_to_setup_section("SYSTEM")
@@ -124,7 +145,14 @@ class TestC2CPlugins:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_plugins_installed_and_running(self):
-        """Verify both SOTERIX and VCAedge-AI plugins are installed and running."""
+        """Verify both SOTERIX and VCAedge-AI plugins are installed and running.
+
+        Steps:
+        1. Open Setup > SYSTEM > PLUG-IN.
+           Expected: The SOTERIX and VCAedge-AI plugins are listed.
+        2. Read each plugin's status.
+           Expected: At least two plugins show running.
+        """
         self.step_capture.mark(1, "Navigate to Plug-in page")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("PLUG-IN")
@@ -144,7 +172,14 @@ class TestC2CPlugins:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_plugin_storage_within_limits(self):
-        """Verify plugin storage usage is below 90%."""
+        """Verify plugin storage usage is below 90%.
+
+        Steps:
+        1. Open Setup > SYSTEM > PLUG-IN and read the storage usage.
+           Expected: A usage percentage is shown.
+        2. Compare it with the limit.
+           Expected: Usage is below 90%.
+        """
         self.step_capture.mark(1, "Navigate to Plug-in page")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("PLUG-IN")
@@ -175,7 +210,16 @@ class TestC2CSystemOps:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_firmware_and_diagnostics_accessible(self):
-        """Verify firmware version and system diagnostics are accessible."""
+        """Verify firmware version and system diagnostics are accessible.
+
+        Steps:
+        1. Open Setup > SYSTEM > FIRMWARE UPDATE.
+           Expected: The firmware page shows a control to select a firmware file.
+        2. Open SYSTEM > SYSTEM DIAGNOSTICS.
+           Expected: The diagnostics page is shown.
+        3. Open SYSTEM > LOG.
+           Expected: The system log page is shown.
+        """
         self.step_capture.mark(1, "Navigate to Firmware Update page")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("FIRMWARE UPDATE")
@@ -195,7 +239,16 @@ class TestC2CSystemOps:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_date_time_settings(self):
-        """Verify date/time settings and language options."""
+        """Verify date/time settings and language options.
+
+        Steps:
+        1. Open Setup > SYSTEM > DATE&TIME SETTING.
+           Expected: The date and time page shows the time settings (NTP or manual).
+        2. Open SYSTEM > DST SETTINGS.
+           Expected: The DST page is shown.
+        3. Open SYSTEM > LANGUAGE.
+           Expected: The language page is shown.
+        """
         self.step_capture.mark(1, "Navigate to Date & Time Setting")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("DATE&TIME SETTING")
@@ -217,7 +270,12 @@ class TestC2CSystemOps:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_configuration_backup_accessible(self):
-        """Verify configuration backup page is accessible."""
+        """Verify configuration backup page is accessible.
+
+        Steps:
+        1. Open Setup > SYSTEM > CONFIGURATION BACKUP.
+           Expected: The CONFIGURATION BACKUP page offers a backup (export or download) option.
+        """
         self.step_capture.mark(1, "Navigate to Configuration Backup")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("CONFIGURATION BACKUP")
@@ -239,6 +297,16 @@ class TestC2CSystemOps:
         passed, because the suite parametrises over every enabled camera in the
         registry - without the guard, a routine `pytest tests/c2c/` reboots
         the entire lab fleet.
+
+        Steps:
+        1. Open Setup > SYSTEM > PLUG-IN and note how many plugins show running.
+           Expected: The count is known for the check after the restart.
+        2. Open SYSTEM > RESTART and click Restart.
+           Expected: The camera goes offline.
+        3. Wait for the camera to come back (up to 3 minutes).
+           Expected: The setup page answers again.
+        4. Open SYSTEM > PLUG-IN again.
+           Expected: At least as many plugins show running as before the restart.
         """
         self.step_capture.mark(1, "Note current plugin status before restart")
         self.camera.navigate_to_setup_section("SYSTEM")

@@ -4,42 +4,165 @@
   "tests": {
     "test_system_info_device_details": {
       "title": "Verify system information displays correct device details",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > SYSTEM INFORMATION.",
+          "expected": "Model name and Manufacturer match the registry entry for this camera, and a serial number starting with PC is shown."
+        },
+        {
+          "n": 2,
+          "action": "Read the video capabilities.",
+          "expected": "Max resolution and Max framerate (fps) match the registry entry."
+        },
+        {
+          "n": 3,
+          "action": "Read the feature list.",
+          "expected": "AI is SUPPORTED, and PTZ is listed for models the registry marks as not supporting it."
+        },
+        {
+          "n": 4,
+          "action": "Read the ONVIF line.",
+          "expected": "It shows the ONVIF version from the registry (24.06 unless set) with its profiles."
+        }
+      ],
       "case_key": ""
     },
     "test_device_name_and_location_editable": {
       "title": "Verify device name and location are editable and persist",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > SYSTEM INFORMATION and note the Device name and Location.",
+          "expected": "Both fields are editable."
+        },
+        {
+          "n": 2,
+          "action": "Change Device name to TEST-CAM-01 and Location to QA Lab, then click Apply.",
+          "expected": "The change is accepted."
+        },
+        {
+          "n": 3,
+          "action": "Refresh the page and reopen SYSTEM > SYSTEM INFORMATION.",
+          "expected": "Device name reads TEST-CAM-01 and Location reads QA Lab."
+        },
+        {
+          "n": 4,
+          "action": "Put the original name and location back and click Apply.",
+          "expected": "The original values are restored (the test restores them even when a step fails)."
+        }
+      ],
       "case_key": ""
     },
     "test_plugins_installed_and_running": {
       "title": "Verify both SOTERIX and VCAedge-AI plugins are installed and running",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > PLUG-IN.",
+          "expected": "The SOTERIX and VCAedge-AI plugins are listed."
+        },
+        {
+          "n": 2,
+          "action": "Read each plugin's status.",
+          "expected": "At least two plugins show running."
+        }
+      ],
       "case_key": ""
     },
     "test_plugin_storage_within_limits": {
       "title": "Verify plugin storage usage is below 90%",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > PLUG-IN and read the storage usage.",
+          "expected": "A usage percentage is shown."
+        },
+        {
+          "n": 2,
+          "action": "Compare it with the limit.",
+          "expected": "Usage is below 90%."
+        }
+      ],
       "case_key": ""
     },
     "test_firmware_and_diagnostics_accessible": {
       "title": "Verify firmware version and system diagnostics are accessible",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > FIRMWARE UPDATE.",
+          "expected": "The firmware page shows a control to select a firmware file."
+        },
+        {
+          "n": 2,
+          "action": "Open SYSTEM > SYSTEM DIAGNOSTICS.",
+          "expected": "The diagnostics page is shown."
+        },
+        {
+          "n": 3,
+          "action": "Open SYSTEM > LOG.",
+          "expected": "The system log page is shown."
+        }
+      ],
       "case_key": ""
     },
     "test_date_time_settings": {
       "title": "Verify date/time settings and language options",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > DATE&TIME SETTING.",
+          "expected": "The date and time page shows the time settings (NTP or manual)."
+        },
+        {
+          "n": 2,
+          "action": "Open SYSTEM > DST SETTINGS.",
+          "expected": "The DST page is shown."
+        },
+        {
+          "n": 3,
+          "action": "Open SYSTEM > LANGUAGE.",
+          "expected": "The language page is shown."
+        }
+      ],
       "case_key": ""
     },
     "test_configuration_backup_accessible": {
       "title": "Verify configuration backup page is accessible",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > CONFIGURATION BACKUP.",
+          "expected": "The CONFIGURATION BACKUP page offers a backup (export or download) option."
+        }
+      ],
       "case_key": ""
     },
     "test_camera_restart": {
       "title": "Verify camera can restart cleanly and retains settings",
-      "steps": [],
+      "steps": [
+        {
+          "n": 1,
+          "action": "Open Setup > SYSTEM > PLUG-IN and note how many plugins show running.",
+          "expected": "The count is known for the check after the restart."
+        },
+        {
+          "n": 2,
+          "action": "Open SYSTEM > RESTART and click Restart.",
+          "expected": "The camera goes offline."
+        },
+        {
+          "n": 3,
+          "action": "Wait for the camera to come back (up to 3 minutes).",
+          "expected": "The setup page answers again."
+        },
+        {
+          "n": 4,
+          "action": "Open SYSTEM > PLUG-IN again.",
+          "expected": "At least as many plugins show running as before the restart."
+        }
+      ],
       "case_key": ""
     }
   }

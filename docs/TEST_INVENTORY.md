@@ -12,9 +12,9 @@ browser parameter.
 
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
-| NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 0 | 0 |
+| NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 0 |
 | NexaiQ-Core | 13 | 52 | 405 | 168 | 348 |
-| **Total** | | **59** | **437** | **168** | **348** |
+| **Total** | | **59** | **437** | **200** | **348** |
 
 ## Growth
 
@@ -64,10 +64,10 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `tests/helpers/` | 1 | 13 | yes | Pins for tests/shared/helpers (surface, search_job). Collected by bare pytest. |
 | `tests/legacy/` | 3 | 138 | no | Retired Selenium-era login and web-client tests, kept for reference. Excluded from collection by pytest.ini norecursedirs. |
 | `tests/plugins/` | 7 | 152 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
-| `tests/tools/` | 14 | 154 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
+| `tests/tools/` | 14 | 155 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
 | `soterix-qa-shared` | 21 | 522 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
 | `Soterix-API-QA` | 1 | 11 | in Soterix-API-QA | Pins for the API repo's own plugins and shims. Run in that repo. |
-| **This repo** | **25** | **457** | | |
+| **This repo** | **25** | **458** | | |
 
 ## NexaiQ-Camera 2 Cloud
 
@@ -75,38 +75,38 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
-| `test_c2c_auth.py::TestC2CAuth::test_camera_login_and_live_view` | Verify camera web UI login and session - happy path | - | - |
-| `test_c2c_auth.py::TestC2CAuth::test_camera_rejects_invalid_credentials` | Verify camera rejects invalid credentials | - | - |
-| `test_c2c_camera.py::TestC2CAdditionalSettings::test_corridor_mode_options` | Verify corridor mode warning and options without triggering reboot | - | - |
-| `test_c2c_camera.py::TestC2CAdditionalSettings::test_roi_configuration` | Verify Region of Interest configuration page | - | - |
-| `test_c2c_camera.py::TestC2CAdditionalSettings::test_smart_stream_disabled` | Verify smart stream controls are disabled when feature is off | - | - |
-| `test_c2c_camera.py::TestC2CAdditionalSettings::test_white_balance_modes` | Verify white balance configuration and modes | - | - |
-| `test_c2c_camera.py::TestC2CCameraSettings::test_exposure_and_daynight_defaults` | Verify exposure and day/night settings defaults | - | - |
-| `test_c2c_camera.py::TestC2CCameraSettings::test_image_adjustment_defaults_and_reset` | Verify image adjustment defaults and reset to default | - | - |
-| `test_c2c_camera.py::TestC2CCameraSettings::test_image_enhancement_and_backlight` | Verify image enhancement mirror/flip, 3D NR, LDC, and backlight WDR | - | - |
-| `test_c2c_camera.py::TestC2CMotionDetection::test_motion_detection_zones` | Verify motion detection configuration and zones | - | - |
-| `test_c2c_camera.py::TestC2CPrivacyMask::test_privacy_mask_configuration` | Verify privacy mask configuration page and controls | - | - |
-| `test_c2c_liveview.py::TestC2CLiveView::test_live_view_controls` | Verify live view controls on main page | - | - |
-| `test_c2c_liveview.py::TestC2CLiveView::test_speaker_and_alarm_controls` | Verify camera speaker and alarm controls on main page | - | - |
-| `test_c2c_liveview.py::TestC2CSecurity::test_security_pages_accessible` | Verify user management and security configuration pages | - | - |
-| `test_c2c_network.py::TestC2CNetwork::test_network_status` | Verify network status displays correct configuration | - | - |
-| `test_c2c_network.py::TestC2CNetwork::test_rtsp_stream_configuration` | Verify RTSP stream is accessible and configured correctly | - | - |
-| `test_c2c_plugins.py::TestC2CMultiLens::test_multi_lens_license_count_matches_lens_count` | Verify multi-lens camera has one license assigned per lens | - | - |
-| `test_c2c_plugins.py::TestC2CSoterixCloud::test_cloud_connect_registered` | Verify camera is registered to Soterix staging cloud | - | - |
-| `test_c2c_plugins.py::TestC2CVCA::test_vca_enabled_with_correct_tracker` | Verify VCA is enabled with DL Object Tracker + Intrusion Detection | - | - |
-| `test_c2c_plugins.py::TestC2CVCA::test_vca_rules_and_license` | Verify VCA has active rules and valid ProAI license | - | - |
-| `test_c2c_system.py::TestC2CPlugins::test_plugin_storage_within_limits` | Verify plugin storage usage is below 90% | - | - |
-| `test_c2c_system.py::TestC2CPlugins::test_plugins_installed_and_running` | Verify both SOTERIX and VCAedge-AI plugins are installed and running | - | - |
-| `test_c2c_system.py::TestC2CSystemInfo::test_device_name_and_location_editable` | Verify device name and location are editable and persist | - | - |
-| `test_c2c_system.py::TestC2CSystemInfo::test_system_info_device_details` | Verify system information displays correct device details | - | - |
-| `test_c2c_system.py::TestC2CSystemOps::test_camera_restart` | Verify camera can restart cleanly and retains settings | - | - |
-| `test_c2c_system.py::TestC2CSystemOps::test_configuration_backup_accessible` | Verify configuration backup page is accessible | - | - |
-| `test_c2c_system.py::TestC2CSystemOps::test_date_time_settings` | Verify date/time settings and language options | - | - |
-| `test_c2c_system.py::TestC2CSystemOps::test_firmware_and_diagnostics_accessible` | Verify firmware version and system diagnostics are accessible | - | - |
-| `test_c2c_video.py::TestC2CAudio::test_audio_configuration_defaults` | Verify audio configuration defaults and controls | - | - |
-| `test_c2c_video.py::TestC2COSD::test_osd_configuration` | Verify OSD date/time overlay is enabled and configurable | - | - |
-| `test_c2c_video.py::TestC2CVideoConfig::test_default_stream_configuration` | Verify default video stream configuration across all 3 streams | - | - |
-| `test_c2c_video.py::TestC2CVideoConfig::test_stream_codec_and_resolution_change` | Verify stream codec and resolution can be changed and applied | - | - |
+| `test_c2c_auth.py::TestC2CAuth::test_camera_login_and_live_view` | Verify camera web UI login and session - happy path | yes | - |
+| `test_c2c_auth.py::TestC2CAuth::test_camera_rejects_invalid_credentials` | Verify camera rejects invalid credentials | yes | - |
+| `test_c2c_camera.py::TestC2CAdditionalSettings::test_corridor_mode_options` | Verify corridor mode warning and options without triggering reboot | yes | - |
+| `test_c2c_camera.py::TestC2CAdditionalSettings::test_roi_configuration` | Verify Region of Interest configuration page | yes | - |
+| `test_c2c_camera.py::TestC2CAdditionalSettings::test_smart_stream_disabled` | Verify the Smart Stream page shows its configuration fields | yes | - |
+| `test_c2c_camera.py::TestC2CAdditionalSettings::test_white_balance_modes` | Verify white balance configuration and modes | yes | - |
+| `test_c2c_camera.py::TestC2CCameraSettings::test_exposure_and_daynight_defaults` | Verify exposure and day/night settings defaults | yes | - |
+| `test_c2c_camera.py::TestC2CCameraSettings::test_image_adjustment_defaults_and_reset` | Verify image adjustment defaults and reset to default | yes | - |
+| `test_c2c_camera.py::TestC2CCameraSettings::test_image_enhancement_and_backlight` | Verify image enhancement mirror/flip, 3D NR, LDC, and backlight WDR | yes | - |
+| `test_c2c_camera.py::TestC2CMotionDetection::test_motion_detection_zones` | Verify motion detection configuration and zones | yes | - |
+| `test_c2c_camera.py::TestC2CPrivacyMask::test_privacy_mask_configuration` | Verify privacy mask configuration page and controls | yes | - |
+| `test_c2c_liveview.py::TestC2CLiveView::test_live_view_controls` | Verify live view controls on main page | yes | - |
+| `test_c2c_liveview.py::TestC2CLiveView::test_speaker_and_alarm_controls` | Verify camera speaker and alarm controls on main page | yes | - |
+| `test_c2c_liveview.py::TestC2CSecurity::test_security_pages_accessible` | Verify user management and security configuration pages | yes | - |
+| `test_c2c_network.py::TestC2CNetwork::test_network_status` | Verify network status displays correct configuration | yes | - |
+| `test_c2c_network.py::TestC2CNetwork::test_rtsp_stream_configuration` | Verify RTSP stream is accessible and configured correctly | yes | - |
+| `test_c2c_plugins.py::TestC2CMultiLens::test_multi_lens_license_count_matches_lens_count` | Verify multi-lens camera has one license assigned per lens | yes | - |
+| `test_c2c_plugins.py::TestC2CSoterixCloud::test_cloud_connect_registered` | Verify camera is registered to Soterix staging cloud | yes | - |
+| `test_c2c_plugins.py::TestC2CVCA::test_vca_enabled_with_correct_tracker` | Verify VCA is enabled with DL Object Tracker + Intrusion Detection | yes | - |
+| `test_c2c_plugins.py::TestC2CVCA::test_vca_rules_and_license` | Verify VCA has active rules and valid ProAI license | yes | - |
+| `test_c2c_system.py::TestC2CPlugins::test_plugin_storage_within_limits` | Verify plugin storage usage is below 90% | yes | - |
+| `test_c2c_system.py::TestC2CPlugins::test_plugins_installed_and_running` | Verify both SOTERIX and VCAedge-AI plugins are installed and running | yes | - |
+| `test_c2c_system.py::TestC2CSystemInfo::test_device_name_and_location_editable` | Verify device name and location are editable and persist | yes | - |
+| `test_c2c_system.py::TestC2CSystemInfo::test_system_info_device_details` | Verify system information displays correct device details | yes | - |
+| `test_c2c_system.py::TestC2CSystemOps::test_camera_restart` | Verify camera can restart cleanly and retains settings | yes | - |
+| `test_c2c_system.py::TestC2CSystemOps::test_configuration_backup_accessible` | Verify configuration backup page is accessible | yes | - |
+| `test_c2c_system.py::TestC2CSystemOps::test_date_time_settings` | Verify date/time settings and language options | yes | - |
+| `test_c2c_system.py::TestC2CSystemOps::test_firmware_and_diagnostics_accessible` | Verify firmware version and system diagnostics are accessible | yes | - |
+| `test_c2c_video.py::TestC2CAudio::test_audio_configuration_defaults` | Verify audio configuration defaults and controls | yes | - |
+| `test_c2c_video.py::TestC2COSD::test_osd_configuration` | Verify OSD date/time overlay is enabled and configurable | yes | - |
+| `test_c2c_video.py::TestC2CVideoConfig::test_default_stream_configuration` | Verify default video stream configuration across all 3 streams | yes | - |
+| `test_c2c_video.py::TestC2CVideoConfig::test_stream_codec_and_resolution_change` | Verify the stream codec can be changed and applied | yes | - |
 
 ## NexaiQ-Core
 

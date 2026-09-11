@@ -13,7 +13,18 @@ class TestC2CAuth:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_camera_login_and_live_view(self, browser, camera_config, step_capture):
-        """Verify camera web UI login and session - happy path."""
+        """Verify camera web UI login and session - happy path.
+
+        Steps:
+        1. Open the camera's web UI (http://<camera IP>/cgi-bin/index.cgi) and sign in with the lab login when the browser asks.
+           Expected: The main page loads with the Soterix Systems branding.
+        2. Look at the live view.
+           Expected: A timestamp overlay with today's date is shown on the video.
+        3. Look for the Setup button.
+           Expected: The Setup button is shown.
+        4. Look at the live view controls.
+           Expected: The Full screen button is shown.
+        """
         context = browser.new_context(
             http_credentials={
                 "username": camera_config["user"],
@@ -49,7 +60,14 @@ class TestC2CAuth:
     @pytest.mark.security
     @pytest.mark.c2c_hardware
     def test_camera_rejects_invalid_credentials(self, browser, camera_config, step_capture):
-        """Verify camera rejects invalid credentials."""
+        """Verify camera rejects invalid credentials.
+
+        Steps:
+        1. Open the camera's web UI and sign in with a wrong username and password (admin / wrongpass).
+           Expected: The camera answers 401 Unauthorized.
+        2. Look at the page.
+           Expected: No camera page content is shown, and there is no Setup button.
+        """
         context = browser.new_context(
             http_credentials={
                 "username": "admin",

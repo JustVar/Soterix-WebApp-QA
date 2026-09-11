@@ -24,7 +24,16 @@ class TestC2CNetwork:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_network_status(self):
-        """Verify network status displays correct configuration."""
+        """Verify network status displays correct configuration.
+
+        Steps:
+        1. Open Setup > NETWORK > STATUS.
+           Expected: The NETWORK STATUS page is shown.
+        2. Read the addresses.
+           Expected: A MAC address is shown, the IP address is the camera's IP, the subnet mask is 255.255.255.0 and a default gateway on the lab network (192.168.x.x) is shown.
+        3. Read the ports.
+           Expected: HTTP 80, HTTPS 443 and RTSP 554 are listed.
+        """
         self.step_capture.mark(1, "Navigate to Network Status")
         self.camera.navigate_to_setup_section("NETWORK")
         self.camera.navigate_to_setup_subsection("STATUS")
@@ -53,7 +62,16 @@ class TestC2CNetwork:
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
     def test_rtsp_stream_configuration(self):
-        """Verify RTSP stream is accessible and configured correctly."""
+        """Verify RTSP stream is accessible and configured correctly.
+
+        Steps:
+        1. Open Setup > NETWORK > RTSP INFORMATION.
+           Expected: The RTSP INFORMATION page is shown.
+        2. Read the RTSP URI.
+           Expected: It is rtsp://<camera IP>:554/<channel> (channel1, or the lens's channel on a multi-lens camera), and the Identifier field shows the same channel.
+        3. Read the RTSP options.
+           Expected: Audio and Meta options are present, and a Copy button is beside the URI.
+        """
         self.step_capture.mark(1, "Navigate to RTSP Information")
         self.camera.navigate_to_setup_section("NETWORK")
         self.camera.navigate_to_setup_subsection("RTSP INFORMATION")
