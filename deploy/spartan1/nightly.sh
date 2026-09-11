@@ -106,6 +106,13 @@ fi
     [ -d "$d" ] || continue
     rsync -a --exclude="traces/" --exclude="*.webm" "$d" "$SERVE/$(basename "$d")/"
   done
+  # The served index and health page must list what the SERVED directory
+  # holds. The archive plugin rebuilds only the clone's own index, and the
+  # copy served since 09/01 listed none of the runs copied after it
+  # (found 09/11/2026). health_summary rebuilds both for any runs dir.
+  venv/bin/python tools/health_summary.py --runs-dir "$SERVE" > /dev/null \
+    && echo "=== served index and health page rebuilt from $SERVE" \
+    || echo "=== served index rebuild FAILED (health_summary exit $?)"
   rm -f "$PIDFILE"
   echo "=== $(date -Is) nightly done"
 } >> "$LOG" 2>&1

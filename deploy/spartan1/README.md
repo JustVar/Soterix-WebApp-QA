@@ -50,9 +50,20 @@ from a Windows checkout: Git on Windows may hand you the file with CRLF
 line endings, and `/bin/sh` refuses a script whose first line ends in `\r`.
 
 ```bash
-ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && git reset -q --hard origin/main && \
-  sudo cp deploy/spartan1/nightly.sh /data/qa/ci/nightly.sh && sudo chmod 755 /data/qa/ci/nightly.sh && \
-  sh -n /data/qa/ci/nightly.sh && echo installed'
+ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && \
+  git show origin/main:deploy/spartan1/nightly.sh > /tmp/nightly.sh.new && sh -n /tmp/nightly.sh.new && \
+  sudo cp /tmp/nightly.sh.new /data/qa/ci/nightly.sh.new && sudo chmod 755 /data/qa/ci/nightly.sh.new && \
+  sudo mv /data/qa/ci/nightly.sh.new /data/qa/ci/nightly.sh && echo installed'
+```
+
+Two rules in that command. It reads the file from `origin/main` with `git show`
+rather than resetting the clone, so a nightly that is running from the clone
+is not disturbed. And it installs by rename, never by copying over the live
+file: a shell reads its script as it runs, so overwriting `nightly.sh`
+in place can hand a running nightly half of the new text. A rename leaves
+the running one its old file and gives cron the new one.
+
+```bash
 
 # nginx: after editing /etc/nginx/sites-enabled/default
 ssh spartan1 'sudo nginx -t && sudo systemctl reload nginx'
