@@ -515,6 +515,21 @@ def summarize_frames(frames: list[dict]) -> dict:
 
 
 # ------------------------------------------------------------------ api ---
+def _account() -> tuple[str, str, int]:
+    """(user, password, site_id) of the box the probe was asked for.
+
+    With BOX set these come from config/env/ through get_credentials, the
+    way the tests and explore_app resolve them; the probe used to read
+    QA_USER and site 16 whatever BOX said, so a US probe logged into India
+    and reported "no channel named" for a US camera (09/11/2026).
+    """
+    if os.environ.get("BOX"):
+        from config.base_config import get_credentials
+        creds = get_credentials()
+        return creds["email"], creds["password"], int(creds["site_id"])
+    return *_account()[:2], int(os.environ.get("TEST_SITE_ID", "16"))
+
+
 def api_facts(api: InternalApi, site_id: int, camera: str) -> dict:
     """Channel record and configured stream settings for the named camera."""
     channels = api.get(f"/REST/site/{site_id}/channel")
@@ -642,7 +657,7 @@ def open_browser(p, headed: bool, channel: str | None):
     cap = Capture()
     cap.attach(ctx, page)
     page.goto(config["base_url"])
-    LoginPage(page, config["base_url"]).login(os.environ["QA_USER"], os.environ["QA_PASSWORD"])
+    LoginPage(page, config["base_url"]).login(*_account()[:2])
     page.wait_for_function("() => !window.location.href.includes('/auth/login')", timeout=60000)
     page.locator("text=Views").first.wait_for(state="visible", timeout=30000)
     views = ViewsPage(page)
@@ -1496,7 +1511,7 @@ def pick_channels(api: InternalApi, site_id: int, camera: str | None, all_camera
 def run_health(args) -> int:
     seconds = args.seconds or 20
     api = InternalApi(config["base_url"], args.site_id)
-    token = api.login(os.environ["QA_USER"], os.environ["QA_PASSWORD"])
+    token = api.login(*_account()[:2])
     channels = pick_channels(api, args.site_id, args.camera, args.all_cameras)
     cfgs: dict[int, dict | None] = {}
     cfg_errors: dict[int, str] = {}
@@ -1547,7 +1562,7 @@ def run_health(args) -> int:
 def run_experiment(args) -> int:
     seconds = args.seconds or 8
     api = InternalApi(config["base_url"], args.site_id)
-    token = api.login(os.environ["QA_USER"], os.environ["QA_PASSWORD"])
+    token = api.login(*_account()[:2])
     ch = pick_channels(api, args.site_id, args.camera, False)[0]
     print(f"[direct] channel {ch['id']} '{ch['name']}', stream {args.stream}, {seconds}s per variant")
     result = browser_free_experiment(api, token, args.site_id, ch["id"], args.stream, seconds)
@@ -1568,7 +1583,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--camera", default=config.get("test_camera_name"),
                         help="camera name as shown in the Views tree")
-    parser.add_argument("--site-id", type=int, default=int(os.environ.get("TEST_SITE_ID", "16")))
+    parser.add_argument("--site-id", type=int, default=None,
+                        help="site to probe (default: the active box's default_site_id, else TEST_SITE_ID)")
     parser.add_argument("--seconds", type=int, default=None,
                         help="capture window per player (facts: 12, health: 20, --no-browser "
                              "experiment: 8 per variant)")
@@ -1597,6 +1613,8 @@ def main() -> int:
                         help="seconds to wait for the media socket before a channel is offline "
                              "(browser path only; --no-browser uses a fixed 15 s connect timeout)")
     args = parser.parse_args()
+    if args.site_id is None:
+        args.site_id = _account()[2]
 
     if not args.camera and not (args.health and args.all_cameras):
         parser.error("--camera or --all-cameras (with --health) required")
@@ -1609,7 +1627,7 @@ def main() -> int:
     api_data = None
     if not args.no_api:
         api = InternalApi(config["base_url"], args.site_id)
-        api.login(os.environ["QA_USER"], os.environ["QA_PASSWORD"])
+        api.login(*_account()[:2])
         api_data = api_facts(api, args.site_id, args.camera)
         print(f"[probe] channel {api_data['channel_id']} '{api_data['name']}' "
               f"{api_data['model']} {api_data['model_number']}")
