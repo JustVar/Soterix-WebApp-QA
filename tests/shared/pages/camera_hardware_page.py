@@ -110,6 +110,93 @@ class CameraHardwarePage:
             pytest.skip(f"this camera's setup menu has no '{subsection_text}' entry "
                         f"(measured on the page; firmware differs by model)")
 
+    # Per-model facts (tests/data/c2c_models.yaml): what a model's firmware
+    # offers, measured once per model. The checks below hold the page to
+    # that record in both directions, so a firmware change fails by name
+    # instead of passing or skipping on whatever the page happened to show.
+    MENU_ENTRIES_KNOWN = ("SMART STREAM", "CONFIGURATION BACKUP", "CORRIDOR SETTING",
+                          "RULES", "CONNECT")
+    CONTROLS_KNOWN = {
+        "day_night_controls": ("IR mode", "IR strength"),
+        "image_enhancement_controls": ("3D noise reduction", "LDC", "Mirror", "Flip"),
+        "live_view_controls": ("Zoom", "IRIS", "Focus", "Auto focus"),
+    }
+    BUTTONS_KNOWN = {"live_view_buttons": ("Focus", "Calibrate")}
+
+    @property
+    def model_facts(self) -> dict:
+        facts = self.config.get("model_facts")
+        if facts is None:
+            raise AssertionError(
+                f"no model facts for {self.config.get('model')!r} ({self.ip}): "
+                f"tests/data/c2c_models.yaml needs an entry for the model")
+        return facts
+
+    def model_entry_present(self, entry: str) -> bool:
+        """True when the model lists this setup entry and the page shows it;
+        False when neither. A disagreement fails, naming which side to fix."""
+        listed = entry.upper() in {e.upper() for e in self.model_facts.get("menu_entries", [])}
+        shown = self.has_subsection(entry)
+        model = self.config.get("model")
+        if listed and not shown:
+            raise AssertionError(
+                f"tests/data/c2c_models.yaml lists a {entry} entry for {model}, but "
+                f"{self.ip}'s setup menu has none: firmware changed, or the record is wrong")
+        if shown and not listed:
+            raise AssertionError(
+                f"{self.ip} ({model}) shows a {entry} entry that tests/data/c2c_models.yaml "
+                f"does not list for the model: measure it and update the record")
+        return listed
+
+    def require_model_entry(self, entry: str) -> None:
+        """Skip, by the model record, when the model has no such entry."""
+        if not self.model_entry_present(entry):
+            pytest.skip(f"{self.config.get('model')} has no {entry} entry "
+                        f"(tests/data/c2c_models.yaml, measured 09/11/2026)")
+
+    def expect_controls(self, page_text: str, key: str) -> None:
+        """Every control the model lists under `key` must be in the page
+        text, and every known control it does not list must be absent."""
+        listed = list(self.model_facts.get(key, []))
+        known = self.CONTROLS_KNOWN[key]
+        model = self.config.get("model")
+        missing = [c for c in listed if c not in page_text]
+        extra = [c for c in known if c not in listed and c in page_text]
+        assert not missing, (
+            f"{self.ip} ({model}) lacks {missing} on this page; tests/data/c2c_models.yaml "
+            f"lists them under {key}: firmware changed, or the record is wrong")
+        assert not extra, (
+            f"{self.ip} ({model}) shows {extra} on this page, which tests/data/c2c_models.yaml "
+            f"does not list under {key}: measure and update the record")
+
+    def expect_buttons(self, key: str) -> None:
+        """Every button the model lists under `key` must be visible, and
+        every known one it does not list must not be (the FC-12F-1 keeps
+        hidden Focus and Calibrate buttons in its live view page)."""
+        listed = list(self.model_facts.get(key, []))
+        known = self.BUTTONS_KNOWN[key]
+        model = self.config.get("model")
+        for name in known:
+            button = self.page.locator(f"button:has-text('{name}')").first
+            if name in listed:
+                expect(button).to_be_visible()
+            else:
+                assert not (button.count() and button.is_visible()), (
+                    f"{self.ip} ({model}) shows a {name} button that tests/data/"
+                    f"c2c_models.yaml does not list under {key}: measure and update the record")
+
+    def stream_rows(self) -> list[dict]:
+        """The VIDEO page's stream table as [{stream, codec, resolution, fps}]:
+        the rows whose cells carry a resolution (WxH)."""
+        out = []
+        for r in self.table_rows():
+            cells = [c for c in r if c]
+            res = [c for c in cells if re.fullmatch(r"\d{3,4}\s*x\s*\d{3,4}", c)]
+            if len(cells) >= 4 and res:
+                out.append({"stream": cells[0], "codec": cells[1],
+                            "resolution": res[0].replace(" ", ""), "fps": cells[-1]})
+        return out
+
     def navigate_to_setup_section(self, section_text: str):
         """Click a top-level nav section in Setup (e.g. 'CAMERA', 'NETWORK')."""
         self._menu_section(section_text).click()

@@ -3,6 +3,8 @@
 Verify image adjustment, exposure, day/night, backlight, white balance,
 image/video enhancement, motion detection zones, and privacy mask.
 """
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -65,7 +67,7 @@ class TestC2CCameraSettings:
         2. Open CAMERA > DAY&NIGHT SETTINGS.
            Expected: The page shows the Auto, Day and Night mode options.
         3. Read the IR settings.
-           Expected: IR mode and an IR strength slider are present.
+           Expected: The IR controls the model record lists (tests/data/c2c_models.yaml) are present and no other known one is: IR mode on every model, IR strength on the single-sensor models.
         """
         self.step_capture.mark(1, "Navigate to Exposure Settings")
         self.camera.navigate_to_setup_section("CAMERA")
@@ -87,12 +89,10 @@ class TestC2CCameraSettings:
         assert "Day" in page_text
         assert "Night" in page_text
 
-        self.step_capture.mark(5, "Verify IR mode is enabled with strength slider")
-        assert "IR mode" in page_text
-        # the IR strength slider is a single-sensor control: MS-20V-1
-        # has IR mode alone (measured 09/11/2026)
-        if "IR strength" not in page_text:
-            print(f"[C2C] {self.camera.ip}: no IR strength control on this model")
+        self.step_capture.mark(5, "Verify the IR controls match the model record")
+        # IR strength is a single-sensor control: MS-20V-1 and FC-12F-1
+        # have IR mode alone (measured 09/11/2026); the record decides
+        self.camera.expect_controls(page_text, "day_night_controls")
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
@@ -101,7 +101,7 @@ class TestC2CCameraSettings:
 
         Steps:
         1. Open Setup > CAMERA > IMAGE ENHANCEMENT.
-           Expected: The page shows 3D noise reduction and LDC (lens distortion) controls, Mirror and Flip, and the note that changing mirror or flip resets the privacy mask.
+           Expected: The page shows the controls the model record lists (tests/data/c2c_models.yaml: 3D noise reduction on every model; LDC, Mirror and Flip where the model has them) and no other known one, plus the note that changing mirror or flip resets the privacy mask where Mirror and Flip exist.
         2. Open CAMERA > BACKLIGHT SETTINGS.
            Expected: The page shows the WDR setting.
         3. Open CAMERA > VIDEO ENHANCEMENT.
@@ -112,19 +112,16 @@ class TestC2CCameraSettings:
         self.camera.navigate_to_setup_subsection("IMAGE ENHANCEMENT")
         expect(self.camera.heading("IMAGE ENHANCEMENT")).to_be_visible()
 
-        self.step_capture.mark(2, "Verify 3D noise reduction and LDC controls")
+        self.step_capture.mark(2, "Verify the enhancement controls match the model record")
         page_text = self.page.locator("body").inner_text()
-        assert "3D noise reduction" in page_text
-        # the LDC row is hidden on MS-20V-1 (measured 09/11/2026)
-        if "LDC" not in page_text and "Lens distortion" not in page_text:
-            print(f"[C2C] {self.camera.ip}: no LDC control on this model")
+        # the LDC row is hidden on MS-20V-1, and FC-12F-1 has neither LDC
+        # nor Mirror/Flip (measured 09/11/2026); the record decides
+        self.camera.expect_controls(page_text, "image_enhancement_controls")
 
-        self.step_capture.mark(3, "Verify Mirror and Flip are Off")
-        assert "Mirror" in page_text
-        assert "Flip" in page_text
-
-        self.step_capture.mark(4, "Verify mirror/flip warning about privacy mask reset")
-        assert "privacy mask" in page_text.lower()
+        self.step_capture.mark(3, "Verify the mirror/flip note about the privacy mask reset")
+        if "Mirror" in self.camera.model_facts["image_enhancement_controls"]:
+            assert "privacy mask" in page_text.lower(), (
+                f"{self.camera.ip}: the mirror/flip note about the privacy mask is missing")
 
         self.step_capture.mark(5, "Navigate to Backlight Settings and verify WDR")
         self.camera.navigate_to_setup_subsection("BACKLIGHT SETTINGS")
@@ -161,7 +158,7 @@ class TestC2CMotionDetection:
         1. Open Setup > EVENTS > MOTION.
            Expected: The MOTION DETECTION CONFIGURATION page lists Motion area1 to Motion area4.
         2. Read the sensitivity of each area.
-           Expected: Each of the four areas shows the default sensitivity 70.
+           Expected: Each of the four areas shows the model's default sensitivity (tests/data/c2c_models.yaml: 70, 80 on the FC-12F-1).
         3. Look for the page buttons.
            Expected: Apply and Cancel buttons are shown.
         """
@@ -175,10 +172,15 @@ class TestC2CMotionDetection:
         for area in ["Motion area1", "Motion area2", "Motion area3", "Motion area4"]:
             assert area in page_text, f"Missing {area}"
 
-        self.step_capture.mark(3, "Verify default sensitivity is 70 for all areas")
+        default = self.camera.model_facts["motion_sensitivity_default"]
+        self.step_capture.mark(3, f"Verify default sensitivity is {default} for all areas")
         # Check that 70 appears multiple times (once per area)
-        sensitivity_count = page_text.count("70")
-        assert sensitivity_count >= 4, f"Expected 4 sensitivity values of 70, found {sensitivity_count}"
+        # each area row ends "- | + <value>"; the FC-12F-1 ships at 80
+        # (measured 09/11/2026), the others at 70
+        values = re.findall(r"Motion area\d\s*-\s*\+\s*(\d+)", page_text)
+        assert values == [str(default)] * 4, (
+            f"{self.camera.ip}: the four motion areas read {values}, the model's "
+            f"default is {default}")
 
         self.step_capture.mark(4, "Verify Apply and Cancel buttons exist")
         expect(self.page.locator("button:has-text('Apply')").first).to_be_visible()
@@ -253,6 +255,8 @@ class TestC2CAdditionalSettings:
            Expected: It warns that applying a change reboots the camera. Do not click Apply.
         """
         self.step_capture.mark(1, "Navigate to Corridor Setting")
+        # the fisheye FC-12F-1 has no CORRIDOR SETTING entry (tests/data/c2c_models.yaml)
+        self.camera.require_model_entry("CORRIDOR SETTING")
         self.camera.navigate_to_setup_subsection("CORRIDOR SETTING")
         expect(self.camera.heading("CORRIDOR SETTING")).to_be_visible()
 
@@ -277,8 +281,8 @@ class TestC2CAdditionalSettings:
            Expected: The SMART STREAM page shows the fields Frame rate, GOP, Bitrate mode, Target bitrate, Hold on time and Trigger event.
         """
         self.step_capture.mark(1, "Navigate to Smart Stream")
-        # MS-20V-1 firmware has no SMART STREAM entry (measured 09/11/2026)
-        self.camera.require_subsection("SMART STREAM")
+        # MS-20V-1 firmware has no SMART STREAM entry (tests/data/c2c_models.yaml)
+        self.camera.require_model_entry("SMART STREAM")
         self.camera.navigate_to_setup_subsection("SMART STREAM")
         expect(self.camera.heading("SMART STREAM")).to_be_visible()
 

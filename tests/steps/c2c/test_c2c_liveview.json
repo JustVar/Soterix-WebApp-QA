@@ -18,7 +18,7 @@
         {
           "n": 3,
           "action": "Read the page for the lens controls.",
-          "expected": "Zoom, Focus and Auto focus are present, with Focus and Calibrate buttons."
+          "expected": "The lens controls the model record lists (tests/data/c2c_models.yaml) are present and no other known one: Zoom, Focus and Auto focus with Focus and Calibrate buttons on the box cameras; Zoom, IRIS and Focus steppers and no buttons on the FC-12F-1."
         }
       ],
       "case_key": "0r9mwl"

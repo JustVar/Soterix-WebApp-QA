@@ -30,33 +30,45 @@ class TestC2CVideoConfig:
         Steps:
         1. Open Setup (it opens on VIDEO CONFIGURATION).
            Expected: The VIDEO CONFIGURATION page is shown.
-        2. Read the three streams.
-           Expected: Stream 1 is H.265 at 2592x1944, Stream 2 is at 640x360, and Stream 3 is M-JPEG.
-        3. Read the Stream 1 codec field.
-           Expected: It shows H.265.
+        2. Read the stream table.
+           Expected: Three streams; Stream 1 is H.265 at the registry's max resolution for this unit (2592x1944, 4000x3000 on FC-12F-1) and Stream 3 is M-JPEG. Stream 2's resolution is a per-unit setting and is only read.
+        3. Read the Stream 1 codec and resolution fields.
+           Expected: They show the same codec and resolution as the table's first row.
         """
         self.step_capture.mark(1, "Navigate to Video Configuration (default page)")
         # Setup page opens to VIDEO by default
         expect(self.camera.heading("VIDEO CONFIGURATION")).to_be_visible()
 
-        self.step_capture.mark(2, "Verify Stream 1: H.265, 2592x1944, 14 FPS")
-        page_text = self.page.locator("body").inner_text()
-        assert "H.265" in page_text
-        assert "2592x1944" in page_text
+        self.step_capture.mark(2, "Read the stream table")
+        streams = self.camera.stream_rows()
+        assert len(streams) == 3, (
+            f"{self.camera.ip}: expected three streams in the table, read {streams}")
 
-        self.step_capture.mark(3, "Verify Stream 2: H.265, 640x360, 14 FPS")
-        assert "640x360" in page_text
+        # the registry's max resolution (read from System Information at
+        # discovery) is stream 1's default; the page writes it without
+        # spaces, the registry sometimes with ('4000 x 3000' on FC-12F-1)
+        max_res = self.config["max_resolution"].replace(" ", "")
+        self.step_capture.mark(3, f"Verify Stream 1 is H.265 at {max_res}")
+        assert streams[0]["codec"] == "H.265", f"{self.camera.ip}: stream 1 reads {streams[0]}"
+        assert streams[0]["resolution"] == max_res, (
+            f"{self.camera.ip}: stream 1 is {streams[0]['resolution']}, the registry's "
+            f"max resolution is {max_res}")
 
-        self.step_capture.mark(4, "Verify Stream 3: M-JPEG, 640x360, 30 FPS")
-        assert "M-JPEG" in page_text
+        # stream 2's resolution is a per-unit setting (640x360, 800x600 and
+        # 320x320 across the lab on 09/11/2026), so it is read, not judged
+        self.step_capture.mark(4, "Verify Stream 3 is M-JPEG")
+        assert streams[2]["codec"] == "M-JPEG", f"{self.camera.ip}: stream 3 reads {streams[2]}"
 
-        self.step_capture.mark(5, "Verify the Stream 1 codec select reads H.265")
+        self.step_capture.mark(5, "Verify the Stream 1 fields match the table")
         # the first select on the page is not the codec on every firmware
-        # (probed 09/11/2026): the codec select is the one offering H.265
-        # the selected option's text, not the select's value: the values
+        # (probed 09/11/2026): the codec select is the one offering H.265.
+        # The selected option's text, not the select's value: the values
         # are numbers on some firmware ('3' for H.265 on BC-5V-1)
         codec_select = self.camera.codec_select()
-        expect(self.camera.selected_option(codec_select)).to_have_text("H.265")
+        expect(self.camera.selected_option(codec_select)).to_have_text(streams[0]["codec"])
+        resolution_select = self.camera.select_with_option(streams[0]["resolution"])
+        expect(self.camera.selected_option(resolution_select)).to_have_text(
+            streams[0]["resolution"])
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware

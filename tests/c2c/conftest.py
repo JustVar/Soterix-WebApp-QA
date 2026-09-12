@@ -86,8 +86,27 @@ def _load_cameras():
     return enabled if enabled else [DEFAULT_CAMERA]
 
 
+MODELS_YAML = CAMERAS_YAML.with_name("c2c_models.yaml")
+
+
+def _attach_model_facts(cameras: list[dict]) -> list[dict]:
+    """Give each camera its model's measured facts (tests/data/c2c_models.yaml)
+    under model_facts. A model with no entry stops the run here, named: the
+    tests assert from these lists, so a guess would pass or skip on nothing."""
+    with open(MODELS_YAML) as f:
+        models = (yaml.safe_load(f) or {}).get("models", {})
+    for cam in cameras:
+        facts = models.get(cam["model"])
+        if facts is None:
+            raise KeyError(
+                f"{MODELS_YAML} has no entry for model {cam['model']!r} "
+                f"({cam['id']}): measure the unit's pages and add one.")
+        cam["model_facts"] = facts
+    return cameras
+
+
 # Discover cameras at collection time so pytest can parametrize
-_AVAILABLE_CAMERAS = _load_cameras()
+_AVAILABLE_CAMERAS = _attach_model_facts(_load_cameras())
 
 # How long to wait when probing whether a camera is on the network at all.
 # Deliberately short: this is a "is it there" check, not a page load.

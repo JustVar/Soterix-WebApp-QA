@@ -61,7 +61,7 @@ class TestC2CVCA:
         """Verify VCA has active rules and valid ProAI license.
 
         Steps:
-        1. Open Setup > VCA > RULES (BC-5V-1 firmware has no RULES entry; skip to step 2 there).
+        1. Open Setup > VCA > RULES where the model record lists a RULES entry (BC-5V-1 and FC-12F-1 have none; go to step 2 there).
            Expected: The RULES table lists at least one rule with its type and name.
         2. Open VCA > LICENSE.
            Expected: The Activated License(s) table lists the camera's license family from the registry (ProAI); a missing row names the camera.
@@ -70,9 +70,10 @@ class TestC2CVCA:
         """
         self.step_capture.mark(1, "Navigate to VCA > RULES")
         self.camera.navigate_to_vca_section()
-        # BC-5V-1 firmware has no RULES entry (measured 09/11/2026); the
-        # license check below runs on every model, so this is no skip
-        if self.camera.has_subsection("RULES"):
+        # BC-5V-1 and FC-12F-1 firmware has no RULES entry (tests/data/
+        # c2c_models.yaml); the license check below runs on every model,
+        # so this is no skip
+        if self.camera.model_entry_present("RULES"):
             self.camera.navigate_to_setup_subsection("RULES")
             expect(self.camera.heading("RULES")).to_be_visible()
 
@@ -138,8 +139,8 @@ class TestC2CSoterixCloud:
         """
         self.step_capture.mark(1, "Navigate to Soterix > CONNECT")
         self.camera.navigate_to_setup_section("Soterix")
-        # DC-5V-1 and BC-5V-1 firmware has no CONNECT entry (probed 09/11/2026)
-        self.camera.require_subsection("CONNECT")
+        # every model measured so far carries CONNECT (tests/data/c2c_models.yaml)
+        self.camera.require_model_entry("CONNECT")
         self.camera.navigate_to_setup_subsection("CONNECT")
 
         self.step_capture.mark(2, "Verify Soterix Cloud Connect page loads with branding")

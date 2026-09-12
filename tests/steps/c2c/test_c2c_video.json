@@ -12,13 +12,13 @@
         },
         {
           "n": 2,
-          "action": "Read the three streams.",
-          "expected": "Stream 1 is H.265 at 2592x1944, Stream 2 is at 640x360, and Stream 3 is M-JPEG."
+          "action": "Read the stream table.",
+          "expected": "Three streams; Stream 1 is H.265 at the registry's max resolution for this unit (2592x1944, 4000x3000 on FC-12F-1) and Stream 3 is M-JPEG. Stream 2's resolution is a per-unit setting and is only read."
         },
         {
           "n": 3,
-          "action": "Read the Stream 1 codec field.",
-          "expected": "It shows H.265."
+          "action": "Read the Stream 1 codec and resolution fields.",
+          "expected": "They show the same codec and resolution as the table's first row."
         }
       ],
       "case_key": "7ExN1X"

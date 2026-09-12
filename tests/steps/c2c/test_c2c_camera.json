@@ -39,7 +39,7 @@
         {
           "n": 3,
           "action": "Read the IR settings.",
-          "expected": "IR mode and an IR strength slider are present."
+          "expected": "The IR controls the model record lists (tests/data/c2c_models.yaml) are present and no other known one is: IR mode on every model, IR strength on the single-sensor models."
         }
       ],
       "case_key": "zv5rPw"
@@ -50,7 +50,7 @@
         {
           "n": 1,
           "action": "Open Setup > CAMERA > IMAGE ENHANCEMENT.",
-          "expected": "The page shows 3D noise reduction and LDC (lens distortion) controls, Mirror and Flip, and the note that changing mirror or flip resets the privacy mask."
+          "expected": "The page shows the controls the model record lists (tests/data/c2c_models.yaml: 3D noise reduction on every model; LDC, Mirror and Flip where the model has them) and no other known one, plus the note that changing mirror or flip resets the privacy mask where Mirror and Flip exist."
         },
         {
           "n": 2,
@@ -76,7 +76,7 @@
         {
           "n": 2,
           "action": "Read the sensitivity of each area.",
-          "expected": "Each of the four areas shows the default sensitivity 70."
+          "expected": "Each of the four areas shows the model's default sensitivity (tests/data/c2c_models.yaml: 70, 80 on the FC-12F-1)."
         },
         {
           "n": 3,

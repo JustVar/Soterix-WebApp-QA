@@ -34,7 +34,7 @@ class TestC2CLiveView:
         2. Read the page for the channel and screen controls.
            Expected: Channel select and the Full screen button are present.
         3. Read the page for the lens controls.
-           Expected: Zoom, Focus and Auto focus are present, with Focus and Calibrate buttons.
+           Expected: The lens controls the model record lists (tests/data/c2c_models.yaml) are present and no other known one: Zoom, Focus and Auto focus with Focus and Calibrate buttons on the box cameras; Zoom, IRIS and Focus steppers and no buttons on the FC-12F-1.
         """
         self.step_capture.mark(1, "Verify the main page is up: the Setup button is shown")
         # the branding is a CSS background on every model (probed 09/11/2026)
@@ -55,16 +55,13 @@ class TestC2CLiveView:
         self.step_capture.mark(4, "Verify Full screen button is functional")
         expect(self.page.locator("button:has-text('Full screen')")).to_be_visible()
 
-        self.step_capture.mark(5, "Verify Zoom controls (W to T) are present")
-        assert "Zoom" in page_text
+        self.step_capture.mark(5, "Verify the lens controls match the model record")
+        # the fisheye FC-12F-1 has Zoom, IRIS and Focus steppers and no
+        # Auto focus (measured 09/11/2026); the record decides
+        self.camera.expect_controls(page_text, "live_view_controls")
 
-        self.step_capture.mark(6, "Verify Focus controls and Auto focus exist")
-        assert "Focus" in page_text
-        assert "Auto focus" in page_text
-
-        self.step_capture.mark(7, "Verify Focus and Calibrate buttons exist")
-        expect(self.page.locator("button:has-text('Focus')").first).to_be_visible()
-        expect(self.page.locator("button:has-text('Calibrate')")).to_be_visible()
+        self.step_capture.mark(6, "Verify the Focus and Calibrate buttons match the model record")
+        self.camera.expect_buttons("live_view_buttons")
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware

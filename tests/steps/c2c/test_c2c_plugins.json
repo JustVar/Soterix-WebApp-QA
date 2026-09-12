@@ -23,7 +23,7 @@
       "steps": [
         {
           "n": 1,
-          "action": "Open Setup > VCA > RULES (BC-5V-1 firmware has no RULES entry; skip to step 2 there).",
+          "action": "Open Setup > VCA > RULES where the model record lists a RULES entry (BC-5V-1 and FC-12F-1 have none; go to step 2 there).",
           "expected": "The RULES table lists at least one rule with its type and name."
         },
         {

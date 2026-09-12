@@ -84,12 +84,11 @@ class TestC2CNetwork:
 
         self.step_capture.mark(2, "Verify RTSP URI contains camera IP and channel")
         ip = self.config["ip"]
-        # Multi-lens cameras use channel1/channel2/etc. based on lens_id
-        channel = self.config.get("channel", "channel1")
-        # a multi-lens unit suffixes the lens (channel1_1 on MS-20V-1),
-        # so the URI is matched by its prefix
+        # the model record names the identifier: channel1, or channel1_1
+        # on the four-lens MS-20V-1 (tests/data/c2c_models.yaml)
+        channel = self.camera.model_facts["rtsp_identifier"]
         expected_uri = f"rtsp://{ip}:554/{channel}"
-        expect(self.camera.content(re.compile(re.escape(expected_uri)))).to_be_visible()
+        expect(self.camera.content(expected_uri)).to_be_visible()
 
         self.step_capture.mark(3, f"Verify Identifier is {channel}")
         # the Identifier field's value is set by script, so no value
@@ -97,8 +96,7 @@ class TestC2CNetwork:
         # filled, and the fields' live values are read here
         values = self.page.locator("#tabs input[type='text']").evaluate_all(
             "els => els.map(e => e.value)")
-        assert any(v.startswith(channel) for v in values), (
-            f"no text field reads {channel!r}: {values}")
+        assert channel in values, f"no text field reads {channel!r}: {values}"
 
         self.step_capture.mark(4, "Verify RTSP Options include Audio and Meta")
         page_text = self.page.locator("body").inner_text()
