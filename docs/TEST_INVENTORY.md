@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 211 | 348 |
-| **Total** | | **59** | **437** | **243** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 226 | 348 |
+| **Total** | | **59** | **437** | **258** | **380** |
 
 ## Growth
 
@@ -65,7 +65,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `tests/legacy/` | 3 | 138 | no | Retired Selenium-era login and web-client tests, kept for reference. Excluded from collection by pytest.ini norecursedirs. |
 | `tests/plugins/` | 8 | 168 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
 | `tests/tools/` | 15 | 162 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
-| `soterix-qa-shared` | 21 | 529 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
+| `soterix-qa-shared` | 21 | 531 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
 | `Soterix-API-QA` | 1 | 11 | in Soterix-API-QA | Pins for the API repo's own plugins and shims. Run in that repo. |
 | **This repo** | **27** | **481** | | |
 
@@ -420,30 +420,30 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
-| `test_media_deeper.py::TestMediaDeeper::test_core_tabs_accessible` | Verify the core media tabs can be clicked without errors | yes | RgQQLl |
-| `test_media_deeper.py::TestMediaDeeper::test_date_filter_dropdown_opens` | Verify the date filter dropdown can be opened | - | M73wDl |
+| `test_media_deeper.py::TestMediaDeeper::test_core_tabs_accessible` | Verify the core media tabs can be selected in turn | yes | RgQQLl |
+| `test_media_deeper.py::TestMediaDeeper::test_date_filter_dropdown_opens` | Verify the date filter dropdown opens on the page's date ranges | yes | M73wDl |
 | `test_media_deeper.py::TestMediaDeeper::test_date_filter_has_options` | Verify the date filter dropdown has multiple filter options | yes | Dr992x |
-| `test_media_deeper.py::TestMediaDeeper::test_date_filter_last_7_days` | Verify selecting 'Last 7 Days' date filter works | - | zvnVa9 |
-| `test_media_deeper.py::TestMediaDeeper::test_date_filter_today` | Verify selecting 'Today' date filter works | - | bj0X3V |
-| `test_media_deeper.py::TestMediaDeeper::test_grid_view_switch_round_trip` | Verify grid view can be activated and page remains valid | yes | eJXXK3 |
-| `test_media_deeper.py::TestMediaDeeper::test_grid_view_toggle_visible` | Verify the grid view toggle button is visible | - | Ee69PV |
-| `test_media_deeper.py::TestMediaDeeper::test_media_page_after_refresh` | Verify the Media page loads correctly after a browser refresh | - | Z8xQV6 |
+| `test_media_deeper.py::TestMediaDeeper::test_date_filter_last_7_days` | Verify selecting 'Last 7 Days' date filter works | yes | zvnVa9 |
+| `test_media_deeper.py::TestMediaDeeper::test_date_filter_today` | Verify selecting 'Today' date filter works | yes | bj0X3V |
+| `test_media_deeper.py::TestMediaDeeper::test_grid_view_switch_round_trip` | Verify grid view can be activated and the list view comes back | yes | eJXXK3 |
+| `test_media_deeper.py::TestMediaDeeper::test_grid_view_toggle_visible` | Verify the view toggle starts in list view | yes | Ee69PV |
+| `test_media_deeper.py::TestMediaDeeper::test_media_page_after_refresh` | Verify the Media page loads correctly after a browser refresh | yes | Z8xQV6 |
 | `test_media_deeper.py::TestMediaDeeper::test_search_clear_and_retry` | Verify clearing search and searching again works | yes | dyXXPW |
-| `test_media_deeper.py::TestMediaDeeper::test_search_input_visible` | Verify the search input is visible on the Media page | - | dypXvp |
-| `test_media_deeper.py::TestMediaDeeper::test_search_no_results` | Verify searching for nonexistent text shows empty or no results | - | Pgw96K |
+| `test_media_deeper.py::TestMediaDeeper::test_search_input_visible` | Verify the search field on the Media page | yes | dypXvp |
+| `test_media_deeper.py::TestMediaDeeper::test_search_no_results` | Verify searching for nonexistent text shows the empty state | yes | Pgw96K |
 | `test_media_deeper.py::TestMediaDeeper::test_tab_round_trip_all_to_clips` | Verify switching from All to Clips and back works | yes | vaZZel |
 | `test_media_deeper.py::TestMediaDeeper::test_tab_round_trip_folders_to_shared` | Verify switching from Folders to Shared with me and back works | yes | xmddLW |
-| `test_media_deeper.py::TestMediaDeeper::test_view_toggle_area_present` | Verify at least one view toggle button (grid or list) is present | - | aj6ydD |
+| `test_media_deeper.py::TestMediaDeeper::test_view_toggle_area_present` | Verify the view toggle offers exactly the list and grid buttons | yes | aj6ydD |
 | `test_media_navigation.py::TestMediaNavigation::test_all_tab` | Verify the All tab loads and shows content or empty state | yes | vaZZyn |
-| `test_media_navigation.py::TestMediaNavigation::test_clips_tab` | Verify the Clips tab loads and shows content or empty state | - | dypXmw |
-| `test_media_navigation.py::TestMediaNavigation::test_folders_tab` | Verify the Folders tab loads | - | xm9d85 |
+| `test_media_navigation.py::TestMediaNavigation::test_clips_tab` | Verify the Clips tab loads and shows content or empty state | yes | dypXmw |
+| `test_media_navigation.py::TestMediaNavigation::test_folders_tab` | Verify the Folders tab loads | yes | xm9d85 |
 | `test_media_navigation.py::TestMediaNavigation::test_my_media_tab` | Verify the My Media tab loads | yes | bjXXl9 |
 | `test_media_navigation.py::TestMediaNavigation::test_navigate_to_media_page` | Verify navigation to the Media page via the sidebar | yes | Z8QQXk |
-| `test_media_navigation.py::TestMediaNavigation::test_search_media` | Verify searching media by title/tags | - | qzdMp4 |
-| `test_media_navigation.py::TestMediaNavigation::test_select_date_filter` | Verify selecting 'Last 30 Days' from the date filter dropdown | - | mBdXNV |
-| `test_media_navigation.py::TestMediaNavigation::test_shared_with_me_tab` | Verify the Shared with me tab loads | - | QGjQ49 |
-| `test_media_navigation.py::TestMediaNavigation::test_switch_to_grid_view` | Verify switching from list to grid view | - | 11zlpR |
-| `test_media_navigation.py::TestMediaNavigation::test_vault_tab` | Verify the Vault tab loads | - | 8V1vlr |
+| `test_media_navigation.py::TestMediaNavigation::test_search_media` | Verify searching media by title | yes | qzdMp4 |
+| `test_media_navigation.py::TestMediaNavigation::test_select_date_filter` | Verify selecting 'Last 30 Days' from the date filter dropdown | yes | mBdXNV |
+| `test_media_navigation.py::TestMediaNavigation::test_shared_with_me_tab` | Verify the Shared with me tab loads | yes | QGjQ49 |
+| `test_media_navigation.py::TestMediaNavigation::test_switch_to_grid_view` | Verify switching from list to grid view | yes | 11zlpR |
+| `test_media_navigation.py::TestMediaNavigation::test_vault_tab` | Verify the Vault tab loads | yes | 8V1vlr |
 | `test_media_operations.py::TestMediaClipOperations::test_add_clip_to_vault` | Vault a clip: its row moves from Clips to the Vault tab | yes | dyp4KK |
 | `test_media_operations.py::TestMediaClipOperations::test_clip_create_link` | Verify the Create Link dialog opens for a clip | yes | 68lDR7 |
 | `test_media_operations.py::TestMediaClipOperations::test_clip_delete` | Delete Clip dialog contract, then a real delete | yes | jPnpWx |

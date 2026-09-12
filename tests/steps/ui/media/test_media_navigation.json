@@ -8,84 +8,29 @@
         {
           "n": 1,
           "action": "Click Media in the left sidebar.",
-          "expected": "The Media page opens and shows its date filter."
+          "expected": "The address ends in /media and the date filter reads Today, its default."
         }
       ],
       "case_key": "Z8QQXk"
     },
     "test_select_date_filter": {
-      "title": "Verify selecting 'Last 30 Days' from the date filter dropdown.",
+      "title": "Verify selecting 'Last 30 Days' from the date filter dropdown",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > All Rules Dropdown",
-          "expected": "All Rules Dropdown page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter on the page",
-          "expected": "selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter",
-          "expected": "selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to selecting 'Aggression Detection' from All Rules dropdown updates the selected rule filter"
+          "action": "Open Media and choose Last 30 Days in the date filter.",
+          "expected": "The date filter reads Last 30 Days instead of Today."
         }
       ],
       "case_key": "mBdXNV"
     },
     "test_switch_to_grid_view": {
-      "title": "Verify switching from list to grid view.",
+      "title": "Verify switching from list to grid view",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > View Toggle - Modules",
-          "expected": "View Toggle - Modules page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for switch to Grid view",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify switch to Grid view is displayed and functions correctly",
-          "expected": "Switch to grid view is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Open Media, choose Last 30 Days and click the grid view button.",
+          "expected": "The grid button reads pressed and the items move from one column into several."
         }
       ],
       "case_key": "11zlpR"
@@ -96,7 +41,7 @@
         {
           "n": 1,
           "action": "Open Media, set the date filter to Last 30 Days and click the All tab.",
-          "expected": "The All tab is selected and shows its content or its empty state, with the date filter still shown."
+          "expected": "The All tab is painted as selected and the page shows items or its empty state."
         }
       ],
       "case_key": "vaZZyn"
@@ -107,252 +52,67 @@
         {
           "n": 1,
           "action": "Open Media, set the date filter to Last 30 Days and click the My Media tab.",
-          "expected": "The My Media tab is selected, with the date filter still shown."
+          "expected": "The My Media tab is painted as selected and All is not."
         }
       ],
       "case_key": "bjXXl9"
     },
     "test_shared_with_me_tab": {
-      "title": "Verify the Shared with me tab loads.",
+      "title": "Verify the Shared with me tab loads",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Devices Tab",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Devices Tab page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: on Search Camera field",
-          "expected": "Precondition is met (on Search Camera field)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Open Media, set the date filter to Last 30 Days and click the Shared with me tab.",
+          "expected": "The Shared with me tab is painted as selected and the page shows items or its empty state."
         }
       ],
       "case_key": "QGjQ49"
     },
     "test_clips_tab": {
-      "title": "Verify the Clips tab loads and shows content or empty state.",
+      "title": "Verify the Clips tab loads and shows content or empty state",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Media > Tabs - Media",
-          "expected": "Tabs - Media page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate switching to Clips tab displays only media clips on the page",
-          "expected": "switching to Clips tab displays only media clips is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify switching to Clips tab displays only media clips is displayed as expected",
-          "expected": "switching to Clips tab displays only media clips is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open Media, set the date filter to Last 30 Days and click the Clips tab.",
+          "expected": "The Clips tab is painted as selected and the page shows items or its empty state."
         }
       ],
       "case_key": "dypXmw"
     },
     "test_folders_tab": {
-      "title": "Verify the Folders tab loads.",
+      "title": "Verify the Folders tab loads",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Media > Tabs - Media",
-          "expected": "Tabs - Media page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate switching to Folders tab displays only folders on the page",
-          "expected": "switching to Folders tab displays only folders is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify switching to Folders tab displays only folders is displayed as expected",
-          "expected": "switching to Folders tab displays only folders is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open Media, set the date filter to Last 30 Days and click the Folders tab.",
+          "expected": "The Folders tab is painted as selected and the page shows items or its empty state."
         }
       ],
       "case_key": "xm9d85"
     },
     "test_vault_tab": {
-      "title": "Verify the Vault tab loads.",
+      "title": "Verify the Vault tab loads",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Media > Vault",
-          "expected": "Vault page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate Vault tab displays empty state on the page",
-          "expected": "Vault tab displays empty state is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify Vault tab displays empty state is displayed as expected",
-          "expected": "Vault tab displays empty state is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Set up precondition: when no media is added",
-          "expected": "Precondition is met (when no media is added)"
-        },
-        {
-          "n": 9,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open Media, set the date filter to Last 30 Days and click the Vault tab.",
+          "expected": "The Vault tab is painted as selected and the page shows items or its empty state."
         }
       ],
       "case_key": "8V1vlr"
     },
     "test_search_media": {
-      "title": "Verify searching media by title/tags.",
+      "title": "Verify searching media by title",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Media, choose Last 30 Days and note the first clip's name.",
+          "expected": "The list shows at least one item."
         },
         {
           "n": 2,
-          "action": "Navigate to Search - Clips",
-          "expected": "Search - Clips page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify the clearing search input restores full media list to be deleted from the list",
-          "expected": "clearing search input restores full media list is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target clearing search input restores full media list",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the clearing search input restores full media list"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the clearing search input restores full media list no longer appears in the list",
-          "expected": "clearing search input restores full media list is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted clearing search input restores full media list does not reappear after refresh"
+          "action": "Type that name in the search field and press Enter.",
+          "expected": "The list shows that item and nothing that does not carry the name (the search needs three characters or more; a shorter query is ignored by the page)."
         }
       ],
       "case_key": "qzdMp4"

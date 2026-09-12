@@ -1,5 +1,6 @@
 """Media test fixtures."""
 import pytest
+
 from tests.shared.pages.media_page import MediaPage
 
 

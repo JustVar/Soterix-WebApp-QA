@@ -5,6 +5,7 @@ grid/list view toggle, clip and folder operations (group, rename, move,
 delete, create link, vault, share, export), and search.
 """
 import datetime
+import re
 import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
@@ -26,15 +27,20 @@ class MediaPage:
         # Date filter dropdown (MUI combobox)
         self.date_filter = page.locator("[role='combobox']").first
 
-        # View toggle (grid/list)
-        self.grid_view_button = page.locator("img[src*='icon-grid']").first
-        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
-        self.list_view_button = page.locator("img[src*='icon-list']").first
+        # The view toggle is a MUI toggle group of two buttons, aria-label
+        # 'table' and 'grid', aria-pressed on the active one (measured
+        # 09/12/2026 on US; the list button carries icon-table, so the old
+        # img[src*='icon-list'] locator never found it)
+        self.list_view_button = page.locator("button[aria-label='table']")
+        self.grid_view_button = page.locator("button[aria-label='grid']")
 
         # Tabs
         self.tab_all = page.locator("button:has-text('All')").first
         self.tab_my_media = page.locator("button:has-text('My Media')")
         self.tab_shared = page.locator("button:has-text('Shared with me')")
+        # the type row's All: a span whose whole text is All (the scope
+        # row's All above it is a button)
+        self.tab_all_types = page.locator("span").filter(has_text=re.compile(r"^All$")).first
         self.tab_clips = page.locator("span:has-text('Clips')").first
         self.tab_folders = page.locator("span:has-text('Folders')").first
         self.tab_vault = page.locator("span:has-text('Vault')").first
@@ -138,31 +144,108 @@ class MediaPage:
     # --- View toggle ---
 
     def switch_to_grid_view(self):
-        """Switch to grid view."""
-        self.grid_view_button.click()
-        # The toggle re-renders client-side: no loader and no DOM signal
-        self.page.wait_for_timeout(2000)
+        """Switch to grid view: the grid button reads pressed, then the items
+        are back on screen (the toggle re-renders them, and a read taken on
+        the pressed state alone saw none; measured 09/12/2026)."""
+        self._switch_view(self.grid_view_button)
 
     def switch_to_list_view(self):
-        """Switch to list view."""
-        self.list_view_button.click()
-        # The toggle re-renders client-side: no loader and no DOM signal
-        self.page.wait_for_timeout(2000)
+        """Switch to list view; same two signals as switch_to_grid_view."""
+        self._switch_view(self.list_view_button)
 
-    # --- Tab navigation ---
+    def _switch_view(self, button) -> None:
+        before = len(self.item_names())
+        button.click()
+        expect(button).to_have_attribute("aria-pressed", "true", timeout=5000)
+        deadline = time.monotonic() + 5
+        while len(self.item_names()) != before:
+            if time.monotonic() > deadline:
+                raise AssertionError(
+                    f"{before} item(s) were listed before the view switch, "
+                    f"{len(self.item_names())} are after it")
+            self.page.wait_for_timeout(100)  # poll tick for the re-render
 
-    def click_tab(self, tab_name: str):
-        """Click a tab by name (All, My Media, Shared with me, Clips, Folders, Vault)."""
+    def view_mode(self) -> str:
+        """'grid' or 'table', from the toggle group's pressed button."""
+        return "grid" if self.grid_view_button.get_attribute("aria-pressed") == "true" else "table"
+
+    def view_columns(self) -> int:
+        """How many columns the item names sit in: 1 in the list view, 3 in
+        the grid view at 1280 px (measured 09/12/2026); 0 with no items."""
+        return self.page.evaluate(
+            """() => new Set([...document.querySelectorAll("input[type='text']")]
+                .filter(i => i.getClientRects().length > 0 && !i.className && i.value
+                        && i.getAttribute('title') === i.value)
+                .map(i => Math.round(i.getBoundingClientRect().left))).size"""
+        )
+
+    # Measured 09/12/2026 on US. The page has two tab rows: the scope
+    # buttons (All / My Media / Shared With Me), whose selected one paints
+    # its background rgb(0, 67, 77); and the type tabs under them (All /
+    # Clips / Folders / Vault), whose selected one paints its text
+    # rgb(24, 204, 231). Nothing else marks the selection (no aria-selected,
+    # no class), so the colours are the signal.
+    DATE_RANGES = ("Today", "Yesterday", "Last 7 Days", "Last 30 Days", "Custom")
+    EMPTY_STATE = "No results found for selected criteria"
+    SEARCH_PLACEHOLDER = "Search by title, tags, sites, etc."
+    SEARCH_MIN_CHARS = 3
+    SCOPE_SELECTED_BACKGROUND = "rgb(0, 67, 77)"
+    TYPE_SELECTED_COLOR = "rgb(24, 204, 231)"
+    # "All" is the scope button; the type row's own All is "All (types)"
+    TYPE_TABS = ("All (types)", "Clips", "Folders", "Vault")
+
+    def date_filter_text(self) -> str:
+        return self.date_filter.inner_text().strip()
+
+    def date_options(self) -> list[str]:
+        """The date filter's options, read with the list open and closed again."""
+        self.date_filter.click()
+        listbox = self.page.locator("[role='listbox']")
+        listbox.wait_for(state="visible", timeout=10000)
+        options = [o.strip() for o in listbox.locator("li[role='option']").all_inner_texts()]
+        self.page.keyboard.press("Escape")
+        listbox.wait_for(state="hidden", timeout=5000)
+        return options
+
+    def tab_is_selected(self, tab_name: str) -> bool:
+        tab = self._tab(tab_name)
+        if tab_name in self.TYPE_TABS:
+            return tab.evaluate("e => getComputedStyle(e).color") == self.TYPE_SELECTED_COLOR
+        return tab.evaluate("e => getComputedStyle(e).backgroundColor") == self.SCOPE_SELECTED_BACKGROUND
+
+    def expect_tab_selected(self, tab_name: str, timeout_ms: int = 5000) -> None:
+        """Fail, naming the paint, when the tab is not the selected one."""
+        deadline = time.monotonic() + timeout_ms / 1000
+        while not self.tab_is_selected(tab_name):
+            if time.monotonic() > deadline:
+                tab = self._tab(tab_name)
+                paint = tab.evaluate(
+                    "e => [getComputedStyle(e).backgroundColor, getComputedStyle(e).color]")
+                raise AssertionError(
+                    f"the {tab_name} tab is not selected: it paints background/text {paint}, "
+                    f"a selected one paints {self.SCOPE_SELECTED_BACKGROUND} (scope) or "
+                    f"{self.TYPE_SELECTED_COLOR} (type)")
+            self.page.wait_for_timeout(100)  # poll tick for the tab paint
+
+    def _tab(self, tab_name: str):
         tab_map = {
             "All": self.tab_all,
             "My Media": self.tab_my_media,
             "Shared with me": self.tab_shared,
+            "All (types)": self.tab_all_types,
             "Clips": self.tab_clips,
             "Folders": self.tab_folders,
             "Vault": self.tab_vault,
         }
         tab = tab_map.get(tab_name)
         assert tab is not None, f"Unknown tab name: {tab_name}"
+        return tab
+
+    # --- Tab navigation ---
+
+    def click_tab(self, tab_name: str):
+        """Click a tab by name (All, My Media, Shared with me, Clips, Folders, Vault)."""
+        tab = self._tab(tab_name)
         tab.click()
         # The tab fetch runs a loader cycle; page-ready covers it
         self._wait_for_page_ready()
@@ -543,7 +626,14 @@ class MediaPage:
     # --- Search ---
 
     def search_media(self, query: str):
-        """Type a search query in the search input and press Enter."""
+        """Type a search query in the search input and press Enter.
+
+        The page ignores a query under three characters: '17' sent no
+        request and left the list as it was, so two tests passed on
+        nothing (measured 09/12/2026). An empty query clears the search."""
+        if query and len(query) < self.SEARCH_MIN_CHARS:
+            raise ValueError(
+                f"the media search ignores queries under {self.SEARCH_MIN_CHARS} characters: {query!r}")
         self.search_input.wait_for(state="visible", timeout=10000)
         self.search_input.fill("")
         self.search_input.fill(query)
