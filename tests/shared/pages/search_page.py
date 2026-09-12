@@ -630,6 +630,10 @@ class SearchPage:
                 continue
             text = container.evaluate("el => el.textContent || ''")
             if camera_name in text:
+                # the panel scrolls: a container below its fold (the 17th
+                # on the box, 09/12/2026) never reveals its action link
+                # under a forced hover, so bring it into view first
+                container.scroll_into_view_if_needed()
                 container.hover(force=True)
 
                 # Scope to the hovered container: every container has

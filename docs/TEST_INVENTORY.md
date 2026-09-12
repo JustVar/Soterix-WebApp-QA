@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 281 | 348 |
-| **Total** | | **59** | **437** | **313** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 285 | 348 |
+| **Total** | | **59** | **437** | **317** | **380** |
 
 ## Growth
 
@@ -491,16 +491,16 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_search_deeper.py::TestSearchDeeper::test_category_dropdown_lists_categories` | Verify category dropdown contains Person, Vehicle, and Event | - | Z8xR7k |
 | `test_search_deeper.py::TestSearchDeeper::test_change_category_person_to_event` | Verify switching from Person to Event and re-searching works | - | GdWPqy |
 | `test_search_deeper.py::TestSearchDeeper::test_change_duration_and_re_search` | Verify changing duration between searches works | - | Ee6dkB |
-| `test_search_deeper.py::TestSearchDeeper::test_description_panel_shown_for_person` | Verify the Description filter appears after selecting Person | - | dypNqZ |
+| `test_search_deeper.py::TestSearchDeeper::test_description_panel_shown_for_person` | Verify the Description filter appears after selecting Person | yes | dypNqZ |
 | `test_search_deeper.py::TestSearchDeeper::test_duration_dropdown_lists_options` | Verify duration dropdown has multiple time range options | - | dypXGR |
 | `test_search_deeper.py::TestSearchDeeper::test_event_category_no_gender_options` | Verify Event category does not show gender selection options | - | xm9E11 |
-| `test_search_deeper.py::TestSearchDeeper::test_event_result_images_valid` | Verify Event search result images are visible | - | gQxw5N |
+| `test_search_deeper.py::TestSearchDeeper::test_event_result_images_valid` | Verify Event search result images are real images | yes | gQxw5N |
 | `test_search_deeper.py::TestSearchDeeper::test_event_search_by_duration (parametrized)` | Verify Event search with different durations completes | - | mBdDrV, n8jvrz |
 | `test_search_deeper.py::TestSearchDeeper::test_person_female_search` | Verify Person search with Female description completes | - | VKbB1P |
-| `test_search_deeper.py::TestSearchDeeper::test_person_result_images_have_src` | Verify Person search result images have valid src attributes | - | Pgw47m |
+| `test_search_deeper.py::TestSearchDeeper::test_person_result_images_have_src` | Verify Person search result images are real images | yes | Pgw47m |
 | `test_search_deeper.py::TestSearchDeeper::test_person_search_multiple_results` | Verify a broad Person search returns multiple results | - | J8d3mL |
 | `test_search_deeper.py::TestSearchDeeper::test_result_count_matches_visible_images` | Verify get_result_count() matches visible result images | - | rGQP7W |
-| `test_search_deeper.py::TestSearchDeeper::test_search_button_state_after_filters` | Verify search button is clickable after setting all filters | - | dypXRb |
+| `test_search_deeper.py::TestSearchDeeper::test_search_button_state_after_filters` | Verify the search button unlocks once every filter is set | yes | dypXRb |
 | `test_search_drawing.py::TestSearchDrawing::test_line_search_draw_line` | Verify a line can be drawn on the canvas | - | lR212J |
 | `test_search_drawing.py::TestSearchDrawing::test_line_search_play_result` | Verify playing a Line search result clip works | - | wmjKjZ |
 | `test_search_drawing.py::TestSearchDrawing::test_line_search_returns_results` | Verify Line search returns results after drawing and searching | yes | bjXXz8 |

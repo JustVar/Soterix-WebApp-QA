@@ -51,19 +51,17 @@ class TestSearchDeeper:
     @pytest.mark.search
     @pytest.mark.search_deeper
     def test_description_panel_shown_for_person(self):
-        """Verify the Description filter appears after selecting Person."""
-        self.search.select_category("Person")
-        # the Description dropdown renders async after the category
-        # applies; a miss leaves the boolean assert to report it
-        try:
-            self.page.get_by_text("Description", exact=False).first.wait_for(
-                state="visible", timeout=8000
-            )
-        # absence falls to the assert below
-        except Exception:
-            pass
+        """Verify the Description filter appears after selecting Person.
 
-        assert self.search.is_description_panel_visible(), (
+        Steps:
+        1. Open Search and pick Person in the Category dropdown.
+           Expected: The Description box switches to Appearance with 0 choices and its panel is shown.
+        """
+        self.search.select_category("Person")
+        values = self.search.filter_values()
+        assert values.get("Description", "").startswith("Appearance"), (
+            f"the Description box reads {values.get('Description')!r} after picking Person")
+        assert self.search.is_description_panel_visible() is True, (
             "Description panel should be visible for Person category"
         )
 
@@ -138,17 +136,28 @@ class TestSearchDeeper:
     @pytest.mark.search
     @pytest.mark.search_deeper
     def test_person_result_images_have_src(self):
-        """Verify Person search result images have valid src attributes."""
+        """Verify Person search result images are real images.
+
+        Steps:
+        1. Search Person, Male, the configured site, Last 30 Days.
+           Expected: Results are listed.
+        2. Read the first three result images.
+           Expected: Each card's picture is a decoded blob, data or http image with a width above zero.
+        """
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
         self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
-
         check_count = min(self.search.get_result_count(), 3)
-        for i in range(check_count):
-            img = self.search.result_images.nth(i)
-            expect(img).to_be_visible()
+        assert check_count > 0, "the Person search listed no result images"
+        # a result card is a div holding the picture as an <img> with a
+        # blob source and a decoded width (measured 09/12/2026)
+        pictures = [self.search.result_images.nth(i).locator("img").first for i in range(check_count)]
+        sources = [(img.get_attribute("src") or "", img.evaluate("e => e.naturalWidth")) for img in pictures]
+        bad = [(src[:40], width) for src, width in sources
+               if not src.startswith(("blob:", "data:image", "http")) or not width]
+        assert not bad, f"result pictures without a decoded image: {bad}"
 
     # --- Event search variations ---
 
@@ -175,21 +184,31 @@ class TestSearchDeeper:
     @pytest.mark.search
     @pytest.mark.search_deeper
     def test_event_result_images_valid(self):
-        """Verify Event search result images are visible.
+        """Verify Event search result images are real images.
 
         120s search budget: the server runs searches as async jobs and
         Event over 30 days is the heaviest; its latency grows when runs
         hammer the tenant (measured 08/09/2026).
+
+        Steps:
+        1. Search Event, the configured site, Last 30 Days.
+           Expected: Results are listed.
+        2. Read the first three result images.
+           Expected: Each card's picture is a decoded blob, data or http image with a width above zero.
         """
         self.search.select_category("Event")
         self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=120000)
-
         check_count = min(self.search.get_result_count(), 3)
-        for i in range(check_count):
-            img = self.search.result_images.nth(i)
-            expect(img).to_be_visible()
+        assert check_count > 0, "the Event search listed no result images"
+        # a result card is a div holding the picture as an <img> with a
+        # blob source and a decoded width (measured 09/12/2026)
+        pictures = [self.search.result_images.nth(i).locator("img").first for i in range(check_count)]
+        sources = [(img.get_attribute("src") or "", img.evaluate("e => e.naturalWidth")) for img in pictures]
+        bad = [(src[:40], width) for src, width in sources
+               if not src.startswith(("blob:", "data:image", "http")) or not width]
+        assert not bad, f"result pictures without a decoded image: {bad}"
 
     # --- Filter change workflows ---
 
@@ -255,13 +274,22 @@ class TestSearchDeeper:
     @pytest.mark.search
     @pytest.mark.search_deeper
     def test_search_button_state_after_filters(self):
-        """Verify search button is clickable after setting all filters."""
+        """Verify the search button unlocks once every filter is set.
+
+        Steps:
+        1. Open Search and read the search button.
+           Expected: It shows its disabled icon.
+        2. Pick Person, Male, the configured site and Last 30 Days.
+           Expected: It shows its enabled icon.
+        """
+        assert self.search.search_icon_name().startswith(SearchPage.SEARCH_DISABLED_ICON), (
+            f"before any filter the search button shows {self.search.search_icon_name()!r}")
         self.search.select_category("Person")
         self.search.select_description_gender("Male")
         self.search.select_locations_cameras(None)
         self.search.select_duration_by_index(5)
-
-        expect(self.search.search_button).to_be_visible(timeout=5000)
+        assert self.search.search_icon_name() == SearchPage.SEARCH_ENABLED_ICON, (
+            f"with the filters set the search button shows {self.search.search_icon_name()!r}")
 
     @pytest.mark.ui
     @pytest.mark.search

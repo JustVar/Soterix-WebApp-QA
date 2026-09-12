@@ -85,42 +85,12 @@
       "case_key": "dypXGR"
     },
     "test_description_panel_shown_for_person": {
-      "title": "Verify the Description filter appears after selecting Person.",
+      "title": "Verify the Description filter appears after selecting Person",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Camera Search Filters",
-          "expected": "Camera Search Filters page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where description panel should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate description panel on the page",
-          "expected": "description panel is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: for Person category",
-          "expected": "Precondition is met (for Person category)"
-        },
-        {
-          "n": 7,
-          "action": "Verify description panel shown",
-          "expected": "description panel shown"
+          "action": "Open Search and pick Person in the Category dropdown.",
+          "expected": "The Description box switches to Appearance with 0 choices and its panel is shown."
         }
       ],
       "case_key": "dypNqZ"
@@ -304,57 +274,17 @@
       "case_key": "J8d3mL"
     },
     "test_person_result_images_have_src": {
-      "title": "Verify Person search result images have valid src attributes.",
+      "title": "Verify Person search result images are real images",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Search Person, Male, the configured site, Last 30 Days.",
+          "expected": "Results are listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > Camera Search Filters",
-          "expected": "Camera Search Filters page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for Person search result images have valid src attributes",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Read the first three result images.",
+          "expected": "Each card's picture is a decoded blob, data or http image with a width above zero."
         }
       ],
       "case_key": "Pgw47m"
@@ -416,57 +346,17 @@
       "case_key": "n8jvrz"
     },
     "test_event_result_images_valid": {
-      "title": "Verify Event search result images are visible.",
+      "title": "Verify Event search result images are real images",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Search Event, the configured site, Last 30 Days.",
+          "expected": "Results are listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > Camera Search Filters",
-          "expected": "Camera Search Filters page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for Event search result images",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Read the first three result images.",
+          "expected": "Each card's picture is a decoded blob, data or http image with a width above zero."
         }
       ],
       "case_key": "gQxw5N"
@@ -569,42 +459,17 @@
       "case_key": "Ee6dkB"
     },
     "test_search_button_state_after_filters": {
-      "title": "Verify search button is clickable after setting all filters.",
+      "title": "Verify the search button unlocks once every filter is set",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Search and read the search button.",
+          "expected": "It shows its disabled icon."
         },
         {
           "n": 2,
-          "action": "Navigate to Search - LPR",
-          "expected": "Search - LPR page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate Search button on the page",
-          "expected": "Search button is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of Search button",
-          "expected": "Search button enabled"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: after applying mandatory filters",
-          "expected": "Precondition is met (after applying mandatory filters)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to Search button"
+          "action": "Pick Person, Male, the configured site and Last 30 Days.",
+          "expected": "It shows its enabled icon."
         }
       ],
       "case_key": "dypXRb"
