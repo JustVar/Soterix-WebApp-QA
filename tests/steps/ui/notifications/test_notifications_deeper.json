@@ -44,42 +44,12 @@
       "case_key": "11zJRB"
     },
     "test_notification_panel_reopen_after_close": {
-      "title": "Verify notification panel can be reopened after closing.",
+      "title": "Verify notification panel can be reopened after closing",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Notifications header area > Notification Ordering",
-          "expected": "Notification Ordering page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for notification order remains correct",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Verify notification order remains correct is displayed and functions correctly",
-          "expected": "Notification order remains correct is displayed as expected (after panel close and reopen)"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: after panel close and reopen",
-          "expected": "Precondition is met (after panel close and reopen)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Open the notification panel, close it with the bell, then open it again.",
+          "expected": "The panel's mute control leaves on close and is back on reopen, its icon file naming the mute state, under the Notifications heading."
         }
       ],
       "case_key": "5BRzq9"
@@ -121,37 +91,12 @@
       "case_key": "21z6dQ"
     },
     "test_notification_bell_icon_visible": {
-      "title": "Verify the notification bell icon is always visible in the header.",
+      "title": "Verify the header's icon group and the bell's place in it",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Notifications header area > Notification Panel",
-          "expected": "Notification Panel page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where notification bell icon should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate notification bell icon on the page",
-          "expected": "notification bell icon is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify notification bell icon visible in header",
-          "expected": "notification bell icon visible in header"
+          "action": "Read the header's right-hand icon group.",
+          "expected": "Four icon buttons, the last one reading the user's initials; the second one (the bell) opens the Notifications panel."
         }
       ],
       "case_key": "aj6nq4"
@@ -239,159 +184,49 @@
       "case_key": "WEnMLM"
     },
     "test_notification_panel_after_page_navigation": {
-      "title": "Verify notification panel works after navigating to a different page.",
+      "title": "Verify notification panel works after navigating to a different page",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open the panel, close it, then open Search from the sidebar.",
+          "expected": "The address ends in /search."
         },
         {
           "n": 2,
-          "action": "Navigate to Notifications header area > Notification Panel",
-          "expected": "Notification Panel page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Note the current state of notification panel persists before making changes",
-          "expected": "Initial state is observed and recorded"
-        },
-        {
-          "n": 4,
-          "action": "Perform the action that changes notification panel persists",
-          "expected": "Action is completed and change is reflected in the UI"
-        },
-        {
-          "n": 5,
-          "action": "Verify the change is displayed correctly before leaving the page",
-          "expected": "Updated state is visible on the current page"
-        },
-        {
-          "n": 6,
-          "action": "Refresh the page (F5 or browser reload)",
-          "expected": "Page reloads completely"
-        },
-        {
-          "n": 7,
-          "action": "Verify notification panel persists retained the changes after refresh",
-          "expected": "The change persisted through the page refresh"
-        },
-        {
-          "n": 8,
-          "action": "Navigate away to a different page",
-          "expected": "Different page loads successfully"
-        },
-        {
-          "n": 9,
-          "action": "Navigate back to Notification Panel page",
-          "expected": "Notification Panel page loads"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: after page navigation",
-          "expected": "Precondition is met (after page navigation)"
-        },
-        {
-          "n": 11,
-          "action": "Verify notification panel persists still reflects the saved changes",
-          "expected": "Changes persist after navigating away and back"
+          "action": "Open the panel again.",
+          "expected": "The Notifications panel opens with its mute control."
         }
       ],
       "case_key": "B86D7R"
     },
     "test_notification_panel_survives_page_refresh": {
-      "title": "Verify notification icon is present after page refresh.",
+      "title": "Verify notification icon is present after page refresh",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Refresh the browser.",
+          "expected": "The address is unchanged and the header shows its four icons."
         },
         {
           "n": 2,
-          "action": "Navigate to Notifications header area > Notification Panel",
-          "expected": "Notification Panel page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Note the current state of notification panel survives page refresh before making changes",
-          "expected": "Initial state is observed and recorded"
-        },
-        {
-          "n": 4,
-          "action": "Perform the action that changes notification panel survives page refresh",
-          "expected": "Action is completed and change is reflected in the UI"
-        },
-        {
-          "n": 5,
-          "action": "Verify the change is displayed correctly before leaving the page",
-          "expected": "Updated state is visible on the current page"
-        },
-        {
-          "n": 6,
-          "action": "Refresh the page (F5 or browser reload)",
-          "expected": "Page reloads completely"
-        },
-        {
-          "n": 7,
-          "action": "Verify notification panel survives page refresh retained the changes after refresh",
-          "expected": "The change persisted through the page refresh"
-        },
-        {
-          "n": 8,
-          "action": "Navigate away to a different page",
-          "expected": "Different page loads successfully"
-        },
-        {
-          "n": 9,
-          "action": "Navigate back to Notification Panel page",
-          "expected": "Notification Panel page loads"
-        },
-        {
-          "n": 10,
-          "action": "Verify notification panel survives page refresh still reflects the saved changes",
-          "expected": "Changes persist after navigating away and back"
+          "action": "Click the bell.",
+          "expected": "The Notifications panel opens with its mute control."
         }
       ],
       "case_key": "8V1l8r"
     },
     "test_notification_icon_not_affected_by_views_page": {
-      "title": "Verify notification icons remain functional on the Views page.",
+      "title": "Verify notification icons remain functional on the Views page",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Views from the sidebar.",
+          "expected": "The address is the site root."
         },
         {
           "n": 2,
-          "action": "Navigate to Notifications header area > Notification Panel",
-          "expected": "Notification Panel page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for notification icon works correctly",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Verify notification icon works correctly is displayed and functions correctly",
-          "expected": "Notification icon works correctly is displayed as expected (on Views page)"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on Views page",
-          "expected": "Precondition is met (on Views page)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Click the bell.",
+          "expected": "The Notifications panel opens with its mute control."
         }
       ],
       "case_key": "M73EP7"

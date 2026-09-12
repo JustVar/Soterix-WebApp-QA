@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 269 | 348 |
-| **Total** | | **59** | **437** | **301** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 274 | 348 |
+| **Total** | | **59** | **437** | **306** | **380** |
 
 ## Growth
 
@@ -467,13 +467,13 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_notifications.py::TestNotifications::test_open_notification_panel` | Verify clicking the notification bell opens the notification panel | - | Ee61yV |
 | `test_notifications_deeper.py::TestNotificationsDeeper::test_header_icons_present` | Verify the header right group has expected notification icons | - | 21z6dQ |
 | `test_notifications_deeper.py::TestNotificationsDeeper::test_mute_unmute_round_trip` | Verify muting then unmuting notifications works as a toggle | - | QGjL9B |
-| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_bell_icon_visible` | Verify the notification bell icon is always visible in the header | - | aj6nq4 |
-| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_icon_not_affected_by_views_page` | Verify notification icons remain functional on the Views page | - | M73EP7 |
-| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_after_page_navigation` | Verify notification panel works after navigating to a different page | - | B86D7R |
+| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_bell_icon_visible` | Verify the header's icon group and the bell's place in it | yes | aj6nq4 |
+| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_icon_not_affected_by_views_page` | Verify notification icons remain functional on the Views page | yes | M73EP7 |
+| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_after_page_navigation` | Verify notification panel works after navigating to a different page | yes | B86D7R |
 | `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_closes_on_reclick` | Verify clicking the bell icon again closes the notification panel | - | 11zJRB |
 | `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_has_content` | Verify notification panel shows text content (not empty) | - | WEnMLM |
-| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_reopen_after_close` | Verify notification panel can be reopened after closing | - | 5BRzq9 |
-| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_survives_page_refresh` | Verify notification icon is present after page refresh | - | 8V1l8r |
+| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_reopen_after_close` | Verify notification panel can be reopened after closing | yes | 5BRzq9 |
+| `test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_survives_page_refresh` | Verify notification icon is present after page refresh | yes | 8V1l8r |
 
 ### search (34 tests in 5 files)
 

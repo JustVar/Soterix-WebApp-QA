@@ -3,6 +3,8 @@
 Extends basic notification tests with panel content checks, mute/unmute
 round-trip, badge count, close behavior, and notification entry inspection.
 """
+import re
+
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
 
@@ -35,6 +37,13 @@ class TestNotificationsDeeper:
         self._header_icons.nth(1).click()
         marker.first.wait_for(state="visible", timeout=10000)
 
+    def _expect_panel_open(self):
+        """The open panel: its heading reads Notifications and its mute
+        control's icon file names the state (MuteNotification unmuted,
+        UnMuteNotification muted; measured 09/12/2026)."""
+        expect(self.page.locator(".headingNotification").first).to_have_text("Notifications", timeout=5000)
+        expect(self._get_mute_button().first).to_have_attribute("src", re.compile("MuteNotification"))
+
     def _close_notification_panel(self):
         """Close the panel; the mute marker leaving is the signal."""
         self._header_icons.nth(1).click()
@@ -66,17 +75,19 @@ class TestNotificationsDeeper:
     @pytest.mark.notifications
     @pytest.mark.notifications_deeper
     def test_notification_panel_reopen_after_close(self):
-        """Verify notification panel can be reopened after closing."""
+        """Verify notification panel can be reopened after closing.
+
+        Steps:
+        1. Open the notification panel, close it with the bell, then open it again.
+           Expected: The panel's mute control leaves on close and is back on reopen, its icon file naming the mute state, under the Notifications heading.
+        """
         self._open_notification_panel()
-        mute_btn = self._get_mute_button()
-        expect(mute_btn.first).to_be_visible(timeout=5000)
-
+        expect(self._get_mute_button().first).to_have_attribute("src", re.compile("MuteNotification"), timeout=5000)
         self._close_notification_panel()
-
+        expect(self._get_mute_button()).to_have_count(0)
         # Reopen
         self._open_notification_panel()
-        mute_btn = self._get_mute_button()
-        expect(mute_btn.first).to_be_visible(timeout=5000)
+        self._expect_panel_open()
 
     # --- Header icons ---
 
@@ -95,9 +106,19 @@ class TestNotificationsDeeper:
     @pytest.mark.notifications
     @pytest.mark.notifications_deeper
     def test_notification_bell_icon_visible(self):
-        """Verify the notification bell icon is always visible in the header."""
-        bell = self._header_icons.nth(1)
-        expect(bell).to_be_visible(timeout=10000)
+        """Verify the header's icon group and the bell's place in it.
+
+        Steps:
+        1. Read the header's right-hand icon group.
+           Expected: Four icon buttons, the last one reading the user's initials; the second one (the bell) opens the Notifications panel.
+        """
+        self._header_icons.first.wait_for(state="visible", timeout=10000)
+        expect(self._header_icons).to_have_count(4)
+        initials = self._header_icons.last.inner_text().strip()
+        assert re.fullmatch(r"[A-Z]{1,3}", initials) is not None, (
+            f"the last header icon reads {initials!r}, expected the user's initials")
+        self._open_notification_panel()
+        self._expect_panel_open()
 
     # --- Mute/unmute round-trip ---
 
@@ -173,36 +194,43 @@ class TestNotificationsDeeper:
     def test_notification_panel_after_page_navigation(self):
         """Verify notification panel works after navigating to a different page.
 
-        Opens panel, navigates to Search, then reopens panel.
+        Steps:
+        1. Open the panel, close it, then open Search from the sidebar.
+           Expected: The address ends in /search.
+        2. Open the panel again.
+           Expected: The Notifications panel opens with its mute control.
         """
         self._open_notification_panel()
-        mute_btn = self._get_mute_button()
-        expect(mute_btn.first).to_be_visible(timeout=5000)
+        self._expect_panel_open()
         self._close_notification_panel()
-
         # Navigate to Search; the reopened panel's own marker wait
         # covers the page transition
         self.page.locator("a[href*='search']").click()
+        expect(self.page).to_have_url(re.compile(r"/search/?$"), timeout=15000)
         self._open_notification_panel()
-        mute_btn = self._get_mute_button()
-        expect(mute_btn.first).to_be_visible(timeout=5000)
+        self._expect_panel_open()
 
     @pytest.mark.ui
     @pytest.mark.notifications
     @pytest.mark.notifications_deeper
     def test_notification_panel_survives_page_refresh(self):
-        """Verify notification icon is present after page refresh."""
+        """Verify notification icon is present after page refresh.
+
+        Steps:
+        1. Refresh the browser.
+           Expected: The address is unchanged and the header shows its four icons.
+        2. Click the bell.
+           Expected: The Notifications panel opens with its mute control.
+        """
+        before = self.page.url
         # reload waits for the load event on its own
         self.page.reload()
-
         self._header_icons.first.wait_for(state="visible", timeout=15000)
-        bell = self._header_icons.nth(1)
-        expect(bell).to_be_visible(timeout=10000)
-
+        expect(self.page).to_have_url(before)
+        expect(self._header_icons).to_have_count(4, timeout=10000)
         # Panel should still open after refresh
         self._open_notification_panel()
-        mute_btn = self._get_mute_button()
-        expect(mute_btn.first).to_be_visible(timeout=5000)
+        self._expect_panel_open()
 
     @pytest.mark.ui
     @pytest.mark.notifications
@@ -212,13 +240,18 @@ class TestNotificationsDeeper:
 
         Views page has heavy video streaming - notification bell should
         still be accessible in the header.
+
+        Steps:
+        1. Open Views from the sidebar.
+           Expected: The address is the site root.
+        2. Click the bell.
+           Expected: The Notifications panel opens with its mute control.
         """
         # Navigate to Views; the header wait below is the arrival signal
         views_link = self.page.locator("text=Views").first
         views_link.click(force=True)
-
+        expect(self.page).to_have_url(re.compile(r"^https?://[^/]+/?$"), timeout=15000)
         # Bell should still work
         self._header_icons.first.wait_for(state="visible", timeout=15000)
         self._open_notification_panel()
-        mute_btn = self._get_mute_button()
-        expect(mute_btn.first).to_be_visible(timeout=5000)
+        self._expect_panel_open()
