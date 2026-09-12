@@ -3,6 +3,9 @@
 Verify VCA enable/tracker engine configuration (critical for PVA),
 VCA rules and license, and Soterix Cloud registration.
 """
+import contextlib
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -132,7 +135,7 @@ class TestC2CSoterixCloud:
         Steps:
         1. Open Setup > Soterix > CONNECT.
            Expected: The SOTERIX CLOUD CONNECT page loads with the Soterix logo.
-        2. Wait a few seconds for the cloud status to load and read it.
+        2. Wait for the cloud status line to appear and read it.
            Expected: Registered Cloud Address shows staging.example.invalid. "Waiting for cloud registration..." or "I am not registered to a cloud." means the camera was never registered: finish provisioning (QR code) and run again.
         3. Read the QR code section.
            Expected: Upload QR Code with Select QR, Upload and Reset buttons.
@@ -149,9 +152,15 @@ class TestC2CSoterixCloud:
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         expect(self.page.locator("img[alt*='Soterix'], img[src*='logo']").first).to_be_visible()
 
-        self.step_capture.mark(3, "Wait for cloud status to load and verify registration")
-        # Cloud status may take a moment to resolve
-        self.page.wait_for_timeout(3000)
+        self.step_capture.mark(3, "Wait for the cloud status line and read it")
+        # the onboard page shows 'Waiting for cloud registration...' while
+        # it asks the camera, then the answer replaces it (1.5 s and 3 s on
+        # 10.2.0.171); a unit still waiting after 15 s is reported as such
+        resolved = self.camera.content(re.compile(
+            "Registered Cloud Address|I am not registered"))
+        # a unit still on the placeholder after 15 s is reported as such below
+        with contextlib.suppress(Exception):
+            resolved.wait_for(state="visible", timeout=15000)
         page_text = self.page.locator("body").inner_text()
 
         self.step_capture.mark(4, "Verify Registered Cloud Address is staging.example.invalid")

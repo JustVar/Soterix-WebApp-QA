@@ -15,7 +15,7 @@ import re
 import time
 
 import pytest
-from playwright.sync_api import BrowserContext, Page, expect
+from playwright.sync_api import BrowserContext, Page, TimeoutError as PlaywrightTimeoutError, expect
 
 # Default camera config - used when no config dict provided (legacy env-var mode)
 CAMERA_IP = os.environ.get("C2C_CAMERA_IP", "10.2.0.129")
@@ -44,13 +44,6 @@ class CameraHardwarePage:
         self.ip = self.config["ip"]
         self.setup_url = f"http://{self.ip}/cgi-bin/admin/setup_main.cgi"
         self.main_url = f"http://{self.ip}/cgi-bin/index.cgi"
-
-        # --- Main Page (Live View) ---
-        self.setup_button = page.locator("button:has-text('Setup')")
-        self.fullscreen_button = page.locator("button:has-text('Full screen')")
-        self.channel_select = page.locator("select").first
-        self.focus_button = page.locator("button:has-text('Focus')")
-        self.calibrate_button = page.locator("button:has-text('Calibrate')")
 
     # ------------------------------------------------------------------ #
     #  Navigation
@@ -215,10 +208,33 @@ class CameraHardwarePage:
         return out
 
     def navigate_to_setup_section(self, section_text: str):
-        """Click a top-level nav section in Setup (e.g. 'CAMERA', 'NETWORK')."""
-        self._menu_section(section_text).click()
-        self.page.wait_for_timeout(500)  # the menu unfolds with no DOM signal of its own
+        """Open a top-level nav section in Setup (e.g. 'CAMERA', 'NETWORK')."""
+        self._open_section(self._menu_section(section_text), section_text)
         return self
+
+    def _open_section(self, section, name: str) -> None:
+        """Unfold a section and wait for its entries. The header toggles, so
+        a section already open is left alone (a second click would fold it
+        and hide the entry the caller wants next); the first entry turning
+        visible is the unfolded signal (replaced a 500 ms pause, 09/12/2026)."""
+        entries = section.locator("li")
+        if entries.count() and entries.last.is_visible():
+            return
+        section.click()
+        # the section slides open: its height grows over ~400 ms (28 -> 119
+        # -> 243 -> 353 px on 10.2.0.168) while every entry already counts
+        # as visible, so a click on a lower entry landed short (PLUG-IN on
+        # 10.2.0.134, 09/12/2026). The unfolded signal is the height holding
+        # still for two ticks
+        deadline = time.monotonic() + 5
+        last = None
+        while time.monotonic() < deadline:
+            height = section.evaluate("e => e.clientHeight")
+            if height and height == last:
+                return
+            last = height
+            self.page.wait_for_timeout(100)  # poll tick for the slide
+        raise AssertionError(f"the {name} section did not unfold within 5 s on {self.ip}")
 
     def navigate_to_vca_section(self):
         """Open the analytics section, whatever the firmware calls it.
@@ -233,8 +249,7 @@ class CameraHardwarePage:
                 "els => els.map(e => (e.textContent || '').trim().split(/\\s+/).slice(0, 2).join(' '))")
             raise AssertionError(
                 f"no setup section carries an Enable entry (analytics): sections are {names}")
-        section.click()
-        self.page.wait_for_timeout(500)  # the menu unfolds with no DOM signal of its own
+        self._open_section(section, "analytics")
         return self
 
     def navigate_to_setup_subsection(self, subsection_text: str):
@@ -245,9 +260,24 @@ class CameraHardwarePage:
         if not item.count():
             raise AssertionError(f"this camera's setup menu has no '{subsection_text}' entry")
         item.click()
+        # the menu marks the open page's entry with class select_minor
+        # (measured 09/12/2026): a click that landed short leaves it on the
+        # old entry, which used to pass silently after a 10 s heading wait
+        # and let a test read the previous pane
+        deadline = time.monotonic() + 10
+        while not item.evaluate("e => e.classList.contains('select_minor')"):
+            if time.monotonic() > deadline:
+                raise AssertionError(
+                    f"the {subsection_text} entry did not open on {self.ip}: the menu still "
+                    f"marks {self._selected_entry()!r} as the open page")
+            self.page.wait_for_timeout(100)  # poll tick for the menu's mark
         self._wait_heading_change(before)
         self._wait_content_settled()
         return self
+
+    def _selected_entry(self) -> str:
+        marked = self.page.locator("#sub_menu li.select_minor").first
+        return marked.inner_text().strip() if marked.count() else ""
 
     def codec_select(self):
         """The Stream 1 codec select: the first select that offers H.265.
@@ -356,297 +386,6 @@ class CameraHardwarePage:
             self.page.wait_for_timeout(100)  # poll tick for the label fill
 
     # ------------------------------------------------------------------ #
-    #  Main Page - Live View assertions
-    # ------------------------------------------------------------------ #
-
-    def get_camera_time_text(self) -> str:
-        """Get the camera time displayed on the main page."""
-        return self.page.locator("text=/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/").inner_text()
-
-    def is_soterix_branded(self) -> bool:
-        """Check if the Soterix Systems branding is visible."""
-        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
-        return self.page.locator("img[src*='logo'], text='SOTERIX'").first.is_visible()
-
-    # ------------------------------------------------------------------ #
-    #  Setup - System Information
-    # ------------------------------------------------------------------ #
-
-    def get_system_info(self) -> dict:
-        """Navigate to System Information and return all fields as a dict."""
-        self.navigate_to_setup()
-        self.navigate_to_setup_section("SYSTEM")
-        self.navigate_to_setup_subsection("SYSTEM INFORMATION")
-
-        info = {}
-        fields = [
-            "Model name", "Serial number", "Manufacturer", "Max resolution",
-            "Max framerate", "Photo resistor(CDS)", "Alarm in", "Relay out",
-            "Audio", "Optical zoom", "Digital zoom", "PTZ", "AI", "ONVIF"
-        ]
-        for field in fields:
-            try:
-                row = self.page.locator(f"text='{field}'").locator("..")
-                value_el = row.locator("td:nth-child(2), span, >> text=/[A-Z].*$/").last
-                info[field] = value_el.inner_text().strip()
-            except Exception:
-                info[field] = None
-
-        # Editable fields
-        info["Device name"] = self.page.locator("input").first.input_value()
-        info["Location"] = self.page.locator("input").nth(1).input_value()
-        return info
-
-    def set_device_name(self, name: str):
-        """Set the device name field."""
-        inp = self.page.locator("input").first
-        inp.fill(name)
-        return self
-
-    def set_location(self, location: str):
-        """Set the location field."""
-        inp = self.page.locator("input").nth(1)
-        inp.fill(location)
-        return self
-
-    # ------------------------------------------------------------------ #
-    #  Setup - Plugin info
-    # ------------------------------------------------------------------ #
-
-    def get_plugin_list(self) -> list[dict]:
-        """Navigate to Plug-in page and return list of plugins with name/version/status."""
-        self.navigate_to_setup()
-        self.navigate_to_setup_section("SYSTEM")
-        self.navigate_to_setup_subsection("PLUG-IN")
-        self.page.wait_for_timeout(1000)
-
-        plugins = []
-        rows = self.page.locator("table").first.locator("tr")
-        for i in range(1, rows.count()):  # skip header row
-            cells = rows.nth(i).locator("td")
-            if cells.count() >= 3:
-                plugins.append({
-                    "name": cells.nth(0).inner_text().strip(),
-                    "version": cells.nth(1).inner_text().strip(),
-                    "status": cells.nth(2).inner_text().strip(),
-                })
-        return plugins
-
-    def get_storage_usage(self) -> int:
-        """Get plugin storage usage percentage from the Plug-in page."""
-        text = self.page.locator("text=/\\d+ %/").inner_text()
-        match = re.search(r"(\d+)", text)
-        return int(match.group(1)) if match else -1
-
-    # ------------------------------------------------------------------ #
-    #  Setup - Video Configuration
-    # ------------------------------------------------------------------ #
-
-    def get_stream_table(self) -> list[dict]:
-        """Get the 3-stream summary table from Video Configuration."""
-        self.navigate_to_setup()
-        # VIDEO & AUDIO is the default expanded section, VIDEO is default page
-        self.page.wait_for_timeout(500)
-
-        streams = []
-        rows = self.page.locator("table").first.locator("tr")
-        for i in range(1, rows.count()):
-            cells = rows.nth(i).locator("td")
-            if cells.count() >= 4:
-                streams.append({
-                    "stream": cells.nth(0).inner_text().strip(),
-                    "codec": cells.nth(1).inner_text().strip(),
-                    "resolution": cells.nth(2).inner_text().strip(),
-                    "fps": cells.nth(3).inner_text().strip(),
-                })
-        return streams
-
-    def get_stream_detail(self, field: str) -> str:
-        """Get a specific field value from the stream detail form (e.g. 'Bitrate mode')."""
-        select = self.page.locator("select").filter(has=self.page.locator("option:checked"))
-        # Try to find the field label and its adjacent value
-        label = self.page.locator(f"text='{field}'").first
-        sibling = label.locator("~ select, ~ input").first
-        if sibling.count():
-            tag = sibling.evaluate("el => el.tagName")
-            if tag == "SELECT":
-                return sibling.input_value()
-            return sibling.input_value()
-        return ""
-
-    def set_codec(self, codec: str):
-        """Change the codec dropdown value."""
-        self.page.locator("select").first.select_option(label=codec)
-        return self
-
-    def set_resolution(self, resolution: str):
-        """Change the resolution dropdown value."""
-        self.page.locator("select").filter(
-            has=self.page.locator(f"option[value='{resolution}']")
-        ).first.select_option(value=resolution)
-        return self
-
-    # ------------------------------------------------------------------ #
-    #  Setup - OSD
-    # ------------------------------------------------------------------ #
-
-    def navigate_to_osd(self):
-        """Navigate to OSD Configuration."""
-        self.navigate_to_setup()
-        self.navigate_to_setup_subsection("OSD")
-        return self
-
-    # ------------------------------------------------------------------ #
-    #  Setup - Audio
-    # ------------------------------------------------------------------ #
-
-    def navigate_to_audio(self):
-        """Navigate to Audio Configuration."""
-        self.navigate_to_setup()
-        self.navigate_to_setup_subsection("AUDIO")
-        return self
-
-    # ------------------------------------------------------------------ #
-    #  Setup - Network
-    # ------------------------------------------------------------------ #
-
-    def get_network_status(self) -> dict:
-        """Navigate to Network Status and return all fields."""
-        self.navigate_to_setup()
-        self.navigate_to_setup_section("NETWORK")
-        self.navigate_to_setup_subsection("STATUS")
-        self.page.wait_for_timeout(500)
-
-        status = {}
-        fields = [
-            "MAC address", "IP address", "Subnet mask", "Default gateway",
-            "Preferred DNS server", "HTTP port", "HTTPS port", "RTSP port"
-        ]
-        for field in fields:
-            try:
-                label = self.page.locator(f"text='{field}'").first
-                value = label.locator("~ td, + td").first.inner_text().strip()
-                status[field] = value
-            except Exception:
-                status[field] = None
-        return status
-
-    # ------------------------------------------------------------------ #
-    #  Setup - VCA
-    # ------------------------------------------------------------------ #
-
-    def get_vca_enable_status(self) -> dict:
-        """Navigate to VCA > ENABLE and return enable state + tracker engine."""
-        self.navigate_to_setup()
-        self.navigate_to_vca_section()
-        self.navigate_to_setup_subsection("ENABLE")
-        self.page.wait_for_timeout(500)
-
-        result = {}
-        # Check if Enable radio is On
-        on_radio = self.page.locator("input[type='radio']").first
-        result["enabled"] = on_radio.is_checked()
-
-        # Check which tracker engine is selected
-        page_text = self.page.locator("body").inner_text()
-        result["dl_object_tracker"] = "DL Object Tracker" in page_text
-        result["intrusion_detection"] = "Intrusion detection" in page_text
-
-        return result
-
-    def get_vca_license(self) -> list[dict]:
-        """Navigate to VCA > LICENSE and return the activated licenses.
-
-        The page renders two tables: the "Activate License" form first, then
-        "Activated License(s)". Taking table.first therefore read the form -
-        which has no data rows - and returned an empty list, making a licensed
-        camera look unlicensed. Match on the header row instead.
-        """
-        self.navigate_to_setup()
-        self.navigate_to_vca_section()
-        self.navigate_to_setup_subsection("LICENSE")
-        self.page.wait_for_timeout(1000)
-
-        return self.page.evaluate(
-            r"""() => {
-              for (const t of document.querySelectorAll('table')) {
-                const rows = [...t.querySelectorAll('tr')];
-                if (rows.length < 2) continue;
-                const head = [...rows[0].querySelectorAll('td,th')]
-                  .map(c => (c.innerText || '').trim().toLowerCase());
-                const a = head.indexOf('assigned'), l = head.indexOf('license');
-                if (a === -1 || l === -1) continue;
-                const out = [];
-                for (const tr of rows.slice(1)) {
-                  const c = [...tr.querySelectorAll('td,th')]
-                    .map(x => (x.innerText || '').trim());
-                  if (c.length > Math.max(a, l) && (c[a] || c[l]))
-                    out.push({assigned: c[a], license: c[l]});
-                }
-                return out;
-              }
-              return [];
-            }"""
-        )
-
-    # ------------------------------------------------------------------ #
-    #  Setup - Soterix Cloud Connect
-    # ------------------------------------------------------------------ #
-
-    def get_cloud_connect_status(self) -> dict:
-        """Navigate to Soterix > CONNECT and report registration state.
-
-        Returns a dict with a "state" of:
-          registered     - "Registered Cloud Address" is shown
-          waiting        - "Waiting for cloud registration..." (pending; the
-                           camera has not completed registration)
-          not_registered - the page explicitly says so
-          unavailable    - the camera has no Soterix Cloud section at all,
-                           which is the case on unbranded VCA units
-          unknown        - page loaded but matched none of the above
-        """
-        result = {"is_registered": False, "is_unregistered": False,
-                  "state": "unknown", "cloud_address": None}
-
-        # Unbranded units have no Soterix section; say so rather than throwing.
-        if self.page.locator("li#connect").count() == 0:
-            result["state"] = "unavailable"
-            return result
-
-        self.navigate_to_setup()
-        self.navigate_to_setup_section("Soterix")
-        self.navigate_to_setup_subsection("CONNECT")
-        self.page.wait_for_timeout(3000)  # cloud status resolves asynchronously
-
-        page_text = self.page.locator("body").inner_text()
-        result["is_registered"] = "Registered Cloud Address" in page_text
-        result["is_unregistered"] = "I am not registered" in page_text
-
-        if result["is_registered"]:
-            result["state"] = "registered"
-            try:
-                addr = self.page.locator("text=/.*soterixcloud\\.com.*/").inner_text().strip()
-                result["cloud_address"] = addr
-            except Exception:
-                result["cloud_address"] = None
-        elif "Waiting for cloud registration" in page_text:
-            result["state"] = "waiting"
-        elif result["is_unregistered"]:
-            result["state"] = "not_registered"
-        return result
-
-    # ------------------------------------------------------------------ #
-    #  Setup - Motion Detection
-    # ------------------------------------------------------------------ #
-
-    def navigate_to_motion(self):
-        """Navigate to Events > Motion Detection."""
-        self.navigate_to_setup()
-        self.navigate_to_setup_section("EVENTS")
-        self.navigate_to_setup_subsection("MOTION")
-        return self
-
-    # ------------------------------------------------------------------ #
     #  Common actions
     # ------------------------------------------------------------------ #
 
@@ -654,22 +393,36 @@ class CameraHardwarePage:
     # (preset and video-out) ahead of the live one, and .first on the
     # bare union waited 30 s on a hidden button (10.2.0.171, 09/11/2026)
     def click_apply(self):
-        """Click the Apply button on the current setup page."""
-        self.page.locator(
-            "button:has-text('Apply'):visible, input[value='Apply']:visible").first.click()
-        self.page.wait_for_timeout(1000)
+        """Click the Apply button on the current setup page and wait for the
+        camera's answer. Every page's Apply is a GET with action=apply
+        (system.cgi?msubmenu=device_info&action=apply&..., video&action=apply
+        ...; measured 09/12/2026); an Apply with nothing changed sends no
+        request, so the wait gives up after 10 s instead of failing. A page
+        that re-reads the camera later (VIDEO, 8 s) has its own wait."""
+        button = self.page.locator(
+            "button:has-text('Apply'):visible, input[value='Apply']:visible").first
+        try:
+            with self.page.expect_response(lambda r: "action=apply" in r.url, timeout=10000):
+                button.click()
+        except PlaywrightTimeoutError:  # why: an Apply with nothing changed sends no request; the caller's own check on the saved value decides
+            pass
+        self._wait_content_settled()
         return self
 
     def click_default(self):
         """Click the Default button to restore factory defaults on current page."""
         self.page.locator(
             "button:has-text('Default'):visible, input[value='Default']:visible").first.click()
-        self.page.wait_for_timeout(1000)
+        # the pane re-renders on the answer; a page that answers later
+        # (VIDEO re-reads the camera 8 s after Apply) has its own wait
+        self._wait_content_settled()
         return self
 
     def click_cancel(self):
         """Click the Cancel button on the current setup page."""
         self.page.locator(
             "button:has-text('Cancel'):visible, input[value='Cancel']:visible").first.click()
-        self.page.wait_for_timeout(500)
+        # the pane re-renders on the answer; a page that answers later
+        # (VIDEO re-reads the camera 8 s after Apply) has its own wait
+        self._wait_content_settled()
         return self

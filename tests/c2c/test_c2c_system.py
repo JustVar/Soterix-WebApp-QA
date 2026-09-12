@@ -4,6 +4,7 @@ Verify system information, plugin status, firmware, diagnostics,
 configuration backup, date/time, and restart.
 """
 import re
+import time
 
 import pytest
 from playwright.sync_api import expect
@@ -100,10 +101,20 @@ class TestC2CSystemInfo:
         self.camera.navigate_to_setup_subsection("SYSTEM INFORMATION")
 
         self.step_capture.mark(2, "Save original values")
-        name_input = self.page.locator("input").first
-        location_input = self.page.locator("input").nth(1)
+        # the page's own fields by id (device_name, location on every model,
+        # measured 09/12/2026). A page-wide input.first read the VIDEO
+        # page's stream radios ('0', '1') when the pane had not switched
+        # yet, and the restore then wrote those into 10.2.0.168's name and
+        # location; the heading is proved first so the fields are the pane's
+        expect(self.camera.heading("SYSTEM INFORMATION")).to_be_visible()
+        name_input = self.page.locator("#tabs input#device_name")
+        location_input = self.page.locator("#tabs input#location")
+        expect(name_input).to_be_visible()
         original_name = name_input.input_value()
         original_location = location_input.input_value()
+        assert original_name not in ("", "0", "1", "TEST-CAM-01"), (
+            f"{self.camera.ip}: the device name reads {original_name!r} before the test; "
+            f"put the unit's name back before running a test that renames it")
 
         try:
             self.step_capture.mark(3, "Change Device name and Location to test values")
@@ -117,14 +128,19 @@ class TestC2CSystemInfo:
             self.page.reload(wait_until="domcontentloaded")
             self.camera.navigate_to_setup_section("SYSTEM")
             self.camera.navigate_to_setup_subsection("SYSTEM INFORMATION")
-            assert self.page.locator("input").first.input_value() == "TEST-CAM-01"
-            assert self.page.locator("input").nth(1).input_value() == "QA Lab"
+            expect(self.page.locator("#tabs input#device_name")).to_have_value("TEST-CAM-01")
+            expect(self.page.locator("#tabs input#location")).to_have_value("QA Lab")
         finally:
-            self.step_capture.mark(6, "Restore original values")
+            self.step_capture.mark(6, f"Restore {original_name} / {original_location}")
             try:
-                self.page.locator("input").first.fill(original_name)
-                self.page.locator("input").nth(1).fill(original_location)
+                self.page.locator("#tabs input#device_name").fill(original_name)
+                self.page.locator("#tabs input#location").fill(original_location)
                 self.camera.click_apply()
+                self.page.reload(wait_until="domcontentloaded")
+                self.camera.navigate_to_setup_section("SYSTEM")
+                self.camera.navigate_to_setup_subsection("SYSTEM INFORMATION")
+                expect(self.page.locator("#tabs input#device_name")).to_have_value(original_name)
+                expect(self.page.locator("#tabs input#location")).to_have_value(original_location)
             except Exception as restore_err:  # noqa: BLE001 - must not mask the real failure
                 pytest.fail(
                     f"Could not restore device name/location on "
@@ -329,7 +345,8 @@ class TestC2CSystemOps:
         self.step_capture.mark(1, "Note current plugin status before restart")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("PLUG-IN")
-        running_before = self.page.locator("text='running'").count()
+        rows = self.camera.wait_for_table_rows()
+        running_before = sum(1 for r in rows if len(r) >= 3 and r[-1] == "running")
 
         self.step_capture.mark(2, "Navigate to Restart page")
         self.camera.navigate_to_setup_subsection("RESTART")
@@ -339,34 +356,40 @@ class TestC2CSystemOps:
         self.page.locator("button:has-text('Restart'), button:has-text('Reboot'), input[value='Restart']").first.click()
 
         self.step_capture.mark(4, "Wait for camera to go offline and come back")
-        import time
-        # Wait for camera to start rebooting
-        time.sleep(10)
-
         # Poll the camera under test. This used to read the module-level
         # CAMERA_IP default (192.168.1.149), so on any parametrised run it
         # polled a machine that was not the one just rebooted - the test could
         # never pass, while still having taken the camera down.
         camera_ip = self.camera.ip
-        for _attempt in range(36):   # 36 x 5s = 3 minutes
+        url = f"http://{camera_ip}/cgi-bin/admin/setup_main.cgi"
+
+        def answers() -> bool:
             try:
-                self.page.goto(
-                    f"http://{camera_ip}/cgi-bin/admin/setup_main.cgi",
-                    wait_until="domcontentloaded",
-                    timeout=5000,
-                )
-                break
-            except Exception:
-                time.sleep(5)
-        else:
-            pytest.fail(
-                f"Camera {camera_ip} did not come back online within 3 minutes "
-                f"after restart"
-            )
+                self.page.goto(url, wait_until="domcontentloaded", timeout=5000)
+                return True
+            except Exception:  # noqa: BLE001 - why: no answer IS the measurement while the camera reboots
+                return False
+
+        # the camera dropping off is the restart-began signal (a fixed 10 s
+        # pause assumed it); it has 60 s to go, then 3 minutes to come back
+        went_down = time.monotonic() + 60
+        while answers():
+            if time.monotonic() > went_down:
+                pytest.fail(f"Camera {camera_ip} kept answering for 60 s after Restart")
+            time.sleep(2)  # poll tick for the camera going down
+        back_by = time.monotonic() + 180
+        while not answers():
+            if time.monotonic() > back_by:
+                pytest.fail(
+                    f"Camera {camera_ip} did not come back online within 3 minutes "
+                    f"after restart")
+            time.sleep(5)  # poll tick for the camera coming back
 
         self.step_capture.mark(5, "Verify web UI is accessible and plugins still running")
         self.camera.navigate_to_setup_section("SYSTEM")
         self.camera.navigate_to_setup_subsection("PLUG-IN")
-        self.page.wait_for_timeout(2000)
-        running_after = self.page.locator("text='running'").count()
-        assert running_after >= running_before, "Plugins not running after restart"
+        rows = self.camera.wait_for_table_rows()
+        running_after = sum(1 for r in rows if len(r) >= 3 and r[-1] == "running")
+        assert running_after >= running_before, (
+            f"{camera_ip}: {running_after} plug-in(s) running after the restart, "
+            f"{running_before} before (the table reads {rows})")

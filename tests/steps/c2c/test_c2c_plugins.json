@@ -49,7 +49,7 @@
         },
         {
           "n": 2,
-          "action": "Wait a few seconds for the cloud status to load and read it.",
+          "action": "Wait for the cloud status line to appear and read it.",
           "expected": "Registered Cloud Address shows staging.example.invalid. \"Waiting for cloud registration...\" or \"I am not registered to a cloud.\" means the camera was never registered: finish provisioning (QR code) and run again."
         },
         {
