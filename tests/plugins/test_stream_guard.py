@@ -109,19 +109,45 @@ def test_guard_switch_reads_off_values_only():
 
 # ---------------------------------------------------------------- the hook
 
-def test_hook_measures_once_and_skips_only_the_livestream_tests(monkeypatch):
-    """One assessment per session with the session's browser channel; only the
-    livestream items get the skip, with the same reason."""
+def test_hook_measures_twice_on_an_empty_sample_and_skips_only_the_livestream_tests(monkeypatch):
+    """An empty first sample earns a second one (the US camera read 0 frames
+    and then 117 a minute apart, 09/12/2026); two empties skip the livestream
+    items only, with the same reason, using the session's browser channel."""
     calls: list = []
     monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8: (calls.append((camera, channel)), dict(DEAD))[1])
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'Soterix Multicam 1.15'})
     monkeypatch.delenv('STREAM_GUARD', raising=False)
     items = [FakeItem('livestream', 'views'), FakeItem('views'), FakeItem('livestream')]
     conftest.stream_guard(_config(), items, 'us')
-    assert calls == [('Soterix Multicam 1.15', 'chrome')]
+    assert calls == [('Soterix Multicam 1.15', 'chrome')] * 2
     assert items[0].skip_reasons == [sh.stream_skip_reason(DEAD, 'us')]
     assert items[2].skip_reasons == items[0].skip_reasons
     assert items[1].markers == []
+
+
+def test_hook_measures_once_when_the_stream_is_alive(monkeypatch):
+    """A first sample with frames is the measurement: one call, no skips."""
+    calls: list = []
+    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8: (calls.append((camera, channel)), dict(ALIVE))[1])
+    monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'Soterix Multicam 1.15'})
+    monkeypatch.delenv('STREAM_GUARD', raising=False)
+    items = [FakeItem('livestream', 'views'), FakeItem('views')]
+    conftest.stream_guard(_config(), items, 'us')
+    assert calls == [('Soterix Multicam 1.15', 'chrome')]
+    assert items[0].markers == []
+    assert items[1].markers == []
+
+
+def test_hook_second_sample_with_frames_skips_nothing(monkeypatch):
+    """An empty first sample and a live second one: the session runs."""
+    answers = [dict(DEAD), dict(ALIVE)]
+    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8: answers.pop(0))
+    monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'Soterix Multicam 1.15'})
+    monkeypatch.delenv('STREAM_GUARD', raising=False)
+    items = [FakeItem('livestream', 'views')]
+    conftest.stream_guard(_config(), items, 'us')
+    assert answers == []
+    assert items[0].markers == []
 
 
 def test_hook_does_not_measure_without_a_livestream_test_or_on_collect_only_or_when_off(monkeypatch):
