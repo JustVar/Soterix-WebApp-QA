@@ -19,7 +19,7 @@
         {
           "n": 1,
           "action": "Click Insights in the left sidebar.",
-          "expected": "The All Insights tab is shown at the top of the page."
+          "expected": "The All Insights tab is shown at the top of the page and reads All Insights."
         }
       ],
       "case_key": "RgGQ4a"
@@ -30,7 +30,7 @@
         {
           "n": 1,
           "action": "Click Insights in the left sidebar.",
-          "expected": "The page shows the My Dashboards and Widgets tabs and lists System Status as the preset dashboard."
+          "expected": "The page shows the My Dashboards and Widgets tabs, a Preset Dashboard section listing System Status as a link to the system status dashboard, and a My Dashboard section."
         }
       ],
       "case_key": "mBdX60"
@@ -47,12 +47,12 @@
       "case_key": "gQxXRW"
     },
     "test_preset_dashboard_view_all": {
-      "title": "Verify the View All control is visible on the landing",
+      "title": "Verify the View All controls on the landing",
       "steps": [
         {
           "n": 1,
           "action": "Click Insights in the left sidebar.",
-          "expected": "A View All control is shown next to the dashboard list."
+          "expected": "Two View All controls are shown, one beside Preset Dashboard and one beside My Dashboard."
         }
       ],
       "case_key": "n8jQ76"
@@ -63,18 +63,18 @@
         {
           "n": 1,
           "action": "Click Insights in the left sidebar, then click System Status.",
-          "expected": "The System Status dashboard opens and shows the Devices and Cameras panels."
+          "expected": "The address ends in /insights/systemStatus and the dashboard shows the Devices and Cameras panels."
         }
       ],
       "case_key": "lR2lPX"
     },
     "test_my_dashboard_section_visible": {
-      "title": "Verify the My Dashboards tab is visible on the landing",
+      "title": "Verify the My Dashboard section on the landing",
       "steps": [
         {
           "n": 1,
           "action": "Click Insights in the left sidebar.",
-          "expected": "The My Dashboards tab is shown."
+          "expected": "The My Dashboards tab and the My Dashboard section are shown; with no user dashboards the section reads \"My Dashboard is currently empty.\" and points at Create New."
         }
       ],
       "case_key": "K4n96b"
@@ -91,12 +91,12 @@
       "case_key": "LD3X7P"
     },
     "test_create_new_button_visible": {
-      "title": "Verify the Create New button is visible on the landing",
+      "title": "Verify the Create New button on the landing",
       "steps": [
         {
           "n": 1,
           "action": "Click Insights in the left sidebar.",
-          "expected": "A Create New button is shown above the dashboard list."
+          "expected": "One enabled Create New button is shown above the dashboard list."
         }
       ],
       "case_key": "XGLQrD"
@@ -107,18 +107,18 @@
         {
           "n": 1,
           "action": "Click Insights in the left sidebar, then Create New.",
-          "expected": "The Create New Dashboard screen opens with a Dashboard Name field and an Add a widget picker."
+          "expected": "The address ends in /insights/createNewDashboard and the screen shows an empty Dashboard Name field (placeholder Enter Dashboard Name), an Add a widget picker and a Search Widgets box."
         }
       ],
       "case_key": "LD3Xwx"
     },
     "test_create_dashboard_has_discard_and_save": {
-      "title": "Verify Discard and Save buttons are shown on the creation screen",
+      "title": "Verify Discard and Save buttons on the creation screen",
       "steps": [
         {
           "n": 1,
           "action": "Click Insights in the left sidebar, then Create New.",
-          "expected": "The creation screen shows a Discard button and a Save button."
+          "expected": "The creation screen shows an enabled Discard button and a Save button that is disabled until the dashboard has a name and a widget."
         }
       ],
       "case_key": "kpZX05"

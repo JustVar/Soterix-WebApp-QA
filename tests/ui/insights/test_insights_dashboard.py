@@ -89,9 +89,11 @@ class TestInsightsDashboard:
 
         Steps:
         1. Click Insights in the left sidebar.
-           Expected: The All Insights tab is shown at the top of the page.
+           Expected: The All Insights tab is shown at the top of the page and reads All Insights.
         """
+        # the tab carries its name in its title attribute, not as text
         expect(self.insights.all_insights_tab).to_be_visible(timeout=10000)
+        expect(self.insights.all_insights_tab).to_have_attribute("title", "All Insights")
 
     # --- Preset dashboard (System Status) ---
 
@@ -103,11 +105,16 @@ class TestInsightsDashboard:
 
         Steps:
         1. Click Insights in the left sidebar.
-           Expected: The page shows the My Dashboards and Widgets tabs and lists System Status as the preset dashboard.
+           Expected: The page shows the My Dashboards and Widgets tabs, a Preset Dashboard section listing System Status as a link to the system status dashboard, and a My Dashboard section.
         """
         expect(self.page.get_by_text("My Dashboards", exact=True)).to_be_visible()
         expect(self.page.get_by_text("Widgets", exact=True).first).to_be_visible()
-        expect(self.insights.system_status_link.first).to_be_visible()
+        # each section header is one P: "<name>   |  View All"
+        expect(self.page.locator("p").filter(has_text=re.compile(r"^Preset Dashboard"))).to_contain_text("View All")
+        expect(self.page.locator("p").filter(has_text=re.compile(r"^My Dashboard  "))).to_contain_text("View All")
+        link = self.insights.system_status_link.first
+        expect(link).to_have_text("System Status")
+        expect(link).to_have_attribute("href", re.compile(re.escape(SYSTEM_STATUS_URL)))
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -131,13 +138,13 @@ class TestInsightsDashboard:
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
     def test_preset_dashboard_view_all(self):
-        """Verify the View All control is visible on the landing.
+        """Verify the View All controls on the landing.
 
         Steps:
         1. Click Insights in the left sidebar.
-           Expected: A View All control is shown next to the dashboard list.
+           Expected: Two View All controls are shown, one beside Preset Dashboard and one beside My Dashboard.
         """
-        expect(self.view_all.first).to_be_visible(timeout=10000)
+        expect(self.view_all).to_have_count(2, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -147,10 +154,10 @@ class TestInsightsDashboard:
 
         Steps:
         1. Click Insights in the left sidebar, then click System Status.
-           Expected: The System Status dashboard opens and shows the Devices and Cameras panels.
+           Expected: The address ends in /insights/systemStatus and the dashboard shows the Devices and Cameras panels.
         """
         self.insights.system_status_link.first.click()
-        self.page.wait_for_url(f"**{SYSTEM_STATUS_URL}**", timeout=15000)
+        expect(self.page).to_have_url(re.compile(re.escape(SYSTEM_STATUS_URL)), timeout=15000)
         expect(self.insights.devices_label).to_be_visible(timeout=15000)
         expect(self.page.get_by_text("Cameras", exact=True).first).to_be_visible()
 
@@ -160,15 +167,25 @@ class TestInsightsDashboard:
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
     def test_my_dashboard_section_visible(self):
-        """Verify the My Dashboards tab is visible on the landing.
+        """Verify the My Dashboard section on the landing.
 
         Steps:
         1. Click Insights in the left sidebar.
-           Expected: The My Dashboards tab is shown.
+           Expected: The My Dashboards tab and the My Dashboard section are shown; with no user dashboards the section reads "My Dashboard is currently empty." and points at Create New.
         """
         expect(self.page.get_by_text("My Dashboards", exact=True)).to_be_visible(
             timeout=10000
         )
+        expect(self.page.locator("p").filter(has_text=re.compile(r"^My Dashboard  "))).to_contain_text("View All")
+        # the empty state is one P with two lines
+        section = self.page.locator("p").filter(has_text=InsightsPage.MY_DASHBOARD_EMPTY)
+        if section.count():
+            expect(section).to_contain_text(InsightsPage.MY_DASHBOARD_EMPTY)
+            expect(section).to_contain_text("Click 'Create New' to start building your dashboard.")
+        else:
+            # a tenant with user dashboards lists them by name instead
+            assert self.page.locator("a[href*='/insights/']").count() > 1, (
+                "My Dashboard shows neither the empty sentence nor a dashboard link")
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -195,13 +212,14 @@ class TestInsightsDashboard:
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
     def test_create_new_button_visible(self):
-        """Verify the Create New button is visible on the landing.
+        """Verify the Create New button on the landing.
 
         Steps:
         1. Click Insights in the left sidebar.
-           Expected: A Create New button is shown above the dashboard list.
+           Expected: One enabled Create New button is shown above the dashboard list.
         """
-        expect(self.create_new.first).to_be_visible(timeout=10000)
+        expect(self.create_new).to_have_count(1, timeout=10000)
+        expect(self.create_new).to_be_enabled()
 
     @pytest.mark.ui
     @pytest.mark.insights
@@ -211,25 +229,27 @@ class TestInsightsDashboard:
 
         Steps:
         1. Click Insights in the left sidebar, then Create New.
-           Expected: The Create New Dashboard screen opens with a Dashboard Name field and an Add a widget picker.
+           Expected: The address ends in /insights/createNewDashboard and the screen shows an empty Dashboard Name field (placeholder Enter Dashboard Name), an Add a widget picker and a Search Widgets box.
         """
         self._open_creation_screen()
+        expect(self.page).to_have_url(re.compile(re.escape(CREATE_URL)))
+        expect(self.name_input.first).to_have_value("")
         expect(self.page.get_by_text("Add a widget", exact=True)).to_be_visible()
-        expect(self.page.locator("input[placeholder='Search Widgets']")).to_be_visible()
+        expect(self.page.locator("input[placeholder='Search Widgets']")).to_have_value("")
 
     @pytest.mark.ui
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
     def test_create_dashboard_has_discard_and_save(self):
-        """Verify Discard and Save buttons are shown on the creation screen.
+        """Verify Discard and Save buttons on the creation screen.
 
         Steps:
         1. Click Insights in the left sidebar, then Create New.
-           Expected: The creation screen shows a Discard button and a Save button.
+           Expected: The creation screen shows an enabled Discard button and a Save button that is disabled until the dashboard has a name and a widget.
         """
         self._open_creation_screen()
-        expect(self.discard.first).to_be_visible(timeout=10000)
-        expect(self.save.first).to_be_visible(timeout=10000)
+        expect(self.discard.first).to_be_enabled(timeout=10000)
+        expect(self.save.first).to_be_disabled(timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.insights

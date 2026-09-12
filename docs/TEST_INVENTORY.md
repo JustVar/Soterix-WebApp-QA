@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 241 | 348 |
-| **Total** | | **59** | **437** | **273** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 246 | 348 |
+| **Total** | | **59** | **437** | **278** | **380** |
 
 ## Growth
 
@@ -300,27 +300,27 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
 | `test_insights_dashboard.py::TestInsightsDashboard::test_all_insights_tab_visible` | Verify the All Insights tab is visible on the dashboard | yes | RgGQ4a |
-| `test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_has_discard_and_save` | Verify Discard and Save buttons are shown on the creation screen | yes | kpZX05 |
+| `test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_has_discard_and_save` | Verify Discard and Save buttons on the creation screen | yes | kpZX05 |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_name_field` | Verify the Dashboard Name field accepts a name | yes | 5BRM3m |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_opens_form` | Verify clicking Create New opens the dashboard creation screen | yes | LD3Xwx |
-| `test_insights_dashboard.py::TestInsightsDashboard::test_create_new_button_visible` | Verify the Create New button is visible on the landing | yes | XGLQrD |
+| `test_insights_dashboard.py::TestInsightsDashboard::test_create_new_button_visible` | Verify the Create New button on the landing | yes | XGLQrD |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_dashboard_landing_loads` | Verify the Insights dashboard landing page loads successfully | yes | VKbewQ |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_dashboard_page_after_refresh` | Verify the Insights landing loads again after a browser refresh | yes | wmjK7z |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_insights_page_scrollable` | Verify the Insights landing survives scrolling | yes | RgGBZW |
-| `test_insights_dashboard.py::TestInsightsDashboard::test_my_dashboard_section_visible` | Verify the My Dashboards tab is visible on the landing | yes | K4n96b |
+| `test_insights_dashboard.py::TestInsightsDashboard::test_my_dashboard_section_visible` | Verify the My Dashboard section on the landing | yes | K4n96b |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_my_dashboard_view_all` | Verify View All keeps the user on the landing when there is nothing more to list | yes | LD3X7P |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_preset_card_clickable` | Verify clicking the preset entry opens the System Status dashboard | yes | lR2lPX |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_cards_displayed` | Verify the preset dashboard is listed as a link on the landing | yes | gQxXRW |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_section_visible` | Verify the landing shows its sections and the preset entry | yes | mBdX60 |
-| `test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_view_all` | Verify the View All control is visible on the landing | yes | n8jQ76 |
+| `test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_view_all` | Verify the View All controls on the landing | yes | n8jQ76 |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_save_disabled_without_name` | Verify Save stays disabled until the dashboard has a name and a widget | yes | 11zP71 |
 | `test_insights_navigation.py::TestInsightsNavigation::test_close_system_status_tab` | Verify the System Status tab can be closed | yes | vaZZ4l |
-| `test_insights_navigation.py::TestInsightsNavigation::test_create_widget_button_visible` | Verify the 'Create New Widget' button is visible in Widgets tab | - | gQxXLl |
+| `test_insights_navigation.py::TestInsightsNavigation::test_create_widget_button_visible` | Verify the Create New button in the Widgets tab | yes | gQxXLl |
 | `test_insights_navigation.py::TestInsightsNavigation::test_navigate_to_insights` | Verify navigation to the Insights page via the sidebar | - | B8692Q |
-| `test_insights_navigation.py::TestInsightsNavigation::test_open_system_status_dashboard` | Verify the System Status dashboard opens and loads for a site | - | lR2lDP |
-| `test_insights_navigation.py::TestInsightsNavigation::test_switch_to_widgets_tab` | Verify switching from Dashboard to Widgets tab | - | Z8xQzQ |
-| `test_insights_navigation.py::TestInsightsNavigation::test_system_status_link_visible` | Verify the System Status link is visible on the Insights page | - | xm9jVZ |
-| `test_insights_navigation.py::TestInsightsNavigation::test_widget_search_input_visible` | Verify the widget search input is visible in Widgets tab | - | Pgw9x1 |
+| `test_insights_navigation.py::TestInsightsNavigation::test_open_system_status_dashboard` | Verify the System Status dashboard opens and loads for a site | yes | lR2lDP |
+| `test_insights_navigation.py::TestInsightsNavigation::test_switch_to_widgets_tab` | Verify switching from Dashboard to Widgets tab | yes | Z8xQzQ |
+| `test_insights_navigation.py::TestInsightsNavigation::test_system_status_link_visible` | Verify the System Status preset link on the Insights page | yes | xm9jVZ |
+| `test_insights_navigation.py::TestInsightsNavigation::test_widget_search_input_visible` | Verify the widget search box in the Widgets tab | yes | Pgw9x1 |
 | `test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create (parametrized)` | Verify a widget can be created with the given graph and category | yes | 8Vvv2r |
 | `test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_delete (parametrized)` | Verify a widget can be deleted and no longer appears in search | yes | M7wwv7 |
 | `test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_report (parametrized)` | Verify a widget report can be downloaded | - | 11zPQK |

@@ -159,6 +159,50 @@ class InsightsPage:
         self.close_tab_icon.click(timeout=10000)
         expect(self.close_tab_icon).to_be_hidden(timeout=5000)
 
+    # Measured 09/12/2026 on US (register row 53). The landing (/insights)
+    # reads: tabs My Dashboards and Widgets, Create New, 'Preset Dashboard'
+    # with View All and the System Status link, 'My Dashboard' with View
+    # All and, with no user dashboards, "My Dashboard is currently empty."
+    # The Widgets tab reads 'Preset Widgets' with View All, the widget
+    # list, 'My Widgets', Create New and a Search box. System Status
+    # (/insights/systemStatus) shows Devices (Cameras, Smoke Detector,
+    # Thermostats, Total), Cameras (Total, Fixed, PTZ, Zoom) and a Health
+    # Monitor with Online/Offline counts per Camera and Sensor.
+    LANDING_URL = "/insights"
+    SYSTEM_STATUS_URL = "/insights/systemStatus"
+    MY_DASHBOARD_EMPTY = "My Dashboard is currently empty."
+
+    def system_status_figures(self) -> dict:
+        """The System Status dashboard's device and camera counts.
+
+        Keys: devices (cameras, smoke, thermostats, total), cameras (total,
+        fixed, ptz, zoom), camera_online, camera_offline. Read from the
+        page text with whitespace collapsed; a missing block raises with
+        the text it read, so a relabelled dashboard fails by name.
+        """
+        text = " ".join(self.page.locator("body").inner_text().split())
+        devices = re.search(
+            r"Devices Cameras (\d+) Smoke Detector (\d+) Thermostats (\d+) Total (\d+)", text)
+        cameras = re.search(r"Cameras Total (\d+) Fixed (\d+) PTZ (\d+) Zoom (\d+)", text)
+        health = re.search(r"Online Offline Camera (\d+) (\d+)", text)
+        missing = [name for name, m in (("Devices", devices), ("Cameras", cameras),
+                                        ("Health Monitor", health)) if m is None]
+        if missing:
+            raise AssertionError(
+                f"the System Status dashboard shows no {missing} block; it reads: {text[:300]!r}")
+        return {
+            "devices": {"cameras": int(devices.group(1)), "smoke": int(devices.group(2)),
+                        "thermostats": int(devices.group(3)), "total": int(devices.group(4))},
+            "cameras": {"total": int(cameras.group(1)), "fixed": int(cameras.group(2)),
+                        "ptz": int(cameras.group(3)), "zoom": int(cameras.group(4))},
+            "camera_online": int(health.group(1)),
+            "camera_offline": int(health.group(2)),
+        }
+
+    def selected_site_text(self) -> str:
+        """What the System Status site selector reads."""
+        return self.site_dropdown.inner_text().strip()
+
     # --- Widgets tab ---
 
     def switch_to_widgets(self):
