@@ -3,6 +3,7 @@
 Covers the Events page search flow: site selection, camera selection,
 duration filtering, searching, validating results, and pinning events.
 """
+import re
 import time
 
 import pytest
@@ -34,14 +35,18 @@ class TestEventsSearch:
 
         Steps:
         1. Click the Events link in the sidebar navigation.
-           Expected: The Events page starts loading.
-        2. Verify events container is visible.
-           Expected: The event feed container renders without errors.
+           Expected: The address ends in /events and the event feed container renders.
+        2. Read the filter selects.
+           Expected: They read All Rules, Select Site and Last 1 Hour, the duration disabled until a site is chosen.
         """
         self.events.navigate()
         self.step_capture.mark(1, "Click the Events link in the sidebar navigation")
+        expect(self.page).to_have_url(re.compile(r"/events/?$"))
         expect(self.events.events_container).to_be_visible(timeout=60000)
-        self.step_capture.mark(2, "Verify events container is visible")
+        self.step_capture.mark(2, "Read the filter selects")
+        assert self.events.selector_texts() == ["All Rules", "Select Site", "Last 1 Hour"], (
+            f"the Events selects read {self.events.selector_texts()}")
+        expect(self.page.locator(".MuiSelect-select").nth(2)).to_have_attribute("aria-disabled", "true")
 
     @pytest.mark.ui
     @pytest.mark.events
@@ -53,27 +58,24 @@ class TestEventsSearch:
         1. Navigate to Events page and wait for load.
            Expected: Events page loads and the loader disappears.
         2. Open the site dropdown and select the test site.
-           Expected: The dropdown lists sites; selecting one closes the list.
-        3. Verify the selected site name is visible on the page.
-           Expected: The chosen site name shows in the site selector.
+           Expected: The site select reads the site's name.
+        3. Read the duration select.
+           Expected: It is enabled now that a site is chosen.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
         self.step_capture.mark(1, "Navigate to Events page and wait for load")
-
         self.events.select_site(SITE_NAME)
         self.step_capture.mark(2, "Open the site dropdown and select the test site")
-
-        # After selecting, the dropdown should close and site name visible
-        site_label = self.page.get_by_text(SITE_NAME, exact=False).first
-        expect(site_label).to_be_visible(timeout=5000)
-        self.step_capture.mark(3, "Verify the selected site name is visible on the page")
+        expect(self.page.locator(".MuiSelect-select").nth(1)).to_have_text(SITE_NAME, timeout=5000)
+        self.step_capture.mark(3, "Read the duration select")
+        expect(self.page.locator(".MuiSelect-select").nth(2)).not_to_have_attribute("aria-disabled", "true")
 
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_search
     def test_select_camera(self):
-        """Verify camera dropdown opens and lists cameras.
+        """Verify camera dropdown opens and lists the site's cameras.
 
         The camera dropdown uses a #simple-menu MUI Popover with a
         tree: Site > All Cameras > individual camera containers.
@@ -86,19 +88,17 @@ class TestEventsSearch:
         Steps:
         1. Navigate to Events and select the test site.
            Expected: Events page loads with the site applied.
-        2. Open the Locations & Cameras dropdown.
-           Expected: A popover opens with the site tree.
-        3. Expand the site node, then All Cameras.
-           Expected: Individual camera entries are listed with thumbnails.
-        4. Dismiss the camera menu.
+        2. Open the Locations & Cameras dropdown and expand the site, then All Cameras.
+           Expected: The site node declares its camera count and exactly that many camera entries are listed.
+        3. Dismiss the camera menu.
            Expected: The popover closes and the search button is visible again.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
-
         self.events.select_site(SITE_NAME)
-        self.events.select_first_available_camera(SITE_NAME)
-
+        declared, listed = self.events.camera_menu_counts(SITE_NAME)
+        assert declared > 0, f"the site node declares {declared} cameras"
+        assert listed == declared, f"the menu lists {listed} cameras, the site node declares {declared}"
         # After dismissing menu, search button should be visible
         expect(self.events.search_button).to_be_visible(timeout=5000)
 
@@ -114,20 +114,15 @@ class TestEventsSearch:
         1. Navigate to Events and select the test site.
            Expected: Duration dropdown becomes enabled after site selection.
         2. Open the duration dropdown and select Last 7 Days.
-           Expected: The option list closes after selection.
-        3. Verify the selected duration is shown.
-           Expected: The duration selector displays Last 7 Days.
+           Expected: The duration select reads Last 7 Days instead of Last 1 Hour.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
-
         # Site must be selected first (duration is disabled without it)
         self.events.select_site(SITE_NAME)
+        expect(self.page.locator(".MuiSelect-select").nth(2)).to_have_text("Last 1 Hour")
         self.events.select_duration("Last 7")
-
-        # The selected duration text should be visible
-        duration_label = self.page.get_by_text("Last 7", exact=False).first
-        expect(duration_label).to_be_visible(timeout=5000)
+        expect(self.page.locator(".MuiSelect-select").nth(2)).to_have_text("Last 7 Days", timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.events
@@ -194,19 +189,20 @@ class TestEventsSearch:
         1. Run an events search for the test site over Last 7 Days.
            Expected: Event thumbnails appear in the result grid.
         2. Inspect the first thumbnails' image sources.
-           Expected: Thumbnails are real images (blob or data URIs), not the No Image Available placeholder.
+           Expected: Every one of the first five is a blob or data image, none the No Image Available placeholder.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
-
         self.events.select_site(SITE_NAME)
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
-
-        assert self.events.has_valid_snapshots(), (
-            "First event thumbnail should be a real image, "
-            "not 'No_Image_Available' placeholder"
-        )
+        results = self.events.event_results
+        sources = [results.nth(i).get_attribute("src") or "" for i in range(min(results.count(), 5))]
+        assert sources, "the search returned no event thumbnails"
+        placeholders = [s for s in sources if "No_Image_Available" in s or not s]
+        assert not placeholders, f"placeholder thumbnails among the first results: {placeholders}"
+        real = [s for s in sources if s.startswith(("blob:", "data:image"))]
+        assert real == sources, f"thumbnails that are neither blob nor data images: {[s[:40] for s in sources if s not in real]}"
 
     @pytest.mark.ui
     @pytest.mark.events
@@ -248,18 +244,17 @@ class TestEventsSearch:
         2. Pin the first event.
            Expected: The pinned clips counter updates.
         3. Verify the Review Pinned Clips button.
-           Expected: The button is visible once at least one clip is pinned.
+           Expected: One enabled button reading Review Pinned Clips is shown once a clip is pinned.
         """
         self.events.navigate()
         self.events.wait_for_page_load()
-
         self.events.select_site(SITE_NAME)
         self.events.select_duration("Last 7")
         self.events.search_events(timeout=60000)
-
         self.events.pin_event(0)
-
-        expect(self.events.review_pinned_button).to_be_visible(timeout=10000)
+        expect(self.events.review_pinned_button).to_have_count(1, timeout=10000)
+        expect(self.events.review_pinned_button).to_contain_text("Review Pinned Clips")
+        expect(self.events.review_pinned_button).to_be_enabled()
 
     @pytest.mark.ui
     @pytest.mark.events

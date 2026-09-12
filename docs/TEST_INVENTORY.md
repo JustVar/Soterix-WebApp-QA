@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 257 | 348 |
-| **Total** | | **59** | **437** | **289** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 261 | 348 |
+| **Total** | | **59** | **437** | **293** | **380** |
 
 ## Growth
 
@@ -290,7 +290,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_events_search.py::TestEventsSearch::test_review_pinned_clips_button` | Verify 'Review Pinned Clips' button appears after pinning | yes | lR2lkQ |
 | `test_events_search.py::TestEventsSearch::test_search_events` | Verify search returns event results after selecting filters | yes | dyXXlR |
 | `test_events_search.py::TestEventsSearch::test_search_with_specific_camera` | Verify search filters results by a single camera channel | yes | xmddXg |
-| `test_events_search.py::TestEventsSearch::test_select_camera` | Verify camera dropdown opens and lists cameras | yes | M73wak |
+| `test_events_search.py::TestEventsSearch::test_select_camera` | Verify camera dropdown opens and lists the site's cameras | yes | M73wak |
 | `test_events_search.py::TestEventsSearch::test_select_duration` | Verify duration filter can be changed from default | yes | gQxXwN |
 | `test_events_search.py::TestEventsSearch::test_select_rule` | Verify rule type filter opens and a rule can be selected | yes | Dr99lm |
 | `test_events_search.py::TestEventsSearch::test_select_site` | Verify site dropdown opens and a site can be selected | yes | eJXXgr |
@@ -507,12 +507,12 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_search_drawing.py::TestSearchDrawing::test_zone_search_draw_zone` | Verify a zone can be drawn on the canvas | - | LD3mGJ |
 | `test_search_drawing.py::TestSearchDrawing::test_zone_search_play_result` | Verify playing a Zone search result clip works | - | dyp4pB |
 | `test_search_drawing.py::TestSearchDrawing::test_zone_search_returns_results` | Verify Zone search returns results after drawing and searching | yes | 68DD2V |
-| `test_search_filters.py::TestSearchFilters::test_navigate_to_search` | Verify clicking Search nav link loads the Global Search page | - | 9e1bNZ |
-| `test_search_filters.py::TestSearchFilters::test_search_button_visible` | Verify the search execution button is visible on page load | - | Ee69dB |
+| `test_search_filters.py::TestSearchFilters::test_navigate_to_search` | Verify clicking Search nav link loads the Global Search page | yes | 9e1bNZ |
+| `test_search_filters.py::TestSearchFilters::test_search_button_visible` | Verify the search button is disabled until the filters allow a search | yes | Ee69dB |
 | `test_search_filters.py::TestSearchFilters::test_search_page_filters_visible` | Verify all filter dropdowns are present on the Search page | yes | 7Eee2e |
-| `test_search_filters.py::TestSearchFilters::test_select_category` | Verify the Category dropdown opens and a category is selectable | - | zvnVK9 |
+| `test_search_filters.py::TestSearchFilters::test_select_category` | Verify the Category dropdown opens and a category is selectable | yes | zvnVK9 |
 | `test_search_filters.py::TestSearchFilters::test_select_duration` | Verify the Duration dropdown opens and Today is selectable | yes | 9ebb2Z |
-| `test_search_filters.py::TestSearchFilters::test_select_locations_cameras` | Verify Locations & Cameras dropdown opens and site is selectable | - | jPnp2d |
+| `test_search_filters.py::TestSearchFilters::test_select_locations_cameras` | Verify Locations & Cameras dropdown opens and site is selectable | yes | jPnp2d |
 
 ### sequences (7 tests in 1 file)
 

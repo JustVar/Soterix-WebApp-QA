@@ -8,12 +8,12 @@
         {
           "n": 1,
           "action": "Click the Events link in the sidebar navigation.",
-          "expected": "The Events page starts loading."
+          "expected": "The address ends in /events and the event feed container renders."
         },
         {
           "n": 2,
-          "action": "Verify events container is visible.",
-          "expected": "The event feed container renders without errors."
+          "action": "Read the filter selects.",
+          "expected": "They read All Rules, Select Site and Last 1 Hour, the duration disabled until a site is chosen."
         }
       ],
       "case_key": "8V1vJn"
@@ -29,18 +29,18 @@
         {
           "n": 2,
           "action": "Open the site dropdown and select the test site.",
-          "expected": "The dropdown lists sites; selecting one closes the list."
+          "expected": "The site select reads the site's name."
         },
         {
           "n": 3,
-          "action": "Verify the selected site name is visible on the page.",
-          "expected": "The chosen site name shows in the site selector."
+          "action": "Read the duration select.",
+          "expected": "It is enabled now that a site is chosen."
         }
       ],
       "case_key": "eJXXgr"
     },
     "test_select_camera": {
-      "title": "Verify camera dropdown opens and lists cameras",
+      "title": "Verify camera dropdown opens and lists the site's cameras",
       "steps": [
         {
           "n": 1,
@@ -49,16 +49,11 @@
         },
         {
           "n": 2,
-          "action": "Open the Locations & Cameras dropdown.",
-          "expected": "A popover opens with the site tree."
+          "action": "Open the Locations & Cameras dropdown and expand the site, then All Cameras.",
+          "expected": "The site node declares its camera count and exactly that many camera entries are listed."
         },
         {
           "n": 3,
-          "action": "Expand the site node, then All Cameras.",
-          "expected": "Individual camera entries are listed with thumbnails."
-        },
-        {
-          "n": 4,
           "action": "Dismiss the camera menu.",
           "expected": "The popover closes and the search button is visible again."
         }
@@ -76,12 +71,7 @@
         {
           "n": 2,
           "action": "Open the duration dropdown and select Last 7 Days.",
-          "expected": "The option list closes after selection."
-        },
-        {
-          "n": 3,
-          "action": "Verify the selected duration is shown.",
-          "expected": "The duration selector displays Last 7 Days."
+          "expected": "The duration select reads Last 7 Days instead of Last 1 Hour."
         }
       ],
       "case_key": "gQxXwN"
@@ -139,7 +129,7 @@
         {
           "n": 2,
           "action": "Inspect the first thumbnails' image sources.",
-          "expected": "Thumbnails are real images (blob or data URIs), not the No Image Available placeholder."
+          "expected": "Every one of the first five is a blob or data image, none the No Image Available placeholder."
         }
       ],
       "case_key": "RgQQRR"
@@ -181,7 +171,7 @@
         {
           "n": 3,
           "action": "Verify the Review Pinned Clips button.",
-          "expected": "The button is visible once at least one clip is pinned."
+          "expected": "One enabled button reading Review Pinned Clips is shown once a clip is pinned."
         }
       ],
       "case_key": "lR2lkQ"

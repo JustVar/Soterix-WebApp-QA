@@ -225,6 +225,36 @@ class EventsPage:
         # Dismiss the menu
         self._dismiss_camera_menu()
 
+    def camera_menu_counts(self, site_name: str) -> tuple[int, int]:
+        """Open the Locations & Cameras menu, expand the site to its
+        cameras and return (the count the site node declares, the camera
+        containers listed), then dismiss the menu. The site node reads
+        '<site> <count>' (measured 09/12/2026: 'Spartan0 22')."""
+        self.camera_dropdown.click()
+        menu = self.page.locator("#simple-menu")
+        menu.wait_for(state="visible", timeout=10000)
+        # exact name inside the row; .first: the menu lists each site
+        # once, and the row is what carries the count
+        site_node = menu.locator(".MuiListItemButton-root").filter(
+            has=self.page.get_by_text(site_name, exact=True)).first
+        digits = [t for t in site_node.inner_text().split() if t.isdigit()]
+        declared = int(digits[-1]) if digits else -1
+        site_node.click()
+        # .first: one All Cameras group node per expanded site
+        all_cameras = menu.get_by_text("All Cameras").first
+        if self._appears(all_cameras, timeout=5000):
+            all_cameras.click()
+        containers = menu.locator(".global-search-camera-container")
+        containers.first.wait_for(state="visible", timeout=10000)
+        listed = containers.count()
+        self._dismiss_camera_menu()
+        return declared, listed
+
+    def selector_texts(self) -> list[str]:
+        """What the page's MUI selects read, left to right (All Rules,
+        the site, the duration)."""
+        return [" ".join(t.split()) for t in self.page.locator(".MuiSelect-select").all_inner_texts()]
+
     def select_first_available_camera(self, site_name: str):
         """Open camera menu and navigate to the first available camera.
 

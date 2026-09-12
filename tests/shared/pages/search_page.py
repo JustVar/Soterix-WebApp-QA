@@ -65,6 +65,28 @@ class SearchPage:
 
     # --- Navigation ---
 
+    # Measured 09/12/2026 on US (register row 53): the four filter boxes
+    # read '<label>\n<value>' with 'Select' before a choice; the search
+    # button is an img whose file is search-disable*.svg until the
+    # filters allow a search and /icons/search_icon.svg after.
+    FILTER_LABELS = ("Category", "Description", "Locations & Cameras", "Duration")
+    SEARCH_DISABLED_ICON = "search-disable"
+    SEARCH_ENABLED_ICON = "search_icon"
+
+    def filter_values(self) -> dict:
+        """The filter boxes as {label: value}; a box with no choice reads 'Select'."""
+        out = {}
+        for text in self.filter_dropdowns.all_inner_texts():
+            lines = [x.strip() for x in text.split("\n") if x.strip()]
+            if lines:
+                out[lines[0]] = " ".join(lines[1:])
+        return out
+
+    def search_icon_name(self) -> str:
+        """The search button's icon file, minus its path and hash."""
+        src = self.search_button.get_attribute("src") or ""
+        return src.rsplit("/", 1)[-1].split(".")[0]
+
     def navigate(self):
         """Navigate to the Global Search page via the nav link."""
         self.search_nav_link.click()

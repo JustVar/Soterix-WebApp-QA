@@ -3,42 +3,12 @@
   "class": "TestSearchFilters",
   "tests": {
     "test_navigate_to_search": {
-      "title": "Verify clicking Search nav link loads the Global Search page.",
+      "title": "Verify clicking Search nav link loads the Global Search page",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search - LPR",
-          "expected": "Search - LPR page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate Search button on the page",
-          "expected": "Search button is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of Search button",
-          "expected": "Search button enabled"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: after applying mandatory filters",
-          "expected": "Precondition is met (after applying mandatory filters)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to Search button"
+          "action": "Click Search in the left sidebar.",
+          "expected": "The address ends in /search and the Category, Description, Locations & Cameras and Duration filters each read Select."
         }
       ],
       "case_key": "9e1bNZ"
@@ -55,42 +25,12 @@
       "case_key": "7Eee2e"
     },
     "test_select_category": {
-      "title": "Verify the Category dropdown opens and a category is selectable.",
+      "title": "Verify the Category dropdown opens and a category is selectable",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search Landing Page",
-          "expected": "Search Landing Page page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Category filter should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Category filter on the page",
-          "expected": "Category filter is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: with Select placeholder",
-          "expected": "Precondition is met (with Select placeholder)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Category filter displayed",
-          "expected": "Category filter displayed"
+          "action": "Open Search and pick Person in the Category dropdown.",
+          "expected": "The Category box reads Person and the Description box switches to Appearance with 0 choices."
         }
       ],
       "case_key": "zvnVK9"
@@ -101,89 +41,34 @@
         {
           "n": 1,
           "action": "Open Search and pick Today from the Duration dropdown.",
-          "expected": "The dropdown closes with Today selected and the Search button is shown."
+          "expected": "The Duration box reads today's range, from 12:00:00 AM on today's date to the present minute."
         }
       ],
       "case_key": "9ebb2Z"
     },
     "test_select_locations_cameras": {
-      "title": "Verify Locations & Cameras dropdown opens and site is selectable.",
+      "title": "Verify Locations & Cameras dropdown opens and site is selectable",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search Landing Page",
-          "expected": "Search Landing Page page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Locations & Cameras filter should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Locations & Cameras filter on the page",
-          "expected": "Locations & Cameras filter is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: with Select placeholder",
-          "expected": "Precondition is met (with Select placeholder)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Locations & Cameras filter displayed",
-          "expected": "Locations & Cameras filter displayed"
+          "action": "Open Search and pick the configured site under Locations & Cameras.",
+          "expected": "The Locations & Cameras box names the first camera and how many more are selected."
         }
       ],
       "case_key": "jPnp2d"
     },
     "test_search_button_visible": {
-      "title": "Verify the search execution button is visible on page load.",
+      "title": "Verify the search button is disabled until the filters allow a search",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Search.",
+          "expected": "The search button shows its disabled icon."
         },
         {
           "n": 2,
-          "action": "Navigate to Search - LPR",
-          "expected": "Search - LPR page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate Search button on the page",
-          "expected": "Search button is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of Search button",
-          "expected": "Search button enabled"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: after applying mandatory filters",
-          "expected": "Precondition is met (after applying mandatory filters)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to Search button"
+          "action": "Pick Person, Today and the configured site.",
+          "expected": "The search button shows its enabled icon."
         }
       ],
       "case_key": "Ee69dB"
