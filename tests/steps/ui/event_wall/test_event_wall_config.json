@@ -3,135 +3,50 @@
   "class": "TestAdminEventWall",
   "tests": {
     "test_event_wall_page_loads": {
-      "title": "Verify Event Wall page loads with visible content.",
+      "title": "The Event Wall page shows its breadcrumb and Add button",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Event Wall page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: without broken UI",
-          "expected": "Precondition is met (without broken UI)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Open Admin > General and click View on the Event Wall card.",
+          "expected": "The breadcrumb reads General > Event Wall and an enabled Add Configuration button is shown."
         }
       ],
       "case_key": "VKbeN9"
     },
     "test_event_wall_has_configuration_area": {
-      "title": "Verify Event Wall has a configuration or settings area.",
+      "title": "The configuration table renders its column headers",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Event Wall page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Open Admin > General and click View on the Event Wall card.",
+          "expected": "The table's columns are Configuration Name, Site, No of Devices and Devices, followed by an unlabelled actions column."
         }
       ],
       "case_key": "RgGBWd"
     },
     "test_event_wall_grid_layout": {
-      "title": "Verify Event Wall uses a grid or card-based layout for events.",
+      "title": "The table shows configurations or the measured empty state",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search Results",
-          "expected": "Search Results page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where event cards should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate event cards on the page",
-          "expected": "event cards is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify event cards displayed in grid layout",
-          "expected": "event cards displayed in grid layout"
+          "action": "Open Admin > General and click View on the Event Wall card.",
+          "expected": "The table lists configurations, each with a name, a site and a device count, or one row reading \"No configuration found.\"."
         }
       ],
       "case_key": "xm9dgR"
     },
     "test_event_wall_site_selector": {
-      "title": "The Add form lists sites under Available Cameras",
+      "title": "The Add form lists the configured site under Available Cameras",
       "steps": [
         {
           "n": 1,
           "action": "Open Admin > General, click View on the Event Wall card, then click Add Configuration.",
-          "expected": "The Add form opens with an Available Cameras panel that lists the configured site."
+          "expected": "The Add Event Wall Configuration form opens with an empty Configuration Name field (placeholder Enter Configuration Name) and an Available Cameras panel listing the configured site with its device count."
+        },
+        {
+          "n": 2,
+          "action": "Expand the site.",
+          "expected": "Its All Cameras group declares the same device count as the site row."
         }
       ],
       "case_key": "QGQQEB"
@@ -183,42 +98,17 @@
       "case_key": "0rzlLl"
     },
     "test_event_wall_has_rule_types": {
-      "title": "Verify Event Wall shows rule type filters or labels.",
+      "title": "The Add form's Select Rule dropdown unlocks once a camera is ticked",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > General, click View on the Event Wall card, then click Add Configuration.",
+          "expected": "The form shows a Select Rule dropdown, disabled while no camera is selected."
         },
         {
           "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Event Wall page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for Intrusion Detection rule",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Intrusion detection rule selectable successfully",
-          "expected": "Intrusion detection rule selectable successfully"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Expand the site to its cameras and tick one.",
+          "expected": "The Select Rule dropdown is enabled."
         }
       ],
       "case_key": "RgGBNa"
@@ -256,57 +146,12 @@
       "case_key": "M7wwyq"
     },
     "test_event_wall_save_or_apply": {
-      "title": "Verify Event Wall has a save or apply button for configuration.",
+      "title": "The Add form carries Cancel and Save",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Event Wall page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Note the current state of Event Wall configuration before making changes",
-          "expected": "Initial state is observed and recorded"
-        },
-        {
-          "n": 4,
-          "action": "Perform the action that changes Event Wall configuration",
-          "expected": "Action is completed and change is reflected in the UI"
-        },
-        {
-          "n": 5,
-          "action": "Verify the change is displayed correctly before leaving the page",
-          "expected": "Updated state is visible on the current page"
-        },
-        {
-          "n": 6,
-          "action": "Refresh the page (F5 or browser reload)",
-          "expected": "Page reloads completely"
-        },
-        {
-          "n": 7,
-          "action": "Verify Event Wall configuration retained the changes after refresh",
-          "expected": "The change persisted through the page refresh"
-        },
-        {
-          "n": 8,
-          "action": "Navigate away to a different page",
-          "expected": "Different page loads successfully"
-        },
-        {
-          "n": 9,
-          "action": "Navigate back to Event Wall page",
-          "expected": "Event Wall page loads"
-        },
-        {
-          "n": 10,
-          "action": "Verify Event Wall configuration still reflects the saved changes",
-          "expected": "Changes persist after navigating away and back"
+          "action": "Open Admin > General, click View on the Event Wall card, then click Add Configuration.",
+          "expected": "The form's buttons are Cancel and Save, both enabled."
         }
       ],
       "case_key": "VKbeN2"
@@ -420,42 +265,12 @@
       "case_key": "J8dzJp"
     },
     "test_event_wall_scrollable": {
-      "title": "Verify Event Wall content area is scrollable when content overflows.",
+      "title": "The page survives scrolling (synchronous, no settle)",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Event Wall page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Event Wall card should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Event Wall card on the page",
-          "expected": "Event Wall card is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on the General page",
-          "expected": "Precondition is met (on the General page)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Event Wall card displayed correctly",
-          "expected": "Event Wall card displayed correctly"
+          "action": "On the Event Wall configuration page, scroll down and back up.",
+          "expected": "The page is back at the top and the breadcrumb still reads General > Event Wall."
         }
       ],
       "case_key": "J8dz4p"

@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 246 | 348 |
-| **Total** | | **59** | **437** | **278** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 257 | 348 |
+| **Total** | | **59** | **437** | **289** | **380** |
 
 ## Growth
 
@@ -233,14 +233,14 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_chats.py::TestChats::test_open_chat_panel` | The panel opens from the header icon; the visible panel | - | mBdpnd |
 | `test_chats.py::TestChats::test_search_and_send_group_message` | Open a group from the list and send a message into it | yes | RgGQ4l |
 | `test_chats.py::TestChats::test_send_individual_message` | Search a user, open the conversation, send a message | - | 0rzlkn |
-| `test_chats_deeper.py::TestChatsDeeper::test_chat_icon_visible_on_events_page` | The chat panel opens from the Events page too | - | 5BRMbz |
+| `test_chats_deeper.py::TestChatsDeeper::test_chat_icon_visible_on_events_page` | The chat panel opens from the Events page too | yes | 5BRMbz |
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_panel_closes_on_second_click` | The header icon is a toggle: a second click closes the | - | RgGQ3W |
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_panel_has_content` | An open panel shows the search input plus either the | yes | 5BMMK9 |
-| `test_chats_deeper.py::TestChatsDeeper::test_chat_panel_reopens_after_close` | The panel reopens after closing via the header X | - | K4nzlV |
+| `test_chats_deeper.py::TestChatsDeeper::test_chat_panel_reopens_after_close` | The panel reopens after closing via the header X | yes | K4nzlV |
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_panel_survives_page_refresh` | The panel opens after a page refresh | yes | 21WWlQ |
-| `test_chats_deeper.py::TestChatsDeeper::test_chat_search_input_visible` | The panel search input is visible once the panel opens | - | GdWznj |
-| `test_chats_deeper.py::TestChatsDeeper::test_click_search_result_opens_chat` | Clicking a search result reaches the conversation: a | - | LD3mr1 |
-| `test_chats_deeper.py::TestChatsDeeper::test_create_group_button_present` | The Create Group button is in the open panel on a box that has it | - | Ee61zV |
+| `test_chats_deeper.py::TestChatsDeeper::test_chat_search_input_visible` | The panel search input is ready once the panel opens | yes | GdWznj |
+| `test_chats_deeper.py::TestChatsDeeper::test_click_search_result_opens_chat` | Clicking a search result reaches the conversation: a | yes | LD3mr1 |
+| `test_chats_deeper.py::TestChatsDeeper::test_create_group_button_present` | The Create Group button is in the open panel on a box that has it | yes | Ee61zV |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_clear_resets_results` | Clearing the search removes the results and empties the | - | VKbQJQ |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_returns_results` | Searching the configured user returns a visible result | - | jPnm3Z |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_with_no_match` | A nonsense term empties the results | - | pDpmEm |
@@ -252,14 +252,14 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_event_wall_config.py::TestEventWallConfig::test_back_to_general_from_event_wall` | The breadcrumb returns to the General cards page | yes | ajyyd4 |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_after_refresh` | The admin section stays valid after a browser refresh | - | J8dzJp |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_camera_checkboxes` | Every camera row of an expanded group carries a checkbox | yes | 5BRDm7 |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_grid_layout` | The table shows data rows or the measured empty state | - | xm9dgR |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_configuration_area` | The configuration table renders its column headers | - | RgGBWd |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_rule_types` | The Add form carries the Select Rule dropdown | - | RgGBNa |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_page_loads` | The Event Wall page shows its breadcrumb and Add button | - | VKbeN9 |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_save_or_apply` | The Add form carries Save and Cancel | - | VKbeN2 |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_scrollable` | The page survives scrolling (synchronous, no settle) | - | J8dz4p |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_grid_layout` | The table shows configurations or the measured empty state | yes | xm9dgR |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_configuration_area` | The configuration table renders its column headers | yes | RgGBWd |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_rule_types` | The Add form's Select Rule dropdown unlocks once a camera is ticked | yes | RgGBNa |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_page_loads` | The Event Wall page shows its breadcrumb and Add button | yes | VKbeN9 |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_save_or_apply` | The Add form carries Cancel and Save | yes | VKbeN2 |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_scrollable` | The page survives scrolling (synchronous, no settle) | yes | J8dz4p |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_site_dropdown_opens` | A site accordion row expands to its camera groups | - | 0rzlLl |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_site_selector` | The Add form lists sites under Available Cameras | yes | QGQQEB |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_site_selector` | The Add form lists the configured site under Available Cameras | yes | QGQQEB |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_to_audit_trail_round_trip` | Event Wall -> General cards -> Event Wall round trip | - | 68leZv |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_toggle_checkbox` | A camera selection control can be toggled | yes | M7wwyq |
 | `test_event_wall_display.py::TestEventWallDisplay::test_event_wall_event_images` | The live wall displays event images for the selected site | yes | WEQQ4M |

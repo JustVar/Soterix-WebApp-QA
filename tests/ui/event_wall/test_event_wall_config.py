@@ -19,12 +19,15 @@ images, and grids that do not exist on this page.
 """
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
-from tests.shared.pages.admin_page import AdminPage
 
 from config.base_config import config
+from tests.shared.pages.admin_page import AdminPage
 
 SITE_NAME = config.get("test_site_name")
 CAMERA_NAME = config.get("test_camera_name")
+# measured 09/12/2026 on US (register row 53): the table's columns and its empty row
+EVENT_WALL_HEADERS = ["Configuration Name", "Site", "No of Devices", "Devices", ""]
+EVENT_WALL_EMPTY = "No configuration found."
 
 
 class TestEventWallConfig:
@@ -125,31 +128,51 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_page_loads(self):
-        """The Event Wall page shows its breadcrumb and Add button."""
-        expect(self.page.get_by_text(
-            "General > Event Wall", exact=False
-        ).first).to_be_visible(timeout=10000)
-        expect(self.add_config).to_be_visible()
+        """The Event Wall page shows its breadcrumb and Add button.
+
+        Steps:
+        1. Open Admin > General and click View on the Event Wall card.
+           Expected: The breadcrumb reads General > Event Wall and an enabled Add Configuration button is shown.
+        """
+        crumb = self.page.get_by_text("General > Event Wall", exact=True)
+        expect(crumb).to_have_text("General > Event Wall", timeout=10000)
+        expect(self.add_config).to_be_enabled()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_has_configuration_area(self):
-        """The configuration table renders its column headers."""
-        for header in ("Configuration Name", "Site", "Devices"):
-            expect(self.page.get_by_text(header, exact=True).first
-                   ).to_be_visible(timeout=10000)
+        """The configuration table renders its column headers.
+
+        Steps:
+        1. Open Admin > General and click View on the Event Wall card.
+           Expected: The table's columns are Configuration Name, Site, No of Devices and Devices, followed by an unlabelled actions column.
+        """
+        expect(self.page.locator("thead").first).to_be_visible(timeout=10000)
+        headers = [h.strip() for h in self.page.locator("thead th, thead td").all_inner_texts()]
+        assert headers == EVENT_WALL_HEADERS, (
+            f"the configuration table's columns read {headers}, expected {EVENT_WALL_HEADERS}")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_grid_layout(self):
-        """The table shows data rows or the measured empty state."""
-        empty = self.page.get_by_text("No configuration found.",
-                                      exact=True)
+        """The table shows configurations or the measured empty state.
+
+        Steps:
+        1. Open Admin > General and click View on the Event Wall card.
+           Expected: The table lists configurations, each with a name, a site and a device count, or one row reading "No configuration found.".
+        """
         rows = self.page.locator("table tbody tr")
-        either = empty.or_(rows.first)
-        expect(either.first).to_be_visible(timeout=10000)
+        expect(rows.first).to_be_visible(timeout=10000)
+        # the empty row carries its sentence outside a td (measured)
+        if rows.first.inner_text().strip() == EVENT_WALL_EMPTY:
+            expect(rows).to_have_count(1)
+        else:
+            for row in rows.all():
+                cells = [c.strip() for c in row.locator("td").all_inner_texts()]
+                assert len(cells) >= 4 and cells[0] and cells[1] and cells[2].isdigit(), (
+                    f"a configuration row reads {cells}; expected a name, a site and a device count")
 
     # --- The Add Configuration form ---
 
@@ -157,17 +180,33 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_site_selector(self):
-        """The Add form lists sites under Available Cameras.
+        """The Add form lists the configured site under Available Cameras.
 
         Steps:
         1. Open Admin > General, click View on the Event Wall card, then click Add Configuration.
-           Expected: The Add form opens with an Available Cameras panel that lists the configured site.
+           Expected: The Add Event Wall Configuration form opens with an empty Configuration Name field (placeholder Enter Configuration Name) and an Available Cameras panel listing the configured site with its device count.
+        2. Expand the site.
+           Expected: Its All Cameras group declares the same device count as the site row.
         """
-        self._open_add_form()
-        expect(self.page.get_by_text("Available Cameras", exact=True)
-               ).to_be_visible(timeout=10000)
-        expect(self.page.get_by_text(SITE_NAME, exact=False).first
-               ).to_be_visible(timeout=10000)
+        name_input = self._open_add_form()
+        modal = self._modal()
+        expect(modal.get_by_text("Add Event Wall Configuration", exact=True)).to_be_visible(timeout=10000)
+        expect(name_input).to_have_value("")
+        expect(name_input).to_have_attribute("placeholder", "Enter Configuration Name")
+        expect(self.page.get_by_text("Available Cameras", exact=True)).to_be_visible(timeout=10000)
+        # exact=False: the row reads the name with its device count;
+        # .first: the panel lists each site once before it is expanded
+        site_row = self.page.get_by_text(SITE_NAME, exact=False).first
+        expect(site_row).to_be_visible(timeout=10000)
+        # the row reads '<site> <device count>' (measured: 'Spartan0 22')
+        site_text = " ".join(site_row.locator("xpath=..").inner_text().split())
+        site_count = site_text.rsplit(" ", 1)[-1]
+        assert site_text.startswith(SITE_NAME) and site_count.isdigit(), (
+            f"the site row reads {site_text!r}; expected the site name and its device count")
+        group_row = self._expand_site_to_groups()
+        group_text = " ".join(group_row.locator("xpath=..").inner_text().split())
+        assert group_text == f"All Cameras {site_count}", (
+            f"the All Cameras group reads {group_text!r}, the site row declares {site_count} devices")
         self._close_add_form()
 
     @pytest.mark.ui
@@ -185,11 +224,25 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_has_rule_types(self):
-        """The Add form carries the Select Rule dropdown."""
+        """The Add form's Select Rule dropdown unlocks once a camera is ticked.
+
+        Steps:
+        1. Open Admin > General, click View on the Event Wall card, then click Add Configuration.
+           Expected: The form shows a Select Rule dropdown, disabled while no camera is selected.
+        2. Expand the site to its cameras and tick one.
+           Expected: The Select Rule dropdown is enabled.
+        """
         self._open_add_form()
-        expect(self.page.locator(
-            "div[role='combobox'], .MuiSelect-select"
-        ).first).to_be_visible(timeout=10000)
+        combo = self._modal().locator("div[role='combobox']").first
+        expect(combo).to_have_text("Select Rule", timeout=10000)
+        expect(combo).to_have_attribute("aria-disabled", "true")
+        group_row = self._expand_site_to_groups()
+        self._expand_group_to_cameras(group_row)
+        box = self._modal().locator("input[type='checkbox']").first
+        if not box.is_checked():
+            box.click()
+        expect(box).to_be_checked(timeout=5000)
+        expect(combo).not_to_have_attribute("aria-disabled", "true", timeout=5000)
         self._close_add_form()
 
     @pytest.mark.ui
@@ -245,12 +298,19 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_save_or_apply(self):
-        """The Add form carries Save and Cancel."""
+        """The Add form carries Cancel and Save.
+
+        Steps:
+        1. Open Admin > General, click View on the Event Wall card, then click Add Configuration.
+           Expected: The form's buttons are Cancel and Save, both enabled.
+        """
         self._open_add_form()
-        expect(self.page.get_by_text("Save", exact=True).first
-               ).to_be_visible(timeout=10000)
-        expect(self.page.get_by_text("Cancel", exact=True).first
-               ).to_be_visible()
+        buttons = self._modal().locator("button")
+        expect(buttons).to_have_count(2, timeout=10000)
+        labels = [b.strip() for b in buttons.all_inner_texts()]
+        assert labels == ["Cancel", "Save"], f"the form's buttons read {labels}"
+        expect(buttons.nth(0)).to_be_enabled()
+        expect(buttons.nth(1)).to_be_enabled()
         self._close_add_form()
 
     # --- Navigation ---
@@ -319,7 +379,13 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_scrollable(self):
-        """The page survives scrolling (synchronous, no settle)."""
+        """The page survives scrolling (synchronous, no settle).
+
+        Steps:
+        1. On the Event Wall configuration page, scroll down and back up.
+           Expected: The page is back at the top and the breadcrumb still reads General > Event Wall.
+        """
         self.page.evaluate("window.scrollBy(0, 300)")
         self.page.evaluate("window.scrollTo(0, 0)")
-        expect(self.add_config).to_be_visible()
+        assert self.page.evaluate("window.scrollY") == 0
+        expect(self.page.get_by_text("General > Event Wall", exact=True)).to_have_text("General > Event Wall")

@@ -64,149 +64,34 @@
       "case_key": "RgGQ3W"
     },
     "test_chat_panel_reopens_after_close": {
-      "title": "Verify the chat panel can be reopened after closing.",
+      "title": "The panel reopens after closing via the header X",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Chat > Chat Access",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Chat Access panel loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: after close",
-          "expected": "Precondition is met (after close)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Open the chat panel, close it with the header X, then open it again.",
+          "expected": "The panel is back with its empty Search field."
         }
       ],
       "case_key": "K4nzlV"
     },
     "test_create_group_button_present": {
-      "title": "Verify the Create Group button is present in the chat panel.",
+      "title": "The Create Group button is in the open panel on a box that has it",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Chat > Group UI",
-          "expected": "Chat Group UI loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the page displays any existing items",
-          "expected": "Page content loads (list, table, or empty state)"
-        },
-        {
-          "n": 4,
-          "action": "Click the create/add button for Create Group button visibility",
-          "expected": "Creation form or dialog opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify all required form fields are present and empty/default",
-          "expected": "Form fields are displayed with correct labels and placeholders"
-        },
-        {
-          "n": 6,
-          "action": "Fill in all required fields with valid test data",
-          "expected": "All fields accept the input without errors"
-        },
-        {
-          "n": 7,
-          "action": "Fill in any optional fields if applicable",
-          "expected": "Optional fields accept input"
-        },
-        {
-          "n": 8,
-          "action": "Review the filled form for correctness",
-          "expected": "All entered data is displayed correctly in the form"
-        },
-        {
-          "n": 9,
-          "action": "Click the Save/Submit/Create button",
-          "expected": "Form is submitted and a success message or indicator appears"
-        },
-        {
-          "n": 10,
-          "action": "Verify the newly created Create Group button visibility appears in the list or view",
-          "expected": "The new Create Group button visibility is visible with the correct data"
-        },
-        {
-          "n": 11,
-          "action": "Verify no duplicate entries were created",
-          "expected": "Only one instance of the new Create Group button visibility exists"
+          "action": "Open the chat panel.",
+          "expected": "On a box with group chat, one enabled Create Group button is shown."
         }
       ],
       "case_key": "Ee61zV"
     },
     "test_chat_search_input_visible": {
-      "title": "Verify the chat search input is visible in the panel.",
+      "title": "The panel search input is ready once the panel opens",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search - Insights",
-          "expected": "Search - Insights page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Search input field should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Search input field on the page",
-          "expected": "Search input field is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on Insights page",
-          "expected": "Precondition is met (on Insights page)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Search input field visible and enabled",
-          "expected": "Search input field visible and enabled"
+          "action": "Open the chat panel.",
+          "expected": "The Search field is shown, empty, and takes typing."
         }
       ],
       "case_key": "GdWznj"
@@ -370,89 +255,34 @@
         {
           "n": 1,
           "action": "Click the chat icon in the header.",
-          "expected": "The panel opens with its search field and shows either the 'use the search bar' instruction or the recent conversations list."
+          "expected": "The panel opens with its search field and shows either the 'use the search bar' instruction or the recent conversations list, each row naming a conversation."
         }
       ],
       "case_key": "5BMMK9"
     },
     "test_click_search_result_opens_chat": {
-      "title": "Verify clicking a search result opens the chat conversation.",
+      "title": "Clicking a search result reaches the conversation: a",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open the chat panel, search the configured user and click the result.",
+          "expected": "The conversation opens with its message field (placeholder Enter Message Here)."
         },
         {
           "n": 2,
-          "action": "Navigate to Chat > One-to-One Chat",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "One-to-One Chat panel loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Click back.",
+          "expected": "The recent conversations list holds a row with the user's name."
         }
       ],
       "case_key": "LD3mr1"
     },
     "test_chat_icon_visible_on_events_page": {
-      "title": "Verify the chat icon is accessible from the Events page.",
+      "title": "The chat panel opens from the Events page too",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Events > Landing Page - Events",
-          "expected": "Landing Page - Events page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate Events icon on the page",
-          "expected": "Events icon is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of Events icon",
-          "expected": "Events icon highlighted"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: when Events page is active",
-          "expected": "Precondition is met (when Events page is active)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to Events icon"
+          "action": "Open Events, then click the chat icon in the header.",
+          "expected": "The address ends in /events and the panel opens with its empty Search field."
         }
       ],
       "case_key": "5BRMbz"
@@ -463,7 +293,7 @@
         {
           "n": 1,
           "action": "Refresh the browser, then click the chat icon in the header.",
-          "expected": "The panel opens with its search field."
+          "expected": "The address is unchanged by the refresh and the panel opens with its empty Search field."
         }
       ],
       "case_key": "21WWlQ"
