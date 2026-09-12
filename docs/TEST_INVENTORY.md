@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 261 | 348 |
-| **Total** | | **59** | **437** | **293** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 269 | 348 |
+| **Total** | | **59** | **437** | **301** | **380** |
 
 ## Growth
 
@@ -558,16 +558,16 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_controls_visible` | Verify player controls are visible in full screen | - | LD3XyZ |
 | `test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_pause_play` | Verify timeline controls are present in full screen | - | kpZQr0 |
 | `test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_video_streaming` | Verify video is actively streaming (no loader, no error state) | - | wmjRNb |
-| `test_views_playback.py::TestViewsPlayback::test_bookmarks_toggle_opens_panel` | Verify the bookmarks dots icon opens/closes the panel | - | yaWrV9 |
-| `test_views_playback.py::TestViewsPlayback::test_control_container_visible` | Verify the main control container is rendered in fullscreen | - | pDpdjG |
-| `test_views_playback.py::TestViewsPlayback::test_exit_and_reenter_fullscreen` | Verify exiting fullscreen and re-entering works | - | wmjg7G |
+| `test_views_playback.py::TestViewsPlayback::test_bookmarks_toggle_opens_panel` | Verify the bookmarks dots icon opens/closes the panel | yes | yaWrV9 |
+| `test_views_playback.py::TestViewsPlayback::test_control_container_visible` | Verify the main control bar carries its measured icon set | yes | pDpdjG |
+| `test_views_playback.py::TestViewsPlayback::test_exit_and_reenter_fullscreen` | Verify exiting fullscreen and re-entering works | yes | wmjg7G |
 | `test_views_playback.py::TestViewsPlayback::test_fullscreen_second_tile` | Verify fullscreen works on a second camera tile | - | 0rzxZb |
-| `test_views_playback.py::TestViewsPlayback::test_live_indicator_in_fullscreen` | Verify the live indicator is shown for a live camera stream | - | 41VXLb |
-| `test_views_playback.py::TestViewsPlayback::test_overlays_icon_visible_in_fullscreen` | Verify the overlays icon is visible in fullscreen player | - | jPn2ad |
-| `test_views_playback.py::TestViewsPlayback::test_settings_icon_visible_in_fullscreen` | Verify the settings icon is visible in fullscreen player | - | K4nmwJ |
-| `test_views_playback.py::TestViewsPlayback::test_share_icon_visible_in_fullscreen` | Verify the share icon is visible in fullscreen player | - | Nj3r6e |
+| `test_views_playback.py::TestViewsPlayback::test_live_indicator_in_fullscreen` | Verify the live indicator and clock for a live camera stream | yes | 41VXLb |
+| `test_views_playback.py::TestViewsPlayback::test_overlays_icon_visible_in_fullscreen` | Verify the overlays icon is in the fullscreen control bar | yes | jPn2ad |
+| `test_views_playback.py::TestViewsPlayback::test_settings_icon_visible_in_fullscreen` | Verify the settings icon is in the fullscreen control bar | yes | K4nmwJ |
+| `test_views_playback.py::TestViewsPlayback::test_share_icon_visible_in_fullscreen` | Verify the share icon is in the fullscreen control bar | yes | Nj3r6e |
 | `test_views_playback.py::TestViewsPlayback::test_timeline_elements_present` | Verify timeline-related elements exist in fullscreen | yes | zvVV19 |
-| `test_views_playback.py::TestViewsPlayback::test_volume_control_clickable` | Verify clicking volume control doesn't crash (mute toggle) | - | LD3g6e |
+| `test_views_playback.py::TestViewsPlayback::test_volume_control_clickable` | Verify the volume control toggles mute and back | yes | LD3g6e |
 | `test_views_share.py::test_share_live_view` | Verify sharing a live view via email and copying the share link | - | K4ndbd |
 | `test_views_subtabs.py::TestViewsSubtabs::test_channels_add_channel_via_checkbox` | CHANNELS: Add channel to tile using checkbox | - | M73w4q |
 | `test_views_subtabs.py::TestViewsSubtabs::test_channels_drag_channel_to_tile` | CHANNELS: Drag channel thumbnail to tile | - | zvnVlw |

@@ -5,6 +5,8 @@ integration. Playback flow: the Locations & Cameras panel starts
 closed and lists site > camera groups > cameras; cameras drag onto
 'Drag & Drop Camera here' tiles.
 """
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -13,6 +15,8 @@ from tests.shared.pages.lpr_page import LprPage
 
 SITE_NAME = config.get("test_site_name")
 CAMERA_NAME = config.get("test_camera_name")
+# measured 09/12/2026 on US (register row 53)
+VIEWS_SUBTABS = ["Devices", "My Views", "Insights", "Maps", "Channels"]
 
 
 class TestLprCameraPlayback:
@@ -61,18 +65,19 @@ class TestLprCameraPlayback:
         1. Click LPR in the left sidebar.
            Expected: The LPR camera page opens.
         2. Click the Locations & Cameras header.
-           Expected: The panel opens and lists the configured test site.
+           Expected: The panel lists the configured test site with its camera count.
         """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
-
         self.step_capture.mark(2, "Open the Locations & Cameras dropdown")
         self.lpr.ensure_lpr_dropdown_open()
-
-        self.step_capture.mark(3, "Verify the configured site is listed")
-        expect(
-            self.page.get_by_text(SITE_NAME, exact=False).first
-        ).to_be_visible(timeout=30000)
+        self.step_capture.mark(3, "Verify the configured site is listed with its camera count")
+        # .first: the panel lists each site once, with its count beside it
+        site_row = self.page.get_by_text(SITE_NAME, exact=False).first
+        expect(site_row).to_be_visible(timeout=30000)
+        row_text = " ".join(site_row.locator("xpath=..").inner_text().split())
+        assert re.fullmatch(rf"{re.escape(SITE_NAME)} \d+", row_text) is not None, (
+            f"the site row reads {row_text!r}; expected the site name and its camera count")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -84,17 +89,19 @@ class TestLprCameraPlayback:
         1. Click LPR in the left sidebar.
            Expected: The LPR camera page opens.
         2. Click the Locations & Cameras header and wait for the list to load.
-           Expected: The configured test site appears in the panel.
+           Expected: The configured test site appears in the panel with a camera count above zero.
         """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
-
         self.step_capture.mark(2, "Open the panel and wait for the site")
         self.lpr.ensure_lpr_dropdown_open()
         self.lpr.wait_for_site_list(SITE_NAME)
-        expect(
-            self.page.get_by_text(SITE_NAME, exact=False).first
-        ).to_be_visible()
+        # .first: the panel lists each site once, with its count beside it
+        site_row = self.page.get_by_text(SITE_NAME, exact=False).first
+        row_text = " ".join(site_row.locator("xpath=..").inner_text().split())
+        count = row_text.rsplit(" ", 1)[-1]
+        assert count.isdigit(), f"the site row reads {row_text!r}; expected a camera count"
+        assert int(count) > 0, f"the site row reads {row_text!r}; the site lists no cameras"
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -106,16 +113,17 @@ class TestLprCameraPlayback:
         1. Reload the browser page.
            Expected: The application loads again.
         2. Click Views in the left sidebar.
-           Expected: The Views page opens and shows its subtab bar.
+           Expected: The address is the site root and the subtab bar reads Devices, My Views, Insights, Maps, Channels.
         """
         self.step_capture.mark(1, "Call safe reset to Views")
         self.lpr.safe_reset_to_views()
-
         self.step_capture.mark(2, "Verify the Views page is active")
-        # Views renders at the root URL; the subtab bar is the marker
-        expect(self.page.locator(".viewTabs").first).to_be_visible(
-            timeout=15000
-        )
+        # Views renders at the root URL; its subtab bar names the five views
+        expect(self.page).to_have_url(re.compile(r"^https?://[^/]+/?$"), timeout=15000)
+        tabs = self.page.locator(".viewTabs").first
+        expect(tabs).to_be_visible(timeout=15000)
+        names = [" ".join(x.split()) for x in tabs.inner_text().split("\n") if x.strip()]
+        assert names == VIEWS_SUBTABS, f"the Views subtab bar reads {names}, expected {VIEWS_SUBTABS}"
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -129,20 +137,16 @@ class TestLprCameraPlayback:
         1. Click LPR in the left sidebar, open the Locations & Cameras panel, open the test site and its All Cameras group, and drag the configured test camera onto the last empty tile.
            Expected: The camera streams in the tile.
         2. Click the streaming tile.
-           Expected: The tile shows the live icon.
+           Expected: Exactly one tile shows the live icon.
         """
         self.step_capture.mark(1, "Navigate to LPR camera page")
         self.lpr.ensure_lpr_camera_page()
-
         self.step_capture.mark(2, f"Play camera '{CAMERA_NAME}'")
         self.lpr.play_camera(site_name=SITE_NAME, camera_name=CAMERA_NAME)
-
         self.step_capture.mark(3, "Activate the camera tile")
         self.lpr.activate_camera_tile()
         # The live icon shows only on an activated tile
-        expect(
-            self.page.locator("img[alt='live icon']").first
-        ).to_be_visible(timeout=10000)
+        expect(self.page.locator("img[alt='live icon']")).to_have_count(1, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -266,16 +270,17 @@ class TestLprViewsIntegration:
 
         Steps:
         1. Click Views in the left sidebar.
-           Expected: The Views page opens and shows its subtab bar.
+           Expected: The address is the site root and the subtab bar reads Devices, My Views, Insights, Maps, Channels.
         """
         self.step_capture.mark(1, "Navigate to Views page")
         self.lpr.go_to_views_page()
-
         self.step_capture.mark(2, "Verify on Views page")
-        # Views renders at the root URL; the subtab bar is the marker
-        expect(self.page.locator(".viewTabs").first).to_be_visible(
-            timeout=15000
-        )
+        # Views renders at the root URL; its subtab bar names the five views
+        expect(self.page).to_have_url(re.compile(r"^https?://[^/]+/?$"), timeout=15000)
+        tabs = self.page.locator(".viewTabs").first
+        expect(tabs).to_be_visible(timeout=15000)
+        names = [" ".join(x.split()) for x in tabs.inner_text().split("\n") if x.strip()]
+        assert names == VIEWS_SUBTABS, f"the Views subtab bar reads {names}, expected {VIEWS_SUBTABS}"
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -287,19 +292,19 @@ class TestLprViewsIntegration:
         1. Click Admin in the left sidebar, then click LPR.
            Expected: The LPR Lists page opens.
         2. Click Views in the left sidebar.
-           Expected: The Views page opens and shows its subtab bar.
+           Expected: The address is the site root and the subtab bar reads Devices, My Views, Insights, Maps, Channels.
         """
         self.step_capture.mark(1, "Navigate to LPR Lists page first")
         self.lpr.navigate_to_lpr()
-
         self.step_capture.mark(2, "Navigate to Views")
         self.lpr.go_to_views_page()
-
         self.step_capture.mark(3, "Verify the Views page is active")
-        # Views renders at the root URL; the subtab bar is the marker
-        expect(self.page.locator(".viewTabs").first).to_be_visible(
-            timeout=15000
-        )
+        # Views renders at the root URL; its subtab bar names the five views
+        expect(self.page).to_have_url(re.compile(r"^https?://[^/]+/?$"), timeout=15000)
+        tabs = self.page.locator(".viewTabs").first
+        expect(tabs).to_be_visible(timeout=15000)
+        names = [" ".join(x.split()) for x in tabs.inner_text().split("\n") if x.strip()]
+        assert names == VIEWS_SUBTABS, f"the Views subtab bar reads {names}, expected {VIEWS_SUBTABS}"
 
     @pytest.mark.ui
     @pytest.mark.admin

@@ -271,6 +271,30 @@ class FullScreenPage:
 
     # --- Bookmarks panel methods ---
 
+    # Measured 09/12/2026 on US (register row 53): the fullscreen control
+    # bar's icons by file name, the volume icon's two states, and the
+    # bar's text ('<camera> | Live | hh:mm:ss AM Mon dd yyyy | 1X | ...').
+    CONTROL_ICONS = ("exitFullScreen", "Live", "date-picker-icon", "icon-share", "Bookmark",
+                     "sequence-icon", "Search", "overlays", "Setting", "dotsIcon")
+    VOLUME_ON = "volumn-icon"
+    VOLUME_MUTED = "volumn-mute-active-icon"
+
+    def control_icon_names(self) -> list[str]:
+        """The control bar's img files, minus their paths and hashes."""
+        return self.control_container.evaluate(
+            "e => [...e.querySelectorAll('img')].map(i => (i.getAttribute('src') || '')"
+            ".split('/').pop().split('.')[0])")
+
+    def volume_icon_name(self) -> str:
+        src = self.volume_control.first.get_attribute("src") or ""
+        return src.rsplit("/", 1)[-1].split(".")[0]
+
+    def clock_text(self) -> str:
+        """The bar's clock, e.g. '01:22:26 AM Sep 12 2026'."""
+        text = " ".join(self.control_container.inner_text().split())
+        m = re.search(r"\d{1,2}:\d{2}:\d{2} [AP]M [A-Z][a-z]{2} \d{1,2} \d{4}", text)
+        return m.group(0) if m else ""
+
     def open_bookmarks_panel(self):
         """Open the bookmarks panel via the dots icon.
 

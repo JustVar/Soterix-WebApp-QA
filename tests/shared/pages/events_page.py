@@ -233,9 +233,10 @@ class EventsPage:
         self.camera_dropdown.click()
         menu = self.page.locator("#simple-menu")
         menu.wait_for(state="visible", timeout=10000)
-        # exact name inside the row; .first: the menu lists each site
-        # once, and the row is what carries the count
+        # exact name inside the row; the menu lists each site once, and
+        # the row is what carries the count
         site_node = menu.locator(".MuiListItemButton-root").filter(
+            # .first: the menu lists each site once
             has=self.page.get_by_text(site_name, exact=True)).first
         digits = [t for t in site_node.inner_text().split() if t.isdigit()]
         declared = int(digits[-1]) if digits else -1

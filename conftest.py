@@ -150,6 +150,13 @@ def stream_guard(config, items, box_name: str) -> None:
     measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"),
                                    config.getoption("--browser-channel", default=None))
     print(stream_health.describe(measure))  # noqa: T201 - the guard's one line for the terminal
+    if measure.get("frames") == 0 and not measure.get("error"):
+        # a second look before skipping the whole session on one empty
+        # window: the US camera read 0 frames and then 117 a minute
+        # apart (09/12/2026), and one 8 s sample had skipped 43 tests
+        measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"),
+                                       config.getoption("--browser-channel", default=None))
+        print("[STREAM] second measurement: " + stream_health.describe(measure))  # noqa: T201 - the guard's terminal line
     reason = stream_health.stream_skip_reason(measure, box_name)
     if reason:
         for item in targets:

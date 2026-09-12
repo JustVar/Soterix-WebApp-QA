@@ -24,7 +24,7 @@
         {
           "n": 2,
           "action": "Click the Locations & Cameras header.",
-          "expected": "The panel opens and lists the configured test site."
+          "expected": "The panel lists the configured test site with its camera count."
         }
       ],
       "case_key": ""
@@ -40,7 +40,7 @@
         {
           "n": 2,
           "action": "Click the Locations & Cameras header and wait for the list to load.",
-          "expected": "The configured test site appears in the panel."
+          "expected": "The configured test site appears in the panel with a camera count above zero."
         }
       ],
       "case_key": ""
@@ -56,7 +56,7 @@
         {
           "n": 2,
           "action": "Click Views in the left sidebar.",
-          "expected": "The Views page opens and shows its subtab bar."
+          "expected": "The address is the site root and the subtab bar reads Devices, My Views, Insights, Maps, Channels."
         }
       ],
       "case_key": ""
@@ -72,7 +72,7 @@
         {
           "n": 2,
           "action": "Click the streaming tile.",
-          "expected": "The tile shows the live icon."
+          "expected": "Exactly one tile shows the live icon."
         }
       ],
       "case_key": ""
@@ -141,7 +141,7 @@
         {
           "n": 1,
           "action": "Click Views in the left sidebar.",
-          "expected": "The Views page opens and shows its subtab bar."
+          "expected": "The address is the site root and the subtab bar reads Devices, My Views, Insights, Maps, Channels."
         }
       ],
       "case_key": ""
@@ -157,7 +157,7 @@
         {
           "n": 2,
           "action": "Click Views in the left sidebar.",
-          "expected": "The Views page opens and shows its subtab bar."
+          "expected": "The address is the site root and the subtab bar reads Devices, My Views, Insights, Maps, Channels."
         }
       ],
       "case_key": ""

@@ -3,289 +3,104 @@
   "class": "TestViewsPlayback",
   "tests": {
     "test_share_icon_visible_in_fullscreen": {
-      "title": "Verify the share icon is visible in fullscreen player.",
+      "title": "Verify the share icon is in the fullscreen control bar",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where share icon should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate share icon on the page",
-          "expected": "share icon is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify share icon visible in fullscreen playback",
-          "expected": "share icon visible in fullscreen playback"
+          "action": "Open a camera tile in fullscreen.",
+          "expected": "The control bar carries exactly one share icon (icon-share)."
         }
       ],
       "case_key": "Nj3r6e"
     },
     "test_settings_icon_visible_in_fullscreen": {
-      "title": "Verify the settings icon is visible in fullscreen player.",
+      "title": "Verify the settings icon is in the fullscreen control bar",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where settings icon should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate settings icon on the page",
-          "expected": "settings icon is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify settings icon visible in fullscreen playback",
-          "expected": "settings icon visible in fullscreen playback"
+          "action": "Open a camera tile in fullscreen.",
+          "expected": "The control bar carries exactly one settings icon (Setting)."
         }
       ],
       "case_key": "K4nmwJ"
     },
     "test_overlays_icon_visible_in_fullscreen": {
-      "title": "Verify the overlays icon is visible in fullscreen player.",
+      "title": "Verify the overlays icon is in the fullscreen control bar",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where overlays icon should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate overlays icon on the page",
-          "expected": "overlays icon is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify overlays icon visible in fullscreen playback",
-          "expected": "overlays icon visible in fullscreen playback"
+          "action": "Open a camera tile in fullscreen.",
+          "expected": "The control bar carries exactly one overlays icon."
         }
       ],
       "case_key": "jPn2ad"
     },
     "test_live_indicator_in_fullscreen": {
-      "title": "Verify the live indicator is shown for a live camera stream.",
+      "title": "Verify the live indicator and clock for a live camera stream",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where live indicator should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate live indicator on the page",
-          "expected": "live indicator is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify live indicator displayed in fullscreen playback",
-          "expected": "live indicator displayed in fullscreen playback"
+          "action": "Open a camera tile in fullscreen.",
+          "expected": "The player reads as streaming in live mode, and the bar's clock shows today's date."
         }
       ],
       "case_key": "41VXLb"
     },
     "test_control_container_visible": {
-      "title": "Verify the main control container is rendered in fullscreen.",
+      "title": "Verify the main control bar carries its measured icon set",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where control container bar should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate control container bar on the page",
-          "expected": "control container bar is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify control container bar visible in fullscreen",
-          "expected": "control container bar visible in fullscreen"
+          "action": "Open a camera tile in fullscreen.",
+          "expected": "The control bar carries the exit, Live, date picker, share, Bookmark, sequence, Search, overlays, Setting and bookmarks-dots icons."
         }
       ],
       "case_key": "pDpdjG"
     },
     "test_volume_control_clickable": {
-      "title": "Verify clicking volume control doesn't crash (mute toggle).",
+      "title": "Verify the volume control toggles mute and back",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open a camera tile in fullscreen and read the volume icon.",
+          "expected": "It shows the muted icon (streams start muted)."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate volume control on the page",
-          "expected": "volume control is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of volume control",
-          "expected": "volume control clickable in fullscreen playback"
-        },
-        {
-          "n": 6,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to volume control"
+          "action": "Click it, then click it again.",
+          "expected": "The icon switches to the volume-on icon, then back to muted."
         }
       ],
       "case_key": "LD3g6e"
     },
     "test_exit_and_reenter_fullscreen": {
-      "title": "Verify exiting fullscreen and re-entering works.",
+      "title": "Verify exiting fullscreen and re-entering works",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open a camera tile in fullscreen, then exit.",
+          "expected": "The exit button is gone and the Views tab bar is back."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > Live Playback Controls",
-          "expected": "Live Playback Controls page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for exit and re-enter fullscreen works correctly",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Verify exit and re-enter fullscreen works correctly is displayed and functions correctly",
-          "expected": "Exit and re-enter fullscreen works correctly is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Enter fullscreen again.",
+          "expected": "The stream plays again (its time advances)."
         }
       ],
       "case_key": "wmjg7G"
     },
     "test_bookmarks_toggle_opens_panel": {
-      "title": "Verify the bookmarks dots icon opens/closes the panel.",
+      "title": "Verify the bookmarks dots icon opens/closes the panel",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open a camera tile in fullscreen and click the bookmarks dots icon.",
+          "expected": "The bookmarks panel opens (its rows are listed when the camera has bookmarks)."
         },
         {
           "n": 2,
-          "action": "Navigate to Views and enter fullscreen mode on a camera view",
-          "expected": "Camera view is displayed in fullscreen"
-        },
-        {
-          "n": 3,
-          "action": "Locate the bookmarks toggle or dots icon in the fullscreen overlay",
-          "expected": "Bookmarks toggle control is visible in fullscreen"
-        },
-        {
-          "n": 4,
-          "action": "Click the bookmarks toggle",
-          "expected": "Bookmark panel opens within the fullscreen view"
-        },
-        {
-          "n": 5,
-          "action": "Verify the bookmark panel displays saved bookmarks",
-          "expected": "Bookmarks list is visible and populated (or shows empty state)"
-        },
-        {
-          "n": 6,
-          "action": "Toggle the bookmarks panel closed",
-          "expected": "Bookmark panel closes, returning to the fullscreen camera view"
+          "action": "Close the panel.",
+          "expected": "The rows are gone and the stream still plays."
         }
       ],
       "case_key": "yaWrV9"
@@ -337,7 +152,7 @@
         {
           "n": 1,
           "action": "On Views, open a camera tile in fullscreen.",
-          "expected": "The stream plays and the player shows its timeline controls, with a pause control present (disabled in live mode, active in archive playback)."
+          "expected": "The stream plays live, the bar shows the live-mode pause control, and the timeline shows at least three hh:mm labels."
         }
       ],
       "case_key": "zvVV19"
