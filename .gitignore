@@ -68,6 +68,10 @@ tests/data/*
 # parametrisation, not bulk data. Without it the C2C suite silently falls back
 # to a single hard-coded camera, so it has to ship with the repo.
 !tests/data/c2c_cameras.yaml
+# The per-model record the C2C tests assert from; without it the conftest
+# stops the run by name (the box run of 09/12/2026 did, on a clone that
+# had the registry but not this file).
+!tests/data/c2c_models.yaml
 testcases_export.json
 
 # Generated tool output artifacts
