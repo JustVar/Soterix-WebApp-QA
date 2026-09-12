@@ -1,17 +1,37 @@
 #!/bin/sh
-# House-conventions gate: runs the convention checker on the lines
-# this commit adds. HIGH findings block the commit; MEDIUM findings
-# print and pass (justify them in the commit message).
+# The collect gate, before the commit exists. CI runs six checks on every
+# push (.github/workflows/collect-gate.yml); this hook runs the same six
+# in the same order of cost, so a commit that would fail the gate fails
+# here, on the laptop, before a failure email goes out. Eight went out on
+# 09/12/2026 because the hook ran only the first three.
 #
 # Install: copy this file to .git/hooks/pre-commit (no extension).
 # Bypass only for a genuine emergency: git commit --no-verify.
 #
-# First the secret gate: no staged line may carry a credential value from
-# .env (the camera login reached two GitHub orgs through a QA Touch backup
-# on 08/28/2026 and nearly again through a conftest on 09/11). Then the
-# inventory: docs/TEST_INVENTORY.md must match the tests on disk, which is
-# what CI's collect-gate checks; two commits reached it stale on 09/08 and
-# 09/11 because nothing asked before the push. Then the conventions.
-venv/Scripts/python.exe tools/secret_check.py || exit 1
-venv/Scripts/python.exe tools/test_inventory.py --check || exit 1
-venv/Scripts/python.exe tools/convention_check.py
+# Why each check is here:
+# - secret_check: no staged line may carry a credential value from .env
+#   (the camera login reached two GitHub orgs through a QA Touch backup
+#   on 08/28/2026 and nearly again through a conftest on 09/11).
+# - convention_check: the house conventions, on the lines this commit
+#   adds. HIGH findings block; MEDIUM findings print and pass (justify
+#   them in the commit message).
+# - test_inventory --check: docs/TEST_INVENTORY.md must match the tests
+#   on disk; two commits reached CI stale on 09/08 and 09/11.
+# - lint_baseline: no file may gain ruff findings; two pushes failed CI
+#   on 09/12 over literal non-breaking spaces nobody linted locally.
+# - collect_floor: the whole repo and the offline suites still collect
+#   and no suite shrank; a broken import fails here, not on main.
+# - the offline suites: the pins for the plugins, tools and helpers. Six
+#   pushes failed CI on 09/12 over one stream-guard pin nobody ran
+#   locally. The run changes nothing a live UI run writes: the archive,
+#   run record, run guard and screenshots are off, and its html report
+#   goes to logs/hook_report.html instead of reports/report.html.
+#
+# About six seconds in all, most of it the last two.
+py=venv/Scripts/python.exe
+$py tools/secret_check.py || exit 1
+$py tools/convention_check.py || exit 1
+$py tools/test_inventory.py --check || exit 1
+$py tools/lint_baseline.py || exit 1
+$py tools/collect_floor.py || exit 1
+RUN_ARCHIVE=off RUN_GUARD=off REPORT_SCREENSHOTS=off $py -m pytest tests/plugins tests/tools tests/helpers -p no:cacheprovider --no-run-record --html=logs/hook_report.html || exit 1

@@ -205,10 +205,17 @@ cp tools/hooks/pre-commit  .git/hooks/pre-commit
 cp tools/hooks/commit-msg  .git/hooks/commit-msg
 ```
 
-`pre-commit` runs three gates: no staged line may carry a credential
-value from `.env`, `docs/TEST_INVENTORY.md` must match the tests on disk
-(regenerate with `python tools/test_inventory.py`), and the convention
-checker reads the lines the commit adds; a HIGH finding blocks it. `commit-msg` rejects any message naming an AI
+`pre-commit` runs the six checks CI's collect gate runs, so a commit
+that would fail the gate fails on the laptop first: no staged line may
+carry a credential value from `.env`; the convention checker reads the
+lines the commit adds (a HIGH finding blocks); `docs/TEST_INVENTORY.md`
+must match the tests on disk (regenerate with
+`python tools/test_inventory.py`); no file may gain lint findings; the
+collected-test floor holds; and the offline suites (`tests/plugins`,
+`tests/tools`, `tests/helpers`) pass. About six seconds. The offline run
+changes nothing a live UI run writes: archive, run record, run guard and
+screenshots are off and its report goes to `logs/hook_report.html`.
+`commit-msg` rejects any message naming an AI
 tool, model or co-author - the workspace CLAUDE.md forbids it and the
 rule had been broken 14 times before the gate existed. Read
 `docs/CONVENTIONS.md` for the rules and `docs/TEAM_CHANGES.md` before you
