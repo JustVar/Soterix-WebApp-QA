@@ -80,52 +80,53 @@ class TestC2CVideoConfig:
         is read, not changed.
 
         Steps:
-        1. Open Setup > VIDEO CONFIGURATION and note the Stream 1 codec.
-           Expected: The codec field shows the current codec.
+        1. Open Setup > VIDEO CONFIGURATION and note the Stream 1 codec in the stream table.
+           Expected: The table's first row shows the current codec (H.265 on every lab unit).
         2. Change the codec to H.264 and click Apply.
-           Expected: After Apply, the codec field reads H.264.
+           Expected: Within 30 seconds the table's first row reads H.264 (the camera re-reads its settings a few seconds after Apply).
         3. Put the original codec back and click Apply.
-           Expected: The original codec is restored (the test restores it even when a step fails).
+           Expected: Within 30 seconds the table's first row reads the original codec and frame rate again (a codec change resets the rate to 30, so the test puts it back); the test restores both even when a step fails, and fails by name if the camera is left changed.
         """
         self.step_capture.mark(1, "Navigate to Video Configuration")
         expect(self.camera.heading("VIDEO CONFIGURATION")).to_be_visible()
 
-        self.step_capture.mark(2, "Save original codec and resolution values")
-        codec_select = self.camera.codec_select()
-        original_codec = codec_select.input_value()
-        # Find resolution select
-        res_selects = self.page.locator("select")
-        original_resolution = None
-        for i in range(res_selects.count()):
-            options = res_selects.nth(i).locator("option")
-            for j in range(options.count()):
-                if "1920x1080" in options.nth(j).text_content():
-                    original_resolution = res_selects.nth(i).input_value()
-                    break
-            if original_resolution is not None:
-                break
+        self.step_capture.mark(2, "Note the Stream 1 codec in the table")
+        # the table is the applied truth; the select only echoes a choice.
+        # 10.2.0.135 was left on H.264 by a run whose restore clicked Apply
+        # before the table had re-read the first change (09/12/2026), so
+        # both changes below wait for the table, and the restore is checked
+        streams = self.camera.stream_rows()
+        assert streams, f"{self.camera.ip}: no stream table on the VIDEO page"
+        before = streams[0]
+        assert before["codec"] != "H.264", (
+            f"{self.camera.ip}: stream 1 already reads H.264 before the test; a previous "
+            f"run left it so, or the unit was reconfigured - put it back before re-running")
 
         try:
             self.step_capture.mark(3, "Change Codec to H.264")
-            codec_select.select_option(label="H.264")
+            self.camera.codec_select().select_option(label="H.264")
 
             self.step_capture.mark(4, "Click Apply")
             self.camera.click_apply()
 
-            self.step_capture.mark(5, "Verify codec change was saved")
-            expect(self.camera.selected_option(self.camera.codec_select())).to_have_text(
-                "H.264", timeout=10000)
+            self.step_capture.mark(5, "Verify the table reads H.264")
+            self.camera.wait_for_stream_codec("H.264")
         finally:
-            # Restore in a finally block: a failed verification previously left
-            # the camera encoding H.264 instead of its configured codec.
-            self.step_capture.mark(6, "Restore original codec and Apply")
+            # Restore the whole row in a finally block and verify it: a
+            # restore that only clicked left 10.2.0.135 on H.264, and a
+            # codec change resets the frame rate to 30, so the rate goes
+            # back too (09/12/2026)
+            self.step_capture.mark(6, f"Restore {before['codec']} at {before['fps']} fps and Apply")
             try:
-                self.camera.codec_select().select_option(value=original_codec)
+                self.camera.codec_select().select_option(label=before["codec"])
+                self.camera.framerate_select().select_option(label=before["fps"])
                 self.camera.click_apply()
+                after = self.camera.wait_for_stream_codec(before["codec"])[0]
+                assert after == before, f"stream 1 reads {after}, it was {before}"
             except Exception as restore_err:  # noqa: BLE001 - must not mask the real failure
                 pytest.fail(
-                    f"Could not restore codec on {self.camera.ip}: "
-                    f"{restore_err}. Camera may still be set to H.264."
+                    f"Could not restore stream 1 on {self.camera.ip}: "
+                    f"{restore_err}. The camera may still be set to H.264 at 30 fps."
                 )
 
 

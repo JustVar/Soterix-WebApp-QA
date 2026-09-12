@@ -185,6 +185,23 @@ class CameraHardwarePage:
                     f"{self.ip} ({model}) shows a {name} button that tests/data/"
                     f"c2c_models.yaml does not list under {key}: measure and update the record")
 
+    def wait_for_stream_codec(self, label: str, timeout_ms: int = 30000) -> list[dict]:
+        """Poll the VIDEO page's stream table until stream 1's codec reads
+        `label`; returns the rows. Apply answers at once but the table
+        re-reads the camera 8 s later (10.2.0.135, 09/12/2026): the select
+        echoes the choice immediately, the table is the applied truth.
+        Raises, with the rows, when the codec never changes."""
+        deadline = time.monotonic() + timeout_ms / 1000
+        rows = self.stream_rows()
+        while time.monotonic() < deadline:
+            rows = self.stream_rows()
+            if rows and rows[0]["codec"] == label:
+                return rows
+            self.page.wait_for_timeout(1000)  # poll tick for the camera's re-read
+        raise AssertionError(
+            f"{self.ip}: stream 1 never read {label} within {timeout_ms // 1000} s "
+            f"of Apply; the table reads {rows}")
+
     def stream_rows(self) -> list[dict]:
         """The VIDEO page's stream table as [{stream, codec, resolution, fps}]:
         the rows whose cells carry a resolution (WxH)."""
@@ -236,6 +253,11 @@ class CameraHardwarePage:
         """The Stream 1 codec select: the first select that offers H.265.
         The page's first select is not the codec on every firmware."""
         return self.select_with_option("H.265")
+
+    def framerate_select(self):
+        """Stream 1's frame rate select on the VIDEO page (id framerate on
+        DC-5V-1, BC-5M-1 and MS-20V-1, measured 09/12/2026)."""
+        return self.page.locator("#tabs select#framerate")
 
     def select_with_option(self, option_text: str):
         """The content pane's first select that offers an option with this

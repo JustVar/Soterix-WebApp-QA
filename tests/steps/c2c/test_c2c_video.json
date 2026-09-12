@@ -28,18 +28,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Open Setup > VIDEO CONFIGURATION and note the Stream 1 codec.",
-          "expected": "The codec field shows the current codec."
+          "action": "Open Setup > VIDEO CONFIGURATION and note the Stream 1 codec in the stream table.",
+          "expected": "The table's first row shows the current codec (H.265 on every lab unit)."
         },
         {
           "n": 2,
           "action": "Change the codec to H.264 and click Apply.",
-          "expected": "After Apply, the codec field reads H.264."
+          "expected": "Within 30 seconds the table's first row reads H.264 (the camera re-reads its settings a few seconds after Apply)."
         },
         {
           "n": 3,
           "action": "Put the original codec back and click Apply.",
-          "expected": "The original codec is restored (the test restores it even when a step fails)."
+          "expected": "Within 30 seconds the table's first row reads the original codec and frame rate again (a codec change resets the rate to 30, so the test puts it back); the test restores both even when a step fails, and fails by name if the camera is left changed."
         }
       ],
       "case_key": "9erj9Q"
