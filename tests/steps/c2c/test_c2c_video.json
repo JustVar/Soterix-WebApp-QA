@@ -21,7 +21,7 @@
           "expected": "It shows H.265."
         }
       ],
-      "case_key": ""
+      "case_key": "7ExN1X"
     },
     "test_stream_codec_and_resolution_change": {
       "title": "Verify the stream codec can be changed and applied",
@@ -42,7 +42,7 @@
           "expected": "The original codec is restored (the test restores it even when a step fails)."
         }
       ],
-      "case_key": ""
+      "case_key": "9erj9Q"
     },
     "test_osd_configuration": {
       "title": "Verify OSD date/time overlay is enabled and configurable",
@@ -58,7 +58,7 @@
           "expected": "A text colour control is shown, Position X and Y fields are present, and a User text section with its Off/On toggle."
         }
       ],
-      "case_key": ""
+      "case_key": "qzaXrb"
     },
     "test_audio_configuration_defaults": {
       "title": "Verify audio configuration defaults and controls",
@@ -79,7 +79,7 @@
           "expected": "Audio out (or Audio alarm) with channels and volume is shown, with 16,000 Hz among the output sample rates."
         }
       ],
-      "case_key": ""
+      "case_key": "XGvr1Z"
     }
   }
 }

@@ -3,6 +3,8 @@
 Verify system information, plugin status, firmware, diagnostics,
 configuration backup, date/time, and restart.
 """
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -216,7 +218,7 @@ class TestC2CSystemOps:
 
         Steps:
         1. Open Setup > SYSTEM > FIRMWARE UPDATE.
-           Expected: The firmware page shows a control to select a firmware file.
+           Expected: The firmware page shows the running firmware version as a dated build (for example 2025.06.30_A20.3.3) and a control to select a firmware file.
         2. Open SYSTEM > SYSTEM DIAGNOSTICS.
            Expected: The diagnostics page is shown.
         3. Open SYSTEM > LOG.
@@ -227,8 +229,13 @@ class TestC2CSystemOps:
         self.camera.navigate_to_setup_subsection("FIRMWARE UPDATE")
         expect(self.camera.heading("FIRMWARE UPDATE")).to_be_visible()
 
-        self.step_capture.mark(2, "Verify firmware upload control exists")
-        expect(self.page.locator("input[type='file'], button:has-text('Select'), text=/Select file/i").first).to_be_visible()
+        self.step_capture.mark(2, "Verify the running version and the upload control")
+        # the running firmware version is a dated build string
+        # (2025.06.30_A20.3.3 on BC-5V-1, 09/11/2026)
+        version = self.camera.content(re.compile(r"\d{4}\.\d{2}\.\d{2}_\w+"))
+        expect(version).to_have_text(re.compile(r"^\s*\d{4}\.\d{2}\.\d{2}_\w+"))
+        # one selector engine per locator: a CSS list cannot carry text=
+        expect(self.page.locator("#tabs input[type='file']")).to_be_visible()
 
         self.step_capture.mark(3, "Navigate to System Diagnostics")
         self.camera.navigate_to_setup_subsection("SYSTEM DIAGNOSTICS")

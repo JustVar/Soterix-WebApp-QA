@@ -90,8 +90,12 @@ class TestC2CNetwork:
         expect(self.page.locator(f"text='{expected_uri}'")).to_be_visible()
 
         self.step_capture.mark(3, f"Verify Identifier is {channel}")
-        identifier_input = self.page.locator(f"input[value='{channel}']")
-        expect(identifier_input).to_be_visible()
+        # the Identifier field's value is set by script, so no value
+        # attribute selector finds it; the URI above proves the page is
+        # filled, and the fields' live values are read here
+        values = self.page.locator("#tabs input[type='text']").evaluate_all(
+            "els => els.map(e => e.value)")
+        assert channel in values, f"no text field reads {channel!r}: {values}"
 
         self.step_capture.mark(4, "Verify RTSP Options include Audio and Meta")
         page_text = self.page.locator("body").inner_text()

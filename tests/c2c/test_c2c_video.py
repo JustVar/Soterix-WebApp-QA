@@ -53,8 +53,10 @@ class TestC2CVideoConfig:
         self.step_capture.mark(5, "Verify the Stream 1 codec select reads H.265")
         # the first select on the page is not the codec on every firmware
         # (probed 09/11/2026): the codec select is the one offering H.265
+        # the selected option's text, not the select's value: the values
+        # are numbers on some firmware ('3' for H.265 on BC-5V-1)
         codec_select = self.camera.codec_select()
-        assert codec_select.input_value() == "H.265"
+        expect(self.camera.selected_option(codec_select)).to_have_text("H.265")
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
@@ -99,7 +101,8 @@ class TestC2CVideoConfig:
             self.camera.click_apply()
 
             self.step_capture.mark(5, "Verify codec change was saved")
-            expect(self.camera.codec_select()).to_have_value("H.264", timeout=10000)
+            expect(self.camera.selected_option(self.camera.codec_select())).to_have_text(
+                "H.264", timeout=10000)
         finally:
             # Restore in a finally block: a failed verification previously left
             # the camera encoding H.264 instead of its configured codec.
@@ -146,7 +149,8 @@ class TestC2COSD:
         assert "Date & time" in page_text
 
         self.step_capture.mark(3, "Verify OSD Text color is set (default orange)")
-        expect(self.page.locator("input[type='color'], text=/RGB/").first).to_be_visible()
+        # the colour picker input; its RGB text twin is a plain text field
+        expect(self.page.locator("#tabs input[type='color']")).to_be_visible()
 
         self.step_capture.mark(4, "Verify Position X and Y are within 0-100 range")
         position_inputs = self.page.locator("input[type='text']")
@@ -191,7 +195,10 @@ class TestC2CAudio:
         assert "Audio encode" in page_text or "Audio" in page_text
 
         self.step_capture.mark(3, "Verify Codec is G.711 ulaw")
-        expect(self.page.locator("text='G.711 ulaw'")).to_be_visible()
+        # each value is a select's chosen option: options are hidden
+        # elements, so the selected option's text is what is read
+        codec = self.camera.select_with_option("G.711 ulaw")
+        expect(self.camera.selected_option(codec)).to_have_text("G.711 ulaw")
 
         self.step_capture.mark(4, "Verify Volume is set to 10")
         volume_select = self.page.locator("select").filter(
@@ -200,10 +207,12 @@ class TestC2CAudio:
         assert volume_select.input_value() == "10"
 
         self.step_capture.mark(5, "Verify Sample rate is 8,000 Hz")
-        expect(self.page.locator("text='8,000 Hz'").first).to_be_visible()
+        rate = self.camera.select_with_option("8,000 Hz")
+        expect(self.camera.selected_option(rate)).to_have_text("8,000 Hz")
 
         self.step_capture.mark(6, "Verify Audio out section with channels and volume")
         assert "Audio alarm" in page_text or "Audio out" in page_text
 
         self.step_capture.mark(7, "Verify output sample rate options exist")
-        expect(self.page.locator("text='16,000 Hz'")).to_be_visible()
+        out_rate = self.camera.select_with_option("16,000 Hz")
+        expect(out_rate.locator("option:has-text('16,000 Hz')")).to_be_attached()

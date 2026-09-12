@@ -126,7 +126,7 @@ class TestC2CSoterixCloud:
         1. Open Setup > Soterix > CONNECT.
            Expected: The SOTERIX CLOUD CONNECT page loads with the Soterix logo.
         2. Wait a few seconds for the cloud status to load and read it.
-           Expected: Registered Cloud Address shows staging.example.invalid. "Waiting for cloud registration..." means the camera was never registered: finish provisioning (QR code) and run again.
+           Expected: Registered Cloud Address shows staging.example.invalid. "Waiting for cloud registration..." or "I am not registered to a cloud." means the camera was never registered: finish provisioning (QR code) and run again.
         3. Read the QR code section.
            Expected: Upload QR Code with Select QR, Upload and Reset buttons.
         """
@@ -137,7 +137,8 @@ class TestC2CSoterixCloud:
         self.camera.navigate_to_setup_subsection("CONNECT")
 
         self.step_capture.mark(2, "Verify Soterix Cloud Connect page loads with branding")
-        expect(self.camera.heading("SOTERIX CLOUD CONNECT")).to_be_visible(timeout=10000)
+        # the onboard page has no .contentTitle: its title is plain text
+        expect(self.camera.content("SOTERIX CLOUD CONNECT")).to_be_visible(timeout=10000)
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         expect(self.page.locator("img[alt*='Soterix'], img[src*='logo']").first).to_be_visible()
 
@@ -151,13 +152,17 @@ class TestC2CSoterixCloud:
         # sits on "Waiting for cloud registration..." until the QR/registration
         # completes, and reporting that as "not registered" sends whoever reads
         # the result looking in the wrong place.
-        if "Waiting for cloud registration" in page_text:
-            pytest.fail(
-                f"Camera {self.camera.ip} is still waiting for cloud "
-                f"registration - it has not completed registration to "
-                f"staging.example.invalid. Upload the QR code / finish "
-                f"provisioning, then re-run."
-            )
+        # the onboard page's own status line, verbatim, so the reader
+        # knows whether to wait or to provision ('I am not registered to
+        # a cloud.' on 10.2.0.171, 09/11/2026)
+        for status in ("Waiting for cloud registration",
+                       "I am not registered to a cloud"):
+            if status in page_text:
+                pytest.fail(
+                    f"Camera {self.camera.ip} reports '{status}': it has "
+                    f"not completed registration to staging.example.invalid. "
+                    f"Upload the QR code / finish provisioning, then re-run."
+                )
         assert "Registered Cloud Address" in page_text, \
             f"Camera {self.camera.ip} not registered. Page shows: {page_text[:200]}"
         expect(self.page.locator("text=/staging\\.soterixcloud\\.com/")).to_be_visible()

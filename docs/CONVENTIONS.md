@@ -143,6 +143,15 @@ once independently in the wait conversion (August 2026). Use them:
   when the panel is missing, and make the applied-signal check RAISE,
   not print: a selection that did not apply invalidates everything
   after it.
+- **`has_text` reads textContent, not the screen.** A regex passed to
+  `.filter(has_text=...)` runs against the element's textContent with
+  whitespace collapsed: hidden entries are in it, and block boundaries
+  add no space, so a camera setup section reads `> NETWORKSTATUSNETWORK
+  SETTINGS...`. Anchor at the start (`^\s*[>v]?\s*NAME`) on a container
+  and use `^...$` only on a leaf whose whole text is the label; a
+  line-end anchor (`\n|$`) never matches and the click waits out its
+  timeout (c2c nightly 09/11/2026). Measure the text with
+  `evaluate("e => e.textContent")` before writing the pattern.
 - **Some labels carry zero-width spaces** (seen on the search sidebar
   section labels), so `:text-is()` can fail while the text looks
   identical on screen. Prefer `:has-text()` with a distinctive

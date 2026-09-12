@@ -921,10 +921,15 @@ class AdminPage:
             row.wait_for(state="visible", timeout=10000)
         except Exception:
             visible = self._wizard_leaf_texts()[:10]
+            # The tree lists only cameras with a relevant assigned
+            # license (the step's own note): a camera that lost its
+            # licence drops out with no rename (india, 09/11/2026)
             raise RuntimeError(
                 f"Camera '{camera}' is not in the wizard device tree. "
-                f"On-screen: {visible}. Update test_camera_name in "
-                f"config/env/ if the tenant renamed it."
+                f"On-screen: {visible}. The tree lists only cameras with "
+                f"a relevant assigned license: check Admin > Licenses for "
+                f"'{camera}', or update test_camera_name in config/env/ "
+                f"if the tenant renamed it."
             ) from None
         box = row.locator(
             "xpath=ancestor::*[.//input[@type='checkbox']][1]"

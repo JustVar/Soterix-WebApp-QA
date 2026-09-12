@@ -26,7 +26,7 @@
           "expected": "It shows the ONVIF version from the registry (24.06 unless set) with its profiles."
         }
       ],
-      "case_key": ""
+      "case_key": "VKDEV9"
     },
     "test_device_name_and_location_editable": {
       "title": "Verify device name and location are editable and persist",
@@ -52,7 +52,7 @@
           "expected": "The original values are restored (the test restores them even when a step fails)."
         }
       ],
-      "case_key": ""
+      "case_key": "J8jPJp"
     },
     "test_plugins_installed_and_running": {
       "title": "Verify both SOTERIX and VCAedge-AI plugins are installed and running",
@@ -68,7 +68,7 @@
           "expected": "At least two plugins show running."
         }
       ],
-      "case_key": ""
+      "case_key": "Pgp3nd"
     },
     "test_plugin_storage_within_limits": {
       "title": "Verify plugin storage usage is below 90%",
@@ -84,7 +84,7 @@
           "expected": "Usage is below 90%."
         }
       ],
-      "case_key": ""
+      "case_key": "68prdv"
     },
     "test_firmware_and_diagnostics_accessible": {
       "title": "Verify firmware version and system diagnostics are accessible",
@@ -92,7 +92,7 @@
         {
           "n": 1,
           "action": "Open Setup > SYSTEM > FIRMWARE UPDATE.",
-          "expected": "The firmware page shows a control to select a firmware file."
+          "expected": "The firmware page shows the running firmware version as a dated build (for example 2025.06.30_A20.3.3) and a control to select a firmware file."
         },
         {
           "n": 2,
@@ -105,7 +105,7 @@
           "expected": "The system log page is shown."
         }
       ],
-      "case_key": ""
+      "case_key": "pDaq23"
     },
     "test_date_time_settings": {
       "title": "Verify date/time settings and language options",
@@ -126,7 +126,7 @@
           "expected": "The language page is shown."
         }
       ],
-      "case_key": ""
+      "case_key": "wm5Gwb"
     },
     "test_configuration_backup_accessible": {
       "title": "Verify configuration backup page is accessible",
@@ -137,7 +137,7 @@
           "expected": "The CONFIGURATION BACKUP page offers a backup (export or download) option."
         }
       ],
-      "case_key": ""
+      "case_key": "LD47GJ"
     },
     "test_camera_restart": {
       "title": "Verify camera can restart cleanly and retains settings",
@@ -163,7 +163,7 @@
           "expected": "At least as many plugins show running as before the restart."
         }
       ],
-      "case_key": ""
+      "case_key": "ya5ljx"
     }
   }
 }

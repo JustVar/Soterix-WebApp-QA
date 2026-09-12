@@ -152,4 +152,5 @@ class TestC2CSecurity:
 
         self.step_capture.mark(5, "Navigate to HTTPS settings")
         self.camera.navigate_to_setup_subsection("HTTPS")
-        expect(self.page.locator("text=/HTTPS/")).to_be_visible()
+        # the pane heading: HTTPS also names a menu entry, a label and four options
+        expect(self.camera.heading("HTTPS")).to_be_visible()

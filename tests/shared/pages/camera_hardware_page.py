@@ -77,10 +77,17 @@ class CameraHardwarePage:
     # first real run from spartan1. Clicks go to the menu; checks to the
     # heading; the navigated signal is the heading changing.
     def _menu_section(self, section_text: str):
-        """The <ul> under #sub_menu whose own first line is the section name.
-        Case-insensitive: the Soterix section renders as 'soterix'."""
-        pattern = re.compile(rf"^\s*[>\u2228v]?\s*{re.escape(section_text)}\s*(\n|$)", re.I)
-        # .first: the pattern is anchored to the ul's whole first line, one section has it
+        """The <ul> under #sub_menu whose text starts with the section name.
+        Case-insensitive: the Soterix section renders as 'soterix'.
+
+        has_text sees the ul's textContent: the fold glyph, the name, then
+        the entries with nothing between ('> NETWORKSTATUSNETWORK SETTINGS'),
+        so the name is anchored at the start only. A line-end anchor matched
+        nothing and every section click timed out (nightly 09/11/2026);
+        measured on 10.2.0.171."""
+        pattern = re.compile(rf"^\s*[>\u2228v]?\s*{re.escape(section_text)}", re.I)
+        # .first: one section starts with the name; no section name is a
+        # prefix of another's (VIDEO & AUDIO is asked for in full)
         return self.page.locator("#sub_menu > ul").filter(has_text=pattern).first
 
     def _menu_item(self, subsection_text: str):
@@ -118,13 +125,36 @@ class CameraHardwarePage:
             raise AssertionError(f"this camera's setup menu has no '{subsection_text}' entry")
         item.click()
         self._wait_heading_change(before)
+        self._wait_content_settled()
         return self
 
     def codec_select(self):
         """The Stream 1 codec select: the first select that offers H.265.
         The page's first select is not the codec on every firmware."""
+        return self.select_with_option("H.265")
+
+    def select_with_option(self, option_text: str):
+        """The content pane's first select that offers an option with this
+        text. Option values differ by firmware (the codec select carries
+        '3' for H.265 on BC-5V-1), so tests read the selected option's text
+        through selected_option, never the select's value."""
         return self.page.locator("#tabs select").filter(
-            has=self.page.locator("option[value='H.265'], option:has-text('H.265')")).first
+            has=self.page.locator(f"option:has-text('{option_text}')")).first
+
+    @staticmethod
+    def selected_option(select):
+        """The option a select currently shows; expect(...).to_have_text on it.
+        Options are hidden elements, so a text= locator on one never reads
+        as visible."""
+        return select.locator("option:checked")
+
+    def content(self, text: "str | re.Pattern[str]"):
+        """The content pane's first element carrying this text or pattern
+        (a label, a status line, a version string), for pages with no
+        .contentTitle such as the Soterix CONNECT onboard page."""
+        # .first: callers pass a fixed page string (a title, a status
+        # line), not an entity name, and the pane states it once
+        return self.page.locator("#tabs").get_by_text(text).first
 
     def heading(self, text: str):
         """The content pane's heading for a setup page, exact text."""
@@ -148,6 +178,25 @@ class CameraHardwarePage:
             if self.current_heading() not in ("", before):
                 return
             self.page.wait_for_timeout(200)  # poll tick for the content pane
+
+    def _wait_content_settled(self, timeout_ms: int = 5000) -> None:
+        """Poll until the content pane's text stops changing.
+        The heading renders first and the labels fill 120 ms later
+        (measured on 10.2.0.171, 09/11/2026): a body text read taken on
+        the heading alone missed 'Auto exposure', '3D noise reduction'
+        and 'Activation' on every camera."""
+        pane = self.page.locator("#tabs")
+        deadline = time.monotonic() + timeout_ms / 1000
+        last = None
+        while time.monotonic() < deadline:
+            try:
+                now = pane.inner_text(timeout=1000)
+            except Exception:  # noqa: BLE001 - why: a pane mid-replace has no text yet; the next tick reads it
+                now = None
+            if now is not None and now == last:
+                return
+            last = now
+            self.page.wait_for_timeout(100)  # poll tick for the label fill
 
     # ------------------------------------------------------------------ #
     #  Main Page - Live View assertions
@@ -444,20 +493,26 @@ class CameraHardwarePage:
     #  Common actions
     # ------------------------------------------------------------------ #
 
+    # :visible on each: the VIDEO page keeps two hidden Apply buttons
+    # (preset and video-out) ahead of the live one, and .first on the
+    # bare union waited 30 s on a hidden button (10.2.0.171, 09/11/2026)
     def click_apply(self):
         """Click the Apply button on the current setup page."""
-        self.page.locator("button:has-text('Apply'), input[value='Apply']").first.click()
+        self.page.locator(
+            "button:has-text('Apply'):visible, input[value='Apply']:visible").first.click()
         self.page.wait_for_timeout(1000)
         return self
 
     def click_default(self):
         """Click the Default button to restore factory defaults on current page."""
-        self.page.locator("button:has-text('Default'), input[value='Default']").first.click()
+        self.page.locator(
+            "button:has-text('Default'):visible, input[value='Default']:visible").first.click()
         self.page.wait_for_timeout(1000)
         return self
 
     def click_cancel(self):
         """Click the Cancel button on the current setup page."""
-        self.page.locator("button:has-text('Cancel'), input[value='Cancel']").first.click()
+        self.page.locator(
+            "button:has-text('Cancel'):visible, input[value='Cancel']:visible").first.click()
         self.page.wait_for_timeout(500)
         return self
