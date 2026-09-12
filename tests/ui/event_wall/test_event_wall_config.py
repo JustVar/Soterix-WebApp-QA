@@ -17,6 +17,8 @@ Rebuilt 08/13/2026 on the measured page; the old suite clicked the
 General card TITLE (a no-op) and probed page-level dropdowns, event
 images, and grids that do not exist on this page.
 """
+import re
+
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
 
@@ -164,15 +166,18 @@ class TestEventWallConfig:
            Expected: The table lists configurations, each with a name, a site and a device count, or one row reading "No configuration found.".
         """
         rows = self.page.locator("table tbody tr")
-        expect(rows.first).to_be_visible(timeout=10000)
-        # the empty row carries its sentence outside a td (measured)
+        # the table renders a blank row while it fetches; the first row
+        # carrying text is the loaded signal (measured 09/12/2026)
+        expect(rows.first).to_contain_text(re.compile(r"\S"), timeout=10000)
         if rows.first.inner_text().strip() == EVENT_WALL_EMPTY:
             expect(rows).to_have_count(1)
         else:
             for row in rows.all():
                 cells = [c.strip() for c in row.locator("td").all_inner_texts()]
-                assert len(cells) >= 4 and cells[0] and cells[1] and cells[2].isdigit(), (
-                    f"a configuration row reads {cells}; expected a name, a site and a device count")
+                assert len(cells) >= 4, f"a configuration row reads {cells}; expected four columns"
+                assert cells[0], f"a configuration row lacks its name: {cells}"
+                assert cells[1], f"a configuration row lacks its site: {cells}"
+                assert cells[2].isdigit(), f"a configuration row's device count reads {cells[2]!r}"
 
     # --- The Add Configuration form ---
 
@@ -201,8 +206,8 @@ class TestEventWallConfig:
         # the row reads '<site> <device count>' (measured: 'Spartan0 22')
         site_text = " ".join(site_row.locator("xpath=..").inner_text().split())
         site_count = site_text.rsplit(" ", 1)[-1]
-        assert site_text.startswith(SITE_NAME) and site_count.isdigit(), (
-            f"the site row reads {site_text!r}; expected the site name and its device count")
+        assert site_text.startswith(SITE_NAME), f"the site row reads {site_text!r}; expected {SITE_NAME!r} first"
+        assert site_count.isdigit(), f"the site row reads {site_text!r}; expected a device count last"
         group_row = self._expand_site_to_groups()
         group_text = " ".join(group_row.locator("xpath=..").inner_text().split())
         assert group_text == f"All Cameras {site_count}", (

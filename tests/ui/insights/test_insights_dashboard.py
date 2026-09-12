@@ -109,9 +109,9 @@ class TestInsightsDashboard:
         """
         expect(self.page.get_by_text("My Dashboards", exact=True)).to_be_visible()
         expect(self.page.get_by_text("Widgets", exact=True).first).to_be_visible()
-        # each section header is one P: "<name>   |  View All"
+        # each section header is one P: "<name> <nbsp> | <nbsp>View All"
         expect(self.page.locator("p").filter(has_text=re.compile(r"^Preset Dashboard"))).to_contain_text("View All")
-        expect(self.page.locator("p").filter(has_text=re.compile(r"^My Dashboard  "))).to_contain_text("View All")
+        expect(self.page.locator("p").filter(has_text=re.compile("^My Dashboard \xa0"))).to_contain_text("View All")
         link = self.insights.system_status_link.first
         expect(link).to_have_text("System Status")
         expect(link).to_have_attribute("href", re.compile(re.escape(SYSTEM_STATUS_URL)))
@@ -176,7 +176,7 @@ class TestInsightsDashboard:
         expect(self.page.get_by_text("My Dashboards", exact=True)).to_be_visible(
             timeout=10000
         )
-        expect(self.page.locator("p").filter(has_text=re.compile(r"^My Dashboard  "))).to_contain_text("View All")
+        expect(self.page.locator("p").filter(has_text=re.compile("^My Dashboard \xa0"))).to_contain_text("View All")
         # the empty state is one P with two lines
         section = self.page.locator("p").filter(has_text=InsightsPage.MY_DASHBOARD_EMPTY)
         if section.count():

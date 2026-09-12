@@ -55,7 +55,7 @@ class TestInsightsNavigation:
         expect(link).to_be_visible(timeout=15000)
         expect(link).to_have_text("System Status")
         expect(link).to_have_attribute("href", re.compile(re.escape(InsightsPage.SYSTEM_STATUS_URL)))
-        # the section header is one P: "Preset Dashboard   |  View All"
+        # the section header is one P: "Preset Dashboard <nbsp> | <nbsp>View All"
         header = self.page.locator("p").filter(has_text=re.compile(r"^Preset Dashboard"))
         expect(header).to_contain_text("View All")
 
@@ -119,8 +119,8 @@ class TestInsightsNavigation:
         """
         self.insights.switch_to_widgets()
         expect(self.insights.inactive_tab).to_have_text("My Dashboards")
-        # the section headers are one P each: "Preset Widgets   |  View All"
-        # and "My Widgets   |  View All"
+        # the section headers are one P each: "Preset Widgets <nbsp> | <nbsp>View All"
+        # and "My Widgets <nbsp> | <nbsp>View All"
         expect(self.page.locator("p").filter(has_text=re.compile(r"^Preset Widgets"))).to_contain_text(
             "View All", timeout=15000)
         expect(self.insights.my_widgets_text).to_contain_text("View All", timeout=15000)
