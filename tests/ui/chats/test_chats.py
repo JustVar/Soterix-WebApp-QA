@@ -123,7 +123,8 @@ class TestChats:
         """The panel opens from the header icon; the visible panel
         search input is the open marker."""
         self.chat.open_chat_panel()
-        expect(self.chat.search_input).to_be_visible()
+        expect(self.chat.search_input).to_have_value("")
+        expect(self.chat.search_input).to_have_attribute("placeholder", "Search")
 
     @pytest.mark.ui
     @pytest.mark.chats
@@ -139,7 +140,7 @@ class TestChats:
         name = self._own_a_group()
         # create_group already waited for the row; this is the visible
         # verdict, and the search is NOT one: it never lists a group
-        expect(self.chat.group_rows(name).first).to_be_visible()
+        expect(self.chat.group_rows(name).first).to_contain_text(name)
 
     @pytest.mark.ui
     @pytest.mark.chats

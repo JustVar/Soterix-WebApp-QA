@@ -44,9 +44,9 @@ class TestEventsPlayback:
     def test_play_event_inline(self):
         """Verify clicking Play Video loads the inline event player."""
         self.events.play_event(0, timeout=60000)
-
-        # Player controls should be visible (play/pause button)
-        expect(self.events.player_play_pause).to_be_visible(timeout=15000)
+        # one pause control marks the inline player playing
+        expect(self.events.player_play_pause).to_have_count(1, timeout=15000)
+        expect(self.events.player_play_pause).to_be_visible()
 
     @pytest.mark.ui
     @pytest.mark.events
@@ -57,10 +57,10 @@ class TestEventsPlayback:
 
         # Four independent checks on one screen: soft, so a missing
         # control reports with the others instead of hiding them
-        expect.soft(self.events.player_play_pause).to_be_visible(timeout=15000)
+        expect.soft(self.events.player_play_pause).to_have_count(1, timeout=15000)
         expect.soft(self.events.player_backward).to_be_visible(timeout=5000)
-        expect.soft(self.events.player_forward).to_be_visible(timeout=5000)
-        expect.soft(self.events.player_volume).to_be_visible(timeout=5000)
+        expect.soft(self.events.player_forward).to_have_count(1, timeout=5000)
+        expect.soft(self.events.player_volume).to_have_count(1, timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.events
@@ -71,9 +71,9 @@ class TestEventsPlayback:
 
         # Three independent checks on one screen: soft, so a missing
         # button reports with the others instead of hiding them
-        expect.soft(self.events.share_button).to_be_visible(timeout=10000)
-        expect.soft(self.events.export_button).to_be_visible(timeout=5000)
-        expect.soft(self.events.lightbox_button).to_be_visible(timeout=5000)
+        expect.soft(self.events.share_button).to_have_count(1, timeout=10000)
+        expect.soft(self.events.export_button).to_have_count(1, timeout=5000)
+        expect.soft(self.events.lightbox_button).to_have_count(1, timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.events

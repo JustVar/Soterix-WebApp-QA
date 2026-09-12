@@ -4,6 +4,8 @@ counts, online status, and navigation behavior.
 Extends basic maps coverage with site dropdown checks, multiple map card
 inspection, camera icon counts, and page navigation patterns.
 """
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -157,7 +159,10 @@ class TestMapsDeeper:
     def test_maps_page_after_refresh(self):
         """Verify the Maps page reloads correctly after a browser refresh."""
         # reload waits for the load event on its own
+        before = self.page.url
         self.page.reload()
+        expect(self.page).to_have_url(before, timeout=15000)
 
         # Should still show the site dropdown
         expect(self.maps.site_dropdown).to_be_visible(timeout=15000)
+        expect(self.maps.site_dropdown).to_contain_text(re.compile(r"\S"))

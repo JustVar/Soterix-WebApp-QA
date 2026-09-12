@@ -75,7 +75,7 @@ class TestLprWidgets:
         """
         self.step_capture.mark(1, "Create a widget with the LPR description")
         name = self._create_lpr_widget()
-        assert name, "Widget name should be returned after creation"
+        assert name != "", "Widget name should be returned after creation"
 
     @pytest.mark.ui
     @pytest.mark.admin

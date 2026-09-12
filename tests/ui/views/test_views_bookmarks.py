@@ -222,6 +222,7 @@ class TestViewsBookmarks:
             filename=filename,
         )
         expect(self.fs.share_success).to_be_visible(timeout=5000)
+        expect(self.fs.share_success).not_to_be_empty()
 
     @pytest.mark.ui
     @pytest.mark.bookmark

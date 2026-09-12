@@ -2,6 +2,8 @@
 
 Verify camera web UI login with valid and invalid credentials.
 """
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -49,6 +51,9 @@ class TestC2CAuth:
 
         step_capture.mark(3, "Verify the camera time is shown")
         expect(page.get_by_text("Camera time", exact=True)).to_be_visible(timeout=5000)
+        # the label's row carries the clock, hh:mm:ss (measured 09/12/2026)
+        expect(page.get_by_text("Camera time", exact=True).locator("xpath=..")).to_contain_text(
+            re.compile(r"\d{2}:\d{2}:\d{2}"))
 
         step_capture.mark(4, "Verify the Full screen control is present")
         expect(page.locator("button:has-text('Full screen')")).to_be_visible()

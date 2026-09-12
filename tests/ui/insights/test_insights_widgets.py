@@ -82,7 +82,7 @@ class TestInsightsWidgetCreate:
             site_name=SITE_NAME,
         )
         self._created_widgets.append(widget_name)
-        assert widget_name, "Widget name should be returned after creation"
+        assert widget_name != "", "Widget name should be returned after creation"
 
 
 class TestInsightsWidgetOperations:
@@ -171,4 +171,4 @@ class TestInsightsWidgetOperations:
         # Not added to _created_widgets - deletion is this test's purpose
 
         deleted = self.insights.delete_widget(widget_name)
-        assert deleted, f"Widget '{widget_name}' should be deleted"
+        assert deleted is True, f"Widget '{widget_name}' should be deleted"

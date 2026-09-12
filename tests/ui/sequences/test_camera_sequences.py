@@ -15,8 +15,10 @@ whose waits carry the real signals (arrival markers, checkbox state,
 the create modal closing with its name input once a save lands).
 """
 import datetime
+
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
+
 from tests.shared.pages.sequence_page import SequencePage
 from tests.shared.pages.views_page import ViewsPage
 
@@ -157,8 +159,10 @@ class TestCameraSequences:
         # Check for sequence items in the sidebar
         sequence_items = self.page.locator('div.sidebarlist-item-button')
         sequence_items.first.wait_for(state="visible", timeout=10000)
-        print(f"[OK] Found {sequence_items.count()} sidebar items - "
-              "sequences available")
+        expect(sequence_items).not_to_have_count(0)
+        names = [" ".join(t.split()) for t in sequence_items.all_inner_texts()]
+        assert all(names), f"a sidebar sequence item is blank: {names}"
+        print(f"[OK] Found {len(names)} sidebar items - sequences available")
 
     @pytest.mark.ui
     @pytest.mark.sequences

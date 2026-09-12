@@ -255,4 +255,7 @@ class TestEventsFilters:
             img = self.events.event_results.nth(i)
             expect(img).to_be_visible()
             src = img.get_attribute("src") or ""
-            assert src, f"Event {i} thumbnail should have a src attribute"
+            scheme = src.split(":", 1)[0]
+            assert scheme in ("blob", "data", "http", "https"), (
+                f"Event {i} thumbnail's source is {src[:40]!r}, not an image")
+            assert img.evaluate("e => e.naturalWidth") > 0, f"Event {i} thumbnail never decoded"

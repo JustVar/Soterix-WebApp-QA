@@ -1422,7 +1422,8 @@ class ViewsPage:
 
         Hovers the video tile, opens three-dot menu, hovers timeline,
         clicks share icon, fills email, clicks Share, then Copy.
-        Returns the copy button text (or empty string if not found).
+        Returns the share link Copy put on the clipboard ("" when the
+        clipboard could not be read).
         """
         video_tile = self.page.locator(
             "[class*='video_container'][class*='new_video_player']"
@@ -1479,12 +1480,21 @@ class ViewsPage:
                 "No Copy button appeared within 10s of clicking Share: "
                 "the share did not complete"
             ) from None
+        # Copy puts the share link on the clipboard: read it back as the
+        # shared value (clipboard permission granted for the read)
+        self.page.context.grant_permissions(["clipboard-read", "clipboard-write"])
         copy_button.click()
+        try:
+            link = self.page.evaluate("() => navigator.clipboard.readText()")
+        except PlaywrightError as e:  # why: the read needs a permission some browsers refuse; the caller reads the "" and says so
+            print(f"[VIEWS] clipboard read failed after Copy: {str(e)[:80]}")
+            link = ""
 
         # Close the share dialog if it is still open
         cancel_btn = share_container.locator(".cancel_button_share_live")
         if self._appears(cancel_btn, timeout=3000):
             cancel_btn.first.click()
+        return link or ""
 
     def toggle_favorite(self, camera_name: str):
         """Toggle the favorite star on a camera in the left panel.

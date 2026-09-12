@@ -1,5 +1,6 @@
 """Share Live View test - share a live camera stream via email and copy link."""
 import pytest
+
 from tests.shared.pages.views_page import ViewsPage
 
 SITE_NAME = None
@@ -14,7 +15,7 @@ def test_share_live_view(authenticated_page):
     1. Navigate to Views, ensure a camera is streaming in a tile
     2. Hover tile -> three-dot menu -> timeline hover -> share icon
     3. Fill email, click Share
-    4. Click Copy to copy the link
+    4. Click Copy to copy the link (the clipboard then holds an http link)
     5. Close the share dialog
     """
     page = authenticated_page
@@ -33,10 +34,12 @@ def test_share_live_view(authenticated_page):
         video_tiles.first.wait_for(state="visible", timeout=30000)
 
     # Share the live view
-    views.share_live_view_on_tile(
+    copied = views.share_live_view_on_tile(
         email="person@example.com",
         tile_index=0,
     )
+    # Copy puts the share link on the clipboard; the helper reads it back
+    assert copied.startswith("http"), f"Copy put {copied!r} on the clipboard, not a share link"
 
     # If we got here without an exception, the share flow completed.
     # The share dialog opened, email was filled, Share was clicked,

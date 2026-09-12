@@ -29,7 +29,7 @@
         {
           "n": 2,
           "action": "Look at the first result's image.",
-          "expected": "It shows a real image, not a placeholder."
+          "expected": "Its picture is a decoded blob, data or http image with a width above zero."
         }
       ],
       "case_key": "J899ML"

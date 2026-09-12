@@ -4,9 +4,10 @@ Tests for LPR list creation, plate management, and filter operations.
 Covers core CRUD operations and state management.
 """
 import datetime
+import re
 
 import pytest
-from playwright.sync_api import Error as PlaywrightError
+from playwright.sync_api import Error as PlaywrightError, expect
 
 from tests.shared.pages.lpr_page import LprPage
 
@@ -379,6 +380,7 @@ class TestLprFilterOperations:
         # the results header rendering is the applied signal
         search_results = self.lpr.search_results_header.first
         search_results.wait_for(state="visible", timeout=15000)
+        expect(search_results).to_contain_text(re.compile("search results", re.I))
 
     @pytest.mark.ui
     @pytest.mark.admin

@@ -65,7 +65,8 @@ class TestAdminUsers:
         self.admin.navigate_to_users()
 
         expect(self.admin.users_tab).to_be_visible(timeout=10000)
-        expect(self.admin.search_input).to_be_visible(timeout=10000)
+        self.admin.expect_admin_tab_selected("Users")
+        expect(self.admin.search_input).to_have_value("", timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin

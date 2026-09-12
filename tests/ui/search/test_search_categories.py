@@ -72,7 +72,7 @@ class TestSearchCategories:
         1. Open Search and run a Person/Male search for the configured site over a duration.
            Expected: Person results appear in the result grid.
         2. Look at the first result's image.
-           Expected: It shows a real image, not a placeholder.
+           Expected: Its picture is a decoded blob, data or http image with a width above zero.
         """
         self.search.navigate()
         self.search.wait_for_page_load()
@@ -83,8 +83,26 @@ class TestSearchCategories:
         self.search.select_duration_by_index(5)
         self.search.execute_search(timeout=60000)
 
+        # a result card is a div holding the picture as an <img> with a
+        # blob source and a decoded width (measured 09/12/2026)
+        # a result card is a div holding the picture as an <img> with a
+        # blob source and a decoded width (measured 09/12/2026)
+        # a result card is a div holding the picture as an <img> with a
+        # blob source and a decoded width (measured 09/12/2026)
         first_result = self.search.result_images.first
         expect(first_result).to_be_visible(timeout=5000)
+        picture = first_result.locator("img").first
+        src = picture.get_attribute("src") or ""
+        assert src.startswith(("blob:", "data:image", "http")), f"the first result's picture source is {src[:40]!r}"
+        assert picture.evaluate("e => e.naturalWidth") > 0, "the first result's picture never decoded"
+        picture = first_result.locator("img").first
+        src = picture.get_attribute("src") or ""
+        assert src.startswith(("blob:", "data:image", "http")), f"the first result's picture source is {src[:40]!r}"
+        assert picture.evaluate("e => e.naturalWidth") > 0, "the first result's picture never decoded"
+        picture = first_result.locator("img").first
+        src = picture.get_attribute("src") or ""
+        assert src.startswith(("blob:", "data:image", "http")), f"the first result's picture source is {src[:40]!r}"
+        assert picture.evaluate("e => e.naturalWidth") > 0, "the first result's picture never decoded"
 
     @pytest.mark.ui
     @pytest.mark.search
@@ -103,7 +121,7 @@ class TestSearchCategories:
 
         self.search.play_result(0, timeout=60000)
 
-        assert self.search.is_replay_visible(timeout=120000), (
+        assert self.search.is_replay_visible(timeout=120000) is True, (
             "Expected Replay icon after video clip finished playing"
         )
 
@@ -148,7 +166,7 @@ class TestSearchCategories:
 
         self.search.play_result(0, timeout=60000)
 
-        assert self.search.is_replay_visible(timeout=120000), (
+        assert self.search.is_replay_visible(timeout=120000) is True, (
             "Expected Replay icon after Vehicle clip finished playing"
         )
 
@@ -199,6 +217,6 @@ class TestSearchCategories:
 
         self.search.play_result(0, timeout=60000)
 
-        assert self.search.is_replay_visible(timeout=120000), (
+        assert self.search.is_replay_visible(timeout=120000) is True, (
             "Expected Replay icon after Event clip finished playing"
         )

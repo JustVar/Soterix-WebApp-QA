@@ -1,4 +1,6 @@
 """Maps page tests - site selection, map cards, camera overlay, stream playback."""
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -54,7 +56,9 @@ class TestMaps:
         1. Click Maps in the left sidebar.
            Expected: The Maps page opens and shows the site dropdown at the top.
         """
+        expect(self.page).to_have_url(re.compile(r"/maps/?$"), timeout=10000)
         expect(self.maps.site_dropdown).to_be_visible(timeout=10000)
+        expect(self.maps.site_dropdown).to_contain_text(re.compile(r"\S"))
 
     @pytest.mark.ui
     @pytest.mark.maps
@@ -85,6 +89,10 @@ class TestMaps:
         """
         self.maps.select_site(self.site_name)
         map_with_cameras = self._map_with_cameras_or_skip()
+        # the card carries its device count as a number
+        counts = [int(d) for d in re.findall(r"\d+", map_with_cameras.inner_text())]
+        assert counts, f"the map card reads {map_with_cameras.inner_text()!r}; expected a device count"
+        assert max(counts) > 0, f"the map card reads {map_with_cameras.inner_text()!r}; its device count is zero"
         # the found card must be a real rendered card, not a hidden
         # mounted copy (the finder reads counts, not visibility)
         expect(map_with_cameras).to_be_visible(timeout=5000)
