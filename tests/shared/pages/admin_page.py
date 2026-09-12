@@ -5,6 +5,7 @@ rules management, and sites/camera group management.
 Used by Admin Users, Admin Sites, and Admin Rules test modules.
 """
 import datetime
+import re
 import time
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
@@ -138,6 +139,67 @@ class AdminPage:
         ).first
 
     # --- Navigation ---
+
+    # Measured 09/12/2026 on US: the admin tabs are <p> labels in the
+    # secondary header; the selected one's parent box paints
+    # rgb(3, 23, 31), the others stay transparent on the header's
+    # rgb(31, 47, 52). No aria-selected, no class, and the address stays
+    # /admin for every tab, so the paint is the signal.
+    ADMIN_TAB_SELECTED_BACKGROUND = "rgb(3, 23, 31)"
+    ADMIN_TABS = ("Dashboard", "Sites", "Users", "Maps", "Integrations", "Rules",
+                  "General", "LPR", "Licenses")
+    # General is a card layout; each card is a title, a blurb and a View
+    # button except Deployment, which shows the version
+    GENERAL_CARDS = ("Deployment", "Audit Trail", "System Logs",
+                     "Multi-Factor Authentication", "Event Wall")
+    AUDIT_TRAIL_CRUMB = "General > Audit Trail"
+    AUDIT_TRAIL_HEADERS = ("Username", "Role Type", "Date & Time", "IP", "Action")
+
+    def admin_tab(self, name: str):
+        """The admin header's tab label."""
+        # .first: the header label comes before the General sub-nav's
+        # 'Rules' in the DOM; the pattern is anchored to the whole text
+        return self.page.locator("p").filter(has_text=re.compile(rf"^{re.escape(name)}$")).first
+
+    def admin_tab_names(self) -> list[str]:
+        """The header's tab labels left to right."""
+        return self.page.evaluate(
+            """() => [...document.querySelectorAll('p')]
+                .filter(e => e.getBoundingClientRect().top < 60 && e.getClientRects().length)
+                .map(e => (e.innerText || '').trim()).filter(Boolean)"""
+        )
+
+    def admin_tab_is_selected(self, name: str) -> bool:
+        return self.admin_tab(name).evaluate(
+            "e => getComputedStyle(e.parentElement).backgroundColor"
+        ) == self.ADMIN_TAB_SELECTED_BACKGROUND
+
+    def expect_admin_tab_selected(self, name: str, timeout_ms: int = 5000) -> None:
+        """Fail, naming the paint, when the tab is not the selected one."""
+        deadline = time.monotonic() + timeout_ms / 1000
+        while not self.admin_tab_is_selected(name):
+            if time.monotonic() > deadline:
+                paint = self.admin_tab(name).evaluate(
+                    "e => getComputedStyle(e.parentElement).backgroundColor")
+                raise AssertionError(
+                    f"the {name} tab is not selected: its box paints {paint}, a selected "
+                    f"tab's paints {self.ADMIN_TAB_SELECTED_BACKGROUND}")
+            self.page.wait_for_timeout(100)  # poll tick for the tab paint
+
+    def general_card(self, title: str):
+        """A General card by its title (the first line of the card).
+        The innermost cards only: an outer MuiCard-root wraps the deck,
+        and a title filter matched it too (09/12/2026)."""
+        return self.page.locator(".MuiCard-root:not(:has(.MuiCard-root))").filter(
+            has=self.page.get_by_text(title, exact=True))
+
+    def general_card_titles(self) -> list[str]:
+        cards = self.page.locator(".MuiCard-root:not(:has(.MuiCard-root))")
+        cards.first.wait_for(state="visible", timeout=10000)
+        return [t.strip().split("\n")[0].strip() for t in cards.all_inner_texts()]
+
+    def audit_trail_headers(self) -> list[str]:
+        return [h.strip() for h in self.page.locator("thead th, thead td").all_inner_texts()]
 
     def navigate_to_admin(self):
         """Navigate to the Admin section via sidebar nav link."""

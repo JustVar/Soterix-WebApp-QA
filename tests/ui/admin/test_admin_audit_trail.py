@@ -9,11 +9,17 @@ Username | Role Type | Date & Time | IP | Action, live records
 and a Today range filter. The old suite clicked the card TITLE (a
 no-op) and probed the General cards page with unions broad enough
 to match it - its seven early-exit returns are gone with it.
+
+09/12/2026: every check reads a value: the breadcrumb's text, the
+column set, the record's date parsed against today, its cells, the
+absence of a pagination control on the one-page table (register row 53).
 """
+import datetime
 import re
 
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
+
 from tests.shared.pages.admin_page import AdminPage
 
 
@@ -27,14 +33,12 @@ class TestAdminAuditTrail:
         step_capture.set_page(self.page)
         self.admin = AdminPage(self.page)
         self.admin.navigate_to_admin()
-
         # General renders as cards; the Rules sub-tab marks it ready
         self.admin.general_tab.wait_for(state="visible", timeout=10000)
         self.admin.general_tab.click()
         self.page.locator("p:text-is('Rules')").first.wait_for(
             state="visible", timeout=10000
         )
-
         card = self.page.locator(".MuiCard-root").filter(
             has_text="Audit Trail"
         ).first
@@ -42,7 +46,6 @@ class TestAdminAuditTrail:
         # so a missing card here is a regression in a permanent control,
         # not an absent artifact (register item 25).
         card.wait_for(state="visible", timeout=10000)
-
         # exact=True: the card blurb contains 'review', so a substring
         # 'View' match clicks prose instead of the button. A View
         # click during cards hydration can be silently dropped - one
@@ -56,7 +59,6 @@ class TestAdminAuditTrail:
         except PlaywrightError:
             card.get_by_text("View", exact=True).first.click()
             self.crumb.wait_for(state="visible", timeout=15000)
-
         self.rows = self.page.locator("tbody tr")
         yield
 
@@ -74,26 +76,43 @@ class TestAdminAuditTrail:
         real_rows.first.wait_for(state="visible", timeout=20000)
         return real_rows.first
 
+    def _first_cells(self) -> list[str]:
+        """The first record's cells: username, role, date, time, IP, action."""
+        return [c.strip() for c in self._first_row().locator("td").all_inner_texts()]
+
     # --- Page structure ---
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_page_loads(self):
-        """The audit page shows its breadcrumb and table."""
+        """The audit page shows its breadcrumb and its table's columns.
+
+        Steps:
+        1. Open Admin > General and click View on the Audit Trail card.
+           Expected: The breadcrumb reads General > Audit Trail.
+        2. Read the table's header.
+           Expected: The columns are Username, Role Type, Date & Time, IP and Action, in that order.
+        """
         self.step_capture.mark(1, "Open Admin > General > Audit Trail")
-        expect(self.crumb).to_be_visible()
-        self.step_capture.mark(2, "The audit table renders")
-        expect(self.page.locator("table").first).to_be_visible(
-            timeout=10000
-        )
+        expect(self.crumb).to_have_text(AdminPage.AUDIT_TRAIL_CRUMB)
+        self.step_capture.mark(2, "The audit table renders its columns")
+        expect(self.page.locator("table").first).to_be_visible(timeout=10000)
+        headers = self.admin.audit_trail_headers()
+        assert headers == list(AdminPage.AUDIT_TRAIL_HEADERS), (
+            f"the audit table's columns read {headers}, expected {list(AdminPage.AUDIT_TRAIL_HEADERS)}")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_breadcrumb(self):
-        """The breadcrumb shows the navigation path."""
-        expect(self.crumb).to_be_visible()
+        """The breadcrumb shows the navigation path.
+
+        Steps:
+        1. Open Admin > General and click View on the Audit Trail card.
+           Expected: The breadcrumb reads exactly General > Audit Trail.
+        """
+        expect(self.crumb).to_have_text(AdminPage.AUDIT_TRAIL_CRUMB)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -107,11 +126,16 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_has_column_headers(self):
-        """The table carries the measured column set."""
-        for header in ("Username", "Role Type", "Date & Time", "IP",
-                       "Action"):
-            expect(self.page.get_by_text(header, exact=True).first
-                   ).to_be_visible(timeout=10000)
+        """The table carries the measured column set.
+
+        Steps:
+        1. Open Admin > General > Audit Trail and read the table header.
+           Expected: Username, Role Type, Date & Time, IP and Action, in that order and nothing else.
+        """
+        expect(self.page.locator("thead").first).to_be_visible(timeout=10000)
+        headers = self.admin.audit_trail_headers()
+        assert headers == list(AdminPage.AUDIT_TRAIL_HEADERS), (
+            f"the audit table's columns read {headers}, expected {list(AdminPage.AUDIT_TRAIL_HEADERS)}")
 
     # --- Records ---
 
@@ -127,31 +151,39 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_record_has_date_info(self):
-        """A record carries a dd-mm-yyyy date and hh:mm time.
+        """A record carries today's date and a clock time.
 
         Steps:
         1. Open Admin > General, click View on the Audit Trail card.
-           Expected: Audit records are listed.
-        2. Read the first record.
-           Expected: It shows a date in dd-mm-yyyy form and a time in hh:mm form.
+           Expected: Audit records are listed under the Today range.
+        2. Read the first record's date and time.
+           Expected: The Date & Time cell reads a real dd-mm-yyyy date no later than today, then | and a time as hh:mm AM or PM.
         """
-        text = self._first_row().inner_text()
-        assert re.search(r"\d{2}-\d{2}-\d{4}", text), (
-            f"No dd-mm-yyyy date in the first audit row: {text!r}"
-        )
-        assert re.search(r"\d{1,2}:\d{2}", text), (
-            f"No hh:mm time in the first audit row: {text!r}"
-        )
+        cells = self._first_cells()
+        # the Date & Time cell reads "12-09-2026 | 12:36 AM" (measured 09/12/2026)
+        stamps = [m for c in cells if (m := re.fullmatch(r"(\d{2}-\d{2}-\d{4}) \| (\d{1,2}:\d{2} [AP]M)", c))]
+        assert len(stamps) == 1, (
+            f"the first audit row carries {len(stamps)} 'dd-mm-yyyy | hh:mm AM' cells: {cells}")
+        recorded = datetime.datetime.strptime(stamps[0].group(1), "%d-%m-%Y").date()
+        assert recorded <= datetime.date.today(), (
+            f"the first audit record is dated {recorded}, after today ({datetime.date.today()})")
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_record_has_user_info(self):
-        """A record's Username cell is populated."""
-        first_cell = self._first_row().locator("td").first
-        assert first_cell.inner_text().strip(), (
-            "The first audit record has an empty Username cell"
-        )
+        """A record's Username and Role Type cells are populated.
+
+        Steps:
+        1. Open Admin > General > Audit Trail and read the first record.
+           Expected: The Username cell names a user and the Role Type cell names a role; the Action cell names the same user.
+        """
+        cells = self._first_cells()
+        username, role = cells[0], cells[1]
+        assert username != "", f"the first audit record has an empty Username cell: {cells}"
+        assert role != "", f"the first audit record has an empty Role Type cell: {cells}"
+        assert username in cells[-1], (
+            f"the Action cell {cells[-1]!r} does not name the record's user {username!r}")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -163,13 +195,13 @@ class TestAdminAuditTrail:
         1. Open Admin > General and click View on the Audit Trail card.
            Expected: Audit records are listed.
         2. Read the first record's Action cell.
-           Expected: It describes the activity and is not empty.
+           Expected: It is a sentence naming the user ("User '<name>' ...").
         """
-        cells = self._first_row().locator("td")
-        action_text = cells.last.inner_text().strip()
-        assert action_text, (
-            "The first audit record has an empty Action cell"
-        )
+        cells = self._first_cells()
+        action = cells[-1]
+        assert action != "", f"the first audit record has an empty Action cell: {cells}"
+        assert action.startswith("User '"), (
+            f"the Action cell reads {action!r}; records read \"User '<name>' <did something>\"")
 
     # --- Pagination ---
 
@@ -177,23 +209,23 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_pagination_visible(self):
-        """Pagination controls render when the page offers them."""
+        """The Today range lists its records on one page.
+
+        Steps:
+        1. Open Admin > General > Audit Trail with its Today range.
+           Expected: The records are listed on one page: no pagination control renders and every row is a record.
+        """
         self._first_row()
         pagination = self.page.locator(
             ".MuiPagination-root, .MuiTablePagination-root, "
             "nav[aria-label*='pagination']"
         )
-        try:
-            pagination.first.wait_for(state="visible", timeout=5000)
-        # deliberate: the audit rows are proved up by _first_row above,
-        # so this timeout is the measured absence of the control
-        except PlaywrightError:
-            pytest.skip(
-                "The audit table has rows but renders no pagination "
-                "control (checked .MuiPagination-root, "
-                ".MuiTablePagination-root and nav[aria-label*=pagination])"
-            )
-        expect(pagination.first).to_be_visible()
+        # measured 09/12/2026: the table pages nothing; a control appearing
+        # here is a change to record, not a pass
+        expect(pagination).to_have_count(0)
+        placeholders = self.rows.filter(has_text="No data available")
+        expect(placeholders).to_have_count(0)
+        expect(self.rows).not_to_have_count(0)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -239,20 +271,32 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_back_to_general_from_audit_trail(self):
-        """The breadcrumb returns to the General cards."""
+        """The breadcrumb returns to the General cards.
+
+        Steps:
+        1. On General > Audit Trail, click General in the breadcrumb.
+           Expected: The General cards are back, the Audit Trail card among them, and the breadcrumb is gone.
+        """
         self.page.get_by_text("General >", exact=False).first.click()
         expect(self.page.locator(".MuiCard-root").filter(
             has_text="Audit Trail"
         ).first).to_be_visible(timeout=10000)
+        expect(self.crumb).not_to_be_visible()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_row_hover(self):
-        """A record row stays rendered through hover."""
+        """A record row keeps its content through hover.
+
+        Steps:
+        1. Hover the first audit record.
+           Expected: The row keeps the same cells (hover changes nothing on this table).
+        """
         row = self._first_row()
+        before = row.inner_text()
         row.hover()
-        expect(row).to_be_visible()
+        assert row.inner_text() == before, f"hovering changed the row from {before!r} to {row.inner_text()!r}"
 
     @pytest.mark.ui
     @pytest.mark.admin

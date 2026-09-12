@@ -1,7 +1,9 @@
 """LPR Views management tests - create, close, and manage multiple views."""
-import pytest
 import time
+
+import pytest
 from playwright.sync_api import expect
+
 from tests.shared.pages.lpr_page import LprPage
 
 

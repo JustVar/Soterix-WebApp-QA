@@ -16,9 +16,9 @@ belongs to the Widgets panel), so the old search step is gone.
 """
 import pytest
 from playwright.sync_api import expect
-from tests.shared.pages.lpr_page import LprPage
 
 from config.base_config import config
+from tests.shared.pages.lpr_page import LprPage
 
 SITE_NAME = config.get("test_site_name")
 CAMERA_NAME = config.get("test_camera_name")

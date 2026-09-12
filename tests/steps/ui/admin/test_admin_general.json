@@ -3,73 +3,23 @@
   "class": "TestAdminGeneral",
   "tests": {
     "test_admin_sidebar_tabs_visible": {
-      "title": "Verify all main admin sidebar tabs are visible.",
+      "title": "Verify the admin header lists its tabs in order",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > General",
-          "expected": "General page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where all admin sidebar tabs should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate all admin sidebar tabs on the page",
-          "expected": "all admin sidebar tabs is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify all admin sidebar tabs visible",
-          "expected": "all admin sidebar tabs visible"
+          "action": "Open Admin and read the header's tab labels left to right.",
+          "expected": "Sites, Users and General appear in that order among Dashboard, Sites, Users, Maps, Integrations, Rules, General, LPR and Licenses."
         }
       ],
       "case_key": "VKbBPP"
     },
     "test_navigate_to_general": {
-      "title": "Verify clicking General tab opens the General section.",
+      "title": "Verify clicking General tab opens the General section",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin",
-          "expected": "Admin area loads"
-        },
-        {
-          "n": 3,
-          "action": "Locate the General tab in the admin navigation",
-          "expected": "General tab is visible in the admin section"
-        },
-        {
-          "n": 4,
-          "action": "Click the General tab",
-          "expected": "General section opens and displays its content"
-        },
-        {
-          "n": 5,
-          "action": "Verify the General section content is loaded",
-          "expected": "General settings and configuration options are displayed"
-        },
-        {
-          "n": 6,
-          "action": "Verify the General tab is highlighted as active",
-          "expected": "General tab shows active/selected state"
+          "action": "Click the General tab.",
+          "expected": "General is painted as the selected tab and its cards are listed: Deployment, Audit Trail, System Logs, Multi-Factor Authentication and Event Wall."
         }
       ],
       "case_key": "J8d37L"
@@ -121,134 +71,34 @@
       "case_key": "Pgw4jm"
     },
     "test_general_section_has_audit_trail": {
-      "title": "Verify the General section contains an Audit Trail sub-tab.",
+      "title": "Verify the General section's Audit Trail card",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > General",
-          "expected": "General page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate General section contains Audit Trail sub-tab on the page",
-          "expected": "General section contains Audit Trail sub-tab is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify General section contains Audit Trail sub-tab is displayed as expected",
-          "expected": "General section contains Audit Trail sub-tab is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open Admin > General and read the Audit Trail card.",
+          "expected": "Its blurb starts \"Monitor and review all activities\" and it carries one View button."
         }
       ],
       "case_key": "68lnEV"
     },
     "test_general_section_has_event_wall": {
-      "title": "Verify the General section contains an Event Wall sub-tab.",
+      "title": "Verify the General section's Event Wall card",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > General",
-          "expected": "General page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate General section contains Event Wall sub-tab on the page",
-          "expected": "General section contains Event Wall sub-tab is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify General section contains Event Wall sub-tab is displayed as expected",
-          "expected": "General section contains Event Wall sub-tab is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open Admin > General and read the Event Wall card.",
+          "expected": "Its blurb reads \"Manage event wall configuration.\" and it carries one View button."
         }
       ],
       "case_key": "7ErGBe"
     },
     "test_switch_users_to_sites": {
-      "title": "Verify switching from Users tab to Sites tab works.",
+      "title": "Verify switching from Users tab to Sites tab works",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > General",
-          "expected": "General page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for switching from Users tab to Sites tab works",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify switching from Users tab to Sites tab works is displayed and functions correctly",
-          "expected": "Switching from users tab to sites tab works is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "Open Admin > Users, then click Sites.",
+          "expected": "Sites is painted as the selected tab, Users is not, and the Sites search field shows its Search placeholder."
         }
       ],
       "case_key": "9e1NMZ"
@@ -295,78 +145,23 @@
       "case_key": "qzdVD4"
     },
     "test_round_trip_users_general_users": {
-      "title": "Verify navigating Users > General > Users round-trip works.",
+      "title": "Verify navigating Users -> General -> Users round-trip works",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > General",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "General page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Open Admin > Users, click General, then click Users again.",
+          "expected": "Users is painted as the selected tab, General is not, and the Add User button is back."
         }
       ],
       "case_key": "XGLep0"
     },
     "test_open_audit_trail": {
-      "title": "Verify clicking Audit Trail opens the audit log view.",
+      "title": "Verify the Audit Trail card's View button opens the audit log",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > General",
-          "expected": "Admin General page loads"
-        },
-        {
-          "n": 3,
-          "action": "Locate the Audit Trail link or tab",
-          "expected": "Audit Trail navigation element is visible"
-        },
-        {
-          "n": 4,
-          "action": "Click on Audit Trail",
-          "expected": "Audit Trail view opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify the audit log entries are displayed",
-          "expected": "Audit log shows a list of recent system events"
-        },
-        {
-          "n": 6,
-          "action": "Verify audit log columns (date, user, action) are present",
-          "expected": "Expected columns are visible in the audit trail table"
+          "action": "Open Admin > General and click View on the Audit Trail card.",
+          "expected": "The breadcrumb reads General > Audit Trail and the table's columns are Username, Role Type, Date & Time, IP and Action."
         }
       ],
       "case_key": "3gj9EP"
@@ -413,47 +208,12 @@
       "case_key": "zvnKW9"
     },
     "test_admin_page_after_refresh": {
-      "title": "Verify the Admin page loads correctly after a browser refresh.",
+      "title": "Verify the Admin page loads correctly after a browser refresh",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > General",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "General page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: after browser refresh",
-          "expected": "Precondition is met (after browser refresh)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "On Admin, refresh the browser.",
+          "expected": "The address still ends in /admin and the header lists Sites, Users and General in that order."
         }
       ],
       "case_key": "mBdD1V"

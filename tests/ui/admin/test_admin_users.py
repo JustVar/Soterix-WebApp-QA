@@ -1,7 +1,9 @@
 """Admin Users tests - navigation, CRUD, role selection, status toggle."""
 import datetime
+
 import pytest
 from playwright.sync_api import expect
+
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.admin_page import AdminPage
 

@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 226 | 348 |
-| **Total** | | **59** | **437** | **258** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 241 | 348 |
+| **Total** | | **59** | **437** | **273** | **380** |
 
 ## Growth
 
@@ -115,30 +115,30 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
 | `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_after_refresh` | The admin section stays valid after a browser refresh | - | aj67L4 |
-| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_breadcrumb` | The breadcrumb shows the navigation path | - | dyp4EZ |
+| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_breadcrumb` | The breadcrumb shows the navigation path | yes | dyp4EZ |
 | `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_content_area_visible` | The audit table body renders records | - | LD3mye |
-| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_column_headers` | The table carries the measured column set | - | wmjK8G |
+| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_column_headers` | The table carries the measured column set | yes | wmjK8G |
 | `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_multiple_entries` | The shared tenant's activity fills more than one record | yes | K4993J |
 | `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_has_records` | At least one audit record renders | - | yaWXD9 |
 | `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_next_page` | Next-page moves the record set when pagination exists | - | WEnvyM |
-| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_page_loads` | The audit page shows its breadcrumb and table | - | Z8xWmk |
-| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_pagination_visible` | Pagination controls render when the page offers them | - | 8V1bJr |
+| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_page_loads` | The audit page shows its breadcrumb and its table's columns | yes | Z8xWmk |
+| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_pagination_visible` | The Today range lists its records on one page | yes | 8V1bJr |
 | `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_action_info` | A record's Action cell describes the activity | yes | VKQQR2 |
-| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_date_info` | A record carries a dd-mm-yyyy date and hh:mm time | yes | jPppXd |
-| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_user_info` | A record's Username cell is populated | - | vanXBn |
-| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_row_hover` | A record row stays rendered through hover | - | kpZWE0 |
-| `test_admin_audit_trail.py::TestAdminAuditTrail::test_back_to_general_from_audit_trail` | The breadcrumb returns to the General cards | - | aj6724 |
-| `test_admin_general.py::TestAdminGeneral::test_admin_page_after_refresh` | Verify the Admin page loads correctly after a browser refresh | - | mBdD1V |
-| `test_admin_general.py::TestAdminGeneral::test_admin_sidebar_tabs_visible` | Verify all main admin sidebar tabs are visible | - | VKbBPP |
-| `test_admin_general.py::TestAdminGeneral::test_general_section_has_audit_trail` | Verify the General section contains an Audit Trail sub-tab | - | 68lnEV |
-| `test_admin_general.py::TestAdminGeneral::test_general_section_has_event_wall` | Verify the General section contains an Event Wall sub-tab | - | 7ErGBe |
+| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_date_info` | A record carries today's date and a clock time | yes | jPppXd |
+| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_record_has_user_info` | A record's Username and Role Type cells are populated | yes | vanXBn |
+| `test_admin_audit_trail.py::TestAdminAuditTrail::test_audit_trail_row_hover` | A record row keeps its content through hover | yes | kpZWE0 |
+| `test_admin_audit_trail.py::TestAdminAuditTrail::test_back_to_general_from_audit_trail` | The breadcrumb returns to the General cards | yes | aj6724 |
+| `test_admin_general.py::TestAdminGeneral::test_admin_page_after_refresh` | Verify the Admin page loads correctly after a browser refresh | yes | mBdD1V |
+| `test_admin_general.py::TestAdminGeneral::test_admin_sidebar_tabs_visible` | Verify the admin header lists its tabs in order | yes | VKbBPP |
+| `test_admin_general.py::TestAdminGeneral::test_general_section_has_audit_trail` | Verify the General section's Audit Trail card | yes | 68lnEV |
+| `test_admin_general.py::TestAdminGeneral::test_general_section_has_event_wall` | Verify the General section's Event Wall card | yes | 7ErGBe |
 | `test_admin_general.py::TestAdminGeneral::test_general_section_has_rules_tab` | Verify the General section contains the Rules sub-tab | - | Pgw4jm |
-| `test_admin_general.py::TestAdminGeneral::test_navigate_to_general` | Verify clicking General tab opens the General section | - | J8d37L |
-| `test_admin_general.py::TestAdminGeneral::test_open_audit_trail` | Verify clicking Audit Trail opens the audit log view | - | 3gj9EP |
+| `test_admin_general.py::TestAdminGeneral::test_navigate_to_general` | Verify clicking General tab opens the General section | yes | J8d37L |
+| `test_admin_general.py::TestAdminGeneral::test_open_audit_trail` | Verify the Audit Trail card's View button opens the audit log | yes | 3gj9EP |
 | `test_admin_general.py::TestAdminGeneral::test_open_event_wall` | Verify clicking Event Wall opens the event wall view | - | zvnKW9 |
-| `test_admin_general.py::TestAdminGeneral::test_round_trip_users_general_users` | Verify navigating Users -> General -> Users round-trip works | - | XGLep0 |
+| `test_admin_general.py::TestAdminGeneral::test_round_trip_users_general_users` | Verify navigating Users -> General -> Users round-trip works | yes | XGLep0 |
 | `test_admin_general.py::TestAdminGeneral::test_switch_sites_to_general` | Verify switching from Sites tab to General tab works | - | qzdVD4 |
-| `test_admin_general.py::TestAdminGeneral::test_switch_users_to_sites` | Verify switching from Users tab to Sites tab works | - | 9e1NMZ |
+| `test_admin_general.py::TestAdminGeneral::test_switch_users_to_sites` | Verify switching from Users tab to Sites tab works | yes | 9e1NMZ |
 | `test_admin_rules.py::TestAdminRules::test_add_new_rule_wizard_opens` | Verify clicking Add New Rule opens the wizard with rule type options | yes | 4188Nb |
 | `test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard (parametrized)` | Verify completing the full rule creation wizard for each rule type | - | 21zEKm, 8V14w7, B86BbX, QGj7m9, WEnm8K, aj64Ve |
 | `test_admin_rules.py::TestAdminRules::test_delete_rule` | Verify deleting the last rule with confirmation dialog | - | lR21MR |
