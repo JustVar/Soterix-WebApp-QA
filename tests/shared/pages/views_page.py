@@ -1,7 +1,12 @@
 """Views Page Object Model for video wall and camera views."""
 import time
 
-from playwright.sync_api import Error as PlaywrightError, Page, expect
+from playwright.sync_api import (
+    Error as PlaywrightError,
+    Page,
+    TimeoutError as PlaywrightTimeoutError,
+    expect,
+)
 
 # A filled grid tile (probed 08/25/2026 on the QA tenant, Chrome channel):
 # div.video_container.new_video_player > div.player__wrapper holds
@@ -1509,13 +1514,27 @@ class ViewsPage:
         before = filled.count()
         # The star flips on the click itself (9-12 ms in the 08/25 trace),
         # about 300 ms before the save answers: the POST/DELETE response
-        # is the saved signal, the flipped star the applied one
-        with self.page.expect_response(
-            lambda r: "/REST/favourite/site/channel" in r.url
-            and r.request.method in ("POST", "DELETE"),
-            timeout=15000,
-        ) as saved:
-            fav_button.click()
+        # is the saved signal, the flipped star the applied one.
+        # Every REST request sent while waiting is kept: the 09/04 failure
+        # ("no favourite response in 15 s") was read from a trace that a
+        # later run had overwritten, so the failure now carries what the
+        # click sent, and whether the row and the star were still there
+        sent: list[str] = []
+        listener = lambda r: sent.append(f"{r.method} {r.url.split('/REST/')[-1][:60]}")  # noqa: E731
+        self.page.on("request", lambda r: listener(r) if "/REST/" in r.url else None)
+        try:
+            with self.page.expect_response(
+                lambda r: "/REST/favourite/site/channel" in r.url
+                and r.request.method in ("POST", "DELETE"),
+                timeout=15000,
+            ) as saved:
+                fav_button.click()
+        except PlaywrightTimeoutError:
+            raise AssertionError(
+                f"the star click on '{camera_name}' got no favourite save answer in 15 s. "
+                f"Star filled before/now: {before}/{filled.count()}; row still visible: "
+                f"{row_anchor.is_visible()}; REST requests sent meanwhile: {sent or 'none'}"
+            ) from None
         if not saved.value.ok:
             raise AssertionError(
                 f"Favorite toggle for '{camera_name}' answered HTTP {saved.value.status}"
