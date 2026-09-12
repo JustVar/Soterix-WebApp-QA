@@ -139,14 +139,12 @@ class TestAdminRules:
 
         Steps:
         1. Open Admin and click Rules in the sidebar.
-           Expected: The rules list opens with its search field.
+           Expected: Rules is painted as the selected tab and the list's search field is empty with the placeholder "Search by Name, Rule Type, Site".
         """
         self._navigate_to_rules()
-
-        # Rules tab should be visible and rule search bar should be present.
-        # .first: 'Rules' can appear in both the sidebar and General content.
-        expect(self.admin.rules_tab.first).to_be_visible(timeout=10000)
-        expect(self.admin.rule_search_input).to_be_visible(timeout=10000)
+        self.admin.expect_admin_tab_selected("Rules")
+        expect(self.admin.rule_search_input).to_have_value("")
+        expect(self.admin.rule_search_input).to_have_attribute("placeholder", "Search by Name, Rule Type, Site")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -156,32 +154,36 @@ class TestAdminRules:
 
         Steps:
         1. Open Admin > Rules and click Add New Rule.
-           Expected: The rule type picker opens and offers Entry-Exit among the types.
+           Expected: The Select Rule picker opens, offers Entry-Exit, Heat Map, Intrusion Detection, Line Crossing, Loitering and Occupancy, and its Next button is disabled until a type is picked.
         """
         self._navigate_to_rules()
-
         self.admin.click_add_new_rule()
-
-        # Verify at least one rule type option is visible
-        entry_exit = self.page.locator("p:text-is('Entry-Exit')")
-        expect(entry_exit).to_be_visible(timeout=10000)
+        modal = self.page.locator(".customMuiModal")
+        expect(modal.get_by_text("Select Rule", exact=True)).to_be_visible(timeout=10000)
+        offered = [t for t in RULE_TYPES if modal.get_by_text(t, exact=True).count()]
+        assert sorted(offered) == sorted(RULE_TYPES), f"the picker offers {offered}, expected {RULE_TYPES}"
+        expect(modal.get_by_role("button", name="Next", exact=True)).to_be_disabled()
 
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_rules
     @pytest.mark.parametrize("rule_type", RULE_TYPES)
     def test_select_rule_type(self, rule_type):
-        """Verify selecting a rule type in the wizard advances to next step."""
+        """Verify selecting a rule type in the wizard enables the next step.
+
+        Steps:
+        1. Open Admin > Rules, click Add New Rule and read the Next button.
+           Expected: Next is disabled with no type picked.
+        2. Click the rule type's card.
+           Expected: Next is enabled.
+        """
         self._navigate_to_rules()
-
         self.admin.click_add_new_rule()
-
         self._require_rule_type_card(rule_type)
-
+        expect(self.admin.next_button).to_be_disabled(timeout=10000)
         self.admin.select_rule_type(rule_type)
-
-        # After selecting rule type, Next button should be visible
-        expect(self.admin.next_button).to_be_visible(timeout=10000)
+        # After selecting rule type, Next unlocks
+        expect(self.admin.next_button).to_be_enabled(timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin

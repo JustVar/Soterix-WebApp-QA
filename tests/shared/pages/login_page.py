@@ -1,7 +1,8 @@
+import os
+import re
 from typing import List, Optional
 
 from playwright.sync_api import Page
-import os
 
 # Timeouts (milliseconds)
 RECAPTCHA_TIMEOUT = 15000
@@ -375,10 +376,26 @@ class LoginPage:
         unrelated MUI menus (camera context menus, tile actions, etc.).
         """
         items: List[str] = []
+        # This build's menu is a box in the secondary header, not a
+        # popover: the avatar's initials, the account name, its role and
+        # 'Sign out' as <p> lines (measured 09/12/2026). Read that box
+        # first; the popover selectors below serve older builds.
+        sign_out = self.page.locator("p").filter(has_text=re.compile(r"^Sign out$")).first
+        if sign_out.count() and sign_out.is_visible():
+            box = sign_out.locator("xpath=ancestor::div[2]")
+            lines = [t.strip() for t in box.locator("p").all_inner_texts() if t.strip()]
+            if "Sign out" in lines:
+                return lines
         # Find the popover that contains "Sign out" - that's the profile menu
+        # this build renders the menu as a role=menu list inside a
+        # MuiPopover-root (measured 09/12/2026); the paper classes stay
+        # for older builds
         popover_selectors = [
+            '[role="menu"]:has-text("Sign out")',
+            '.MuiMenu-list:has-text("Sign out")',
             '.MuiPopover-paper:has-text("Sign out")',
             '.MuiMenu-paper:has-text("Sign out")',
+            '.MuiPopover-root:has-text("Sign out")',
         ]
         for ps in popover_selectors:
             try:

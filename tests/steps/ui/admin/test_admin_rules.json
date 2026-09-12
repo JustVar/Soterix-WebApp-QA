@@ -8,7 +8,7 @@
         {
           "n": 1,
           "action": "Open Admin and click Rules in the sidebar.",
-          "expected": "The rules list opens with its search field."
+          "expected": "Rules is painted as the selected tab and the list's search field is empty with the placeholder \"Search by Name, Rule Type, Site\"."
         }
       ],
       "case_key": "pD88GG"
@@ -19,43 +19,23 @@
         {
           "n": 1,
           "action": "Open Admin > Rules and click Add New Rule.",
-          "expected": "The rule type picker opens and offers Entry-Exit among the types."
+          "expected": "The Select Rule picker opens, offers Entry-Exit, Heat Map, Intrusion Detection, Line Crossing, Loitering and Occupancy, and its Next button is disabled until a type is picked."
         }
       ],
       "case_key": "4188Nb"
     },
     "test_select_rule_type": {
-      "title": "Verify selecting a rule type in the wizard advances to next step (parametrized: Entry-Exit, Heat Map, Loitering, Occupancy, Intrusion Detection, Line Crossing).",
+      "title": "Verify selecting a rule type in the wizard enables the next step",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Rules, click Add New Rule and read the Next button.",
+          "expected": "Next is disabled with no type picked."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > Empty State",
-          "expected": "Views Empty State page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where empty state message should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate empty state message on the page",
-          "expected": "empty state message is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Verify empty state message displayed before selecting rule type",
-          "expected": "empty state message displayed before selecting rule type"
+          "action": "Click the rule type's card.",
+          "expected": "Next is enabled."
         }
       ],
       "case_key": "Drd95P"

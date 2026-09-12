@@ -1,4 +1,6 @@
 """Logout tests - session termination, redirect, and re-authentication."""
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -8,13 +10,18 @@ from tests.shared.pages.login_page import LoginPage
 @pytest.mark.ui
 @pytest.mark.logout
 def test_profile_menu_opens(authenticated_page, base_url):
-    """Verify the profile avatar menu opens and contains menu items."""
+    """Verify the profile avatar menu opens and lists Sign out.
+
+    Steps:
+    1. Click the avatar in the header.
+       Expected: The profile menu opens and its items include Sign out.
+    """
     page = authenticated_page
     lp = LoginPage(page, base_url)
-
     lp.open_profile_menu()
-    assert lp.is_profile_menu_open(), "Profile menu should be visible after clicking avatar"
-
+    assert lp.is_profile_menu_open() is True, "Profile menu should be visible after clicking avatar"
+    items = lp.get_profile_menu_items()
+    assert "Sign out" in items, f"the profile menu lists {items}"
 
 @pytest.mark.ui
 @pytest.mark.logout
@@ -45,22 +52,24 @@ def test_logout_redirects_to_login(authenticated_page, base_url):
 @pytest.mark.ui
 @pytest.mark.logout
 def test_login_form_visible_after_logout(authenticated_page, base_url):
-    """Verify the login form is fully visible and functional after logout."""
+    """Verify the login form is fully visible and functional after logout.
+
+    Steps:
+    1. Sign out.
+       Expected: The address ends in /auth/login and the form shows empty email and password fields with an enabled submit button.
+    """
     page = authenticated_page
     lp = LoginPage(page, base_url)
-
     lp.logout()
-
+    expect(page).to_have_url(re.compile(r"/auth/login"), timeout=15000)
     email_field = page.locator('input[name="email"]')
     password_field = page.locator('input[name="password"]')
     submit_btn = page.locator('button[type="submit"]')
-
     # Three independent checks on one screen: soft, so a missing
     # field reports with the others instead of hiding them
-    expect.soft(email_field).to_be_visible()
-    expect.soft(password_field).to_be_visible()
-    expect.soft(submit_btn).to_be_visible()
-
+    expect.soft(email_field).to_have_value("")
+    expect.soft(password_field).to_have_value("")
+    expect.soft(submit_btn).to_be_enabled()
 
 @pytest.mark.ui
 @pytest.mark.logout
@@ -142,13 +151,12 @@ def test_logout_from_different_pages(authenticated_page, base_url, path, page_na
     1. Open the Search page from its URL.
        Expected: The page renders with the profile avatar in the header.
     2. Click the avatar, then click Sign out.
-       Expected: The login page opens.
+       Expected: The address ends in /auth/login and the login page is shown.
     3. Repeat from the Events page and from the Insights page.
        Expected: The login page opens each time.
     """
     page = authenticated_page
     lp = LoginPage(page, base_url)
-
     page.goto(base_url + path, wait_until="domcontentloaded")
     # Wait for the SPA to fully render the page header with avatar
     try:
@@ -157,6 +165,6 @@ def test_logout_from_different_pages(authenticated_page, base_url, path, page_na
         # Some pages render the header after heavy content; one more
         # bounded beat before logout tries anyway
         page.wait_for_timeout(5000)
-
     lp.logout()
-    assert lp.is_login_page(), f"Should be on login page after logout from {page_name}"
+    expect(page).to_have_url(re.compile(r"/auth/login"), timeout=15000)
+    assert lp.is_login_page() is True, f"Should be on login page after logout from {page_name}"

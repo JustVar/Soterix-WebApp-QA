@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
-| NexaiQ-Core | 13 | 52 | 405 | 274 | 348 |
-| **Total** | | **59** | **437** | **306** | **380** |
+| NexaiQ-Core | 13 | 52 | 405 | 281 | 348 |
+| **Total** | | **59** | **437** | **313** | **380** |
 
 ## Growth
 
@@ -146,7 +146,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_rules.py::TestAdminRules::test_mute_rule_notification` | Verify muting a rule's notification via the mute icon | - | mBdpwM |
 | `test_admin_rules.py::TestAdminRules::test_navigate_to_rules` | Verify navigating to Admin > General > Rules loads the rules list | yes | pD88GG |
 | `test_admin_rules.py::TestAdminRules::test_search_rule` | Verify searching for a rule by name filters the results | yes | LDXXze |
-| `test_admin_rules.py::TestAdminRules::test_select_rule_type (parametrized)` | Verify selecting a rule type in the wizard advances to next step | - | Drd95P |
+| `test_admin_rules.py::TestAdminRules::test_select_rule_type (parametrized)` | Verify selecting a rule type in the wizard enables the next step | yes | Drd95P |
 | `test_admin_sites.py::TestAdminSites::test_camera_sorting` | Verify A-Z and Z-A camera sorting within a site | yes | B899GN |
 | `test_admin_sites.py::TestAdminSites::test_check_site_status` | Verify sites display Online/Offline status indicators | - | WEnvKQ |
 | `test_admin_sites.py::TestAdminSites::test_create_camera_group` | Verify creating a new camera group with camera selection | - | n8jmmP |
@@ -157,7 +157,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_sites.py::TestAdminSites::test_search_inside_site` | Verify searching for cameras within a site detail view | - | GdWvMK |
 | `test_admin_sites.py::TestAdminSites::test_search_site` | Verify the search input filters sites by name | - | 0rzlE9 |
 | `test_admin_sites.py::TestAdminSites::test_site_versions` | Verify sites display version information | yes | 0rJJGb |
-| `test_admin_sites.py::TestAdminSites::test_toggle_grid_list_view` | Verify toggling between grid and list view on the Sites page | - | eJqXz3 |
+| `test_admin_sites.py::TestAdminSites::test_toggle_grid_list_view` | Verify toggling between grid and list view on the Sites page | yes | eJqXz3 |
 | `test_admin_users.py::TestAdminUsers::test_add_user` | Verify a new user can be added via the Add User form | - | 41VMM7 |
 | `test_admin_users.py::TestAdminUsers::test_delete_user` | Verify a user can be deleted via options menu > delete > confirm | yes | Dr993m |
 | `test_admin_users.py::TestAdminUsers::test_navigate_to_admin_users` | Verify navigating to Admin > Users section loads the user list | yes | kpXX30 |
@@ -391,11 +391,11 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_login_valid.py::test_valid_credentials` | Valid credentials log the user in | - | RgGBDz |
 | `test_logout.py::test_back_button_after_logout` | Verify browser back button after logout doesn't bypass authentication | - | 41VMQv |
 | `test_logout.py::test_cannot_access_app_after_logout` | Verify navigating to the app after logout redirects to login | - | 3gj93P |
-| `test_logout.py::test_login_form_visible_after_logout` | Verify the login form is fully visible and functional after logout | - | XGLe70 |
+| `test_logout.py::test_login_form_visible_after_logout` | Verify the login form is fully visible and functional after logout | yes | XGLe70 |
 | `test_logout.py::test_logout_from_different_pages (parametrized)` | Verify logout works from various application pages | yes | Z8QQDP |
 | `test_logout.py::test_logout_redirects_to_login` | Verify logout redirects to the login page | - | qzdVj4 |
 | `test_logout.py::test_profile_menu_contains_sign_out` | Verify the profile menu contains a 'Sign out' option | - | 9e1NEZ |
-| `test_logout.py::test_profile_menu_opens` | Verify the profile avatar menu opens and contains menu items | - | 7ErGae |
+| `test_logout.py::test_profile_menu_opens` | Verify the profile avatar menu opens and lists Sign out | yes | 7ErGae |
 | `test_logout.py::test_relogin_after_logout` | Verify successful re-login after logging out | - | pDpdMG |
 
 ### maps (13 tests in 2 files)
@@ -554,9 +554,9 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_views_drag_drop.py::TestViewsDragDrop::test_multiple_cameras_to_multiple_tiles` | Verify multiple cameras can be added to multiple tiles | - | Nj3zwa |
 | `test_views_favorites.py::TestViewsFavorites::test_add_remove_favorites` | Verify adding a camera to favorites, seeing it in the panel, and removing it | - | Nj3JdQ |
 | `test_views_fullscreen.py::TestViewsFullscreen::test_enter_fullscreen` | Verify clicking zoom icon enters full screen and video streams | - | M73wpq |
-| `test_views_fullscreen.py::TestViewsFullscreen::test_exit_fullscreen` | Verify exiting full screen returns to the views grid | - | Drd9pm |
-| `test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_controls_visible` | Verify player controls are visible in full screen | - | LD3XyZ |
-| `test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_pause_play` | Verify timeline controls are present in full screen | - | kpZQr0 |
+| `test_views_fullscreen.py::TestViewsFullscreen::test_exit_fullscreen` | Verify exiting full screen returns to the views grid | yes | Drd9pm |
+| `test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_controls_visible` | Verify player controls are visible in full screen | yes | LD3XyZ |
+| `test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_pause_play` | Verify timeline controls are present in full screen | yes | kpZQr0 |
 | `test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_video_streaming` | Verify video is actively streaming (no loader, no error state) | - | wmjRNb |
 | `test_views_playback.py::TestViewsPlayback::test_bookmarks_toggle_opens_panel` | Verify the bookmarks dots icon opens/closes the panel | yes | yaWrV9 |
 | `test_views_playback.py::TestViewsPlayback::test_control_container_visible` | Verify the main control bar carries its measured icon set | yes | pDpdjG |

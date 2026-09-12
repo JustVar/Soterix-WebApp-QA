@@ -10,6 +10,9 @@ from config.base_config import config
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.admin_page import AdminPage
 
+# measured 09/12/2026 on US (register row 53): the list view's columns
+SITES_LIST_HEADERS = ["Site Name", "Enterprise", "Address", "Devices", "Version"]
+
 
 class TestAdminSites:
     """Tests for Admin > Sites section."""
@@ -122,16 +125,19 @@ class TestAdminSites:
 
         Steps:
         1. Open Admin and click Sites in the sidebar.
-           Expected: The Sites list opens with its search field and the site cards with their online or offline markers.
+           Expected: Sites is painted as the selected tab, the search field shows its Search placeholder, and every listed site carries an Online or Offline marker.
         """
         self._navigate_to_sites()
-
-        expect(self.admin.sites_tab.first).to_be_visible(timeout=10000)
-        # Verify Sites content loaded - look for site cards or search
-        site_content = self.page.locator(
-            "input[placeholder*='Search'], img[alt='Online'], img[alt='Offline']"
-        ).first
-        expect(site_content).to_be_visible(timeout=10000)
+        self.admin.expect_admin_tab_selected("Sites")
+        search = self.page.locator("input[placeholder*='Search']").first
+        expect(search).to_have_attribute("placeholder", re.compile(r"^Search\s*$"), timeout=10000)
+        if not self._appears(self.admin.online_status_icons) and \
+                not self._appears(self.admin.offline_status_icons, timeout=2000):
+            pytest.fail("No site status indicators found")
+        statuses = self.admin.get_site_statuses()[0]
+        assert statuses["total"] > 0, f"the Sites list shows no status markers: {statuses}"
+        assert statuses["online"] + statuses["offline"] == statuses["total"], (
+            f"the site status counts do not add up: {statuses}")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -160,15 +166,25 @@ class TestAdminSites:
         toggle appearing after each click is the switched signal. The
         old version guarded both clicks behind presence checks and
         could pass without toggling anything.
+
+        Steps:
+        1. Open Admin > Sites and click the list view toggle.
+           Expected: A table lists the sites with the columns Site Name, Enterprise, Address, Devices, Version, and the grid toggle is offered.
+        2. Click the grid view toggle.
+           Expected: The table is gone and the list toggle is offered again.
         """
         self._navigate_to_sites()
-
         expect(self.admin.list_view_toggle).to_be_visible(timeout=10000)
         self.admin.toggle_to_list_view()
         expect(self.admin.grid_view_toggle).to_be_visible(timeout=5000)
-
+        # the table renders a beat after the toggle; its header is the signal
+        expect(self.page.locator("thead").first).to_be_visible(timeout=10000)
+        headers = [h.strip() for h in self.page.locator("thead th, thead td").all_inner_texts()]
+        assert headers[:5] == SITES_LIST_HEADERS, f"the sites table's columns read {headers}"
+        expect(self.page.locator("table tbody tr")).not_to_have_count(0)
         self.admin.toggle_to_grid_view()
         expect(self.admin.list_view_toggle).to_be_visible(timeout=5000)
+        expect(self.page.locator("table tbody tr")).to_have_count(0)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -339,9 +355,11 @@ class TestAdminSites:
         # name needs no entry in the UI cleanup list
         timestamp = datetime.datetime.now().strftime("%H%M%S")
         new_name = f"AutoTest Edited {timestamp}"
-        assert self.admin.edit_camera_group_by_name(group["name"], new_name), (
+        assert self.admin.edit_camera_group_by_name(group["name"], new_name) is True, (
             f"API-created group '{group['name']}' not found for rename"
         )
+        # the renamed group is listed under its new name
+        expect(self.page.get_by_text(new_name, exact=True)).to_have_text(new_name, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin

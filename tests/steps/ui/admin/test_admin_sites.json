@@ -8,7 +8,7 @@
         {
           "n": 1,
           "action": "Open Admin and click Sites in the sidebar.",
-          "expected": "The Sites list opens with its search field and the site cards with their online or offline markers."
+          "expected": "Sites is painted as the selected tab, the search field shows its Search placeholder, and every listed site carries an Online or Offline marker."
         }
       ],
       "case_key": "8Vvv6J"
@@ -60,47 +60,17 @@
       "case_key": "0rzlE9"
     },
     "test_toggle_grid_list_view": {
-      "title": "Verify toggling between grid and list view on the Sites page.",
+      "title": "Verify toggling between grid and list view on the Sites page",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Sites and click the list view toggle.",
+          "expected": "A table lists the sites with the columns Site Name, Enterprise, Address, Devices, Version, and the grid toggle is offered."
         },
         {
           "n": 2,
-          "action": "Navigate to Media Listing & Actions",
-          "expected": "Media Listing & Actions page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate grid/list view toggle on the page",
-          "expected": "grid/list view toggle is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify grid/list view toggle is displayed as expected",
-          "expected": "grid/list view toggle is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Click the grid view toggle.",
+          "expected": "The table is gone and the list toggle is offered again."
         }
       ],
       "case_key": "eJqXz3"
