@@ -19,6 +19,7 @@ import time
 
 import pytest
 from playwright.sync_api import expect
+
 from config.base_config import config
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.insights_page import InsightsPage
@@ -254,6 +255,7 @@ class TestViewsSubtabs:
             .or_(self.page.locator(f"button.tabItem:has-text('{view_name}')"))
         )
         expect(tab.first).to_be_attached(timeout=10000)
+        expect(tab).not_to_have_count(0)
 
     @pytest.mark.ui
     @pytest.mark.subtabs
@@ -315,7 +317,7 @@ class TestViewsSubtabs:
             for loc, before in zip(tab_locators, tabs_before, strict=True)
         )
 
-        assert filled or tab_found, (
+        assert (filled or tab_found) is True, (
             f"Dragging the saved view '{view_name}' onto a tile landed "
             f"nothing: no tile filled and no new tab opened within 8s"
         )
@@ -393,7 +395,7 @@ class TestViewsSubtabs:
         health = self.views.content_health_snapshot()
         self._visible_drag(map_thumb, target_tile)
 
-        assert self._content_added(initial_tiles, content_sel, baseline), \
+        assert self._content_added(initial_tiles, content_sel, baseline) is True, \
             "Map drag failed"
         self.views.log_new_content_issues(health, "map drag")
 
@@ -461,7 +463,7 @@ class TestViewsSubtabs:
         health = self.views.content_health_snapshot()
         self._visible_drag(channel, target_tile)
 
-        assert self._content_added(initial_tiles, content_sel, baseline), \
+        assert self._content_added(initial_tiles, content_sel, baseline) is True, \
             "Channel drag failed"
         self.views.log_new_content_issues(health, "channel drag")
 

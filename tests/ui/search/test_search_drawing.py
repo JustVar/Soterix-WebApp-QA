@@ -44,9 +44,12 @@ class TestSearchDrawing:
         self.search.open_zone_drawing(CAMERA_NAME)
 
         expect(self.search.canvas).to_be_visible(timeout=30000)
+        box = self.search.canvas.bounding_box()
+        assert box is not None, "the drawing canvas has no bounding box"
+        assert box["width"] > 0, f"the drawing canvas has no width: {box}"
+        assert box["height"] > 0, f"the drawing canvas has no height: {box}"
         self.search.draw_zone()
-
-        expect(self.search.done_button).to_be_visible(timeout=10000)
+        expect(self.search.done_button).to_be_enabled(timeout=10000)
         self.search.click_done()
 
     @pytest.mark.ui
@@ -96,7 +99,7 @@ class TestSearchDrawing:
 
         self.search.play_result(0, timeout=60000)
 
-        assert self.search.is_replay_visible(timeout=120000), (
+        assert self.search.is_replay_visible(timeout=120000) is True, (
             "Expected Replay icon after Zone clip finished playing"
         )
 
@@ -117,9 +120,12 @@ class TestSearchDrawing:
         self.search.open_line_drawing(CAMERA_NAME)
 
         expect(self.search.canvas).to_be_visible(timeout=30000)
+        box = self.search.canvas.bounding_box()
+        assert box is not None, "the drawing canvas has no bounding box"
+        assert box["width"] > 0, f"the drawing canvas has no width: {box}"
+        assert box["height"] > 0, f"the drawing canvas has no height: {box}"
         self.search.draw_line()
-
-        expect(self.search.done_button).to_be_visible(timeout=10000)
+        expect(self.search.done_button).to_be_enabled(timeout=10000)
         self.search.click_done()
 
     @pytest.mark.ui
@@ -166,6 +172,6 @@ class TestSearchDrawing:
 
         self.search.play_result(0, timeout=60000)
 
-        assert self.search.is_replay_visible(timeout=120000), (
+        assert self.search.is_replay_visible(timeout=120000) is True, (
             "Expected Replay icon after Line clip finished playing"
         )

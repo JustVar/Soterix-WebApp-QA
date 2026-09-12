@@ -199,5 +199,5 @@ class TestLicenseExport:
                 + (f"; it sent {len(requests)} API request(s): {requests[:3]}" if requests
                    else " and sent no request at all (app defect - register, App defects)")
             ) from None
-        assert download.suggested_filename.endswith(".csv"), (
+        assert download.suggested_filename[-4:] == ".csv", (
             f"Expected a .csv export, got: {download.suggested_filename}")

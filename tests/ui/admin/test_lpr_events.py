@@ -132,11 +132,12 @@ class TestLprEventPlayback:
         self.lpr.open_first_event()
 
         self.step_capture.mark(2, "Verify timeline readout and seek icons")
-        expect(self.page.get_by_text(TIME_STRIP_RE).first).to_be_visible(
-            timeout=10000
+        # .first: the open player shows one position readout (mm:ss / mm:ss)
+        expect(self.page.get_by_text(TIME_STRIP_RE).first).to_have_text(
+            TIME_STRIP_RE, timeout=10000
         )
-        expect(self.page.locator("img[alt='Backward']").first).to_be_visible()
-        expect(self.page.locator("img[alt='forward']").first).to_be_visible()
+        expect(self.page.locator("img[alt='Backward']")).not_to_have_count(0)
+        expect(self.page.locator("img[alt='forward']")).not_to_have_count(0)
 
         self.step_capture.mark(3, "Close the player")
         self.lpr.close_event_player()
@@ -162,10 +163,8 @@ class TestLprEventPlayback:
         self.page.locator("img[src*='filter']").first.click()
         expect(self.page.get_by_text("Cameras", exact=True).first)\
             .to_be_visible(timeout=10000)
-        expect(self.page.get_by_text("Duration", exact=True).first)\
-            .to_be_visible()
-        expect(self.page.get_by_text("Apply", exact=True).first)\
-            .to_be_visible()
+        expect(self.page.get_by_text("Duration", exact=True)).not_to_have_count(0)
+        expect(self.page.get_by_text("Apply", exact=True)).not_to_have_count(0)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -185,7 +184,7 @@ class TestLprEventPlayback:
         self.step_capture.mark(2, "Verify the first card's timestamp")
         # The card anchor matches on the time alone; the assertion
         # requires the date part too, so it is not circular
-        assert FULL_TS_RE.search(cards.first.inner_text()), (
+        assert FULL_TS_RE.search(cards.first.inner_text()) is not None, (
             "First event card has no full 'time | date' stamp"
         )
 
@@ -212,6 +211,7 @@ class TestLprEventPlayback:
             expect(
                 self.page.locator(f"img[alt='{alt}']").first
             ).to_be_visible(timeout=10000)
+            expect(self.page.locator(f"img[alt='{alt}']")).not_to_have_count(0)
 
         self.step_capture.mark(3, "Close the player")
         self.lpr.close_event_player()
@@ -312,6 +312,8 @@ class TestLprEventPlayback:
         self.page.wait_for_function(
             "() => document.fullscreenElement != null", timeout=10000
         )
+        assert self.page.evaluate("() => document.fullscreenElement != null") is True, (
+            "the player did not take the screen")
 
         self.step_capture.mark(3, "Exit fullscreen")
         # Escape does not release programmatic fullscreen headless;

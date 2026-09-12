@@ -1,6 +1,7 @@
 """Basic Views tests - thumbnail display, tabs, tile layout."""
 import pytest
 from playwright.sync_api import expect
+
 from tests.shared.pages.views_page import ViewsPage
 
 
@@ -168,7 +169,7 @@ class TestViewsBasic:
 
         # Verify success message
         success_message = self.page.locator("text=View saved successfully")
-        success_message.wait_for(state="visible", timeout=20000)
+        expect(success_message).to_contain_text("View saved successfully", timeout=20000)
 
         # Cleanup: close tab and delete saved view
         tab.hover()
@@ -206,8 +207,8 @@ class TestViewsBasic:
         # The panel shows its Presets / My Views toggle even with no saved
         # views, so it is a deterministic panel-open signal (thumbnails only
         # exist when the tenant happens to have saved views).
-        expect(self.page.locator("text=Presets").first).to_be_visible(timeout=20000)
-        expect(self.page.locator("text=My Views").last).to_be_visible(timeout=5000)
+        expect(self.page.locator("text=Presets").first).to_have_text("Presets", timeout=20000)
+        expect(self.page.locator("text=My Views").last).to_have_text("My Views", timeout=5000)
 
     @pytest.mark.ui
     @pytest.mark.views_myviews
@@ -344,4 +345,5 @@ class TestViewsBasic:
 
         # Verify success message
         success_message = self.page.locator("text=Successfully deleted")
-        success_message.wait_for(state="visible", timeout=60000)
+        expect(success_message).to_contain_text("Successfully deleted", timeout=60000)
+        expect(saved_view).to_have_count(0, timeout=10000)

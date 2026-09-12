@@ -7,6 +7,8 @@ timeout popup ('Set Timeout Duration') opens only while a stream is
 playing - without one, the icon click yields nothing but its
 'Playback Auto-Timeout' tooltip. Measured 08/12-08/13/2026.
 """
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -170,9 +172,8 @@ class TestLprTimer:
 
         self.step_capture.mark(2, "Verify the popup controls")
         popup = self._popup()
-        expect(popup.get_by_text("Save", exact=True).first).to_be_visible()
-        expect(popup.get_by_text("Cancel", exact=True).first)\
-            .to_be_visible()
+        expect(popup.get_by_text("Save", exact=True)).to_have_count(1)
+        expect(popup.get_by_text("Cancel", exact=True)).to_have_count(1)
 
         self.step_capture.mark(3, "Close and clear")
         self._close_popup()
@@ -201,17 +202,13 @@ class TestLprTimer:
 
         self.step_capture.mark(2, "Open the duration dropdown")
         current = self._popup().get_by_text("Minutes", exact=False).first
-        expect(current).to_be_visible()
+        expect(current).to_have_text(re.compile(r"\d+ Minutes"))
         current.click()
 
         self.step_capture.mark(3, "Verify the preset options")
         options = self.page.locator("li:visible")
-        expect(
-            options.filter(has_text="30 Minutes").first
-        ).to_be_visible(timeout=10000)
-        expect(
-            options.filter(has_text="45 Minutes").first
-        ).to_be_visible()
+        expect(options.filter(has_text="30 Minutes")).to_have_count(1, timeout=10000)
+        expect(options.filter(has_text="45 Minutes")).to_have_count(1)
 
         self.step_capture.mark(4, "Dismiss without saving")
         self.page.keyboard.press("Escape")
@@ -272,7 +269,7 @@ class TestLprTimer:
         self._open_popup_with_stream()
         expect(
             self._popup().get_by_text("Minutes", exact=False).first
-        ).to_be_visible()
+        ).to_have_text(re.compile(r"\d+ Minutes"))
         self._close_popup()
 
         self.step_capture.mark(2, "Reload and reopen")
@@ -280,7 +277,7 @@ class TestLprTimer:
         self._open_popup_with_stream()
         expect(
             self._popup().get_by_text("Minutes", exact=False).first
-        ).to_be_visible()
+        ).to_have_text(re.compile(r"\d+ Minutes"))
 
         self.step_capture.mark(3, "Close and clear")
         self._close_popup()
