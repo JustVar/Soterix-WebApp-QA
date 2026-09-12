@@ -75,8 +75,8 @@
         },
         {
           "n": 3,
-          "action": "Count the activated licenses marked assigned.",
-          "expected": "One assigned license per lens."
+          "action": "Read the assigned license row.",
+          "expected": "It covers one license per lens (Used reads 4 on the MS-20V-1 units)."
         }
       ],
       "case_key": "J89gEX"

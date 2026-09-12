@@ -294,6 +294,8 @@ class TestC2CSystemOps:
         """
         self.step_capture.mark(1, "Navigate to Configuration Backup")
         self.camera.navigate_to_setup_section("SYSTEM")
+        # MS-20V-1 firmware has no CONFIGURATION BACKUP entry (measured 09/11/2026)
+        self.camera.require_subsection("CONFIGURATION BACKUP")
         self.camera.navigate_to_setup_subsection("CONFIGURATION BACKUP")
 
         self.step_capture.mark(2, "Verify export/download option exists")

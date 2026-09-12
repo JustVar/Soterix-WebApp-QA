@@ -79,7 +79,7 @@ class TestC2CVCA:
             self.step_capture.mark(2, "Verify at least one rule is listed")
             # one table row per rule: type, name, action, colour. DC-5V-1
             # offers Modify/Delete beside the rule and no Add button
-            rows = self.camera.table_rows()
+            rows = self.camera.wait_for_table_rows()
             rules = [(r[0], r[1]) for r in rows if len(r) >= 2 and r[0] and r[1]]
             assert rules, (
                 f"no rule listed on {self.camera.ip}: the RULES table reads {rows}")
@@ -95,19 +95,19 @@ class TestC2CVCA:
         # adds the channel count, which the multi-lens step counts by row
         family = expected_license.split()[0]
         self.step_capture.mark(4, f"Verify a {family} license is activated")
-        rows = self.camera.table_rows()
-        licenses = [r[-1] for r in rows if len(r) == 2 and r[-1].startswith(family)]
+        rows, licenses, used = self.camera.activated_licenses(family)
         assert licenses, (
             f"no activated {family} license on {self.camera.ip}: the Activated "
             f"License(s) table has no license row (cells read {rows})")
 
-        # Multi-lens cameras must show N licenses assigned (one per lens)
+        # a multi-lens unit's licence covers one channel per lens: the
+        # row's Used cell (4 on MS-20V-1), or one row per lens
         if self.config.get("multi_lens"):
             expected_count = self.config["expected_license_count"]
             self.step_capture.mark(5, f"Verify {expected_count} licenses assigned (multi-lens)")
-            assert len(licenses) >= expected_count, (
-                f"{self.camera.ip} should list {expected_count} {family} licenses, "
-                f"one per lens; it lists {len(licenses)}: {licenses}")
+            assert used >= expected_count, (
+                f"{self.camera.ip} should cover {expected_count} lenses with {family}; "
+                f"its rows cover {used}: {licenses}")
 
 
 class TestC2CSoterixCloud:
@@ -211,8 +211,8 @@ class TestC2CMultiLens:
            Expected: The LICENSE page is shown.
         2. Compare the registry's expected license count with its lens count.
            Expected: They match (four for the MS-20V-1 units).
-        3. Count the activated licenses marked assigned.
-           Expected: One assigned license per lens.
+        3. Read the assigned license row.
+           Expected: It covers one license per lens (Used reads 4 on the MS-20V-1 units).
         """
         self.step_capture.mark(1, "Navigate to VCA > LICENSE")
         self.camera.navigate_to_vca_section()
@@ -220,19 +220,20 @@ class TestC2CMultiLens:
         expect(self.camera.heading("LICENSE")).to_be_visible()
 
         expected_count = self.config["expected_license_count"]
-        total_lenses = self.config["total_lenses"]
+        lens_count = self.config["lens_count"]
 
-        self.step_capture.mark(2, f"Verify license count ({expected_count}) matches lens count ({total_lenses})")
-        assert expected_count == total_lenses, (
-            f"Config inconsistency: expected_license_count={expected_count} "
-            f"but total_lenses={total_lenses}"
+        self.step_capture.mark(2, f"Verify license count ({expected_count}) matches lens count ({lens_count})")
+        assert expected_count == lens_count, (
+            f"registry inconsistency for {self.config['id']}: expected_license_count="
+            f"{expected_count} but lens_count={lens_count}"
         )
 
         self.step_capture.mark(3, "Verify all lenses have licenses assigned")
-        # Each activated license row appears with the license name
-        # For a 4-lens device with ProAI 4ch, should see 4 assigned rows
-        licenses = self.camera.get_vca_license()
-        assigned_count = sum(1 for lic in licenses if lic.get("assigned"))
-        assert assigned_count == expected_count, (
-            f"Expected {expected_count} assigned licenses, found {assigned_count}"
+        # the assigned row's Used cell counts the lenses it covers (4 on
+        # MS-20V-1); a unit listing one row per lens counts the rows
+        family = self.config["expected_license"].split()[0]
+        rows, licenses, used = self.camera.activated_licenses(family)
+        assert used == expected_count, (
+            f"{self.camera.ip} should cover {expected_count} lenses with {family}; "
+            f"its rows cover {used}: {licenses} (cells read {rows})"
         )

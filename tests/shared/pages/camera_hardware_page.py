@@ -174,6 +174,28 @@ class CameraHardwarePage:
             "trs => trs.map(tr => [...tr.querySelectorAll('td')].map(td => td.innerText.trim()))")
         return [r for r in rows if any(r)]
 
+    def wait_for_table_rows(self, timeout_ms: int = 10000) -> list[list[str]]:
+        """table_rows once a data row is there. The RULES table on MS-20V-1
+        renders after the pane text has settled (measured 09/11/2026), so
+        a read on the settle alone saw no rows. Returns [] at the timeout,
+        so the caller names the empty table."""
+        deadline = time.monotonic() + timeout_ms / 1000
+        while True:
+            rows = self.table_rows()
+            if rows or time.monotonic() > deadline:
+                return rows
+            self.page.wait_for_timeout(200)  # poll tick for the table fill
+
+    def activated_licenses(self, family: str):
+        """On the LICENSE page: (all rows, the Activated License(s) rows
+        naming this family, the lenses they cover). A row reads
+        [assigned mark, license, used]: 'V', 'ProAI', '4' on the four-lens
+        MS-20V-1; single-lens units have no Used cell and count one."""
+        rows = self.wait_for_table_rows()
+        hits = [r for r in rows if len(r) >= 2 and r[1].startswith(family)]
+        used = sum(int(r[2]) if len(r) >= 3 and r[2].isdigit() else 1 for r in hits)
+        return rows, hits, used
+
     def content(self, text: "str | re.Pattern[str]"):
         """The content pane's first element carrying this text or pattern
         (a label, a status line, a version string), for pages with no
@@ -407,7 +429,7 @@ class CameraHardwarePage:
     def get_vca_enable_status(self) -> dict:
         """Navigate to VCA > ENABLE and return enable state + tracker engine."""
         self.navigate_to_setup()
-        self.navigate_to_setup_section("VCA")
+        self.navigate_to_vca_section()
         self.navigate_to_setup_subsection("ENABLE")
         self.page.wait_for_timeout(500)
 
@@ -432,7 +454,7 @@ class CameraHardwarePage:
         camera look unlicensed. Match on the header row instead.
         """
         self.navigate_to_setup()
-        self.navigate_to_setup_section("VCA")
+        self.navigate_to_vca_section()
         self.navigate_to_setup_subsection("LICENSE")
         self.page.wait_for_timeout(1000)
 
