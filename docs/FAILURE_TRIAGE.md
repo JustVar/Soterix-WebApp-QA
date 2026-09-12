@@ -159,6 +159,14 @@ Locators
   and verification evidence: TEST_REPAIRS items 14, 18-20.
 
 Waits and signals
+- A control that turns into a spinner, sends no request and never
+  resolves is not a slow server. Open the trace's console (the Console
+  tab in the GUI, or the `console` events in trace.trace): a Content
+  Security Policy refusal ('Refused to connect because it violates the
+  document's Content Security Policy') rejects the app's promise with
+  no toast and no request. The view Save did this on 09/12/2026: the
+  app fetched its own data:image/png thumbnail and connect-src has no
+  data:. Read the console before blaming the stream (TEST_REPAIRS 56).
 - Empty video tiles keep placeholder spinners alive forever - never
   wait for CircularProgress hidden on tile grids; a new `video`
   element past the baseline is the played signal.
