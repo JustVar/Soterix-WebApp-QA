@@ -36,7 +36,7 @@ class TestC2CVCA:
            Expected: DL Object Tracker is selected with Intrusion detection as its active option, and DL People Tracker is listed as the alternative.
         """
         self.step_capture.mark(1, "Navigate to VCA > ENABLE")
-        self.camera.navigate_to_setup_section("VCA")
+        self.camera.navigate_to_vca_section()
         self.camera.navigate_to_setup_subsection("ENABLE")
         expect(self.camera.heading("CONFIGURATION")).to_be_visible()
 
@@ -61,47 +61,53 @@ class TestC2CVCA:
         """Verify VCA has active rules and valid ProAI license.
 
         Steps:
-        1. Open Setup > VCA > RULES.
-           Expected: The RULES page lists the rules and has an Add button.
+        1. Open Setup > VCA > RULES (BC-5V-1 firmware has no RULES entry; skip to step 2 there).
+           Expected: The RULES table lists at least one rule with its type and name.
         2. Open VCA > LICENSE.
-           Expected: The LICENSE page shows the camera's expected license (from the registry) under Activated License.
+           Expected: The Activated License(s) table lists the camera's license family from the registry (ProAI); a missing row names the camera.
         3. On a multi-lens camera, count the activated license rows.
            Expected: One row per lens (four on the MS-20V-1 units).
         """
         self.step_capture.mark(1, "Navigate to VCA > RULES")
-        self.camera.navigate_to_setup_section("VCA")
-        # DC-5V-1 and BC-5V-1 firmware has no RULES entry (probed 09/11/2026)
-        self.camera.require_subsection("RULES")
-        self.camera.navigate_to_setup_subsection("RULES")
-        expect(self.camera.heading("RULES")).to_be_visible()
+        self.camera.navigate_to_vca_section()
+        # BC-5V-1 firmware has no RULES entry (measured 09/11/2026); the
+        # license check below runs on every model, so this is no skip
+        if self.camera.has_subsection("RULES"):
+            self.camera.navigate_to_setup_subsection("RULES")
+            expect(self.camera.heading("RULES")).to_be_visible()
 
-        self.step_capture.mark(2, "Verify at least one rule exists")
-        page_text = self.page.locator("body").inner_text()
-        # Should have a rule like "Presence" or similar
-        assert "Rule(s)" in page_text or "Type" in page_text
-        # Verify Add button exists (confirms rules UI is functional)
-        expect(self.page.locator("button:has-text('Add')")).to_be_visible()
+            self.step_capture.mark(2, "Verify at least one rule is listed")
+            # one table row per rule: type, name, action, colour. DC-5V-1
+            # offers Modify/Delete beside the rule and no Add button
+            rows = self.camera.table_rows()
+            rules = [(r[0], r[1]) for r in rows if len(r) >= 2 and r[0] and r[1]]
+            assert rules, (
+                f"no rule listed on {self.camera.ip}: the RULES table reads {rows}")
+        else:
+            print(f"[C2C] {self.camera.ip}: the analytics section has no RULES entry")
 
         self.step_capture.mark(3, "Navigate to VCA > LICENSE")
         self.camera.navigate_to_setup_subsection("LICENSE")
         expect(self.camera.heading("LICENSE")).to_be_visible()
 
         expected_license = self.config["expected_license"]
-        self.step_capture.mark(4, f"Verify {expected_license} license is activated")
-        expect(self.page.locator(f"text='{expected_license}'")).to_be_visible()
-
-        self.step_capture.mark(5, "Verify license is assigned")
-        page_text = self.page.locator("body").inner_text()
-        assert "Activated License" in page_text
+        # the page names the family ('ProAI'); the registry's 'ProAI 1ch'
+        # adds the channel count, which the multi-lens step counts by row
+        family = expected_license.split()[0]
+        self.step_capture.mark(4, f"Verify a {family} license is activated")
+        rows = self.camera.table_rows()
+        licenses = [r[-1] for r in rows if len(r) == 2 and r[-1].startswith(family)]
+        assert licenses, (
+            f"no activated {family} license on {self.camera.ip}: the Activated "
+            f"License(s) table has no license row (cells read {rows})")
 
         # Multi-lens cameras must show N licenses assigned (one per lens)
         if self.config.get("multi_lens"):
             expected_count = self.config["expected_license_count"]
-            self.step_capture.mark(6, f"Verify {expected_count} licenses assigned (multi-lens)")
-            # Each row in Activated Licenses table represents one assigned license
-            license_rows = self.page.locator(f"text='{expected_license}'").count()
-            assert license_rows >= expected_count, \
-                f"Multi-lens camera should have {expected_count} licenses, found {license_rows}"
+            self.step_capture.mark(5, f"Verify {expected_count} licenses assigned (multi-lens)")
+            assert len(licenses) >= expected_count, (
+                f"{self.camera.ip} should list {expected_count} {family} licenses, "
+                f"one per lens; it lists {len(licenses)}: {licenses}")
 
 
 class TestC2CSoterixCloud:
@@ -209,7 +215,7 @@ class TestC2CMultiLens:
            Expected: One assigned license per lens.
         """
         self.step_capture.mark(1, "Navigate to VCA > LICENSE")
-        self.camera.navigate_to_setup_section("VCA")
+        self.camera.navigate_to_vca_section()
         self.camera.navigate_to_setup_subsection("LICENSE")
         expect(self.camera.heading("LICENSE")).to_be_visible()
 

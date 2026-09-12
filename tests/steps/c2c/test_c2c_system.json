@@ -65,7 +65,7 @@
         {
           "n": 2,
           "action": "Read each plugin's status.",
-          "expected": "At least two plugins show running."
+          "expected": "Every listed plugin shows running; a stopped one is named in the failure."
         }
       ],
       "case_key": "Pgp3nd"

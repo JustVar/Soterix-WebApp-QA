@@ -23,13 +23,13 @@
       "steps": [
         {
           "n": 1,
-          "action": "Open Setup > VCA > RULES.",
-          "expected": "The RULES page lists the rules and has an Add button."
+          "action": "Open Setup > VCA > RULES (BC-5V-1 firmware has no RULES entry; skip to step 2 there).",
+          "expected": "The RULES table lists at least one rule with its type and name."
         },
         {
           "n": 2,
           "action": "Open VCA > LICENSE.",
-          "expected": "The LICENSE page shows the camera's expected license (from the registry) under Activated License."
+          "expected": "The Activated License(s) table lists the camera's license family from the registry (ProAI); a missing row names the camera."
         },
         {
           "n": 3,

@@ -116,6 +116,23 @@ class CameraHardwarePage:
         self.page.wait_for_timeout(500)  # the menu unfolds with no DOM signal of its own
         return self
 
+    def navigate_to_vca_section(self):
+        """Open the analytics section, whatever the firmware calls it.
+        BC-5V-1 names it VCA; DC-5V-1 names it SETTINGS (Enable, RULES,
+        COUNTERS, SCHEDULES, ... LICENSE; measured 09/11/2026). The
+        section is found by its Enable entry, which both carry."""
+        enable = self.page.locator("li").filter(has_text=re.compile(r"^\s*Enable\s*$", re.I))
+        # .first: one section carries the analytics Enable entry
+        section = self.page.locator("#sub_menu > ul").filter(has=enable).first
+        if not section.count():
+            names = self.page.locator("#sub_menu > ul").evaluate_all(
+                "els => els.map(e => (e.textContent || '').trim().split(/\\s+/).slice(0, 2).join(' '))")
+            raise AssertionError(
+                f"no setup section carries an Enable entry (analytics): sections are {names}")
+        section.click()
+        self.page.wait_for_timeout(500)  # the menu unfolds with no DOM signal of its own
+        return self
+
     def navigate_to_setup_subsection(self, subsection_text: str):
         """Click a sub-section link in Setup (e.g. 'VIDEO', 'OSD', 'ENABLE')
         and wait for the content heading to change."""
@@ -147,6 +164,15 @@ class CameraHardwarePage:
         Options are hidden elements, so a text= locator on one never reads
         as visible."""
         return select.locator("option:checked")
+
+    def table_rows(self) -> list[list[str]]:
+        """The content pane's table rows as cell texts, empty rows dropped.
+        Header rows use th cells and so come back empty; a heading row
+        set in td cells ('Assigned', 'License') stays, so callers match
+        on the cells they expect."""
+        rows = self.page.locator("#tabs tr").evaluate_all(
+            "trs => trs.map(tr => [...tr.querySelectorAll('td')].map(td => td.innerText.trim()))")
+        return [r for r in rows if any(r)]
 
     def content(self, text: "str | re.Pattern[str]"):
         """The content pane's first element carrying this text or pattern

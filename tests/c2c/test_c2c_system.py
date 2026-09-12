@@ -155,7 +155,7 @@ class TestC2CPlugins:
         1. Open Setup > SYSTEM > PLUG-IN.
            Expected: The SOTERIX and VCAedge-AI plugins are listed.
         2. Read each plugin's status.
-           Expected: At least two plugins show running.
+           Expected: Every listed plugin shows running; a stopped one is named in the failure.
         """
         self.step_capture.mark(1, "Navigate to Plug-in page")
         self.camera.navigate_to_setup_section("SYSTEM")
@@ -170,8 +170,15 @@ class TestC2CPlugins:
         expect(self.page.locator("text='VCAedge-AI'")).to_be_visible()
 
         self.step_capture.mark(4, "Verify both plugins show 'running' status")
-        running_count = self.page.locator("text='running'").count()
-        assert running_count >= 2, f"Expected at least 2 running plugins, found {running_count}"
+        # each plug-in row by name and status, so a stopped one is named
+        # (SOTERIX 1.5.1 'stopped' beside a running VCAedge-AI on
+        # 10.2.0.129, 09/11/2026)
+        rows = self.camera.table_rows()
+        plugins = {r[0]: r[-1] for r in rows if len(r) >= 3 and r[0]}
+        assert plugins, f"no plug-in rows on {self.camera.ip}: the tables read {rows}"
+        stopped = [f"{name} {status}" for name, status in plugins.items() if status != "running"]
+        assert not stopped, (
+            f"plug-ins not running on {self.camera.ip}: {stopped} (the table reads {plugins})")
 
     @pytest.mark.regression
     @pytest.mark.c2c_hardware
