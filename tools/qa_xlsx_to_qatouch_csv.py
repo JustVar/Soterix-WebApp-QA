@@ -226,10 +226,11 @@ TESTING_TYPE_TOKENS = {
 
 # Unicode characters QA's xlsx generator inserts that we want to normalise:
 # en-dash, em-dash, minus, replacement char, right arrow, non-breaking
-# space, smart quotes. The keys are written as escapes on purpose: two
-# typography sweeps of the source (the last 94b8cb9, 08/07/2026) had
-# flattened the literal characters to ASCII, so the map rewrote every
-# plain hyphen as " - " and left the smart quotes alone until 09/14/2026
+# space, smart quotes. The keys are written as escapes on purpose: the
+# dash, arrow and single-quote keys were ASCII from the file's first
+# commit (07/14/2026) and the 08/07 typography sweep (94b8cb9) took the
+# double quotes too, so the map rewrote every plain hyphen as " - " and
+# left the smart quotes alone until 09/14/2026
 # (register row 62). tests/tools/test_unicode_fixes.py holds it.
 UNICODE_FIXES = {
     "\u2013": " - ",   # en-dash

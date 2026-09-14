@@ -384,7 +384,7 @@ def add_to_review_queue(nodeid: str, reason: str, queue_path: str = REVIEW_QUEUE
     queue = _load_review_queue(queue_path)
 
     next_id = queue["metadata"].get("next_id", 1)
-    entry_id = f"RQ-{next_id:04d}"
+    entry_id = f"RQ-{int(next_id):04d}"
     queue["metadata"]["next_id"] = next_id + 1
 
     entry = {

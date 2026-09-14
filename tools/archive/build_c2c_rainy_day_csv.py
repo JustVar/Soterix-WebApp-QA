@@ -51,7 +51,7 @@ def _ascii(s: str) -> str:
         "\u2018": "'", "\u2019": "'",        # smart single quotes
         "\u201c": '"', "\u201d": '"',        # smart double quotes
         "\u2026": "...", "\ufffd": "-",      # ellipsis, replacement char
-        "\u00a0": " ",                        # nbsp (keys escaped: a typography sweep flattened them once)
+        "\u00a0": " ",                        # nbsp (keys escaped: the literal keys had been flattened to ASCII)
     }
     for k, v in repl.items():
         s = s.replace(k, v)

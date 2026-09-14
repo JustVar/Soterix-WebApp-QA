@@ -70,3 +70,25 @@ def test_an_unreadable_baseline_reads_as_none(baseline_file):
     assert lb.load_baseline() is None
     baseline_file.write_text(json.dumps({"files": {}}), encoding="utf-8")
     assert lb.load_baseline() == {}
+
+
+def test_a_failed_ruff_run_is_an_error_not_a_clean_tree(baseline_file, monkeypatch, capsys):
+    """ruff exiting with anything but 0 or 1 stops the gate with its stderr; at a zero baseline that used to read as clean."""
+    baseline_file.write_text(json.dumps({"total": 0, "files": {}}), encoding="utf-8")
+
+    class Dead:
+        returncode = 2
+        stdout = ""
+        stderr = "error: bad pyproject"
+
+    monkeypatch.setattr(lb.subprocess, "run", lambda *a, **k: Dead())
+    assert lb.main([]) == 2
+    assert "ruff exited 2: error: bad pyproject" in capsys.readouterr().out
+
+
+def test_a_recorded_baseline_round_trips(baseline_file):
+    """What --update writes is what the next run reads, zero included."""
+    lb.save_baseline(Counter({"tools/x.py": 2}))
+    assert lb.load_baseline() == {"tools/x.py": 2}
+    lb.save_baseline(Counter())
+    assert lb.load_baseline() == {}

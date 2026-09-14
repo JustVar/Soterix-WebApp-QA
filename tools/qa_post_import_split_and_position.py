@@ -432,7 +432,7 @@ def sync_case(
     page,
     project_key: str,
     case_key: str,
-    _title: str,
+    title: str,  # noqa: ARG001 - the caller passes it, the body never reads it (register row 63)
     steps: list[str],
     expecteds: list[str],
     dry_run: bool,

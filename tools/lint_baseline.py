@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Fail when a file gains lint findings. Ignore the ones it already had.
 
-This repo carries several hundred ruff findings. A gate that demands zero
-would fail every pull request from day one and be switched off within a
-week, so it would protect nothing. A gate that demands "no more than
-before" is one a change can actually pass, and it stops the count growing.
-The current total is in config/lint_baseline.json; do not quote it here,
-because a number in a docstring goes stale and this one already did.
+The repo reached zero ruff findings on 09/14/2026 and the recorded
+baseline is zero, so today any finding fails. The tool stays as the gate
+because a per-file baseline is what got it there: a repo that held
+several hundred findings could not have started at zero, and "no more than
+before, per file" was a bar every change could pass while the count came
+down. If the count ever has to go up, say why in the commit message and
+run --update; the standard is zero, not "no more than before".
 
 The count is per file, not a repo total. A repo total lets a change fix five
 findings in one file and add five in another and call it even, which is how
@@ -39,11 +40,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE = ROOT / 'config' / 'lint_baseline.json'
-# conftest.py is here because it was the whole gap: `ruff check .` finds
-# 644 and these targets found 614, and all 30 of the difference were in
-# that one file - the file that holds `pytest_plugins`, which is the
-# subject of the two shim rules the migration turns on.
-TARGETS = ['plugins', 'tools', 'tests', 'config', 'run.py', 'conftest.py']
+# The whole tree, the same scope as `ruff check .`: the excludes live in
+# pyproject.toml. A list of directories here once missed conftest.py and
+# then a root script; the gate lints what ruff lints.
+TARGETS = ['.']
 
 
 def current_counts() -> tuple[Counter, str | None]:
@@ -56,6 +56,11 @@ def current_counts() -> tuple[Counter, str | None]:
             check=False)
     except (OSError, subprocess.SubprocessError) as exc:
         return Counter(), f'could not run ruff: {exc}'
+    # ruff exits 0 with no findings and 1 with findings, both with JSON on
+    # stdout. Anything else is ruff failing (a broken pyproject, a missing
+    # install), and at a zero baseline that used to read as a clean tree.
+    if proc.returncode not in (0, 1):
+        return Counter(), f'ruff exited {proc.returncode}: {proc.stderr.strip()[:200]}'
     try:
         findings = json.loads(proc.stdout or '[]')
     except (json.JSONDecodeError, ValueError):

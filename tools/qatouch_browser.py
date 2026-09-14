@@ -292,7 +292,7 @@ def enter_project(page, context=None):
             proj = page.locator('text="NexaiQ-Core"').first
             try:
                 proj.wait_for(state='visible', timeout=10000)
-            except Exception:
+            except Exception as exc:  # why: the re-auth's own failure is the cause the raise below carries
                 # Re-auth claimed success but project still not visible - force manual login
                 print('  Re-auth returned True but project not visible - forcing manual login...')
                 if wait_for_login(page):
@@ -302,7 +302,7 @@ def enter_project(page, context=None):
                     proj = page.locator('text="NexaiQ-Core"').first
                     proj.wait_for(state='visible', timeout=10000)
                 else:
-                    raise TimeoutError('Could not enter project - manual login failed') from None
+                    raise TimeoutError('Could not enter project - manual login failed') from exc
         else:
             raise TimeoutError('Could not enter project - authentication failed') from None
 

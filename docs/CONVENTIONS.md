@@ -572,19 +572,24 @@ so testers can see the drag in headed mode. The current implementation is
 ## Linting (ruff)
 
 - Config: `pyproject.toml`. Playwright/pytest-aware rule families (PT,
-  T20, ARG, B, UP, SIM, RUF, I, plus pycodestyle and pyflakes).
+  T20, ARG, B, UP, SIM, RUF, I, RET, LOG, ASYNC, plus pycodestyle and
+  pyflakes).
 - The repo is clean since 09/14/2026 and `tools/lint_baseline.py` holds it
-  there: a file that gains a finding fails the commit hook and CI. Fix the
-  finding, or say why in the commit message and run `--update`.
+  there over the same tree `ruff check .` lints: a file that gains a
+  finding fails the commit hook and CI, and a ruff run that fails is an
+  error, not a clean tree. Fix the finding, or say why in the commit
+  message and run `--update`.
 - Not BLE (blind except): the rule on `except Exception` is a why comment,
   inline or on the line above, and the convention checker enforces it
   (`except-without-why`). Not SIM105 (`contextlib.suppress`), which would
   hide that comment, and not SIM102, where a nested if carries its own
   comment. Decided 09/14/2026.
-- Per-file ignores live in `pyproject.toml`: tests/ allow unused-import,
-  unused-arg, and `assert False`; tools/ allow `print()` and imports after
-  the path shim; conftest.py and plugins/ allow `print()` and the unused
-  arguments pytest hook signatures name.
+- Per-file ignores live in `pyproject.toml`: tests/ allow unused imports,
+  unused variables and arguments, `print()`, `assert False` and three
+  pytest-style rules (PT004, PT005, PT012); tools/ and run.py allow
+  `print()`, and tools/ imports after the path shim; conftest.py allows
+  `print()`; conftest.py and plugins/ allow the unused arguments pytest
+  hook signatures name.
 - A tool parameter that callers pass and the body never reads is marked
   `# noqa: ARG001 - <why>` naming the register row, never renamed away.
 - `docs/archive/`, `config/audit_reports/`, `config/qatouch_snapshots/`,

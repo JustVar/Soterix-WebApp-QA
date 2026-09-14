@@ -744,7 +744,6 @@ def cmd_regression(args):
     mapping = load_case_mapping()
 
     matrix = build_coverage_matrix(snapshot, pw_tests, mapping)
-    compute_gap_scores(matrix)  # kept for its effect
     tagged = get_tagged_cases(snapshot)
 
     # Already tagged cases (don't double-tag)

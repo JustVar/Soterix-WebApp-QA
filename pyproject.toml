@@ -46,7 +46,7 @@ ignore = [
     "PT006",   # parametrize argnames style - tuple vs list, low value
     "RUF012",  # mutable class attrs need ClassVar - noisy for POMs that define `page.locator(...)` at class level
     "SIM105",  # contextlib.suppress hides the why comment the conventions require on a swallowed exception
-    "SIM102",  # a nested if that carries its own comment reads better than one joined condition (the 19 left all do)
+    "SIM102",  # a nested if that carries its own comment reads better than one joined condition (most of the 19 left do)
 ]
 # Not BLE (blind except): the house rule is a why comment on every
 # `except Exception`, checked by tools/convention_check.py (except-without-why),
