@@ -153,7 +153,12 @@ class TestCameraSequences:
     @pytest.mark.ui
     @pytest.mark.sequences
     def test_add_created_sequence_to_views(self):
-        """Verify sequences are available and can be interacted with."""
+        """The sequences sidebar lists the tenant's sequences by name.
+
+        Steps:
+        1. Open the Sequences page.
+           Expected: The sidebar lists at least one sequence and no entry is blank.
+        """
         self._navigate_and_verify()
 
         # Check for sequence items in the sidebar

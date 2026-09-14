@@ -190,7 +190,12 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_check_site_status(self):
-        """Verify sites display Online/Offline status indicators."""
+        """Every site on the Sites list carries an Online or Offline marker.
+
+        Steps:
+        1. Open Admin > Sites.
+           Expected: The list shows at least one Online or Offline status marker.
+        """
         self._navigate_to_sites()
 
         # Wait for the first indicator; get_site_statuses reads counts once

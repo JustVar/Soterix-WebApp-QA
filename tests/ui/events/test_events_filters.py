@@ -212,11 +212,13 @@ class TestEventsFilters:
     @pytest.mark.events
     @pytest.mark.events_filters
     def test_unpin_event_via_second_pin(self):
-        """Verify pinning a second event after pinning the first shows count of 2,
-        then pinning a third shows count of 3 (verifies counter increments).
+        """Pinning three events shows a pinned count of three.
 
-        Note: Unpinning requires re-hovering an already-pinned event which
-        has different hover state. This test verifies the counter tracks correctly.
+        Steps:
+        1. On Events, pick the site, the Intrusion Detection rule and Last 7 days, and search.
+           Expected: The results list at least three events. With fewer the test skips naming the count.
+        2. Pin the first, second and third event.
+           Expected: The pinned counter reads 3.
         """
         self.events.select_site(None)
         self.events.select_rule("Intrusion Detection")

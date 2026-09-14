@@ -82,52 +82,12 @@
       "case_key": "wmjK8G"
     },
     "test_audit_trail_has_records": {
-      "title": "Verify the Audit Trail has at least one record",
+      "title": "The audit trail lists at least one record",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Audit Trail - Users",
-          "expected": "Audit Trail - Users page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate Audit Trail records on the page",
-          "expected": "Audit Trail records is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify Audit Trail records populated",
-          "expected": "Audit Trail records populated"
-        },
-        {
-          "n": 8,
-          "action": "Set up precondition: with valid data",
-          "expected": "Precondition is met (with valid data)"
-        },
-        {
-          "n": 9,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open Admin > General and click View on the Audit Trail card.",
+          "expected": "The table shows a real audit record, not the No data available placeholder."
         }
       ],
       "case_key": "yaWXD9"
@@ -187,42 +147,17 @@
       "case_key": "8V1bJr"
     },
     "test_audit_trail_next_page": {
-      "title": "Verify clicking Next page loads more records",
+      "title": "The Next control turns the audit trail to a new set of records",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > General, click View on the Audit Trail card, and note the first record.",
+          "expected": "A real audit record is listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Audit Trail - Users",
-          "expected": "Browser navigates to the target URL"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Audit Trail - Users page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Click Next below the table.",
+          "expected": "The first record changes to a different one. With no Next control there is no page to turn and the test skips."
         }
       ],
       "case_key": "WEnvyM"
@@ -261,47 +196,12 @@
       "case_key": "kpZWE0"
     },
     "test_audit_trail_after_refresh": {
-      "title": "Verify Admin page loads correctly after browser refresh",
+      "title": "The audit trail page survives a browser refresh",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Audit Trail - Users",
-          "expected": "Audit Trail - Users page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate Audit Trail table refreshes and displays all records on the page",
-          "expected": "Audit Trail table refreshes and displays all records is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify Audit Trail table refreshes and displays all records is displayed as expected",
-          "expected": "Audit Trail table refreshes and displays all records is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open Admin > General, click View on the Audit Trail card, then refresh the browser.",
+          "expected": "The address still contains /admin and the General tab shows again."
         }
       ],
       "case_key": "aj67L4"

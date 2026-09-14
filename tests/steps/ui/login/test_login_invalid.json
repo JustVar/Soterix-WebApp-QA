@@ -44,42 +44,12 @@
       "case_key": "J8dzQj"
     },
     "test_empty_username": {
-      "title": "Verify login fails with empty username",
+      "title": "Submitting the login form with no email keeps the login page",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Camera Grid",
-          "expected": "Camera Grid page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for empty camera grid state",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Verify empty camera grid state is displayed and functions correctly",
-          "expected": "Empty camera grid state is displayed as expected (when no cameras are selected)"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: when no cameras are selected",
-          "expected": "Precondition is met (when no cameras are selected)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Leave the email empty, type a password and click Login.",
+          "expected": "The login page stays open and the app does not sign in."
         }
       ],
       "case_key": "Pgwl8v"
@@ -146,118 +116,23 @@
       "case_key": "68leQP"
     },
     "test_wrong_credentials": {
-      "title": "Verify login fails with incorrect credentials",
+      "title": "Wrong credentials do not sign in",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Storage",
-          "expected": "Storage page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Locate the form, input, or control where validation applies",
-          "expected": "The target input or form is visible"
-        },
-        {
-          "n": 4,
-          "action": "Enter invalid data or trigger the error condition for error handling",
-          "expected": "The invalid input is accepted into the field"
-        },
-        {
-          "n": 5,
-          "action": "Attempt to submit or trigger the validation",
-          "expected": "Validation fires on submit or field blur"
-        },
-        {
-          "n": 6,
-          "action": "Verify an error message is displayed near the field or at the top of the form",
-          "expected": "A clear, descriptive error message appears"
-        },
-        {
-          "n": 7,
-          "action": "Verify the error message text is correct and helpful",
-          "expected": "Error message accurately describes the validation failure"
-        },
-        {
-          "n": 8,
-          "action": "Verify the form did not submit or the action was blocked",
-          "expected": "No data was saved; the user remains on the form"
-        },
-        {
-          "n": 9,
-          "action": "Correct the invalid input with valid data",
-          "expected": "The error message disappears when valid data is entered"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: when credentials are incorrect",
-          "expected": "Precondition is met (when credentials are incorrect)"
-        },
-        {
-          "n": 11,
-          "action": "Submit with the corrected data and verify success",
-          "expected": "Form submits successfully after correction"
+          "action": "Type an unknown email and a wrong password and click Login.",
+          "expected": "The app does not sign in: an error shows or the login page stays open."
         }
       ],
       "case_key": "gQxma3"
     },
     "test_invalid_email_format": {
-      "title": "Verify login fails with malformed email format",
+      "title": "A malformed email address does not sign in",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Share Live View Modal",
-          "expected": "Share Live View Modal page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Locate the form, input, or control where validation applies",
-          "expected": "The target input or form is visible"
-        },
-        {
-          "n": 4,
-          "action": "Enter invalid data or trigger the error condition for invalid email format shows validation error",
-          "expected": "The invalid input is accepted into the field"
-        },
-        {
-          "n": 5,
-          "action": "Attempt to submit or trigger the validation",
-          "expected": "Validation fires on submit or field blur"
-        },
-        {
-          "n": 6,
-          "action": "Verify an error message is displayed near the field or at the top of the form",
-          "expected": "A clear, descriptive error message appears"
-        },
-        {
-          "n": 7,
-          "action": "Verify the error message text is correct and helpful",
-          "expected": "Error message accurately describes the validation failure"
-        },
-        {
-          "n": 8,
-          "action": "Verify the form did not submit or the action was blocked",
-          "expected": "No data was saved; the user remains on the form"
-        },
-        {
-          "n": 9,
-          "action": "Correct the invalid input with valid data",
-          "expected": "The error message disappears when valid data is entered"
-        },
-        {
-          "n": 10,
-          "action": "Submit with the corrected data and verify success",
-          "expected": "Form submits successfully after correction"
+          "action": "Type not-an-email as the email with any password and click Login.",
+          "expected": "The login page stays open and the app does not sign in."
         }
       ],
       "case_key": "VKbeZL"

@@ -35,7 +35,12 @@ class TestInsightsNavigation:
     @pytest.mark.ui
     @pytest.mark.insights
     def test_navigate_to_insights(self):
-        """Verify navigation to the Insights page via the sidebar."""
+        """The Insights link in the sidebar opens the Insights page.
+
+        Steps:
+        1. Click Insights in the left sidebar.
+           Expected: The address contains /insights.
+        """
         self.insights.navigate()
         assert "insights" in self.page.url.lower(), (
             f"Expected URL to contain 'insights', got: {self.page.url}"

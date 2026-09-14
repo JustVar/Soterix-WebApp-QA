@@ -47,11 +47,15 @@ class TestNotifications:
     @pytest.mark.ui
     @pytest.mark.notifications
     def test_mute_notifications(self):
-        """The mute control toggles state and restores.
+        """The mute control in the notification panel toggles and toggles back.
 
-        The src flipping (MuteNotification <-> UnMuteNotification) is
-        the state-changed oracle; the second toggle restores the
-        shared account to its starting state.
+        Steps:
+        1. Open the notification panel and read the mute icon.
+           Expected: The icon shows the current state, Mute or UnMute.
+        2. Click the mute icon.
+           Expected: The icon changes to the other state.
+        3. Click it again.
+           Expected: The icon returns to the state it started in.
         """
         self._open_panel()
         before = self.mute_union.first.get_attribute("src")

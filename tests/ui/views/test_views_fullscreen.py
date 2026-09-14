@@ -118,7 +118,12 @@ class TestViewsFullscreen:
     @pytest.mark.views_fullscreen
     @pytest.mark.livestream
     def test_fullscreen_video_streaming(self):
-        """Verify video is actively streaming (no loader, no error state)."""
+        """A camera plays in full screen.
+
+        Steps:
+        1. Show the site's cameras, tick the first camera and open its tile in full screen.
+           Expected: The full-screen player is streaming, with no loader and no failure message.
+        """
         fs = self._enter_fullscreen()
 
         # _enter_fullscreen already ran assert_stream_playing, so a

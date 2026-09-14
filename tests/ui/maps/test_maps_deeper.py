@@ -122,7 +122,12 @@ class TestMapsDeeper:
     @pytest.mark.maps
     @pytest.mark.maps_deeper
     def test_camera_icon_count_positive(self):
-        """Verify an opened map shows at least one camera icon."""
+        """An opened map shows at least one camera icon.
+
+        Steps:
+        1. On Maps, select the configured site and open a map card that lists cameras.
+           Expected: The map opens and shows at least one camera icon. With no such card the test skips.
+        """
         self.maps.select_site(self.site_name)
         map_card = self._map_with_cameras_or_skip()
 

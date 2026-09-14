@@ -72,42 +72,12 @@
       "case_key": "LD3XyZ"
     },
     "test_fullscreen_video_streaming": {
-      "title": "Verify video is actively streaming (no loader, no error state).",
+      "title": "A camera plays in full screen",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Live Playback State",
-          "expected": "Live Playback State page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Live indicator should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Live indicator on the page",
-          "expected": "Live indicator is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: when camera video is streaming in real-time",
-          "expected": "Precondition is met (when camera video is streaming in real-time)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Live indicator displayed",
-          "expected": "Live indicator displayed"
+          "action": "Show the site's cameras, tick the first camera and open its tile in full screen.",
+          "expected": "The full-screen player is streaming, with no loader and no failure message."
         }
       ],
       "case_key": "wmjRNb"

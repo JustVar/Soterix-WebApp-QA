@@ -171,13 +171,13 @@ class TestViewsSubtabs:
     @pytest.mark.views_devices
     @pytest.mark.dragdrop
     def test_devices_drag_camera_to_tile(self):
-        """DEVICES: Drag camera thumbnail directly to empty tile.
+        """A camera thumbnail dragged onto an empty tile starts there.
 
         Steps:
-        1. Expand site -> Show cameras
-        2. Drag camera thumbnail to empty tile (visible drag animation)
-
-        Success: Tile count decreases OR video element appears
+        1. On Views > Devices, show the site's cameras.
+           Expected: Camera thumbnails are listed and at least one tile is empty.
+        2. Drag the first camera thumbnail onto an empty tile.
+           Expected: The tile takes the camera: one fewer empty tile, or a video element shows.
         """
         initial_tiles = self.views.get_available_tile_count()
         assert initial_tiles > 0, "No empty tiles available"
@@ -215,14 +215,13 @@ class TestViewsSubtabs:
     @pytest.mark.checkbox
     @pytest.mark.livestream
     def test_my_views_add_saved_view_via_checkbox(self):
-        """MY VIEWS: Add saved view to tile using checkbox.
+        """A saved view ticked in My Views opens.
 
         Steps:
-        1. Create and save a test view (setup)
-        2. Click My Views tab
-        3. Hover saved view -> Click checkbox
-
-        Success: View opens as new tab OR tile filled
+        1. Add a tab, rename it, show the site's cameras, tick the first camera and click Save.
+           Expected: The toast View saved successfully shows.
+        2. Click the My Views tab, hover the saved view and tick its checkbox.
+           Expected: The view opens as a new tab or fills a tile.
         """
         import datetime
         view_name = f"SubtabTest_{datetime.datetime.now().strftime('%H%M%S')}"

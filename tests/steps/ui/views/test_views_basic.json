@@ -167,98 +167,43 @@
       "case_key": "Z8QQJP"
     },
     "test_open_saved_view": {
-      "title": "Verify a saved view can be reopened from My Views after page refresh",
+      "title": "A saved view reopens from My Views after a page refresh",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Add a tab, rename it, show the site's cameras, tick the first camera and click Save.",
+          "expected": "The toast View saved successfully shows."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > View Tabs",
-          "expected": "Browser navigates to the target URL"
+          "action": "Refresh the browser and open My Views.",
+          "expected": "The saved view is listed under its name."
         },
         {
           "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "View Tabs page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Hover the saved view and tick its checkbox.",
+          "expected": "The view opens as a tab or fills a tile."
         }
       ],
       "case_key": "8V1vGJ"
     },
     "test_delete_saved_view": {
-      "title": "Verify a saved view can be deleted",
+      "title": "A saved view can be deleted from My Views",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Add a tab, rename it, show the site's cameras and tick the first camera.",
+          "expected": "The camera lands in the first tile."
         },
         {
           "n": 2,
-          "action": "Navigate to Insights > Accessibility - Insights",
-          "expected": "Accessibility - Insights page loads without errors"
+          "action": "Click Save.",
+          "expected": "The toast View saved successfully shows."
         },
         {
           "n": 3,
-          "action": "Identify an existing View, Edit, Delete, Report options to edit from the list",
-          "expected": "At least one View, Edit, Delete, Report options is visible in the list"
-        },
-        {
-          "n": 4,
-          "action": "Click on the View, Edit, Delete, Report options or its edit button to open the edit form",
-          "expected": "Edit form or dialog opens with pre-populated data"
-        },
-        {
-          "n": 5,
-          "action": "Verify the existing data is correctly pre-filled in the form",
-          "expected": "All fields show the current values of the View, Edit, Delete, Report options"
-        },
-        {
-          "n": 6,
-          "action": "Modify the target field(s) with new valid data",
-          "expected": "The field(s) accept the new input"
-        },
-        {
-          "n": 7,
-          "action": "Verify the changes are reflected in the form before saving",
-          "expected": "Updated values are displayed in the form fields"
-        },
-        {
-          "n": 8,
-          "action": "Click the Save/Update button",
-          "expected": "Changes are saved and a success message or indicator appears"
-        },
-        {
-          "n": 9,
-          "action": "Verify the updated View, Edit, Delete, Report options reflects the new values in the list or detail view",
-          "expected": "The modified data is displayed correctly"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and verify the changes persisted",
-          "expected": "Updated values remain after page refresh"
+          "action": "Close the tab, open My Views, hover the saved view, click its delete icon and confirm Delete.",
+          "expected": "The toast Successfully deleted shows and the view is gone from the list."
         }
       ],
       "case_key": "WEnQRx"

@@ -215,7 +215,16 @@ class TestViewsBasic:
     @pytest.mark.checkbox
     @pytest.mark.livestream
     def test_open_saved_view(self):
-        """Verify a saved view can be reopened from My Views after page refresh."""
+        """A saved view reopens from My Views after a page refresh.
+
+        Steps:
+        1. Add a tab, rename it, show the site's cameras, tick the first camera and click Save.
+           Expected: The toast View saved successfully shows.
+        2. Refresh the browser and open My Views.
+           Expected: The saved view is listed under its name.
+        3. Hover the saved view and tick its checkbox.
+           Expected: The view opens as a tab or fills a tile.
+        """
         import datetime
 
         view_name = f"OpenTest_{datetime.datetime.now().strftime('%H%M%S')}"
@@ -283,7 +292,16 @@ class TestViewsBasic:
     @pytest.mark.checkbox
     @pytest.mark.livestream
     def test_delete_saved_view(self):
-        """Verify a saved view can be deleted."""
+        """A saved view can be deleted from My Views.
+
+        Steps:
+        1. Add a tab, rename it, show the site's cameras and tick the first camera.
+           Expected: The camera lands in the first tile.
+        2. Click Save.
+           Expected: The toast View saved successfully shows.
+        3. Close the tab, open My Views, hover the saved view, click its delete icon and confirm Delete.
+           Expected: The toast Successfully deleted shows and the view is gone from the list.
+        """
         import datetime
 
         # First create and save a view

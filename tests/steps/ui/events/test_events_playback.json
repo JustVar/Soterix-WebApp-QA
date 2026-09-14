@@ -3,129 +3,39 @@
   "class": "TestEventsPlayback",
   "tests": {
     "test_play_event_inline": {
-      "title": "Verify clicking Play Video loads the inline event player.",
+      "title": "Play Video on an event opens the inline player",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search Results",
-          "expected": "Search Results page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All interactive elements are loaded and ready"
-        },
-        {
-          "n": 4,
-          "action": "Locate the target UI element for hovering",
-          "expected": "The element is visible and interactive"
-        },
-        {
-          "n": 5,
-          "action": "Verify hovering is displayed and functions correctly",
-          "expected": "Hovering is displayed as expected (on event card reveals Play Video icon)"
-        },
-        {
-          "n": 6,
-          "action": "Verify the UI responded correctly to the interaction",
-          "expected": "Visual feedback confirms the action was processed"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: on event card reveals Play Video icon",
-          "expected": "Precondition is met (on event card reveals Play Video icon)"
-        },
-        {
-          "n": 8,
-          "action": "Verify no unintended side effects occurred",
-          "expected": "Other page elements remain in their expected state"
+          "action": "On Events, pick the site and search, hover the first event and click Play Video.",
+          "expected": "The inline player opens and shows one pause control, so the clip is playing."
         }
       ],
       "case_key": "8V1v5k"
     },
     "test_player_controls_visible": {
-      "title": "Verify all player controls are visible after playing an event.",
+      "title": "The inline event player shows its pause, backward, forward and volume controls",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Playback Controls - Media",
-          "expected": "Playback Controls - Media page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Bookmark Clip icon should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Bookmark Clip icon on the page",
-          "expected": "Bookmark Clip icon is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on live playback controls",
-          "expected": "Precondition is met (on live playback controls)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Bookmark Clip icon visible",
-          "expected": "Bookmark Clip icon visible"
+          "action": "On Events, pick the site and search, hover the first event and click Play Video.",
+          "expected": "The player shows one pause control, the backward control, one forward control and one volume control."
         }
       ],
       "case_key": "eJqmLp"
     },
     "test_event_action_toolbar": {
-      "title": "Verify event action toolbar buttons are visible after playing.",
+      "title": "The event player shows its Share, Export and lightbox actions",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Events, pick the site and search, hover the first event and click Play Video.",
+          "expected": "The inline player opens."
         },
         {
           "n": 2,
-          "action": "Navigate to Events > Event Wall",
-          "expected": "Event Wall page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Hover effects should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Hover effects on the page",
-          "expected": "Hover effects is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on Event Wall action",
-          "expected": "Precondition is met (on Event Wall action)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Hover effects displayed correctly",
-          "expected": "Hover effects displayed correctly"
+          "action": "Read the player's action toolbar.",
+          "expected": "One Share button, one Export button and one lightbox button show."
         }
       ],
       "case_key": "PgwlNd"

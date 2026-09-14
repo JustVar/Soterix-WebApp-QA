@@ -143,7 +143,12 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_has_records(self):
-        """At least one audit record renders."""
+        """The audit trail lists at least one record.
+
+        Steps:
+        1. Open Admin > General and click View on the Audit Trail card.
+           Expected: The table shows a real audit record, not the No data available placeholder.
+        """
         # oracle: _first_row raises unless a record renders
         self._first_row()
 
@@ -231,7 +236,14 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_next_page(self):
-        """Next-page moves the record set when pagination exists."""
+        """The Next control turns the audit trail to a new set of records.
+
+        Steps:
+        1. Open Admin > General, click View on the Audit Trail card, and note the first record.
+           Expected: A real audit record is listed.
+        2. Click Next below the table.
+           Expected: The first record changes to a different one. With no Next control there is no page to turn and the test skips.
+        """
         first_row_text = self._first_row().inner_text()
         next_btn = self.page.locator(
             "button[aria-label*='next' i], button:has-text('Next')"
@@ -302,7 +314,12 @@ class TestAdminAuditTrail:
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
     def test_audit_trail_after_refresh(self):
-        """The admin section stays valid after a browser refresh."""
+        """The audit trail page survives a browser refresh.
+
+        Steps:
+        1. Open Admin > General, click View on the Audit Trail card, then refresh the browser.
+           Expected: The address still contains /admin and the General tab shows again.
+        """
         # reload waits for the load event on its own
         self.page.reload()
         assert "admin" in self.page.url.lower()

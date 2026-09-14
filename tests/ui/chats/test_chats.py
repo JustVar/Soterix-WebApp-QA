@@ -167,11 +167,13 @@ class TestChats:
     @pytest.mark.ui
     @pytest.mark.chats
     def test_send_individual_message(self):
-        """Search a user, open the conversation, send a message.
+        """A message sent in a one-to-one chat shows in the thread.
 
-        The oracle lives in send_message: it raises unless the sent
-        text renders in the thread. The run-unique text keeps the
-        delivered-wait from matching an older run's message.
+        Steps:
+        1. Click the chat icon in the header and search for the configured chat user.
+           Expected: The user is listed.
+        2. Open the conversation and send a message with a unique time stamp in its text.
+           Expected: The sent text shows in the thread.
         """
         self.chat.open_chat_panel()
         self._open_partner_conversation()

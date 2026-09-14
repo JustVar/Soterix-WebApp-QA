@@ -3,42 +3,12 @@
   "class": "TestInsightsNavigation",
   "tests": {
     "test_navigate_to_insights": {
-      "title": "Verify navigation to the Insights page via the sidebar.",
+      "title": "The Insights link in the sidebar opens the Insights page",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Insights",
-          "expected": "Insights page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Insights widget list should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Insights widget list on the page",
-          "expected": "Insights widget list is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: when Insights tab is selected",
-          "expected": "Precondition is met (when Insights tab is selected)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Insights widget list displayed",
-          "expected": "Insights widget list displayed"
+          "action": "Click Insights in the left sidebar.",
+          "expected": "The address contains /insights."
         }
       ],
       "case_key": "B8692Q"

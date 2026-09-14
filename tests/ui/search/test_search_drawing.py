@@ -31,11 +31,15 @@ class TestSearchDrawing:
     @pytest.mark.ui
     @pytest.mark.search
     def test_zone_search_draw_zone(self):
-        """Verify a zone can be drawn on the canvas.
+        """A zone can be drawn on a camera's search canvas.
 
-        Opens the Zone drawing canvas for a camera, draws a rectangular
-        polygon, and clicks Done. The canvas and Done button should
-        both be interactable.
+        Steps:
+        1. On Search, pick the Zone category and open the zone drawing for the configured camera.
+           Expected: The drawing canvas shows with a width and a height above zero.
+        2. Draw a rectangle on the canvas.
+           Expected: The Done button becomes enabled.
+        3. Click Done.
+           Expected: The zone is accepted.
         """
         self.search.navigate()
         self.search.wait_for_page_load()
@@ -158,7 +162,16 @@ class TestSearchDrawing:
     @pytest.mark.flaky(reruns=1)
     @pytest.mark.livestream
     def test_line_search_play_result(self):
-        """Verify playing a Line search result clip works."""
+        """A Line search result plays to its end.
+
+        Steps:
+        1. On Search, pick the Line category, open the line drawing for the configured camera, draw a line and click Done.
+           Expected: The line is accepted.
+        2. Pick a duration and search.
+           Expected: Results are listed.
+        3. Play the first result.
+           Expected: The clip plays and the Replay icon shows when it ends.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 

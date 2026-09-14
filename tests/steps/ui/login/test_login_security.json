@@ -64,42 +64,12 @@
       "case_key": "yaWXMk"
     },
     "test_xss_attempt": {
-      "title": "Verify login rejects XSS script payload",
+      "title": "A script tag typed as the email is rejected with an error",
       "steps": [
         {
           "n": 1,
-          "action": "Open the application login page",
-          "expected": "Login page loads with username and password fields"
-        },
-        {
-          "n": 2,
-          "action": "Log in with the required user role/credentials",
-          "expected": "User is authenticated and redirected to the default page"
-        },
-        {
-          "n": 3,
-          "action": "Navigate to Admin > Licenses",
-          "expected": "Licenses page loads (or access denied, depending on the test)"
-        },
-        {
-          "n": 4,
-          "action": "Verify the access behavior matches the expected permission level",
-          "expected": "User can access or is correctly blocked from the feature"
-        },
-        {
-          "n": 5,
-          "action": "Verify non-Admin license access attempt is logged",
-          "expected": "Non-admin license access attempt logged"
-        },
-        {
-          "n": 6,
-          "action": "Verify no unauthorized data or controls are exposed",
-          "expected": "Only permitted content is visible to the current user role"
-        },
-        {
-          "n": 7,
-          "action": "Log out and verify the session ends cleanly",
-          "expected": "User is redirected to the login page after logout"
+          "action": "Type <script>alert('XSS')</script> as the email with any password and click Login.",
+          "expected": "The app does not sign in and an error message shows."
         }
       ],
       "case_key": "0rzlQG"

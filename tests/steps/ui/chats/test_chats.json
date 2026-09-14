@@ -81,37 +81,17 @@
       "case_key": "RgGQ4l"
     },
     "test_send_individual_message": {
-      "title": "Verify a message can be sent to an individual user.",
+      "title": "A message sent in a one-to-one chat shows in the thread",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click the chat icon in the header and search for the configured chat user.",
+          "expected": "The user is listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Chat > One-to-One Chat",
-          "expected": "One-to-One Chat panel loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for Send text message in one-to-one chat",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Verify Send text message in one-to-one chat is displayed and functions correctly",
-          "expected": "Send text message in one-to-one chat is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Open the conversation and send a message with a unique time stamp in its text.",
+          "expected": "The sent text shows in the thread."
         }
       ],
       "case_key": "0rzlkn"

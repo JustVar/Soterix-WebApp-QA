@@ -218,7 +218,16 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_site_dropdown_opens(self):
-        """A site accordion row expands to its camera groups."""
+        """A site row in the Event Wall add form expands to its camera groups.
+
+        Steps:
+        1. Open Admin > General > Event Wall and click Add Configuration.
+           Expected: The form opens with a Name field.
+        2. Click the configured site's row in the cameras list.
+           Expected: The row expands and lists the All Cameras group.
+        3. Click Cancel.
+           Expected: The form closes.
+        """
         self._open_add_form()
         # oracle: _expand_site_to_groups raises unless the group list
         # renders (sites expand to groups, not cameras - measured)

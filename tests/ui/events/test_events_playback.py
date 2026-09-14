@@ -42,7 +42,12 @@ class TestEventsPlayback:
     @pytest.mark.events
     @pytest.mark.events_playback
     def test_play_event_inline(self):
-        """Verify clicking Play Video loads the inline event player."""
+        """Play Video on an event opens the inline player.
+
+        Steps:
+        1. On Events, pick the site and search, hover the first event and click Play Video.
+           Expected: The inline player opens and shows one pause control, so the clip is playing.
+        """
         self.events.play_event(0, timeout=60000)
         # one pause control marks the inline player playing
         expect(self.events.player_play_pause).to_have_count(1, timeout=15000)
@@ -52,7 +57,12 @@ class TestEventsPlayback:
     @pytest.mark.events
     @pytest.mark.events_playback
     def test_player_controls_visible(self):
-        """Verify all player controls are visible after playing an event."""
+        """The inline event player shows its pause, backward, forward and volume controls.
+
+        Steps:
+        1. On Events, pick the site and search, hover the first event and click Play Video.
+           Expected: The player shows one pause control, the backward control, one forward control and one volume control.
+        """
         self.events.play_event(0, timeout=60000)
 
         # Four independent checks on one screen: soft, so a missing
@@ -66,7 +76,14 @@ class TestEventsPlayback:
     @pytest.mark.events
     @pytest.mark.events_playback
     def test_event_action_toolbar(self):
-        """Verify event action toolbar buttons are visible after playing."""
+        """The event player shows its Share, Export and lightbox actions.
+
+        Steps:
+        1. On Events, pick the site and search, hover the first event and click Play Video.
+           Expected: The inline player opens.
+        2. Read the player's action toolbar.
+           Expected: One Share button, one Export button and one lightbox button show.
+        """
         self.events.play_event(0, timeout=60000)
 
         # Three independent checks on one screen: soft, so a missing

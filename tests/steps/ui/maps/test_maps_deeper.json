@@ -208,47 +208,12 @@
       "case_key": "Z8xRpk"
     },
     "test_camera_icon_count_positive": {
-      "title": "Verify an opened map shows at least one camera icon.",
+      "title": "An opened map shows at least one camera icon",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Devices Tab",
-          "expected": "Devices Tab page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate expanded location shows camera count badges on the page",
-          "expected": "expanded location shows camera count badges is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify expanded location shows camera count badges is displayed as expected",
-          "expected": "expanded location shows camera count badges is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "On Maps, select the configured site and open a map card that lists cameras.",
+          "expected": "The map opens and shows at least one camera icon. With no such card the test skips."
         }
       ],
       "case_key": "RgGyEd"

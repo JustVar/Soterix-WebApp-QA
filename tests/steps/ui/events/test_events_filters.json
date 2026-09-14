@@ -437,42 +437,17 @@
       "case_key": "vanZWy"
     },
     "test_unpin_event_via_second_pin": {
-      "title": "Verify pinning multiple events shows correct counter (pin 3 events).",
+      "title": "Pinning three events shows a pinned count of three",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Events, pick the site, the Intrusion Detection rule and Last 7 days, and search.",
+          "expected": "The results list at least three events. With fewer the test skips naming the count."
         },
         {
           "n": 2,
-          "action": "Navigate to Events > Pin/Unpin",
-          "expected": "Pin/Unpin page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Unpin icon should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Unpin icon on the page",
-          "expected": "Unpin icon is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on pinned event card",
-          "expected": "Precondition is met (on pinned event card)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Unpin icon visible",
-          "expected": "Unpin icon visible"
+          "action": "Pin the first, second and third event.",
+          "expected": "The pinned counter reads 3."
         }
       ],
       "case_key": "n8jQk3"

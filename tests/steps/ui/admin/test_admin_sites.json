@@ -76,42 +76,12 @@
       "case_key": "eJqXz3"
     },
     "test_check_site_status": {
-      "title": "Verify sites display Online/Offline status indicators.",
+      "title": "Every site on the Sites list carries an Online or Offline marker",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Admin > Tooltip",
-          "expected": "Admin Tooltip display loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate the relevant UI area for tooltip",
-          "expected": "The target section or element is visible"
-        },
-        {
-          "n": 5,
-          "action": "Verify tooltip is displayed and functions correctly",
-          "expected": "Tooltip is displayed as expected (on site status)"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: on site status",
-          "expected": "Precondition is met (on site status)"
-        },
-        {
-          "n": 7,
-          "action": "Verify no errors or unexpected behavior occurred",
-          "expected": "Page remains stable with no console errors"
+          "action": "Open Admin > Sites.",
+          "expected": "The list shows at least one Online or Offline status marker."
         }
       ],
       "case_key": "WEnvKQ"

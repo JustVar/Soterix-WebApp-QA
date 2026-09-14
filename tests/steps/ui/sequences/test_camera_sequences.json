@@ -192,62 +192,12 @@
       "case_key": "LD3x9E"
     },
     "test_add_created_sequence_to_views": {
-      "title": "Verify adding a created sequence to the views panel",
+      "title": "The sequences sidebar lists the tenant's sequences by name",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views > Camera Sequence - Fullscreen",
-          "expected": "Camera Sequence - Fullscreen page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the page displays any existing items",
-          "expected": "Page content loads (list, table, or empty state)"
-        },
-        {
-          "n": 4,
-          "action": "Click the create/add button for adding a created sequence to the views panel",
-          "expected": "Creation form or dialog opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify all required form fields are present and empty/default",
-          "expected": "Form fields are displayed with correct labels and placeholders"
-        },
-        {
-          "n": 6,
-          "action": "Fill in all required fields with valid test data",
-          "expected": "All fields accept the input without errors"
-        },
-        {
-          "n": 7,
-          "action": "Fill in any optional fields if applicable",
-          "expected": "Optional fields accept input"
-        },
-        {
-          "n": 8,
-          "action": "Review the filled form for correctness",
-          "expected": "All entered data is displayed correctly in the form"
-        },
-        {
-          "n": 9,
-          "action": "Click the Save/Submit/Create button",
-          "expected": "Form is submitted and a success message or indicator appears"
-        },
-        {
-          "n": 10,
-          "action": "Verify the newly created adding a created sequence to the views panel appears in the list or view",
-          "expected": "The new adding a created sequence to the views panel is visible with the correct data"
-        },
-        {
-          "n": 11,
-          "action": "Verify no duplicate entries were created",
-          "expected": "Only one instance of the new adding a created sequence to the views panel exists"
+          "action": "Open the Sequences page.",
+          "expected": "The sidebar lists at least one sequence and no entry is blank."
         }
       ],
       "case_key": "wmjJZm"

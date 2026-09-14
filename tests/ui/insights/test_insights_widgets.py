@@ -135,7 +135,14 @@ class TestInsightsWidgetOperations:
         ids=["Line_Person", "Bar_Event"],
     )
     def test_widget_report(self, graph_name, category_name):
-        """Verify a widget report can be downloaded."""
+        """A widget's report can be downloaded from its menu.
+
+        Steps:
+        1. On Insights, create a widget of the given graph type and category for the configured site.
+           Expected: The widget shows on the dashboard under its generated name.
+        2. Open the widget's menu and click Report.
+           Expected: A file download starts.
+        """
         widget_name = self.insights.create_widget(
             graph_name=graph_name,
             category_name=category_name,

@@ -48,8 +48,14 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_chat_panel_closes_on_second_click(self):
-        """The header icon is a toggle: a second click closes the
-        panel (this toggle is what broke the old opener)."""
+        """The header's chat icon opens the panel on one click and closes it on the next.
+
+        Steps:
+        1. Click the chat icon in the header.
+           Expected: The chat panel opens with its search field.
+        2. Click the chat icon again.
+           Expected: The panel closes and the search field is gone.
+        """
         self.chat.open_chat_panel()
         expect(self.chat.search_input).to_be_visible()
 
@@ -127,10 +133,13 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_search_with_no_match(self):
-        """A nonsense term empties the results.
+        """A chat search for a name nobody has lists no results.
 
-        The real search first proves results can render; without it, a
-        dead search box would pass this test vacuously.
+        Steps:
+        1. Click the chat icon in the header and search for the configured chat user.
+           Expected: The user is listed, which proves the search works.
+        2. Search for zzzznonexistentuser99999.
+           Expected: The result list is empty.
         """
         self.chat.open_chat_panel()
         self._search_partner_or_fail()

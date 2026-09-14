@@ -206,16 +206,20 @@ class TestAdminRules:
     @pytest.mark.admin
     @pytest.mark.admin_rules
     def test_edit_rule_notification(self):
-        """The rule 'Edit' icon opens the details drawer; the notification
-        edit form is gone.
+        """The rule's Edit icon opens a read-only details drawer with no notification edit.
 
-        Measured 08/17/2026: since the rules redesign the row's Edit
-        icon opens a read-only details drawer (devices, schedules,
-        created/modified audit) with delete/mute/close icons only - no
-        Notification tab, no Update & Close. The old flow had been
-        skipping silently on 'Notification tab not found' behind a
-        swallowed wait. Holds as an explicit skip; fails loud if a
-        notification-edit form ever reappears so the flow gets rebuilt.
+        Measured 08/17/2026: since the rules redesign the row's Edit icon opens a
+        read-only details drawer (devices, schedules, created and modified dates)
+        with delete, mute and close icons only. The old flow had been skipping
+        silently on a missing Notification tab behind a swallowed wait. This holds
+        as an explicit skip and fails loud if a notification-edit form reappears,
+        so the flow gets rebuilt.
+
+        Steps:
+        1. Open Admin > Rules, create a rule for this test and click its Edit icon.
+           Expected: A details drawer opens with the rule's devices, schedules and dates, and delete, mute and close icons.
+        2. Look for a Notification tab or an Update & Close button in the drawer.
+           Expected: Neither is offered and the test skips naming that. If either shows, the test fails so the notification edit flow gets rebuilt.
         """
         self._navigate_to_rules()
         rule_name = self._own_a_rule()

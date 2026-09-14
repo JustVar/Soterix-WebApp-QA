@@ -52,47 +52,22 @@
       "case_key": "QGQQEB"
     },
     "test_event_wall_site_dropdown_opens": {
-      "title": "Verify the site dropdown can be opened on Event Wall.",
+      "title": "A site row in the Event Wall add form expands to its camera groups",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > General > Event Wall and click Add Configuration.",
+          "expected": "The form opens with a Name field."
         },
         {
           "n": 2,
-          "action": "Navigate to Search > Category - Event",
-          "expected": "Browser navigates to the target URL"
+          "action": "Click the configured site's row in the cameras list.",
+          "expected": "The row expands and lists the All Cameras group."
         },
         {
           "n": 3,
-          "action": "Wait for the page to fully load",
-          "expected": "Category - Event page loads successfully without errors"
-        },
-        {
-          "n": 4,
-          "action": "Verify the page title or header is correct",
-          "expected": "Page heading or title matches the expected page name"
-        },
-        {
-          "n": 5,
-          "action": "Verify the left navigation highlights the correct menu item",
-          "expected": "The corresponding sidebar item is highlighted/active"
-        },
-        {
-          "n": 6,
-          "action": "Verify main page content and controls are displayed",
-          "expected": "Key UI elements (buttons, tables, panels) are present"
-        },
-        {
-          "n": 7,
-          "action": "Set up precondition: when clicked",
-          "expected": "Precondition is met (when clicked)"
-        },
-        {
-          "n": 8,
-          "action": "Verify the page URL matches the expected route",
-          "expected": "URL path corresponds to the expected page"
+          "action": "Click Cancel.",
+          "expected": "The form closes."
         }
       ],
       "case_key": "0rzlLl"

@@ -3,62 +3,17 @@
   "class": "TestChatsDeeper",
   "tests": {
     "test_chat_panel_closes_on_second_click": {
-      "title": "Verify the chat panel closes when the chat icon is clicked again.",
+      "title": "The header's chat icon opens the panel on one click and closes it on the next",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click the chat icon in the header.",
+          "expected": "The chat panel opens with its search field."
         },
         {
           "n": 2,
-          "action": "Navigate to Search > More Filters",
-          "expected": "More Filters page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for More Filters panel closes",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: when clicking outside",
-          "expected": "Precondition is met (when clicking outside)"
-        },
-        {
-          "n": 11,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Click the chat icon again.",
+          "expected": "The panel closes and the search field is gone."
         }
       ],
       "case_key": "RgGQ3W"
@@ -153,62 +108,17 @@
       "case_key": "jPnm3Z"
     },
     "test_search_with_no_match": {
-      "title": "Verify searching for a nonexistent user shows no results.",
+      "title": "A chat search for a name nobody has lists no results",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click the chat icon in the header and search for the configured chat user.",
+          "expected": "The user is listed, which proves the search works."
         },
         {
           "n": 2,
-          "action": "Navigate to Views > My Views",
-          "expected": "My Views page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for Search Views shows no matches message",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: for invalid input",
-          "expected": "Precondition is met (for invalid input)"
-        },
-        {
-          "n": 11,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Search for zzzznonexistentuser99999.",
+          "expected": "The result list is empty."
         }
       ],
       "case_key": "pDpmEm"

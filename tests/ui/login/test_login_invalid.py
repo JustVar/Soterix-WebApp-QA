@@ -14,7 +14,12 @@ def test_empty_fields(page, base_url):
 
 @pytest.mark.ui
 def test_empty_username(page, base_url):
-    """Submitting a password with no username stays on the login page."""
+    """Submitting the login form with no email keeps the login page.
+
+    Steps:
+    1. Leave the email empty, type a password and click Login.
+       Expected: The login page stays open and the app does not sign in.
+    """
     lp = LoginPage(page, base_url)
     lp.login("", "somepassword")
     assert not lp.is_logged_in()
@@ -32,7 +37,12 @@ def test_empty_password(page, base_url):
 
 @pytest.mark.ui
 def test_wrong_credentials(page, base_url):
-    """Wrong credentials show an error or keep the user on the login page."""
+    """Wrong credentials do not sign in.
+
+    Steps:
+    1. Type an unknown email and a wrong password and click Login.
+       Expected: The app does not sign in: an error shows or the login page stays open.
+    """
     lp = LoginPage(page, base_url)
     lp.login("invalid@example.com", "wrongpass")
     # Key assertion: user should not be logged in. Accept either an error
@@ -43,7 +53,12 @@ def test_wrong_credentials(page, base_url):
 
 @pytest.mark.ui
 def test_invalid_email_format(page, base_url):
-    """A malformed email address is rejected and stays on the login page."""
+    """A malformed email address does not sign in.
+
+    Steps:
+    1. Type not-an-email as the email with any password and click Login.
+       Expected: The login page stays open and the app does not sign in.
+    """
     lp = LoginPage(page, base_url)
     lp.login("not-an-email", "password123")
     assert not lp.is_logged_in()

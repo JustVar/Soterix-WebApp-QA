@@ -15,7 +15,12 @@ def test_sql_injection_attempt(page, base_url):
 
 @pytest.mark.ui
 def test_xss_attempt(page, base_url):
-    """A script-tag payload in the username is rejected with an error."""
+    """A script tag typed as the email is rejected with an error.
+
+    Steps:
+    1. Type <script>alert('XSS')</script> as the email with any password and click Login.
+       Expected: The app does not sign in and an error message shows.
+    """
     lp = LoginPage(page, base_url)
     payload = "<script>alert('XSS')</script>"
     lp.login(payload, "password123")

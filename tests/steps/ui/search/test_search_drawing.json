@@ -3,57 +3,22 @@
   "class": "TestSearchDrawing",
   "tests": {
     "test_zone_search_draw_zone": {
-      "title": "Verify a zone can be drawn on the canvas.",
+      "title": "A zone can be drawn on a camera's search canvas",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Search, pick the Zone category and open the zone drawing for the configured camera.",
+          "expected": "The drawing canvas shows with a width and a height above zero."
         },
         {
           "n": 2,
-          "action": "Navigate to Search > Zone - Setup & Drawing",
-          "expected": "Zone - Setup & Drawing page loads without errors"
+          "action": "Draw a rectangle on the canvas.",
+          "expected": "The Done button becomes enabled."
         },
         {
           "n": 3,
-          "action": "Identify the Reset Search clears Zone category selection to be deleted from the list",
-          "expected": "Reset Search clears Zone category selection is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target Reset Search clears Zone category selection",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the Reset Search clears Zone category selection"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the Reset Search clears Zone category selection no longer appears in the list",
-          "expected": "Reset Search clears Zone category selection is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted Reset Search clears Zone category selection does not reappear after refresh"
+          "action": "Click Done.",
+          "expected": "The zone is accepted."
         }
       ],
       "case_key": "LD3mGJ"
@@ -188,62 +153,22 @@
       "case_key": "bjXXz8"
     },
     "test_line_search_play_result": {
-      "title": "Verify playing a Line search result clip works.",
+      "title": "A Line search result plays to its end",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Search, pick the Line category, open the line drawing for the configured camera, draw a line and click Done.",
+          "expected": "The line is accepted."
         },
         {
           "n": 2,
-          "action": "Navigate to Search > Line",
-          "expected": "Line page loads without errors"
+          "action": "Pick a duration and search.",
+          "expected": "Results are listed."
         },
         {
           "n": 3,
-          "action": "Verify the initial unfiltered list or data set is displayed",
-          "expected": "All items are shown before applying any search or filter"
-        },
-        {
-          "n": 4,
-          "action": "Note the total count of items before filtering",
-          "expected": "Initial item count is recorded"
-        },
-        {
-          "n": 5,
-          "action": "Locate the search input field or filter controls",
-          "expected": "Search/filter UI is visible and accessible"
-        },
-        {
-          "n": 6,
-          "action": "Enter the search criteria or select the filter option for search returns results only",
-          "expected": "Search/filter input accepts the value"
-        },
-        {
-          "n": 7,
-          "action": "Trigger the search or apply the filter (press Enter or click Apply)",
-          "expected": "The list updates to show filtered results"
-        },
-        {
-          "n": 8,
-          "action": "Verify the results match the search/filter criteria",
-          "expected": "All displayed items match the applied criteria"
-        },
-        {
-          "n": 9,
-          "action": "Verify the result count updated to reflect the filtered set",
-          "expected": "Item count is less than or equal to the original count"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: when an object crosses Line direction configured for Line_1",
-          "expected": "Precondition is met (when an object crosses Line direction configured for Line_1)"
-        },
-        {
-          "n": 11,
-          "action": "Clear the search/filter and verify all items return",
-          "expected": "Clearing the filter restores the full unfiltered list"
+          "action": "Play the first result.",
+          "expected": "The clip plays and the Replay icon shows when it ends."
         }
       ],
       "case_key": "wmjKjZ"
