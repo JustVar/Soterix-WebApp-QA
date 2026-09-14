@@ -581,7 +581,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"=== Loaded {len(csv_cases)} cases from CSV ===")
 
     with sync_playwright() as p:
-        browser, ctx, page = login(p, args.auth_state_file)
+        browser, _ctx, page = login(p, args.auth_state_file)
         try:
             print(f"\n=== Fetching cases from QA Touch (project {args.project_key}) ===")
             qt_cases = fetch_project_cases(page, args.project_key)

@@ -32,7 +32,7 @@ def generate_html_report(queue: dict[str, Any]) -> str:
     pending = [it for it in items if it.get("status", "pending") == "pending"]
     html = [
         "<html><head><meta charset='utf-8'><title>Review Queue</title></head><body>",
-        "<h1>Manual Review Queue &mdash; %s</h1>" % datetime.utcnow().isoformat(),
+        "<h1>Manual Review Queue &mdash; {}</h1>".format(datetime.utcnow().isoformat()),
     ]
     if not pending:
         html.append("<p>No items pending review.</p>")
@@ -54,17 +54,16 @@ def generate_html_report(queue: dict[str, Any]) -> str:
             # artifact links (best-effort): look for logs/<nodeid>.png or .mp4
             safe_name = nodeid.replace('/', '_').replace(':', '_')
             imgs = []
-            img_path = os.path.join(ROOT, 'logs', "%s.png" % safe_name)
-            vid_path = os.path.join(ROOT, 'logs', "%s.mp4" % safe_name)
+            img_path = os.path.join(ROOT, 'logs', "{}.png".format(safe_name))
+            vid_path = os.path.join(ROOT, 'logs', "{}.mp4".format(safe_name))
             if os.path.exists(img_path):
-                imgs.append("<a href='file://%s'>screenshot</a>" % img_path)
+                imgs.append("<a href='file://{}'>screenshot</a>".format(img_path))
             if os.path.exists(vid_path):
-                imgs.append("<a href='file://%s'>video</a>" % vid_path)
+                imgs.append("<a href='file://{}'>video</a>".format(vid_path))
             artifacts = ', '.join(imgs) or 'n/a'
             html.append(
-                "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td>"
-                "<td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>"
-                % (entry_id, nodeid, module, severity, score, reason, ts, artifacts)
+                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+                "<td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(entry_id, nodeid, module, severity, score, reason, ts, artifacts)
             )
         html.append("</table>")
 
@@ -80,8 +79,7 @@ def generate_html_report(queue: dict[str, Any]) -> str:
         for it in reviewed[-20:]:
             jira_key = it.get('jira_key') or 'n/a'
             html.append(
-                "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>"
-                % (it.get('id', ''), it.get('nodeid', ''),
+                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(it.get('id', ''), it.get('nodeid', ''),
                    it.get('status', ''), jira_key, it.get('reviewed_by', ''))
             )
         html.append("</table>")

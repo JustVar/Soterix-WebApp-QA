@@ -16,7 +16,7 @@ class TestLicensePermissions:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.license = LicensePage(self.page)
-        yield
+        return
 
     @pytest.mark.ui
     @pytest.mark.licenses

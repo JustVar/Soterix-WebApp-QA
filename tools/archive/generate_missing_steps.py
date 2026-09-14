@@ -98,8 +98,7 @@ def safe_filename(module_name: str) -> str:
     """Convert module name to safe filename."""
     name = module_name.lower()
     name = re.sub(r"[^a-z0-9]+", "_", name)
-    name = name.strip("_")
-    return name
+    return name.strip("_")
 
 
 def load_snapshot() -> dict[str, dict]:

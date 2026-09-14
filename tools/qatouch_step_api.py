@@ -317,7 +317,7 @@ def create_step(page, cid: str, step_desc: str, expected: str) -> dict:
     safe_exp = escape_for_html(expected)
 
     # Use argument passing instead of f-string to avoid injection issues
-    result = page.evaluate("""
+    return page.evaluate("""
         async ([cid, desc, exp]) => {
             try {
                 const token = document.cookie.split('XSRF-TOKEN=')[1]?.split(';')[0];
@@ -350,7 +350,6 @@ def create_step(page, cid: str, step_desc: str, expected: str) -> dict:
             }
         }
     """, [cid, safe_desc, safe_exp])
-    return result
 
 
 # ---------------------------------------------------------------------------

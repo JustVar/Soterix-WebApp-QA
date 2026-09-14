@@ -279,7 +279,7 @@ def create_step(page, case_key: str, step_html: str, expected_html: str) -> dict
     wraps plain text in <p>...</p>, but the OTA payload v2 builder already
     did that for us.
     """
-    result = page.evaluate("""
+    return page.evaluate("""
         async ([pid, cid, desc, exp]) => {
             try {
                 const token = document.cookie.split('XSRF-TOKEN=')[1]?.split(';')[0];
@@ -309,7 +309,6 @@ def create_step(page, case_key: str, step_html: str, expected_html: str) -> dict
             }
         }
     """, [PROJECT_KEY, case_key, step_html, expected_html])
-    return result
 
 
 # ---------------------------------------------------------------------------
@@ -487,7 +486,7 @@ def main():
             write_log(records)
             return
 
-        browser, ctx, page = login(p, args.auth_state_file)
+        browser, _ctx, page = login(p, args.auth_state_file)
         try:
             for i, entry in enumerate(targets, 1):
                 ref = entry.get('_ref', '?')

@@ -302,9 +302,9 @@ def enter_project(page, context=None):
                     proj = page.locator('text="NexaiQ-Core"').first
                     proj.wait_for(state='visible', timeout=10000)
                 else:
-                    raise TimeoutError('Could not enter project - manual login failed')
+                    raise TimeoutError('Could not enter project - manual login failed') from None
         else:
-            raise TimeoutError('Could not enter project - authentication failed')
+            raise TimeoutError('Could not enter project - authentication failed') from None
 
     # Dismiss any survey/overlay popups that block clicks
     _dismiss_survey(page)
@@ -1066,10 +1066,9 @@ def _sync_case_in_new_tab(context, page, case_key, steps,
 
         # Write steps
         for i, step in enumerate(steps):
-            if i > 0:
-                if not _click_add_step(new_page):
-                    print(f'      Failed to add step row {i + 1}')
-                    break
+            if i > 0 and not _click_add_step(new_page):
+                print(f'      Failed to add step row {i + 1}')
+                break
             action = step.get('action', '')
             expected = step.get('expected', '')
             if not _write_step_row(new_page, i, action, expected):
@@ -1782,9 +1781,8 @@ def set_mode_on_case(page, target='Automation') -> bool:
         return True
 
     # Fallback: try Custom Fields tab
-    if click_form_tab(page, 'Custom Fields'):
-        if set_dropdown_value(page, 'Mode', target):
-            return True
+    if click_form_tab(page, 'Custom Fields') and set_dropdown_value(page, 'Mode', target):
+        return True
 
     print('    Mode field not found on any tab')
     shot(page, 'mode_not_found')
@@ -3300,10 +3298,9 @@ def cmd_sync_steps(step_dir=None, csv_file=None, case_keys=None, dry_run=False,
 
                         # Add and write each step
                         for i, step in enumerate(steps):
-                            if i > 0:
-                                if not _click_add_step(page):
-                                    print(f'      Failed to add step row {i + 1}')
-                                    break
+                            if i > 0 and not _click_add_step(page):
+                                print(f'      Failed to add step row {i + 1}')
+                                break
 
                             action = step.get('action', '')
                             expected = step.get('expected', '')
@@ -3669,9 +3666,8 @@ def _find_case_exhaustive(page, title, module):
 
     print(f'      [exhaustive] Paginating through {total_pages} pages...')
     for pg in range(1, total_pages + 1):
-        if not _go_to_page(page, pg):
-            if not _go_to_next_page(page):
-                break
+        if not _go_to_page(page, pg) and not _go_to_next_page(page):
+            break
         time.sleep(2)  # Longer wait between pages
 
         # Scroll each page
@@ -4061,10 +4057,9 @@ def cmd_sync_unfound(case_keys=None, limit=None, dry_run=False):
 
                         # Write steps
                         for i, step in enumerate(steps):
-                            if i > 0:
-                                if not _click_add_step(page):
-                                    print(f'      Failed to add step row {i + 1}')
-                                    break
+                            if i > 0 and not _click_add_step(page):
+                                print(f'      Failed to add step row {i + 1}')
+                                break
                             action = step.get('action', '')
                             expected = step.get('expected', '')
                             if not _write_step_row(page, i, action, expected):

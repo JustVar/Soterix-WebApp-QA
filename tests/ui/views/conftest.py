@@ -1,7 +1,8 @@
 """Views test fixtures - shared setup for full screen and bookmark tests."""
 import pytest
-from tests.shared.pages.views_page import ViewsPage
+
 from tests.shared.pages.fullscreen_page import FullScreenPage
+from tests.shared.pages.views_page import ViewsPage
 
 
 @pytest.fixture

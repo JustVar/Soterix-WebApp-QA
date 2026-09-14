@@ -96,7 +96,7 @@ def read_source(path: Path) -> list[dict]:
         from openpyxl import load_workbook
     except ImportError:
         print("ERROR openpyxl is required: pip install openpyxl", file=sys.stderr)
-        raise SystemExit(2)
+        raise SystemExit(2) from None
     wb = load_workbook(path, data_only=True)
     ws = wb[wb.sheetnames[0]]
     header = [c.value for c in ws[1]]

@@ -25,7 +25,7 @@ class TestEventsFilters:
         self.page.reload()
         self.events.navigate()
         self.events.wait_for_page_load()
-        yield
+        return
 
     # --- Site dropdown ---
 

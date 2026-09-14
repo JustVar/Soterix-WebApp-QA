@@ -425,7 +425,7 @@ class FullScreenPage:
 
     # --- Bookmark operations ---
 
-    def export_bookmark(self, index: int = 0, filename: str = None,
+    def export_bookmark(self, index: int = 0, filename: str | None = None,
                         save_to_media: bool = False):
         """Export a bookmark via the options menu.
 
@@ -522,7 +522,7 @@ class FullScreenPage:
         return ""
 
     def share_bookmark(self, index: int = 0, email: str = "test@example.com",
-                       filename: str = None, save_to_media: bool = False):
+                       filename: str | None = None, save_to_media: bool = False):
         """Share a bookmark via the options menu.
 
         save_to_media is off for the reason given on export_bookmark: a
@@ -544,7 +544,7 @@ class FullScreenPage:
 
         self.share_success.wait_for(state="visible", timeout=30000)
 
-    def rename_bookmark(self, index: int = 0, new_name: str = None) -> str:
+    def rename_bookmark(self, index: int = 0, new_name: str | None = None) -> str:
         """Rename a bookmark via the options menu. Returns the new name."""
         if new_name is None:
             new_name = datetime.datetime.now().strftime("%Y%m%d%H%M%S")

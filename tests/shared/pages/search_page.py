@@ -317,7 +317,7 @@ class SearchPage:
         value.click()
         return value
 
-    def select_locations_cameras(self, site_name: str = None):
+    def select_locations_cameras(self, site_name: str | None = None):
         """Open the Locations & Cameras panel, pick a site, and select
         all cameras via the 'All Cameras' checkbox.
 

@@ -28,7 +28,7 @@ class TestLicenseAssignedTab:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.license = LicensePage(self.page)
-        yield
+        return
 
     def _navigate_to_assigned(self):
         """Navigate to Licenses > Assigned tab."""
@@ -215,7 +215,7 @@ class TestLicenseDeviceList:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.license = LicensePage(self.page)
-        yield
+        return
 
     _require_expandable_site = TestLicenseAssignedTab._require_expandable_site
 
@@ -363,7 +363,7 @@ class TestLicenseAssignModal:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.license = LicensePage(self.page)
-        yield
+        return
 
     @pytest.mark.ui
     @pytest.mark.licenses

@@ -1,6 +1,7 @@
 """Notification tests - mute notifications, clear all, admin rule mute."""
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
+
 from tests.shared.helpers.surface import require_items
 
 

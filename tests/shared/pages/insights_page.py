@@ -114,7 +114,7 @@ class InsightsPage:
         )
         self._wait_for_loader_finish()
 
-    def open_system_status(self, site_name: str = None):
+    def open_system_status(self, site_name: str | None = None):
         """Open the System Status dashboard and select a site.
 
         Navigates to Insights, clicks System Status, selects the given

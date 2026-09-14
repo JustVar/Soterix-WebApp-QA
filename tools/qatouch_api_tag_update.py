@@ -163,7 +163,7 @@ def update_case_newtags(page, case_key: str, case_data: dict, newtags: list[str]
         if field not in payload:
             payload[field] = []
 
-    result = page.evaluate("""
+    return page.evaluate("""
         async ({caseKey, payload}) => {
             try {
                 const token = document.cookie.split('XSRF-TOKEN=')[1]?.split(';')[0];
@@ -187,7 +187,6 @@ def update_case_newtags(page, case_key: str, case_data: dict, newtags: list[str]
             }
         }
     """, {"caseKey": case_key, "payload": payload})
-    return result
 
 
 def add_tag_to_case(page, case_key: str, tag: str) -> tuple[bool, str]:

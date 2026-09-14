@@ -19,8 +19,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools import qa_xlsx_to_canonical_csv as canonical  # noqa: E402
-from tools import qa_xlsx_to_qatouch_csv as qatouch  # noqa: E402
+from tools import (
+    qa_xlsx_to_canonical_csv as canonical,  # noqa: E402
+    qa_xlsx_to_qatouch_csv as qatouch,  # noqa: E402
+)
 
 MODULES = [canonical, qatouch]
 EN_DASH, LEFT_DQ, RIGHT_DQ, LEFT_SQ, RIGHT_SQ, ARROW = "\u2013", "\u201c", "\u201d", "\u2018", "\u2019", "\u2192"

@@ -19,7 +19,7 @@ class TestSearchDeeper:
         self.search = SearchPage(self.page)
         self.search.navigate()
         self.search.wait_for_page_load()
-        yield
+        return
 
     # --- Dropdown enumeration ---
 

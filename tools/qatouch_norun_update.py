@@ -183,7 +183,7 @@ def update_case(page, case_key: str, case_data: dict, field_updates: dict) -> di
         if field not in payload:
             payload[field] = []
 
-    result = page.evaluate("""
+    return page.evaluate("""
         async ({caseKey, payload}) => {
             try {
                 const token = document.cookie.split('XSRF-TOKEN=')[1]?.split(';')[0];
@@ -207,7 +207,6 @@ def update_case(page, case_key: str, case_data: dict, field_updates: dict) -> di
             }
         }
     """, {"caseKey": case_key, "payload": payload})
-    return result
 
 
 # ── Precondition helpers ─────────────────────────────────────────────

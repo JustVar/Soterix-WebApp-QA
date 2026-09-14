@@ -486,7 +486,7 @@ def load_manifest(path: Path) -> dict:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         print(f"Manifest not valid JSON: {e}", file=sys.stderr)
-        raise SystemExit(2)
+        raise SystemExit(2) from e
 
 
 # ---------------------------------------------------------------------------

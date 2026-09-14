@@ -132,7 +132,7 @@ class EventsPage:
         # Listbox hidden = MUI applied the selection
         listbox.wait_for(state="hidden", timeout=10000)
 
-    def select_site(self, site_name: str = None):
+    def select_site(self, site_name: str | None = None):
         """Open site dropdown and select a site by name.
 
         MUI Select renders options as li[role='option'] MuiMenuItem elements.
@@ -174,7 +174,7 @@ class EventsPage:
         )
 
     def select_camera(self, site_name: str, camera_name: str,
-                      location_name: str = None):
+                      location_name: str | None = None):
         """Open camera menu and navigate to a specific camera by name.
 
         Opens #simple-menu popover, expands site > All Cameras, and
@@ -541,7 +541,7 @@ class EventsPage:
 
     # --- Export ---
 
-    def export_event(self, filename: str = None):
+    def export_event(self, filename: str | None = None):
         """Click export, fill the dialog, and wait for progress to start.
 
         The export progress bar appears after clicking save. We verify

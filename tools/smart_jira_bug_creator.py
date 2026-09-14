@@ -152,12 +152,12 @@ class JiraClient:
     factored into helpers and covered by 29 tests.
     """
 
-    def __init__(self, server: str = None, user: str = None, token: str = None):
+    def __init__(self, server: str | None = None, user: str | None = None, token: str | None = None):
         self.server = server or os.environ.get('JIRA_URL')
         self.user = user or os.environ.get('JIRA_EMAIL')
         self.token = token or os.environ.get('JIRA_API_TOKEN')
 
-    def create_issue(self, summary: str, description: str, labels: list[str] = None, project_key: str = None, issue_type: str = 'Bug', attachments: list[str] = None, story_link: str = None, qa_touch_data: dict[str, Any] = None) -> dict[str, Any]:
+    def create_issue(self, summary: str, description: str, labels: list[str] | None = None, project_key: str | None = None, issue_type: str = 'Bug', attachments: list[str] | None = None, story_link: str | None = None, qa_touch_data: dict[str, Any] | None = None) -> dict[str, Any]:
         """Create a Jira issue using `jira` library if available and BUG_CREATION_ENABLED true.
 
         Args:
@@ -355,8 +355,8 @@ def _try_api_queue(payload: dict[str, Any]) -> str | None:
 
 
 def add_to_review_queue(nodeid: str, reason: str, queue_path: str = REVIEW_QUEUE,
-                        bug_data: dict[str, Any] = None, score: float = None,
-                        consecutive: int = None, failure_rate: float = None) -> str:
+                        bug_data: dict[str, Any] | None = None, score: float | None = None,
+                        consecutive: int | None = None, failure_rate: float | None = None) -> str:
     """Add an item to the review queue with optional enriched bug data.
 
     Tries the QA Ops Hub API first (if QA_OPS_API_URL and QA_OPS_API_KEY are set).
@@ -438,12 +438,12 @@ def list_pending_bugs(queue_path: str = REVIEW_QUEUE) -> list[dict[str, Any]]:
         has_data = "Yes" if bug_data else "No"
 
         print("  [%d] %s" % (i, entry_id))
-        print("      Test:       %s" % nodeid)
-        print("      Module:     %s" % module)
-        print("      Severity:   %s" % severity)
-        print("      Confidence: %s  |  Consecutive: %s" % (score, consec))
-        print("      Queued:     %s" % ts)
-        print("      Bug data:   %s" % has_data)
+        print("      Test:       {}".format(nodeid))
+        print("      Module:     {}".format(module))
+        print("      Severity:   {}".format(severity))
+        print("      Confidence: {}  |  Consecutive: {}".format(score, consec))
+        print("      Queued:     {}".format(ts))
+        print("      Bug data:   {}".format(has_data))
         print("      " + "-" * 50)
 
     print("")
@@ -479,21 +479,21 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
         print("  REVIEW: %s  (%d of %d)" % (entry_id, idx + 1, len(pending)))
         print("=" * 78)
         print("")
-        print("  Test ID:      %s" % nodeid)
-        print("  Module:       %s" % bug_data.get("module", "n/a"))
-        print("  Summary:      %s" % bug_data.get("summary", "n/a"))
-        print("  Environment:  %s" % bug_data.get("environment", "n/a"))
-        print("  Severity:     %s" % bug_data.get("severity", "n/a"))
-        print("  Confidence:   %s" % item.get("confidence_score", "n/a"))
-        print("  Consecutive:  %s failures" % item.get("consecutive_failures", "n/a"))
-        print("  Failure Rate: %s" % item.get("failure_rate", "n/a"))
+        print("  Test ID:      {}".format(nodeid))
+        print("  Module:       {}".format(bug_data.get("module", "n/a")))
+        print("  Summary:      {}".format(bug_data.get("summary", "n/a")))
+        print("  Environment:  {}".format(bug_data.get("environment", "n/a")))
+        print("  Severity:     {}".format(bug_data.get("severity", "n/a")))
+        print("  Confidence:   {}".format(item.get("confidence_score", "n/a")))
+        print("  Consecutive:  {} failures".format(item.get("consecutive_failures", "n/a")))
+        print("  Failure Rate: {}".format(item.get("failure_rate", "n/a")))
         print("")
         print("  Steps to Reproduce:")
         for line in bug_data.get("steps", "n/a").split("\n"):
-            print("    %s" % line)
+            print("    {}".format(line))
         print("")
-        print("  Expected: %s" % bug_data.get("expected", "n/a"))
-        print("  Actual:   %s" % bug_data.get("actual", "n/a"))
+        print("  Expected: {}".format(bug_data.get("expected", "n/a")))
+        print("  Actual:   {}".format(bug_data.get("actual", "n/a")))
         print("")
 
         print("  Actions: [a]pprove  [r]eject  [e]dit severity  [s]kip  [q]uit")
@@ -511,11 +511,10 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
                 print("  Creating Jira bug...")
                 desc = (
                     "Automated detection:\n"
-                    "nodeid: %s\n"
-                    "confidence: %s\n"
-                    "consecutive_failures: %s\n"
-                    "failure_rate: %s\n"
-                    % (nodeid, item.get("confidence_score", "n/a"),
+                    "nodeid: {}\n"
+                    "confidence: {}\n"
+                    "consecutive_failures: {}\n"
+                    "failure_rate: {}\n".format(nodeid, item.get("confidence_score", "n/a"),
                        item.get("consecutive_failures", "n/a"),
                        item.get("failure_rate", "n/a"))
                 )
@@ -541,10 +540,10 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
                     item["reviewed_by"] = os.environ.get("USERNAME", os.environ.get("USER", "qa"))
                     item["reviewed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
                     _save_review_queue(queue, queue_path)
-                    print("  APPROVED -- Jira issue: %s" % issue_key)
+                    print("  APPROVED -- Jira issue: {}".format(issue_key))
                     approved += 1
                 except Exception as e:
-                    print("  ERROR creating Jira issue: %s" % e)
+                    print("  ERROR creating Jira issue: {}".format(e))
                     print("  Item remains pending. Try again later.")
                 break
 
@@ -558,8 +557,8 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
                 break
 
             if choice in ("e", "edit"):
-                print("  Current severity: %s" % bug_data.get("severity", "n/a"))
-                print("  Valid options: %s" % ", ".join(VALID_SEVERITIES))
+                print("  Current severity: {}".format(bug_data.get("severity", "n/a")))
+                print("  Valid options: {}".format(", ".join(VALID_SEVERITIES)))
                 try:
                     new_sev = input("  New severity: ").strip()
                 except (EOFError, KeyboardInterrupt):
@@ -568,10 +567,10 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
                 if new_sev in VALID_SEVERITIES:
                     bug_data["severity"] = new_sev
                     _save_review_queue(queue, queue_path)
-                    print("  Severity updated to: %s" % new_sev)
+                    print("  Severity updated to: {}".format(new_sev))
                     print("  Now choose: [a]pprove  [r]eject  [s]kip")
                 else:
-                    print("  Invalid severity. Must be one of: %s" % ", ".join(VALID_SEVERITIES))
+                    print("  Invalid severity. Must be one of: {}".format(", ".join(VALID_SEVERITIES)))
 
             elif choice in ("s", "skip"):
                 print("  SKIPPED -- remains pending.")
@@ -594,7 +593,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
     return {"approved": approved, "rejected": rejected, "skipped": skipped}
 
 
-def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool = False, auto_create: bool = False) -> dict[str, Any]:
+def multi_gate_validation(nodeid: str, env_base_url: str | None = None, is_smoke: bool = False, auto_create: bool = False) -> dict[str, Any]:
     """Run gates and decide whether to queue a bug for review or create it directly.
 
     By default (auto_create=False), bugs that pass the confidence threshold are
@@ -623,7 +622,7 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
 
     # Gate 1: environment health
     if not env_ok:
-        details["reason"] = "Environment unhealthy: %s" % env_msg
+        details["reason"] = "Environment unhealthy: {}".format(env_msg)
         return {"action": "no_action", "details": details}
 
     # Gate 2: smoke tests require manual review on first failure
@@ -638,11 +637,11 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
     if consec >= MIN_CONSECUTIVE_FAILURES and score >= CONFIDENCE_THRESHOLD:
         module = _infer_module_from_nodeid(nodeid)
         environment = _infer_environment(env_base_url)
-        summary = "[Auto] %s failing in %s" % (nodeid.split("::")[-1], env_base_url or "env")
+        summary = "[Auto] {} failing in {}".format(nodeid.split("::")[-1], env_base_url or "env")
         bug_data = {
             "summary": summary,
             "module": module,
-            "steps": "1. Run test: %s\n2. Test fails consistently" % nodeid,
+            "steps": "1. Run test: {}\n2. Test fails consistently".format(nodeid),
             "expected": "Test should pass",
             "actual": "Test has failed %d consecutive times (confidence: %s)" % (consec, score),
             "environment": environment,
@@ -657,10 +656,9 @@ def multi_gate_validation(nodeid: str, env_base_url: str = None, is_smoke: bool 
             jira = JiraClient()
             desc = (
                 "Automated detection:\n"
-                "nodeid: %s\nconfidence: %s\n"
-                "consecutive_failures: %s\nfailure_rate: %s\n"
-                "env_check: %s\n"
-                % (nodeid, score, consec, fail_rate, env_msg)
+                "nodeid: {}\nconfidence: {}\n"
+                "consecutive_failures: {}\nfailure_rate: {}\n"
+                "env_check: {}\n".format(nodeid, score, consec, fail_rate, env_msg)
             )
             issue = jira.create_issue(
                 summary, desc,

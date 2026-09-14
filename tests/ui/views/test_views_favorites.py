@@ -17,7 +17,7 @@ class TestViewsFavorites:
         self.views = ViewsPage(self.page)
         self.views.navigate()
         self.views.wait_for_page_load()
-        yield
+        return
 
     def _expand_site(self):
         """Expand the site tree and show cameras.

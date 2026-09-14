@@ -65,8 +65,7 @@ def normalize(text: str) -> str:
             text = text[len(prefix):]
     # Remove special chars, collapse whitespace
     text = re.sub(r'[^a-z0-9 ]', ' ', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
+    return re.sub(r'\s+', ' ', text).strip()
 
 
 def word_overlap_score(a: str, b: str) -> float:

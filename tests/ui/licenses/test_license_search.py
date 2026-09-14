@@ -19,7 +19,7 @@ class TestLicenseSearch:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.license = LicensePage(self.page)
-        yield
+        return
 
     def _first_feature(self) -> dict:
         """The first feature row of the unfiltered table; the search terms come from it."""
@@ -151,7 +151,7 @@ class TestLicenseExport:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.license = LicensePage(self.page)
-        yield
+        return
 
     @pytest.mark.ui
     @pytest.mark.licenses

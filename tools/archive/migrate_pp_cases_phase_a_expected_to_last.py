@@ -359,7 +359,7 @@ def save_step(
 
 def delete_step(creds: AuthCreds, step_id: str) -> dict:
     """GET /v1/steps/delete/mid/{id}?type=true. Returns {ok, status}."""
-    status, body = _internal_request(
+    status, _body = _internal_request(
         creds, "GET", f"/v1/steps/delete/mid/{step_id}?type=true",
     )
     return {

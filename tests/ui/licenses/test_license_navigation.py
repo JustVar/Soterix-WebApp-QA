@@ -19,7 +19,7 @@ class TestLicenseNavigation:
     def setup(self, authenticated_page):
         self.page = authenticated_page
         self.license = LicensePage(self.page)
-        yield
+        return
 
     def _navigate(self):
         """Helper to navigate to Licenses page."""

@@ -186,7 +186,7 @@ def cmd_milestone(name: str):
         print(f'Created! Response: {result}')
 
 
-def cmd_release(version: str, env: str, user_key: str, milestone_key: str = None):
+def cmd_release(version: str, env: str, user_key: str, milestone_key: str | None = None):
     """Create a full release suite: milestone (optional) + smoke/sanity/regression runs.
 
     This is the main release automation command. It:

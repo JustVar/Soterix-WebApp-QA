@@ -22,7 +22,7 @@ class TestMediaDeeper:
         self.page = authenticated_page
         self.media = MediaPage(self.page)
         self.media.navigate()
-        yield
+        return
 
     def _items_or_skip(self) -> list[str]:
         """The listed item names, or a skip that says the list is empty.

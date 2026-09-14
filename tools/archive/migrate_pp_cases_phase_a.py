@@ -695,7 +695,7 @@ def run(args) -> int:
     replicated = failed = partial = unmatched = dry_run_count = 0
 
     with sync_playwright() as p:
-        browser, ctx, page = open_browser(p, auth_state_file)
+        browser, _ctx, page = open_browser(p, auth_state_file)
         try:
             for idx, (source_case, src_mod) in enumerate(work, 1):
                 target_section_key = module_map.get(src_mod["name"])

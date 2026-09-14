@@ -151,7 +151,7 @@ class SequencePage:
 
     # --- Create Sequence ---
 
-    def create_sequence(self, name: str = None) -> str:
+    def create_sequence(self, name: str | None = None) -> str:
         """Create a new camera sequence with the given name.
 
         Args:

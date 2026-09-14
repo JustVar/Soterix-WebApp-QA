@@ -465,7 +465,7 @@ class ViewsPage:
                 print("[VIEWS] Camera checkbox clicked but no tile was "
                       f"consumed within 10s (still {before_tiles} empty)")
 
-    def add_first_camera_via_checkbox(self, camera_name: str = None):
+    def add_first_camera_via_checkbox(self, camera_name: str | None = None):
         """Add the CONFIGURED camera to a tile through its checkbox.
 
         The name is historical: every caller takes the default, which is
@@ -621,7 +621,7 @@ class ViewsPage:
                     # the loop absorbs the reload time)
                     self.page.reload()
                 else:
-                    raise RuntimeError(f"Failed to navigate to Views page after {max_attempts} attempts: {e}")
+                    raise RuntimeError(f"Failed to navigate to Views page after {max_attempts} attempts: {e}") from e
 
     def wait_for_page_load(self, timeout: int = 5000):
         """Wait for the Views page to finish loading.
@@ -957,7 +957,7 @@ class ViewsPage:
         self._tile_count_changed(before_tiles, "JS location drag")
         return result
 
-    def drag_map_to_tile(self, map_name: str = None, tile_index: int = 0):
+    def drag_map_to_tile(self, map_name: str | None = None, tile_index: int = 0):
         """Drag a map element to a tile.
 
         Native mouse drag first; a drag that raises or consumes no
@@ -1300,7 +1300,7 @@ class ViewsPage:
         all_cameras.wait_for(state="visible", timeout=10000)
         all_cameras.click(force=True)
 
-    def expand_site_and_show_cameras(self, site_name: str = None):
+    def expand_site_and_show_cameras(self, site_name: str | None = None):
         """Expand a site and click All Cameras to show thumbnails.
 
         Flow: Devices tab -> site node -> All Cameras -> thumbnails appear.

@@ -8,8 +8,7 @@ import sys
 from pathlib import Path
 
 try:
-    from soterix_qa_shared.reporting import health as _mod
-    from soterix_qa_shared.reporting import run_archive as _archive
+    from soterix_qa_shared.reporting import health as _mod, run_archive as _archive
 except ModuleNotFoundError as exc:
     if (exc.name or "").split(".")[0] != "soterix_qa_shared":
         raise                    # a dependency of the package is missing

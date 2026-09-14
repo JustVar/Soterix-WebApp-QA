@@ -117,7 +117,7 @@ def load_storage_state(path: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
-        raise SystemExit(f"Auth state file is not valid JSON: {path}\n{e}")
+        raise SystemExit(f"Auth state file is not valid JSON: {path}\n{e}") from e
 
 
 def cookies_for_domain(state: dict, domain: str) -> list[dict]:

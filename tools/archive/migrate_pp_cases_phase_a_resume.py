@@ -405,7 +405,7 @@ def run(args) -> int:
     rollup_every = 25
 
     with sync_playwright() as p:
-        browser, ctx, page = open_browser(p, auth_state_file)
+        browser, _ctx, page = open_browser(p, auth_state_file)
         try:
             total = len(work)
             for idx, (src, tgt, tgt_mod_key) in enumerate(work, 1):

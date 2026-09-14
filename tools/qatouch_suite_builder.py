@@ -474,9 +474,8 @@ def match_cases(cases: list[dict], module_config: dict) -> list[dict]:
 
             # Check title keywords if specified
             keywords = config.get('title_keywords')
-            if keywords:
-                if not any(kw.lower() in title for kw in keywords):
-                    continue
+            if keywords and not any(kw.lower() in title for kw in keywords):
+                continue
 
             selected.append({
                 'case_key': case_key,

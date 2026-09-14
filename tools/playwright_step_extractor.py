@@ -146,8 +146,7 @@ def _locator_description(call_node):
     # CSS class hints
     cls = re.search(r"\.([\w-]+)", selector)
     if cls:
-        name = cls.group(1).replace("-", " ").replace("_", " ")
-        return name
+        return cls.group(1).replace("-", " ").replace("_", " ")
 
     # p:text-is('...')
     text_is = re.search(r"text-is\(['\"]([^'\"]+)['\"]\)", selector)
@@ -417,8 +416,7 @@ class StepExtractor(ast.NodeVisitor):
                 if isinstance(node.value, (ast.Attribute, ast.Call)):
                     return self._describe_element(node.value)
             # Convert snake_case to readable
-            readable = attr.replace("_", " ")
-            return readable
+            return attr.replace("_", " ")
 
         # Local variable name - resolve or use name as description
         if isinstance(node, ast.Name):

@@ -24,7 +24,7 @@ class TestAdminGeneral:
         self.page = authenticated_page
         self.admin = AdminPage(self.page)
         self.admin.navigate_to_admin()
-        yield
+        return
 
     def _open_general(self):
         """Click the General tab; the Rules sub-tab signals it rendered.

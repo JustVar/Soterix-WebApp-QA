@@ -64,7 +64,7 @@ class TestEventWallConfig:
             "Add Configuration", exact=True
         )
         self.add_config.wait_for(state="visible", timeout=15000)
-        yield
+        return
 
     def _open_add_form(self):
         """Open the Add Configuration modal; the name input is the

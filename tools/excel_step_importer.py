@@ -625,7 +625,7 @@ def cmd_reset_checkpoint(args):
     qa_cases = load_snapshot()
 
     print("Matching...")
-    matched, stats = match_excel_to_qatouch(matchable, qa_cases)
+    matched, _stats = match_excel_to_qatouch(matchable, qa_cases)
 
     # Also check which matched keys are actually in step files with source=excel
     step_files = load_step_files()

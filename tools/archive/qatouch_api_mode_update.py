@@ -143,7 +143,7 @@ def update_case_mode(page, case_key: str, case_data: dict, target_mode: str) -> 
         if field not in payload:
             payload[field] = []
 
-    result = page.evaluate("""
+    return page.evaluate("""
         async ({caseKey, payload}) => {
             try {
                 const token = document.cookie.split('XSRF-TOKEN=')[1]?.split(';')[0];
@@ -170,7 +170,6 @@ def update_case_mode(page, case_key: str, case_data: dict, target_mode: str) -> 
         "caseKey": case_key,
         "payload": payload,
     })
-    return result
 
 
 def get_blank_mode_keys() -> list[str]:

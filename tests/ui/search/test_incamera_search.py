@@ -22,7 +22,7 @@ class TestInCameraSearch:
         self.views.navigate()
         self.views.wait_for_page_load()
         self._ensure_camera_streaming()
-        yield
+        return
 
     def _ensure_camera_streaming(self):
         """Ensure a camera is streaming in a tile and enter fullscreen."""

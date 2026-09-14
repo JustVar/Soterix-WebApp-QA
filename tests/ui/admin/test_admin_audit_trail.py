@@ -60,7 +60,7 @@ class TestAdminAuditTrail:
             card.get_by_text("View", exact=True).first.click()
             self.crumb.wait_for(state="visible", timeout=15000)
         self.rows = self.page.locator("tbody tr")
-        yield
+        return
 
     def _first_row(self):
         """The first real audit record.

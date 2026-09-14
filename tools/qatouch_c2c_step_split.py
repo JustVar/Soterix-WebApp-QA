@@ -286,7 +286,7 @@ def create_step(page, cid: str, step_desc: str, expected: str) -> dict:
     safe_desc = escape_for_html(step_desc)
     safe_exp = escape_for_html(expected)
 
-    result = page.evaluate("""
+    return page.evaluate("""
         async ([pid, cid, desc, exp]) => {
             try {
                 const token = document.cookie.split('XSRF-TOKEN=')[1]?.split(';')[0];
@@ -316,7 +316,6 @@ def create_step(page, cid: str, step_desc: str, expected: str) -> dict:
             }
         }
     """, [PROJECT_KEY, cid, safe_desc, safe_exp])
-    return result
 
 
 # ---------------------------------------------------------------------------
@@ -470,7 +469,7 @@ def main():
             cmd_list(None, args)
             return
 
-        browser, ctx, page = login(p)
+        browser, _ctx, page = login(p)
         try:
             if args.cmd == 'dry-run':
                 cmd_dry_run(page, args)
