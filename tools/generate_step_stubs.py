@@ -43,7 +43,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from config.products import PRODUCT_ROOTS  # noqa: E402
+from config.products import PRODUCT_ROOTS
 
 TESTS_DIR = ROOT / 'tests'
 STEPS_DIR = ROOT / 'tests' / 'steps'

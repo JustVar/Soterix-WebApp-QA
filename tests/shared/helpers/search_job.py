@@ -185,7 +185,7 @@ def watch_search(page: Page, click: Callable[[], None], *, timeout_ms: int = 600
         path = response.url.split("?")[0]
         try:
             body = response.json()
-        except Exception:  # noqa: BLE001 - why: a non-JSON body is one of the faults observe records
+        except Exception:  # why: a non-JSON body is one of the faults observe records
             body = None
         job.observe(path, response.status, body)
 

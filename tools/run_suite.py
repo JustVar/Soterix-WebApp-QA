@@ -57,12 +57,12 @@ print = functools.partial(_print, flush=True)
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv(ROOT / '.env')
 
-from tools.qatouch_client import QATouchClient  # noqa: E402
-from tools.qatouch_run_manager import _extract_run_key  # noqa: E402
+from tools.qatouch_client import QATouchClient
+from tools.qatouch_run_manager import _extract_run_key
 
 PROJECT_KEY = os.environ.get('QATOUCH_PROJECT_ID', 'JlW1')
 MAPPING_PATH = ROOT / 'config' / 'qatouch_case_mapping.json'

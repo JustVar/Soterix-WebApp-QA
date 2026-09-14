@@ -594,7 +594,7 @@ def cmd_import(args):
     return matched
 
 
-def cmd_validate(args):
+def cmd_validate(_args):
     """Run validation checks on all step JSON files."""
     print("Validating step JSON files...")
     result = validate_step_files()

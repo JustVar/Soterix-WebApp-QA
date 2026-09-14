@@ -7,7 +7,6 @@ import time
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Dict
 
 import pytest
 
@@ -150,14 +149,14 @@ def stream_guard(config, items, box_name: str) -> None:
     # what the channel streams (Chrome on Linux has no H.265 decoder).
     measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"),
                                    config.getoption("--browser-channel", default=None))
-    print(stream_health.describe(measure))  # noqa: T201 - the guard's one line for the terminal
+    print(stream_health.describe(measure))
     if measure.get("frames") == 0 and not measure.get("error"):
         # a second look before skipping the whole session on one empty
         # window: the US camera read 0 frames and then 117 a minute
         # apart (09/12/2026), and one 8 s sample had skipped 43 tests
         measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"),
                                        config.getoption("--browser-channel", default=None))
-        print("[STREAM] second measurement: " + stream_health.describe(measure))  # noqa: T201 - the guard's terminal line
+        print("[STREAM] second measurement: " + stream_health.describe(measure))
     reason = stream_health.stream_skip_reason(measure, box_name)
     if reason:
         for item in targets:
@@ -209,7 +208,7 @@ def build_no_tenant_login_data() -> dict[str, str]:
 @pytest.fixture(scope="session")
 def env_config():
     """Resolved environment configuration dict (from ENV)."""
-    logging.info(f"[ENV CONFIG] Loaded config for: {os.environ.get('ENV')}")
+    logging.getLogger(__name__).info(f"[ENV CONFIG] Loaded config for: {os.environ.get('ENV')}")
     return config
 
 
@@ -244,7 +243,7 @@ def login_data():
                 f"BOX='{box}' is set but its credentials are incomplete. The "
                 f"box's password variable is empty or missing in .env; see the "
                 f"password_env key for this box in config/env/.")
-        logging.info(f"[CREDENTIALS] Using box '{box}' account from env config")
+        logging.getLogger(__name__).info(f"[CREDENTIALS] Using box '{box}' account from env config")
         return {"username": creds["email"], "password": creds["password"],
                 "expected_landing": expected_landing}
 
@@ -252,7 +251,7 @@ def login_data():
     password = os.environ.get("QA_PASSWORD")
     if not user or not password:
         raise ValueError("QA_USER and QA_PASSWORD must be set in environment or .env file. See .env.template")
-    logging.info("[CREDENTIALS] Using QA_USER from environment")
+    logging.getLogger(__name__).info("[CREDENTIALS] Using QA_USER from environment")
     return {"username": user, "password": password, "expected_landing": expected_landing}
 
 @pytest.fixture

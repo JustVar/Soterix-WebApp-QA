@@ -1,6 +1,5 @@
 import os
 import re
-from typing import List, Optional
 
 from playwright.sync_api import Page
 

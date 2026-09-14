@@ -119,6 +119,7 @@ def rest_get_page(
                 time.sleep(wait)
                 continue
             raise
+    return None
 
 
 def classify(case: dict) -> tuple[str, int, int, str, str]:

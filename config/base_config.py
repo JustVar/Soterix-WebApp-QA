@@ -76,7 +76,7 @@ def load_config():
     if overrides:
         cfg = {**cfg, **overrides}
 
-    logging.info(f"[ENV RESOLVED] ENV='{env}' APP_TYPE='{app_type}' -> {module_path} | base_url={cfg.get('base_url')} | box='{box}' overlay={sorted(overrides)}")
+    logging.getLogger(__name__).info(f"[ENV RESOLVED] ENV='{env}' APP_TYPE='{app_type}' -> {module_path} | base_url={cfg.get('base_url')} | box='{box}' overlay={sorted(overrides)}")
     return cfg
 
 # Helpers to expose box/credential and safety checks

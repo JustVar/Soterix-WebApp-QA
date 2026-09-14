@@ -43,13 +43,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from config.products import area_of  # noqa: E402
-from plugins import products  # noqa: E402
-from tools import (  # noqa: E402
+from config.products import area_of
+from plugins import products
+from tools import (
     qatouch_ledger,
     qatouch_mapping as qm,
 )
-from tools.qatouch_cases_from_tests import TestInfo, parse_docstring, scan_tests  # noqa: E402
+from tools.qatouch_cases_from_tests import TestInfo, parse_docstring, scan_tests
 
 OUT = ROOT / 'docs' / 'TEST_INVENTORY.md'
 HISTORY = ROOT / 'history' / 'test_counts.jsonl'

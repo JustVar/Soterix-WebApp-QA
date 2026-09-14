@@ -398,10 +398,6 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Try to verify in Search Results (should fail)")
-        try:
+        with pytest.raises(Exception, match="Not in Search Results"):
             self.lpr.ensure_in_search_results()
-            pytest.fail("Should have raised exception - not in Search Results")
-        except Exception as e:
-            self.step_capture.mark(3, "Exception correctly raised")
-            assert "Not in Search Results" in str(e), "Unexpected exception message"
-            print(f"[PASS] Correctly raised exception: {e}")
+        self.step_capture.mark(3, "Exception correctly raised")

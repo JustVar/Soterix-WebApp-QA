@@ -82,11 +82,12 @@ jobs:
       - name: Test inventory is current
         run: python tools/test_inventory.py --check
 
-      # Not `ruff check`, which finds 627 things here and would fail every
-      # pull request from day one. This fails only when a FILE gains
-      # findings: a bar a change can pass, that still stops the count
-      # growing. See tools/lint_baseline.py for why per-file, and for the
-      # bug that hid in a file holding 50 findings.
+      # Per file against a recorded baseline, not a bare `ruff check`: the
+      # repo held 627 findings when the gate was born and this bar let a
+      # change pass while stopping the count growing. Since 09/14/2026 the
+      # baseline is zero, so any finding fails, and the tool stays because
+      # its message names the file and the way out (fix, or --update with a
+      # reason in the commit message). See tools/lint_baseline.py.
       - name: Lint, against the recorded baseline
         run: python tools/lint_baseline.py
 

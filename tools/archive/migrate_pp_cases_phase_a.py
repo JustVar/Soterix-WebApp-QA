@@ -254,7 +254,7 @@ def fetch_all_project_cases(project_key: str, token: str, domain: str,
     module_key in memory.
 
     Was: fetch_source_cases_for_module(...) ran a full page-by-page scan
-    PER module - so 3 modules = 3× pagination = ~180 REST calls back-to-back
+    PER module - so 3 modules = 3x pagination = ~180 REST calls back-to-back
     against api.qatouch.com, which rate-limits hard around page 35 (HTTP 429).
     The dry-run on 2026-06-25 surfaced this - Users (first scan) returned 86
     cases but Platform Management + Audit_Trail both came back EMPTY because
@@ -403,9 +403,7 @@ def update_succeeded(resp: dict) -> bool:
     if resp.get("ok"):
         return True
     body = (resp.get("body") or "").lower()
-    if "successfully" in body or '"status":true' in body or "updated" in body:
-        return True
-    return False
+    return bool("successfully" in body or '"status":true' in body or "updated" in body)
 
 
 # ── Build update payload from source edit-data ──────────────────────────────

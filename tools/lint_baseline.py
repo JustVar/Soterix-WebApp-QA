@@ -72,14 +72,22 @@ def current_counts() -> tuple[Counter, str | None]:
     return counts, None
 
 
-def load_baseline() -> dict[str, int]:
+def load_baseline() -> dict[str, int] | None:
+    """The recorded per-file counts; None when nothing is recorded.
+
+    An empty dict is a real baseline: zero findings everywhere, which the
+    repo reached on 09/14/2026. Reading it as "no baseline" blocked the
+    commit that got it there.
+    """
     if not BASELINE.exists():
-        return {}
+        return None
     try:
         data = json.loads(BASELINE.read_text(encoding='utf-8'))
     except (OSError, json.JSONDecodeError, ValueError):
-        return {}
-    return data.get('files', {}) if isinstance(data, dict) else {}
+        return None
+    if not isinstance(data, dict) or not isinstance(data.get('files'), dict):
+        return None
+    return data['files']
 
 
 def save_baseline(counts: Counter) -> None:
@@ -112,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     baseline = load_baseline()
-    if not baseline:
+    if baseline is None:
         print('No baseline recorded. Run: python tools/lint_baseline.py --update')
         return 2
 

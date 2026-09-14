@@ -390,9 +390,7 @@ def is_carrier_expected(expected_html: str) -> bool:
     plain = _strip_html(expected_html or "")
     if not plain:
         return False
-    if plain == DASH_FALLBACK:
-        return False
-    return True
+    return plain != DASH_FALLBACK
 
 
 def excerpt(text: str, n: int = 120) -> str:

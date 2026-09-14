@@ -400,9 +400,12 @@ def normalize_priority(raw: str, severity: str = "") -> str:
             return k
         # Also tolerate P1/P2/P3 shorthand.
         ptok = candidate.strip().upper()
-        if ptok == "P1": return "high"
-        if ptok == "P2": return "medium"
-        if ptok == "P3": return "low"
+        if ptok == "P1":
+            return "high"
+        if ptok == "P2":
+            return "medium"
+        if ptok == "P3":
+            return "low"
     return "medium"
 
 

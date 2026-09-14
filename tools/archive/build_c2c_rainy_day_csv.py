@@ -62,7 +62,7 @@ def _join(lines: list[str]) -> str:
     return "\n".join(_ascii(x) for x in lines)
 
 
-def auth_steps(scenario, notes):
+def auth_steps(scenario, _notes):
     steps = [
         "1. Log in to the Cloud 2 Cam web app as a user with an active session and at least one online camera",
         "2. Open a live view so a protected resource is actively in use",

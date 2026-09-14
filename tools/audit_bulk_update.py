@@ -188,8 +188,8 @@ def main():
             steps_unchanged += 1
         else:
             steps_changed += 1
-            bu_count = len([l for l in bu_steps.split("\n") if l.strip()])
-            qt_count = len([l for l in qt_steps.split("\n") if l.strip()])
+            bu_count = len([line for line in bu_steps.split("\n") if line.strip()])
+            qt_count = len([line for line in qt_steps.split("\n") if line.strip()])
             if qt_count == 0:
                 steps_added += 1
             step_count_changes.append({
@@ -286,7 +286,7 @@ def main():
         exp_lines = bu_exp.split("\n")
 
         # Empty steps
-        non_empty = [l for l in step_lines if l.strip()]
+        non_empty = [line for line in step_lines if line.strip()]
         if not non_empty:
             empty_steps += 1
             continue

@@ -165,7 +165,7 @@ class FullScreenPage:
                 return chain.join(' < ') + ` @${Math.round(r.x)},${Math.round(r.y)}`;
             })""")
         # the diagnostic must not mask the wait's own failure
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return [f"unreadable: {str(exc)[:80]}"]
 
     def assert_stream_playing(self, timeout_ms: int = 30000) -> None:

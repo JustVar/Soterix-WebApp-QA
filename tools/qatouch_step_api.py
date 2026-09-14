@@ -605,7 +605,7 @@ def cmd_sync(page, dry_run: bool, batch: str | None, cases: list[str] | None,
     print(f'{"=" * 60}\n')
 
     interrupted = False
-    def handle_sigint(sig, frame):
+    def handle_sigint(_sig, _frame):
         nonlocal interrupted
         interrupted = True
         print('\n  Ctrl+C detected -- finishing current case then stopping...')

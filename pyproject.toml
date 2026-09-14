@@ -32,7 +32,6 @@ select = [
     "RUF",    # Ruff-specific
     "PT",     # flake8-pytest-style (fixture / parametrize / mark conventions)
     "T20",    # flake8-print (catches stray print() in test/library code)
-    "BLE",    # flake8-blind-except (no `except Exception` / bare except)
     "ARG",    # flake8-unused-arguments
     "RET",    # flake8-return (return-statement consistency)
     "LOG",    # flake8-logging-format
@@ -46,7 +45,12 @@ ignore = [
     "PT011",   # pytest.raises(Exception) too broad - sometimes intentional in negative tests
     "PT006",   # parametrize argnames style - tuple vs list, low value
     "RUF012",  # mutable class attrs need ClassVar - noisy for POMs that define `page.locator(...)` at class level
+    "SIM105",  # contextlib.suppress hides the why comment the conventions require on a swallowed exception
+    "SIM102",  # a nested if that carries its own comment reads better than one joined condition (the 19 left all do)
 ]
+# Not BLE (blind except): the house rule is a why comment on every
+# `except Exception`, checked by tools/convention_check.py (except-without-why),
+# and ruff's rule cannot accept the comment. Decided 09/14/2026.
 
 [tool.ruff.lint.per-file-ignores]
 # Test files use plenty of patterns that look bad in production code but are
@@ -66,15 +70,18 @@ ignore = [
 "conftest.py" = [
     "F401",   # conftest re-exports fixtures by import
     "F811",   # redefinition for fixture overrides
+    "T201",   # the [AUTH] and [TRACE] lines are the console report by design
+    "ARG001", # pytest hook signatures name arguments the hook does not use
 ]
 "tools/**/*.py" = [
     "T201",   # CLI tools legitimately use print() for output
-    "BLE001", # tools may catch broad Exception when reporting to operator
+    "E402",   # scripts put the repo root on sys.path before their imports
 ]
 "run.py" = [
     "T201",   # the front-door CLI prints its command and result paths
 ]
 "plugins/**/*.py" = [
+    "ARG001", # pytest hook signatures name arguments the hook does not use
     "ARG002", # pytest plugin hooks have many unused-arg signatures
 ]
 "**/discover_*.py" = [

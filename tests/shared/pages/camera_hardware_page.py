@@ -353,7 +353,7 @@ class CameraHardwarePage:
         title = self.page.locator("#tabs .contentTitle").first
         try:
             return title.inner_text(timeout=2000).strip() if title.count() else ""
-        except Exception:  # noqa: BLE001 - why: no heading yet is a valid 'before' for the change wait
+        except Exception:  # why: no heading yet is a valid 'before' for the change wait
             return ""
 
     def _wait_heading_change(self, before: str, timeout_ms: int = 10000) -> None:
@@ -378,7 +378,7 @@ class CameraHardwarePage:
         while time.monotonic() < deadline:
             try:
                 now = pane.inner_text(timeout=1000)
-            except Exception:  # noqa: BLE001 - why: a pane mid-replace has no text yet; the next tick reads it
+            except Exception:  # why: a pane mid-replace has no text yet; the next tick reads it
                 now = None
             if now is not None and now == last:
                 return

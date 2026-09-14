@@ -359,7 +359,7 @@ class ViewsPage:
             # capture is evidence, not testing: a failed screenshot is
             # logged but must not disturb the drag or the release in
             # the finally
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 print(f"[VIEWS] mid-drag capture failed: {e}")
         finally:
             # the button must never stay pressed into the next action
@@ -1122,7 +1122,7 @@ class ViewsPage:
                 "broken_images": broken_images,
                 "stream_failures": self.streaming_failed.count(),
             }
-        except Exception as e:  # noqa: BLE001 - advisory layer, log and stand down
+        except Exception as e:  # why: advisory layer, log and stand down
             print(f"[VIEWS] content health snapshot failed: {e}")
             return None
 
@@ -1146,7 +1146,7 @@ class ViewsPage:
                 print(f"[VIEWS] content health after {action}: "
                       f"{broken_delta:+d} broken image(s), "
                       f"{stream_delta:+d} stream failure(s)")
-        except Exception as e:  # noqa: BLE001 - advisory layer, log and stand down
+        except Exception as e:  # why: advisory layer, log and stand down
             print(f"[VIEWS] content health check failed: {e}")
 
     def get_tab_count(self) -> int:
@@ -1293,6 +1293,7 @@ class ViewsPage:
                 print("[VIEWS] click_site: the site did not expand "
                       "within 5s of the JS click")
             return result
+        return None
 
     def click_all_cameras(self):
         """Click on 'All Cameras' to show all camera thumbnails."""
@@ -1530,7 +1531,10 @@ class ViewsPage:
         # later run had overwritten, so the failure now carries what the
         # click sent, and whether the row and the star were still there
         sent: list[str] = []
-        listener = lambda r: sent.append(f"{r.method} {r.url.split('/REST/')[-1][:60]}")  # noqa: E731
+
+        def listener(r):
+            sent.append(f"{r.method} {r.url.split('/REST/')[-1][:60]}")
+
         self.page.on("request", lambda r: listener(r) if "/REST/" in r.url else None)
         try:
             with self.page.expect_response(

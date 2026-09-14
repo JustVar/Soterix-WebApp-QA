@@ -90,7 +90,8 @@ def tags_to_enc(pipe_str):
 
 def build_payloads_for(csv_path, project_key, target_module_filter, all_cases):
     """target_module_filter: predicate (case_dict) -> bool; restricts which live cases we match against."""
-    csv_rows = list(csv.DictReader(open(csv_path, encoding='utf-8')))
+    with open(csv_path, encoding='utf-8') as f:
+        csv_rows = list(csv.DictReader(f))
     # Filter live cases for this CSV (by module - to avoid cross-CSV title collisions)
     candidates = [c for c in all_cases if target_module_filter(c)]
     title_idx = {}
@@ -154,7 +155,8 @@ def main():
         jlw1_cases,
     )
     print(f'LDAP -> JlW1: matched {len(p)}, unmatched {len(u)}')
-    all_payloads.extend(p); all_unmatched.extend(u)
+    all_payloads.extend(p)
+    all_unmatched.extend(u)
 
     # SiteDevice -> 70l1, all cases (skip corrupt TR0029)
     p, u = build_payloads_for(
@@ -164,17 +166,19 @@ def main():
         p70l1_cases,
     )
     print(f'SiteDevice -> 70l1: matched {len(p)}, unmatched {len(u)}')
-    all_payloads.extend(p); all_unmatched.extend(u)
+    all_payloads.extend(p)
+    all_unmatched.extend(u)
 
     # Distributor -> 70l1
     p, u = build_payloads_for(
         REPO / 'tests/data/distributor_canonical.csv',
         '70l1',
-        lambda c: True,
+        lambda _c: True,
         p70l1_cases,
     )
     print(f'Distributor -> 70l1: matched {len(p)}, unmatched {len(u)}')
-    all_payloads.extend(p); all_unmatched.extend(u)
+    all_payloads.extend(p)
+    all_unmatched.extend(u)
 
     # Stats
     from collections import Counter

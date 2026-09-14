@@ -77,17 +77,17 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
-from config.products import PRODUCT_ROOTS, area_of, home_project  # noqa: E402
+from config.products import PRODUCT_ROOTS, area_of, home_project
 
 # --after-import reads the project back through the API; the key
 # lives in .env like the import tool's does
 load_dotenv(ROOT / '.env')
 
-from plugins.run_report import readable_title  # noqa: E402
-from tools import qatouch_mapping as qm  # noqa: E402
-from tools.qatouch_mapping_audit import (  # noqa: E402
+from plugins.run_report import readable_title
+from tools import qatouch_mapping as qm
+from tools.qatouch_mapping_audit import (
     collect_tests,
     dead_key_nodeids,
     latest_snapshot,

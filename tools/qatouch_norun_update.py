@@ -256,7 +256,7 @@ def mark_case_norun(page, case_key: str, reason: str) -> tuple[bool, str]:
     # Build updates
     updates = {}
     if not already_tagged:
-        updates["newtags"] = list(current_newtags) + [tag_id]
+        updates["newtags"] = [*list(current_newtags), tag_id]
     if not already_precond:
         updates["precondition"] = build_norun_precondition(reason, current_precondition)
 
@@ -308,7 +308,7 @@ def unmark_case_norun(page, case_key: str) -> tuple[bool, str]:
 
 # ── Commands ─────────────────────────────────────────────────────────
 
-def cmd_discover_tag(page, args):
+def cmd_discover_tag(page, _args):
     """Discover the NO_RUN tag hash ID by diffing newtags before/after UI tagging."""
     test_key = "5BRMnj"  # Known test case
     print(f"\n  Reading case {test_key} to capture current tags...")
@@ -370,7 +370,7 @@ def cmd_discover_tag(page, args):
     print("\n  Next: python tools/qatouch_norun_update.py test")
 
 
-def cmd_test(page, args):
+def cmd_test(page, _args):
     """Test NO_RUN marking on a single case, then revert."""
     tag_id = get_norun_tag_id()
     if not tag_id:
@@ -570,7 +570,7 @@ def _case_tags_lower(case: dict) -> str:
     return ",".join(p.strip().lower() for p in parts if p and p.strip())
 
 
-def cmd_list(page, args):
+def cmd_list(_page, _args):
     """List all NO_RUN cases from latest snapshot."""
     snap = load_latest_snapshot()
     if not snap:
@@ -595,7 +595,7 @@ def cmd_list(page, args):
         print(f"  {c['case_key']:<10} {module:<30} {title}")
 
 
-def cmd_count(page, args):
+def cmd_count(_page, _args):
     """Count NO_RUN vs runnable cases."""
     snap = load_latest_snapshot()
     if not snap:

@@ -204,7 +204,7 @@ def _invocation_target(config: Any) -> str:
     """
     try:
         return ' '.join(str(a) for a in config.invocation_params.args)[:200]
-    except Exception:  # noqa: BLE001 - the target is a nicety, never worth failing for
+    except Exception:  # why: the target is a nicety, never worth failing for
         return ''
 
 
@@ -245,7 +245,7 @@ def _mute_html_report(config: Any) -> None:
         for plugin in list(pm.get_plugins()):
             if type(plugin).__module__.startswith('pytest_html'):
                 pm.unregister(plugin)
-    except Exception as e:  # noqa: BLE001 - muting is a nicety on an exit path
+    except Exception as e:  # why: muting is a nicety on an exit path
         log.debug(f'single_run_guard: could not mute the html report: {e}')
 
 
@@ -263,7 +263,7 @@ def pytest_sessionstart(session: Any) -> None:
         existing = _read_lock(env_name)
         action, reason = decide(existing, environ=os.environ, collect_only=collect_only,
                                 own_pid=os.getpid(), parent_pid=os.getppid())
-    except Exception as e:  # noqa: BLE001 - a broken guard must never block testing
+    except Exception as e:  # why: a broken guard must never block testing
         log.warning(f'single_run_guard: guard check failed ({e}) - run proceeds unguarded')
         return
 
@@ -278,7 +278,7 @@ def pytest_sessionstart(session: Any) -> None:
         try:
             rival = cross_env_rival(env_name, environ=os.environ,
                                     own_pid=os.getpid(), parent_pid=os.getppid())
-        except Exception as e:  # noqa: BLE001 - a broken guard must never block testing
+        except Exception as e:  # why: a broken guard must never block testing
             log.warning(f'single_run_guard: cross-env scan failed ({e}) - run proceeds')
             rival = None
         if rival is not None:
@@ -297,7 +297,7 @@ def pytest_sessionstart(session: Any) -> None:
             config._single_run_guard_env = env_name
             _arm_heartbeat(env_name, {os.getpid()})
             log.info(f'single_run_guard: run lock taken for env={env_name} ({reason})')
-        except Exception as e:  # noqa: BLE001 - a broken guard must never block testing
+        except Exception as e:  # why: a broken guard must never block testing
             log.warning(f'single_run_guard: could not take the run lock ({e}) - '
                         f'run proceeds unguarded')
         return
@@ -328,7 +328,7 @@ def _arm_heartbeat_for_parent(env_name: str, reason: str) -> None:
         _arm_heartbeat(env_name, pids)
 
 
-def pytest_runtest_logreport(report: Any) -> None:  # noqa: ARG001 - pytest names the hook argument
+def pytest_runtest_logreport(report: Any) -> None:
     """Each test report is a sign of life; stamp the lock at most once a
     minute. A stamp that fails is logged once and never fails the run."""
     state = _beat_state
@@ -343,7 +343,7 @@ def pytest_runtest_logreport(report: Any) -> None:  # noqa: ARG001 - pytest name
     state['last'] = now
     try:
         beat(state['env'], state['pids'])
-    except Exception as e:  # noqa: BLE001 - a heartbeat must never fail a run
+    except Exception as e:  # why: a heartbeat must never fail a run
         log.warning(f'single_run_guard: could not stamp the run lock ({e}); '
                     f'the staleness backstop falls back to acquired_at')
         _disarm_heartbeat()
@@ -372,6 +372,6 @@ def pytest_unconfigure(config: Any) -> None:
         # blindly could free a rival that re-acquired after a --force.
         if existing is not None and existing.get('pid') == os.getpid():
             _remove_lock(env_name)
-    except Exception as e:  # noqa: BLE001 - release failure must not fail the run
+    except Exception as e:  # why: release failure must not fail the run
         log.warning(f'single_run_guard: could not release the run lock ({e}) - '
                     f'the backstops in tools/run_lock.py will clear it')

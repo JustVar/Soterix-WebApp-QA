@@ -254,7 +254,7 @@ def _dismiss_survey(page):
         survey = page.locator('.survey-parent-container')
         if survey.count() > 0 and survey.first.is_visible(timeout=1000):
             # Try clicking close/X button first
-            close = page.locator('.survey-parent-container button:has-text("×"), '
+            close = page.locator('.survey-parent-container button:has-text("\u00d7"), '
                                  '.survey-parent-container .close, '
                                  '.survey-parent-container [aria-label="Close"]')
             if close.count() > 0:
@@ -782,7 +782,7 @@ def _go_to_next_page(page):
     return False
 
 
-def scroll_to_find_case(page, title, max_attempts=80):
+def scroll_to_find_case(page, title, max_attempts=80):  # noqa: ARG001 - callers pass it, the body never reads it (register row 63)
     """Find a case in the paginated list.
 
     Strategy:
@@ -959,7 +959,7 @@ def find_and_click_case(page, title):
     return False
 
 
-def navigate_to_case_by_url(page, case_key) -> bool:
+def navigate_to_case_by_url(_page, _case_key) -> bool:
     """Open case in a new tab via direct URL, bypassing module search.
 
     Opens a new browser tab with the case detail URL, waits for it to load,
@@ -971,7 +971,7 @@ def navigate_to_case_by_url(page, case_key) -> bool:
     return False
 
 
-def _sync_case_in_new_tab(context, page, case_key, steps,
+def _sync_case_in_new_tab(context, _page, case_key, steps,
                           module_key='', module_name='', case_title=''):
     """Open case in a new tab, write steps, close tab. Returns 'ok'/'partial'/'fail'/'already_set'.
 
@@ -1997,7 +1997,7 @@ def add_tags_to_case(page, tags: list[str]) -> bool:
 # ---------------------------------------------------------------------------
 # Core Operations
 # ---------------------------------------------------------------------------
-def process_case(page, context, case, operations, rate_limiter, report):
+def process_case(page, _context, case, operations, rate_limiter, report):
     """Process a single case: navigate to it, open edit, apply operations, save.
 
     operations: list of dicts, each with 'action' key:
@@ -2904,7 +2904,7 @@ def _steps_match(existing: list[dict], desired: list[dict]) -> bool:
     return True
 
 
-def cmd_sync_steps(step_dir=None, csv_file=None, case_keys=None, dry_run=False,
+def cmd_sync_steps(step_dir=None, csv_file=None, case_keys=None, dry_run=False,  # noqa: ARG001 - csv_file is accepted and never read (register row 63)
                    limit=None, include_manual=False, manual_only=False,
                    batch=None, resume=False):
     """Sync step definitions from JSON files into QA Touch Steps tab.
@@ -3602,7 +3602,7 @@ def _wait_for_case_list(page, timeout=10):
     return 0
 
 
-def _find_case_exhaustive(page, title, module):
+def _find_case_exhaustive(page, title, _module):
     """Enhanced case search: maximize per-page, scroll exhaustively, paginate.
 
     Returns True if the case was found and scrolled into view.
@@ -3633,7 +3633,7 @@ def _find_case_exhaustive(page, title, module):
     if result.get('found'):
         return True
 
-    # Scroll content container exhaustively (60 iterations × 500px = 30,000px)
+    # Scroll content container exhaustively (60 iterations x 500px = 30,000px)
     page.evaluate('''() => {
         var wrap = document.querySelector('.test_case_table_content_outer_wrap');
         if (wrap) wrap.scrollTop = 0;

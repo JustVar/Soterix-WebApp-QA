@@ -85,13 +85,13 @@ def measure_stream(camera_name: str | None, seconds: int = DEFAULT_SECONDS) -> d
                             {"channelId": out["channel_id"], "streamType": 1})
             ct = (rows[0] if rows else {}).get("codecType")
             out["codec"] = CODEC_TYPES.get(ct, f"codecType {ct}") if ct is not None else None
-        except Exception as e:  # noqa: BLE001 - why: the codec is a second fact; without it the decode check is skipped, the frame count still counts
+        except Exception as e:  # why: the codec is a second fact; without it the decode check is skipped, the frame count still counts
             out["note"] = f"codec unread: {type(e).__name__}"
         rec = asyncio.run(direct_socket(media_url(site_id, out["channel_id"], 1),
                                         app_headers(token), float(seconds)))
         out["frames"] = sum(1 for f in rec.get("frames", []) if f.get("opcode") == 2)
         out["note"] = rec.get("error") or out["note"]
-    except Exception as e:  # noqa: BLE001 - why: the guard reports what stopped the measurement and skips nothing
+    except Exception as e:  # why: the guard reports what stopped the measurement and skips nothing
         out["error"] = f"{type(e).__name__}: {e}"[:200]
     return out
 
@@ -123,7 +123,7 @@ def decode_check(codec: str | None, channel: str | None) -> dict:
             name = f"{'Chrome' if channel == 'chrome' else 'Chromium'} {browser.version} on {platform.system()}"
             browser.close()
         return {"decodes": bool(supported), "browser": name}
-    except Exception as e:  # noqa: BLE001 - why: a check that could not run is 'unknown', which skips nothing
+    except Exception as e:  # why: a check that could not run is 'unknown', which skips nothing
         return {"decodes": None, "browser": f"check failed: {type(e).__name__}"}
 
 

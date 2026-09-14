@@ -52,7 +52,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv(ROOT / ".env")
 
@@ -549,7 +549,7 @@ def cmd_restore(page, args):
 
 
 # Imported so there is one definition of the status names in the repo.
-from tools.qatouch_client import STATUS_NAMES, normalize_status_name  # noqa: E402
+from tools.qatouch_client import STATUS_NAMES, normalize_status_name
 
 # Accepts "not-applicable", "Not Applicable", "NOT APPLICABLE" alike.
 STATUS_BY_NAME = {normalize_status_name(v).replace(" ", "-"): k

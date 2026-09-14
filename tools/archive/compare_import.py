@@ -106,7 +106,7 @@ def load_file(filepath, title_col, module_col):
 
 
 def compare_files(incoming_df, qa_df, incoming_title_col, qa_title_col,
-                  incoming_module_col, qa_module_col):
+                  _incoming_module_col, _qa_module_col):
     """Compare two DataFrames and return comparison results."""
 
     # Normalize titles for comparison

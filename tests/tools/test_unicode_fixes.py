@@ -19,9 +19,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools import (
-    qa_xlsx_to_canonical_csv as canonical,  # noqa: E402
-    qa_xlsx_to_qatouch_csv as qatouch,  # noqa: E402
+from tools import (  # noqa: E402
+    qa_xlsx_to_canonical_csv as canonical,
+    qa_xlsx_to_qatouch_csv as qatouch,
 )
 
 MODULES = [canonical, qatouch]

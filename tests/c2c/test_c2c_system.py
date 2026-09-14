@@ -141,7 +141,7 @@ class TestC2CSystemInfo:
                 self.camera.navigate_to_setup_subsection("SYSTEM INFORMATION")
                 expect(self.page.locator("#tabs input#device_name")).to_have_value(original_name)
                 expect(self.page.locator("#tabs input#location")).to_have_value(original_location)
-            except Exception as restore_err:  # noqa: BLE001 - must not mask the real failure
+            except Exception as restore_err:  # why: must not mask the real failure
                 pytest.fail(
                     f"Could not restore device name/location on "
                     f"{self.camera.ip}: {restore_err}. The camera may still be "
@@ -367,7 +367,7 @@ class TestC2CSystemOps:
             try:
                 self.page.goto(url, wait_until="domcontentloaded", timeout=5000)
                 return True
-            except Exception:  # noqa: BLE001 - why: no answer IS the measurement while the camera reboots
+            except Exception:  # why: no answer IS the measurement while the camera reboots
                 return False
 
         # the camera dropping off is the restart-began signal (a fixed 10 s

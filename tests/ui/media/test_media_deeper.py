@@ -262,7 +262,8 @@ class TestMediaDeeper:
         query = names[0]
         self.media.search_media(query)
         results = self.media.item_names()
-        assert results and all(query.lower() in n.lower() for n in results), (
+        assert results, f"searching {query!r} returned nothing"
+        assert all(query.lower() in n.lower() for n in results), (
             f"searching {query!r} returned {results}")
         self.media.search_media("")
         expect(self.media.search_input).to_have_value("")

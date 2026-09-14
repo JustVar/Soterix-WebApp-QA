@@ -25,7 +25,7 @@ from __future__ import annotations
 # to: the shims under test live in plugins/ and tools/, and pytest may not
 # have put the root there. E402 and the import-sort rule both object, and
 # both are wrong here.
-# ruff: noqa: E402, I001
+# ruff: noqa: I001
 
 import json
 import os
@@ -41,30 +41,30 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from soterix_qa_shared.qatouch import client as pkg_client
-from soterix_qa_shared.qatouch import reporter as pkg_reporter
-from soterix_qa_shared.qatouch import retry as pkg_retry
-from soterix_qa_shared.qatouch.results import (
+from soterix_qa_shared.qatouch import client as pkg_client  # noqa: E402
+from soterix_qa_shared.qatouch import reporter as pkg_reporter  # noqa: E402
+from soterix_qa_shared.qatouch import retry as pkg_retry  # noqa: E402
+from soterix_qa_shared.qatouch.results import (  # noqa: E402
     RunContext,
     RunResult,
     RunResultsFileSink,
 )
-from soterix_qa_shared.qatouch.upload import QATouchUploadSink
+from soterix_qa_shared.qatouch.upload import QATouchUploadSink  # noqa: E402
 
-from soterix_qa_shared.reporting import email as pkg_email
-from soterix_qa_shared.reporting import health as pkg_health
-from soterix_qa_shared.reporting import media as pkg_media
-from soterix_qa_shared.reporting import run_archive as pkg_run_archive
-from soterix_qa_shared.reporting import run_report as pkg_run_report
+from soterix_qa_shared.reporting import email as pkg_email  # noqa: E402
+from soterix_qa_shared.reporting import health as pkg_health  # noqa: E402
+from soterix_qa_shared.reporting import media as pkg_media  # noqa: E402
+from soterix_qa_shared.reporting import run_archive as pkg_run_archive  # noqa: E402
+from soterix_qa_shared.reporting import run_report as pkg_run_report  # noqa: E402
 
-from plugins import qatouch_reporter as shim_reporter
-from plugins import report_media as shim_media
-from plugins import run_archive as shim_run_archive
-from plugins import run_report as shim_run_report
-from tools import email_client as shim_email
-from tools import health_summary as shim_health
-from tools import qatouch_client as shim_client
-from tools import retry_uploads as shim_retry
+from plugins import qatouch_reporter as shim_reporter  # noqa: E402
+from plugins import report_media as shim_media  # noqa: E402
+from plugins import run_archive as shim_run_archive  # noqa: E402
+from plugins import run_report as shim_run_report  # noqa: E402
+from tools import email_client as shim_email  # noqa: E402
+from tools import health_summary as shim_health  # noqa: E402
+from tools import qatouch_client as shim_client  # noqa: E402
+from tools import retry_uploads as shim_retry  # noqa: E402
 
 
 def _real(p) -> Path:

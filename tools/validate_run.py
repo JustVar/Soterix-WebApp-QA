@@ -35,11 +35,11 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv(os.path.join(ROOT, '.env'))
 
-from tools.qatouch_client import (  # noqa: E402
+from tools.qatouch_client import (
     PYTEST_TO_QATOUCH,
     STATUS_NAMES,
     normalize_status_name,

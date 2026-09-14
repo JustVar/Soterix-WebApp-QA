@@ -944,8 +944,7 @@ def main():
         print("\n" + "=" * 70)
         print("  SAMPLE GENERATED STEPS")
         print("=" * 70)
-        shown = 0
-        for key, data in sorted(all_steps.items()):
+        for shown, (key, data) in enumerate(sorted(all_steps.items())):
             if shown >= 10:
                 break
             print(f"\n[{key}] [{data['module']}] {data['title']}")
@@ -954,7 +953,6 @@ def main():
             for s in data["steps"]:
                 exp = f" -> {s['expected']}" if s.get("expected") else ""
                 print(f"  Step {s['n']}: {s['action']}{exp}")
-            shown += 1
 
         # Show unmatched details
         if unmatched:

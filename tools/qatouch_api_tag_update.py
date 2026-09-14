@@ -210,7 +210,7 @@ def add_tag_to_case(page, case_key: str, tag: str) -> tuple[bool, str]:
         return True, f"Already has '{tag}'"
 
     # Add the new tag hash ID
-    updated_newtags = list(current_newtags) + [tag_id]
+    updated_newtags = [*list(current_newtags), tag_id]
 
     result = update_case_newtags(page, case_key, data, updated_newtags)
     if result.get("ok"):
@@ -220,7 +220,7 @@ def add_tag_to_case(page, case_key: str, tag: str) -> tuple[bool, str]:
 
 # ── Commands ──────────────────────────────────────────────────────────
 
-def cmd_test(page, args):
+def cmd_test(page, _args):
     """Test tag update on a single case, then revert."""
     test_key = "5BRMnj"  # Known case with smoke+sanity tags
     print(f"\n  Testing tag update on case {test_key}...")
@@ -257,7 +257,7 @@ def cmd_test(page, args):
     print("\n  Test complete!")
 
 
-def cmd_count(page, args):
+def cmd_count(_page, _args):
     """Count cases by tag state using snapshot."""
     snap_dir = ROOT / "config" / "qatouch_snapshots"
     latest = sorted(snap_dir.glob("snapshot_*.json"))[-1]

@@ -61,14 +61,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv(ROOT / '.env')
 
-from playwright.sync_api import Error as PlaywrightError, sync_playwright  # noqa: E402
-from requests import RequestException  # noqa: E402
+from playwright.sync_api import Error as PlaywrightError, sync_playwright
+from requests import RequestException
 
-from config.base_config import config, get_credentials  # noqa: E402
+from config.base_config import config, get_credentials
 
 GROUP_PATTERNS = [
     re.compile(r'^AutoTest Group\b'),

@@ -48,9 +48,9 @@ sys.path.insert(0, str(REPO))
 os.chdir(REPO)
 load_dotenv()
 
-from config.base_config import config, get_credentials  # noqa: E402
-from tests.shared.auth_state import auth_state_filename  # noqa: E402
-from tests.shared.pages.login_page import LoginPage  # noqa: E402
+from config.base_config import config, get_credentials
+from tests.shared.auth_state import auth_state_filename
+from tests.shared.pages.login_page import LoginPage
 
 
 def main() -> int:

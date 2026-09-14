@@ -231,9 +231,8 @@ class TestMediaClipOperations:
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("Clips")
         names = self.media.item_names()
-        assert temp in names and original not in names, (
-            f"Rename did not persist through reload: {names}"
-        )
+        assert temp in names, f"Rename did not persist through reload: {names}"
+        assert original not in names, f"The original name is still listed after the rename: {names}"
 
         self.media.rename_item(temp, original)
 
@@ -242,9 +241,8 @@ class TestMediaClipOperations:
         self.media.select_date_filter("Last 30 Days")
         self.media.click_tab("Clips")
         names = self.media.item_names()
-        assert original in names and temp not in names, (
-            f"Rename back did not persist: {names}"
-        )
+        assert original in names, f"Rename back did not persist: {names}"
+        assert temp not in names, f"The temporary name is still listed after the rename back: {names}"
 
     @pytest.mark.ui
     @pytest.mark.media

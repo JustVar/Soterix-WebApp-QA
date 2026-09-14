@@ -49,7 +49,7 @@ EXCLUDE_PREFIXES = ("tests/legacy/",)
 # roots (tests/ui/ for Core, tests/c2c/ for Camera 2 Cloud), never the
 # tooling and plugin pins.
 sys.path.insert(0, str(REPO))
-from config.products import PRODUCT_ROOTS  # noqa: E402 - after the path insert
+from config.products import PRODUCT_ROOTS
 
 PRODUCT_PREFIXES = tuple(PRODUCT_ROOTS)
 

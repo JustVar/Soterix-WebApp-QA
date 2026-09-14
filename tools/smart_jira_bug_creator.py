@@ -384,7 +384,7 @@ def add_to_review_queue(nodeid: str, reason: str, queue_path: str = REVIEW_QUEUE
     queue = _load_review_queue(queue_path)
 
     next_id = queue["metadata"].get("next_id", 1)
-    entry_id = "RQ-%04d" % next_id
+    entry_id = f"RQ-{next_id:04d}"
     queue["metadata"]["next_id"] = next_id + 1
 
     entry = {
@@ -423,7 +423,8 @@ def list_pending_bugs(queue_path: str = REVIEW_QUEUE) -> list[dict[str, Any]]:
 
     print("")
     print("=" * 78)
-    print("  PENDING BUG REVIEW QUEUE  (%d item%s)" % (len(pending), "s" if len(pending) != 1 else ""))
+    plural = "s" if len(pending) != 1 else ""
+    print(f"  PENDING BUG REVIEW QUEUE  ({len(pending)} item{plural})")
     print("=" * 78)
     print("")
     for i, item in enumerate(pending, 1):
@@ -437,7 +438,7 @@ def list_pending_bugs(queue_path: str = REVIEW_QUEUE) -> list[dict[str, Any]]:
         module = bug_data.get("module", "n/a")
         has_data = "Yes" if bug_data else "No"
 
-        print("  [%d] %s" % (i, entry_id))
+        print(f"  [{i}] {entry_id}")
         print(f"      Test:       {nodeid}")
         print(f"      Module:     {module}")
         print(f"      Severity:   {severity}")
@@ -461,7 +462,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
         smoke_only = [item for item in queue.get("items", [])
                       if item.get("status") == "pending" and not item.get("bug_data")]
         if smoke_only:
-            print("(%d smoke-test entries without bug data -- see --list or email report)" % len(smoke_only))
+            print(f"({len(smoke_only)} smoke-test entries without bug data -- see --list or email report)")
         return {"approved": 0, "rejected": 0, "skipped": 0}
 
     approved = 0
@@ -476,7 +477,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
 
         print("")
         print("=" * 78)
-        print("  REVIEW: %s  (%d of %d)" % (entry_id, idx + 1, len(pending)))
+        print(f"  REVIEW: {entry_id}  ({idx + 1} of {len(pending)})")
         print("=" * 78)
         print("")
         print(f"  Test ID:      {nodeid}")
@@ -588,7 +589,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
     _save_review_queue(queue, queue_path)
     print("")
     print("=" * 78)
-    print("  Review complete: %d approved, %d rejected, %d skipped" % (approved, rejected, skipped))
+    print(f"  Review complete: {approved} approved, {rejected} rejected, {skipped} skipped")
     print("=" * 78)
     return {"approved": approved, "rejected": rejected, "skipped": skipped}
 
@@ -643,7 +644,7 @@ def multi_gate_validation(nodeid: str, env_base_url: str | None = None, is_smoke
             "module": module,
             "steps": f"1. Run test: {nodeid}\n2. Test fails consistently",
             "expected": "Test should pass",
-            "actual": "Test has failed %d consecutive times (confidence: %s)" % (consec, score),
+            "actual": f"Test has failed {consec} consecutive times (confidence: {score})",
             "environment": environment,
             "severity": "Medium",
             "build": "",

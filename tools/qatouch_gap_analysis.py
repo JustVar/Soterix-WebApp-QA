@@ -356,7 +356,7 @@ def discover_playwright_tests() -> dict:
 
 # ── Analysis Functions ───────────────────────────────────────────────
 
-def build_coverage_matrix(snapshot: dict, pw_tests: dict, case_mapping: dict,
+def build_coverage_matrix(snapshot: dict, pw_tests: dict, _case_mapping: dict,
                           feature_inv: dict | None = None) -> dict:
     """Build the three-layer coverage matrix."""
     matrix = {}
@@ -546,7 +546,7 @@ def get_tagged_cases(snapshot: dict) -> dict:
 
 # ── Command Handlers ─────────────────────────────────────────────────
 
-def cmd_snapshot(args):
+def cmd_snapshot(_args):
     """Analyze QA Touch snapshot by product area."""
     snapshot = load_latest_snapshot()
     cases = snapshot.get("cases", [])
@@ -570,7 +570,7 @@ def cmd_snapshot(args):
     print(f"\n{'TOTAL':<30} {len(cases):>6}")
 
 
-def cmd_playwright(args):
+def cmd_playwright(_args):
     """Analyze Playwright test coverage."""
     pw = discover_playwright_tests()
     total = sum(m["count"] for m in pw.values())
@@ -583,7 +583,7 @@ def cmd_playwright(args):
         print(f"{mod:<20} {info['count']:>6} {len(info['files']):>6}")
 
 
-def cmd_matrix(args):
+def cmd_matrix(_args):
     """Generate full coverage matrix."""
     snapshot = load_latest_snapshot()
     pw_tests = discover_playwright_tests()
@@ -657,7 +657,7 @@ def cmd_gaps(args):
         print()
 
 
-def cmd_vet_smoke(args):
+def cmd_vet_smoke(_args):
     """Vet current SMOKE tagged cases against gap analysis."""
     snapshot = load_latest_snapshot()
     pw_tests = discover_playwright_tests()
@@ -704,7 +704,7 @@ def cmd_vet_smoke(args):
             print(f"  - {area}")
 
 
-def cmd_vet_sanity(args):
+def cmd_vet_sanity(_args):
     """Vet current SANITY tagged cases against gap analysis."""
     snapshot = load_latest_snapshot()
     pw_tests = discover_playwright_tests()
@@ -863,7 +863,7 @@ def cmd_regression(args):
     print("Review the file, then use tools/qatouch_suite_hold.py to apply tags (browser session).")
 
 
-def cmd_inventory(args):
+def cmd_inventory(_args):
     """Load and display feature inventory status."""
     inv = load_feature_inventory()
     if not inv:
@@ -898,7 +898,7 @@ def cmd_inventory(args):
         print(f"  {area['product_area']}: {len(features)} features")
 
 
-def cmd_report(args):
+def cmd_report(_args):
     """Generate comprehensive gap report."""
     snapshot = load_latest_snapshot()
     pw_tests = discover_playwright_tests()

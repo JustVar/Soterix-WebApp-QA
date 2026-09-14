@@ -53,9 +53,9 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from config.products import PRODUCT_ROOTS, area_of  # noqa: E402
-from plugins.run_report import readable_title  # noqa: E402
-from tools.qatouch_mapping import MAPPING_PATH, function_base, load_raw  # noqa: E402
+from config.products import PRODUCT_ROOTS, area_of
+from plugins.run_report import readable_title
+from tools.qatouch_mapping import MAPPING_PATH, function_base, load_raw
 
 SNAPSHOTS_DIR = ROOT / 'config' / 'qatouch_snapshots'
 TESTS_ROOTS = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS]   # config/products.py

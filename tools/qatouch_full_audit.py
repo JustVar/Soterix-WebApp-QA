@@ -614,7 +614,7 @@ def audit_case_titles(session, csv_data: dict, snapshot: dict, report: AuditRepo
 # ---------------------------------------------------------------------------
 # Audit 4: Module Integrity (Snapshot vs Live)
 # ---------------------------------------------------------------------------
-def audit_module_integrity(session, csv_data: dict, snapshot: dict, report: AuditReport):
+def audit_module_integrity(_session, csv_data: dict, snapshot: dict, report: AuditReport):
     """Verify module assignments haven't changed."""
     report.log(f'\n{"#" * 60}')
     report.log('# AUDIT 4: Module Integrity - CSV vs Snapshot (offline)')

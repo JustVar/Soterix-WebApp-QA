@@ -97,10 +97,7 @@ def is_vague_expected(text):
         r"\bis working\b",
     ]
     text_lower = text.lower()
-    for pat in vague_patterns:
-        if re.search(pat, text_lower):
-            return True
-    return False
+    return any(re.search(pat, text_lower) for pat in vague_patterns)
 
 def has_template_leak(text):
     return bool(re.search(r"\{subject\}|\{predicate\}", text, re.IGNORECASE))

@@ -51,11 +51,11 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv(ROOT / '.env')
 
-from tools.qatouch_client import QATouchClient, QATouchError  # noqa: E402
+from tools.qatouch_client import QATouchClient, QATouchError
 
 PROJECT_KEY = os.environ.get('QATOUCH_PROJECT_ID', 'JlW1')
 MAPPING_PATH = ROOT / 'config' / 'qatouch_case_mapping.json'

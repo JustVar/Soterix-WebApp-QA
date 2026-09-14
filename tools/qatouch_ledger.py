@@ -29,8 +29,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from plugins import products  # noqa: E402
-from tools import qatouch_mapping as qm  # noqa: E402
+from plugins import products
+from tools import qatouch_mapping as qm
 
 HISTORY = ROOT / 'history' / 'qatouch_counts.jsonl'
 SNAPSHOTS_DIR = ROOT / 'config' / 'qatouch_snapshots'

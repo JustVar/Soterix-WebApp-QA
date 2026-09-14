@@ -63,16 +63,16 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv(ROOT / ".env")
 
-from playwright.sync_api import sync_playwright  # noqa: E402
+from playwright.sync_api import sync_playwright
 
-from config.base_config import config  # noqa: E402
-from tests.shared.api.client import ApiError, InternalApi  # noqa: E402
-from tests.shared.pages.login_page import LoginPage  # noqa: E402
-from tests.shared.pages.views_page import ViewsPage  # noqa: E402
+from config.base_config import config
+from tests.shared.api.client import ApiError, InternalApi
+from tests.shared.pages.login_page import LoginPage
+from tests.shared.pages.views_page import ViewsPage
 
 TILE = "[class*='video_container'][class*='new_video_player']"
 MEDIA_WS = "/v3/api/ws"

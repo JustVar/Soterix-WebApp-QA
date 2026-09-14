@@ -321,7 +321,7 @@ def create_step(page, cid: str, step_desc: str, expected: str) -> dict:
 # ---------------------------------------------------------------------------
 # Sync Logic
 # ---------------------------------------------------------------------------
-def sync_case(page, case_key: str, title: str, steps: list[dict],
+def sync_case(page, case_key: str, _title: str, steps: list[dict],
               dry_run: bool = False) -> dict:
     result = {'status': 'ok', 'deleted': 0, 'created': 0, 'error': ''}
 
@@ -363,14 +363,14 @@ def sync_case(page, case_key: str, title: str, steps: list[dict],
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
-def cmd_list(page, args):
+def cmd_list(_page, _args):
     csv_cases = load_csv_by_title()
     print(f'\n=== CSV loaded: {len(csv_cases)} cases ===\n')
     for title, data in csv_cases.items():
         print(f'  [{data["module"]:<45}] {title}  ({len(data["steps"])} steps)')
 
 
-def cmd_dry_run(page, args):
+def cmd_dry_run(page, _args):
     """Fetch cases from QA Touch, match to CSV, show what WOULD happen."""
     csv_cases = load_csv_by_title()
     print(f'\n=== Loaded {len(csv_cases)} cases from CSV ===')
@@ -384,7 +384,7 @@ def cmd_dry_run(page, args):
     for c in qt_cases:
         module = c.get('module', '') or ''
         if 'C2C Hardware' in module or any(
-            t in c['title'] for t in csv_cases.keys()
+            t in c['title'] for t in csv_cases
         ):
             qt_by_title[c['title']] = c['key']
 

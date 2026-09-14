@@ -123,7 +123,7 @@ class TestC2CVideoConfig:
                 self.camera.click_apply()
                 after = self.camera.wait_for_stream_codec(before["codec"])[0]
                 assert after == before, f"stream 1 reads {after}, it was {before}"
-            except Exception as restore_err:  # noqa: BLE001 - must not mask the real failure
+            except Exception as restore_err:  # why: must not mask the real failure
                 pytest.fail(
                     f"Could not restore stream 1 on {self.camera.ip}: "
                     f"{restore_err}. The camera may still be set to H.264 at 30 fps."

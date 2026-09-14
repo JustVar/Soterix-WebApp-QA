@@ -486,7 +486,7 @@ def derive_nav_path(module_name: str, app_area: str) -> str:
     return f"Navigate to {prefix} > {module_name}"
 
 
-def derive_app_page(module_name: str, app_area: str) -> str:
+def derive_app_page(module_name: str, _app_area: str) -> str:
     """Derive a human-readable app page name."""
     return f"{module_name} page"
 
@@ -613,7 +613,7 @@ ACTION_VERB_SPLITTERS: list[str] = [
 ]
 
 
-def parse_title(title: str, *, description: str | None = None) -> dict:
+def parse_title(title: str, *, _description: str | None = None) -> dict:
     """Parse a test case title into structured components."""
     original = title.strip()
 
@@ -937,7 +937,7 @@ def generate_steps(parsed: dict, module_ctx: dict) -> list[dict]:
     return steps
 
 
-def assess_quality(parsed: dict, module_ctx: dict, nav_context_curated: bool) -> str:
+def assess_quality(parsed: dict, _module_ctx: dict, nav_context_curated: bool) -> str:
     """Assess quality of generated steps."""
     if nav_context_curated and parsed["action_type"] != "default":
         return "high"
@@ -1154,7 +1154,7 @@ def cmd_generate(args):
         print(f"    {cls:25s} {cnt:5d} ({pct:.1f}%)")
 
 
-def cmd_stats(args):
+def cmd_stats(_args):
     """Show statistics for generated step files."""
     output_dir = DEFAULT_OUTPUT_DIR
     if not output_dir.exists():

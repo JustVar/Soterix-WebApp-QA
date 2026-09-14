@@ -178,7 +178,7 @@ def load_csv_by_title(csv_path: str) -> dict[str, dict]:
                 while len(head) < n - 1:
                     head.append("-")
                 head = head[:n - 1]
-                expecteds = head + [last]
+                expecteds = [*head, last]
 
             cases[title] = {
                 "module":     get_col(row, "section_name", "Module_name"),
@@ -432,7 +432,7 @@ def sync_case(
     page,
     project_key: str,
     case_key: str,
-    title: str,
+    _title: str,
     steps: list[str],
     expecteds: list[str],
     dry_run: bool,

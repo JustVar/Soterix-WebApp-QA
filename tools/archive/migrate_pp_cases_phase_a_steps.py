@@ -80,7 +80,7 @@ mid-flip casualties and hand-fix them.
 
 Rate-limit budget
 =================
-- 214 cases × ~13 avg source steps = ~2800 /v1/steps/save calls +
+- 214 cases x ~13 avg source steps = ~2800 /v1/steps/save calls +
   ~214 flip calls + ~3 reads/case ≈ 3700 internal calls. With 0.4s
   inter-step pause + 1.3s inter-case pause and the conservative 20s
   pause on 429, expect ~60-90 min wall time.

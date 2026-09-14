@@ -73,7 +73,7 @@ except ImportError:
 
 # Pull in everything reusable from the phase-A script - all pure helpers,
 # no global state, verified at lines 306-460 of migrate_pp_cases_phase_a.py.
-from migrate_pp_cases_phase_a import (  # noqa: E402
+from migrate_pp_cases_phase_a import (
     DEFAULT_AUTH_STATE,
     # constants
     SOURCE_PROJECT,

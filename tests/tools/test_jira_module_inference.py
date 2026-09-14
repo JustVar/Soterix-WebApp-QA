@@ -8,7 +8,6 @@ from __future__ import annotations
 
 # The imports below run AFTER the repo root goes on sys.path, which they
 # have to: tools/ is not importable otherwise.
-# ruff: noqa: E402
 import json
 import sys
 from pathlib import Path
@@ -17,9 +16,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import pytest
+import pytest  # noqa: E402
 
-from tools.smart_jira_bug_creator import _MODULE_MAP, _infer_module_from_nodeid
+from tools.smart_jira_bug_creator import _MODULE_MAP, _infer_module_from_nodeid  # noqa: E402
 
 
 @pytest.mark.parametrize(('nodeid', 'expected'), [
