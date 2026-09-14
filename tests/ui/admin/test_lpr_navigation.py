@@ -9,9 +9,14 @@ Tests the ability to navigate between LPR pages and ensure correct page state:
 """
 import contextlib
 import datetime
+import re
 
 import pytest
-from playwright.sync_api import Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import (
+    Error as PlaywrightError,
+    TimeoutError as PlaywrightTimeoutError,
+    expect,
+)
 
 from tests.shared.pages.lpr_page import LprPage
 
@@ -84,7 +89,7 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_ensure_lpr_page_already_on_lists(self):
-        """Verify ensure_lpr_page returns when already on Lists page.
+        """Verify clicking LPR while the Lists page is open keeps it open.
 
         Steps:
         1. Click Admin in the left sidebar, then click LPR.
@@ -133,25 +138,32 @@ class TestLprNavigation:
         """Verify navigation from Search Results back to Lists via breadcrumb.
 
         Steps:
-        1. Click Admin in the left sidebar, then click LPR.
-           Expected: The LPR Lists page opens and shows the Create List button.
+        1. Click Admin in the left sidebar, then click LPR, and click the View icon on a list row.
+           Expected: The Plate page for that list opens and shows the Add Plate button.
+        2. Click the Filter icon, then click Apply.
+           Expected: The Search Results view opens with its header.
+        3. Click LPR in the breadcrumb.
+           Expected: The Lists page opens with the Create List button, and the Search Results header is gone.
         """
-        # The View -> Filter -> Apply -> breadcrumb-back leg is not
-        # automated yet; the test verifies the Lists page state only.
-        # (Outside the docstring: the QA Touch generator would append
-        # trailing prose to step 1's Expected.)
-        self.step_capture.mark(1, "Navigate to LPR Lists page")
+        self.step_capture.mark(1, "Open a list's Plate page")
         self.lpr.navigate_to_lpr()
+        list_name = self._own_a_list()
+        row = self.lpr.get_list_row(list_name)
+        row.locator("img[aria-label='View']").first.click()
+        expect(self.lpr.add_plate_button.first).to_be_visible(timeout=30000)
 
-        self.step_capture.mark(2, "Verify on Lists page")
-        assert self.lpr.create_list_button.count() > 0, "Should be on Lists page"
+        self.step_capture.mark(2, "Apply a filter to reach Search Results")
+        self.lpr.filter_icon.first.click()
+        expect(self.lpr.apply_filter_button.first).to_be_visible(timeout=30000)
+        self.lpr.apply_filter_button.first.click()
+        expect(self.lpr.search_results_header.first).to_contain_text(
+            re.compile("search results", re.I), timeout=15000)
 
-        # Simulate being in Search Results by finding a list and checking for search header
-        # (In a real test, we'd apply a filter to get to Search Results)
-        self.step_capture.mark(3, "Simulate Search Results state")
-        print("[INFO] Search Results navigation test - would need active filter to fully test")
-
-        print("[PASS] Lists page state confirmed")
+        self.step_capture.mark(3, "Return to Lists via the breadcrumb")
+        self.lpr.lpr_breadcrumb.first.click()
+        expect(self.lpr.create_list_button.first).to_be_visible(timeout=30000)
+        expect(self.lpr.search_results_header).to_have_count(0)
+        expect(self.lpr.get_list_row(list_name)).to_contain_text(list_name)
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -181,7 +193,7 @@ class TestLprNavigation:
     @pytest.mark.admin
     @pytest.mark.lpr
     def test_categories_page_already_on_categories(self):
-        """Verify ensure_lpr_categories_page returns when already on Categories.
+        """Verify clicking the Categories tab while Categories is open keeps it open.
 
         Steps:
         1. Click Admin in the left sidebar, click LPR, then click the Categories tab.

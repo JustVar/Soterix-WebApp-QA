@@ -182,11 +182,11 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_cancel_button` | Cancel closes the popup without saving | yes | - |
 | `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_dropdown_values` | The duration dropdown offers the preset values | yes | - |
 | `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_popup_validation` | The popup opens over a playing stream and closes on Cancel | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_categories_page_already_on_categories` | Verify ensure_lpr_categories_page returns when already on Categories | yes | - |
+| `test_lpr_navigation.py::TestLprNavigation::test_categories_page_already_on_categories` | Verify clicking the Categories tab while Categories is open keeps it open | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_categories_page_navigation` | Verify navigation to Categories page | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_ensure_in_search_results_not_in_results` | Verify ensure_in_search_results raises exception when not in Search Results | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_ensure_lpr_lists_page_already_on_lists` | Verify ensure_lpr_lists_page returns when already on Lists | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_ensure_lpr_page_already_on_lists` | Verify ensure_lpr_page returns when already on Lists page | yes | - |
+| `test_lpr_navigation.py::TestLprNavigation::test_ensure_lpr_page_already_on_lists` | Verify clicking LPR while the Lists page is open keeps it open | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_ensure_plate_page_already_on_plate` | Verify ensure_lpr_plate_page returns when already on Plate page | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_filter_panel_already_open` | Verify ensure_lpr_filter_panel returns when panel already open | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_filter_panel_navigation` | Verify opening and closing filter panel on Plate page | yes | - |
