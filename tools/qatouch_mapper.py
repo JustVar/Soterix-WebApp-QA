@@ -313,7 +313,7 @@ def cmd_csv():
 
     # AUTOMATED tag CSV - all mapped cases
     automated_keys = set()
-    for nodeid, info in mappings.items():
+    for _nodeid, info in mappings.items():
         automated_keys.add(info['case_key'])
 
     automated_csv = output_dir / 'qatouch_automated_tags.csv'

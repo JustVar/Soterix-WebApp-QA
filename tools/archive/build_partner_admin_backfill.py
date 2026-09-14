@@ -157,7 +157,6 @@ def main():
     all_payloads.extend(p); all_unmatched.extend(u)
 
     # SiteDevice -> 70l1, all cases (skip corrupt TR0029)
-    site_modules = set()
     p, u = build_payloads_for(
         REPO / 'tests/data/sitedevice_canonical.csv',
         '70l1',

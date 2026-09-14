@@ -574,7 +574,6 @@ def main() -> int:
         })
 
     # --- Main loop
-    n_total = len(sliced)
     last_ref = ""
     try:
         for offset, payload in enumerate(sliced):

@@ -404,7 +404,7 @@ def cmd_upload(run_key: str, report_path: str):
 
     print(f'\nUploading {len(payload)} results to run {run_key}...')
     try:
-        response = client.update_test_run_results(
+        client.update_test_run_results(
             project_key=PROJECT_KEY,
             test_run_key=run_key,
             results=payload,
@@ -522,7 +522,7 @@ def cmd_scaffold(nodeid: str, module_name: str, title: str,
     else:
         # Step 3: Create the case
         print('Creating test case in QA Touch...')
-        result = client.create_test_case(
+        client.create_test_case(
             project_key=PROJECT_KEY,
             section_key=section_key,
             title=title,

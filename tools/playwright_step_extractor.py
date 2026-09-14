@@ -919,7 +919,7 @@ def main():
     unmatched = {k: v for k, v in post_keys.items() if k not in matched_keys}
     mapped_but_no_parse = 0
     truly_unmapped = 0
-    for k, v in unmatched.items():
+    for k, _v in unmatched.items():
         if k in key_to_nodeids:
             mapped_but_no_parse += 1
         else:

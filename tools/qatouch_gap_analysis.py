@@ -480,7 +480,6 @@ def compute_gap_scores(matrix: dict) -> list[dict]:
     """Compute gap scores for each product area."""
     gaps = []
     total_cases = sum(m["case_count"] for m in matrix.values())
-    total_tests = sum(m["test_count"] for m in matrix.values())
 
     for area_name, area_data in matrix.items():
         cases = area_data["case_count"]
@@ -745,7 +744,7 @@ def cmd_regression(args):
     mapping = load_case_mapping()
 
     matrix = build_coverage_matrix(snapshot, pw_tests, mapping)
-    gaps = compute_gap_scores(matrix)
+    compute_gap_scores(matrix)  # kept for its effect
     tagged = get_tagged_cases(snapshot)
 
     # Already tagged cases (don't double-tag)
@@ -798,7 +797,6 @@ def cmd_regression(args):
 
     # Allocate slots per area, minimum 2 per area with candidates
     area_slots = {}
-    remaining = target
     for area_name, weight in area_weights.items():
         raw_slots = int(target * weight / total_weight)
         slots = max(2, min(raw_slots, len(area_candidates[area_name])))

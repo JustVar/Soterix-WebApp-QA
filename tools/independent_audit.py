@@ -248,7 +248,7 @@ def verdict_navigation(case):
     """
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
     module = case.get("module_name", "")
 
     # Title-step alignment: navigation case should end with verifying URL or page loaded
@@ -296,7 +296,7 @@ def verdict_element_visibility(case):
     problems = []
     steps = get_steps(case)
     title = case.get("title", "")
-    module = case.get("module_name", "")
+    case.get("module_name", "")  # kept for its effect
 
     # Should have a step that locates/finds the element
     step_actions = [s.get("action", "").lower() for s in steps]
@@ -318,7 +318,7 @@ def verdict_element_visibility(case):
             problems.append(f"Step {s['n']}: Vague expected: '{s['expected']}'")
 
     # Title-to-step alignment: extract what should be visible from title
-    title_lower = title.lower().replace("verify ", "").replace(" is visible", "").strip()
+    title.lower().replace("verify ", "").replace(" is visible", "").strip()  # kept for its effect
 
     # Check for identical action/expected (template defect)
     for s in steps:
@@ -447,7 +447,7 @@ def verdict_create(case):
     # Embedding raw title in step text
     for s in steps:
         action = s.get("action", "")
-        expected = s.get("expected", "")
+        s.get("expected", "")  # kept for its effect
         # Step 10 typically says "Verify the newly created [raw_title_fragment] appears..."
         if "newly created" in action.lower():
             # Extract what comes after "newly created"
@@ -485,8 +485,6 @@ def verdict_delete(case):
 
     # Title-to-step alignment: delete cases where title is not about deleting an entity
     # e.g. "Verify clearing Search Views restores full view list" is a search/filter action, not a delete
-    is_actually_delete = any(word in title.lower() for word in ["delet", "remov", "clear", "uncheck", "dismiss"])
-    has_delete_action = any("delete" in a or "remove" in a or "confirm" in a for a in step_actions)
 
     # The delete template is applied regardless of whether the title is about deletion
     if "clearing" in title.lower() or "unchecking" in title.lower() or "hiding" in title.lower():
@@ -607,7 +605,7 @@ def verdict_error_validation(case):
 def verdict_search_filter(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
 
     step_actions = [s.get("action", "").lower() for s in steps]
 
@@ -692,7 +690,7 @@ def verdict_button_control(case):
 def verdict_interaction(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
 
     # Step 5 often has identical action/expected
     for s in steps:
@@ -765,7 +763,7 @@ def verdict_playwright(case):
     """Playwright cases have real steps extracted from actual tests."""
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
     module = case.get("module_name", "")
 
     # Last step often has identical action/expected
@@ -807,7 +805,7 @@ def verdict_playwright(case):
 def verdict_element_state(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
     step_actions = [s.get("action", "").lower() for s in steps]
 
     # Should inspect current state
@@ -834,7 +832,7 @@ def verdict_element_state(case):
 def verdict_field_input(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
     step_actions = [s.get("action", "").lower() for s in steps]
 
     # Step 5 often injects entire title as test value
@@ -902,7 +900,7 @@ def verdict_chat_message(case):
 def verdict_data_display(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
     step_actions = [s.get("action", "").lower() for s in steps]
 
     # Should verify data is not placeholder
@@ -937,7 +935,6 @@ def verdict_data_transfer(case):
     problems = []
     steps = get_steps(case)
     title = case.get("title", "")
-    step_actions = [s.get("action", "").lower() for s in steps]
 
     # Title injected into steps repeatedly
     title_frag = title.replace("Verify ", "").lower()
@@ -1032,7 +1029,7 @@ def verdict_logging_audit(case):
 def verdict_performance_resilience(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
     step_actions = [s.get("action", "").lower() for s in steps]
 
     # Step 4 injects title as "stress condition"
@@ -1066,7 +1063,7 @@ def verdict_performance_resilience(case):
 def verdict_persistence(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
     step_actions = [s.get("action", "").lower() for s in steps]
 
     # Should have refresh + navigate away + navigate back
@@ -1125,8 +1122,7 @@ def verdict_reset_default(case):
 def verdict_schedule_time(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
-    step_actions = [s.get("action", "").lower() for s in steps]
+    case.get("title", "")  # kept for its effect
 
     # Step 4 injects title as configuration value - not actionable
     for s in steps:
@@ -1154,7 +1150,7 @@ def verdict_schedule_time(case):
 def verdict_ui_integrity(case):
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
     step_actions = [s.get("action", "").lower() for s in steps]
 
     # "without overlap" as precondition at end is a test condition, not a setup step
@@ -1189,7 +1185,7 @@ def verdict_curated(case):
     """Curated cases are hand-crafted - evaluate with stricter standards."""
     problems = []
     steps = get_steps(case)
-    title = case.get("title", "")
+    case.get("title", "")  # kept for its effect
 
     # Curated should be very specific
     for s in steps:

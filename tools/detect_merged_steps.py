@@ -650,7 +650,6 @@ def main() -> int:
         bucket[label] = bucket.get(label, 0) + 1
 
     n_total_full = len(cases)
-    n_total_slice = len(sliced)
     interrupted = False
     last_logged_i = start_idx
 

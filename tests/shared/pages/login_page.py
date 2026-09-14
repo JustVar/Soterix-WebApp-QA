@@ -31,19 +31,19 @@ class LoginPage:
         self.base_url = raw_base.rstrip("/")
 
         # selector fallbacks
-        self._email_selectors: List[str] = [
+        self._email_selectors: list[str] = [
             '[data-testid="email"]',
             '[aria-label="Email"]',
             'input[name="email"]',
             '//input[contains(@name, "email")]',
         ]
-        self._password_selectors: List[str] = [
+        self._password_selectors: list[str] = [
             '[data-testid="password"]',
             '[aria-label="Password"]',
             'input[name="password"]',
             '//input[contains(@name, "password")]',
         ]
-        self._login_button_selectors: List[str] = [
+        self._login_button_selectors: list[str] = [
             'button[type="submit"]',
             'button:has-text("Login")',
             'button:has-text("Sign In")',
@@ -52,7 +52,7 @@ class LoginPage:
             '#login-btn',
             'button.btn-primary',
         ]
-        self._error_selectors: List[str] = [
+        self._error_selectors: list[str] = [
             '[data-testid="error-message"]',
             '[role="alert"]',
             '.error',
@@ -60,7 +60,7 @@ class LoginPage:
             '//div[contains(@class, "error")]',
         ]
 
-    def _first_visible(self, selectors: List[str]):
+    def _first_visible(self, selectors: list[str]):
         """Return the first visible locator from a list of selectors, or None."""
         for s in selectors:
             try:
@@ -147,7 +147,7 @@ class LoginPage:
         Returns True if ReCAPTCHA appears completed or not present; False on timeout.
         """
         p = self.page
-        for attempt in range(1, max_retries + 1):
+        for _attempt in range(1, max_retries + 1):
             try:
                 frame_loc = p.frame_locator("iframe[title='reCAPTCHA']")
                 anchor = frame_loc.locator("#recaptcha-anchor")
@@ -369,13 +369,13 @@ class LoginPage:
         except Exception:
             return False
 
-    def get_profile_menu_items(self) -> List[str]:
+    def get_profile_menu_items(self) -> list[str]:
         """Return text content of all visible profile menu items.
 
         Scoped to the popover containing 'Sign out' to avoid picking up
         unrelated MUI menus (camera context menus, tile actions, etc.).
         """
-        items: List[str] = []
+        items: list[str] = []
         # This build's menu is a box in the secondary header, not a
         # popover: the avatar's initials, the account name, its role and
         # 'Sign out' as <p> lines (measured 09/12/2026). Read that box

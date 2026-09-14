@@ -200,7 +200,7 @@ def cmd_scan():
     print(f"  Scaffolded stubs: {len(scaffolded)}")
 
     good_matches = 0
-    for nodeid, entry in scaffolded.items():
+    for _nodeid, entry in scaffolded.items():
         stub_key = entry['case_key']
         stub_title = entry['case_title']
         stub_case = case_by_key.get(stub_key, {})
@@ -311,7 +311,7 @@ def cmd_fix(threshold: float = 0.35):
         with open(delete_csv, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['case_key', 'stub_title', 'remapped_to', 'remapped_title'])
-            for nodeid, old_key, new_key, new_title, score in remapped:
+            for nodeid, old_key, new_key, new_title, _score in remapped:
                 old_title = scaffolded[nodeid]['case_title']
                 writer.writerow([old_key, old_title, new_key, new_title])
         print(f"\n  Wrote: {delete_csv}")

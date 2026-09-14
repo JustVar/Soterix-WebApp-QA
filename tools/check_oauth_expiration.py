@@ -56,7 +56,6 @@ def main():
         sys.exit(1)
     # Slack notification logic
     webhook = os.environ.get('SLACK_WEBHOOK_URL')
-    channel = os.environ.get('SLACK_ALERT_CHANNEL', '')
 
     if days < 7:
         msg = f"<!channel> ⚠️ OAuth Secret Expiring Soon\nDays remaining: {days}\nExpires: {exp}\nAction: See MAINTENANCE_REMINDERS.md"

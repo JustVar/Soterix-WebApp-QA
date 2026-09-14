@@ -319,7 +319,7 @@ def _get_automation_metrics(snapshot_cases: list[dict] | None = None) -> dict:
 
     # Count by module - prefer snapshot's current module name over mapping's
     automated_by_module = Counter()
-    for nodeid, info in mappings.items():
+    for _nodeid, info in mappings.items():
         case_key = info.get('case_key', '')
         # Use snapshot module if available, fall back to mapping module
         mod = case_to_module.get(case_key, info.get('module', 'Unknown'))

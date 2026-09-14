@@ -18,7 +18,7 @@ def is_admin_profile_id(profile_id: int) -> bool:
     return profile_id in ADMIN_LEVEL_PROFILE_IDS
 
 
-def get_user_role_from_roles(roles: List[Dict[str, Any]], user_profile_id: int) -> str:
+def get_user_role_from_roles(roles: list[dict[str, Any]], user_profile_id: int) -> str:
     """Get the role name for a given profile ID."""
     for role in roles:
         if role.get("profileId") == user_profile_id:
@@ -26,13 +26,13 @@ def get_user_role_from_roles(roles: List[Dict[str, Any]], user_profile_id: int) 
     return "Unknown"
 
 
-def has_admin_access(roles: List[Dict[str, Any]]) -> bool:
+def has_admin_access(roles: list[dict[str, Any]]) -> bool:
     """
     Check if any of the provided roles grant admin-level access.
-    
+
     Args:
         roles: List of role dictionaries with 'profileId' and 'profileName'
-        
+
     Returns:
         True if at least one role is admin-level
     """

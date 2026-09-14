@@ -150,14 +150,14 @@ def describe_tile_samples(first: dict, last: dict) -> str:
 
 class ViewsPage:
     """Page object for Views functionality (video wall, thumbnails, tabs)."""
-    
+
     def __init__(self, page: Page):
         self.page = page
-        
+
         # Locators - Thumbnails
         self.camera_thumbnails = page.locator(".cameraThumbnailWrapper")
         self.drag_drop_tiles = page.locator("text=Drag & Drop Camera here")
-        
+
         # Locators - Tabs
         self.add_tab_button = page.locator("img[src*='media/addIcon']")
         self.tab_titles = page.locator(".tabTitle")
@@ -165,7 +165,7 @@ class ViewsPage:
         self.tab_close_buttons = page.locator("img[src*='closeIcon']")
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         self.tab_edit_buttons = page.locator("img[src*='media/editIcon']")
-        
+
         # Locators - Views subtab buttons (inside .viewTabs container, NOT left nav)
         # Structure: div.viewTabs > div.viewTabItem > img[alt="TabName"] + "TabName"
         self.view_tabs_container = page.locator(".viewTabs")
@@ -183,7 +183,7 @@ class ViewsPage:
         self.insights_tab = page.locator("text=Insights")
         self.maps_tab = page.locator("text=Maps")
         self.channels_tab = page.locator("text=Channels")
-        
+
         # Locators - Site/Camera Tree
         self.search_camera_input = page.locator("input[placeholder*='Search Camera']")
 
@@ -191,14 +191,14 @@ class ViewsPage:
         self.tab_headers = page.locator("[class*='tabTitle'], [class*='tab-title']")
         self.action_not_permitted_modal = page.locator("text=Action Not Permitted")
         self.modal_ok_button = page.locator("button:has-text('OK'), button:has-text('Ok')")
-        
+
         # Locators - Full Screen
         self.fullscreen_buttons = page.locator("img[src*='media/Zoom.']")
 
         # Locators - Loading/Status
         self.loader = page.locator("[class*='CircularProgress']")
         self.streaming_failed = page.locator("text=failed to load")
-        
+
         # Locators - Delete confirmation
         self.delete_button = page.locator("img[src*='delete-icon']")
         self.confirm_yes_button = page.locator("button:has-text('Yes')")
@@ -265,7 +265,7 @@ class ViewsPage:
         edit_button = self.tab_edit_buttons.nth(tab_index)
         edit_button.hover()
         edit_button.click()
-        
+
         # Clear existing text and type new name
         tab_title = self.tab_titles.nth(tab_index)
         tab_title.fill(new_name)
@@ -643,7 +643,7 @@ class ViewsPage:
         view_element.hover()
         self.delete_button.click()
         self.confirm_yes_button.click()
-        
+
         # Wait for success message
         self.success_message.wait_for(state="visible", timeout=60000)
 
@@ -1310,7 +1310,7 @@ class ViewsPage:
             site_name: Specific site name to expand. If None, uses config test_site_name.
         """
         if self.camera_thumbnails.count() > 0:
-            print(f"DEBUG expand_site_and_show_cameras: Cameras already visible, skipping")
+            print("DEBUG expand_site_and_show_cameras: Cameras already visible, skipping")
             return  # Already expanded, nothing to do
 
         # Use configured site name if not specified
@@ -1324,10 +1324,10 @@ class ViewsPage:
         # Step 1: activate Devices panel
         if self.devices_subtab.count() > 0:
             self.devices_subtab.click()
-            print(f"DEBUG expand_site_and_show_cameras: Clicked devices subtab")
+            print("DEBUG expand_site_and_show_cameras: Clicked devices subtab")
         elif self.devices_tab.count() > 0:
             self.devices_tab.first.click()
-            print(f"DEBUG expand_site_and_show_cameras: Clicked devices tab")
+            print("DEBUG expand_site_and_show_cameras: Clicked devices tab")
 
         # Step 2: "Select Location & Cameras" is a placeholder button that opens
         # the site picker - it renders once the Devices panel loads, so wait
@@ -1335,7 +1335,7 @@ class ViewsPage:
         select_loc = self.page.locator("text=Select Location & Cameras")
         if self._appears(select_loc, timeout=5000):
             select_loc.first.click()
-            print(f"DEBUG expand_site_and_show_cameras: Clicked 'Select Location & Cameras'")
+            print("DEBUG expand_site_and_show_cameras: Clicked 'Select Location & Cameras'")
 
         # Step 3: click the site in the now-visible tree (a named site click
         # auto-waits for the tree to render)
@@ -1345,17 +1345,17 @@ class ViewsPage:
         # Step 4: click "All Cameras" if it appears
         all_cameras = self.page.locator("text=All Cameras")
         if self._appears(all_cameras, timeout=5000):
-            print(f"DEBUG expand_site_and_show_cameras: Clicking 'All Cameras'")
+            print("DEBUG expand_site_and_show_cameras: Clicking 'All Cameras'")
             self.click_all_cameras()
             # A click that lands during a tree re-render is silently dropped
             # (measured in trace: click dispatched, no thumbnails loaded).
             # Retry once if no thumbnails appear.
             if not self._appears(self.camera_thumbnails, timeout=8000):
-                print(f"DEBUG expand_site_and_show_cameras: Retrying 'All Cameras' click")
+                print("DEBUG expand_site_and_show_cameras: Retrying 'All Cameras' click")
                 self.click_all_cameras()
                 self._appears(self.camera_thumbnails, timeout=10000)
         else:
-            print(f"DEBUG expand_site_and_show_cameras: 'All Cameras' not visible")
+            print("DEBUG expand_site_and_show_cameras: 'All Cameras' not visible")
             # Some tenants show thumbnails without an All Cameras node
             self._appears(self.camera_thumbnails, timeout=8000)
 
@@ -1373,7 +1373,7 @@ class ViewsPage:
         """
         # Enter fullscreen first (timeline is always available in
         # fullscreen); the stream wait below is the entered signal
-        print(f"DEBUG add_bookmark_on_tile: Entering fullscreen...")
+        print("DEBUG add_bookmark_on_tile: Entering fullscreen...")
         self.enter_fullscreen_on_tile(tile_index)
 
         # Import FullScreenPage for fullscreen operations
@@ -1381,18 +1381,18 @@ class ViewsPage:
         fs = FullScreenPage(self.page)
 
         # Wait for stream to load
-        print(f"DEBUG add_bookmark_on_tile: Waiting for stream to load in fullscreen...")
+        print("DEBUG add_bookmark_on_tile: Waiting for stream to load in fullscreen...")
         fs.wait_for_stream_loaded(timeout=30000)
-        print(f"DEBUG add_bookmark_on_tile: Stream loaded!")
+        print("DEBUG add_bookmark_on_tile: Stream loaded!")
 
         # In fullscreen, timeline is always available - hover it to reveal
         # bookmark icon; the icon click waits for the reveal on its own
-        print(f"DEBUG add_bookmark_on_tile: Hovering timeline in fullscreen...")
+        print("DEBUG add_bookmark_on_tile: Hovering timeline in fullscreen...")
         timeline = fs.video_container.locator("[class*='timeline'], svg").first
         timeline.hover()
 
         # Click the bookmark icon
-        print(f"DEBUG add_bookmark_on_tile: Clicking bookmark icon...")
+        print("DEBUG add_bookmark_on_tile: Clicking bookmark icon...")
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         bookmark_icon = fs.video_container.locator("img[src*='Bookmark']")
         bookmark_icon.click()
@@ -1408,14 +1408,14 @@ class ViewsPage:
                 "No 'Bookmark Added' toast within 10s of the bookmark click: "
                 "the bookmark was not saved"
             ) from None
-        print(f"DEBUG add_bookmark_on_tile: Bookmark added!")
+        print("DEBUG add_bookmark_on_tile: Bookmark added!")
 
         # Exit fullscreen
-        print(f"DEBUG add_bookmark_on_tile: Exiting fullscreen...")
+        print("DEBUG add_bookmark_on_tile: Exiting fullscreen...")
         fs.exit_fullscreen()
         # The exit control leaving with the player is the exited signal
         fs.exit_fullscreen_button.wait_for(state="hidden", timeout=10000)
-        print(f"DEBUG add_bookmark_on_tile: Done!")
+        print("DEBUG add_bookmark_on_tile: Done!")
 
     def share_live_view_on_tile(self, email: str, tile_index: int = 0):
         """Share a live view from a video tile via email and copy link.

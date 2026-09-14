@@ -164,7 +164,7 @@ def get_step_coverage(include_manual: bool = True) -> dict[str, Any]:
             continue
         is_manual = fp.is_relative_to(MANUAL_ROOT) if MANUAL_ROOT.exists() else False
         tests = data.get('tests', {})
-        for method_name, test_data in tests.items():
+        for _method_name, test_data in tests.items():
             total_tests += 1
             if is_manual:
                 manual_tests += 1

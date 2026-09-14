@@ -322,7 +322,7 @@ def open_browser(p, auth_state_file: Path):
     print("  BROWSER OPENED - please log in to QA Touch.")
     print("  Waiting up to 600 seconds...")
     print("=" * 60)
-    for i in range(200):
+    for _i in range(200):
         time.sleep(3)
         url = page.url or ""
         if "/login" not in url and "qatouch.com" in url:

@@ -112,7 +112,7 @@ def env_health_check(base_url: str, timeout: int = 5) -> tuple[bool, str]:
         # fallback: attempt a minimal urllib request
         from urllib.request import urlopen
 
-        with urlopen(base_url, timeout=timeout) as r:
+        with urlopen(base_url, timeout=timeout):
             return True, "status:ok"
     except Exception as e:
         return False, str(e)

@@ -2784,7 +2784,7 @@ def _clear_all_steps(page) -> int:
     """Remove all existing step rows by clicking delete buttons.
     Returns the number of steps deleted."""
     deleted = 0
-    for attempt in range(30):  # Safety limit
+    for _attempt in range(30):  # Safety limit
         delete_btns = page.locator('button[title="Delete"], button:has-text("Delete Step"), '
                                    'button.delete-step, i.fa-trash, svg[data-icon="trash"]')
         if delete_btns.count() == 0:
@@ -2851,7 +2851,7 @@ def _write_step_row(page, step_index: int, action: str, expected: str) -> bool:
     'Expected Result' labels for the specified step row.
     """
     # Find all Step Description and Expected Result editors via JS
-    editors = page.evaluate('''(idx) => {
+    page.evaluate('''(idx) => {
         var labels = document.querySelectorAll('label, .form-label, p');
         var descLabels = [];
         var expLabels = [];
@@ -3622,7 +3622,7 @@ def _find_case_exhaustive(page, title, module):
         return True
 
     # Maximize per-page (try twice)
-    for attempt in range(2):
+    for _attempt in range(2):
         if _maximize_per_page(page):
             time.sleep(5)  # Longer wait for re-render
             break
@@ -3955,7 +3955,7 @@ def cmd_sync_unfound(case_keys=None, limit=None, dry_run=False):
                 print(f'    Case list loaded: {container_count} containers')
 
                 # Maximize per-page once for the module (with retry)
-                for attempt in range(2):
+                for _attempt in range(2):
                     if _maximize_per_page(page):
                         time.sleep(5)
                         break

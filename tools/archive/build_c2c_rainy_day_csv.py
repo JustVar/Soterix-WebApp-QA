@@ -47,11 +47,11 @@ def _ascii(s: str) -> str:
     if not s:
         return s
     repl = {
-        "-": " - ", "-": " - ",  # em/en dash
-        "'": "'", "'": "'",        # smart single quotes
-        """: '"', """: '"',        # smart double quotes
-        "...": "...", "�": "-",       # ellipsis, replacement char
-        " ": " ",                         # nbsp
+        "\u2013": " - ", "\u2014": " - ",  # en/em dash
+        "\u2018": "'", "\u2019": "'",        # smart single quotes
+        "\u201c": '"', "\u201d": '"',        # smart double quotes
+        "\u2026": "...", "\ufffd": "-",      # ellipsis, replacement char
+        "\u00a0": " ",                        # nbsp (keys escaped: a typography sweep flattened them once)
     }
     for k, v in repl.items():
         s = s.replace(k, v)

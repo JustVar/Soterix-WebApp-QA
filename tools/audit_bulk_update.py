@@ -276,7 +276,6 @@ def main():
     # ---------------------------------------------------------------
     print("\n[7] Checking for empty or malformed steps...")
     empty_steps = 0
-    single_step = 0
     raw_prefix = 0
     step_exp_mismatch = 0
 

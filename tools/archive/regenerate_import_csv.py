@@ -116,7 +116,7 @@ def main():
     seen_titles = set()
 
     # First add all full steps test cases
-    for title_key, tc in full_steps.items():
+    for _title_key, tc in full_steps.items():
         title = tc['title']
         if title.lower() in seen_titles:
             continue

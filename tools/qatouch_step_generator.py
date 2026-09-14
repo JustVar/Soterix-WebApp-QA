@@ -964,7 +964,7 @@ def cmd_seed_nav(args):
     # Build nav context
     nav_modules = {}
     area_counts = defaultdict(int)
-    for mod_name, info in sorted(modules.items(), key=lambda x: x[1]["count"], reverse=True):
+    for mod_name, _info in sorted(modules.items(), key=lambda x: x[1]["count"], reverse=True):
         area = classify_module_area(mod_name)
         area_counts[area] += 1
         nav_modules[mod_name] = {

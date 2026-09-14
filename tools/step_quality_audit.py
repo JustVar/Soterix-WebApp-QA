@@ -256,7 +256,7 @@ def stratified_sample(cases: dict, per_type: int = 5, seed: int = 42) -> dict[st
     random.seed(seed)
 
     by_type = defaultdict(list)
-    for ck, case in cases.items():
+    for _ck, case in cases.items():
         gen_info = case.get("generation_info")
         if gen_info:
             cls = gen_info.get("classification", "unknown")

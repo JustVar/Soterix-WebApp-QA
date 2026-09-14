@@ -613,8 +613,12 @@ def wanted(path: str) -> bool:
 
 
 def git(*args: str) -> str:
+    # utf-8, not the console's code page: a diff carrying smart quotes
+    # crashed the reader thread on Windows (cp1252, 09/14/2026) and the
+    # hook blocked the commit that fixed the converters' Unicode map
     result = subprocess.run(
-        ["git", *args], capture_output=True, text=True, check=False, cwd=REPO
+        ["git", *args], capture_output=True, text=True, check=False, cwd=REPO,
+        encoding="utf-8", errors="replace",
     )
     if result.returncode != 0:
         print(f"git {' '.join(args)} failed: {result.stderr.strip()}")

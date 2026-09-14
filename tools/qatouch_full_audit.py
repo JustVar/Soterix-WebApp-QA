@@ -111,7 +111,7 @@ def load_csv_full() -> dict[str, dict]:
             continue
         with open(csv_path, encoding='utf-8') as f:
             reader = csv.reader(f)
-            header = next(reader)
+            next(reader)  # the header row
             for row in reader:
                 if len(row) < 13:
                     continue

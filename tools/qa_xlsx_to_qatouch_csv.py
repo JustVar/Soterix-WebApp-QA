@@ -90,13 +90,6 @@ import sys
 from collections import Counter
 from dataclasses import dataclass, field
 
-try:
-    import openpyxl
-except ImportError as exc:  # pragma: no cover
-    print("ERROR: openpyxl not installed. Run: pip install openpyxl", file=sys.stderr)
-    raise SystemExit(1) from exc
-
-
 # --------------------------------------------------------------------------- #
 # Canonical 15-column CSV header - VENDOR-CANONICAL slugs that match the QA
 # Touch import wizard's 17 internal field names. With these exact headers,
@@ -231,18 +224,24 @@ TESTING_TYPE_TOKENS = {
     "API", "Regression",
 }
 
-# Unicode hygiene - en-dash, em-dash, replacement char, arrows, NBSP, smart quotes.
+# Unicode characters QA's xlsx generator inserts that we want to normalise:
+# en-dash, em-dash, minus, replacement char, right arrow, non-breaking
+# space, smart quotes. The keys are written as escapes on purpose: two
+# typography sweeps of the source (the last 94b8cb9, 08/07/2026) had
+# flattened the literal characters to ASCII, so the map rewrote every
+# plain hyphen as " - " and left the smart quotes alone until 09/14/2026
+# (register row 62). tests/tools/test_unicode_fixes.py holds it.
 UNICODE_FIXES = {
-    "-": " - ",   # en-dash
-    "-": " - ",   # em-dash
-    "−": " - ",   # minus sign
-    "�": " - ",   # replacement char (mojibake fallback)
-    "->": " - ",   # right arrow
-    " ": " ",     # nbsp
-    "'": "'",     # left single quote
-    "'": "'",     # right single quote
-    """: '"',     # left double quote
-    """: '"',     # right double quote
+    "\u2013": " - ",   # en-dash
+    "\u2014": " - ",   # em-dash
+    "\u2212": " - ",   # minus sign
+    "\ufffd": " - ",   # replacement char (mojibake fallback)
+    "\u2192": " - ",   # right arrow (Distributor file uses these)
+    "\u00a0": " ",     # nbsp
+    "\u2018": "'",     # left single quote
+    "\u2019": "'",     # right single quote
+    "\u201c": '"',     # left double quote
+    "\u201d": '"',     # right double quote
 }
 
 
@@ -873,6 +872,13 @@ def convert(
     output_format: str = "merged-steps",
 ) -> ConvertResult:
     result = ConvertResult()
+    # imported here, not at the top: the map and sanitize() are pinned by
+    # tests/tools/test_unicode_fixes.py in an environment without openpyxl
+    try:
+        import openpyxl
+    except ImportError as exc:  # pragma: no cover
+        print("ERROR: openpyxl not installed. Run: pip install openpyxl", file=sys.stderr)
+        raise SystemExit(1) from exc
     wb = openpyxl.load_workbook(xlsx_path, data_only=True)
 
     all_records: list[CanonicalRecord] = []

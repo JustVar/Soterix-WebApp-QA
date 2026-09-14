@@ -164,7 +164,6 @@ def main():
                 for fkey, fmeta in fields_meta.items():
                     if fmeta.get('required') and fkey not in issue_dict:
                         # pick a safe default from allowedValues if present
-                        allowed = fmeta.get('allowedValues') or fmeta.get('schema', {}).get('custom')
                         if fmeta.get('allowedValues'):
                             av = fmeta['allowedValues'][0]
                             # allowed value may have 'id' or 'value'

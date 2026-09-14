@@ -216,7 +216,7 @@ def main() -> int:
     pages_to_scan = list(range(1, last_page + 1))
 
     try:
-        for page_idx, page_num in enumerate(pages_to_scan, 1):
+        for _page_idx, page_num in enumerate(pages_to_scan, 1):
             if page_num == 1:
                 page = page1  # reuse pre-flight call
             else:

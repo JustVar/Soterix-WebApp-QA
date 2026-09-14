@@ -203,7 +203,7 @@ def print_results(results, verbose=False):
         print("\n" + "-" * 60)
         print("MATCHED TEST CASES")
         print("-" * 60)
-        for i, (inc, qa) in enumerate(results['matched'][:50], 1):
+        for i, (inc, _qa) in enumerate(results['matched'][:50], 1):
             print(f"  {i}. {inc[:70]}{'...' if len(str(inc)) > 70 else ''}")
         if len(results['matched']) > 50:
             print(f"  ... and {len(results['matched']) - 50} more")
