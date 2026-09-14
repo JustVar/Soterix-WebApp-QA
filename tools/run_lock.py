@@ -28,6 +28,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -59,9 +60,27 @@ def _read_lock(env: str) -> dict | None:
 
 
 def _write_lock(env: str, info: dict) -> None:
+    """Write the lock in one step: a temp file replaced over the path.
+
+    The heartbeat rewrites the lock every minute for the run's whole
+    length; a rival reading between a truncate and the write would see no
+    lock and start beside the live run. os.replace is atomic on both
+    platforms; Windows refuses it while a reader holds the file open, so
+    it is retried briefly.
+    """
     LOCK_DIR.mkdir(parents=True, exist_ok=True)
-    with open(_lock_path(env), 'w') as f:
+    path = _lock_path(env)
+    tmp = path.with_name(f'{path.name}.{os.getpid()}.tmp')
+    with open(tmp, 'w') as f:
         json.dump(info, f, indent=2)
+    for attempt in range(20):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if attempt == 19:
+                raise
+            time.sleep(0.05)  # a reader still holds the file (Windows)
 
 
 def _remove_lock(env: str) -> None:
@@ -89,7 +108,9 @@ def beat(env: str, holder_pids: set[int]) -> bool:
 
     A lock a rival replaced (after a --force) is never revived: the stamp
     goes only on a lock that records the caller's own process or the
-    parent it runs under. Returns True when a stamp was written.
+    parent it runs under. Returns True when a stamp was written. The read
+    and the write are not one step: a --force landing in the instant
+    between them is overwritten by the stamped copy.
     """
     existing = _read_lock(env)
     if not existing or existing.get('pid') not in holder_pids:

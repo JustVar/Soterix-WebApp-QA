@@ -34,7 +34,8 @@
 #                 a multi-lens unit suffixes per lens (channel1_1)
 #   sd_cards: SD card slots on RECORD > STORAGE; RECORD > MANAGEMENT lists
 #                 two recorded devices per card, RECORDn on card (n mod
-#                 slots) + 1 (measured 09/14/2026 on .137 and .135)
+#                 slots) + 1 (measured 09/14/2026 on .137 and .135; the
+#                 other models by the test's pass on every unit, row 58)
 models:
   DC-5V-1:
     sd_cards: 1

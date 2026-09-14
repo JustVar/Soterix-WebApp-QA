@@ -10,8 +10,9 @@ from playwright.sync_api import expect
 
 from tests.shared.pages.camera_hardware_page import CameraHardwarePage
 
-# measured 09/14/2026 on BC-5V-1 10.2.0.137 and MS-20V-1 10.2.0.135 (QA
-# Touch case TR0022). The recorded devices and cards follow the model's
+# measured 09/14/2026 on BC-5V-1 10.2.0.137 and MS-20V-1 10.2.0.135; the
+# other models by the test's pass on every unit (register row 58). The
+# recorded devices and cards follow the model's
 # sd_cards in tests/data/c2c_models.yaml: two devices per card, RECORDn on
 # card (n mod cards) + 1.
 TARGET_STREAM_OPTIONS = ["None", "Main stream", "Sub stream"]
@@ -66,8 +67,10 @@ class TestC2CRecord:
 
         self.step_capture.mark(2, "Read the Recorded devices table")
         slots = self.config["model_facts"].get("sd_cards")
-        assert slots, (
+        assert slots is not None, (
             f"tests/data/c2c_models.yaml gives no sd_cards for {self.config['model']}; measure and update the record")
+        if slots == 0:
+            pytest.skip(f"{self.config['model']} records no SD card slot (tests/data/c2c_models.yaml)")
         expected = {f"RECORD{n}": f"SD card {n % slots + 1}" for n in range(2 * slots)}
         rows = self.camera.wait_for_table_rows()
         # a row reads [name, enabled mark, file type, storage, continuous]
@@ -89,11 +92,12 @@ class TestC2CRecord:
         assert sorted(cards) == expected_cards, (
             f"{self.config['id']}: the Storage list names {sorted(cards)}, expected {expected_cards}")
         for name, row in cards.items():
+            assert len(row) >= 5, f"{name} reads {row}; expected mounted, size, used and available cells"
             mounted, size, used, available = row[1:5]
             # a card that is not mounted is a device state for the lab, named here
             assert mounted == "Yes", (
                 f"{self.config['id']}: {name} is not mounted ({row}); insert or format the card")
             assert used.endswith("%"), f"{name} used reads {used!r}, expected a percentage"
-            assert 0 <= int(used.rstrip("%")) <= 100, f"{name} used reads {used!r}, expected 0-100%"
+            assert 0 <= float(used.rstrip("%")) <= 100, f"{name} used reads {used!r}, expected 0-100%"
             assert _gigabytes(available) <= _gigabytes(size), (
                 f"{name} available {available} exceeds its size {size}")

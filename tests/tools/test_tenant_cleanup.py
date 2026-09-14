@@ -119,7 +119,7 @@ def test_group_matcher_is_exact_on_the_suites_shape():
 
 def test_bookmark_matcher_accepts_the_suites_names_only():
     """The app's default name and the suite's own three shapes; nothing else."""
-    for name in ('New Bookmark', 'AutoTest BM 101530', 'DEL_20260825145554', 'Test bookmark'):
+    for name in ('New Bookmark', 'AutoTest BM 101530', 'AutoTest Bookmark 101530', 'DEL_20260825145554', 'Test bookmark'):
         assert tc.is_automation_bookmark(name) is True, name
     for name in ('Grant walking by', 'Bookmark', 'New Bookmark 2', 'AutoTest BM', '', None):
         assert tc.is_automation_bookmark(name) is False, name

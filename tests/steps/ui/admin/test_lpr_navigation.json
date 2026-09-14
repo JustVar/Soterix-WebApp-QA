@@ -14,7 +14,7 @@
       "case_key": ""
     },
     "test_ensure_lpr_page_already_on_lists": {
-      "title": "Verify ensure_lpr_page returns when already on Lists page",
+      "title": "Verify clicking LPR while the Lists page is open keeps it open",
       "steps": [
         {
           "n": 1,
@@ -50,8 +50,18 @@
       "steps": [
         {
           "n": 1,
-          "action": "Click Admin in the left sidebar, then click LPR.",
-          "expected": "The LPR Lists page opens and shows the Create List button."
+          "action": "Click Admin in the left sidebar, then click LPR, and click the View icon on a list row.",
+          "expected": "The Plate page opens and shows the Add Plate button."
+        },
+        {
+          "n": 2,
+          "action": "Click the Filter icon, then click Apply.",
+          "expected": "The Search Results view opens with its header."
+        },
+        {
+          "n": 3,
+          "action": "Click LPR in the breadcrumb.",
+          "expected": "The Lists page opens with the Create List button, and the Search Results header is gone."
         }
       ],
       "case_key": ""
@@ -73,7 +83,7 @@
       "case_key": ""
     },
     "test_categories_page_already_on_categories": {
-      "title": "Verify ensure_lpr_categories_page returns when already on Categories",
+      "title": "Verify clicking the Categories tab while Categories is open keeps it open",
       "steps": [
         {
           "n": 1,

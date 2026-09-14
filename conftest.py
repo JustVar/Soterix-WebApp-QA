@@ -410,32 +410,52 @@ def _finish_video(video, keep_as: str | None) -> None:
         print(f"[VIDEO] Could not finalize video: {e}")
 
 
-def _track_api_requests(page) -> set:
-    """The app's API requests still in flight on this page, kept current
-    by the page's request events. Websocket upgrades and the app's static
-    files are not counted."""
-    in_flight: set = set()
+def _track_api_requests(page) -> dict:
+    """Track the app's API requests on this page: the ones in flight and
+    the URLs that finished, kept current by the page's request events
+    until the tracker's off() removes the listeners. Websocket upgrades
+    and the app's static files are not counted."""
+    tracker: dict = {'in_flight': set(), 'finished': []}
 
     def started(request):
         if "/v-apiserver/" in request.url or "/api/" in request.url:
-            in_flight.add(request)
+            tracker['in_flight'].add(request)
 
     def finished(request):
-        in_flight.discard(request)
+        if request in tracker['in_flight']:
+            tracker['in_flight'].discard(request)
+            tracker['finished'].append(request.url)
+
+    def off():
+        page.remove_listener("request", started)
+        page.remove_listener("requestfinished", finished)
+        page.remove_listener("requestfailed", finished)
 
     # plain functions: Playwright's sync wrapper cannot mark a bound builtin
     page.on("request", started)
     page.on("requestfinished", finished)
     page.on("requestfailed", finished)
-    return in_flight
+    tracker['off'] = off
+    return tracker
 
 
-def _wait_for_api_quiet(page, in_flight: set, timeout_ms: int = 15000) -> None:
-    """Return once no tracked API request is in flight, or at the timeout
-    (a request the app never answers must not hold the fixture)."""
+# The last of the landing page's post-login calls (traces 09/14/2026: the
+# session check, the site tree, then the status), and it lands after the
+# nav shows, so the nav alone is too early to yield on.
+LANDING_REQUEST = "/api/status"
+
+
+def _wait_for_landing(page, tracker: dict, timeout_ms: int = 15000) -> None:
+    """Return once the landing page's status request has answered and no
+    tracked API request is in flight, or at the timeout (a request the
+    app never answers must not hold the fixture). Removes the listeners."""
     deadline = time.monotonic() + timeout_ms / 1000
-    while in_flight and time.monotonic() < deadline:
-        page.wait_for_timeout(100)  # poll tick for the in-flight set
+    while time.monotonic() < deadline:
+        landed = any(LANDING_REQUEST in url for url in tracker['finished'])
+        if landed and not tracker['in_flight']:
+            break
+        page.wait_for_timeout(100)  # poll tick for the tracker
+    tracker['off']()
 
 
 @pytest.fixture(scope="session")
@@ -521,7 +541,7 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
         context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
         video = _video_of(page)
-        in_flight = _track_api_requests(page)
+        tracker = _track_api_requests(page)
 
         try:
             from tests.shared.pages.login_page import LoginPage
@@ -541,9 +561,10 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
             # and the app bounced to /auth/login (india traces 09/12 and
             # 09/14/2026, the logout-from-/search single). Yield on the
             # same signal the cached path validates on, the nav, and then
-            # once no API request is in flight.
+            # once the status request has answered and nothing is in
+            # flight.
             page.locator("text=Views").first.wait_for(state="visible", timeout=30000)
-            _wait_for_api_quiet(page, in_flight)
+            _wait_for_landing(page, tracker)
 
             # Save the authenticated state
             context.storage_state(path=auth_state_path)

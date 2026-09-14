@@ -13,8 +13,9 @@ Targets ONLY names the suite itself creates (docs/TEST_REPAIRS.md row 7):
   - chat groups named "AutoGroup_<stamp>" (the chats tests' own names;
     US box only - india has no group feature)
   - bookmarks on the configured site that the ACCOUNT ITSELF made and
-    that carry a name the suite gives: the app's default "New Bookmark",
-    "AutoTest BM <stamp>", "DEL_<stamp>", "Test bookmark". Read and
+    that carry a name the suite gives or gave: the app's default "New
+    Bookmark", "AutoTest BM <stamp>", "AutoTest Bookmark <stamp>", and the
+    08/2026 suite's "DEL_<stamp>" and "Test bookmark". Read and
     deleted over the internal API (a delete is soft: the row stays with
     deletedAt set). Another user's bookmarks are listed and left alone,
     whatever their name.
@@ -89,14 +90,18 @@ GROUP_PATTERN = re.compile(r'^AutoGroup_\d+$')
 # first rows that made Create Link, Share and Export answer 'Empty
 # folder' in the 09/11/2026 full run.
 FOLDER_PATTERN = re.compile(r'^Folder_\d+$')
-# Bookmarks: the suite creates them with the app's default name and
-# renames or deletes its own in-test; what survives a dead run is a
+# Bookmarks: the names the suite gives or gave. The UI test creates one
+# under the app's default name and renames its own to "AutoTest BM
+# <stamp>"; the API fixture names its "AutoTest Bookmark <stamp>"; the
+# suite before da239ac (08/2026) named them "DEL_<stamp>" and "Test
+# bookmark", and india still holds those. What survives a dead run is a
 # default-named row on the test camera, owned by the automation account
 # (US measured 09/14/2026: three, all test-auto-qa's). The owner check
 # is what keeps a real user's "New Bookmark" safe; on india the account
 # is a real user's, so the dry run is the place to read the list.
 STEPS = ('groups', 'rules', 'chats', 'folders', 'bookmarks', 'users')
-BOOKMARK_PATTERN = re.compile(r'^(New Bookmark|AutoTest BM \d+|DEL_\d+|Test bookmark)$')
+BOOKMARK_PATTERN = re.compile(
+    r'^(New Bookmark|AutoTest BM \d+|AutoTest Bookmark \d+|DEL_\d+|Test bookmark)$')
 
 # A channel card is the grid item around its three-dots icon; the name
 # is its p.textEllipsis and the url its p.lineClampTwoLine (probed
@@ -412,7 +417,7 @@ def is_automation_bookmark(comment: str | None) -> bool:
 def bookmark_candidates(rows: list[dict], owner: str) -> tuple[list[dict], list[dict]]:
     """Split a site's bookmark rows into (the automation's, everyone else's live rows).
 
-    A row is the automation's when it is live (deletedAt -1), the logged-in
+    A row is the automation's when it is live (deletedAt -1, 0 or missing), the logged-in
     account made it (userId is the account's e-mail) and its comment is a
     name the suite gives. Soft-deleted rows are dropped from both lists.
     """
@@ -466,8 +471,11 @@ def _bookmarks_step(apply: bool) -> list[str]:
                 print(f"  deleted  {row.get('bookmarkId')} {row.get('comment')!r}")
             except (ApiError, RequestException) as e:
                 print(f"  REFUSED  {row.get('bookmarkId')}: {e}")
-        still, _ = bookmark_candidates(api.get(f'/REST/clipbookmark/{api.site_id}'), user)
-        print(f'  remaining automation bookmarks: {len(still)}')
+        try:
+            still, _ = bookmark_candidates(api.get(f'/REST/clipbookmark/{api.site_id}'), user)
+            print(f'  remaining automation bookmarks: {len(still)}')
+        except (ApiError, RequestException) as e:
+            print(f'  could not re-read the list after the deletes: {e}')
     return [str(row.get('comment')) for row in mine]
 
 
@@ -545,6 +553,8 @@ def main() -> int:
                         metavar='STEP',
                         help=f"run only this step (repeatable): {', '.join(STEPS)}")
     args = parser.parse_args()
+    if args.only and args.delete_channel:
+        parser.error('--only and --delete-channel are different runs; pass one of them')
     wanted = set(args.only or STEPS)
 
     if wanted == {'bookmarks'}:
@@ -624,9 +634,12 @@ def main() -> int:
                 print('\nDry run - nothing deleted. Re-run with --apply to delete the above.')
             return 0
         page.keyboard.press('Escape')
-        # the folders step leaves the page on Media; the Users tab is
-        # in the Admin sidebar (the run died here from 09/11 to 09/14)
-        admin.navigate_to_admin()
+        # the folders step leaves the page on Media; the Users tab is in
+        # the Admin sidebar (the run died here from 09/11 to 09/14). From
+        # inside Admin the top nav's Admin link is covered and the click
+        # hangs (the rules step's own guard), so only leave Media
+        if '/admin' not in page.url:
+            admin.navigate_to_admin()
         admin.navigate_to_users()
         users = _user_candidates(page, admin)
         print(f'Users: {len(users)} automation leftover(s):')

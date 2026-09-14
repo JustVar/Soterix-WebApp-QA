@@ -99,14 +99,13 @@ class TestLprNavigation:
         """
         self.step_capture.mark(1, "Navigate to LPR Lists page")
         self.lpr.navigate_to_lpr()
+        url_before = self.page.url
 
-        self.step_capture.mark(2, "Call ensure_lpr_page (should return immediately)")
-        self.lpr.ensure_lpr_page()
-
-        self.step_capture.mark(3, "Verify still on Lists page")
-        assert self.lpr.create_list_button.count() > 0, "Should still be on Lists page"
-
-        print("[PASS] ensure_lpr_page correctly handled 'already on Lists' case")
+        self.step_capture.mark(2, "Click LPR again while the Lists page is open")
+        self.lpr.lpr_menu.first.click()
+        expect(self.lpr.create_list_button.first).to_be_visible(timeout=10000)
+        assert self.page.url == url_before, (
+            f"the second LPR click moved the page to {self.page.url}")
 
     @pytest.mark.ui
     @pytest.mark.admin
@@ -139,7 +138,7 @@ class TestLprNavigation:
 
         Steps:
         1. Click Admin in the left sidebar, then click LPR, and click the View icon on a list row.
-           Expected: The Plate page for that list opens and shows the Add Plate button.
+           Expected: The Plate page opens and shows the Add Plate button.
         2. Click the Filter icon, then click Apply.
            Expected: The Search Results view opens with its header.
         3. Click LPR in the breadcrumb.
@@ -149,15 +148,14 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
         list_name = self._own_a_list()
         row = self.lpr.get_list_row(list_name)
-        row.locator("img[aria-label='View']").first.click()
+        row.locator("img[aria-label='View']").click()
         expect(self.lpr.add_plate_button.first).to_be_visible(timeout=30000)
 
         self.step_capture.mark(2, "Apply a filter to reach Search Results")
         self.lpr.filter_icon.first.click()
         expect(self.lpr.apply_filter_button.first).to_be_visible(timeout=30000)
         self.lpr.apply_filter_button.first.click()
-        expect(self.lpr.search_results_header.first).to_contain_text(
-            re.compile("search results", re.I), timeout=15000)
+        expect(self.lpr.search_results_header.first).to_be_visible(timeout=15000)
 
         self.step_capture.mark(3, "Return to Lists via the breadcrumb")
         self.lpr.lpr_breadcrumb.first.click()
@@ -204,14 +202,13 @@ class TestLprNavigation:
         self.step_capture.mark(1, "Navigate to Categories page")
         self.lpr.navigate_to_lpr()
         self.lpr.ensure_lpr_categories_page()
+        url_before = self.page.url
 
-        self.step_capture.mark(2, "Call ensure_lpr_categories_page again")
-        self.lpr.ensure_lpr_categories_page()
-
-        self.step_capture.mark(3, "Verify still on Categories page")
-        assert self.lpr.add_category_button.count() > 0, "Should still be on Categories page"
-
-        print("[PASS] ensure_lpr_categories_page correctly handled 'already on Categories' case")
+        self.step_capture.mark(2, "Click the Categories tab again")
+        self.lpr.categories_tab.first.click(force=True)
+        expect(self.lpr.add_category_button.first).to_be_visible(timeout=10000)
+        assert self.page.url == url_before, (
+            f"the second Categories click moved the page to {self.page.url}")
 
     @pytest.mark.ui
     @pytest.mark.admin

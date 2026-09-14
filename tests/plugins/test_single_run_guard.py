@@ -581,11 +581,34 @@ def test_reports_stamp_the_lock_the_parent_process_holds(lock_dir, monkeypatch):
     guard.pytest_unconfigure(_FakeConfig())
 
 
-def test_a_worker_standing_aside_stamps_nothing(lock_dir, monkeypatch):
-    """xdist workers and RUN_GUARD=off runs hold no lock and stamp none."""
+@pytest.mark.parametrize(('var', 'value'), [('PYTEST_XDIST_WORKER', 'gw0'), ('RUN_GUARD', 'off')])
+def test_a_run_standing_aside_arms_nothing(lock_dir, monkeypatch, var, value):
+    """xdist workers and RUN_GUARD=off runs hold no lock, arm no heartbeat
+    and stamp nothing, even on a lock that records their parent."""
     monkeypatch.setattr(guard, '_beat_state', None)
-    monkeypatch.setenv('PYTEST_XDIST_WORKER', 'gw0')
-    run_lock._write_lock('qa', _lock())
+    monkeypatch.setenv(var, value)
+    run_lock._write_lock('qa', _lock(pid=os.getppid()))
     guard.pytest_sessionstart(_session(_FakeConfig()))
+    assert guard._beat_state is None
     guard.pytest_runtest_logreport(_report())
     assert 'heartbeat_at' not in json.loads(_lock_file(lock_dir).read_text())
+
+
+def test_the_first_report_stamps_on_a_box_just_booted(lock_dir, monkeypatch):
+    """monotonic counts from boot; an uptime under the interval must not
+    swallow the first stamp (the CI runner's, 09/14/2026)."""
+    monkeypatch.setattr(guard, '_beat_state', None)
+    monkeypatch.setattr(guard.time, 'monotonic', lambda: 5.0)
+    config = _FakeConfig()
+    guard.pytest_sessionstart(_session(config))
+    guard.pytest_runtest_logreport(_report())
+    assert json.loads(_lock_file(lock_dir).read_text())['heartbeat_at']
+    guard.pytest_unconfigure(config)
+
+
+def test_the_lock_is_written_in_one_step(lock_dir):
+    """The write goes through a temp file replaced over the lock, and the
+    temp file does not survive."""
+    run_lock._write_lock('qa', _lock())
+    assert json.loads(_lock_file(lock_dir).read_text())['pid'] == RIVAL_PID
+    assert [p.name for p in lock_dir.iterdir()] == ['.run_lock_qa.json']

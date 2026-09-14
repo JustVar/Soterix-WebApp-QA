@@ -205,8 +205,9 @@ cp tools/hooks/pre-commit  .git/hooks/pre-commit
 cp tools/hooks/commit-msg  .git/hooks/commit-msg
 ```
 
-`pre-commit` runs the six checks CI's collect gate runs, so a commit
-that would fail the gate fails on the laptop first: no staged line may
+`pre-commit` runs the four checks of CI's collect gate that fit in
+seconds, plus two of its own, so a commit that would fail the gate
+fails on the laptop first: no staged line may
 carry a credential value from `.env`; the convention checker reads the
 lines the commit adds (a HIGH finding blocks); `docs/TEST_INVENTORY.md`
 must match the tests on disk (regenerate with
@@ -214,7 +215,8 @@ must match the tests on disk (regenerate with
 collected-test floor holds; and the offline suites (`tests/plugins`,
 `tests/tools`, `tests/helpers`) pass. About six seconds. The offline run
 changes nothing a live UI run writes: archive, run record, run guard and
-screenshots are off and its report goes to `logs/hook_report.html`.
+screenshots are off and its reports go to `logs/`. CI alone keeps
+`pytest --setup-plan` (fixture wiring, 25 s).
 `commit-msg` rejects any message naming an AI
 tool, model or co-author - the workspace CLAUDE.md forbids it and the
 rule had been broken 14 times before the gate existed. Read

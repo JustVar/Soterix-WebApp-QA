@@ -310,7 +310,7 @@ def pytest_sessionstart(session: Any) -> None:
 
 def _arm_heartbeat(env_name: str, pids: set[int]) -> None:
     global _beat_state
-    _beat_state = {'env': env_name, 'pids': pids, 'last': 0.0}
+    _beat_state = {'env': env_name, 'pids': pids, 'last': None}
 
 
 def _arm_heartbeat_for_parent(env_name: str, reason: str) -> None:
@@ -335,7 +335,10 @@ def pytest_runtest_logreport(report: Any) -> None:  # noqa: ARG001 - pytest name
     if state is None:
         return
     now = time.monotonic()
-    if now - state['last'] < HEARTBEAT_INTERVAL_S:
+    # None, not 0: monotonic counts from boot on both platforms, and a box
+    # up for less than the interval would otherwise skip its first stamp
+    # (the CI runner did, 09/14/2026)
+    if state['last'] is not None and now - state['last'] < HEARTBEAT_INTERVAL_S:
         return
     state['last'] = now
     try:

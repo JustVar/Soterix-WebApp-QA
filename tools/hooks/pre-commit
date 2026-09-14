@@ -1,9 +1,12 @@
 #!/bin/sh
-# The collect gate, before the commit exists. CI runs six checks on every
-# push (.github/workflows/collect-gate.yml); this hook runs the same six
-# in the same order of cost, so a commit that would fail the gate fails
-# here, on the laptop, before a failure email goes out. Eight went out on
-# 09/12/2026 because the hook ran only the first three.
+# The collect gate, before the commit exists. CI (.github/workflows/
+# collect-gate.yml) runs the collected-test floor, the offline suites,
+# the inventory check and the lint baseline on every push; this hook
+# runs those four, cheapest first, plus two of its own (secrets,
+# conventions), so a commit that would fail the gate fails here, on the
+# laptop, before a failure email goes out. Eight went out on 09/12/2026
+# because the hook ran only its own two and the inventory. CI alone also
+# runs `pytest --setup-plan` (fixture wiring, 25 s); that stays in CI.
 #
 # Install: copy this file to .git/hooks/pre-commit (no extension).
 # Bypass only for a genuine emergency: git commit --no-verify.
@@ -20,7 +23,10 @@
 # - lint_baseline: no file may gain ruff findings; two pushes failed CI
 #   on 09/12 over literal non-breaking spaces nobody linted locally.
 # - collect_floor: the whole repo and the offline suites still collect
-#   and no suite shrank; a broken import fails here, not on main.
+#   and no suite shrank; a broken import fails here, not on main. Its
+#   collect-only pytest is pointed at logs/ too (PYTEST_ADDOPTS), or it
+#   replaces reports/report.html with an empty shell on every commit
+#   (the 09/14 audit found it doing that).
 # - the offline suites: the pins for the plugins, tools and helpers. Six
 #   pushes failed CI on 09/12 over one stream-guard pin nobody ran
 #   locally. The run changes nothing a live UI run writes: the archive,
@@ -33,5 +39,5 @@ $py tools/secret_check.py || exit 1
 $py tools/convention_check.py || exit 1
 $py tools/test_inventory.py --check || exit 1
 $py tools/lint_baseline.py || exit 1
-$py tools/collect_floor.py || exit 1
+PYTEST_ADDOPTS="--html=logs/hook_collect.html -p no:cacheprovider" $py tools/collect_floor.py || exit 1
 RUN_ARCHIVE=off RUN_GUARD=off REPORT_SCREENSHOTS=off $py -m pytest tests/plugins tests/tools tests/helpers -p no:cacheprovider --no-run-record --html=logs/hook_report.html || exit 1
