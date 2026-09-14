@@ -2,7 +2,7 @@
   "version": 1,
   "project_key": "JlW1",
   "total_playwright_tests": 352,
-  "total_mapped": 411,
+  "total_mapped": 465,
   "mappings": {
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_admin_sidebar_tabs_visible[chromium]": {
       "case_key": "VKbBPP",
@@ -3411,6 +3411,492 @@
       "auto_matched": false,
       "reviewed": true,
       "source": "title-match 2026-09-14 (existing Camera 2 Cloud case TR0022)"
+    },
+    "tests/ui/admin/test_lpr_camera_selection.py::TestLprCameraSelection::test_drag_drop_camera_to_grid[chromium]": {
+      "case_key": "qzMNZe",
+      "case_title": "Dragging the group onto a tile starts its cameras",
+      "score": 1.0,
+      "module": "LPR Camera Selection",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_camera_selection.py::TestLprCameraSelection::test_hover_and_select_single_camera[chromium]": {
+      "case_key": "XGQ2lG",
+      "case_title": "A camera row's hover checkbox starts that camera",
+      "score": 1.0,
+      "module": "LPR Camera Selection",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_camera_selection.py::TestLprCameraSelection::test_select_multi_camera_by_site[chromium]": {
+      "case_key": "3gBXnz",
+      "case_title": "The group row's hover checkbox starts the group's cameras",
+      "score": 1.0,
+      "module": "LPR Camera Selection",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_event_details_panel[chromium]": {
+      "case_key": "zvVN9P",
+      "case_title": "The clip player exposes the event's action controls",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_event_filter_by_type[chromium]": {
+      "case_key": "mBXQWd",
+      "case_title": "The feed filter opens with camera and duration options",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_event_list_visibility[chromium]": {
+      "case_key": "n8QNe3",
+      "case_title": "The live feed lists at least one event card",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_event_navigation_next_prev[chromium]": {
+      "case_key": "gQXNy3",
+      "case_title": "The seek controls act on the open clip without breaking it",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_event_scrubber_control[chromium]": {
+      "case_key": "Gd9Laj",
+      "case_title": "The clip player shows its timeline readout and seek controls",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_event_selection_play_pause_scrubber[chromium]": {
+      "case_key": "Ee95aV",
+      "case_title": "Selecting an event opens its clip player, and close ends it",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_event_timestamp_verification[chromium]": {
+      "case_key": "lRlNMQ",
+      "case_title": "Event cards carry a full time-and-date stamp",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_fullscreen_event_playback[chromium]": {
+      "case_key": "rGDNRe",
+      "case_title": "Fullscreen engages and releases on the clip player",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_events.py::TestLprEventPlayback::test_lpr_playback_speed_control[chromium]": {
+      "case_key": "Nj9paL",
+      "case_title": "Speed control on the clip player (absent in the current UI)",
+      "score": 1.0,
+      "module": "LPR Events",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_grid_and_timer.py::TestLprGridLayout::test_select_grid_layouts[chromium]": {
+      "case_key": "K49paV",
+      "case_title": "Each layout button shows its tile count and active state",
+      "score": 1.0,
+      "module": "Grid Layout",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_grid_and_timer.py::TestLprTimer::test_timer_after_page_refresh[chromium]": {
+      "case_key": "jPp0BZ",
+      "case_title": "The popup reopens with a value after a reload",
+      "score": 1.0,
+      "module": "Timer",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_grid_and_timer.py::TestLprTimer::test_timer_cancel_button[chromium]": {
+      "case_key": "4183n8",
+      "case_title": "Cancel closes the popup without saving",
+      "score": 1.0,
+      "module": "Timer",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_grid_and_timer.py::TestLprTimer::test_timer_dropdown_values[chromium]": {
+      "case_key": "pD8Nbm",
+      "case_title": "The duration dropdown offers the preset values",
+      "score": 1.0,
+      "module": "Timer",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_grid_and_timer.py::TestLprTimer::test_timer_popup_validation[chromium]": {
+      "case_key": "LDXpa1",
+      "case_title": "The popup opens over a playing stream and closes on Cancel",
+      "score": 1.0,
+      "module": "Timer",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_categories_page_already_on_categories[chromium]": {
+      "case_key": "wmRNP3",
+      "case_title": "Verify clicking the Categories tab while Categories is open keeps it open",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_categories_page_navigation[chromium]": {
+      "case_key": "yaxN70",
+      "case_title": "Verify navigation to Categories page",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_ensure_lpr_page_already_on_lists[chromium]": {
+      "case_key": "0rJ7nn",
+      "case_title": "Verify clicking LPR while the Lists page is open keeps it open",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_filter_panel_navigation[chromium]": {
+      "case_key": "kpX28d",
+      "case_title": "Verify opening and closing filter panel on Plate page",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_navigate_back_to_lists_from_categories[chromium]": {
+      "case_key": "11P9wa",
+      "case_title": "Verify navigation back to Lists page from Categories via List tab",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_navigate_from_search_results_to_lists[chromium]": {
+      "case_key": "5BMWnW",
+      "case_title": "Verify navigation from Search Results back to Lists via breadcrumb",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_navigate_to_lpr_main_page[chromium]": {
+      "case_key": "21WqnN",
+      "case_title": "Verify navigation to Admin > LPR Lists page",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_no_search_results_view_before_a_filter[chromium]": {
+      "case_key": "ajy2kD",
+      "case_title": "Verify the Lists page shows no Search Results view before a filter is applied",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_navigation.py::TestLprNavigation::test_open_plate_page_from_lists[chromium]": {
+      "case_key": "QGQ2am",
+      "case_title": "Verify opening Plate page by clicking View icon on a list",
+      "score": 1.0,
+      "module": "LPR Navigation",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprFilterOperations::test_apply_filter_shows_search_results[chromium]": {
+      "case_key": "WEQ2wN",
+      "case_title": "Verify applying a filter shows Search Results view",
+      "score": 1.0,
+      "module": "Filter Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprFilterOperations::test_filter_panel_toggle[chromium]": {
+      "case_key": "B89kay",
+      "case_title": "Verify filter panel can be opened and closed",
+      "score": 1.0,
+      "module": "Filter Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprFilterOperations::test_reset_filter_returns_to_plate[chromium]": {
+      "case_key": "8VvpWk",
+      "case_title": "Verify resetting filter returns to Plate page",
+      "score": 1.0,
+      "module": "Filter Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprListOperations::test_click_admin_and_access_lpr[chromium]": {
+      "case_key": "M7wpax",
+      "case_title": "Verify navigation to Admin page and LPR menu visibility",
+      "score": 1.0,
+      "module": "List Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprListOperations::test_create_lpr_list[chromium]": {
+      "case_key": "Dr9pan",
+      "case_title": "Create a new LPR list with valid data",
+      "score": 1.0,
+      "module": "List Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprListOperations::test_list_actions_visible[chromium]": {
+      "case_key": "eJX2lP",
+      "case_title": "Verify View, Edit, and Delete actions are available for lists",
+      "score": 1.0,
+      "module": "List Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprListOperations::test_list_status_toggle[chromium]": {
+      "case_key": "vaZNJy",
+      "case_title": "Verify list status toggle is present and interactive",
+      "score": 1.0,
+      "module": "List Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprListOperations::test_lpr_page_ui_elements[chromium]": {
+      "case_key": "bjX2LD",
+      "case_title": "Verify LPR page UI elements are present",
+      "score": 1.0,
+      "module": "List Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprListOperations::test_open_list_and_verify_plate_page[chromium]": {
+      "case_key": "Z8Q2lz",
+      "case_title": "Open a list and verify plate page UI",
+      "score": 1.0,
+      "module": "List Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_operations.py::TestLprListOperations::test_search_lpr_list_by_name[chromium]": {
+      "case_key": "RgQ2ae",
+      "case_title": "Search for LPR list by name",
+      "score": 1.0,
+      "module": "List Operations",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprCameraPlayback::test_camera_tile_activation[chromium]": {
+      "case_key": "dyX2rK",
+      "case_title": "Play the configured camera, then activate its tile",
+      "score": 1.0,
+      "module": "Camera Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprCameraPlayback::test_dismiss_backdrop[chromium]": {
+      "case_key": "xmdK6L",
+      "case_title": "Verify backdrop dismissal leaves no click-blocking overlay",
+      "score": 1.0,
+      "module": "Camera Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprCameraPlayback::test_navigate_to_lpr_camera_page[chromium]": {
+      "case_key": "VKQ2lx",
+      "case_title": "Navigate to LPR camera/playback page",
+      "score": 1.0,
+      "module": "Camera Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprCameraPlayback::test_open_locations_dropdown[chromium]": {
+      "case_key": "B89kaQ",
+      "case_title": "Verify Locations & Cameras dropdown opens and lists the site",
+      "score": 1.0,
+      "module": "Camera Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprCameraPlayback::test_open_lpr_playback_timeout_popup[chromium]": {
+      "case_key": "8VvpW4",
+      "case_title": "Verify the LPR timeout popup opens and closes cleanly",
+      "score": 1.0,
+      "module": "Camera Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprCameraPlayback::test_open_playback_timeout_popup[chromium]": {
+      "case_key": "M7wpa1",
+      "case_title": "Verify the timeout popup opens for a playing LPR stream",
+      "score": 1.0,
+      "module": "Camera Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprCameraPlayback::test_safe_reset_to_views[chromium]": {
+      "case_key": "Dr9paZ",
+      "case_title": "Verify safe reset lands on the Views page",
+      "score": 1.0,
+      "module": "Camera Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprCameraPlayback::test_wait_for_site_list_loading[chromium]": {
+      "case_key": "eJX2D8",
+      "case_title": "Verify site list loads correctly",
+      "score": 1.0,
+      "module": "Camera Playback",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprViewsIntegration::test_navigate_to_views_page[chromium]": {
+      "case_key": "vaZNzw",
+      "case_title": "Verify navigation to Views page",
+      "score": 1.0,
+      "module": "Views Integration",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprViewsIntegration::test_play_all_cameras[chromium]": {
+      "case_key": "bjX2Bj",
+      "case_title": "Verify the whole camera group plays onto the tiles",
+      "score": 1.0,
+      "module": "Views Integration",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprViewsIntegration::test_play_camera_by_location[chromium]": {
+      "case_key": "Z8Q24q",
+      "case_title": "Verify the configured camera plays from its site group",
+      "score": 1.0,
+      "module": "Views Integration",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_playback.py::TestLprViewsIntegration::test_safe_views_navigation_on_non_views_page[chromium]": {
+      "case_key": "RgQ24z",
+      "case_title": "Verify safe navigation to Views works from non-Views pages",
+      "score": 1.0,
+      "module": "Views Integration",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_views.py::TestLprViews::test_click_lpr_navigation[chromium]": {
+      "case_key": "dyX2Mp",
+      "case_title": "Navigate to LPR then to Views page and verify page loaded",
+      "score": 1.0,
+      "module": "LPR Views",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_views.py::TestLprViews::test_close_all_views_with_popup[chromium]": {
+      "case_key": "xmdKwa",
+      "case_title": "Close views down to the last one, which refuses with an alert",
+      "score": 1.0,
+      "module": "LPR Views",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_views.py::TestLprViews::test_create_multiple_views[chromium]": {
+      "case_key": "VKQ24L",
+      "case_title": "Create multiple view tabs by clicking view plus button",
+      "score": 1.0,
+      "module": "LPR Views",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_widgets.py::TestLprWidgets::test_create_new_insight_widget[chromium]": {
+      "case_key": "J890gj",
+      "case_title": "Create an LPR insight widget with the shared Insights flow",
+      "score": 1.0,
+      "module": "LPR Widgets",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_widgets.py::TestLprWidgets::test_select_widget_checkbox[chromium]": {
+      "case_key": "Pg921v",
+      "case_title": "Place a widget on the LPR page by dragging its card to a tile",
+      "score": 1.0,
+      "module": "LPR Widgets",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_lpr_widgets.py::TestLprWidgets::test_verify_widget_in_lpr_dropdown[chromium]": {
+      "case_key": "68DmyP",
+      "case_title": "A created LPR widget appears in the camera page Widgets panel",
+      "score": 1.0,
+      "module": "LPR Widgets",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
     }
   }
 }

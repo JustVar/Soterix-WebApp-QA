@@ -414,9 +414,11 @@ def build_row(info: TestInfo, parsed: ParsedDoc, today: str) -> dict[str, str]:
     splitter reads them as a per-step vector."""
     steps = '\n'.join(f'Step {i}: {s.text}' for i, s in enumerate(parsed.steps, 1))
     expected = '\n'.join(s.expected or '-' for s in parsed.steps)
-    tags = ['automated', 'playwright', info.area]
-    if info.skipped:
-        tags.append('skipped-in-suite')
+    # an existing label only: the import endpoint fails a row that carries
+    # a label the project has never seen (measured 09/14/2026, docs/
+    # QA_TOUCH_INTEGRATION.md); Mode=Automation is the automation marker
+    tags = ['regression']
+    skipped_note = ' (skipped in the suite)' if info.skipped else ''
     if info.parametrized:
         test_data = ', '.join(info.param_ids) if info.param_ids \
             else 'parametrized (ids not readable statically)'
@@ -433,7 +435,7 @@ def build_row(info: TestInfo, parsed: ParsedDoc, today: str) -> dict[str, str]:
         'Expected_result': expected,
         'Test Suite': '',
         'Tags': ';'.join(t for t in tags if t),
-        'Description': f'Generated from {info.nodeid} on {today}',
+        'Description': f'Generated from {info.nodeid} on {today}{skipped_note}',
         'Type': TYPE,
         'Priority': PRIORITY,
         'Mode': MODE,

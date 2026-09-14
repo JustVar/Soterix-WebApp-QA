@@ -209,7 +209,7 @@ def test_row_has_every_column_and_reference_is_nodeid(synthetic):
     assert row['Steps'] == 'Step 1: Create the widget. Repeat for each graph and category.'
     assert row['Expected_result'] == 'The widget is listed.'
     assert row['Test Data'] == 'Line_Person, Bar_Event'
-    assert row['Tags'] == 'automated;playwright;thing'
+    assert row['Tags'] == 'regression'
     assert row['Type'] == 'Regression'
     assert row['Priority'] == 'Medium'
     assert row['Mode'] == 'Automation'
@@ -219,13 +219,15 @@ def test_row_has_every_column_and_reference_is_nodeid(synthetic):
 
 
 def test_row_pads_expected_and_tags_skipped(synthetic):
-    """Expected_result holds one line per step, "-" where a step has none,
-    and a skipped test carries the skipped-in-suite tag."""
+    """Expected_result holds one line per step, "-" where a step has none;
+    the tag is a label the project has, and a skipped test says so in its
+    description (a tag the project lacks fails the import, measured 09/14/2026)."""
     root, path = synthetic
     found = gen.scan_file(path, root)
     held = found['tests/ui/thing/test_thing.py::TestThing::test_held']
     row = gen.build_row(held, gen.parse_docstring(held.docstring, held.nodeid), '2026-08-25')
-    assert row['Tags'] == 'automated;playwright;thing;skipped-in-suite'
+    assert row['Tags'] == 'regression'
+    assert row['Description'].endswith('(skipped in the suite)')
     assert row['Test Data'] == 'N/A'
     parsed = gen.parse_docstring(DOC_WITH_STEPS, 'tests/ui/views/test_v.py::TestV::test_star')
     row = gen.build_row(found['tests/ui/thing/test_thing.py::test_plain'], parsed, '2026-08-25')
@@ -259,7 +261,7 @@ def test_csv_round_trips_through_the_importer(synthetic, tmp_path):
     assert first['reference'] == info.nodeid
     assert first['steps'] == 'Step 1: Do the thing.'
     assert first['expected_result'] == 'The thing is done.'
-    assert first['tags'] == 'automated;playwright;thing'
+    assert first['tags'] == 'regression'
 
 
 def test_generate_lists_needs_steps_and_writes_both_files(synthetic, tmp_path, monkeypatch):

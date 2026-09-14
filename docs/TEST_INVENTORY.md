@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 8 | 33 | 33 | 33 |
-| NexaiQ-Core | 13 | 52 | 402 | 282 | 348 |
-| **Total** | | **60** | **435** | **315** | **381** |
+| NexaiQ-Core | 13 | 52 | 402 | 282 | 402 |
+| **Total** | | **60** | **435** | **315** | **435** |
 
 ## Growth
 
@@ -166,60 +166,60 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_users.py::TestAdminUsers::test_search_user` | Verify the search input filters users by name | - | xm9dWa |
 | `test_admin_users.py::TestAdminUsers::test_select_role_filter` | Verify selecting a role from the filter dropdown works | - | vanZWz |
 | `test_admin_users.py::TestAdminUsers::test_toggle_user_status` | Verify the active/suspended toggle switch works | - | B86EyN |
-| `test_lpr_camera_selection.py::TestLprCameraSelection::test_drag_drop_camera_to_grid` | Dragging the group onto a tile starts its cameras | yes | - |
-| `test_lpr_camera_selection.py::TestLprCameraSelection::test_hover_and_select_single_camera` | A camera row's hover checkbox starts that camera | yes | - |
-| `test_lpr_camera_selection.py::TestLprCameraSelection::test_select_multi_camera_by_site` | The group row's hover checkbox starts the group's cameras | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_details_panel` | The clip player exposes the event's action controls | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_filter_by_type` | The feed filter opens with camera and duration options | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_list_visibility` | The live feed lists at least one event card | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_navigation_next_prev` | The seek controls act on the open clip without breaking it | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_scrubber_control` | The clip player shows its timeline readout and seek controls | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_selection_play_pause_scrubber` | Selecting an event opens its clip player, and close ends it | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_timestamp_verification` | Event cards carry a full time-and-date stamp | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_fullscreen_event_playback` | Fullscreen engages and releases on the clip player | yes | - |
-| `test_lpr_events.py::TestLprEventPlayback::test_lpr_playback_speed_control` | Speed control on the clip player (absent in the current UI) | yes | - |
-| `test_lpr_grid_and_timer.py::TestLprGridLayout::test_select_grid_layouts` | Each layout button shows its tile count and active state | yes | - |
-| `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_after_page_refresh` | The popup reopens with a value after a reload | yes | - |
-| `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_cancel_button` | Cancel closes the popup without saving | yes | - |
-| `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_dropdown_values` | The duration dropdown offers the preset values | yes | - |
-| `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_popup_validation` | The popup opens over a playing stream and closes on Cancel | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_categories_page_already_on_categories` | Verify clicking the Categories tab while Categories is open keeps it open | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_categories_page_navigation` | Verify navigation to Categories page | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_ensure_lpr_page_already_on_lists` | Verify clicking LPR while the Lists page is open keeps it open | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_filter_panel_navigation` | Verify opening and closing filter panel on Plate page | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_navigate_back_to_lists_from_categories` | Verify navigation back to Lists page from Categories via List tab | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_navigate_from_search_results_to_lists` | Verify navigation from Search Results back to Lists via breadcrumb | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_navigate_to_lpr_main_page` | Verify navigation to Admin > LPR Lists page | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_no_search_results_view_before_a_filter` | Verify the Lists page shows no Search Results view before a filter is applied | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_open_plate_page_from_lists` | Verify opening Plate page by clicking View icon on a list | yes | - |
-| `test_lpr_operations.py::TestLprFilterOperations::test_apply_filter_shows_search_results` | Verify applying a filter shows Search Results view | yes | - |
-| `test_lpr_operations.py::TestLprFilterOperations::test_filter_panel_toggle` | Verify filter panel can be opened and closed | yes | - |
-| `test_lpr_operations.py::TestLprFilterOperations::test_reset_filter_returns_to_plate` | Verify resetting filter returns to Plate page | yes | - |
-| `test_lpr_operations.py::TestLprListOperations::test_click_admin_and_access_lpr` | Verify navigation to Admin page and LPR menu visibility | yes | - |
-| `test_lpr_operations.py::TestLprListOperations::test_create_lpr_list` | Create a new LPR list with valid data | yes | - |
-| `test_lpr_operations.py::TestLprListOperations::test_list_actions_visible` | Verify View, Edit, and Delete actions are available for lists | yes | - |
-| `test_lpr_operations.py::TestLprListOperations::test_list_status_toggle` | Verify list status toggle is present and interactive | yes | - |
-| `test_lpr_operations.py::TestLprListOperations::test_lpr_page_ui_elements` | Verify LPR page UI elements are present | yes | - |
-| `test_lpr_operations.py::TestLprListOperations::test_open_list_and_verify_plate_page` | Open a list and verify plate page UI | yes | - |
-| `test_lpr_operations.py::TestLprListOperations::test_search_lpr_list_by_name` | Search for LPR list by name | yes | - |
-| `test_lpr_playback.py::TestLprCameraPlayback::test_camera_tile_activation` | Play the configured camera, then activate its tile | yes | - |
-| `test_lpr_playback.py::TestLprCameraPlayback::test_dismiss_backdrop` | Verify backdrop dismissal leaves no click-blocking overlay | yes | - |
-| `test_lpr_playback.py::TestLprCameraPlayback::test_navigate_to_lpr_camera_page` | Navigate to LPR camera/playback page | yes | - |
-| `test_lpr_playback.py::TestLprCameraPlayback::test_open_locations_dropdown` | Verify Locations & Cameras dropdown opens and lists the site | yes | - |
-| `test_lpr_playback.py::TestLprCameraPlayback::test_open_lpr_playback_timeout_popup` | Verify the LPR timeout popup opens and closes cleanly | yes | - |
-| `test_lpr_playback.py::TestLprCameraPlayback::test_open_playback_timeout_popup` | Verify the timeout popup opens for a playing LPR stream | yes | - |
-| `test_lpr_playback.py::TestLprCameraPlayback::test_safe_reset_to_views` | Verify safe reset lands on the Views page | yes | - |
-| `test_lpr_playback.py::TestLprCameraPlayback::test_wait_for_site_list_loading` | Verify site list loads correctly | yes | - |
-| `test_lpr_playback.py::TestLprViewsIntegration::test_navigate_to_views_page` | Verify navigation to Views page | yes | - |
-| `test_lpr_playback.py::TestLprViewsIntegration::test_play_all_cameras` | Verify the whole camera group plays onto the tiles | yes | - |
-| `test_lpr_playback.py::TestLprViewsIntegration::test_play_camera_by_location` | Verify the configured camera plays from its site group | yes | - |
-| `test_lpr_playback.py::TestLprViewsIntegration::test_safe_views_navigation_on_non_views_page` | Verify safe navigation to Views works from non-Views pages | yes | - |
-| `test_lpr_views.py::TestLprViews::test_click_lpr_navigation` | Navigate to LPR then to Views page and verify page loaded | yes | - |
-| `test_lpr_views.py::TestLprViews::test_close_all_views_with_popup` | Close views down to the last one, which refuses with an alert | yes | - |
-| `test_lpr_views.py::TestLprViews::test_create_multiple_views` | Create multiple view tabs by clicking view plus button | yes | - |
-| `test_lpr_widgets.py::TestLprWidgets::test_create_new_insight_widget` | Create an LPR insight widget with the shared Insights flow | yes | - |
-| `test_lpr_widgets.py::TestLprWidgets::test_select_widget_checkbox` | Place a widget on the LPR page by dragging its card to a tile | yes | - |
-| `test_lpr_widgets.py::TestLprWidgets::test_verify_widget_in_lpr_dropdown` | A created LPR widget appears in the camera page Widgets panel | yes | - |
+| `test_lpr_camera_selection.py::TestLprCameraSelection::test_drag_drop_camera_to_grid` | Dragging the group onto a tile starts its cameras | yes | qzMNZe |
+| `test_lpr_camera_selection.py::TestLprCameraSelection::test_hover_and_select_single_camera` | A camera row's hover checkbox starts that camera | yes | XGQ2lG |
+| `test_lpr_camera_selection.py::TestLprCameraSelection::test_select_multi_camera_by_site` | The group row's hover checkbox starts the group's cameras | yes | 3gBXnz |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_details_panel` | The clip player exposes the event's action controls | yes | zvVN9P |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_filter_by_type` | The feed filter opens with camera and duration options | yes | mBXQWd |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_list_visibility` | The live feed lists at least one event card | yes | n8QNe3 |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_navigation_next_prev` | The seek controls act on the open clip without breaking it | yes | gQXNy3 |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_scrubber_control` | The clip player shows its timeline readout and seek controls | yes | Gd9Laj |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_selection_play_pause_scrubber` | Selecting an event opens its clip player, and close ends it | yes | Ee95aV |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_event_timestamp_verification` | Event cards carry a full time-and-date stamp | yes | lRlNMQ |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_fullscreen_event_playback` | Fullscreen engages and releases on the clip player | yes | rGDNRe |
+| `test_lpr_events.py::TestLprEventPlayback::test_lpr_playback_speed_control` | Speed control on the clip player (absent in the current UI) | yes | Nj9paL |
+| `test_lpr_grid_and_timer.py::TestLprGridLayout::test_select_grid_layouts` | Each layout button shows its tile count and active state | yes | K49paV |
+| `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_after_page_refresh` | The popup reopens with a value after a reload | yes | jPp0BZ |
+| `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_cancel_button` | Cancel closes the popup without saving | yes | 4183n8 |
+| `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_dropdown_values` | The duration dropdown offers the preset values | yes | pD8Nbm |
+| `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_popup_validation` | The popup opens over a playing stream and closes on Cancel | yes | LDXpa1 |
+| `test_lpr_navigation.py::TestLprNavigation::test_categories_page_already_on_categories` | Verify clicking the Categories tab while Categories is open keeps it open | yes | wmRNP3 |
+| `test_lpr_navigation.py::TestLprNavigation::test_categories_page_navigation` | Verify navigation to Categories page | yes | yaxN70 |
+| `test_lpr_navigation.py::TestLprNavigation::test_ensure_lpr_page_already_on_lists` | Verify clicking LPR while the Lists page is open keeps it open | yes | 0rJ7nn |
+| `test_lpr_navigation.py::TestLprNavigation::test_filter_panel_navigation` | Verify opening and closing filter panel on Plate page | yes | kpX28d |
+| `test_lpr_navigation.py::TestLprNavigation::test_navigate_back_to_lists_from_categories` | Verify navigation back to Lists page from Categories via List tab | yes | 11P9wa |
+| `test_lpr_navigation.py::TestLprNavigation::test_navigate_from_search_results_to_lists` | Verify navigation from Search Results back to Lists via breadcrumb | yes | 5BMWnW |
+| `test_lpr_navigation.py::TestLprNavigation::test_navigate_to_lpr_main_page` | Verify navigation to Admin > LPR Lists page | yes | 21WqnN |
+| `test_lpr_navigation.py::TestLprNavigation::test_no_search_results_view_before_a_filter` | Verify the Lists page shows no Search Results view before a filter is applied | yes | ajy2kD |
+| `test_lpr_navigation.py::TestLprNavigation::test_open_plate_page_from_lists` | Verify opening Plate page by clicking View icon on a list | yes | QGQ2am |
+| `test_lpr_operations.py::TestLprFilterOperations::test_apply_filter_shows_search_results` | Verify applying a filter shows Search Results view | yes | WEQ2wN |
+| `test_lpr_operations.py::TestLprFilterOperations::test_filter_panel_toggle` | Verify filter panel can be opened and closed | yes | B89kay |
+| `test_lpr_operations.py::TestLprFilterOperations::test_reset_filter_returns_to_plate` | Verify resetting filter returns to Plate page | yes | 8VvpWk |
+| `test_lpr_operations.py::TestLprListOperations::test_click_admin_and_access_lpr` | Verify navigation to Admin page and LPR menu visibility | yes | M7wpax |
+| `test_lpr_operations.py::TestLprListOperations::test_create_lpr_list` | Create a new LPR list with valid data | yes | Dr9pan |
+| `test_lpr_operations.py::TestLprListOperations::test_list_actions_visible` | Verify View, Edit, and Delete actions are available for lists | yes | eJX2lP |
+| `test_lpr_operations.py::TestLprListOperations::test_list_status_toggle` | Verify list status toggle is present and interactive | yes | vaZNJy |
+| `test_lpr_operations.py::TestLprListOperations::test_lpr_page_ui_elements` | Verify LPR page UI elements are present | yes | bjX2LD |
+| `test_lpr_operations.py::TestLprListOperations::test_open_list_and_verify_plate_page` | Open a list and verify plate page UI | yes | Z8Q2lz |
+| `test_lpr_operations.py::TestLprListOperations::test_search_lpr_list_by_name` | Search for LPR list by name | yes | RgQ2ae |
+| `test_lpr_playback.py::TestLprCameraPlayback::test_camera_tile_activation` | Play the configured camera, then activate its tile | yes | dyX2rK |
+| `test_lpr_playback.py::TestLprCameraPlayback::test_dismiss_backdrop` | Verify backdrop dismissal leaves no click-blocking overlay | yes | xmdK6L |
+| `test_lpr_playback.py::TestLprCameraPlayback::test_navigate_to_lpr_camera_page` | Navigate to LPR camera/playback page | yes | VKQ2lx |
+| `test_lpr_playback.py::TestLprCameraPlayback::test_open_locations_dropdown` | Verify Locations & Cameras dropdown opens and lists the site | yes | B89kaQ |
+| `test_lpr_playback.py::TestLprCameraPlayback::test_open_lpr_playback_timeout_popup` | Verify the LPR timeout popup opens and closes cleanly | yes | 8VvpW4 |
+| `test_lpr_playback.py::TestLprCameraPlayback::test_open_playback_timeout_popup` | Verify the timeout popup opens for a playing LPR stream | yes | M7wpa1 |
+| `test_lpr_playback.py::TestLprCameraPlayback::test_safe_reset_to_views` | Verify safe reset lands on the Views page | yes | Dr9paZ |
+| `test_lpr_playback.py::TestLprCameraPlayback::test_wait_for_site_list_loading` | Verify site list loads correctly | yes | eJX2D8 |
+| `test_lpr_playback.py::TestLprViewsIntegration::test_navigate_to_views_page` | Verify navigation to Views page | yes | vaZNzw |
+| `test_lpr_playback.py::TestLprViewsIntegration::test_play_all_cameras` | Verify the whole camera group plays onto the tiles | yes | bjX2Bj |
+| `test_lpr_playback.py::TestLprViewsIntegration::test_play_camera_by_location` | Verify the configured camera plays from its site group | yes | Z8Q24q |
+| `test_lpr_playback.py::TestLprViewsIntegration::test_safe_views_navigation_on_non_views_page` | Verify safe navigation to Views works from non-Views pages | yes | RgQ24z |
+| `test_lpr_views.py::TestLprViews::test_click_lpr_navigation` | Navigate to LPR then to Views page and verify page loaded | yes | dyX2Mp |
+| `test_lpr_views.py::TestLprViews::test_close_all_views_with_popup` | Close views down to the last one, which refuses with an alert | yes | xmdKwa |
+| `test_lpr_views.py::TestLprViews::test_create_multiple_views` | Create multiple view tabs by clicking view plus button | yes | VKQ24L |
+| `test_lpr_widgets.py::TestLprWidgets::test_create_new_insight_widget` | Create an LPR insight widget with the shared Insights flow | yes | J890gj |
+| `test_lpr_widgets.py::TestLprWidgets::test_select_widget_checkbox` | Place a widget on the LPR page by dragging its card to a tile | yes | Pg921v |
+| `test_lpr_widgets.py::TestLprWidgets::test_verify_widget_in_lpr_dropdown` | A created LPR widget appears in the camera page Widgets panel | yes | 68DmyP |
 
 ### chats (17 tests in 2 files)
 

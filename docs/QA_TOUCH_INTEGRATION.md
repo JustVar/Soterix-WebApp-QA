@@ -160,6 +160,15 @@ weeks. Used only for what the public API cannot do.
   or update endpoint. The one exception is creation: a `tags` column in the CSV
   import sets tags on a new case (see below). Changing the tags on a case that
   already exists needs this browser endpoint.
+- **A tag the project has never seen fails the whole row.** Measured
+  09/14/2026 on JlW1: 54 rows tagged `automated;playwright;admin` all
+  failed with the server's own error (`label`, Eloquent Model.php:232),
+  and nothing was created; the same rows with the Tags column blank, or
+  with the existing tag `regression`, imported. The project's labels were
+  regression, smoke, sanity and future. So the generator tags new cases
+  with an existing label only; a new label has to be created once in the
+  QA Touch UI before the API will accept it. The Mode column, not a tag,
+  marks a case as automation.
 
 ### Result status codes
 
