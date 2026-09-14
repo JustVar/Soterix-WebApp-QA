@@ -179,6 +179,8 @@ class TestChats:
         self._open_partner_conversation()
 
         stamp = datetime.datetime.now().strftime("%H%M%S")
+        # oracle: send_message raises unless the sent text renders in the
+        # thread; the run-unique text keeps it from matching an older message
         self.chat.send_message(f"Individual chat check {stamp}")
 
     @pytest.mark.ui
