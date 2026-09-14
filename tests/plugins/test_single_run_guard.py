@@ -1,4 +1,4 @@
-﻿"""Unit tests for plugins/single_run_guard.py.
+"""Unit tests for plugins/single_run_guard.py.
 
 The full decision matrix (free / held-by-live / held-by-stale / re-entrant /
 collect-only / xdist worker / kill switch), the blocked message, and the

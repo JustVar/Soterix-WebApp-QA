@@ -98,7 +98,7 @@ The raw pytest forms below do the same work without the wrapper:
 venv\Scripts\python.exe -m pytest tests/ui/views                 # one module
 venv\Scripts\python.exe -m pytest tests/ui/views/test_views_basic.py
 venv\Scripts\python.exe -m pytest "tests/ui/views/test_views_basic.py::TestViewsBasic::test_open_my_views[chromium]"
-venv\Scripts\python.exe -m pytest -m smoke                        # by marker (65 in pytest.ini)
+venv\Scripts\python.exe -m pytest -m smoke                        # by marker (110 collected 09/14/2026)
 venv\Scripts\python.exe -m pytest -m dragdrop tests/ui/views      # marker inside a module
 venv\Scripts\python.exe -m pytest -k "bookmark"                   # by name pattern
 venv\Scripts\python.exe -m pytest tests/ui/views --headed         # watch the browser

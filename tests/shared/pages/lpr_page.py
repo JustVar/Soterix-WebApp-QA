@@ -1,4 +1,4 @@
-﻿"""LPR (License Plate Recognition) Page Object Model."""
+"""LPR (License Plate Recognition) Page Object Model."""
 import re
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
