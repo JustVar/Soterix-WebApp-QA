@@ -32,8 +32,12 @@
 #                 areas shows on EVENTS > MOTION out of the box
 #   rtsp_identifier: the Identifier on NETWORK > RTSP INFORMATION, which
 #                 a multi-lens unit suffixes per lens (channel1_1)
+#   sd_cards: SD card slots on RECORD > STORAGE; RECORD > MANAGEMENT lists
+#                 two recorded devices per card, RECORDn on card (n mod
+#                 slots) + 1 (measured 09/14/2026 on .137 and .135)
 models:
   DC-5V-1:
+    sd_cards: 1
     menu_entries: [SMART STREAM, CONFIGURATION BACKUP, CORRIDOR SETTING, RULES, CONNECT]
     live_view_controls: [Zoom, Focus, Auto focus]
     live_view_buttons: [Focus, Calibrate]
@@ -42,6 +46,7 @@ models:
     image_enhancement_controls: [3D noise reduction, LDC, Mirror, Flip]
     rtsp_identifier: channel1
   BC-5V-1:
+    sd_cards: 1
     menu_entries: [SMART STREAM, CONFIGURATION BACKUP, CORRIDOR SETTING, CONNECT]
     live_view_controls: [Zoom, Focus, Auto focus]
     live_view_buttons: [Focus, Calibrate]
@@ -50,6 +55,7 @@ models:
     image_enhancement_controls: [3D noise reduction, LDC, Mirror, Flip]
     rtsp_identifier: channel1
   BC-5M-1:
+    sd_cards: 1
     menu_entries: [SMART STREAM, CONFIGURATION BACKUP, CORRIDOR SETTING, RULES, CONNECT]
     live_view_controls: [Zoom, Focus, Auto focus]
     live_view_buttons: [Focus, Calibrate]
@@ -58,6 +64,7 @@ models:
     image_enhancement_controls: [3D noise reduction, LDC, Mirror, Flip]
     rtsp_identifier: channel1
   FC-12F-1:
+    sd_cards: 1
     menu_entries: [SMART STREAM, CONFIGURATION BACKUP, CONNECT]
     live_view_controls: [Zoom, IRIS, Focus]
     live_view_buttons: []
@@ -66,6 +73,7 @@ models:
     image_enhancement_controls: [3D noise reduction]
     rtsp_identifier: channel1
   MS-20V-1:
+    sd_cards: 4
     menu_entries: [CORRIDOR SETTING, RULES, CONNECT]
     live_view_controls: [Zoom, Focus, Auto focus]
     live_view_buttons: [Focus, Calibrate]

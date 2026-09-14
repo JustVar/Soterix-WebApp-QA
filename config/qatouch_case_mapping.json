@@ -2,7 +2,7 @@
   "version": 1,
   "project_key": "JlW1",
   "total_playwright_tests": 352,
-  "total_mapped": 410,
+  "total_mapped": 411,
   "mappings": {
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_admin_sidebar_tabs_visible[chromium]": {
       "case_key": "VKbBPP",
@@ -3402,6 +3402,15 @@
       "auto_matched": false,
       "reviewed": true,
       "source": "generated"
+    },
+    "tests/c2c/test_c2c_record.py::TestC2CRecord::test_record_management_and_sd_card_status": {
+      "case_key": "jP1VGa",
+      "case_title": "Verify recording management and SD card status",
+      "score": 1.0,
+      "module": "Recording",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "title-match 2026-09-14 (existing Camera 2 Cloud case TR0022)"
     }
   }
 }

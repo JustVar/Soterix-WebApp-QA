@@ -12,9 +12,9 @@ browser parameter.
 
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
-| NexaiQ-Camera 2 Cloud | 1 | 7 | 32 | 32 | 32 |
+| NexaiQ-Camera 2 Cloud | 1 | 8 | 33 | 33 | 33 |
 | NexaiQ-Core | 13 | 52 | 405 | 285 | 348 |
-| **Total** | | **59** | **437** | **317** | **380** |
+| **Total** | | **60** | **438** | **318** | **381** |
 
 ## Growth
 
@@ -71,7 +71,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 
 ## NexaiQ-Camera 2 Cloud
 
-### c2c (32 tests in 7 files)
+### c2c (33 tests in 8 files)
 
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
@@ -95,6 +95,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_c2c_plugins.py::TestC2CSoterixCloud::test_cloud_connect_registered` | Verify camera is registered to Soterix staging cloud | yes | lRaP3e |
 | `test_c2c_plugins.py::TestC2CVCA::test_vca_enabled_with_correct_tracker` | Verify VCA is enabled with DL Object Tracker + Intrusion Detection | yes | Gdjxrr |
 | `test_c2c_plugins.py::TestC2CVCA::test_vca_rules_and_license` | Verify VCA has active rules and valid ProAI license | yes | EeLRZ6 |
+| `test_c2c_record.py::TestC2CRecord::test_record_management_and_sd_card_status` | Verify recording management and SD card status | yes | jP1VGa |
 | `test_c2c_system.py::TestC2CPlugins::test_plugin_storage_within_limits` | Verify plugin storage usage is below 90% | yes | 68prdv |
 | `test_c2c_system.py::TestC2CPlugins::test_plugins_installed_and_running` | Verify both SOTERIX and VCAedge-AI plugins are installed and running | yes | Pgp3nd |
 | `test_c2c_system.py::TestC2CSystemInfo::test_device_name_and_location_editable` | Verify device name and location are editable and persist | yes | J8jPJp |

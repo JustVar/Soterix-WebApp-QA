@@ -2,6 +2,6 @@
   "comment": "Lowest acceptable collected-test count per suite. Higher is always fine. Lower needs a reason in the commit message. See soterix_qa_shared.gates.collect_floor.",
   "suites": {
     "offline suites": 447,
-    "whole repo": 1202
+    "whole repo": 1212
   }
 }
