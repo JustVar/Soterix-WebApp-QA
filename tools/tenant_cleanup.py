@@ -12,11 +12,18 @@ Targets ONLY names the suite itself creates (docs/TEST_REPAIRS.md row 7):
     matters more than tidiness.
   - chat groups named "AutoGroup_<stamp>" (the chats tests' own names;
     US box only - india has no group feature)
+  - bookmarks on the configured site that the ACCOUNT ITSELF made and
+    that carry a name the suite gives: the app's default "New Bookmark",
+    "AutoTest BM <stamp>", "DEL_<stamp>", "Test bookmark". Read and
+    deleted over the internal API (a delete is soft: the row stays with
+    deletedAt set). Another user's bookmarks are listed and left alone,
+    whatever their name.
 
 Anything else on the tenant is somebody's real data and is never touched.
 
     python tools/tenant_cleanup.py            # dry run: list what would go
     python tools/tenant_cleanup.py --apply    # delete it
+    python tools/tenant_cleanup.py --only bookmarks --apply   # one step
 
 Channels (Admin > Integrations > Channels) are a separate errand: they
 are never matched by pattern, only by the exact names passed on the
@@ -47,6 +54,7 @@ import contextlib
 import os
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -57,6 +65,7 @@ from dotenv import load_dotenv  # noqa: E402
 load_dotenv(ROOT / '.env')
 
 from playwright.sync_api import Error as PlaywrightError, sync_playwright  # noqa: E402
+from requests import RequestException  # noqa: E402
 
 from config.base_config import config, get_credentials  # noqa: E402
 
@@ -80,6 +89,14 @@ GROUP_PATTERN = re.compile(r'^AutoGroup_\d+$')
 # first rows that made Create Link, Share and Export answer 'Empty
 # folder' in the 09/11/2026 full run.
 FOLDER_PATTERN = re.compile(r'^Folder_\d+$')
+# Bookmarks: the suite creates them with the app's default name and
+# renames or deletes its own in-test; what survives a dead run is a
+# default-named row on the test camera, owned by the automation account
+# (US measured 09/14/2026: three, all test-auto-qa's). The owner check
+# is what keeps a real user's "New Bookmark" safe; on india the account
+# is a real user's, so the dry run is the place to read the list.
+STEPS = ('groups', 'rules', 'chats', 'folders', 'bookmarks', 'users')
+BOOKMARK_PATTERN = re.compile(r'^(New Bookmark|AutoTest BM \d+|DEL_\d+|Test bookmark)$')
 
 # A channel card is the grid item around its three-dots icon; the name
 # is its p.textEllipsis and the url its p.lineClampTwoLine (probed
@@ -388,6 +405,72 @@ def _groups_step(page, apply: bool) -> list[str]:
     return groups
 
 
+def is_automation_bookmark(comment: str | None) -> bool:
+    return bool(BOOKMARK_PATTERN.match(comment or ''))
+
+
+def bookmark_candidates(rows: list[dict], owner: str) -> tuple[list[dict], list[dict]]:
+    """Split a site's bookmark rows into (the automation's, everyone else's live rows).
+
+    A row is the automation's when it is live (deletedAt -1), the logged-in
+    account made it (userId is the account's e-mail) and its comment is a
+    name the suite gives. Soft-deleted rows are dropped from both lists.
+    """
+    live = [r for r in rows if (r.get('deletedAt') if r.get('deletedAt') is not None else -1) <= 0]
+    mine = [r for r in live if r.get('userId') == owner and is_automation_bookmark(r.get('comment'))]
+    others = [r for r in live if r not in mine]
+    return mine, others
+
+
+def _bookmark_line(row: dict) -> str:
+    created = row.get('createdTime') or 0
+    stamp = datetime.fromtimestamp(created / 1000).strftime('%m/%d %H:%M') if created else '?'
+    return f"{row.get('bookmarkId')} {stamp} camera {row.get('cameraId')} {row.get('userId')} {row.get('comment')!r}"
+
+
+def _bookmarks_step(apply: bool) -> list[str]:
+    """Bookmarks on the configured site, over the internal API.
+
+    No browser: GET /REST/clipbookmark/{siteId} lists every row, live and
+    soft-deleted, and DELETE /REST/clipbookmark/{id} soft-deletes one.
+    A row still live after the delete is reported, not assumed gone.
+    """
+    from tests.shared.api.client import ApiError, InternalApi
+    user, password = active_account()
+    try:
+        site_id = get_credentials().get('site_id')
+    except (KeyError, RuntimeError):
+        site_id = None
+    site_id = site_id or os.environ.get('TEST_SITE_ID')
+    if not site_id:
+        print('Bookmarks: skipped, no site id for this box (site_id in config/env/ or TEST_SITE_ID)')
+        return []
+    api = InternalApi(config['base_url'], site_id)
+    try:
+        api.login(user, password)
+        rows = api.get(f'/REST/clipbookmark/{api.site_id}')
+    except (ApiError, RequestException) as e:
+        print(f'Bookmarks: skipped, the internal API did not answer: {e}')
+        return []
+    mine, others = bookmark_candidates(rows, user)
+    print(f'Bookmarks on site {api.site_id}: {len(mine)} automation leftover(s), '
+          f'{len(others)} other live row(s) left alone:')
+    for row in mine:
+        print(f'  bookmark  {_bookmark_line(row)}')
+    for row in others:
+        print(f'  (left)    {_bookmark_line(row)}')
+    if apply and mine:
+        for row in mine:
+            try:
+                api.delete(f"/REST/clipbookmark/{row['bookmarkId']}")
+                print(f"  deleted  {row.get('bookmarkId')} {row.get('comment')!r}")
+            except (ApiError, RequestException) as e:
+                print(f"  REFUSED  {row.get('bookmarkId')}: {e}")
+        still, _ = bookmark_candidates(api.get(f'/REST/clipbookmark/{api.site_id}'), user)
+        print(f'  remaining automation bookmarks: {len(still)}')
+    return [str(row.get('comment')) for row in mine]
+
+
 def is_automation_folder(name: str) -> bool:
     return bool(FOLDER_PATTERN.match(name))
 
@@ -458,7 +541,18 @@ def main() -> int:
                         metavar='NAME',
                         help='delete the channel with exactly this name '
                              '(repeatable); the run does only the channels step')
+    parser.add_argument('--only', action='append', default=[], choices=STEPS,
+                        metavar='STEP',
+                        help=f"run only this step (repeatable): {', '.join(STEPS)}")
     args = parser.parse_args()
+    wanted = set(args.only or STEPS)
+
+    if wanted == {'bookmarks'}:
+        # the API step needs no browser
+        bookmarks = _bookmarks_step(args.apply)
+        if not args.apply and bookmarks:
+            print('\nDry run - nothing deleted. Re-run with --apply to delete the above.')
+        return 0
 
     from tests.shared.pages.admin_page import AdminPage
 
@@ -475,46 +569,64 @@ def main() -> int:
                 print('\nDry run - nothing deleted. Re-run with --apply to delete.')
             return 0
 
-        # --- groups ---
-        admin.navigate_to_admin()
-        admin.navigate_to_sites()
-        site = _open_configured_site(page, admin)
-        admin.open_groups_dropdown()
-        all_groups = page.evaluate(GROUP_NAMES_JS)
-        groups = _group_candidates(page)
-        print(f'Site "{site}": {len(all_groups)} group(s) listed, '
-              f'{len(groups)} automation leftover(s):')
-        for name in groups:
-            print(f'  group  {name}')
-        if args.apply:
-            for name in groups:
-                admin.open_groups_dropdown()
-                ok = admin.delete_camera_group_by_name(name)
-                print(f'  {"deleted" if ok else "NOT FOUND"}  {name}')
-            if groups:
-                admin.open_groups_dropdown()
-                left = _group_candidates(page)
-                print(f'  remaining automation groups: {len(left)}')
+        groups = rules = chat_groups = folders = bookmarks = users = []
 
-        # the Groups dropdown is a MUI menu whose invisible backdrop
-        # swallows clicks until it closes
-        page.keyboard.press('Escape')
-        page.locator('.MuiModal-backdrop').first.wait_for(state='hidden', timeout=5000)
+        # --- groups ---
+        if 'groups' in wanted:
+            admin.navigate_to_admin()
+            admin.navigate_to_sites()
+            site = _open_configured_site(page, admin)
+            admin.open_groups_dropdown()
+            all_groups = page.evaluate(GROUP_NAMES_JS)
+            groups = _group_candidates(page)
+            print(f'Site "{site}": {len(all_groups)} group(s) listed, '
+                  f'{len(groups)} automation leftover(s):')
+            for name in groups:
+                print(f'  group  {name}')
+            if args.apply:
+                for name in groups:
+                    admin.open_groups_dropdown()
+                    ok = admin.delete_camera_group_by_name(name)
+                    print(f'  {"deleted" if ok else "NOT FOUND"}  {name}')
+                if groups:
+                    admin.open_groups_dropdown()
+                    left = _group_candidates(page)
+                    print(f'  remaining automation groups: {len(left)}')
+
+            # the Groups dropdown is a MUI menu whose invisible backdrop
+            # swallows clicks until it closes
+            page.keyboard.press('Escape')
+            page.locator('.MuiModal-backdrop').first.wait_for(state='hidden', timeout=5000)
 
         # --- rules --- (before users: a leaked rule hides its camera from
         # the wizard and fails every later run, register item 28, while
         # the tenant refuses user deletes and that step must not abort
         # the ones that matter)
-        rules = _rules_step(page, admin, args.apply)
+        if 'rules' in wanted:
+            rules = _rules_step(page, admin, args.apply)
 
         # --- chat groups ---
-        chat_groups = _groups_step(page, args.apply)
+        if 'chats' in wanted:
+            chat_groups = _groups_step(page, args.apply)
 
         # --- media folders ---
-        folders = _folders_step(page, args.apply)
+        if 'folders' in wanted:
+            folders = _folders_step(page, args.apply)
+
+        # --- bookmarks --- (the API, not the page)
+        if 'bookmarks' in wanted:
+            bookmarks = _bookmarks_step(args.apply)
 
         # --- users ---
+        if 'users' not in wanted:
+            browser.close()
+            if not args.apply and (groups or rules or chat_groups or folders or bookmarks):
+                print('\nDry run - nothing deleted. Re-run with --apply to delete the above.')
+            return 0
         page.keyboard.press('Escape')
+        # the folders step leaves the page on Media; the Users tab is
+        # in the Admin sidebar (the run died here from 09/11 to 09/14)
+        admin.navigate_to_admin()
         admin.navigate_to_users()
         users = _user_candidates(page, admin)
         print(f'Users: {len(users)} automation leftover(s):')
@@ -535,7 +647,7 @@ def main() -> int:
 
         browser.close()
 
-    if not args.apply and (groups or users or rules or chat_groups or folders):
+    if not args.apply and (groups or users or rules or chat_groups or folders or bookmarks):
         print('\nDry run - nothing deleted. Re-run with --apply to delete the above.')
     return 0
 

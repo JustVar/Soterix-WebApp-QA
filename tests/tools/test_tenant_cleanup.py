@@ -115,3 +115,25 @@ def test_group_matcher_is_exact_on_the_suites_shape():
     assert tc.is_automation_group("AutoGroup_0941158049")
     for name in ("AutoGroup_", "AutoGroup_x", "Sales AutoGroup_1", "", None):
         assert not tc.is_automation_group(name), name
+
+
+def test_bookmark_matcher_accepts_the_suites_names_only():
+    """The app's default name and the suite's own three shapes; nothing else."""
+    for name in ('New Bookmark', 'AutoTest BM 101530', 'DEL_20260825145554', 'Test bookmark'):
+        assert tc.is_automation_bookmark(name) is True, name
+    for name in ('Grant walking by', 'Bookmark', 'New Bookmark 2', 'AutoTest BM', '', None):
+        assert tc.is_automation_bookmark(name) is False, name
+
+
+def test_bookmark_candidates_take_only_the_accounts_live_default_rows():
+    """Another user's 'New Bookmark' and a soft-deleted row are never candidates."""
+    rows = [
+        {'bookmarkId': 1, 'userId': 'auto@example.com', 'comment': 'New Bookmark', 'deletedAt': -1},
+        {'bookmarkId': 2, 'userId': 'auto@example.com', 'comment': 'DEL_1', 'deletedAt': 1750000000000},
+        {'bookmarkId': 3, 'userId': 'real@example.com', 'comment': 'New Bookmark', 'deletedAt': -1},
+        {'bookmarkId': 4, 'userId': 'auto@example.com', 'comment': 'Grant walking by', 'deletedAt': -1},
+        {'bookmarkId': 5, 'userId': 'auto@example.com', 'comment': 'AutoTest BM 1', 'deletedAt': None},
+    ]
+    mine, others = tc.bookmark_candidates(rows, 'auto@example.com')
+    assert [r['bookmarkId'] for r in mine] == [1, 5]
+    assert [r['bookmarkId'] for r in others] == [3, 4]
