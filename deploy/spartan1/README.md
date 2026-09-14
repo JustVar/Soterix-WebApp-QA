@@ -54,6 +54,18 @@ because it existed nowhere in git.
     the project does not support Chromium), a Windows VM with the GPU passed
     through. Until one of those is proven, the livestream tests run from a
     Windows or Mac Chrome.
+  - The better untried path (read 09/14/2026): the box's CPU is an
+    i7-14700, whose own Intel UHD 770 graphics carry a hardware HEVC
+    decoder, and no Intel display device is on the PCI bus, so it is
+    switched off in the BIOS. Chrome's Linux HEVC path is VA-API, and
+    Intel's driver is the mainstream one (the NVIDIA bridge above is a
+    community shim its project does not support for Chromium). To try:
+    enable the CPU graphics in the BIOS, `apt install
+    intel-media-va-driver-non-free`, check `vainfo` lists VAProfileHEVCMain
+    on the new render node (renderD129), then repeat the headed probe above
+    with `LIBVA_DRIVER_NAME=iHD` and without the NVIDIA feature flags. A
+    Windows VM under KVM (the box has /dev/kvm and 15 GB) with the HEVC
+    Video Extensions is the fallback that also needs no separate machine.
 - `/data/qa/ci/Soterix-WebApp-QA/.env` (mode 600) with the QA Touch keys
   and one account per box the nightly runs: `QA_INDIA_USER`,
   `QA_INDIA_PASSWORD`, `QA_US_USER`, `QA_US_PASSWORD`. The suite reads the
