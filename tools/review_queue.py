@@ -32,7 +32,7 @@ def generate_html_report(queue: dict[str, Any]) -> str:
     pending = [it for it in items if it.get("status", "pending") == "pending"]
     html = [
         "<html><head><meta charset='utf-8'><title>Review Queue</title></head><body>",
-        "<h1>Manual Review Queue &mdash; {}</h1>".format(datetime.utcnow().isoformat()),
+        f"<h1>Manual Review Queue &mdash; {datetime.utcnow().isoformat()}</h1>",
     ]
     if not pending:
         html.append("<p>No items pending review.</p>")
@@ -54,16 +54,16 @@ def generate_html_report(queue: dict[str, Any]) -> str:
             # artifact links (best-effort): look for logs/<nodeid>.png or .mp4
             safe_name = nodeid.replace('/', '_').replace(':', '_')
             imgs = []
-            img_path = os.path.join(ROOT, 'logs', "{}.png".format(safe_name))
-            vid_path = os.path.join(ROOT, 'logs', "{}.mp4".format(safe_name))
+            img_path = os.path.join(ROOT, 'logs', f"{safe_name}.png")
+            vid_path = os.path.join(ROOT, 'logs', f"{safe_name}.mp4")
             if os.path.exists(img_path):
-                imgs.append("<a href='file://{}'>screenshot</a>".format(img_path))
+                imgs.append(f"<a href='file://{img_path}'>screenshot</a>")
             if os.path.exists(vid_path):
-                imgs.append("<a href='file://{}'>video</a>".format(vid_path))
+                imgs.append(f"<a href='file://{vid_path}'>video</a>")
             artifacts = ', '.join(imgs) or 'n/a'
             html.append(
-                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-                "<td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(entry_id, nodeid, module, severity, score, reason, ts, artifacts)
+                f"<tr><td>{entry_id}</td><td>{nodeid}</td><td>{module}</td><td>{severity}</td>"
+                f"<td>{score}</td><td>{reason}</td><td>{ts}</td><td>{artifacts}</td></tr>"
             )
         html.append("</table>")
 

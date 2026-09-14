@@ -17,7 +17,7 @@ class LoginPage:
     ReCAPTCHA checkbox handler and robust submit button selection.
     """
 
-    def __init__(self, page: Page, base_url: Optional[str] = None):
+    def __init__(self, page: Page, base_url: str | None = None):
         """Initialize LoginPage.
 
         Args:
@@ -74,7 +74,7 @@ class LoginPage:
                 continue
         return None
 
-    def goto(self, base_url: Optional[str] = None, app_type: str = "customer"):
+    def goto(self, base_url: str | None = None, app_type: str = "customer"):
         """Navigate to the login page.
 
         Args:
@@ -269,7 +269,7 @@ class LoginPage:
             pass
         return False
 
-    def get_error_message(self) -> Optional[str]:
+    def get_error_message(self) -> str | None:
         """Return a visible error/validation message if present, otherwise None."""
         for s in self._error_selectors:
             try:
@@ -324,7 +324,7 @@ class LoginPage:
                 continue
         return False
 
-    def find_password_reset_link(self) -> Optional[str]:
+    def find_password_reset_link(self) -> str | None:
         """Find a 'Forgot password' or 'Reset' link on the login page.
 
         Returns the link text if found, None otherwise.

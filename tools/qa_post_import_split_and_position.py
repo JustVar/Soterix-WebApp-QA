@@ -470,7 +470,7 @@ def sync_case(
         time.sleep(inter_call_delay)
 
     # ---- Save N new rows ----
-    for i, (step_text, exp_text) in enumerate(zip(steps, expecteds), 1):
+    for i, (step_text, exp_text) in enumerate(zip(steps, expecteds, strict=False), 1):
         r = create_step(page, project_key, case_key, step_text, exp_text)
         if r.get("rateLimited"):
             print(f"    Rate limited at step {i}/{len(steps)} - sleeping {RATE_LIMIT_PAUSE}s")

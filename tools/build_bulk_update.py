@@ -127,7 +127,7 @@ def load_excel_rows():
             if not scenario:
                 continue
 
-            def _get(key):
+            def _get(key, row=row, cols=cols):  # bound per iteration, not at call time
                 idx = cols[key]
                 return str(row[idx]).strip() if idx < len(row) and row[idx] else ""
 

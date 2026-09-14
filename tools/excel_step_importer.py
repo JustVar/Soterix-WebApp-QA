@@ -99,7 +99,7 @@ def parse_excel(excel_path: Path) -> list[dict]:
 
         for row in ws.iter_rows(min_row=2):  # skip header
             # Safe extraction with bounds checking
-            def _get(key):
+            def _get(key, row=row, cols=cols):  # bound per iteration, not at call time
                 idx = cols[key]
                 if idx < len(row):
                     return _cell_str(row[idx])

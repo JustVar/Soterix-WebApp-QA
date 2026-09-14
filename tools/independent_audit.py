@@ -307,7 +307,7 @@ def verdict_element_visibility(case):
     # Should have a step that asserts visible
     has_visible_check = any(
         "visible" in a or "displayed" in a or "appear" in a or "is visible" in s.get("expected", "").lower()
-        for a, s in zip(step_actions, steps)
+        for a, s in zip(step_actions, steps, strict=False)
     )
     if not has_visible_check:
         problems.append("No explicit visibility assertion step")

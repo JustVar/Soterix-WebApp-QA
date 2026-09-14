@@ -360,7 +360,7 @@ def parse_merged_step(case_step_row: dict) -> tuple[list[tuple[str, str]], int]:
         last_exp = expected_text if expected_text and expected_text != "-" else DASH_FALLBACK
         expecteds = ["-"] * (len(steps) - 1) + [last_exp]
 
-    return list(zip(steps, expecteds)), marker_count
+    return list(zip(steps, expecteds, strict=False)), marker_count
 
 
 def case_step_signature(case_steps: list[dict]) -> tuple[int, int]:

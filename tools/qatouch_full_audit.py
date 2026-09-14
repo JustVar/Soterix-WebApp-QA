@@ -520,7 +520,7 @@ def audit_step_content(session, csv_data: dict, report: AuditReport, sample_size
             continue
 
         step_match = True
-        for j, (csv_s, live_s) in enumerate(zip(csv_steps, live_steps)):
+        for j, (csv_s, live_s) in enumerate(zip(csv_steps, live_steps, strict=False)):
             csv_step_text = html_mod.unescape(csv_s['step']).strip()
             csv_exp_text = html_mod.unescape(csv_s['expected']).strip()
 

@@ -2894,7 +2894,7 @@ def _steps_match(existing: list[dict], desired: list[dict]) -> bool:
     """Check if existing steps already match the desired steps (idempotency)."""
     if len(existing) != len(desired):
         return False
-    for ex, ds in zip(existing, desired):
+    for ex, ds in zip(existing, desired, strict=False):
         ex_desc = ex.get('description', '').strip()
         ex_exp = ex.get('expected', '').strip()
         ds_action = ds.get('action', '').strip()

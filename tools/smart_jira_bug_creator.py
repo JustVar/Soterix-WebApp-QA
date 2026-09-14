@@ -438,12 +438,12 @@ def list_pending_bugs(queue_path: str = REVIEW_QUEUE) -> list[dict[str, Any]]:
         has_data = "Yes" if bug_data else "No"
 
         print("  [%d] %s" % (i, entry_id))
-        print("      Test:       {}".format(nodeid))
-        print("      Module:     {}".format(module))
-        print("      Severity:   {}".format(severity))
-        print("      Confidence: {}  |  Consecutive: {}".format(score, consec))
-        print("      Queued:     {}".format(ts))
-        print("      Bug data:   {}".format(has_data))
+        print(f"      Test:       {nodeid}")
+        print(f"      Module:     {module}")
+        print(f"      Severity:   {severity}")
+        print(f"      Confidence: {score}  |  Consecutive: {consec}")
+        print(f"      Queued:     {ts}")
+        print(f"      Bug data:   {has_data}")
         print("      " + "-" * 50)
 
     print("")
@@ -479,7 +479,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
         print("  REVIEW: %s  (%d of %d)" % (entry_id, idx + 1, len(pending)))
         print("=" * 78)
         print("")
-        print("  Test ID:      {}".format(nodeid))
+        print(f"  Test ID:      {nodeid}")
         print("  Module:       {}".format(bug_data.get("module", "n/a")))
         print("  Summary:      {}".format(bug_data.get("summary", "n/a")))
         print("  Environment:  {}".format(bug_data.get("environment", "n/a")))
@@ -490,7 +490,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
         print("")
         print("  Steps to Reproduce:")
         for line in bug_data.get("steps", "n/a").split("\n"):
-            print("    {}".format(line))
+            print(f"    {line}")
         print("")
         print("  Expected: {}".format(bug_data.get("expected", "n/a")))
         print("  Actual:   {}".format(bug_data.get("actual", "n/a")))
@@ -540,10 +540,10 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
                     item["reviewed_by"] = os.environ.get("USERNAME", os.environ.get("USER", "qa"))
                     item["reviewed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
                     _save_review_queue(queue, queue_path)
-                    print("  APPROVED -- Jira issue: {}".format(issue_key))
+                    print(f"  APPROVED -- Jira issue: {issue_key}")
                     approved += 1
                 except Exception as e:
-                    print("  ERROR creating Jira issue: {}".format(e))
+                    print(f"  ERROR creating Jira issue: {e}")
                     print("  Item remains pending. Try again later.")
                 break
 
@@ -567,7 +567,7 @@ def review_pending_bugs(queue_path: str = REVIEW_QUEUE) -> dict[str, Any]:
                 if new_sev in VALID_SEVERITIES:
                     bug_data["severity"] = new_sev
                     _save_review_queue(queue, queue_path)
-                    print("  Severity updated to: {}".format(new_sev))
+                    print(f"  Severity updated to: {new_sev}")
                     print("  Now choose: [a]pprove  [r]eject  [s]kip")
                 else:
                     print("  Invalid severity. Must be one of: {}".format(", ".join(VALID_SEVERITIES)))
@@ -622,7 +622,7 @@ def multi_gate_validation(nodeid: str, env_base_url: str | None = None, is_smoke
 
     # Gate 1: environment health
     if not env_ok:
-        details["reason"] = "Environment unhealthy: {}".format(env_msg)
+        details["reason"] = f"Environment unhealthy: {env_msg}"
         return {"action": "no_action", "details": details}
 
     # Gate 2: smoke tests require manual review on first failure
@@ -641,7 +641,7 @@ def multi_gate_validation(nodeid: str, env_base_url: str | None = None, is_smoke
         bug_data = {
             "summary": summary,
             "module": module,
-            "steps": "1. Run test: {}\n2. Test fails consistently".format(nodeid),
+            "steps": f"1. Run test: {nodeid}\n2. Test fails consistently",
             "expected": "Test should pass",
             "actual": "Test has failed %d consecutive times (confidence: %s)" % (consec, score),
             "environment": environment,
@@ -656,9 +656,9 @@ def multi_gate_validation(nodeid: str, env_base_url: str | None = None, is_smoke
             jira = JiraClient()
             desc = (
                 "Automated detection:\n"
-                "nodeid: {}\nconfidence: {}\n"
-                "consecutive_failures: {}\nfailure_rate: {}\n"
-                "env_check: {}\n".format(nodeid, score, consec, fail_rate, env_msg)
+                f"nodeid: {nodeid}\nconfidence: {score}\n"
+                f"consecutive_failures: {consec}\nfailure_rate: {fail_rate}\n"
+                f"env_check: {env_msg}\n"
             )
             issue = jira.create_issue(
                 summary, desc,
