@@ -11,7 +11,9 @@ For every mapping row it lines up three things:
 
   1. The test's readable title (first docstring line, as run.html shows it).
   2. The case title cached in the mapping row.
-  3. The case title in the newest QA Touch snapshot (or a file you pass).
+  3. The case title in the newest QA Touch snapshot of the test's own
+     project (NexaiQ-Core at the top of the snapshots folder, or a file
+     you pass; Camera 2 Cloud in its 60W5 folder).
 
 and reports:
 
@@ -58,6 +60,22 @@ from plugins.run_report import readable_title
 from tools.qatouch_mapping import MAPPING_PATH, function_base, load_raw
 
 SNAPSHOTS_DIR = ROOT / 'config' / 'qatouch_snapshots'
+# Which QA Touch project a test's cases live in, by the test's root. The
+# web-app tests map into NexaiQ-Core, whose snapshots sit at the top of
+# the snapshots folder; the Camera 2 Cloud tests map into 60W5, whose
+# snapshots sit in the 60W5 folder. Reading only the first called every
+# c2c row dead (19 rows, 09/14/2026).
+DEFAULT_PROJECT = 'JlW1'
+PROJECT_BY_ROOT = {'tests/c2c': '60W5'}
+
+
+def project_for(path_or_nodeid: str) -> str:
+    """The QA Touch project key a test file's cases belong to."""
+    rel = str(path_or_nodeid).replace('\\', '/')
+    for root, project in PROJECT_BY_ROOT.items():
+        if rel == root or rel.startswith(root + '/'):
+            return project
+    return DEFAULT_PROJECT
 TESTS_ROOTS = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS]   # config/products.py
 
 DEFAULT_THRESHOLD = 0.45
@@ -118,6 +136,7 @@ def collect_tests(root: Path | None = None) -> dict[str, dict]:
                 'nodeid': nodeid,
                 'file': rel,
                 'area': area,
+                'project': project_for(rel),
                 'title': readable_title(nodeid, ast.get_docstring(fn)),
             }
 
@@ -134,8 +153,36 @@ def collect_tests(root: Path | None = None) -> dict[str, dict]:
 
 
 def latest_snapshot() -> Path | None:
+    """The newest NexaiQ-Core snapshot (the top of the snapshots folder)."""
     files = sorted(SNAPSHOTS_DIR.glob('snapshot_*.json'))
     return files[-1] if files else None
+
+
+def latest_snapshots() -> dict[str, Path]:
+    """project key -> its newest snapshot, for every project a test root maps to."""
+    found: dict[str, Path] = {}
+    top = latest_snapshot()
+    if top:
+        found[DEFAULT_PROJECT] = top
+    for project in set(PROJECT_BY_ROOT.values()):
+        files = sorted((SNAPSHOTS_DIR / project).glob('snapshot_*.json'))
+        if files:
+            found[project] = files[-1]
+    return found
+
+
+def load_all_cases(paths: dict[str, Path]) -> tuple[dict[str, dict], str]:
+    """Every project's cases in one dict, each tagged with its project,
+    plus one label naming the files."""
+    cases: dict[str, dict] = {}
+    labels = []
+    for project, path in sorted(paths.items()):
+        loaded, label = load_cases(path)
+        for case in loaded.values():
+            case['project'] = project
+        cases.update(loaded)
+        labels.append(f'{project}: {label}')
+    return cases, ' + '.join(labels)
 
 
 def load_cases(path: Path) -> tuple[dict[str, dict], str]:
@@ -188,8 +235,11 @@ def candidates(test: dict, cases: dict[str, dict], limit: int) -> list[dict]:
     so a Views test prefers a Views case over a same-worded Media case.
     """
     words = AREA_WORDS.get(test['area'], ())
-    leaders = sorted(cases.values(),
-                     key=lambda c: -_overlap(test['title'], c['title']))[:SHORTLIST]
+    # a test's candidates come from its own project: a c2c test is never
+    # offered a NexaiQ-Core case, however alike the titles read
+    project = test.get('project')
+    pool = [c for c in cases.values() if not project or c.get('project', project) == project]
+    leaders = sorted(pool, key=lambda c: -_overlap(test['title'], c['title']))[:SHORTLIST]
     scored = []
     for c in leaders:
         score = similarity(test['title'], c['title'])
@@ -367,12 +417,14 @@ def main() -> int:
                         help='Text mode: also list every row with its score')
     args = parser.parse_args()
 
-    cases_path = args.cases or latest_snapshot()
-    if not cases_path or not cases_path.exists():
+    paths = latest_snapshots()
+    if args.cases:
+        paths[DEFAULT_PROJECT] = args.cases
+    if DEFAULT_PROJECT not in paths or not paths[DEFAULT_PROJECT].exists():
         print('No case snapshot found. Pass --cases or take one: '
               'python tools/qatouch_analytics.py snapshot', file=sys.stderr)
         return 2
-    cases, source = load_cases(cases_path)
+    cases, source = load_all_cases(paths)
     result = audit(load_raw(args.mapping), collect_tests(), cases,
                    args.threshold, args.candidates)
     result['source'] = source

@@ -1,24 +1,24 @@
 {
-  "generated": "2026-09-08 11:54:22",
-  "snapshot_date": "2026-09-08",
-  "total_cases": 3170,
-  "total_modules": 467,
+  "generated": "2026-09-14 16:26:08",
+  "snapshot_date": "2026-09-14",
+  "total_cases": 3275,
+  "total_modules": 482,
   "automation": {
     "playwright_tests": 352,
-    "mapped_to_qatouch": 378,
-    "coverage_pct": 11.9,
+    "mapped_to_qatouch": 465,
+    "coverage_pct": 14.2,
     "api_tests": 0,
-    "ui_tests": 378
+    "ui_tests": 432
   },
   "tags": {
     "smoke": 64,
     "sanity": 221,
-    "tagged_pct": 19.7
+    "tagged_pct": 22.3
   },
   "by_type": {
     "Functional": 2377,
     "Acceptance": 628,
-    "Regression": 127,
+    "Regression": 232,
     "Accessibility": 29,
     "Usability": 6,
     "Performance": 2,
@@ -28,7 +28,7 @@
     {
       "module": "Licenses",
       "count": 228,
-      "automated": 42
+      "automated": 41
     },
     {
       "module": "LPR",
@@ -38,12 +38,12 @@
     {
       "module": "Event Wall",
       "count": 57,
-      "automated": 7
+      "automated": 4
     },
     {
       "module": "Search Landing Page",
       "count": 53,
-      "automated": 5
+      "automated": 4
     },
     {
       "module": "List",
@@ -63,7 +63,7 @@
     {
       "module": "Audit Trail - Users",
       "count": 45,
-      "automated": 11
+      "automated": 4
     },
     {
       "module": "System Logs",
@@ -118,7 +118,7 @@
     {
       "module": "Camera Sequence - Fullscreen",
       "count": 24,
-      "automated": 5
+      "automated": 4
     },
     {
       "module": "Person - Results & Execution",
@@ -183,6 +183,10 @@
     {
       "date": "2026-09-08",
       "total_cases": 3170
+    },
+    {
+      "date": "2026-09-14",
+      "total_cases": 3275
     }
   ],
   "creation_dates": {
@@ -194,14 +198,15 @@
     "2026-06-22": 1,
     "2026-06-24": 176,
     "2026-08-27": 5,
-    "2026-09-08": 72
+    "2026-09-08": 72,
+    "2026-09-14": 105
   },
   "delta": {
-    "from_date": "2026-08-28",
-    "to_date": "2026-09-08",
-    "net_new": 69,
-    "added": 72,
-    "removed": 3,
+    "from_date": "2026-09-08",
+    "to_date": "2026-09-14",
+    "net_new": 105,
+    "added": 105,
+    "removed": 0,
     "modified": 0
   }
 }
