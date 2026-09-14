@@ -630,22 +630,33 @@ class SearchPage:
                 continue
             text = container.evaluate("el => el.textContent || ''")
             if camera_name in text:
-                # the panel scrolls: a container below its fold (the 17th
-                # on the box, 09/12/2026) never reveals its action link
-                # under a forced hover, so bring it into view first
-                container.scroll_into_view_if_needed()
-                container.hover(force=True)
-
                 # Scope to the hovered container: every container has
                 # its own always-mounted copy of the action link, so a
                 # page-wide .first grabs another container's hidden one
                 action_link = container.get_by_text(
                     action_text, exact=True
                 ).first
-                action_link.wait_for(state="visible", timeout=5000)
-                action_link.click()
-                # The drawing canvas opening is the caller's wait
-                return
+                # the panel scrolls: a container below its fold (the 17th
+                # on the box, 09/12/2026) never reveals its action link
+                # under a forced hover, so bring it into view first. The
+                # reveal is hover-driven and the containers repaint with
+                # their snapshots, so one hover can land between paints
+                # and reveal nothing (india, the 7th container, two of
+                # three nights 09/12-09/14): leave, come back, up to
+                # three times, then fail naming the container
+                for _ in range(3):
+                    container.scroll_into_view_if_needed()
+                    container.hover(force=True)
+                    if self._appears(action_link, timeout=5000):
+                        action_link.click()
+                        # The drawing canvas opening is the caller's wait
+                        return
+                    self.page.mouse.move(0, 0)
+                raise AssertionError(
+                    f"Hovering camera container {i} of {containers.count()} "
+                    f"('{camera_name}') revealed no '{action_text}' link "
+                    f"in three attempts"
+                )
         raise AssertionError(
             f"Camera '{camera_name}' not found in camera containers"
         )
