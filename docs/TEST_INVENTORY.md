@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 8 | 33 | 33 | 33 |
-| NexaiQ-Core | 13 | 52 | 405 | 285 | 348 |
-| **Total** | | **60** | **438** | **318** | **381** |
+| NexaiQ-Core | 13 | 52 | 402 | 282 | 348 |
+| **Total** | | **60** | **435** | **315** | **381** |
 
 ## Growth
 
@@ -111,7 +111,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 
 ## NexaiQ-Core
 
-### admin (108 tests in 13 files)
+### admin (105 tests in 13 files)
 
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
@@ -185,15 +185,12 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_lpr_grid_and_timer.py::TestLprTimer::test_timer_popup_validation` | The popup opens over a playing stream and closes on Cancel | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_categories_page_already_on_categories` | Verify clicking the Categories tab while Categories is open keeps it open | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_categories_page_navigation` | Verify navigation to Categories page | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_ensure_in_search_results_not_in_results` | Verify ensure_in_search_results raises exception when not in Search Results | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_ensure_lpr_lists_page_already_on_lists` | Verify ensure_lpr_lists_page returns when already on Lists | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_ensure_lpr_page_already_on_lists` | Verify clicking LPR while the Lists page is open keeps it open | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_ensure_plate_page_already_on_plate` | Verify ensure_lpr_plate_page returns when already on Plate page | yes | - |
-| `test_lpr_navigation.py::TestLprNavigation::test_filter_panel_already_open` | Verify ensure_lpr_filter_panel returns when panel already open | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_filter_panel_navigation` | Verify opening and closing filter panel on Plate page | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_navigate_back_to_lists_from_categories` | Verify navigation back to Lists page from Categories via List tab | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_navigate_from_search_results_to_lists` | Verify navigation from Search Results back to Lists via breadcrumb | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_navigate_to_lpr_main_page` | Verify navigation to Admin > LPR Lists page | yes | - |
+| `test_lpr_navigation.py::TestLprNavigation::test_no_search_results_view_before_a_filter` | Verify the Lists page shows no Search Results view before a filter is applied | yes | - |
 | `test_lpr_navigation.py::TestLprNavigation::test_open_plate_page_from_lists` | Verify opening Plate page by clicking View icon on a list | yes | - |
 | `test_lpr_operations.py::TestLprFilterOperations::test_apply_filter_shows_search_results` | Verify applying a filter shows Search Results view | yes | - |
 | `test_lpr_operations.py::TestLprFilterOperations::test_filter_panel_toggle` | Verify filter panel can be opened and closed | yes | - |

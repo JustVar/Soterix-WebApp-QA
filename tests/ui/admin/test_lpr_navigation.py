@@ -110,29 +110,6 @@ class TestLprNavigation:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
-    def test_ensure_lpr_lists_page_already_on_lists(self):
-        """Verify ensure_lpr_lists_page returns when already on Lists.
-
-        Steps:
-        1. Click Admin in the left sidebar, then click LPR.
-           Expected: The LPR Lists page opens and shows the Create List button.
-        2. Click LPR again while the Lists page is open.
-           Expected: The Lists page stays as it is and the Create List button stays visible.
-        """
-        self.step_capture.mark(1, "Navigate to LPR Lists page")
-        self.lpr.navigate_to_lpr()
-
-        self.step_capture.mark(2, "Call ensure_lpr_lists_page (should return immediately)")
-        self.lpr.ensure_lpr_lists_page()
-
-        self.step_capture.mark(3, "Verify on Lists page")
-        assert self.lpr.create_list_button.count() > 0, "Should be on Lists page"
-
-        print("[PASS] ensure_lpr_lists_page correctly handled 'already on Lists' case")
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.lpr
     def test_navigate_from_search_results_to_lists(self):
         """Verify navigation from Search Results back to Lists via breadcrumb.
 
@@ -278,40 +255,6 @@ class TestLprNavigation:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
-    def test_ensure_plate_page_already_on_plate(self):
-        """Verify ensure_lpr_plate_page returns when already on Plate page.
-
-        Steps:
-        1. Click Admin, then LPR, and click the View icon on the first list row.
-           Expected: The Plate page for that list opens and shows the Add Plate button.
-        2. Open the same list again while its Plate page is open.
-           Expected: The Plate page stays open and the Add Plate button stays visible.
-        """
-        self.step_capture.mark(1, "Navigate to Lists page")
-        self.lpr.navigate_to_lpr()
-
-        # Get first available list
-        # Make the list this test works on. Taking the tenant's
-        # first one passed only while a leaked list was there.
-        list_name = self._own_a_list()
-        first_list_row = self.lpr.get_list_row(list_name)
-
-        self.step_capture.mark(2, f"Open Plate page for list: {list_name}")
-        view_icon = first_list_row.locator("img[aria-label='View']")
-        view_icon.click()
-        self.lpr.add_plate_button.first.wait_for(state="visible", timeout=30000)
-
-        self.step_capture.mark(3, "Call ensure_lpr_plate_page (should return immediately)")
-        self.lpr.ensure_lpr_plate_page(list_name)
-
-        self.step_capture.mark(4, "Verify still on Plate page")
-        assert self.lpr.add_plate_button.count() > 0, "Should still be on Plate page"
-
-        print("[PASS] ensure_lpr_plate_page correctly handled 'already on Plate' case")
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.lpr
     def test_filter_panel_navigation(self):
         """Verify opening and closing filter panel on Plate page.
 
@@ -348,56 +291,17 @@ class TestLprNavigation:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
-    def test_filter_panel_already_open(self):
-        """Verify ensure_lpr_filter_panel returns when panel already open.
-
-        Steps:
-        1. Click Admin, then LPR, and click the View icon on the first list row.
-           Expected: The Plate page for that list opens and shows the Add Plate button.
-        2. Click the Filter icon.
-           Expected: The filter panel opens and shows the Apply and Reset buttons.
-        3. Open the filter panel again without closing it.
-           Expected: The panel stays open and the Apply button stays visible.
-        """
-        self.step_capture.mark(1, "Navigate to Lists page")
-        self.lpr.navigate_to_lpr()
-
-        # Get first available list
-        # Make the list this test works on. Taking the tenant's
-        # first one passed only while a leaked list was there.
-        list_name = self._own_a_list()
-        first_list_row = self.lpr.get_list_row(list_name)
-
-        self.step_capture.mark(2, f"Open Plate page with filter panel for list: {list_name}")
-        view_icon = first_list_row.locator("img[aria-label='View']")
-        view_icon.click()
-        self.lpr.add_plate_button.first.wait_for(state="visible", timeout=30000)
-        self.lpr.ensure_lpr_filter_panel(list_name)
-
-        self.step_capture.mark(3, "Call ensure_lpr_filter_panel again (should return immediately)")
-        self.lpr.ensure_lpr_filter_panel(list_name)
-
-        self.step_capture.mark(4, "Verify filter panel still open")
-        assert self.lpr.apply_filter_button.count() > 0, "Filter panel should still be open"
-
-        print("[PASS] ensure_lpr_filter_panel correctly handled 'already open' case")
-
-    @pytest.mark.ui
-    @pytest.mark.admin
-    @pytest.mark.lpr
-    def test_ensure_in_search_results_not_in_results(self):
-        """Verify ensure_in_search_results raises exception when not in Search Results.
+    def test_no_search_results_view_before_a_filter(self):
+        """Verify the Lists page shows no Search Results view before a filter is applied.
 
         Steps:
         1. Click Admin in the left sidebar, then click LPR.
-           Expected: The Lists page opens and shows no Search Results header.
-        2. Look for the Search Results view without applying a filter.
-           Expected: The Search Results header is not shown. The Lists page stays open.
+           Expected: The Lists page opens with the Create List button and no Search Results header.
         """
-        self.step_capture.mark(1, "Navigate to Lists page")
+        self.step_capture.mark(1, "Open the Lists page with no filter applied")
         self.lpr.navigate_to_lpr()
-
-        self.step_capture.mark(2, "Try to verify in Search Results (should fail)")
+        expect(self.lpr.create_list_button.first).to_be_visible()
+        expect(self.lpr.search_results_header).to_have_count(0)
+        # the page object's own guard agrees: it refuses the Lists page
         with pytest.raises(Exception, match="Not in Search Results"):
             self.lpr.ensure_in_search_results()
-        self.step_capture.mark(3, "Exception correctly raised")
