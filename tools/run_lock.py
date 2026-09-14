@@ -34,8 +34,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LOCK_DIR = ROOT / 'logs'
 
-# Default stale lock timeout: 4 hours
+# Default stale lock timeout: 4 hours without a sign of life. The sign of
+# life is the lock's heartbeat_at when the holder writes one (the pytest
+# guard stamps it as tests report, at most once a minute), else the
+# acquired_at it started with. A live run past 4 h keeps its lock that
+# way; a hung run, alive but reporting nothing, still goes stale.
 DEFAULT_TIMEOUT_HOURS = 4
+HEARTBEAT_INTERVAL_S = 60
 
 
 def _lock_path(env: str) -> Path:
@@ -66,16 +71,32 @@ def _remove_lock(env: str) -> None:
 
 
 def _is_stale(lock_info: dict, timeout_hours: float) -> bool:
-    """Check if a lock is stale (older than timeout)."""
-    acquired = lock_info.get('acquired_at', '')
-    if not acquired:
+    """Stale when the lock's last sign of life is older than the timeout:
+    heartbeat_at when present, else acquired_at."""
+    last_alive = lock_info.get('heartbeat_at') or lock_info.get('acquired_at', '')
+    if not last_alive:
         return True
     try:
-        acquired_dt = datetime.fromisoformat(acquired)
-        age_hours = (datetime.now(UTC) - acquired_dt).total_seconds() / 3600
+        alive_dt = datetime.fromisoformat(last_alive)
+        age_hours = (datetime.now(UTC) - alive_dt).total_seconds() / 3600
         return age_hours > timeout_hours
     except (ValueError, TypeError):
         return True
+
+
+def beat(env: str, holder_pids: set[int]) -> bool:
+    """Stamp heartbeat_at on the lock, if it still records one of holder_pids.
+
+    A lock a rival replaced (after a --force) is never revived: the stamp
+    goes only on a lock that records the caller's own process or the
+    parent it runs under. Returns True when a stamp was written.
+    """
+    existing = _read_lock(env)
+    if not existing or existing.get('pid') not in holder_pids:
+        return False
+    existing['heartbeat_at'] = datetime.now(UTC).isoformat()
+    _write_lock(env, existing)
+    return True
 
 
 def _pid_alive(pid: int) -> bool:
@@ -208,6 +229,7 @@ def status(env: str) -> None:
     print(f'    Holder: {existing.get("user", "?")} (PID {existing.get("pid", "?")})')
     print(f'    Type:   {existing.get("run_type", "?")}')
     print(f'    Since:  {existing.get("acquired_at", "?")}')
+    print(f'    Beat:   {existing.get("heartbeat_at", "none yet")}')
     print(f'    Host:   {existing.get("hostname", "?")}')
 
 

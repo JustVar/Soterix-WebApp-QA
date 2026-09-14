@@ -23,10 +23,16 @@ A blocked run stops at session start, before any test executes, with:
     Kill switch (skips this guard entirely): RUN_GUARD=off
 
 When the guard does start a run, it writes the lock at session start and
-releases it at pytest shutdown. A run that dies without releasing is
-covered by tools/run_lock.py's backstops: a lock whose holder process is
-dead, or older than the 4-hour staleness timeout, is cleared automatically
-by the next run.
+releases it at pytest shutdown. While tests report it stamps the lock's
+heartbeat_at, at most once a minute, and it does the same for the parent's
+lock when it runs under one (RUN_GUARD_HELD, or the lock records the parent
+PID). A run that dies without releasing is covered by tools/run_lock.py's
+backstops: a lock whose holder process is dead, or whose last sign of life
+(the heartbeat, else acquired_at) is older than the 4-hour staleness
+timeout, is cleared automatically by the next run. The sign of life is
+test progress on purpose: a live run past 4 h keeps its lock, a hung run
+does not (before 09/14/2026 nothing refreshed the lock, so a long live run
+lost it).
 
 The guard stands aside - no lock taken, run proceeds - when:
   - RUN_GUARD=off (kill switch; same off values as REPORT_SCREENSHOTS);
@@ -47,6 +53,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -54,15 +61,22 @@ import pytest
 
 from tools.run_lock import (
     DEFAULT_TIMEOUT_HOURS,
+    HEARTBEAT_INTERVAL_S,
     _holder_info,
     _is_stale,
     _pid_alive,
     _read_lock,
     _remove_lock,
     _write_lock,
+    beat,
 )
 
 log = logging.getLogger('single_run_guard')
+
+# The lock this session stamps as tests report: (env, the PIDs the lock may
+# record: this process, or the parent whose lock this run runs under). Set
+# at session start, cleared at unconfigure; None means nothing to stamp.
+_beat_state: dict | None = None
 
 # Kill switch: same off-values idiom as plugins/report_media.py.
 _OFF_VALUES = ('off', '0', 'false', 'no')
@@ -255,6 +269,7 @@ def pytest_sessionstart(session: Any) -> None:
 
     if action == SKIP:
         log.debug(f'single_run_guard: standing aside - {reason}')
+        _arm_heartbeat_for_parent(env_name, reason)
         return
 
     if action == ACQUIRE:
@@ -280,6 +295,7 @@ def pytest_sessionstart(session: Any) -> None:
             _write_lock(env_name, info)
             # What pytest_unconfigure releases; unset means nothing to release.
             config._single_run_guard_env = env_name
+            _arm_heartbeat(env_name, {os.getpid()})
             log.info(f'single_run_guard: run lock taken for env={env_name} ({reason})')
         except Exception as e:  # noqa: BLE001 - a broken guard must never block testing
             log.warning(f'single_run_guard: could not take the run lock ({e}) - '
@@ -292,6 +308,49 @@ def pytest_sessionstart(session: Any) -> None:
     pytest.exit(_blocked_message(env_name, existing or {}), returncode=2)
 
 
+def _arm_heartbeat(env_name: str, pids: set[int]) -> None:
+    global _beat_state
+    _beat_state = {'env': env_name, 'pids': pids, 'last': 0.0}
+
+
+def _arm_heartbeat_for_parent(env_name: str, reason: str) -> None:
+    """A run under a parent's lock keeps that lock alive for the parent:
+    the parent (run_suite, guarded_run) only waits on its child."""
+    pids: set[int] = set()
+    if HELD_MARKER in reason:
+        marker = os.environ.get(HELD_MARKER, '')
+        if marker.isdigit():
+            pids.add(int(marker))
+        pids.add(os.getppid())
+    elif 'parent process' in reason:
+        pids.add(os.getppid())
+    if pids:
+        _arm_heartbeat(env_name, pids)
+
+
+def pytest_runtest_logreport(report: Any) -> None:  # noqa: ARG001 - pytest names the hook argument
+    """Each test report is a sign of life; stamp the lock at most once a
+    minute. A stamp that fails is logged once and never fails the run."""
+    state = _beat_state
+    if state is None:
+        return
+    now = time.monotonic()
+    if now - state['last'] < HEARTBEAT_INTERVAL_S:
+        return
+    state['last'] = now
+    try:
+        beat(state['env'], state['pids'])
+    except Exception as e:  # noqa: BLE001 - a heartbeat must never fail a run
+        log.warning(f'single_run_guard: could not stamp the run lock ({e}); '
+                    f'the staleness backstop falls back to acquired_at')
+        _disarm_heartbeat()
+
+
+def _disarm_heartbeat() -> None:
+    global _beat_state
+    _beat_state = None
+
+
 def pytest_unconfigure(config: Any) -> None:
     """Release the lock this session took - and only that lock.
 
@@ -300,6 +359,7 @@ def pytest_unconfigure(config: Any) -> None:
     lock behind. A hard kill still can - that is exactly what run_lock's
     dead-PID and staleness backstops then clear on the next run.
     """
+    _disarm_heartbeat()
     env_name = getattr(config, '_single_run_guard_env', None)
     if not env_name:
         return

@@ -482,3 +482,110 @@ class TestCrossEnvRival:
         assert guard.cross_env_rival(
             'qa', environ={}, own_pid=OWN_PID, parent_pid=PARENT_PID,
             read_lock=lambda env: None, lock_envs=[]) is None
+
+
+# ---------------------------------------------------------------------------
+# Heartbeat: the lock's sign of life is test progress
+# ---------------------------------------------------------------------------
+
+def _report(when='call'):
+    return SimpleNamespace(when=when)
+
+
+def test_staleness_reads_the_heartbeat_when_present():
+    """An old lock with a fresh heartbeat is alive; a lock whose heartbeat
+    itself is old is stale; without a heartbeat acquired_at decides."""
+    fresh_beat = datetime.now(UTC).isoformat()
+    old_beat = (datetime.now(UTC) - timedelta(hours=5)).isoformat()
+    assert run_lock._is_stale(_lock(age_hours=100, heartbeat_at=fresh_beat), 4) is False
+    assert run_lock._is_stale(_lock(age_hours=100, heartbeat_at=old_beat), 4) is True
+    assert run_lock._is_stale(_lock(age_hours=1), 4) is False
+    assert run_lock._is_stale(_lock(age_hours=100), 4) is True
+
+
+def test_beat_stamps_only_a_lock_that_records_a_holder_pid(lock_dir):
+    """A rival's lock is never revived by our stamp."""
+    run_lock._write_lock('qa', _lock(pid=RIVAL_PID))
+    assert run_lock.beat('qa', {OWN_PID}) is False
+    assert 'heartbeat_at' not in json.loads(_lock_file(lock_dir).read_text())
+    assert run_lock.beat('qa', {RIVAL_PID}) is True
+    assert json.loads(_lock_file(lock_dir).read_text())['heartbeat_at']
+
+
+def test_a_test_report_stamps_the_lock_the_session_took(lock_dir, monkeypatch):
+    """Session start arms the heartbeat; the first report stamps the lock."""
+    monkeypatch.setattr(guard, '_beat_state', None)
+    config = _FakeConfig()
+    guard.pytest_sessionstart(_session(config))
+    assert 'heartbeat_at' not in json.loads(_lock_file(lock_dir).read_text())
+    guard.pytest_runtest_logreport(_report())
+    written = json.loads(_lock_file(lock_dir).read_text())
+    assert written['pid'] == os.getpid()
+    assert written['heartbeat_at']
+    guard.pytest_unconfigure(config)
+    assert guard._beat_state is None
+
+
+def test_reports_are_throttled_to_the_interval(lock_dir, monkeypatch):
+    """A second report inside the interval writes nothing."""
+    monkeypatch.setattr(guard, '_beat_state', None)
+    monkeypatch.setattr(guard, 'HEARTBEAT_INTERVAL_S', 3600)
+    config = _FakeConfig()
+    guard.pytest_sessionstart(_session(config))
+    guard.pytest_runtest_logreport(_report())
+    first = json.loads(_lock_file(lock_dir).read_text())['heartbeat_at']
+    run_lock._write_lock('qa', {**json.loads(_lock_file(lock_dir).read_text()), 'heartbeat_at': 'untouched'})
+    guard.pytest_runtest_logreport(_report())
+    assert json.loads(_lock_file(lock_dir).read_text())['heartbeat_at'] == 'untouched'
+    assert first
+    guard.pytest_unconfigure(config)
+
+
+def test_reports_never_revive_a_rivals_lock(lock_dir, monkeypatch):
+    """Our lock was force-released and a rival took over: our reports must
+    not stamp the rival's lock."""
+    monkeypatch.setattr(guard, '_beat_state', None)
+    monkeypatch.setattr(guard, 'HEARTBEAT_INTERVAL_S', 0)
+    config = _FakeConfig()
+    guard.pytest_sessionstart(_session(config))
+    run_lock._write_lock('qa', _lock())
+    guard.pytest_runtest_logreport(_report())
+    assert 'heartbeat_at' not in json.loads(_lock_file(lock_dir).read_text())
+    guard.pytest_unconfigure(config)
+
+
+def test_reports_stamp_the_parents_lock_under_the_marker(lock_dir, monkeypatch):
+    """A child under run_suite keeps the parent's lock alive: the parent
+    only waits on the child and would otherwise go stale at 4 h."""
+    monkeypatch.setattr(guard, '_beat_state', None)
+    monkeypatch.setenv('RUN_GUARD_HELD', '4242')
+    run_lock._write_lock('qa', _lock(pid=4242))
+    guard.pytest_sessionstart(_session(_FakeConfig()))
+    guard.pytest_runtest_logreport(_report())
+    written = json.loads(_lock_file(lock_dir).read_text())
+    assert written['pid'] == 4242
+    assert written['heartbeat_at']
+    guard.pytest_unconfigure(_FakeConfig())
+
+
+def test_reports_stamp_the_lock_the_parent_process_holds(lock_dir, monkeypatch):
+    """The wrapper that predates the marker: the lock records our parent PID."""
+    monkeypatch.setattr(guard, '_beat_state', None)
+    monkeypatch.setattr(guard, '_pid_alive', _alive)
+    run_lock._write_lock('qa', _lock(pid=os.getppid()))
+    guard.pytest_sessionstart(_session(_FakeConfig()))
+    guard.pytest_runtest_logreport(_report())
+    written = json.loads(_lock_file(lock_dir).read_text())
+    assert written['pid'] == os.getppid()
+    assert written['heartbeat_at']
+    guard.pytest_unconfigure(_FakeConfig())
+
+
+def test_a_worker_standing_aside_stamps_nothing(lock_dir, monkeypatch):
+    """xdist workers and RUN_GUARD=off runs hold no lock and stamp none."""
+    monkeypatch.setattr(guard, '_beat_state', None)
+    monkeypatch.setenv('PYTEST_XDIST_WORKER', 'gw0')
+    run_lock._write_lock('qa', _lock())
+    guard.pytest_sessionstart(_session(_FakeConfig()))
+    guard.pytest_runtest_logreport(_report())
+    assert 'heartbeat_at' not in json.loads(_lock_file(lock_dir).read_text())
