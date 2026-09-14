@@ -159,6 +159,12 @@ Locators
   and verification evidence: TEST_REPAIRS items 14, 18-20.
 
 Waits and signals
+- A fresh login is not over when the URL leaves /auth/login: the
+  landing page then runs its session check, site tree and status,
+  about 3 s later. A goto in that window aborts them and the app
+  bounces to /auth/login and drops its cookie (india traces 09/12 and
+  09/14/2026). Wait for the nav and for the API to go quiet first;
+  the authenticated_page fixture does.
 - A control that turns into a spinner, sends no request and never
   resolves is not a slow server. Open the trace's console (the Console
   tab in the GUI, or the `console` events in trace.trace): a Content

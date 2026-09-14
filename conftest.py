@@ -3,6 +3,7 @@ import importlib
 import logging
 import os
 import re
+import time
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -409,6 +410,34 @@ def _finish_video(video, keep_as: str | None) -> None:
         print(f"[VIDEO] Could not finalize video: {e}")
 
 
+def _track_api_requests(page) -> set:
+    """The app's API requests still in flight on this page, kept current
+    by the page's request events. Websocket upgrades and the app's static
+    files are not counted."""
+    in_flight: set = set()
+
+    def started(request):
+        if "/v-apiserver/" in request.url or "/api/" in request.url:
+            in_flight.add(request)
+
+    def finished(request):
+        in_flight.discard(request)
+
+    # plain functions: Playwright's sync wrapper cannot mark a bound builtin
+    page.on("request", started)
+    page.on("requestfinished", finished)
+    page.on("requestfailed", finished)
+    return in_flight
+
+
+def _wait_for_api_quiet(page, in_flight: set, timeout_ms: int = 15000) -> None:
+    """Return once no tracked API request is in flight, or at the timeout
+    (a request the app never answers must not hold the fixture)."""
+    deadline = time.monotonic() + timeout_ms / 1000
+    while in_flight and time.monotonic() < deadline:
+        page.wait_for_timeout(100)  # poll tick for the in-flight set
+
+
 @pytest.fixture(scope="session")
 def auth_state_path(base_url):
     """Path to the cached authentication state file.
@@ -492,6 +521,7 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
         context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
         video = _video_of(page)
+        in_flight = _track_api_requests(page)
 
         try:
             from tests.shared.pages.login_page import LoginPage
@@ -505,6 +535,15 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
             )
             # Use domcontentloaded instead of networkidle (app has persistent connections)
             page.wait_for_load_state('domcontentloaded', timeout=30000)
+            # The landing page finishes the login on its own: a session
+            # check, the site tree and status, about 3 s after the form.
+            # A test that navigated before those answered aborted them
+            # and the app bounced to /auth/login (india traces 09/12 and
+            # 09/14/2026, the logout-from-/search single). Yield on the
+            # same signal the cached path validates on, the nav, and then
+            # once no API request is in flight.
+            page.locator("text=Views").first.wait_for(state="visible", timeout=30000)
+            _wait_for_api_quiet(page, in_flight)
 
             # Save the authenticated state
             context.storage_state(path=auth_state_path)
