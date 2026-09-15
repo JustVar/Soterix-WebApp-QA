@@ -44,7 +44,7 @@ the mapping file points a test at; a product with no snapshot that day shows "-"
 
 | Date | NexaiQ-Camera 2 Cloud | NexaiQ-Core | NexaiQ-Neurosen | NexaiQ-Partner Admin Tool | NexaiQ-Technician App | NexiaQ-Mobile | Total cases | Automated |
 |---|---|---|---|---|---|---|---|---|
-| 2026-09-15 | - | 3277 | - | - | - | - | 3277 | 408 |
+| 2026-09-15 | - | 3303 | - | - | - | - | 3303 | 403 |
 | 2026-09-14 | - | 3275 | - | - | - | - | 3275 | 408 |
 | 2026-09-11 | 119 | - | - | - | - | - | 119 | 32 |
 | 2026-09-08 | 118 | 3170 | 0 | 772 | 0 | 10 | 4070 | 354 |

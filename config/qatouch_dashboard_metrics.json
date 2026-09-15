@@ -1,24 +1,24 @@
 {
-  "generated": "2026-09-14 16:26:08",
-  "snapshot_date": "2026-09-14",
-  "total_cases": 3275,
-  "total_modules": 482,
+  "generated": "2026-09-15 09:42:17",
+  "snapshot_date": "2026-09-15",
+  "total_cases": 3303,
+  "total_modules": 483,
   "automation": {
     "playwright_tests": 352,
     "mapped_to_qatouch": 465,
-    "coverage_pct": 14.2,
+    "coverage_pct": 14.1,
     "api_tests": 0,
     "ui_tests": 432
   },
   "tags": {
     "smoke": 64,
     "sanity": 221,
-    "tagged_pct": 22.3
+    "tagged_pct": 22.9
   },
   "by_type": {
     "Functional": 2377,
     "Acceptance": 628,
-    "Regression": 232,
+    "Regression": 260,
     "Accessibility": 29,
     "Usability": 6,
     "Performance": 2,
@@ -43,12 +43,12 @@
     {
       "module": "Search Landing Page",
       "count": 53,
-      "automated": 4
+      "automated": 2
     },
     {
       "module": "List",
       "count": 51,
-      "automated": 1
+      "automated": 0
     },
     {
       "module": "Media Listing & Actions",
@@ -66,19 +66,19 @@
       "automated": 4
     },
     {
+      "module": "Categories",
+      "count": 38,
+      "automated": 7
+    },
+    {
       "module": "System Logs",
       "count": 37,
       "automated": 0
     },
     {
-      "module": "Categories",
-      "count": 36,
-      "automated": 6
-    },
-    {
       "module": "Map Editing",
       "count": 32,
-      "automated": 1
+      "automated": 0
     },
     {
       "module": "Multi-Factor Authentication",
@@ -103,12 +103,12 @@
     {
       "module": "Vehicle - Execution & Results",
       "count": 28,
-      "automated": 1
+      "automated": 0
     },
     {
       "module": "Zone - AND, Execution & Results",
       "count": 25,
-      "automated": 1
+      "automated": 0
     },
     {
       "module": "Map Creation",
@@ -118,12 +118,12 @@
     {
       "module": "Camera Sequence - Fullscreen",
       "count": 24,
-      "automated": 4
+      "automated": 3
     },
     {
       "module": "Person - Results & Execution",
       "count": 24,
-      "automated": 1
+      "automated": 0
     },
     {
       "module": "Webhooks",
@@ -187,6 +187,10 @@
     {
       "date": "2026-09-14",
       "total_cases": 3275
+    },
+    {
+      "date": "2026-09-15",
+      "total_cases": 3303
     }
   ],
   "creation_dates": {
@@ -199,14 +203,15 @@
     "2026-06-24": 176,
     "2026-08-27": 5,
     "2026-09-08": 72,
-    "2026-09-14": 105
+    "2026-09-14": 105,
+    "2026-09-15": 28
   },
   "delta": {
-    "from_date": "2026-09-08",
-    "to_date": "2026-09-14",
-    "net_new": 105,
-    "added": 105,
+    "from_date": "2026-09-14",
+    "to_date": "2026-09-15",
+    "net_new": 28,
+    "added": 28,
     "removed": 0,
-    "modified": 0
+    "modified": 26
   }
 }
