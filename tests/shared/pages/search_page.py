@@ -647,15 +647,33 @@ class SearchPage:
                 for _ in range(3):
                     container.scroll_into_view_if_needed()
                     container.hover(force=True)
-                    if self._appears(action_link, timeout=5000):
-                        action_link.click()
+                    if not self._appears(action_link, timeout=5000):
+                        self.page.mouse.move(0, 0)
+                        continue
+                    # The link shows, but a plain click waits for the
+                    # element to hold still and these containers never do:
+                    # they repaint their camera snapshot, so the pointer
+                    # click times out with the link on screen (india,
+                    # 09/15/2026; FAILURE_TRIAGE > Waits and signals).
+                    # Bounded pointer click, then the JS click that needs
+                    # no stability, and only then the next hover.
+                    try:
+                        action_link.click(timeout=5000)
                         # The drawing canvas opening is the caller's wait
+                        return
+                    # why: the pointer click is the first of three tries;
+                    # the JS click below and the next hover follow, and the
+                    # raise after the loop is what reports a dead link
+                    except PlaywrightError:
+                        pass
+                    if self._appears(action_link, timeout=1000):
+                        action_link.evaluate("el => el.click()")
                         return
                     self.page.mouse.move(0, 0)
                 raise AssertionError(
                     f"Hovering camera container {i} of {containers.count()} "
-                    f"('{camera_name}') revealed no '{action_text}' link "
-                    f"in three attempts"
+                    f"('{camera_name}') revealed no clickable '{action_text}' "
+                    f"link in three attempts"
                 )
         raise AssertionError(
             f"Camera '{camera_name}' not found in camera containers"

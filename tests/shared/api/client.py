@@ -26,6 +26,10 @@ import urllib3
 # is `accountid`. The login answers code 200 with status 2002, so
 # `status` is not an "OK" check (verified 2026-08-24).
 LOGIN_USERNAME = "Example Label"
+# The tenant answers a dead session with this status (code 401) and the
+# message "Session expired! Re-login required!" (measured 09/15/2026).
+SESSION_EXPIRED_STATUS = 3113
+LOGIN_PATH = "/REST/central/user/login"
 TIMEOUT_S = 30
 
 
@@ -50,9 +54,14 @@ class InternalApi:
         self.user: str | None = None
         self.session = session or requests.Session()
         self.session.verify = verify
+        self._password: str | None = None
 
     def login(self, user: str, password: str) -> str:
-        """Log in and keep the JSESSIONID cookie on the session."""
+        """Log in and keep the JSESSIONID cookie on the session.
+
+        The password is kept so a session the tenant expires mid-run can
+        be renewed; see _request.
+        """
         body = {
             "accountid": user,
             "username": LOGIN_USERNAME,
@@ -62,6 +71,7 @@ class InternalApi:
         token = result[0]["JSESSIONID"]
         self.session.headers["Cookie"] = f"JSESSIONID={token}"
         self.user = user
+        self._password = password
         return token
 
     def get(self, path: str, params: dict | None = None) -> list:
@@ -77,7 +87,33 @@ class InternalApi:
         """Send the request and return the envelope's `result`.
 
         Raises ApiError when `code` is not 200 or the body is not JSON.
+        A session the tenant expired is renewed once and the request is
+        sent again: the fixture logs in at session start and a full run
+        outlives the token (status 3113 at 28 minutes on india,
+        09/15/2026, which failed a test for a reason that was not the
+        app's behaviour).
         """
+        try:
+            return self._send(method, path, **kwargs)
+        except ApiError as first:
+            if not self._is_expired_session(first) or not self._can_relogin(path):
+                raise
+            self.login(self.user, self._password)
+            return self._send(method, path, **kwargs)
+
+    @staticmethod
+    def _is_expired_session(error: ApiError) -> bool:
+        """The tenant's own answer for a dead session: status 3113, or a
+        message naming it. The code is 401 on both."""
+        return error.status == SESSION_EXPIRED_STATUS or (
+            "session expired" in str(error.message or "").lower())
+
+    def _can_relogin(self, path: str) -> bool:
+        """A renewal needs the account, the password and a path that is
+        not the login itself (which would recurse)."""
+        return bool(self.user and self._password) and not path.endswith(LOGIN_PATH)
+
+    def _send(self, method: str, path: str, **kwargs) -> list:
         # QA serves a self-signed certificate. The warning is silenced
         # per request: pytest resets the warning filters after every
         # test, so a one-time disable at construction lapses for the

@@ -180,6 +180,10 @@ Waits and signals
   snapshot) never pass Playwright's stability check; use a bounded
   pointer click with a JS-click fallback (on the inner input for MUI
   checkboxes, on the element itself for custom ones).
+  The same holds for a control those rows reveal on hover: the Search
+  page's Create Zone / Create Line link showed and then timed out its own
+  click for 30 s on india (09/15/2026), with the link on screen the whole
+  time. A reveal that works is not a click that lands.
 - Those same rows break `filter(has=...)`: its inner match is
   re-evaluated on every action, races the repaint, and the child
   (a reveal-on-hover checkbox) times out unreachable. Match the
