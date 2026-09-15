@@ -302,10 +302,13 @@ class TestAdminSites:
     @pytest.mark.admin
     @pytest.mark.admin_sites
     def test_create_camera_group(self):
-        """Verify creating a new camera group with camera selection.
+        """Verify a camera group can be created on a site.
 
-        The oracle lives in create_camera_group: its form-close wait
-        raises when the Create never lands.
+        Steps:
+        1. Open Admin > Sites and open the first site.
+           Expected: The site detail opens with its Groups control.
+        2. Open the Groups dropdown, click Create, name the group, search the configured camera and tick it, then Create.
+           Expected: The form closes, which is the app's saved signal.
         """
         self._navigate_to_sites()
         self._open_first_site()
@@ -322,6 +325,8 @@ class TestAdminSites:
         # Search term for cameras to add: the configured camera name,
         # never a hardcoded vendor name (the tenant renames cameras)
         camera_search = config.get("test_camera_name", "camera")
+        # oracle: create_camera_group raises when the form never closes,
+        # which is the app's only saved signal here
         self.admin.create_camera_group(group_name, camera_search=camera_search)
 
     @pytest.mark.ui

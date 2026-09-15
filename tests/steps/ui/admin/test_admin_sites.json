@@ -84,7 +84,7 @@
           "expected": "The list shows at least one Online or Offline status marker."
         }
       ],
-      "case_key": "WEnvKQ"
+      "case_key": "Pg9221"
     },
     "test_site_versions": {
       "title": "Verify sites display version information",
@@ -130,52 +130,17 @@
       "case_key": "B899GN"
     },
     "test_create_camera_group": {
-      "title": "Verify creating a new camera group with camera selection.",
+      "title": "Verify a camera group can be created on a site",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Sites and open the first site.",
+          "expected": "The site detail opens with its Groups control."
         },
         {
           "n": 2,
-          "action": "Navigate to Maps > Map Editing",
-          "expected": "Map Editing page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate Verifying map configuration list refresh on the page",
-          "expected": "Verifying map configuration list refresh is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify Verifying map configuration list refresh is displayed as expected",
-          "expected": "Verifying map configuration list refresh is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Set up precondition: after create or update action - Camera groups and cameras are displayed correctly",
-          "expected": "Precondition is met (after create or update action - Camera groups and cameras are displayed correctly)"
-        },
-        {
-          "n": 9,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Open the Groups dropdown, click Create, name the group, search the configured camera and tick it, then Create.",
+          "expected": "The form closes, which is the app's saved signal."
         }
       ],
       "case_key": "n8jmmP"

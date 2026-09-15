@@ -338,10 +338,13 @@ class TestViewsDragDrop:
     @pytest.mark.dragdrop
     @pytest.mark.views_channels
     def test_add_channel_to_tile(self):
-        """Verify a channel can be added to a tile via checkbox or drag.
+        """Verify a channel can be added to an empty tile.
 
-        Channels panel shows a list of available channels that can be searched
-        or browsed. Channels use the same interaction pattern as cameras.
+        Steps:
+        1. On Views, click the Channels tab in the left panel.
+           Expected: The panel lists the tenant's channels. With none the test skips naming that.
+        2. Hover the first channel and tick its checkbox.
+           Expected: The channel takes a tile: one fewer empty tile, or its content shows.
         """
         # Get initial tile count
         initial_tile_count = self.views.get_available_tile_count()

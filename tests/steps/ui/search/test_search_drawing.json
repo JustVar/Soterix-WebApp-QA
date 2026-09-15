@@ -21,7 +21,7 @@
           "expected": "The zone is accepted."
         }
       ],
-      "case_key": "LD3mGJ"
+      "case_key": "eJX25Q"
     },
     "test_zone_search_returns_results": {
       "title": "Verify Zone search returns results after drawing and searching",
@@ -40,42 +40,22 @@
       "case_key": "68DD2V"
     },
     "test_zone_search_play_result": {
-      "title": "Verify playing a Zone search result clip works.",
+      "title": "Verify a Zone search result plays to its end",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Search, pick the Zone category, open the zone drawing for the configured camera, draw a zone and click Done.",
+          "expected": "The zone is accepted."
         },
         {
           "n": 2,
-          "action": "Navigate to Search > Zone - AND, Execution & Results",
-          "expected": "Zone - AND, Execution & Results page loads without errors"
+          "action": "Pick a duration and search.",
+          "expected": "Results are listed."
         },
         {
           "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where empty state message should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate empty state message on the page",
-          "expected": "empty state message is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: when Zone search returns no results",
-          "expected": "Precondition is met (when Zone search returns no results)"
-        },
-        {
-          "n": 7,
-          "action": "Verify empty state message shown",
-          "expected": "empty state message shown"
+          "action": "Play the first result.",
+          "expected": "The clip plays and the Replay icon shows when it ends."
         }
       ],
       "case_key": "dyp4pB"
@@ -171,7 +151,7 @@
           "expected": "The clip plays and the Replay icon shows when it ends."
         }
       ],
-      "case_key": "wmjKjZ"
+      "case_key": "Dr9pN7"
     }
   }
 }

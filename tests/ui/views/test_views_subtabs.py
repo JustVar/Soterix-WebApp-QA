@@ -439,13 +439,13 @@ class TestViewsSubtabs:
     @pytest.mark.views_channels
     @pytest.mark.dragdrop
     def test_channels_drag_channel_to_tile(self):
-        """CHANNELS: Drag channel thumbnail to tile.
+        """Verify a channel dragged onto an empty tile starts there.
 
         Steps:
-        1. Click Channels subtab
-        2. Drag channel to empty tile
-
-        Success: Tile filled with video
+        1. On Views, click the Channels subtab.
+           Expected: The panel lists the tenant's channels. With none the test skips naming that.
+        2. Drag the first channel onto an empty tile.
+           Expected: The tile takes the channel: one fewer empty tile, or a video element shows.
         """
         initial_tiles = self.views.get_available_tile_count()
 

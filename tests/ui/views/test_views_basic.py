@@ -78,7 +78,14 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.sanity
     def test_rename_does_not_affect_sequence(self):
-        """Verify renaming a tab doesn't break the sequential naming for new tabs."""
+        """Verify renaming a tab leaves the numbering of the next tab alone.
+
+        Steps:
+        1. Hover the first tab, click its pencil icon, type Custom Name and press Enter.
+           Expected: The tab reads Custom Name.
+        2. Click + to add a tab.
+           Expected: The new tab is named View 2, so the rename did not take its number.
+        """
         self.step_capture.mark(1, "Navigate to Views page and wait for page load")
         # Hover over the first tab to reveal edit button
         first_tab = self.page.locator("button.tabItem").first
@@ -108,7 +115,12 @@ class TestViewsBasic:
     @pytest.mark.ui
     @pytest.mark.sanity
     def test_save_empty_view_shows_error(self):
-        """Verify saving an empty view shows an error or is prevented."""
+        """Verify saving a view with no cameras is refused.
+
+        Steps:
+        1. Add a tab and leave it empty, then click Save.
+           Expected: The app shows an empty-view message. If it shows none, it must not show View saved successfully either.
+        """
         # Add a new tab (it will be empty)
         self._add_tab_and_wait()
 

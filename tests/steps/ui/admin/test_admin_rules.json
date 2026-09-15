@@ -38,7 +38,7 @@
           "expected": "Next is enabled."
         }
       ],
-      "case_key": "Drd95P"
+      "case_key": "Ee92Kb"
     },
     "test_search_rule": {
       "title": "Verify searching for a rule by name filters the results",
@@ -65,7 +65,7 @@
           "expected": "Neither is offered and the test skips naming that. If either shows, the test fails so the notification edit flow gets rebuilt."
         }
       ],
-      "case_key": "dyp4aR"
+      "case_key": "J8900a"
     },
     "test_delete_rule": {
       "title": "Verify deleting the last rule with confirmation dialog.",
@@ -170,67 +170,22 @@
       "case_key": "mBdpwM"
     },
     "test_create_rule_full_wizard": {
-      "title": "Verify completing the full rule creation wizard for each rule type (parametrized: Entry-Exit, Heat Map, Loitering, Occupancy, Intrusion Detection, Line Crossing).",
+      "title": "Verify the rule creation wizard completes for each rule type",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Rules and click Add New Rule.",
+          "expected": "The Select Rule picker opens and offers the rule type."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Rules > Add New Rule",
-          "expected": "Add New Rule page loads without errors"
+          "action": "Pick the rule type and walk the wizard: the site, the camera, the zone or the switch, a unique rule name, then Save.",
+          "expected": "The wizard closes."
         },
         {
           "n": 3,
-          "action": "Verify the page displays any existing items",
-          "expected": "Page content loads (list, table, or empty state)"
-        },
-        {
-          "n": 4,
-          "action": "Click the create/add button for full Entry-Exit rule creation wizard",
-          "expected": "Creation form or dialog opens"
-        },
-        {
-          "n": 5,
-          "action": "Verify all required form fields are present and empty/default",
-          "expected": "Form fields are displayed with correct labels and placeholders"
-        },
-        {
-          "n": 6,
-          "action": "Fill in all required fields with valid test data",
-          "expected": "All fields accept the input without errors"
-        },
-        {
-          "n": 7,
-          "action": "Fill in any optional fields if applicable",
-          "expected": "Optional fields accept input"
-        },
-        {
-          "n": 8,
-          "action": "Review the filled form for correctness",
-          "expected": "All entered data is displayed correctly in the form"
-        },
-        {
-          "n": 9,
-          "action": "Click the Save/Submit/Create button",
-          "expected": "Form is submitted and a success message or indicator appears"
-        },
-        {
-          "n": 10,
-          "action": "Verify the newly created full Entry-Exit rule creation wizard appears in the list or view",
-          "expected": "The new full Entry-Exit rule creation wizard is visible with the correct data"
-        },
-        {
-          "n": 11,
-          "action": "Set up precondition: with canvas zone drawing",
-          "expected": "Precondition is met (with canvas zone drawing)"
-        },
-        {
-          "n": 12,
-          "action": "Verify no duplicate entries were created",
-          "expected": "Only one instance of the new full Entry-Exit rule creation wizard exists"
+          "action": "Search the rules list for that name.",
+          "expected": "Exactly one row carries it, so the rule was saved and not just closed."
         }
       ],
       "case_key": "8V14w7"

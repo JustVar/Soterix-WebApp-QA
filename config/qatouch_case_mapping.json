@@ -18,7 +18,8 @@
       "score": 1.0,
       "module": "General",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_general_section_has_rules_tab[chromium]": {
       "case_key": "Pgw4jm",
@@ -26,7 +27,8 @@
       "score": 0.8,
       "module": "General",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_general_section_has_audit_trail[chromium]": {
       "case_key": "68lnEV",
@@ -34,7 +36,8 @@
       "score": 0.8,
       "module": "General",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_general_section_has_event_wall[chromium]": {
       "case_key": "7ErGBe",
@@ -42,7 +45,8 @@
       "score": 0.8,
       "module": "General",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_switch_users_to_sites[chromium]": {
       "case_key": "9e1NMZ",
@@ -50,7 +54,8 @@
       "score": 0.83,
       "module": "General",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_switch_sites_to_general[chromium]": {
       "case_key": "qzdVD4",
@@ -58,7 +63,8 @@
       "score": 0.83,
       "module": "General",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_round_trip_users_general_users[chromium]": {
       "case_key": "XGLep0",
@@ -74,7 +80,8 @@
       "score": 0.83,
       "module": "General",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_open_event_wall[chromium]": {
       "case_key": "zvnKW9",
@@ -82,7 +89,8 @@
       "score": 1.0,
       "module": "General",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_admin_page_after_refresh[chromium]": {
       "case_key": "mBdD1V",
@@ -106,7 +114,8 @@
       "score": 0.83,
       "module": "Rules - Notifications",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Entry-Exit]": {
       "case_key": "21zEKm",
@@ -148,7 +157,8 @@
       "score": 0.67,
       "module": "Sites",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_search_inside_site[chromium]": {
       "case_key": "GdWvMK",
@@ -156,7 +166,8 @@
       "score": 1.0,
       "module": "Sites",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_users.py::TestAdminUsers::test_add_user[chromium]": {
       "case_key": "41VMM7",
@@ -196,7 +207,8 @@
       "score": 0.83,
       "module": "Chat Access",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/chats/test_chats.py::TestChats::test_delete_group[chromium]": {
       "case_key": "bj04VD",
@@ -220,7 +232,8 @@
       "score": 0.75,
       "module": "Group UI",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/chats/test_chats_deeper.py::TestChatsDeeper::test_chat_search_input_visible[chromium]": {
       "case_key": "GdWznj",
@@ -254,7 +267,8 @@
       "score": 0.67,
       "module": "Events Filter",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/events/test_events_filters.py::TestEventsFilters::test_rule_dropdown_lists_available_rules[chromium]": {
       "case_key": "GdWPmy",
@@ -286,7 +300,8 @@
       "score": 0.53,
       "module": "Events Filter",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/events/test_events_filters.py::TestEventsFilters::test_rule_and_duration_combined[chromium]": {
       "case_key": "Nj3rPe",
@@ -302,7 +317,8 @@
       "score": 0.61,
       "module": "Events Filter",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/events/test_events_filters.py::TestEventsFilters::test_pin_multiple_events[chromium]": {
       "case_key": "vanZWy",
@@ -310,7 +326,8 @@
       "score": 0.83,
       "module": "Search Results",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/events/test_events_filters.py::TestEventsFilters::test_event_results_have_thumbnails[chromium]": {
       "case_key": "68lnPV",
@@ -318,7 +335,8 @@
       "score": 0.62,
       "module": "Events Filter",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/events/test_events_playback.py::TestEventsPlayback::test_export_event[chromium]": {
       "case_key": "B86Epy",
@@ -382,7 +400,8 @@
       "score": 0.88,
       "module": "Create New Widget",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_navigation.py::TestInsightsNavigation::test_widget_search_input_visible[chromium]": {
       "case_key": "Pgw9x1",
@@ -390,7 +409,8 @@
       "score": 0.66,
       "module": "Widgets Search",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_view[chromium-Line_Person]": {
       "case_key": "GdW9QX",
@@ -398,7 +418,8 @@
       "score": 0.46,
       "module": "My Widgets",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/login/test_login_invalid.py::test_empty_fields[chromium]": {
       "case_key": "J8dzQj",
@@ -479,7 +500,8 @@
       "score": 1.0,
       "module": "Logout",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/login/test_logout.py::test_login_form_visible_after_logout[chromium]": {
       "case_key": "XGLe70",
@@ -511,7 +533,8 @@
       "score": 0.63,
       "module": "Logout",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/maps/test_maps.py::TestMaps::test_navigate_to_maps[chromium]": {
       "case_key": "GdW97j",
@@ -519,7 +542,8 @@
       "score": 0.62,
       "module": "Landing & Navigation",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_site_dropdown_lists_sites[chromium]": {
       "case_key": "DrdZ7x",
@@ -527,7 +551,8 @@
       "score": 1.0,
       "module": "Maps",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_selected_site_text_updates[chromium]": {
       "case_key": "eJqj13",
@@ -535,7 +560,8 @@
       "score": 1.0,
       "module": "Maps",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_map_cards_visible_after_site_selection[chromium]": {
       "case_key": "vanmRn",
@@ -543,7 +569,8 @@
       "score": 1.0,
       "module": "Maps",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_multiple_map_cards[chromium]": {
       "case_key": "bj0Ga9",
@@ -559,7 +586,8 @@
       "score": 0.8,
       "module": "Maps",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_online_camera_count[chromium]": {
       "case_key": "dypNzZ",
@@ -567,7 +595,8 @@
       "score": 0.5,
       "module": "Maps",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/maps/test_maps_deeper.py::TestMapsDeeper::test_maps_page_after_refresh[chromium]": {
       "case_key": "xm9Ex1",
@@ -591,7 +620,8 @@
       "score": 1.0,
       "module": "Date Filter",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_date_filter_last_7_days[chromium]": {
       "case_key": "zvnVa9",
@@ -623,7 +653,8 @@
       "score": 1.0,
       "module": "Search",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/media/test_media_deeper.py::TestMediaDeeper::test_media_page_after_refresh[chromium]": {
       "case_key": "Z8xQV6",
@@ -639,7 +670,8 @@
       "score": 0.71,
       "module": "Media Listing & Actions",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_switch_to_grid_view[chromium]": {
       "case_key": "11zlpR",
@@ -647,7 +679,8 @@
       "score": 1.0,
       "module": "View Toggle",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_clips_tab[chromium]": {
       "case_key": "dypXmw",
@@ -671,7 +704,8 @@
       "score": 0.58,
       "module": "Vault - Navigation - Vault",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/media/test_media_navigation.py::TestMediaNavigation::test_search_media[chromium]": {
       "case_key": "qzdMp4",
@@ -679,7 +713,8 @@
       "score": 0.64,
       "module": "Media Listing & Actions",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/media/test_media_operations.py::TestMediaClipOperations::test_clip_rename[chromium]": {
       "case_key": "K4n9dr",
@@ -728,7 +763,8 @@
       "score": 0.8,
       "module": "Media Listing & Actions",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/notifications/test_notifications.py::TestNotifications::test_open_notification_panel[chromium]": {
       "case_key": "Ee61yV",
@@ -736,7 +772,8 @@
       "score": 0.57,
       "module": "Notification Panel",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_closes_on_reclick[chromium]": {
       "case_key": "11zJRB",
@@ -744,7 +781,8 @@
       "score": 0.62,
       "module": "Notification Panel",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_reopen_after_close[chromium]": {
       "case_key": "5BRzq9",
@@ -752,7 +790,8 @@
       "score": 0.8,
       "module": "Notification Panel",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_header_icons_present[chromium]": {
       "case_key": "21z6dQ",
@@ -784,7 +823,8 @@
       "score": 0.7,
       "module": "Notification Panel",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_panel_after_page_navigation[chromium]": {
       "case_key": "B86D7R",
@@ -800,7 +840,8 @@
       "score": 1.0,
       "module": "Notification Panel",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/notifications/test_notifications_deeper.py::TestNotificationsDeeper::test_notification_icon_not_affected_by_views_page[chromium]": {
       "case_key": "M73EP7",
@@ -808,7 +849,8 @@
       "score": 0.64,
       "module": "Notification Panel",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_incamera_search.py::TestInCameraSearch::test_incamera_search[chromium]": {
       "case_key": "kpZBmZ",
@@ -816,7 +858,8 @@
       "score": 1.0,
       "module": "Search in Camera",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_incamera_search.py::TestInCameraSearch::test_incamera_search_play_result[chromium]": {
       "case_key": "5BRNpj",
@@ -824,7 +867,8 @@
       "score": 0.62,
       "module": "Search in Camera",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_categories.py::TestSearchCategories::test_person_search_play_result[chromium]": {
       "case_key": "kpZWpZ",
@@ -872,7 +916,8 @@
       "score": 0.9,
       "module": "Camera Search Filters",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_deeper.py::TestSearchDeeper::test_person_female_search[chromium]": {
       "case_key": "VKbB1P",
@@ -888,7 +933,8 @@
       "score": 0.91,
       "module": "Camera Search Filters",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_deeper.py::TestSearchDeeper::test_person_result_images_have_src[chromium]": {
       "case_key": "Pgw47m",
@@ -904,7 +950,8 @@
       "score": 0.71,
       "module": "Camera Search Filters",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_deeper.py::TestSearchDeeper::test_event_result_images_valid[chromium]": {
       "case_key": "gQxw5N",
@@ -912,7 +959,8 @@
       "score": 1.0,
       "module": "Camera Search Filters",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_deeper.py::TestSearchDeeper::test_change_category_person_to_event[chromium]": {
       "case_key": "GdWPqy",
@@ -920,7 +968,8 @@
       "score": 0.66,
       "module": "Camera Search Filters",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_deeper.py::TestSearchDeeper::test_change_duration_and_re_search[chromium]": {
       "case_key": "Ee6dkB",
@@ -928,7 +977,8 @@
       "score": 0.57,
       "module": "Camera Search Filters",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_deeper.py::TestSearchDeeper::test_search_button_state_after_filters[chromium]": {
       "case_key": "dypXRb",
@@ -960,7 +1010,8 @@
       "score": 0.72,
       "module": "Line - Setup & Drawing",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_filters.py::TestSearchFilters::test_select_category[chromium]": {
       "case_key": "zvnVK9",
@@ -976,7 +1027,8 @@
       "score": 0.73,
       "module": "Search Landing Page",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_filters.py::TestSearchFilters::test_search_button_visible[chromium]": {
       "case_key": "Ee69dB",
@@ -992,7 +1044,8 @@
       "score": 0.75,
       "module": "Camera Sequence",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/sequences/test_camera_sequences.py::TestCameraSequences::test_search_camera_in_sequence[chromium]": {
       "case_key": "41VrRX",
@@ -1000,7 +1053,8 @@
       "score": 0.83,
       "module": "Camera Sequence",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/sequences/test_camera_sequences.py::TestCameraSequences::test_select_all_cameras_for_sequencing[chromium]": {
       "case_key": "pDpvBJ",
@@ -1008,7 +1062,8 @@
       "score": 1.0,
       "module": "Camera Sequence",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/sequences/test_camera_sequences.py::TestCameraSequences::test_create_camera_sequence[chromium]": {
       "case_key": "LD3x9E",
@@ -1016,7 +1071,8 @@
       "score": 0.89,
       "module": "Camera Sequence Save",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/sequences/test_camera_sequences.py::TestCameraSequences::test_edit_sequence[chromium]": {
       "case_key": "XGLQ37",
@@ -1032,7 +1088,8 @@
       "score": 0.91,
       "module": "Camera Sequence Options",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_basic.py::TestViewsBasic::test_rename_does_not_affect_sequence[chromium]": {
       "case_key": "pDp8l3",
@@ -1064,7 +1121,8 @@
       "score": 0.75,
       "module": "Bookmark",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_open_bookmarks_panel[chromium]": {
       "case_key": "K4nzPD",
@@ -1072,7 +1130,8 @@
       "score": 0.75,
       "module": "Bookmark Panel - Side",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_play_bookmark[chromium]": {
       "case_key": "Nj39ya",
@@ -1080,7 +1139,8 @@
       "score": 0.65,
       "module": "Bookmark Playback - Bookmarks",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_bookmarks.py::TestViewsBookmarks::test_delete_bookmark[chromium]": {
       "case_key": "yaWX0K",
@@ -1096,7 +1156,8 @@
       "score": 0.53,
       "module": "Camera Drag & Drop",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_drag_map_to_tile[chromium]": {
       "case_key": "B869gN",
@@ -1104,7 +1165,8 @@
       "score": 0.67,
       "module": "Maps",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_drag_drop.py::TestViewsDragDrop::test_add_channel_to_tile[chromium]": {
       "case_key": "0rzJpl",
@@ -1120,7 +1182,8 @@
       "score": 0.72,
       "module": "Camera Drag & Drop",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_favorites.py::TestViewsFavorites::test_add_remove_favorites[chromium]": {
       "case_key": "Nj3JdQ",
@@ -1128,7 +1191,8 @@
       "score": 0.5,
       "module": "Camera Favorite",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_fullscreen.py::TestViewsFullscreen::test_enter_fullscreen[chromium]": {
       "case_key": "M73wpq",
@@ -1136,7 +1200,8 @@
       "score": 0.56,
       "module": "Fullscreen Entry",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_fullscreen.py::TestViewsFullscreen::test_exit_fullscreen[chromium]": {
       "case_key": "Drd9pm",
@@ -1144,7 +1209,8 @@
       "score": 0.84,
       "module": "Fullscreen Exit",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_pause_play[chromium]": {
       "case_key": "kpZQr0",
@@ -1152,7 +1218,8 @@
       "score": 0.81,
       "module": "Live Playback Controls",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_fullscreen.py::TestViewsFullscreen::test_fullscreen_controls_visible[chromium]": {
       "case_key": "LD3XyZ",
@@ -1168,7 +1235,8 @@
       "score": 1.0,
       "module": "Live Playback Controls",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_settings_icon_visible_in_fullscreen[chromium]": {
       "case_key": "K4nmwJ",
@@ -1216,7 +1284,8 @@
       "score": 0.67,
       "module": "Live Playback Controls",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_bookmarks_toggle_opens_panel[chromium]": {
       "case_key": "yaWrV9",
@@ -1224,7 +1293,8 @@
       "score": 1.0,
       "module": "Live Playback Controls",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_playback.py::TestViewsPlayback::test_fullscreen_second_tile[chromium]": {
       "case_key": "0rzxZb",
@@ -1240,7 +1310,8 @@
       "score": 0.83,
       "module": "Share Live View - Camera",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/views/test_views_subtabs.py::TestViewsSubtabs::test_channels_drag_channel_to_tile[chromium]": {
       "case_key": "zvnVlw",
@@ -1256,7 +1327,8 @@
       "score": 0.67,
       "module": "Insights",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Heat Map]": {
       "case_key": "aj64Ve",
@@ -1272,7 +1344,8 @@
       "score": 0.53,
       "module": "Events Filter",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_view[chromium-Bar_Person]": {
       "case_key": "GdW9QX",
@@ -1280,7 +1353,8 @@
       "score": 0.46,
       "module": "My Widgets",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/search/test_search_deeper.py::TestSearchDeeper::test_event_search_by_duration[chromium-Last 7 Days]": {
       "case_key": "n8jvrz",
@@ -1288,7 +1362,8 @@
       "score": 0.67,
       "module": "Camera Search Filters",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Loitering]": {
       "case_key": "QGj7m9",
@@ -1304,7 +1379,8 @@
       "score": 0.53,
       "module": "Events Filter",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_view[chromium-Pie_Person]": {
       "case_key": "GdW9QX",
@@ -1312,7 +1388,8 @@
       "score": 0.46,
       "module": "My Widgets",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Occupancy]": {
       "case_key": "WEnm8K",
@@ -1450,7 +1527,8 @@
       "score": 1.0,
       "module": "Preset Dashboard Cards",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_my_dashboard_section_visible[chromium]": {
       "case_key": "K4n96b",
@@ -1482,7 +1560,8 @@
       "score": 0.75,
       "module": "Create Dashboard Entry",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_has_discard_and_save[chromium]": {
       "case_key": "kpZX05",
@@ -1490,7 +1569,8 @@
       "score": 0.6,
       "module": "Create Dashboard Actions",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_name_field[chromium]": {
       "case_key": "5BRM3m",
@@ -1498,7 +1578,8 @@
       "score": 0.75,
       "module": "Dashboard Name",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_save_disabled_without_name[chromium]": {
       "case_key": "11zP71",
@@ -1514,7 +1595,8 @@
       "score": 0.56,
       "module": "Scrolling - Dashboard",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026 in the mapping sweep: the case states the test's behaviour"
     },
     "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_dashboard_page_after_refresh[chromium]": {
       "case_key": "wmjK7z",
@@ -1549,20 +1631,22 @@
       "reviewed": true
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_shows_site_grouping[chromium]": {
-      "case_key": "LD3gmJ",
-      "case_title": "Verify assigned tab shows site grouping",
+      "case_key": "0rzl2Q",
+      "case_title": "Verify Assigned Licenses tab displays site-wise grouping",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_multiple_sites_displayed[chromium]": {
-      "case_key": "wmjgKb",
-      "case_title": "Verify multiple sites displayed",
+      "case_key": "kpZWyB",
+      "case_title": "Verify multiple sites are displayed correctly",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_expand_site_shows_features[chromium]": {
       "case_key": "yaWrXx",
@@ -1573,12 +1657,13 @@
       "reviewed": true
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_collapse_site_hides_features[chromium]": {
-      "case_key": "0rzxll",
-      "case_title": "Verify collapse site hides features",
+      "case_key": "5BRD2z",
+      "case_title": "Verify collapse site hides feature-level details",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_site_enable_toggle_visible[chromium]": {
       "case_key": "kpZQW9",
@@ -1589,12 +1674,13 @@
       "reviewed": true
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_retains_state_after_navigation[chromium]": {
-      "case_key": "11zJl0",
-      "case_title": "Verify assigned tab retains state after navigation",
+      "case_key": "eJqmbp",
+      "case_title": "Verify Assigned Licenses tab retains state after navigation",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_refresh_behavior[chromium]": {
       "case_key": "5BRzD7",
@@ -1605,20 +1691,22 @@
       "reviewed": true
     },
     "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_consistent_layout_across_tabs[chromium]": {
-      "case_key": "21z6Bn",
-      "case_title": "Verify consistent layout across tabs",
+      "case_key": "68leJ7",
+      "case_title": "Verify consistent UI layout across Licenses tabs",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_tooltip_text_for_icons[chromium]": {
-      "case_key": "QGjLwP",
-      "case_title": "Verify tooltip text for icons",
+      "case_key": "7ErvPG",
+      "case_title": "Verify tooltip text for license-related icons",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_search_with_valid_license_name[chromium]": {
       "case_key": "WEnMv2",
@@ -1629,20 +1717,22 @@
       "reviewed": true
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_search_with_partial_keyword[chromium]": {
-      "case_key": "B86DEN",
-      "case_title": "Verify search with partial keyword",
+      "case_key": "vanXyp",
+      "case_title": "Verify search using partial License Item keyword",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_search_with_license_key[chromium]": {
-      "case_key": "8V1lbJ",
-      "case_title": "Verify search with license key",
+      "case_key": "bj04lQ",
+      "case_title": "Verify search using valid License Key",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_invalid_search_shows_no_results[chromium]": {
       "case_key": "M73Ezq",
@@ -1653,52 +1743,58 @@
       "reviewed": true
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_device_list_loads[chromium]": {
-      "case_key": "DrdZzm",
-      "case_title": "Verify device list loads",
+      "case_key": "J8dzPB",
+      "case_title": "Verify navigation to device list from feature license",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_device_list_has_three_dot_menu[chromium]": {
-      "case_key": "eJqjmr",
-      "case_title": "Verify device list has three dot menu",
+      "case_key": "rGQX3P",
+      "case_title": "Verify three-dot menu is available for each device",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_suspend_option_available[chromium]": {
-      "case_key": "vanmXl",
-      "case_title": "Verify suspend option available",
+      "case_key": "Nj3zRv",
+      "case_title": "Verify Suspend License option is available for device",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_unassign_option_available[chromium]": {
-      "case_key": "bj0G48",
-      "case_title": "Verify unassign option available",
+      "case_key": "wmjK6z",
+      "case_title": "Verify Unassign License option is available for device",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_suspend_confirmation_popup[chromium]": {
-      "case_key": "Z8xRWP",
-      "case_title": "Verify suspend confirmation popup",
+      "case_key": "K4nzvM",
+      "case_title": "Verify Suspend License confirmation popup",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_unassign_confirmation_popup[chromium]": {
-      "case_key": "RgGyBl",
-      "case_title": "Verify unassign confirmation popup",
+      "case_key": "yaWX9n",
+      "case_title": "Verify Unassign License confirmation popup",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignModal::test_assign_button_visible[chromium]": {
       "case_key": "dypN4W",
@@ -1757,36 +1853,40 @@
       "reviewed": true
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_license_counts_displayed[chromium]": {
-      "case_key": "eJqjmn",
-      "case_title": "Verify license counts displayed",
+      "case_key": "QGjwdG",
+      "case_title": "Verify Active, Available and Suspended license counts",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_counts_persist_after_refresh[chromium]": {
-      "case_key": "vanmXV",
-      "case_title": "Verify counts persist after refresh",
+      "case_key": "WEnv71",
+      "case_title": "Verify license summary persistence after refresh",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_is_default[chromium]": {
-      "case_key": "bj0G4q",
-      "case_title": "Verify available tab is default",
+      "case_key": "B86E2m",
+      "case_title": "Verify Available Licenses tab is default selected",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_switch_between_tabs[chromium]": {
-      "case_key": "Z8xRWR",
-      "case_title": "Verify switch between tabs",
+      "case_key": "8V1b21",
+      "case_title": "Verify switching between Available and Assigned Licenses tabs",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_displays_feature_list[chromium]": {
       "case_key": "RgGyrK",
@@ -1797,68 +1897,76 @@
       "reviewed": true
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_columns[chromium]": {
-      "case_key": "dypNdB",
-      "case_title": "Verify available tab columns",
+      "case_key": "3gj82X",
+      "case_title": "Verify columns displayed in Available Licenses tab",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_retains_state_after_navigation[chromium]": {
-      "case_key": "xm9E4m",
-      "case_title": "Verify available tab retains state after navigation",
+      "case_key": "yaWXyb",
+      "case_title": "Verify Available Licenses tab retains state after navigation",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_search_bar_visible[chromium]": {
-      "case_key": "VKbBrV",
-      "case_title": "Verify search bar visible",
+      "case_key": "M73zvX",
+      "case_title": "Verify search bar presence on Licenses page",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_license_module_accessible_after_refresh[chromium]": {
-      "case_key": "J8d3rn",
-      "case_title": "Verify license module accessible after refresh",
+      "case_key": "7Erv2q",
+      "case_title": "Verify Licenses module access after multiple page refreshes",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_admin_can_access_licenses[chromium]": {
-      "case_key": "Pgw4rw",
-      "case_title": "Verify admin can access licenses",
+      "case_key": "kpZW3B",
+      "case_title": "Verify Admin user can access Licenses module",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_license_page_no_duplicate_records[chromium]": {
-      "case_key": "68ln6w",
-      "case_title": "Verify license page no duplicate records",
+      "case_key": "J8dzMz",
+      "case_title": "Verify Licenses page does not display duplicate records",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_clear_search_restores_list[chromium]": {
-      "case_key": "7ErG7L",
-      "case_title": "Verify clear search restores list",
+      "case_key": "RgGBx1",
+      "case_title": "Verify clearing search restores full license list",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_empty_search_does_not_filter[chromium]": {
-      "case_key": "9e1N3r",
-      "case_title": "Verify empty search does not filter",
+      "case_key": "Drdz2P",
+      "case_title": "Verify empty search does not filter license data",
       "score": 1.0,
       "module": "Licenses",
       "auto_matched": false,
-      "reviewed": true
+      "reviewed": true,
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseExport::test_csv_download_option_available[chromium]": {
       "case_key": "qzdV4P",

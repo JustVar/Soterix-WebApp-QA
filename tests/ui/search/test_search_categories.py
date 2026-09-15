@@ -109,7 +109,14 @@ class TestSearchCategories:
     @pytest.mark.flaky(reruns=1)
     @pytest.mark.livestream
     def test_person_search_play_result(self):
-        """Verify playing a Person search result clip works."""
+        """Verify a Person search result plays to its end.
+
+        Steps:
+        1. On Search, pick the Person category, the Male description, the site's cameras and a duration, then search.
+           Expected: Results are listed.
+        2. Play the first result.
+           Expected: The clip plays and the Replay icon shows when it ends.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 
@@ -155,7 +162,14 @@ class TestSearchCategories:
     @pytest.mark.search
     @pytest.mark.livestream
     def test_vehicle_search_play_result(self):
-        """Verify playing a Vehicle search result clip works."""
+        """Verify a Vehicle search result plays to its end.
+
+        Steps:
+        1. On Search, pick the Vehicle category, the site's cameras and a duration, then search.
+           Expected: Results are listed.
+        2. Play the first result.
+           Expected: The clip plays and the Replay icon shows when it ends.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 

@@ -22,7 +22,7 @@
           "expected": "The table's columns are Configuration Name, Site, No of Devices and Devices, followed by an unlabelled actions column."
         }
       ],
-      "case_key": "RgGBWd"
+      "case_key": "mBXQQq"
     },
     "test_event_wall_grid_layout": {
       "title": "The table shows configurations or the measured empty state",
@@ -33,7 +33,7 @@
           "expected": "The table lists configurations, each with a name, a site and a device count, or one row reading \"No configuration found.\"."
         }
       ],
-      "case_key": "xm9dgR"
+      "case_key": "zvVNNz"
     },
     "test_event_wall_site_selector": {
       "title": "The Add form lists the configured site under Available Cameras",
@@ -70,7 +70,7 @@
           "expected": "The form closes."
         }
       ],
-      "case_key": "0rzlLl"
+      "case_key": "gQXNNl"
     },
     "test_event_wall_has_rule_types": {
       "title": "The Add form's Select Rule dropdown unlocks once a camera is ticked",
@@ -102,7 +102,7 @@
           "expected": "One checkbox per device."
         }
       ],
-      "case_key": "5BRDm7"
+      "case_key": "3gBXXe"
     },
     "test_event_wall_toggle_checkbox": {
       "title": "A camera selection control can be toggled",
@@ -129,7 +129,7 @@
           "expected": "The form's buttons are Cancel and Save, both enabled."
         }
       ],
-      "case_key": "VKbeN2"
+      "case_key": "n8QNNP"
     },
     "test_back_to_general_from_event_wall": {
       "title": "The breadcrumb returns to the General cards page",
@@ -179,62 +179,12 @@
       "case_key": "68leZv"
     },
     "test_event_wall_after_refresh": {
-      "title": "Verify Event Wall page loads correctly after browser refresh.",
+      "title": "Verify the Event Wall section survives a browser refresh",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Events > Event - Execution & Results",
-          "expected": "Event - Execution & Results page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Note the current state of Event duration persists before making changes",
-          "expected": "Initial state is observed and recorded"
-        },
-        {
-          "n": 4,
-          "action": "Perform the action that changes Event duration persists",
-          "expected": "Action is completed and change is reflected in the UI"
-        },
-        {
-          "n": 5,
-          "action": "Verify the change is displayed correctly before leaving the page",
-          "expected": "Updated state is visible on the current page"
-        },
-        {
-          "n": 6,
-          "action": "Refresh the page (F5 or browser reload)",
-          "expected": "Page reloads completely"
-        },
-        {
-          "n": 7,
-          "action": "Verify Event duration persists retained the changes after refresh",
-          "expected": "The change persisted through the page refresh"
-        },
-        {
-          "n": 8,
-          "action": "Navigate away to a different page",
-          "expected": "Different page loads successfully"
-        },
-        {
-          "n": 9,
-          "action": "Navigate back to Event - Execution & Results page",
-          "expected": "Event - Execution & Results page loads"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: after page refresh",
-          "expected": "Precondition is met (after page refresh)"
-        },
-        {
-          "n": 11,
-          "action": "Verify Event duration persists still reflects the saved changes",
-          "expected": "Changes persist after navigating away and back"
+          "action": "Open Admin > General > Event Wall and refresh the browser.",
+          "expected": "The address still contains /admin and the General tab shows again."
         }
       ],
       "case_key": "J8dzJp"

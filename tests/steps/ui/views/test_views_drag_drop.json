@@ -153,47 +153,17 @@
       "case_key": "B869gN"
     },
     "test_add_channel_to_tile": {
-      "title": "Verify a channel can be added to a tile via checkbox or drag.",
+      "title": "Verify a channel can be added to an empty tile",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "On Views, click the Channels tab in the left panel.",
+          "expected": "The panel lists the tenant's channels. With none the test skips naming that."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > Channels - Views",
-          "expected": "Channels - Views page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for data to finish loading (spinners, skeleton loaders disappear)",
-          "expected": "All data sections have loaded completely"
-        },
-        {
-          "n": 4,
-          "action": "Locate channel tile displays channel name or logo on the page",
-          "expected": "channel tile displays channel name or logo is visible in the expected location"
-        },
-        {
-          "n": 5,
-          "action": "Verify the data values are populated and not empty or showing placeholders",
-          "expected": "Actual data values are displayed (not 'N/A', 'Loading...', or '---')"
-        },
-        {
-          "n": 6,
-          "action": "Verify the data format is correct (numbers, dates, labels, etc.)",
-          "expected": "Data is formatted according to the expected display format"
-        },
-        {
-          "n": 7,
-          "action": "Verify channel tile displays channel name or logo is displayed as expected",
-          "expected": "channel tile displays channel name or logo is displayed as expected"
-        },
-        {
-          "n": 8,
-          "action": "Refresh the page and verify the data displays consistently",
-          "expected": "Same data appears after page refresh"
+          "action": "Hover the first channel and tick its checkbox.",
+          "expected": "The channel takes a tile: one fewer empty tile, or its content shows."
         }
       ],
       "case_key": "0rzJpl"

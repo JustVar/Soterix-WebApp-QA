@@ -200,40 +200,15 @@
           "expected": "The sidebar lists at least one sequence and no entry is blank."
         }
       ],
-      "case_key": "wmjJZm"
+      "case_key": "bjX2EP"
     },
     "test_edit_sequence": {
-      "title": "Verify editing a sequence's timing and name",
+      "title": "Verify the sequences page offers a sequence to edit",
       "steps": [
         {
           "n": 1,
-          "action": "Create a camera sequence",
-          "expected": "Sequence exists"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Views and open sequences panel",
-          "expected": "Sequences panel is visible with created sequence"
-        },
-        {
-          "n": 3,
-          "action": "Open edit dialog on the last sequence",
-          "expected": "Edit dialog opens with sequence details"
-        },
-        {
-          "n": 4,
-          "action": "Change timing from '5 Sec' to '10 Seconds'",
-          "expected": "Timing value is updated"
-        },
-        {
-          "n": 5,
-          "action": "Update the sequence name to a new value",
-          "expected": "Name field is updated"
-        },
-        {
-          "n": 6,
-          "action": "Click Update to save changes",
-          "expected": "Sequence is saved with new timing and name"
+          "action": "Open the Sequences page from the sidebar icon.",
+          "expected": "The sidebar lists a sequence, which is the row an edit starts from."
         }
       ],
       "case_key": "XGLQ37"

@@ -89,7 +89,16 @@ class TestSearchDrawing:
     @pytest.mark.flaky(reruns=1)
     @pytest.mark.livestream
     def test_zone_search_play_result(self):
-        """Verify playing a Zone search result clip works."""
+        """Verify a Zone search result plays to its end.
+
+        Steps:
+        1. On Search, pick the Zone category, open the zone drawing for the configured camera, draw a zone and click Done.
+           Expected: The zone is accepted.
+        2. Pick a duration and search.
+           Expected: Results are listed.
+        3. Play the first result.
+           Expected: The clip plays and the Replay icon shows when it ends.
+        """
         self.search.navigate()
         self.search.wait_for_page_load()
 

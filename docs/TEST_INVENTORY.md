@@ -13,8 +13,8 @@ browser parameter.
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
 | NexaiQ-Camera 2 Cloud | 1 | 8 | 33 | 33 | 33 |
-| NexaiQ-Core | 13 | 52 | 402 | 311 | 402 |
-| **Total** | | **60** | **435** | **344** | **435** |
+| NexaiQ-Core | 13 | 52 | 402 | 325 | 402 |
+| **Total** | | **60** | **435** | **358** | **435** |
 
 ## Growth
 
@@ -44,6 +44,7 @@ the mapping file points a test at; a product with no snapshot that day shows "-"
 
 | Date | NexaiQ-Camera 2 Cloud | NexaiQ-Core | NexaiQ-Neurosen | NexaiQ-Partner Admin Tool | NexaiQ-Technician App | NexiaQ-Mobile | Total cases | Automated |
 |---|---|---|---|---|---|---|---|---|
+| 2026-09-15 | - | 3277 | - | - | - | - | 3277 | 408 |
 | 2026-09-14 | - | 3275 | - | - | - | - | 3275 | 408 |
 | 2026-09-11 | 119 | - | - | - | - | - | 119 | 32 |
 | 2026-09-08 | 118 | 3170 | 0 | 772 | 0 | 10 | 4070 | 354 |
@@ -142,7 +143,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_general.py::TestAdminGeneral::test_switch_sites_to_general` | Verify switching from Sites tab to General tab works | - | qzdVD4 |
 | `test_admin_general.py::TestAdminGeneral::test_switch_users_to_sites` | Verify switching from Users tab to Sites tab works | yes | 9e1NMZ |
 | `test_admin_rules.py::TestAdminRules::test_add_new_rule_wizard_opens` | Verify clicking Add New Rule opens the wizard with rule type options | yes | 4188Nb |
-| `test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard (parametrized)` | Verify completing the full rule creation wizard for each rule type | - | 21zEKm, 8V14w7, B86BbX, QGj7m9, WEnm8K, aj64Ve |
+| `test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard (parametrized)` | Verify the rule creation wizard completes for each rule type | yes | 21zEKm, 8V14w7, B86BbX, QGj7m9, WEnm8K, aj64Ve |
 | `test_admin_rules.py::TestAdminRules::test_delete_rule` | Verify deleting the last rule with confirmation dialog | - | lR21MR |
 | `test_admin_rules.py::TestAdminRules::test_edit_rule_notification` | The rule's Edit icon opens a read-only details drawer with no notification edit | yes | J8900a |
 | `test_admin_rules.py::TestAdminRules::test_mute_rule_notification` | Verify muting a rule's notification via the mute icon | - | mBdpwM |
@@ -151,7 +152,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_rules.py::TestAdminRules::test_select_rule_type (parametrized)` | Verify selecting a rule type in the wizard enables the next step | yes | Ee92Kb |
 | `test_admin_sites.py::TestAdminSites::test_camera_sorting` | Verify A-Z and Z-A camera sorting within a site | yes | B899GN |
 | `test_admin_sites.py::TestAdminSites::test_check_site_status` | Every site on the Sites list carries an Online or Offline marker | yes | Pg9221 |
-| `test_admin_sites.py::TestAdminSites::test_create_camera_group` | Verify creating a new camera group with camera selection | - | n8jmmP |
+| `test_admin_sites.py::TestAdminSites::test_create_camera_group` | Verify a camera group can be created on a site | yes | n8jmmP |
 | `test_admin_sites.py::TestAdminSites::test_delete_camera_group` | Verify deleting a camera group with Yes confirmation | - | gQxkdL |
 | `test_admin_sites.py::TestAdminSites::test_edit_camera_group` | Verify editing a camera group name | yes | wmRR4G |
 | `test_admin_sites.py::TestAdminSites::test_navigate_to_admin_sites` | Verify navigating to Admin > Sites loads the site list | yes | 8Vvv6J |
@@ -165,8 +166,8 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_users.py::TestAdminUsers::test_navigate_to_admin_users` | Verify navigating to Admin > Users section loads the user list | yes | kpXX30 |
 | `test_admin_users.py::TestAdminUsers::test_role_filter_options` | Verify the role filter dropdown contains expected roles | yes | 11PPEB |
 | `test_admin_users.py::TestAdminUsers::test_search_user` | Verify the search input filters users by name | - | xm9dWa |
-| `test_admin_users.py::TestAdminUsers::test_select_role_filter` | Verify selecting a role from the filter dropdown works | - | vanZWz |
-| `test_admin_users.py::TestAdminUsers::test_toggle_user_status` | Verify the active/suspended toggle switch works | - | B86EyN |
+| `test_admin_users.py::TestAdminUsers::test_select_role_filter` | Verify the Users list can be filtered by role | yes | vanZWz |
+| `test_admin_users.py::TestAdminUsers::test_toggle_user_status` | Verify a user's active and suspended toggle flips and flips back | yes | B86EyN |
 | `test_lpr_camera_selection.py::TestLprCameraSelection::test_drag_drop_camera_to_grid` | Dragging the group onto a tile starts its cameras | yes | qzMNZe |
 | `test_lpr_camera_selection.py::TestLprCameraSelection::test_hover_and_select_single_camera` | A camera row's hover checkbox starts that camera | yes | XGQ2lG |
 | `test_lpr_camera_selection.py::TestLprCameraSelection::test_select_multi_camera_by_site` | The group row's hover checkbox starts the group's cameras | yes | 3gBXnz |
@@ -240,7 +241,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_search_input_visible` | The panel search input is ready once the panel opens | yes | GdWznj |
 | `test_chats_deeper.py::TestChatsDeeper::test_click_search_result_opens_chat` | Clicking a search result reaches the conversation: a | yes | qzMNN3 |
 | `test_chats_deeper.py::TestChatsDeeper::test_create_group_button_present` | The Create Group button is in the open panel on a box that has it | yes | Ee61zV |
-| `test_chats_deeper.py::TestChatsDeeper::test_search_clear_resets_results` | Clearing the search removes the results and empties the | - | VKbQJQ |
+| `test_chats_deeper.py::TestChatsDeeper::test_search_clear_resets_results` | Verify clearing the chat search empties the results and the field | yes | VKbQJQ |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_returns_results` | Searching the configured user returns a visible result | - | jPnm3Z |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_with_no_match` | A chat search for a name nobody has lists no results | yes | XGQ22M |
 
@@ -249,7 +250,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
 | `test_event_wall_config.py::TestEventWallConfig::test_back_to_general_from_event_wall` | The breadcrumb returns to the General cards page | yes | ajyyd4 |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_after_refresh` | The admin section stays valid after a browser refresh | - | J8dzJp |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_after_refresh` | Verify the Event Wall section survives a browser refresh | yes | J8dzJp |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_camera_checkboxes` | Every camera row of an expanded group carries a checkbox | yes | 3gBXXe |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_grid_layout` | The table shows configurations or the measured empty state | yes | zvVNNz |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_configuration_area` | The configuration table renders its column headers | yes | mBXQQq |
@@ -334,42 +335,42 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_license_assignment.py::TestLicenseAssignModal::test_assign_modal_opens` | Verify Assign New opens the assignment panel with its heading, both modes and its sections | yes | xm9EjW |
 | `test_license_assignment.py::TestLicenseAssignModal::test_site_dropdown_in_modal` | Verify the panel's Site select lists the tenant's sites, including the configured one | yes | B86DEG |
 | `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_refresh_behavior` | Verify the Assigned tab re-selects and shows the same site rows after a page reload | yes | 5BRzD7 |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_retains_state_after_navigation` | Verify the Assigned table shows the same site rows after leaving for Views and coming back | yes | 11zJl0 |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_shows_site_grouping` | Verify the Assigned table lists one well-formed row per site | yes | LD3gmJ |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_collapse_site_hides_features` | Verify collapsing a site removes exactly the feature rows it showed | yes | 0rzxll |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_retains_state_after_navigation` | Verify the Assigned table shows the same site rows after leaving for Views and coming back | yes | eJqmbp |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_shows_site_grouping` | Verify the Assigned table lists one well-formed row per site | yes | 0rzl2Q |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_collapse_site_hides_features` | Verify collapsing a site removes exactly the feature rows it showed | yes | 5BRD2z |
 | `test_license_assignment.py::TestLicenseAssignedTab::test_expand_site_shows_features` | Verify expanding a site lists its feature licences and their quantities add up to the site's | yes | yaWrXx |
-| `test_license_assignment.py::TestLicenseAssignedTab::test_multiple_sites_displayed` | Verify the site rows are numbered 1 to N in order, one per site | yes | wmjgKb |
+| `test_license_assignment.py::TestLicenseAssignedTab::test_multiple_sites_displayed` | Verify the site rows are numbered 1 to N in order, one per site | yes | kpZWyB |
 | `test_license_assignment.py::TestLicenseAssignedTab::test_site_enable_toggle_visible` | Verify each site's switch agrees with its Status column | yes | kpZQW9 |
-| `test_license_assignment.py::TestLicenseDeviceList::test_device_list_has_three_dot_menu` | Verify every device row carries an options menu | yes | eJqjmr |
-| `test_license_assignment.py::TestLicenseDeviceList::test_device_list_loads` | Verify a feature licence opens its device list with a breadcrumb and device rows | yes | DrdZzm |
-| `test_license_assignment.py::TestLicenseDeviceList::test_suspend_confirmation_popup` | Verify Suspend asks for confirmation naming the action, and Cancel changes nothing | yes | Z8xRWP |
-| `test_license_assignment.py::TestLicenseDeviceList::test_suspend_option_available` | Verify a device's options menu offers Suspend and closes on Escape | yes | vanmXl |
-| `test_license_assignment.py::TestLicenseDeviceList::test_unassign_confirmation_popup` | Verify Unassign asks for confirmation naming the action, and Cancel changes nothing | yes | RgGyBl |
-| `test_license_assignment.py::TestLicenseDeviceList::test_unassign_option_available` | Verify a device's options menu offers Unassign and closes on Escape | yes | bj0G48 |
-| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_columns` | Verify the Available Licenses table has exactly the columns Feature, Quantity, Available, Active | yes | dypNdB |
+| `test_license_assignment.py::TestLicenseDeviceList::test_device_list_has_three_dot_menu` | Verify every device row carries an options menu | yes | rGQX3P |
+| `test_license_assignment.py::TestLicenseDeviceList::test_device_list_loads` | Verify a feature licence opens its device list with a breadcrumb and device rows | yes | J8dzPB |
+| `test_license_assignment.py::TestLicenseDeviceList::test_suspend_confirmation_popup` | Verify Suspend asks for confirmation naming the action, and Cancel changes nothing | yes | K4nzvM |
+| `test_license_assignment.py::TestLicenseDeviceList::test_suspend_option_available` | Verify a device's options menu offers Suspend and closes on Escape | yes | Nj3zRv |
+| `test_license_assignment.py::TestLicenseDeviceList::test_unassign_confirmation_popup` | Verify Unassign asks for confirmation naming the action, and Cancel changes nothing | yes | yaWX9n |
+| `test_license_assignment.py::TestLicenseDeviceList::test_unassign_option_available` | Verify a device's options menu offers Unassign and closes on Escape | yes | wmjK6z |
+| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_columns` | Verify the Available Licenses table has exactly the columns Feature, Quantity, Available, Active | yes | 3gj82X |
 | `test_license_navigation.py::TestLicenseNavigation::test_available_tab_displays_feature_list` | Verify the Available table lists named features, not the No Data row | yes | RgGyrK |
-| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_is_default` | Verify Available Licenses is the selected tab on landing and Assigned is not | yes | bj0G4q |
-| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_retains_state_after_navigation` | Verify the Available table shows the same rows after leaving for Views and coming back | yes | xm9E4m |
-| `test_license_navigation.py::TestLicenseNavigation::test_counts_persist_after_refresh` | Verify the licence summary reads the same numbers after a page reload | yes | vanmXV |
+| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_is_default` | Verify Available Licenses is the selected tab on landing and Assigned is not | yes | B86E2m |
+| `test_license_navigation.py::TestLicenseNavigation::test_available_tab_retains_state_after_navigation` | Verify the Available table shows the same rows after leaving for Views and coming back | yes | yaWXyb |
+| `test_license_navigation.py::TestLicenseNavigation::test_counts_persist_after_refresh` | Verify the licence summary reads the same numbers after a page reload | yes | WEnv71 |
 | `test_license_navigation.py::TestLicenseNavigation::test_default_layout` | Verify the licence summary reconciles: Total equals Active plus Available plus Suspended | yes | M73EzN |
-| `test_license_navigation.py::TestLicenseNavigation::test_license_counts_displayed` | Verify every feature row's Available and Active fit inside its Quantity | yes | eJqjmn |
-| `test_license_navigation.py::TestLicenseNavigation::test_license_module_accessible_after_refresh` | Verify three reloads in a row leave the licence summary unchanged | yes | J8d3rn |
+| `test_license_navigation.py::TestLicenseNavigation::test_license_counts_displayed` | Verify every feature row's Available and Active fit inside its Quantity | yes | QGjwdG |
+| `test_license_navigation.py::TestLicenseNavigation::test_license_module_accessible_after_refresh` | Verify three reloads in a row leave the licence summary unchanged | yes | 7Erv2q |
 | `test_license_navigation.py::TestLicenseNavigation::test_navigate_to_licenses` | Verify Admin > Licenses lands on the two licence tabs with Available selected | yes | 8V1lbn |
-| `test_license_navigation.py::TestLicenseNavigation::test_search_bar_visible` | Verify the search box is empty, says what it searches, and takes text | yes | VKbBrV |
-| `test_license_navigation.py::TestLicenseNavigation::test_switch_between_tabs` | Verify switching tabs moves the selection and swaps the table | yes | Z8xRWR |
+| `test_license_navigation.py::TestLicenseNavigation::test_search_bar_visible` | Verify the search box is empty, says what it searches, and takes text | yes | M73zvX |
+| `test_license_navigation.py::TestLicenseNavigation::test_switch_between_tabs` | Verify switching tabs moves the selection and swaps the table | yes | 8V1b21 |
 | `test_license_navigation.py::TestLicenseNavigation::test_total_licenses_widget_visible` | Verify Total Licenses equals the Quantity column of the Available table | yes | DrdZz4 |
-| `test_license_permissions.py::TestLicensePermissions::test_admin_can_access_licenses` | Verify the admin's sidebar offers Licenses under Admin and it opens the licence page | yes | Pgw4rw |
+| `test_license_permissions.py::TestLicensePermissions::test_admin_can_access_licenses` | Verify the admin's sidebar offers Licenses under Admin and it opens the licence page | yes | kpZW3B |
 | `test_license_permissions.py::TestLicensePermissions::test_confirmation_dialogs_have_clear_messaging` | Verify the Suspend confirmation names the action and offers Cancel (device-list tripwire) | yes | pD8NNL |
-| `test_license_permissions.py::TestLicensePermissions::test_consistent_layout_across_tabs` | Verify the summary, the search box and the Download control are the same on both tabs | yes | 21z6Bn |
-| `test_license_permissions.py::TestLicensePermissions::test_license_page_no_duplicate_records` | Verify the Licenses page does not render duplicate records | yes | 68ln6w |
-| `test_license_permissions.py::TestLicensePermissions::test_tooltip_text_for_icons` | Verify the licence page's icons carry a name: the Download icon's alt and the expand arrow's test id | yes | QGjLwP |
+| `test_license_permissions.py::TestLicensePermissions::test_consistent_layout_across_tabs` | Verify the summary, the search box and the Download control are the same on both tabs | yes | 68leJ7 |
+| `test_license_permissions.py::TestLicensePermissions::test_license_page_no_duplicate_records` | Verify the Licenses page does not render duplicate records | yes | J8dzMz |
+| `test_license_permissions.py::TestLicensePermissions::test_tooltip_text_for_icons` | Verify the licence page's icons carry a name: the Download icon's alt and the expand arrow's test id | yes | 7ErvPG |
 | `test_license_search.py::TestLicenseExport::test_csv_download_option_available` | Verify the Licenses page offers one Download control, labelled as such | yes | qzdV4P |
 | `test_license_search.py::TestLicenseExport::test_csv_download_triggers_file` | Verify clicking Download produces a CSV export | yes | XGLew7 |
-| `test_license_search.py::TestLicenseSearch::test_clear_search_restores_list` | Verify clearing the search brings back exactly the rows shown before it | yes | 7ErG7L |
-| `test_license_search.py::TestLicenseSearch::test_empty_search_does_not_filter` | Verify an empty search term changes nothing in the table | yes | 9e1N3r |
+| `test_license_search.py::TestLicenseSearch::test_clear_search_restores_list` | Verify clearing the search brings back exactly the rows shown before it | yes | RgGBx1 |
+| `test_license_search.py::TestLicenseSearch::test_empty_search_does_not_filter` | Verify an empty search term changes nothing in the table | yes | Drdz2P |
 | `test_license_search.py::TestLicenseSearch::test_invalid_search_shows_no_results` | Verify a term that matches nothing leaves only the No Data! row | yes | M73Ezq |
-| `test_license_search.py::TestLicenseSearch::test_search_with_license_key` | Verify searching an Available count lists the features with that count | yes | 8V1lbJ |
-| `test_license_search.py::TestLicenseSearch::test_search_with_partial_keyword` | Verify a partial feature name filters to the rows containing it | yes | B86DEN |
+| `test_license_search.py::TestLicenseSearch::test_search_with_license_key` | Verify searching an Available count lists the features with that count | yes | bj04lQ |
+| `test_license_search.py::TestLicenseSearch::test_search_with_partial_keyword` | Verify a partial feature name filters to the rows containing it | yes | vanXyp |
 | `test_license_search.py::TestLicenseSearch::test_search_with_valid_license_name` | Verify searching a feature's full name lists only rows carrying that name | yes | WEnMv2 |
 
 ### login (20 tests in 4 files)
@@ -483,10 +484,10 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_search_categories.py::TestSearchCategories::test_event_search` | Verify Event category search returns results | yes | dyXXWZ |
 | `test_search_categories.py::TestSearchCategories::test_event_search_play_result` | Verify playing an Event search result clip works | yes | xmddy1 |
 | `test_search_categories.py::TestSearchCategories::test_person_search` | Verify Person search with Male description returns results | yes | VKQQ6P |
-| `test_search_categories.py::TestSearchCategories::test_person_search_play_result` | Verify playing a Person search result clip works | - | kpZWpZ |
+| `test_search_categories.py::TestSearchCategories::test_person_search_play_result` | Verify a Person search result plays to its end | yes | kpZWpZ |
 | `test_search_categories.py::TestSearchCategories::test_person_search_results_valid` | Verify Person search results contain valid images | yes | J899ML |
 | `test_search_categories.py::TestSearchCategories::test_vehicle_search` | Verify Vehicle search returns results | yes | Pg99Rm |
-| `test_search_categories.py::TestSearchCategories::test_vehicle_search_play_result` | Verify playing a Vehicle search result clip works | - | gQxmzz |
+| `test_search_categories.py::TestSearchCategories::test_vehicle_search_play_result` | Verify a Vehicle search result plays to its end | yes | gQxmzz |
 | `test_search_deeper.py::TestSearchDeeper::test_category_dropdown_lists_categories` | Verify category dropdown contains Person, Vehicle, and Event | - | Z8xR7k |
 | `test_search_deeper.py::TestSearchDeeper::test_change_category_person_to_event` | Verify switching from Person to Event and re-searching works | - | GdWPqy |
 | `test_search_deeper.py::TestSearchDeeper::test_change_duration_and_re_search` | Verify changing duration between searches works | - | Ee6dkB |
@@ -504,7 +505,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_search_drawing.py::TestSearchDrawing::test_line_search_play_result` | A Line search result plays to its end | yes | Dr9pN7 |
 | `test_search_drawing.py::TestSearchDrawing::test_line_search_returns_results` | Verify Line search returns results after drawing and searching | yes | bjXXz8 |
 | `test_search_drawing.py::TestSearchDrawing::test_zone_search_draw_zone` | A zone can be drawn on a camera's search canvas | yes | eJX25Q |
-| `test_search_drawing.py::TestSearchDrawing::test_zone_search_play_result` | Verify playing a Zone search result clip works | - | dyp4pB |
+| `test_search_drawing.py::TestSearchDrawing::test_zone_search_play_result` | Verify a Zone search result plays to its end | yes | dyp4pB |
 | `test_search_drawing.py::TestSearchDrawing::test_zone_search_returns_results` | Verify Zone search returns results after drawing and searching | yes | 68DD2V |
 | `test_search_filters.py::TestSearchFilters::test_navigate_to_search` | Verify clicking Search nav link loads the Global Search page | yes | vaZNBM |
 | `test_search_filters.py::TestSearchFilters::test_search_button_visible` | Verify the search button is disabled until the filters allow a search | yes | Ee69dB |
@@ -520,7 +521,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_camera_sequences.py::TestCameraSequences::test_add_created_sequence_to_views` | The sequences sidebar lists the tenant's sequences by name | yes | bjX2EP |
 | `test_camera_sequences.py::TestCameraSequences::test_create_camera_sequence` | Create a new camera sequence with a timestamped name | - | LD3x9E |
 | `test_camera_sequences.py::TestCameraSequences::test_create_sequence_with_advanced_options` | Create a sequence with offline camera refrain and reverse play options | - | 0rzgKw |
-| `test_camera_sequences.py::TestCameraSequences::test_edit_sequence` | Verify sequence edit workflow - navigate and access edit menu | - | XGLQ37 |
+| `test_camera_sequences.py::TestCameraSequences::test_edit_sequence` | Verify the sequences page offers a sequence to edit | yes | XGLQ37 |
 | `test_camera_sequences.py::TestCameraSequences::test_navigate_to_camera_sequence_page` | Navigate to camera sequence page via sequence icon in sidebar | - | jPnWJE |
 | `test_camera_sequences.py::TestCameraSequences::test_search_camera_in_sequence` | Search for a camera on the sequence page | - | 41VrRX |
 | `test_camera_sequences.py::TestCameraSequences::test_select_all_cameras_for_sequencing` | Select all cameras via the Select All checkbox | - | pDpvBJ |
@@ -532,8 +533,8 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_views_basic.py::TestViewsBasic::test_delete_saved_view` | A saved view can be deleted from My Views | yes | Z8Q2yQ |
 | `test_views_basic.py::TestViewsBasic::test_open_my_views` | Verify the My Views panel opens | yes | Z8QQJP |
 | `test_views_basic.py::TestViewsBasic::test_open_saved_view` | A saved view reopens from My Views after a page refresh | yes | RgQ2WB |
-| `test_views_basic.py::TestViewsBasic::test_rename_does_not_affect_sequence` | Verify renaming a tab doesn't break the sequential naming for new tabs | - | pDp8l3 |
-| `test_views_basic.py::TestViewsBasic::test_save_empty_view_shows_error` | Verify saving an empty view shows an error or is prevented | - | yaWXBx |
+| `test_views_basic.py::TestViewsBasic::test_rename_does_not_affect_sequence` | Verify renaming a tab leaves the numbering of the next tab alone | yes | pDp8l3 |
+| `test_views_basic.py::TestViewsBasic::test_save_empty_view_shows_error` | Verify saving a view with no cameras is refused | yes | yaWXBx |
 | `test_views_basic.py::TestViewsBasic::test_save_view` | Verify a view can be saved with content using checkbox selection | - | 8V1b0g |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_bookmark_options_menu` | Verify the 3-dot options menu shows 4 options | yes | 9ebb47 |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_close_bookmarks_panel` | Verify bookmarks panel closes when clicking the dots icon again | yes | qzMMWv |
@@ -544,7 +545,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_views_bookmarks.py::TestViewsBookmarks::test_rename_bookmark` | Verify a bookmark can be renamed and the new name appears | yes | 3gBB46 |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_share_bookmark` | Verify a bookmark can be shared (share dialog shows success) | yes | zvVVzD |
 | `test_views_bookmarks.py::test_add_bookmark` | Create a bookmark on a streaming video tile | yes | rGQZz1 |
-| `test_views_drag_drop.py::TestViewsDragDrop::test_add_channel_to_tile` | Verify a channel can be added to a tile via checkbox or drag | - | 0rzJpl |
+| `test_views_drag_drop.py::TestViewsDragDrop::test_add_channel_to_tile` | Verify a channel can be added to an empty tile | yes | 0rzJpl |
 | `test_views_drag_drop.py::TestViewsDragDrop::test_drag_camera_by_name_to_tile` | Verify a specific camera can be dragged to a tile by name | yes | qzMM04 |
 | `test_views_drag_drop.py::TestViewsDragDrop::test_drag_camera_to_tile` | Verify a camera thumbnail can be dragged to an empty tile | - | Ee6103 |
 | `test_views_drag_drop.py::TestViewsDragDrop::test_drag_location_to_tile` | Verify a location/site can be dragged to an empty tile (shows all cameras) | yes | XGQQ90 |
@@ -569,7 +570,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_views_playback.py::TestViewsPlayback::test_volume_control_clickable` | Verify the volume control toggles mute and back | yes | LD3g6e |
 | `test_views_share.py::test_share_live_view` | Verify sharing a live view via email and copying the share link | - | K4ndbd |
 | `test_views_subtabs.py::TestViewsSubtabs::test_channels_add_channel_via_checkbox` | CHANNELS: Add channel to tile using checkbox | - | M73w4q |
-| `test_views_subtabs.py::TestViewsSubtabs::test_channels_drag_channel_to_tile` | CHANNELS: Drag channel thumbnail to tile | - | zvnVlw |
+| `test_views_subtabs.py::TestViewsSubtabs::test_channels_drag_channel_to_tile` | Verify a channel dragged onto an empty tile starts there | yes | zvnVlw |
 | `test_views_subtabs.py::TestViewsSubtabs::test_devices_add_camera_via_checkbox` | DEVICES: Add camera to tile using checkbox selection | yes | mBXXyV |
 | `test_views_subtabs.py::TestViewsSubtabs::test_devices_drag_camera_to_tile` | A camera thumbnail dragged onto an empty tile starts there | yes | xmdKMr |
 | `test_views_subtabs.py::TestViewsSubtabs::test_insights_add_via_checkbox` | INSIGHTS: Add insight widget to tile using checkbox | yes | n8QQyz |

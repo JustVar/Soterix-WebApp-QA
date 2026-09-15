@@ -285,12 +285,19 @@ class TestAdminRules:
     @pytest.mark.slow
     @pytest.mark.parametrize("rule_type", RULE_TYPES)
     def test_create_rule_full_wizard(self, rule_type):
-        """Verify completing the full rule creation wizard for each rule type.
+        """Verify the rule creation wizard completes for each rule type.
 
-        Canvas rules (Entry-Exit, Line Crossing): snapshot + zone drawing.
-        Non-canvas rules (Heat Map, Intrusion, Loitering, Occupancy): MuiSwitch toggle.
+        Canvas rules (Entry-Exit, Line Crossing) draw a zone on the camera
+        snapshot; the others (Heat Map, Intrusion Detection, Loitering,
+        Occupancy) toggle their switch instead.
 
-        Selenium ref: test_vsaas_soterix.py lines 3335-4294.
+        Steps:
+        1. Open Admin > Rules and click Add New Rule.
+           Expected: The Select Rule picker opens and offers the rule type.
+        2. Pick the rule type and walk the wizard: the site, the camera, the zone or the switch, a unique rule name, then Save.
+           Expected: The wizard closes.
+        3. Search the rules list for that name.
+           Expected: Exactly one row carries it, so the rule was saved and not just closed.
         """
         self._navigate_to_rules()
 

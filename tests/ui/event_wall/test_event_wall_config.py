@@ -383,7 +383,12 @@ class TestEventWallConfig:
     @pytest.mark.admin
     @pytest.mark.event_wall
     def test_event_wall_after_refresh(self):
-        """The admin section stays valid after a browser refresh."""
+        """Verify the Event Wall section survives a browser refresh.
+
+        Steps:
+        1. Open Admin > General > Event Wall and refresh the browser.
+           Expected: The address still contains /admin and the General tab shows again.
+        """
         # reload waits for the load event on its own
         self.page.reload()
         assert "admin" in self.page.url.lower()

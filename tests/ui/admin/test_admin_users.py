@@ -111,7 +111,16 @@ class TestAdminUsers:
     @pytest.mark.admin
     @pytest.mark.admin_users
     def test_toggle_user_status(self):
-        """Verify the active/suspended toggle switch works."""
+        """Verify a user's active and suspended toggle flips and flips back.
+
+        Steps:
+        1. Open Admin > Users and search for AutoTest.
+           Expected: An automation user is listed. With none the test skips naming the tenant's data.
+        2. Click that user's status toggle.
+           Expected: The toggle flips to the other state.
+        3. Click it again.
+           Expected: The toggle returns to the state it started in, so the shared tenant is left as it was.
+        """
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 
@@ -176,7 +185,14 @@ class TestAdminUsers:
     @pytest.mark.admin
     @pytest.mark.admin_users
     def test_select_role_filter(self):
-        """Verify selecting a role from the filter dropdown works."""
+        """Verify the Users list can be filtered by role.
+
+        Steps:
+        1. Open Admin > Users and click the role filter.
+           Expected: The role list opens.
+        2. Choose Admin.
+           Expected: The filter shows Admin as its value.
+        """
         self.admin.navigate_to_admin()
         self.admin.navigate_to_users()
 

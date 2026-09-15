@@ -16,7 +16,7 @@
           "expected": "The panel closes and the search field is gone."
         }
       ],
-      "case_key": "RgGQ3W"
+      "case_key": "9ebaaW"
     },
     "test_chat_panel_reopens_after_close": {
       "title": "The panel reopens after closing via the header X",
@@ -121,40 +121,20 @@
           "expected": "The result list is empty."
         }
       ],
-      "case_key": "pDpmEm"
+      "case_key": "XGQ22M"
     },
     "test_search_clear_resets_results": {
-      "title": "Verify clearing the search input resets the search state.",
+      "title": "Verify clearing the chat search empties the results and the field",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Click the chat icon in the header and search for the configured chat user.",
+          "expected": "The user is listed."
         },
         {
           "n": 2,
-          "action": "Navigate to Admin > All Rules Filter",
-          "expected": "All Rules Filter page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded"
-        },
-        {
-          "n": 4,
-          "action": "Locate Reset Search clears selected rule and resets to All Rules on the page",
-          "expected": "Reset Search clears selected rule and resets to All Rules is visible"
-        },
-        {
-          "n": 5,
-          "action": "Inspect the current state of Reset Search clears selected rule and resets to All Rules",
-          "expected": "Reset Search clears selected rule and resets to All Rules is displayed as expected"
-        },
-        {
-          "n": 6,
-          "action": "Verify no console errors or unexpected behavior",
-          "expected": "No errors in the browser console related to Reset Search clears selected rule and resets to All Rules"
+          "action": "Clear the search.",
+          "expected": "No results are listed and the search field is empty."
         }
       ],
       "case_key": "VKbQJQ"
@@ -184,7 +164,7 @@
           "expected": "The recent conversations list holds a row with the user's name."
         }
       ],
-      "case_key": "LD3mr1"
+      "case_key": "qzMNN3"
     },
     "test_chat_icon_visible_on_events_page": {
       "title": "The chat panel opens from the Events page too",
@@ -195,7 +175,7 @@
           "expected": "The address ends in /events and the panel opens with its empty Search field."
         }
       ],
-      "case_key": "5BRMbz"
+      "case_key": "7Eennn"
     },
     "test_chat_panel_survives_page_refresh": {
       "title": "The panel opens after a page refresh",

@@ -116,42 +116,22 @@
       "case_key": "xm9dWa"
     },
     "test_toggle_user_status": {
-      "title": "Verify the active/suspended toggle switch works.",
+      "title": "Verify a user's active and suspended toggle flips and flips back",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Users and search for AutoTest.",
+          "expected": "An automation user is listed. With none the test skips naming the tenant's data."
         },
         {
           "n": 2,
-          "action": "Navigate to LPR > List",
-          "expected": "LPR List page loads without errors"
+          "action": "Click that user's status toggle.",
+          "expected": "The toggle flips to the other state."
         },
         {
           "n": 3,
-          "action": "Wait for the page to fully render",
-          "expected": "All page elements are loaded (no spinners or skeleton loaders)"
-        },
-        {
-          "n": 4,
-          "action": "Scroll to the area where Status toggle should appear",
-          "expected": "The relevant section of the page is in view"
-        },
-        {
-          "n": 5,
-          "action": "Locate Status toggle on the page",
-          "expected": "Status toggle is visible on the page"
-        },
-        {
-          "n": 6,
-          "action": "Set up precondition: for each list entry",
-          "expected": "Precondition is met (for each list entry)"
-        },
-        {
-          "n": 7,
-          "action": "Verify Status toggle visible",
-          "expected": "Status toggle visible"
+          "action": "Click it again.",
+          "expected": "The toggle returns to the state it started in, so the shared tenant is left as it was."
         }
       ],
       "case_key": "B86EyN"
@@ -168,57 +148,17 @@
       "case_key": "11PPEB"
     },
     "test_select_role_filter": {
-      "title": "Verify selecting a role from the filter dropdown works.",
+      "title": "Verify the Users list can be filtered by role",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Open Admin > Users and click the role filter.",
+          "expected": "The role list opens."
         },
         {
           "n": 2,
-          "action": "Navigate to Search & Reset",
-          "expected": "Search & Reset page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify the Reset Search clears Select Site filter to be deleted from the list",
-          "expected": "Reset Search clears Select Site filter is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target Reset Search clears Select Site filter",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the Reset Search clears Select Site filter"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the Reset Search clears Select Site filter no longer appears in the list",
-          "expected": "Reset Search clears Select Site filter is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted Reset Search clears Select Site filter does not reappear after refresh"
+          "action": "Choose Admin.",
+          "expected": "The filter shows Admin as its value."
         }
       ],
       "case_key": "vanZWz"

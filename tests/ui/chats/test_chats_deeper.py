@@ -154,8 +154,14 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_search_clear_resets_results(self):
-        """Clearing the search removes the results and empties the
-        input."""
+        """Verify clearing the chat search empties the results and the field.
+
+        Steps:
+        1. Click the chat icon in the header and search for the configured chat user.
+           Expected: The user is listed.
+        2. Clear the search.
+           Expected: No results are listed and the search field is empty.
+        """
         self.chat.open_chat_panel()
         self._search_partner_or_fail()
 

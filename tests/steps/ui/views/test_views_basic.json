@@ -3,118 +3,28 @@
   "class": "TestViewsBasic",
   "tests": {
     "test_rename_does_not_affect_sequence": {
-      "title": "Verify renaming a tab doesn't break the sequential naming for new tabs",
+      "title": "Verify renaming a tab leaves the numbering of the next tab alone",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
+          "action": "Hover the first tab, click its pencil icon, type Custom Name and press Enter.",
+          "expected": "The tab reads Custom Name."
         },
         {
           "n": 2,
-          "action": "Navigate to Insights",
-          "expected": "Insights page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Identify the removing one Insights widget to be deleted from the list",
-          "expected": "removing one Insights widget is visible and identifiable in the list"
-        },
-        {
-          "n": 4,
-          "action": "Note the current count of items in the list",
-          "expected": "Current item count is recorded for later comparison"
-        },
-        {
-          "n": 5,
-          "action": "Click the delete button or action for the target removing one Insights widget",
-          "expected": "A confirmation dialog or prompt appears"
-        },
-        {
-          "n": 6,
-          "action": "Verify the confirmation dialog displays the correct item being deleted",
-          "expected": "Dialog shows the name or identifier of the removing one Insights widget"
-        },
-        {
-          "n": 7,
-          "action": "Click Confirm/Yes/Delete to proceed with the deletion",
-          "expected": "Deletion is processed and a success message appears"
-        },
-        {
-          "n": 8,
-          "action": "Verify the removing one Insights widget no longer appears in the list",
-          "expected": "removing one Insights widget is removed from the list view"
-        },
-        {
-          "n": 9,
-          "action": "Verify the item count decreased by one",
-          "expected": "List count reflects the removal"
-        },
-        {
-          "n": 10,
-          "action": "Refresh the page and confirm the deletion persisted",
-          "expected": "The deleted removing one Insights widget does not reappear after refresh"
+          "action": "Click + to add a tab.",
+          "expected": "The new tab is named View 2, so the rename did not take its number."
         }
       ],
       "case_key": "pDp8l3"
     },
     "test_save_empty_view_shows_error": {
-      "title": "Verify saving an empty view shows an error or is prevented",
+      "title": "Verify saving a view with no cameras is refused",
       "steps": [
         {
           "n": 1,
-          "action": "Log in to the application with valid credentials",
-          "expected": "User is logged in and default page loads"
-        },
-        {
-          "n": 2,
-          "action": "Navigate to Search > Categories",
-          "expected": "Search Categories page loads without errors"
-        },
-        {
-          "n": 3,
-          "action": "Locate the form, input, or control where validation applies",
-          "expected": "The target input or form is visible"
-        },
-        {
-          "n": 4,
-          "action": "Enter invalid data or trigger the error condition for system shows validation error",
-          "expected": "The invalid input is accepted into the field"
-        },
-        {
-          "n": 5,
-          "action": "Attempt to submit or trigger the validation",
-          "expected": "Validation fires on submit or field blur"
-        },
-        {
-          "n": 6,
-          "action": "Verify an error message is displayed near the field or at the top of the form",
-          "expected": "A clear, descriptive error message appears"
-        },
-        {
-          "n": 7,
-          "action": "Verify the error message text is correct and helpful",
-          "expected": "Error message accurately describes the validation failure"
-        },
-        {
-          "n": 8,
-          "action": "Verify the form did not submit or the action was blocked",
-          "expected": "No data was saved; the user remains on the form"
-        },
-        {
-          "n": 9,
-          "action": "Correct the invalid input with valid data",
-          "expected": "The error message disappears when valid data is entered"
-        },
-        {
-          "n": 10,
-          "action": "Set up precondition: when category name is left empty",
-          "expected": "Precondition is met (when category name is left empty)"
-        },
-        {
-          "n": 11,
-          "action": "Submit with the corrected data and verify success",
-          "expected": "Form submits successfully after correction"
+          "action": "Add a tab and leave it empty, then click Save.",
+          "expected": "The app shows an empty-view message. If it shows none, it must not show View saved successfully either."
         }
       ],
       "case_key": "yaWXBx"
@@ -185,7 +95,7 @@
           "expected": "The view opens as a tab or fills a tile."
         }
       ],
-      "case_key": "8V1vGJ"
+      "case_key": "RgQ2WB"
     },
     "test_delete_saved_view": {
       "title": "A saved view can be deleted from My Views",
@@ -206,7 +116,7 @@
           "expected": "The toast Successfully deleted shows and the view is gone from the list."
         }
       ],
-      "case_key": "WEnQRx"
+      "case_key": "Z8Q2yQ"
     }
   }
 }

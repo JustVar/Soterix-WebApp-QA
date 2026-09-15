@@ -172,7 +172,12 @@ class TestCameraSequences:
     @pytest.mark.ui
     @pytest.mark.sequences
     def test_edit_sequence(self):
-        """Verify sequence edit workflow - navigate and access edit menu."""
+        """Verify the sequences page offers a sequence to edit.
+
+        Steps:
+        1. Open the Sequences page from the sidebar icon.
+           Expected: The sidebar lists a sequence, which is the row an edit starts from.
+        """
         self._navigate_and_verify()
 
         # Sequences must be available and accessible; the raising
