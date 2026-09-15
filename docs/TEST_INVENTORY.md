@@ -143,7 +143,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_general.py::TestAdminGeneral::test_switch_sites_to_general` | Verify switching from Sites tab to General tab works | - | qzdVD4 |
 | `test_admin_general.py::TestAdminGeneral::test_switch_users_to_sites` | Verify switching from Users tab to Sites tab works | yes | 9e1NMZ |
 | `test_admin_rules.py::TestAdminRules::test_add_new_rule_wizard_opens` | Verify clicking Add New Rule opens the wizard with rule type options | yes | 4188Nb |
-| `test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard (parametrized)` | Verify the rule creation wizard completes for each rule type | yes | 21zEKm, 8V14w7, B86BbX, QGj7m9, WEnm8K, aj64Ve |
+| `test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard (parametrized)` | Verify the rule creation wizard completes for each rule type | yes | Ee92xD |
 | `test_admin_rules.py::TestAdminRules::test_delete_rule` | Verify deleting the last rule with confirmation dialog | - | lR21MR |
 | `test_admin_rules.py::TestAdminRules::test_edit_rule_notification` | The rule's Edit icon opens a read-only details drawer with no notification edit | yes | J8900a |
 | `test_admin_rules.py::TestAdminRules::test_mute_rule_notification` | Verify muting a rule's notification via the mute icon | - | mBdpwM |
@@ -152,7 +152,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_rules.py::TestAdminRules::test_select_rule_type (parametrized)` | Verify selecting a rule type in the wizard enables the next step | yes | Ee92Kb |
 | `test_admin_sites.py::TestAdminSites::test_camera_sorting` | Verify A-Z and Z-A camera sorting within a site | yes | B899GN |
 | `test_admin_sites.py::TestAdminSites::test_check_site_status` | Every site on the Sites list carries an Online or Offline marker | yes | Pg9221 |
-| `test_admin_sites.py::TestAdminSites::test_create_camera_group` | Verify a camera group can be created on a site | yes | n8jmmP |
+| `test_admin_sites.py::TestAdminSites::test_create_camera_group` | Verify a camera group can be created on a site | yes | lRlyLr |
 | `test_admin_sites.py::TestAdminSites::test_delete_camera_group` | Verify deleting a camera group with Yes confirmation | - | gQxkdL |
 | `test_admin_sites.py::TestAdminSites::test_edit_camera_group` | Verify editing a camera group name | yes | wmRR4G |
 | `test_admin_sites.py::TestAdminSites::test_navigate_to_admin_sites` | Verify navigating to Admin > Sites loads the site list | yes | 8Vvv6J |
@@ -166,8 +166,8 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_users.py::TestAdminUsers::test_navigate_to_admin_users` | Verify navigating to Admin > Users section loads the user list | yes | kpXX30 |
 | `test_admin_users.py::TestAdminUsers::test_role_filter_options` | Verify the role filter dropdown contains expected roles | yes | 11PPEB |
 | `test_admin_users.py::TestAdminUsers::test_search_user` | Verify the search input filters users by name | - | xm9dWa |
-| `test_admin_users.py::TestAdminUsers::test_select_role_filter` | Verify the Users list can be filtered by role | yes | vanZWz |
-| `test_admin_users.py::TestAdminUsers::test_toggle_user_status` | Verify a user's active and suspended toggle flips and flips back | yes | B86EyN |
+| `test_admin_users.py::TestAdminUsers::test_select_role_filter` | Verify the Users list can be filtered by role | yes | rGD2vP |
+| `test_admin_users.py::TestAdminUsers::test_toggle_user_status` | Verify a user's active and suspended toggle flips and flips back | yes | Nj9bjv |
 | `test_lpr_camera_selection.py::TestLprCameraSelection::test_drag_drop_camera_to_grid` | Dragging the group onto a tile starts its cameras | yes | qzMNZe |
 | `test_lpr_camera_selection.py::TestLprCameraSelection::test_hover_and_select_single_camera` | A camera row's hover checkbox starts that camera | yes | XGQ2lG |
 | `test_lpr_camera_selection.py::TestLprCameraSelection::test_select_multi_camera_by_site` | The group row's hover checkbox starts the group's cameras | yes | 3gBXnz |
@@ -241,7 +241,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_search_input_visible` | The panel search input is ready once the panel opens | yes | GdWznj |
 | `test_chats_deeper.py::TestChatsDeeper::test_click_search_result_opens_chat` | Clicking a search result reaches the conversation: a | yes | qzMNN3 |
 | `test_chats_deeper.py::TestChatsDeeper::test_create_group_button_present` | The Create Group button is in the open panel on a box that has it | yes | Ee61zV |
-| `test_chats_deeper.py::TestChatsDeeper::test_search_clear_resets_results` | Verify clearing the chat search empties the results and the field | yes | VKbQJQ |
+| `test_chats_deeper.py::TestChatsDeeper::test_search_clear_resets_results` | Verify clearing the chat search empties the results and the field | yes | K49D4M |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_returns_results` | Searching the configured user returns a visible result | - | jPnm3Z |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_with_no_match` | A chat search for a name nobody has lists no results | yes | XGQ22M |
 
@@ -250,7 +250,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
 | `test_event_wall_config.py::TestEventWallConfig::test_back_to_general_from_event_wall` | The breadcrumb returns to the General cards page | yes | ajyyd4 |
-| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_after_refresh` | Verify the Event Wall section survives a browser refresh | yes | J8dzJp |
+| `test_event_wall_config.py::TestEventWallConfig::test_event_wall_after_refresh` | Verify the Event Wall section survives a browser refresh | yes | jPpkPP |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_camera_checkboxes` | Every camera row of an expanded group carries a checkbox | yes | 3gBXXe |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_grid_layout` | The table shows configurations or the measured empty state | yes | zvVNNz |
 | `test_event_wall_config.py::TestEventWallConfig::test_event_wall_has_configuration_area` | The configuration table renders its column headers | yes | mBXQQq |
@@ -285,13 +285,13 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_events_playback.py::TestEventsPlayback::test_play_event_inline` | Play Video on an event opens the inline player | yes | lRlNNP |
 | `test_events_playback.py::TestEventsPlayback::test_player_controls_visible` | The inline event player shows its pause, backward, forward and volume controls | yes | rGDNNd |
 | `test_events_search.py::TestEventsSearch::test_event_snapshots_valid` | Verify event thumbnails have real images, not placeholders | yes | RgQQRR |
-| `test_events_search.py::TestEventsSearch::test_navigate_to_events` | Verify clicking Events nav link loads the events page | yes | 8V1vJn |
+| `test_events_search.py::TestEventsSearch::test_navigate_to_events` | Verify clicking Events nav link loads the events page | yes | 41821a |
 | `test_events_search.py::TestEventsSearch::test_pin_event` | Verify pinning an event updates the pinned clips counter | yes | M73wxx |
 | `test_events_search.py::TestEventsSearch::test_review_pinned_clips_button` | Verify 'Review Pinned Clips' button appears after pinning | yes | lR2lkQ |
 | `test_events_search.py::TestEventsSearch::test_search_events` | Verify search returns event results after selecting filters | yes | dyXXlR |
 | `test_events_search.py::TestEventsSearch::test_search_with_specific_camera` | Verify search filters results by a single camera channel | yes | xmddXg |
 | `test_events_search.py::TestEventsSearch::test_select_camera` | Verify camera dropdown opens and lists the site's cameras | yes | Nj9ppB |
-| `test_events_search.py::TestEventsSearch::test_select_duration` | Verify duration filter can be changed from default | yes | gQxXwN |
+| `test_events_search.py::TestEventsSearch::test_select_duration` | Verify duration filter can be changed from default | yes | pD8yD2 |
 | `test_events_search.py::TestEventsSearch::test_select_rule` | Verify rule type filter opens and a rule can be selected | yes | Dr99lm |
 | `test_events_search.py::TestEventsSearch::test_select_site` | Verify site dropdown opens and a site can be selected | yes | eJXXgr |
 
@@ -299,7 +299,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
-| `test_insights_dashboard.py::TestInsightsDashboard::test_all_insights_tab_visible` | Verify the All Insights tab is visible on the dashboard | yes | RgGQ4a |
+| `test_insights_dashboard.py::TestInsightsDashboard::test_all_insights_tab_visible` | Verify the All Insights tab is visible on the dashboard | yes | LDXeD3 |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_has_discard_and_save` | Verify Discard and Save buttons on the creation screen | yes | kpZX05 |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_name_field` | Verify the Dashboard Name field accepts a name | yes | 5BRM3m |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_create_dashboard_opens_form` | Verify clicking Create New opens the dashboard creation screen | yes | LD3Xwx |
@@ -313,13 +313,13 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_cards_displayed` | Verify the preset dashboard is listed as a link on the landing | yes | gQxXRW |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_section_visible` | Verify the landing shows its sections and the preset entry | yes | mBdX60 |
 | `test_insights_dashboard.py::TestInsightsDashboard::test_preset_dashboard_view_all` | Verify the View All controls on the landing | yes | n8jQ76 |
-| `test_insights_dashboard.py::TestInsightsDashboard::test_save_disabled_without_name` | Verify Save stays disabled until the dashboard has a name and a widget | yes | 11zP71 |
+| `test_insights_dashboard.py::TestInsightsDashboard::test_save_disabled_without_name` | Verify Save stays disabled until the dashboard has a name and a widget | yes | wmRymz |
 | `test_insights_navigation.py::TestInsightsNavigation::test_close_system_status_tab` | Verify the System Status tab can be closed | yes | vaZZ4l |
 | `test_insights_navigation.py::TestInsightsNavigation::test_create_widget_button_visible` | Verify the Create New button in the Widgets tab | yes | gQxXLl |
 | `test_insights_navigation.py::TestInsightsNavigation::test_navigate_to_insights` | The Insights link in the sidebar opens the Insights page | yes | K49ppe |
-| `test_insights_navigation.py::TestInsightsNavigation::test_open_system_status_dashboard` | Verify the System Status dashboard opens and loads for a site | yes | lR2lDP |
+| `test_insights_navigation.py::TestInsightsNavigation::test_open_system_status_dashboard` | Verify the System Status dashboard opens and loads for a site | yes | yaxyan |
 | `test_insights_navigation.py::TestInsightsNavigation::test_switch_to_widgets_tab` | Verify switching from Dashboard to Widgets tab | yes | jPp003 |
-| `test_insights_navigation.py::TestInsightsNavigation::test_system_status_link_visible` | Verify the System Status preset link on the Insights page | yes | xm9jVZ |
+| `test_insights_navigation.py::TestInsightsNavigation::test_system_status_link_visible` | Verify the System Status preset link on the Insights page | yes | 0rJ2r9 |
 | `test_insights_navigation.py::TestInsightsNavigation::test_widget_search_input_visible` | Verify the widget search box in the Widgets tab | yes | Pgw9x1 |
 | `test_insights_widgets.py::TestInsightsWidgetCreate::test_widget_create (parametrized)` | Verify a widget can be created with the given graph and category | yes | 8Vvv2r |
 | `test_insights_widgets.py::TestInsightsWidgetOperations::test_widget_delete (parametrized)` | Verify a widget can be deleted and no longer appears in search | yes | M7wwv7 |
@@ -421,7 +421,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
 | `test_media_deeper.py::TestMediaDeeper::test_core_tabs_accessible` | Verify the core media tabs can be selected in turn | yes | RgQQLl |
-| `test_media_deeper.py::TestMediaDeeper::test_date_filter_dropdown_opens` | Verify the date filter dropdown opens on the page's date ranges | yes | M73wDl |
+| `test_media_deeper.py::TestMediaDeeper::test_date_filter_dropdown_opens` | Verify the date filter dropdown opens on the page's date ranges | yes | kpXypg |
 | `test_media_deeper.py::TestMediaDeeper::test_date_filter_has_options` | Verify the date filter dropdown has multiple filter options | yes | Dr992x |
 | `test_media_deeper.py::TestMediaDeeper::test_date_filter_last_7_days` | Verify selecting 'Last 7 Days' date filter works | yes | zvnVa9 |
 | `test_media_deeper.py::TestMediaDeeper::test_date_filter_today` | Verify selecting 'Today' date filter works | yes | bj0X3V |
@@ -429,11 +429,11 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_media_deeper.py::TestMediaDeeper::test_grid_view_toggle_visible` | Verify the view toggle starts in list view | yes | 11P9N1 |
 | `test_media_deeper.py::TestMediaDeeper::test_media_page_after_refresh` | Verify the Media page loads correctly after a browser refresh | yes | Z8xQV6 |
 | `test_media_deeper.py::TestMediaDeeper::test_search_clear_and_retry` | Verify clearing search and searching again works | yes | dyXXPW |
-| `test_media_deeper.py::TestMediaDeeper::test_search_input_visible` | Verify the search field on the Media page | yes | dypXvp |
+| `test_media_deeper.py::TestMediaDeeper::test_search_input_visible` | Verify the search field on the Media page | yes | 11P21R |
 | `test_media_deeper.py::TestMediaDeeper::test_search_no_results` | Verify searching for nonexistent text shows the empty state | yes | Pgw96K |
 | `test_media_deeper.py::TestMediaDeeper::test_tab_round_trip_all_to_clips` | Verify switching from All to Clips and back works | yes | vaZZel |
 | `test_media_deeper.py::TestMediaDeeper::test_tab_round_trip_folders_to_shared` | Verify switching from Folders to Shared with me and back works | yes | xmddLW |
-| `test_media_deeper.py::TestMediaDeeper::test_view_toggle_area_present` | Verify the view toggle offers exactly the list and grid buttons | yes | aj6ydD |
+| `test_media_deeper.py::TestMediaDeeper::test_view_toggle_area_present` | Verify the view toggle offers exactly the list and grid buttons | yes | 5BM2BE |
 | `test_media_navigation.py::TestMediaNavigation::test_all_tab` | Verify the All tab loads and shows content or empty state | yes | vaZZyn |
 | `test_media_navigation.py::TestMediaNavigation::test_clips_tab` | Verify the Clips tab loads and shows content or empty state | yes | dypXmw |
 | `test_media_navigation.py::TestMediaNavigation::test_folders_tab` | Verify the Folders tab loads | yes | xm9d85 |
@@ -484,10 +484,10 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_search_categories.py::TestSearchCategories::test_event_search` | Verify Event category search returns results | yes | dyXXWZ |
 | `test_search_categories.py::TestSearchCategories::test_event_search_play_result` | Verify playing an Event search result clip works | yes | xmddy1 |
 | `test_search_categories.py::TestSearchCategories::test_person_search` | Verify Person search with Male description returns results | yes | VKQQ6P |
-| `test_search_categories.py::TestSearchCategories::test_person_search_play_result` | Verify a Person search result plays to its end | yes | kpZWpZ |
+| `test_search_categories.py::TestSearchCategories::test_person_search_play_result` | Verify a Person search result plays to its end | yes | 21W21M |
 | `test_search_categories.py::TestSearchCategories::test_person_search_results_valid` | Verify Person search results contain valid images | yes | J899ML |
 | `test_search_categories.py::TestSearchCategories::test_vehicle_search` | Verify Vehicle search returns results | yes | Pg99Rm |
-| `test_search_categories.py::TestSearchCategories::test_vehicle_search_play_result` | Verify a Vehicle search result plays to its end | yes | gQxmzz |
+| `test_search_categories.py::TestSearchCategories::test_vehicle_search_play_result` | Verify a Vehicle search result plays to its end | yes | ajyEjW |
 | `test_search_deeper.py::TestSearchDeeper::test_category_dropdown_lists_categories` | Verify category dropdown contains Person, Vehicle, and Event | - | Z8xR7k |
 | `test_search_deeper.py::TestSearchDeeper::test_change_category_person_to_event` | Verify switching from Person to Event and re-searching works | - | GdWPqy |
 | `test_search_deeper.py::TestSearchDeeper::test_change_duration_and_re_search` | Verify changing duration between searches works | - | Ee6dkB |
@@ -500,15 +500,15 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_search_deeper.py::TestSearchDeeper::test_person_result_images_have_src` | Verify Person search result images are real images | yes | Pgw47m |
 | `test_search_deeper.py::TestSearchDeeper::test_person_search_multiple_results` | Verify a broad Person search returns multiple results | - | J8d3mL |
 | `test_search_deeper.py::TestSearchDeeper::test_result_count_matches_visible_images` | Verify get_result_count() matches visible result images | - | rGQP7W |
-| `test_search_deeper.py::TestSearchDeeper::test_search_button_state_after_filters` | Verify the search button unlocks once every filter is set | yes | dypXRb |
+| `test_search_deeper.py::TestSearchDeeper::test_search_button_state_after_filters` | Verify the search button unlocks once every filter is set | yes | QGQdGk |
 | `test_search_drawing.py::TestSearchDrawing::test_line_search_draw_line` | Verify a line can be drawn on the canvas | - | lR212J |
 | `test_search_drawing.py::TestSearchDrawing::test_line_search_play_result` | A Line search result plays to its end | yes | Dr9pN7 |
 | `test_search_drawing.py::TestSearchDrawing::test_line_search_returns_results` | Verify Line search returns results after drawing and searching | yes | bjXXz8 |
 | `test_search_drawing.py::TestSearchDrawing::test_zone_search_draw_zone` | A zone can be drawn on a camera's search canvas | yes | eJX25Q |
-| `test_search_drawing.py::TestSearchDrawing::test_zone_search_play_result` | Verify a Zone search result plays to its end | yes | dyp4pB |
+| `test_search_drawing.py::TestSearchDrawing::test_zone_search_play_result` | Verify a Zone search result plays to its end | yes | WEQ7EQ |
 | `test_search_drawing.py::TestSearchDrawing::test_zone_search_returns_results` | Verify Zone search returns results after drawing and searching | yes | 68DD2V |
 | `test_search_filters.py::TestSearchFilters::test_navigate_to_search` | Verify clicking Search nav link loads the Global Search page | yes | vaZNBM |
-| `test_search_filters.py::TestSearchFilters::test_search_button_visible` | Verify the search button is disabled until the filters allow a search | yes | Ee69dB |
+| `test_search_filters.py::TestSearchFilters::test_search_button_visible` | Verify the search button is disabled until the filters allow a search | yes | B8928E |
 | `test_search_filters.py::TestSearchFilters::test_search_page_filters_visible` | Verify all filter dropdowns are present on the Search page | yes | 7Eee2e |
 | `test_search_filters.py::TestSearchFilters::test_select_category` | Verify the Category dropdown opens and a category is selectable | yes | zvnVK9 |
 | `test_search_filters.py::TestSearchFilters::test_select_duration` | Verify the Duration dropdown opens and Today is selectable | yes | 9ebb2Z |
@@ -521,7 +521,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_camera_sequences.py::TestCameraSequences::test_add_created_sequence_to_views` | The sequences sidebar lists the tenant's sequences by name | yes | bjX2EP |
 | `test_camera_sequences.py::TestCameraSequences::test_create_camera_sequence` | Create a new camera sequence with a timestamped name | - | LD3x9E |
 | `test_camera_sequences.py::TestCameraSequences::test_create_sequence_with_advanced_options` | Create a sequence with offline camera refrain and reverse play options | - | 0rzgKw |
-| `test_camera_sequences.py::TestCameraSequences::test_edit_sequence` | Verify the sequences page offers a sequence to edit | yes | XGLQ37 |
+| `test_camera_sequences.py::TestCameraSequences::test_edit_sequence` | Verify the sequences page offers a sequence to edit | yes | 8Vv2V9 |
 | `test_camera_sequences.py::TestCameraSequences::test_navigate_to_camera_sequence_page` | Navigate to camera sequence page via sequence icon in sidebar | - | jPnWJE |
 | `test_camera_sequences.py::TestCameraSequences::test_search_camera_in_sequence` | Search for a camera on the sequence page | - | 41VrRX |
 | `test_camera_sequences.py::TestCameraSequences::test_select_all_cameras_for_sequencing` | Select all cameras via the Select All checkbox | - | pDpvBJ |
@@ -533,19 +533,19 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_views_basic.py::TestViewsBasic::test_delete_saved_view` | A saved view can be deleted from My Views | yes | Z8Q2yQ |
 | `test_views_basic.py::TestViewsBasic::test_open_my_views` | Verify the My Views panel opens | yes | Z8QQJP |
 | `test_views_basic.py::TestViewsBasic::test_open_saved_view` | A saved view reopens from My Views after a page refresh | yes | RgQ2WB |
-| `test_views_basic.py::TestViewsBasic::test_rename_does_not_affect_sequence` | Verify renaming a tab leaves the numbering of the next tab alone | yes | pDp8l3 |
-| `test_views_basic.py::TestViewsBasic::test_save_empty_view_shows_error` | Verify saving a view with no cameras is refused | yes | yaWXBx |
+| `test_views_basic.py::TestViewsBasic::test_rename_does_not_affect_sequence` | Verify renaming a tab leaves the numbering of the next tab alone | yes | M7wv7l |
+| `test_views_basic.py::TestViewsBasic::test_save_empty_view_shows_error` | Verify saving a view with no cameras is refused | yes | Dr92rV |
 | `test_views_basic.py::TestViewsBasic::test_save_view` | Verify a view can be saved with content using checkbox selection | - | 8V1b0g |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_bookmark_options_menu` | Verify the 3-dot options menu shows 4 options | yes | 9ebb47 |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_close_bookmarks_panel` | Verify bookmarks panel closes when clicking the dots icon again | yes | qzMMWv |
-| `test_views_bookmarks.py::TestViewsBookmarks::test_delete_bookmark` | Verify a bookmark can be deleted with confirmation | yes | yaWX0K |
+| `test_views_bookmarks.py::TestViewsBookmarks::test_delete_bookmark` | Verify a bookmark can be deleted with confirmation | yes | eJXKJl |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_export_bookmark` | Verify a bookmark can be exported (export dialog completes) | yes | XGQQ68 |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_open_bookmarks_panel` | Verify bookmarks panel opens when clicking the dots icon | yes | K4nzPD |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_play_bookmark` | Verify clicking a bookmark navigates to that snapshot position | yes | Nj39ya |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_rename_bookmark` | Verify a bookmark can be renamed and the new name appears | yes | 3gBB46 |
 | `test_views_bookmarks.py::TestViewsBookmarks::test_share_bookmark` | Verify a bookmark can be shared (share dialog shows success) | yes | zvVVzD |
 | `test_views_bookmarks.py::test_add_bookmark` | Create a bookmark on a streaming video tile | yes | rGQZz1 |
-| `test_views_drag_drop.py::TestViewsDragDrop::test_add_channel_to_tile` | Verify a channel can be added to an empty tile | yes | 0rzJpl |
+| `test_views_drag_drop.py::TestViewsDragDrop::test_add_channel_to_tile` | Verify a channel can be added to an empty tile | yes | vaZyaz |
 | `test_views_drag_drop.py::TestViewsDragDrop::test_drag_camera_by_name_to_tile` | Verify a specific camera can be dragged to a tile by name | yes | qzMM04 |
 | `test_views_drag_drop.py::TestViewsDragDrop::test_drag_camera_to_tile` | Verify a camera thumbnail can be dragged to an empty tile | - | Ee6103 |
 | `test_views_drag_drop.py::TestViewsDragDrop::test_drag_location_to_tile` | Verify a location/site can be dragged to an empty tile (shows all cameras) | yes | XGQQ90 |
@@ -570,7 +570,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_views_playback.py::TestViewsPlayback::test_volume_control_clickable` | Verify the volume control toggles mute and back | yes | LD3g6e |
 | `test_views_share.py::test_share_live_view` | Verify sharing a live view via email and copying the share link | - | K4ndbd |
 | `test_views_subtabs.py::TestViewsSubtabs::test_channels_add_channel_via_checkbox` | CHANNELS: Add channel to tile using checkbox | - | M73w4q |
-| `test_views_subtabs.py::TestViewsSubtabs::test_channels_drag_channel_to_tile` | Verify a channel dragged onto an empty tile starts there | yes | zvnVlw |
+| `test_views_subtabs.py::TestViewsSubtabs::test_channels_drag_channel_to_tile` | Verify a channel dragged onto an empty tile starts there | yes | bjXljR |
 | `test_views_subtabs.py::TestViewsSubtabs::test_devices_add_camera_via_checkbox` | DEVICES: Add camera to tile using checkbox selection | yes | mBXXyV |
 | `test_views_subtabs.py::TestViewsSubtabs::test_devices_drag_camera_to_tile` | A camera thumbnail dragged onto an empty tile starts there | yes | xmdKMr |
 | `test_views_subtabs.py::TestViewsSubtabs::test_insights_add_via_checkbox` | INSIGHTS: Add insight widget to tile using checkbox | yes | n8QQyz |
