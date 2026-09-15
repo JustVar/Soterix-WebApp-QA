@@ -126,12 +126,13 @@
     },
     "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_search_site[chromium]": {
       "case_key": "0rzlE9",
-      "case_title": "Verify Select Site dropdown resets on Reset Search",
+      "case_title": "Verify search by site name",
       "score": 1.0,
       "module": "Select Site Dropdown",
       "auto_matched": true,
-      "reviewed": false,
-      "note": "re-pointed 09/08/2026: the test filters sites by name, which is case 0rzlE9 'Verify search by site name'; n8jQRg 'Select Site dropdown resets on Reset Search' describes a flow no test performs"
+      "reviewed": true,
+      "note": "re-pointed 09/08/2026: the test filters sites by name, which is case 0rzlE9 'Verify search by site name'; n8jQRg 'Select Site dropdown resets on Reset Search' describes a flow no test performs",
+      "source": "read 09/15/2026: the case was renamed, the new title fits the test"
     },
     "tests/ui/admin/test_admin_sites.py::TestAdminSites::test_toggle_grid_list_view[chromium]": {
       "case_key": "eJqXz3",
@@ -243,7 +244,8 @@
       "score": 0.39,
       "module": "Chat UI",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026: the case is right, the titles word it differently"
     },
     "tests/ui/chats/test_chats_deeper.py::TestChatsDeeper::test_search_returns_results[chromium]": {
       "case_key": "jPnm3Z",
@@ -251,7 +253,8 @@
       "score": 0.4,
       "module": "One-to-One Chat",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026: the case is right, the titles word it differently"
     },
     "tests/ui/chats/test_chats_deeper.py::TestChatsDeeper::test_search_clear_resets_results[chromium]": {
       "case_key": "VKbQJQ",
@@ -419,7 +422,8 @@
       "score": 0.2,
       "module": "Validation - Login",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026: the case is right, the titles word it differently"
     },
     "tests/ui/login/test_login_invalid.py::test_empty_password[chromium]": {
       "case_key": "68leQP",
@@ -731,7 +735,8 @@
       "score": 0.46,
       "module": "Media Listing & Actions",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026: the case is right, the titles word it differently"
     },
     "tests/ui/media/test_media_operations.py::TestMediaFolderOperations::test_folder_create_link[chromium]": {
       "case_key": "RgGQ8d",
@@ -1427,7 +1432,8 @@
       "score": 0.62,
       "module": "Audit Trail",
       "auto_matched": true,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026: the case is right, the titles word it differently"
     },
     "tests/ui/event_wall/test_event_wall_config.py::TestEventWallConfig::test_event_wall_page_loads[chromium]": {
       "case_key": "VKbeN9",
@@ -1451,7 +1457,8 @@
       "score": 0.3,
       "module": "Event Wall",
       "auto_matched": false,
-      "reviewed": false
+      "reviewed": true,
+      "source": "read 09/15/2026: the case is right, the titles word it differently"
     },
     "tests/ui/insights/test_insights_dashboard.py::TestInsightsDashboard::test_dashboard_landing_loads[chromium]": {
       "case_key": "VKbewQ",
