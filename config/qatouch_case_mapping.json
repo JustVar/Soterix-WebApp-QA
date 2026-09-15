@@ -92,14 +92,6 @@
       "auto_matched": true,
       "reviewed": true
     },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Entry-Exit]": {
-      "case_key": "Drd95P",
-      "case_title": "Verify empty state message is displayed before selecting rule type",
-      "score": 0.83,
-      "module": "Empty State",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_delete_rule[chromium]": {
       "case_key": "lR21MR",
       "case_title": "Delete rule confirmation dialog",
@@ -203,14 +195,6 @@
       "case_title": "Verify Chat panel opens when clicking Chat icon",
       "score": 0.83,
       "module": "Chat Access",
-      "auto_matched": true,
-      "reviewed": false
-    },
-    "tests/ui/chats/test_chats.py::TestChats::test_search_and_send_group_message[chromium]": {
-      "case_key": "RgGQ4l",
-      "case_title": "Verify Search Views shows no matches message for invalid input",
-      "score": 0.5,
-      "module": "My Views",
       "auto_matched": true,
       "reviewed": false
     },
@@ -1274,14 +1258,6 @@
       "auto_matched": true,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Heat Map]": {
-      "case_key": "Drd95P",
-      "case_title": "Verify empty state message is displayed before selecting rule type",
-      "score": 0.83,
-      "module": "Empty State",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Heat Map]": {
       "case_key": "aj64Ve",
       "case_title": "Verify full Heat Map rule creation wizard with MuiSwitch toggle",
@@ -1314,14 +1290,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Loitering]": {
-      "case_key": "Drd95P",
-      "case_title": "Verify empty state message is displayed before selecting rule type",
-      "score": 0.83,
-      "module": "Empty State",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Loitering]": {
       "case_key": "QGj7m9",
       "case_title": "Verify full Loitering rule creation wizard with MuiSwitch toggle",
@@ -1346,14 +1314,6 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Occupancy]": {
-      "case_key": "Drd95P",
-      "case_title": "Verify empty state message is displayed before selecting rule type",
-      "score": 0.83,
-      "module": "Empty State",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Occupancy]": {
       "case_key": "WEnm8K",
       "case_title": "Verify full Occupancy rule creation wizard with MuiSwitch toggle",
@@ -1362,28 +1322,12 @@
       "auto_matched": false,
       "reviewed": false
     },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Intrusion Detection]": {
-      "case_key": "Drd95P",
-      "case_title": "Verify empty state message is displayed before selecting rule type",
-      "score": 0.83,
-      "module": "Empty State",
-      "auto_matched": true,
-      "reviewed": false
-    },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Intrusion Detection]": {
       "case_key": "B86BbX",
       "case_title": "Verify full Intrusion Detection rule creation wizard with MuiSwitch toggle",
       "score": 0.55,
       "module": "Add New Rule",
       "auto_matched": false,
-      "reviewed": false
-    },
-    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Line Crossing]": {
-      "case_key": "Drd95P",
-      "case_title": "Verify empty state message is displayed before selecting rule type",
-      "score": 0.83,
-      "module": "Empty State",
-      "auto_matched": true,
       "reviewed": false
     },
     "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_create_rule_full_wizard[chromium-Line Crossing]": {
@@ -3953,6 +3897,69 @@
       "case_title": "A saved view ticked in My Views opens",
       "score": 1.0,
       "module": "Subtabs",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Entry-Exit]": {
+      "case_key": "Ee92Kb",
+      "case_title": "Verify selecting a rule type in the wizard enables the next step",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Heat Map]": {
+      "case_key": "Ee92Kb",
+      "case_title": "Verify selecting a rule type in the wizard enables the next step",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Loitering]": {
+      "case_key": "Ee92Kb",
+      "case_title": "Verify selecting a rule type in the wizard enables the next step",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Occupancy]": {
+      "case_key": "Ee92Kb",
+      "case_title": "Verify selecting a rule type in the wizard enables the next step",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Intrusion Detection]": {
+      "case_key": "Ee92Kb",
+      "case_title": "Verify selecting a rule type in the wizard enables the next step",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/admin/test_admin_rules.py::TestAdminRules::test_select_rule_type[chromium-Line Crossing]": {
+      "case_key": "Ee92Kb",
+      "case_title": "Verify selecting a rule type in the wizard enables the next step",
+      "score": 1.0,
+      "module": "Rules",
+      "auto_matched": false,
+      "reviewed": true,
+      "source": "generated"
+    },
+    "tests/ui/chats/test_chats.py::TestChats::test_search_and_send_group_message[chromium]": {
+      "case_key": "lRly0V",
+      "case_title": "Open a group from the list and send a message into it",
+      "score": 1.0,
+      "module": "Chats",
       "auto_matched": false,
       "reviewed": true,
       "source": "generated"

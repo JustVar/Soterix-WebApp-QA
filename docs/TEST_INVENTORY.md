@@ -148,7 +148,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_admin_rules.py::TestAdminRules::test_mute_rule_notification` | Verify muting a rule's notification via the mute icon | - | mBdpwM |
 | `test_admin_rules.py::TestAdminRules::test_navigate_to_rules` | Verify navigating to Admin > General > Rules loads the rules list | yes | pD88GG |
 | `test_admin_rules.py::TestAdminRules::test_search_rule` | Verify searching for a rule by name filters the results | yes | LDXXze |
-| `test_admin_rules.py::TestAdminRules::test_select_rule_type (parametrized)` | Verify selecting a rule type in the wizard enables the next step | yes | Drd95P |
+| `test_admin_rules.py::TestAdminRules::test_select_rule_type (parametrized)` | Verify selecting a rule type in the wizard enables the next step | yes | Ee92Kb |
 | `test_admin_sites.py::TestAdminSites::test_camera_sorting` | Verify A-Z and Z-A camera sorting within a site | yes | B899GN |
 | `test_admin_sites.py::TestAdminSites::test_check_site_status` | Every site on the Sites list carries an Online or Offline marker | yes | Pg9221 |
 | `test_admin_sites.py::TestAdminSites::test_create_camera_group` | Verify creating a new camera group with camera selection | - | n8jmmP |
@@ -230,7 +230,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_chats.py::TestChats::test_delete_group` | Delete a group and see it leave the conversation list | yes | bj04VD |
 | `test_chats.py::TestChats::test_edit_group_name` | The group thread's edit icon opens nothing on the current build | yes | eJXX6r |
 | `test_chats.py::TestChats::test_open_chat_panel` | The panel opens from the header icon; the visible panel | - | mBdpnd |
-| `test_chats.py::TestChats::test_search_and_send_group_message` | Open a group from the list and send a message into it | yes | RgGQ4l |
+| `test_chats.py::TestChats::test_search_and_send_group_message` | Open a group from the list and send a message into it | yes | lRly0V |
 | `test_chats.py::TestChats::test_send_individual_message` | A message sent in a one-to-one chat shows in the thread | yes | 68DmmG |
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_icon_visible_on_events_page` | The chat panel opens from the Events page too | yes | 7Eennn |
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_panel_closes_on_second_click` | The header's chat icon opens the panel on one click and closes it on the next | yes | 9ebaaW |
