@@ -38,6 +38,8 @@ from typing import Any
 import pytest
 from playwright.sync_api import Page
 
+from tests.shared.helpers import search_gap
+
 JOB_PATH = "/REST/site/search"
 POLL_PATH = "/REST/site/search/event"
 REQUEST_TIMEOUT_MS = 15000
@@ -189,6 +191,11 @@ def watch_search(page: Page, click: Callable[[], None], *, timeout_ms: int = 600
             body = None
         job.observe(path, response.status, body)
 
+    # the account's one search job frees about 16 s after the previous
+    # searching test's page closed: wait only the remainder, then note
+    # that this test searched so its own close is stamped (search_gap)
+    search_gap.wait_for_gap()
+    search_gap.mark_ran()
     page.on("response", on_response)
     started = time.monotonic()
     try:

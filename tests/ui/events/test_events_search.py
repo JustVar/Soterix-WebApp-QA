@@ -12,6 +12,11 @@ from playwright.sync_api import expect
 from config.base_config import config
 from tests.shared.pages.events_page import EventsPage
 
+# One search job per account and no cancel (register row 78): every
+# searching module shares this xdist group so --dist loadgroup runs them
+# on one worker, and tests/shared/helpers/search_gap.py spaces the searches.
+pytestmark = pytest.mark.xdist_group("account_search")
+
 # Site name used across event tests (same as Views tests). The shared
 # tenant renames sites, so the name lives in config, never in the test.
 SITE_NAME = config.get("test_site_name")

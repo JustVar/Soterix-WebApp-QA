@@ -13,6 +13,11 @@ from playwright.sync_api import expect
 from config.base_config import config
 from tests.shared.pages.search_page import SearchPage
 
+# One search job per account and no cancel (register row 78): every
+# searching module shares this xdist group so --dist loadgroup runs them
+# on one worker, and tests/shared/helpers/search_gap.py spaces the searches.
+pytestmark = pytest.mark.xdist_group("account_search")
+
 # The shared tenant renames cameras, so the name lives in config. The
 # drawing searches take their own camera when the box names one: india's
 # test camera is offline and its search never completes (register row 76).

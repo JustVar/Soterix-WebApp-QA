@@ -8,7 +8,16 @@ from __future__ import annotations
 
 import pytest
 
-from tests.shared.helpers import search_job as sj
+from tests.shared.helpers import search_gap, search_job as sj
+
+
+@pytest.fixture(autouse=True)
+def no_search_gap(monkeypatch):
+    """These pins drive watch_search with a fake page: no real job runs,
+    so the account's free window does not apply. Without this, each pin's
+    fake search stamped the stop and the next waited the full 17 s."""
+    monkeypatch.setattr(search_gap, "wait_for_gap", lambda: 0.0)
+    monkeypatch.setattr(search_gap, "mark_ran", lambda: None)
 
 JOB_URL = "https://vsaas-qa.example/v-apiserver/REST/site/search"
 POLL_URL = "https://vsaas-qa.example/v-apiserver/REST/site/search/event"

@@ -305,6 +305,17 @@ VIDEO_DIR = TRACE_DIR / "videos"
 _OFF_VALUES = ("off", "0", "false", "no")
 
 
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_teardown(item, nextitem):
+    """After a test that ran a search job is torn down (its page has
+    closed, so its polling stopped), stamp the moment: the next search
+    waits only the remainder of the server's free window (search_gap)."""
+    yield
+    from tests.shared.helpers import search_gap
+    if search_gap.ran_this_test():
+        search_gap.note_stopped()
+
+
 LOGIN_SCREEN = "/auth/login"
 SESSION_DROP_NOTE = (
     "[SESSION] The page was on the login screen when the test failed. The "

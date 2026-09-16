@@ -18,6 +18,11 @@ from playwright.sync_api import expect
 
 from tests.shared.pages.search_page import SearchPage
 
+# One search job per account and no cancel (register row 78): every
+# searching module shares this xdist group so --dist loadgroup runs them
+# on one worker, and tests/shared/helpers/search_gap.py spaces the searches.
+pytestmark = pytest.mark.xdist_group("account_search")
+
 
 class TestSearchCategories:
     """Tests for category-specific Global Search flows."""
