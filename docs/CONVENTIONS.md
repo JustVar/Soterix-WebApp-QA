@@ -117,6 +117,10 @@ once independently in the wait conversion (August 2026). Use them:
   Config test data is per-box: `config/env/qa.py` boxes carry a
   `test_data` overlay, so `config.get("test_site_name")` is always the
   ACTIVE box's site (BOX=us resolves Spartan0) and tests stay box-agnostic.
+  A box may add `search_site_name` / `search_camera_name` for the drawing
+  searches when its test camera cannot be searched (india: the test
+  site's IVMS is down, so the search never completes); readers fall
+  back to the test keys when a box does not set them.
 - **Identity lookups match the exact name, escaped** (locator series
   09/2026, TEST_REPAIRS items 14 and 18-20). Finding a specific
   camera/site/list/view by its name uses `get_by_text` / `get_by_title` /

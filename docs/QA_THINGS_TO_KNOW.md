@@ -244,8 +244,9 @@ turns ReCAPTCHA off outside production.
 - Credentials come from `.env` (`QA_USER` / `QA_PASSWORD`), or per-box
   accounts via `BOX` (for example `BOX=india`). Each box names its own env
   vars in the config. See [CREDENTIALS_SETUP.md](CREDENTIALS_SETUP.md).
-- Test data bindings (`test_site_name`, `test_camera_name`) live in the env
-  config. The shared QA tenant drifts: on 2026-08-07 a site rename broke
+- Test data bindings (`test_site_name`, `test_camera_name`, and the optional
+  `search_site_name` / `search_camera_name` for the drawing searches) live in
+  the env config. The shared QA tenant drifts: on 2026-08-07 a site rename broke
   every site-selecting test. When the configured site is missing,
   `ViewsPage.click_site` now fails fast and lists the entries actually on
   screen, so the error itself names the fix. For other selectors, the

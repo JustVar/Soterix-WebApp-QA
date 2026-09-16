@@ -598,7 +598,9 @@ class SearchPage:
         rows = panel.locator(".MuiListItemButton-root")
         rows.first.wait_for(state="visible", timeout=10000)
         from config.base_config import config
-        site = config.get("test_site_name")
+        # the drawing searches may run on their own site (india: the
+        # test site's cameras are offline, register row 76)
+        site = config.get("search_site_name") or config.get("test_site_name")
         # Fail fast on a missing site: silently drawing on the first
         # row's cameras would test the wrong site without a trace.
         # Exact inner-element match (item 20): has_text was a substring,
@@ -611,8 +613,8 @@ class SearchPage:
             visible = [t.strip()[:40] for t in rows.all_inner_texts()][:8]
             raise RuntimeError(
                 f"Site '{site}' is not in the Locations panel. "
-                f"On-screen entries: {visible}. Update test_site_name "
-                f"in config/env/ if the tenant renamed it."
+                f"On-screen entries: {visible}. Update search_site_name "
+                f"or test_site_name in config/env/ if the tenant renamed it."
             ) from None
         site_row.click()
         all_row = panel.locator(

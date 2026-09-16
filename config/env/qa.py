@@ -36,6 +36,14 @@ config = {
             "test_data": {
                 "test_site_name": "Newtown Action Area",
                 "test_camera_name": "main gate",
+                # The drawing searches (Zone, Line) need a camera that is
+                # online and recording: on 'main gate' (site IVMS down,
+                # 0 frames) the search job creeps and never completes.
+                # Thermal-14 on this site delivers Zone and Line results
+                # (measured 09/16/2026, register row 76). Boxes without
+                # these keys fall back to test_site_name/test_camera_name.
+                "search_site_name": "Example Corporate Office",
+                "search_camera_name": "Thermal-14",
                 # Chat partners differ per tenant: the accounts on one
                 # box do not exist on the other, so a shared name fails
                 # the chats tests everywhere but home (register item 29)

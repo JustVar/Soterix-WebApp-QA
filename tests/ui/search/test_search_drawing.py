@@ -13,8 +13,16 @@ from playwright.sync_api import expect
 from config.base_config import config
 from tests.shared.pages.search_page import SearchPage
 
-# The shared tenant renames cameras, so the name lives in config
-CAMERA_NAME = config.get("test_camera_name")
+# The shared tenant renames cameras, so the name lives in config. The
+# drawing searches take their own camera when the box names one: india's
+# test camera is offline and its search never completes (register row 76).
+CAMERA_NAME = config.get("search_camera_name") or config.get("test_camera_name")
+# The india backend scans a 30-day window at about 1% a minute and hands
+# events over as it reaches them: measured 09/16/2026 on Thermal-14 at
+# rest, the first Zone result landed at 114 s and the first Line result at
+# 130 s, against 14 s to 100% on US. The old 120 s budget cut india off a
+# few seconds before its first result.
+SEARCH_BUDGET_MS = 240000
 
 
 
@@ -79,7 +87,7 @@ class TestSearchDrawing:
         self.search.click_done()
 
         self.search.select_duration_by_index(5)
-        self.search.execute_search(timeout=120000)
+        self.search.execute_search(timeout=SEARCH_BUDGET_MS)
 
         count = self.search.get_result_count()
         assert count > 0, "Expected at least one Zone search result"
@@ -108,7 +116,7 @@ class TestSearchDrawing:
         self.search.click_done()
 
         self.search.select_duration_by_index(5)
-        self.search.execute_search(timeout=120000)
+        self.search.execute_search(timeout=SEARCH_BUDGET_MS)
 
         self.search.play_result(0, timeout=60000)
 
@@ -161,7 +169,7 @@ class TestSearchDrawing:
         self.search.click_done()
 
         self.search.select_duration_by_index(5)
-        self.search.execute_search(timeout=120000)
+        self.search.execute_search(timeout=SEARCH_BUDGET_MS)
 
         count = self.search.get_result_count()
         assert count > 0, "Expected at least one Line search result"
@@ -190,7 +198,7 @@ class TestSearchDrawing:
         self.search.click_done()
 
         self.search.select_duration_by_index(5)
-        self.search.execute_search(timeout=120000)
+        self.search.execute_search(timeout=SEARCH_BUDGET_MS)
 
         self.search.play_result(0, timeout=60000)
 
