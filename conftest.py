@@ -305,16 +305,50 @@ VIDEO_DIR = TRACE_DIR / "videos"
 _OFF_VALUES = ("off", "0", "false", "no")
 
 
+LOGIN_SCREEN = "/auth/login"
+SESSION_DROP_NOTE = (
+    "[SESSION] The page was on the login screen when the test failed. The "
+    "app answered 401 to a live session and bounced to login mid-test "
+    "(nightly traces 09/16/2026: india 09:12 and 09:13 UTC, us 09:47 UTC). "
+    "The locator is not the fault; read the 401 responses in the trace."
+)
+
+
+def _session_drop_note(item, rep) -> str | None:
+    """The session-drop line for a failed call whose page shows the login
+    screen, else None. The page is the one authenticated_page stashed on
+    the item; a page already closed has no URL and gets no note."""
+    if rep.when != "call" or not rep.failed:
+        return None
+    page = getattr(item, "qa_page", None)
+    if page is None:
+        return None
+    try:
+        url = page.url
+    except Exception:  # why: a closed page raises; the note is optional
+        return None
+    return SESSION_DROP_NOTE if LOGIN_SCREEN in url else None
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Stash each phase's report on the item so fixtures can see the outcome.
 
     Fixtures tear down after the test finishes, so `request.node.rep_call`
     is how `authenticated_page` knows whether to keep or discard its trace.
+
+    A failed call whose page sits on the login screen gets the session-drop
+    note appended to its traceback, so the log names the mechanism instead
+    of the locator that timed out on the login page (three of the 09/16
+    nightly's failures read as locator timeouts until their screenshots
+    were opened).
     """
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
+    note = _session_drop_note(item, rep)
+    if note and hasattr(rep.longrepr, "addsection"):
+        rep.longrepr.addsection("session", note)
 
 
 def _artifact_path(name: str, kind: str, suffix: str) -> Path:
@@ -582,6 +616,8 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
             _finish_video(video, f"{request.node.nodeid}-login-failure")
             raise
 
+    # the makereport hook reads the page's URL at failure time
+    request.node.qa_page = page
     yield page
     _finish_tracing(context, request)
     page.close()

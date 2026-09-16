@@ -173,6 +173,13 @@ Waits and signals
   no toast and no request. The view Save did this on 09/12/2026: the
   app fetched its own data:image/png thumbnail and connect-src has no
   data:. Read the console before blaming the stream (TEST_REPAIRS 56).
+- A locator timeout whose FAILED screenshot shows the login form is a
+  session drop, not the locator. The server answered 401 to a live
+  session, in a burst across the page's parallel calls, and the app
+  bounced to /auth/login (nightly traces 09/16/2026: india 09:12:24
+  and 09:13:17 UTC, us 09:47:54 UTC). The traceback now ends with a
+  [SESSION] section when this happened; the trace's 401 responses
+  give the exact moment. TEST_REPAIRS 75.
 - Empty video tiles keep placeholder spinners alive forever - never
   wait for CircularProgress hidden on tile grids; a new `video`
   element past the baseline is the played signal.
