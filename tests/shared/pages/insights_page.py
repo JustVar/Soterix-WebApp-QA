@@ -265,7 +265,8 @@ class InsightsPage:
     def create_widget(self, graph_name: str = "Line",
                       category_name: str = "Person",
                       site_name: str | None = None,
-                      description_name: str | None = None) -> str:
+                      description_name: str | None = None,
+                      camera_name: str | None = None) -> str:
         """Create a widget with specified graph type and category.
 
         Pass site_name=None to use test_site_name from config/env/.
@@ -395,47 +396,76 @@ class InsightsPage:
         self._appears(all_cameras, timeout=5000)
 
         if "heat" in graph_name.lower():
-            # Heat map requires a single specific camera (not "All
-            # Cameras" which is just a header).  Select the first
-            # individual camera listed under the expanded section.
-            # The JS click returns the camera it picked, so the applied
-            # check can name the row it expects
-            picked_name = self.page.evaluate("""() => {
-                // The camera list panel is the paper that starts with
-                // "All Cameras". Its rows are .location-popup-accordian
-                // elements; the row (not its <p>) owns the click handler
-                // and the camera-selected state (trace 08/25/2026). Pick
-                // the first camera row that is not already selected.
-                const papers = document.querySelectorAll('.MuiPaper-root');
-                for (const paper of papers) {
-                    const text = (paper.textContent || '').trim();
-                    if (!text.startsWith('All Cameras')) continue;
-                    const rows = paper.querySelectorAll('.location-popup-accordian');
-                    for (const row of rows) {
-                        const t = (row.textContent || '').trim();
-                        if (!t || t === 'All Cameras' || t.match(/^\\d+$/)) continue;
-                        if (row.classList.contains('camera-selected')) continue;
-                        row.click();
-                        return t;
-                    }
-                }
-                return null;
-            }""")
-            if not picked_name:
-                raise RuntimeError(
-                    "Heat map camera pick found no camera row under All Cameras"
+            # Heat map needs one specific camera (not "All Cameras", a
+            # header). Pick the CONFIGURED camera: on the Videonetics
+            # site the first row is an offline emulator camera the app
+            # will not select, so picking "the first row" built the heat
+            # map against no camera (09/16/2026). Fall back to the first
+            # selectable row when no camera is configured.
+            if camera_name is None:
+                from config.base_config import config as _cfg
+                camera_name = _cfg.get("test_camera_name")
+
+            if camera_name:
+                # The row (not its <p>) owns the click handler and the
+                # camera-selected state (trace 08/25/2026). The list can
+                # render a hidden copy first, so match by the accordion
+                # class and the name and count selected rows by name.
+                # Probed 09/16/2026: the row applies camera-selected
+                # about 0.5 s after a click once the list has settled; a
+                # single click fired before it settled was the Heat_Person
+                # miss, so click with a short retry.
+                target = (
+                    self.page.locator(".location-popup-accordian")
+                    .filter(has_text=camera_name)
+                    # .first: a hidden copy of the list renders first, and
+                    # the selected check counts matching rows by name across
+                    # both copies, so clicking either row applies the state
+                    .first
                 )
-            # The picked row carries camera-selected: the applied signal
-            # (probe 08/25/2026), checked on that row by name because a
-            # row can already be selected before the click. A pick that
-            # did not land would build the heat map against no camera and
-            # the success toast cannot tell
-            # The list is rendered twice in the DOM (a hidden copy sits
-            # first), so count selected rows by name rather than wait on
-            # the first one to be visible
-            selected = self.page.locator(
-                ".location-popup-accordian.camera-selected"
-            ).filter(has_text=picked_name)
+                try:
+                    target.wait_for(state="attached", timeout=8000)
+                except PlaywrightError:
+                    raise RuntimeError(
+                        f"Heat map wanted the configured camera {camera_name!r} "
+                        f"but no such row is under All Cameras; update "
+                        f"test_camera_name or the site"
+                    ) from None
+                picked_name = camera_name
+                selected = self.page.locator(
+                    ".location-popup-accordian.camera-selected"
+                ).filter(has_text=camera_name)
+                for _ in range(5):
+                    if selected.count():
+                        break
+                    target.evaluate("el => el.click()")
+                    self.page.wait_for_timeout(600)  # the row applies the state ~0.5 s after the click
+            else:
+                # No configured camera: the first selectable row. The row
+                # (not its <p>) owns the click handler (trace 08/25/2026).
+                picked_name = self.page.evaluate("""() => {
+                    const papers = document.querySelectorAll('.MuiPaper-root');
+                    for (const paper of papers) {
+                        const text = (paper.textContent || '').trim();
+                        if (!text.startsWith('All Cameras')) continue;
+                        const rows = [...paper.querySelectorAll('.location-popup-accordian')];
+                        const target = rows.find(r => {
+                            const t = (r.textContent || '').trim();
+                            return t && t !== 'All Cameras' && !t.match(/^\\d+$/)
+                                && !r.classList.contains('camera-selected');
+                        });
+                        if (target) { target.click(); return (target.textContent || '').trim(); }
+                    }
+                    return null;
+                }""")
+                if not picked_name:
+                    raise RuntimeError(
+                        "Heat map camera pick found no camera row under All Cameras"
+                    )
+                selected = self.page.locator(
+                    ".location-popup-accordian.camera-selected"
+                ).filter(has_text=picked_name)
+
             try:
                 expect(selected).not_to_have_count(0, timeout=5000)
             except AssertionError:
@@ -445,8 +475,7 @@ class InsightsPage:
                       + str(self.page.evaluate("""() => Array.from(
                           document.querySelectorAll('.location-popup-accordian')
                         ).map(r => ({text: (r.textContent || '').trim().slice(0, 30),
-                                     cls: r.className,
-                                     inner: r.innerHTML.slice(0, 160)}))""")))
+                                     cls: r.className}))""")))
                 raise RuntimeError(
                     f"Heat map camera pick did not apply: '{picked_name}' is not "
                     f"the selected row within 5s; the widget would be created "
