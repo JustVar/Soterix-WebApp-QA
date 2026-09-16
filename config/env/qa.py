@@ -31,19 +31,18 @@ config = {
             "email_env": "QA_INDIA_USER",
             "password_env": "QA_INDIA_PASSWORD",
             # siteId of test_site_name below; the api fixture builds its
-            # data here, so it must be the site the UI tests open
-            "default_site_id": 16,
+            # data here, so it must be the site the UI tests open.
+            # Newtown Action Area (site 16, camera 'main gate') is being
+            # rebuilt and its IVMS is down, so india tests run on the
+            # Example Corporate Office site until further notice
+            # (Justin, 09/16/2026; register row 78). Thermal-14 is online
+            # and searchable there (register row 76). When Newtown is
+            # back, the drawing searches can keep their own camera via
+            # search_site_name / search_camera_name (CONVENTIONS.md).
+            "default_site_id": 17,
             "test_data": {
-                "test_site_name": "Newtown Action Area",
-                "test_camera_name": "main gate",
-                # The drawing searches (Zone, Line) need a camera that is
-                # online and recording: on 'main gate' (site IVMS down,
-                # 0 frames) the search job creeps and never completes.
-                # Thermal-14 on this site delivers Zone and Line results
-                # (measured 09/16/2026, register row 76). Boxes without
-                # these keys fall back to test_site_name/test_camera_name.
-                "search_site_name": "Example Corporate Office",
-                "search_camera_name": "Thermal-14",
+                "test_site_name": "Example Corporate Office",
+                "test_camera_name": "Thermal-14",
                 # Chat partners differ per tenant: the accounts on one
                 # box do not exist on the other, so a shared name fails
                 # the chats tests everywhere but home (register item 29)

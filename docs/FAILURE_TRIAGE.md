@@ -180,6 +180,14 @@ Waits and signals
   and 09:13:17 UTC, us 09:47:54 UTC). The traceback now ends with a
   [SESSION] section when this happened; the trace's 401 responses
   give the exact moment. TEST_REPAIRS 75.
+- 'no search job was sent ... site/search answered HTTP 400' on a box
+  whose searches are real (cameras online, data to scan) is not the
+  request: the same request answers 200 when run alone. The server runs
+  ONE search job per account, so another worker's search held it
+  (measured 09/16/2026: the API refuses a second POST /REST/site/search
+  with code 400 from any session while one is polled). It surfaced when
+  india moved to the Videonetics site, where a job runs for minutes; the
+  serialisation fix is open (TEST_REPAIRS 78).
 - Empty video tiles keep placeholder spinners alive forever - never
   wait for CircularProgress hidden on tile grids; a new `video`
   element past the baseline is the played signal.

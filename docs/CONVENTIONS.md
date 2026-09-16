@@ -121,6 +121,21 @@ once independently in the wait conversion (August 2026). Use them:
   searches when its test camera cannot be searched (india: the test
   site's IVMS is down, so the search never completes); readers fall
   back to the test keys when a box does not set them.
+- **A name the app shows cut short is matched as shown.** Several panels
+  cut a long name in the DOM and append an ellipsis with no title
+  attribute ('Example Corporate Off...'), so neither an exact nor a
+  substring match reaches the row. `tests/shared/helpers/shown_name.py`
+  (`shown_as` for a locator, `is_shown_as` for an assertion) accepts the
+  name or a cut of it with the ellipsis, and nothing else.
+- **The server runs one search job per account (app limit).** A second
+  POST /REST/site/search answers code 400 while one is being polled, from
+  any session of the account and for any site (measured 09/16/2026). Two
+  workers on one box that both search collide, so a search test reads
+  'no search job was sent ... HTTP 400'. On a box where jobs finish in
+  seconds (Newtown before its rebuild) collisions are rare; on Videonetics
+  an analytics job scans video for minutes and they are common. The fix is
+  to serialise the searching tests (Search, Events, drawing) onto one
+  worker; register row 78 tracks it, and it is unresolved as of 09/16.
 - **Identity lookups match the exact name, escaped** (locator series
   09/2026, TEST_REPAIRS items 14 and 18-20). Finding a specific
   camera/site/list/view by its name uses `get_by_text` / `get_by_title` /

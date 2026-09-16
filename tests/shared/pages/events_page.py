@@ -198,6 +198,7 @@ class EventsPage:
         site_node = menu.locator(".MuiListItemButton-root").filter(
             has=self.page.get_by_text(site_name, exact=True)).first
         site_node.click()
+        self._clear_hover_tooltip()
 
         # Site expansion reveals the "All Cameras" node
         all_cameras = menu.get_by_text("All Cameras").first
@@ -225,6 +226,21 @@ class EventsPage:
         # Dismiss the menu
         self._dismiss_camera_menu()
 
+    def _clear_hover_tooltip(self) -> None:
+        """Move the pointer off the menu row just clicked and wait for its
+        tooltip to go. A site row cut by CSS ('textEllipsis') opens a MUI
+        tooltip with the full name on hover, and that popper sat over the
+        'All Cameras' row and intercepted its click for the full 30 s
+        (india, 'Example Corporate Office', 09/16/2026)."""
+        self.page.mouse.move(0, 0)
+        tooltip = self.page.locator("[role='tooltip']")
+        try:
+            tooltip.first.wait_for(state="hidden", timeout=2000)
+        # why: a tooltip still up after 2 s is left to the next click to
+        # report; hidden resolves at once when none ever showed
+        except PlaywrightError:
+            pass
+
     def camera_menu_counts(self, site_name: str) -> tuple[int, int]:
         """Open the Locations & Cameras menu, expand the site to its
         cameras and return (the count the site node declares, the camera
@@ -241,6 +257,7 @@ class EventsPage:
         digits = [t for t in site_node.inner_text().split() if t.isdigit()]
         declared = int(digits[-1]) if digits else -1
         site_node.click()
+        self._clear_hover_tooltip()
         # .first: one All Cameras group node per expanded site
         all_cameras = menu.get_by_text("All Cameras").first
         if self._appears(all_cameras, timeout=5000):
@@ -278,6 +295,7 @@ class EventsPage:
         site_node = menu.locator(".MuiListItemButton-root").filter(
             has=self.page.get_by_text(site_name, exact=True)).first
         site_node.click()
+        self._clear_hover_tooltip()
 
         # Site expansion reveals the "All Cameras" node
         all_cameras = menu.get_by_text("All Cameras").first

@@ -23,9 +23,13 @@ import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
 
 from config.base_config import config
+from tests.shared.helpers.shown_name import is_shown_as, shown_as
 from tests.shared.pages.admin_page import AdminPage
 
 SITE_NAME = config.get("test_site_name")
+# the Available Cameras panel cuts a long site name in the DOM
+# ('Example Corporate Off...', no title attribute; probed 09/16/2026)
+SITE_ROW = shown_as(SITE_NAME) if SITE_NAME else None
 CAMERA_NAME = config.get("test_camera_name")
 # measured 09/12/2026 on US (register row 53): the table's columns and its empty row
 EVENT_WALL_HEADERS = ["Configuration Name", "Site", "No of Devices", "Devices", ""]
@@ -117,7 +121,9 @@ class TestEventWallConfig:
     def _expand_site_to_groups(self):
         """In the Add form, expand the config site; sites expand to
         camera GROUPS (measured), cameras sit one level deeper."""
-        site_row = self.page.get_by_text(SITE_NAME, exact=False).first
+        # SITE_ROW is a full match of the name or its cut, and the panel
+        # lists each site once before it is expanded: .first is that row
+        site_row = self.page.get_by_text(SITE_ROW).first
         site_row.wait_for(state="visible", timeout=10000)
         site_row.click()
         group_row = self.page.get_by_text("All Cameras", exact=True).first
@@ -199,14 +205,16 @@ class TestEventWallConfig:
         expect(name_input).to_have_value("")
         expect(name_input).to_have_attribute("placeholder", "Enter Configuration Name")
         expect(self.page.get_by_text("Available Cameras", exact=True)).to_be_visible(timeout=10000)
-        # exact=False: the row reads the name with its device count;
+        # the name node reads the site as the panel shows it, cut or whole;
         # .first: the panel lists each site once before it is expanded
-        site_row = self.page.get_by_text(SITE_NAME, exact=False).first
+        site_row = self.page.get_by_text(SITE_ROW).first
         expect(site_row).to_be_visible(timeout=10000)
         # the row reads '<site> <device count>' (measured: 'Spartan0 22')
         site_text = " ".join(site_row.locator("xpath=..").inner_text().split())
         site_count = site_text.rsplit(" ", 1)[-1]
-        assert site_text.startswith(SITE_NAME), f"the site row reads {site_text!r}; expected {SITE_NAME!r} first"
+        shown_name = site_text.rsplit(" ", 1)[0]
+        assert is_shown_as(shown_name, SITE_NAME), (
+            f"the site row reads {site_text!r}; expected {SITE_NAME!r} or a cut of it first")
         assert site_count.isdigit(), f"the site row reads {site_text!r}; expected a device count last"
         group_row = self._expand_site_to_groups()
         group_text = " ".join(group_row.locator("xpath=..").inner_text().split())
