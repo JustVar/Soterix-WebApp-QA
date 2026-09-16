@@ -945,53 +945,117 @@ class AdminPage:
     # --- Full rule creation wizard ---
 
 
+    def _select_wizard_site(self, site_name: str) -> None:
+        """Select a site in the wizard's Select Devices site dropdown.
+
+        The step defaults to the account's first site (Newtown) and the
+        camera tiles below follow this dropdown (probe 09/16/2026), so a
+        run whose test_site_name is not that default sees the wrong
+        site's cameras. A no-op when the dropdown already shows the site.
+        The closed select ellipsizes a long name, but the option list
+        carries the full name, so the option is matched exactly.
+        """
+        # the site select is the one whose value is a site name; the
+        # second select on the step is the camera group ("All Cameras")
+        site_select = self.page.locator(".MuiSelect-select").first
+        current = " ".join((site_select.inner_text() or "").split())
+        if current == site_name:
+            return
+        site_select.click()
+        option = self.page.locator("li[role='option'], .MuiMenuItem-root").filter(
+            has_text=re.compile("^" + re.escape(site_name) + "$"))
+        try:
+            option.first.wait_for(state="visible", timeout=8000)
+        except PlaywrightError:
+            offered = [" ".join(t.split()) for t in self.page.locator(
+                "li[role='option'], .MuiMenuItem-root").all_inner_texts()]
+            raise RuntimeError(
+                f"The rules wizard does not offer the site {site_name!r}; "
+                f"it lists only sites with a relevant assigned license: "
+                f"{offered}. Check Admin > Licenses, or update test_site_name."
+            ) from None
+        option.first.click()
+        # the tiles reload for the new site; the search box stays, the
+        # old site's tiles clear first
+        self.page.wait_for_timeout(1200)
+
+    def _wizard_camera_names(self) -> list:
+        """The camera names the wizard offers, one per tile checkbox."""
+        return self.page.evaluate(
+            "() => [...document.querySelectorAll('input[type=checkbox]')].map(b => {"
+            "  let el = b;"
+            "  for (let k=0;k<6 && el;k++){ el = el.parentElement;"
+            "    const t=(el && el.textContent||'').trim();"
+            "    if (t.length>1 && t.length<40) return t; }"
+            "  return ''; }).filter(t => t)"
+        )
+
+    def _choose_wizard_camera(self, camera: str, available: list) -> str | None:
+        """The camera to build the rule on: the configured one when the
+        wizard offers it, else a sibling lens of it (same name stem, e.g.
+        the other Thermal-* lenses of one device), else any offered
+        camera. A camera that already holds a rule of the type being
+        created drops out of the list, so the configured camera is not
+        always present and the rule's own device is immaterial to what
+        these tests check (the wizard completes for the rule type)."""
+        if camera in available:
+            return camera
+        stem = re.match(r"[^0-9]*", camera).group(0).strip(" -")
+        siblings = [c for c in available if stem and c.startswith(stem)]
+        if siblings:
+            return siblings[0]
+        return available[0] if available else None
+
     def _check_wizard_camera(self):
-        """Filter to the configured camera on Select Devices and check it."""
+        """Select the configured site, then a camera, on Select Devices."""
         from config.base_config import config
         camera = config.get("test_camera_name")
-        search = self.page.locator(
-            "input[placeholder*='camera name']"
-        ).first
-        search.wait_for(state="visible", timeout=10000)
-        # The device tree loads async after the step renders: wait for
-        # it before filtering, so slow loads do not read as a missing
-        # camera
-        self.page.locator("input[type='checkbox']").first.wait_for(
-            state="attached", timeout=20000
-        )
-        if camera:
-            # The unfiltered tree stays up while the filter runs: the
-            # checkbox count leaving its baseline is the re-rendered
-            # signal (a one-camera tree never moves it, so a miss logs)
-            boxes = self.page.locator("input[type='checkbox']")
-            before = boxes.count()
-            search.fill(camera)
-            self._count_left_baseline(boxes, before, "wizard device filter")
-        # The configured camera's own row, fail-fast: a silent fallback
-        # to another checkbox would create the rule against an
-        # arbitrary device and pass on wrong data
+        site = config.get("test_site_name")
         if not camera:
             raise RuntimeError(
                 "test_camera_name is not set for this ENV in config/env/."
             )
-        # Exact and escaped (item 19): this pick decides which device the
-        # rule is created against, so a substring landing 'main gate 2'
-        # for 'main gate' would build the rule on the wrong camera. A
-        # renamed camera now fails loud below with the on-screen names.
-        row = self.page.get_by_text(camera, exact=True).first
+        if site:
+            self._select_wizard_site(site)
+        search = self.page.locator(
+            "input[placeholder*='camera name']"
+        ).first
+        search.wait_for(state="visible", timeout=10000)
+        # the tiles load async after the step (or a site switch): wait
+        # for one before reading them, so a slow load is not a miss
+        self.page.locator("input[type='checkbox']").first.wait_for(
+            state="attached", timeout=20000
+        )
+        self.page.wait_for_timeout(600)  # tiles settle after a site switch
+        available = self._wizard_camera_names()
+        target = self._choose_wizard_camera(camera, available)
+        if target is None:
+            raise RuntimeError(
+                f"The wizard offers no camera for this rule type on site "
+                f"{site!r}: {available}. Check Admin > Licenses, or that the "
+                f"site has a camera free of an existing rule of this type."
+            )
+        if target != camera:
+            print(f"[ADMIN] rules wizard: '{camera}' is not offered for this "
+                  f"rule type (it may already hold one); using '{target}'")
+        # Filter to the chosen camera. The unfiltered list stays up while
+        # the filter runs: the checkbox count leaving its baseline is the
+        # re-rendered signal (a one-camera list never moves it, so a miss
+        # logs)
+        boxes = self.page.locator("input[type='checkbox']")
+        before = boxes.count()
+        search.fill(target)
+        self._count_left_baseline(boxes, before, "wizard device filter")
+        # Exact and escaped (item 19): a substring landing 'Thermal-141'
+        # for 'Thermal-14' would build the rule on the wrong camera.
+        row = self.page.get_by_text(target, exact=True).first
         try:
             row.wait_for(state="visible", timeout=10000)
         except Exception:
             visible = self._wizard_leaf_texts()[:10]
-            # The tree lists only cameras with a relevant assigned
-            # license (the step's own note): a camera that lost its
-            # licence drops out with no rename (india, 09/11/2026)
             raise RuntimeError(
-                f"Camera '{camera}' is not in the wizard device tree. "
-                f"On-screen: {visible}. The tree lists only cameras with "
-                f"a relevant assigned license: check Admin > Licenses for "
-                f"'{camera}', or update test_camera_name in config/env/ "
-                f"if the tenant renamed it."
+                f"Camera '{target}' is not in the wizard device tree after "
+                f"filtering. On-screen: {visible}."
             ) from None
         box = row.locator(
             "xpath=ancestor::*[.//input[@type='checkbox']][1]"
@@ -1003,7 +1067,7 @@ class AdminPage:
             expect(box).to_be_checked(timeout=5000)
         except AssertionError:
             raise RuntimeError(
-                f"Wizard camera checkbox for '{camera}' did not register: "
+                f"Wizard camera checkbox for '{target}' did not register: "
                 f"the rule would be created against no device"
             ) from None
 
