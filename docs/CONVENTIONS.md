@@ -71,7 +71,12 @@ instead; that layer never decides a test.
 load"`: a test that failed on the tenant's stream-failure message runs
 once more, and nothing else does. The flag is opt-in, never the default,
 and the match is never widened. A rerun hides a broken wait, a wrong
-locator, or a tenant that needs a fix. Fix first.
+locator, or a tenant that needs a fix. Fix first. The label for a test
+that fails now and then is `intermittent`, never `flaky`: that name is
+pytest-rerunfailures' own, and the plugin retries it on ANY failure, once
+even with no `reruns=` (measured 09/17/2026). Seventeen tests carried it
+unnoticed until the audit (register row 85). The checker refuses
+`@pytest.mark.flaky` in any form.
 
 For clicks that a sticky header or a lazy-loaded overlay intercepts, try
 `click(scroll="none")` before you reach for `force=True` or a JS click.
@@ -319,7 +324,7 @@ Defined in `pytest.ini`. The main groups:
 - **Type:** `smoke`, `sanity`, `regression`, `ui`
 - **Feature:** `admin`, `views_devices`, `events`, `search`, `media`, `maps`,
   `chats`, `licenses`, and the rest
-- **Meta:** `slow` (over 30 s), `flaky` (intermittent), `wip` (skip in CI)
+- **Meta:** `slow` (over 30 s), `intermittent` (fails now and then; never `flaky`, see Reruns), `wip` (skip in CI)
 
 Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`.
 

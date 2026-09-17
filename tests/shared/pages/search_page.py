@@ -552,8 +552,9 @@ class SearchPage:
         Clips typically play for ~20s before the app shows Replay.
 
         Stream loading is intermittent in QA env - some clips fail to
-        load (readyState stays 0). Tests using this method should use
-        @pytest.mark.flaky(reruns=1) to handle transient stream failures.
+        load (readyState stays 0). Tests using this method carry the
+        `intermittent` marker as a label; nothing reruns them by itself
+        (run.py --retry-streams is the one opt-in, CONVENTIONS > Reruns).
         """
         result = self.result_images.nth(index)
         result.hover()

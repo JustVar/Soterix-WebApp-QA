@@ -225,7 +225,7 @@ Convention details + examples: `docs/CONVENTIONS.md` under Step capture.
 
 - **Type:** `smoke`, `sanity`, `regression`, `api`, `ui`
 - **Feature:** `admin`, `views_devices`, `events`, `search`, `media`, `maps`, `chats`, `licenses`, `insights`, `notifications`, `sequences`, etc.
-- **Meta:** `slow` (>30s), `flaky` (intermittent), `wip` (skip in CI)
+- **Meta:** `slow` (>30s), `intermittent` (fails now and then; never `flaky`, which reruns), `wip` (skip in CI)
 - **Mapping:** `qatouch(case_key)` / `qatouch_project(project_key)` - recognised by the reporter but intentionally unused in the shared test files; keep mappings in `config/qatouch_case_mapping.json` instead
 
 Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`.

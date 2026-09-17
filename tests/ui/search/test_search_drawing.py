@@ -99,7 +99,7 @@ class TestSearchDrawing:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     @pytest.mark.livestream
     def test_zone_search_play_result(self):
         """Verify a Zone search result plays to its end.
@@ -181,7 +181,7 @@ class TestSearchDrawing:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     @pytest.mark.livestream
     def test_line_search_play_result(self):
         """A Line search result plays to its end.

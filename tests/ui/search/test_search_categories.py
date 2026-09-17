@@ -11,7 +11,8 @@ Migrated from Selenium:
 Known limitations:
 - Play result: QA env video streams use MediaSource (duration=Infinity).
   Occasionally a clip stream fails to load (stays at readyState=0).
-  Play tests use @flaky(reruns=1) to handle transient stream failures.
+  Play tests carry the `intermittent` marker as a label of that; nothing reruns
+  them by itself (run.py --retry-streams is the one opt-in).
 """
 import pytest
 from playwright.sync_api import expect
@@ -111,7 +112,7 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     @pytest.mark.livestream
     def test_person_search_play_result(self):
         """Verify a Person search result plays to its end.
@@ -215,7 +216,7 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     @pytest.mark.livestream
     def test_event_search_play_result(self):
         """Verify playing an Event search result clip works.

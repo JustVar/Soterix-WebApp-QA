@@ -345,3 +345,14 @@ def test_first_on_text_lookup_flags_substring_identity():
     hits = [f['line'] for f in [f for i in range(len(lines)) for f in cc.check_line('p.py', lines, i)]
             if f['rule'] == 'first-on-text-lookup']
     assert hits == [1, 2]
+
+
+def test_the_flaky_mark_is_refused_in_any_form_and_intermittent_passes():
+    """The flaky mark belongs to pytest-rerunfailures, which retries it on any
+    failure, once even bare (measured 09/17/2026; 17 tests carried it). The
+    label is intermittent. The strings are joined so this pin is not a hit."""
+    mark = '@pytest.mark.'
+    lines = ['    ' + mark + 'flaky(reruns=1)', '    ' + mark + 'flaky', '    ' + mark + 'intermittent',
+             '    ' + mark + 'flakyish']
+    rules = [[f['rule'] for f in cc.check_line('tests/ui/x/test_x.py', lines, i, mapped=set())] for i in range(4)]
+    assert rules == [['flaky-marker'], ['flaky-marker'], [], []]

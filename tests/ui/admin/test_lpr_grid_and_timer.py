@@ -155,7 +155,7 @@ class TestLprTimer:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_timer_popup_validation(self):
         """The popup opens over a playing stream and closes on Cancel.
 
@@ -183,7 +183,7 @@ class TestLprTimer:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_timer_dropdown_values(self):
         """The duration dropdown offers the preset values.
 
@@ -219,7 +219,7 @@ class TestLprTimer:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_timer_cancel_button(self):
         """Cancel closes the popup without saving.
 
@@ -249,7 +249,7 @@ class TestLprTimer:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_timer_after_page_refresh(self):
         """The popup reopens with a value after a reload.
 

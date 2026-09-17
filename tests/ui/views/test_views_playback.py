@@ -213,7 +213,7 @@ class TestViewsPlayback:
 
     @pytest.mark.ui
     @pytest.mark.views_playback
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     @pytest.mark.livestream
     def test_fullscreen_second_tile(self):
         """Verify fullscreen works on a second camera tile.

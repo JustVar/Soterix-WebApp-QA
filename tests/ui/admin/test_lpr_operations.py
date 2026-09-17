@@ -124,7 +124,7 @@ class TestLprListOperations:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.lpr
-    @pytest.mark.flaky(reruns=2)
+    @pytest.mark.intermittent
     def test_create_lpr_list(self):
         """Create a new LPR list with valid data.
 

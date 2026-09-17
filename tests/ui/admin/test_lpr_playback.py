@@ -129,7 +129,7 @@ class TestLprCameraPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_camera_tile_activation(self):
         """Play the configured camera, then activate its tile.
 
@@ -177,7 +177,7 @@ class TestLprCameraPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_open_playback_timeout_popup(self):
         """Verify the timeout popup opens for a playing LPR stream.
 
@@ -215,7 +215,7 @@ class TestLprCameraPlayback:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_open_lpr_playback_timeout_popup(self):
         """Verify the LPR timeout popup opens and closes cleanly.
 
@@ -310,7 +310,7 @@ class TestLprViewsIntegration:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_play_camera_by_location(self):
         """Verify the configured camera plays from its site group.
 
@@ -340,7 +340,7 @@ class TestLprViewsIntegration:
     @pytest.mark.admin
     @pytest.mark.lpr
     @pytest.mark.livestream
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_play_all_cameras(self):
         """Verify the whole camera group plays onto the tiles.
 

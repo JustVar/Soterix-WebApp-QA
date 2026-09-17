@@ -101,7 +101,7 @@ class TestInCameraSearch:
 
     @pytest.mark.ui
     @pytest.mark.incamera_search
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     @pytest.mark.livestream
     def test_incamera_search_play_result(self):
         """Verify playing an in-camera search result.

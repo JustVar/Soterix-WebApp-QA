@@ -299,7 +299,7 @@ class TestSearchDeeper:
     @pytest.mark.ui
     @pytest.mark.search
     @pytest.mark.search_deeper
-    @pytest.mark.flaky(reruns=1)
+    @pytest.mark.intermittent
     def test_result_count_matches_visible_images(self):
         """Verify get_result_count() matches visible result images.
 

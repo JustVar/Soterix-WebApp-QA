@@ -56,6 +56,10 @@ PRODUCT_PREFIXES = tuple(PRODUCT_ROOTS)
 SLEEP_RE = re.compile(r"(?:wait_for_timeout|time\.sleep)\s*\(")
 TICKET_RE = re.compile(r"\bNC-\d+\b")
 QATOUCH_RE = re.compile(r"@pytest\.mark\.qatouch")
+# The flaky mark is pytest-rerunfailures' own: it retries on any failure,
+# once even bare. A hidden retry the register never sees (17 tests, audit
+# 09/17/2026). The label is `intermittent`.
+FLAKY_MARK_RE = re.compile(r"@pytest\.mark\.flaky\b")
 ABS_COUNT_RE = re.compile(r"\.count\(\)\s*(?:>\s*0|>=\s*[01])\b")
 IMG_SRC_RE = re.compile(r"img\[src\*?=")
 TENANT_NAME_RE = re.compile(r"[\"'](?:Driver Site|Hanwha)")
@@ -245,6 +249,14 @@ def check_line(path: str, lines: list[str], idx: int,
             "sev": "HIGH", "rule": "qatouch-marker-in-test",
             "msg": "QA Touch mappings belong in "
                    "config/qatouch_case_mapping.json, never in a test file.",
+        })
+    if FLAKY_MARK_RE.search(line):
+        findings.append({
+            "sev": "HIGH", "rule": "flaky-marker",
+            "msg": "the flaky mark is pytest-rerunfailures' own: it retries on ANY "
+                   "failure, once even bare, and hides it from the register. Label "
+                   "with intermittent; only run.py --retry-streams reruns "
+                   "(CONVENTIONS.md > Reruns).",
         })
     if ABS_COUNT_RE.search(line):
         findings.append({

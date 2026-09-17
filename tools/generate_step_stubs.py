@@ -87,7 +87,7 @@ def extract_test_methods(file_path: Path) -> list[dict]:
                     if hasattr(dec.value, 'attr') and dec.value.attr == 'mark':
                         markers.append(dec.attr)
                 elif isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute):
-                    # @pytest.mark.flaky(reruns=1)
+                    # @pytest.mark.intermittent
                     if hasattr(dec.func, 'value') and isinstance(dec.func.value, ast.Attribute):
                         if dec.func.value.attr == 'mark':
                             markers.append(dec.func.attr)
