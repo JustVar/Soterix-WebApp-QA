@@ -6,18 +6,28 @@ parallel runs need, what already works, and what still blocks a full rollout.
 ## How to run
 
 ```
-pytest <files> -n 4 --dist loadfile
+pytest tests/ui -n 4
 ```
 
-`--dist loadfile` keeps each test file on one worker. Tests inside a file run
-in their written order, so in-file ordering assumptions keep working.
+Nothing else. pytest.ini carries `--dist loadgroup`, which schedules by
+`xdist_group` mark: every module that writes this account's state (saved
+views, rules, users, sites, LPR lists, chats, clips, sequences, dashboards)
+declares one, so its tests run on one worker in their written order, and
+the search and events modules share `account_search` because the server
+runs one search job at a time (register row 78). Modules without a mark
+spread test by test. Never add `--dist` on the command line: it overrides
+the ini silently, and `conftest.pytest_configure` refuses the run. A pin
+(`tests/plugins/test_xdist_groups.py`) fails when a module that writes
+state lands without a group.
 
-**Rollout decision (2026-08-08):** `-n 4 --dist loadfile` is the recommended
-command for read-mostly regression runs on this class of machine, validated
-by the experiment below. It stays a deliberate flag, not a pytest.ini
-default: QA Touch uploads and `--verify-mode` must run serial, and a hidden
-default `-n` would silently break both. Do not use `-n auto`. See the open
-risks below.
+**History.** From 2026-08-08 to 09/17 the recommended command was
+`-n 4 --dist loadfile` (one file per worker). The nightly ran `loadgroup`
+from 09/16, so the doc and the box disagreed, and `loadfile` on a laptop
+undid the search grouping (audit 09/17/2026, row 86). The experiment log
+below is from the loadfile period and still holds for what it measured:
+concurrent sessions on one account.
+
+Do not use `-n auto`. QA Touch uploads and `--verify-mode` run serial.
 
 ## What already works
 
@@ -30,10 +40,9 @@ risks below.
 ## Open risks
 
 - **Shared tenant data.** All workers sign in to the same QA tenant. Tests
-  that create, rename, or delete views, users, rules, or groups can interfere
-  across workers. View names carry an `HHMMSS` timestamp, which two workers
-  can collide on within the same second. Keep mutating suites on one worker
-  (`--dist loadfile`) or serial.
+  that create, rename, or delete views, users, rules, or groups interfere
+  across workers, so their modules carry an `xdist_group` (How to run) and
+  generated names carry milliseconds (`%H%M%S%f`), never seconds alone.
 - **Concurrent sessions on one account.** The experiment below ran 2 sessions
   on the same account without a kick-out. Higher worker counts are untested.
 - **Hardware tests stay serial.** Never run `tests/c2c/` (its own product root

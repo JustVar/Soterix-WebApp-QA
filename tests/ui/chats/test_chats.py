@@ -23,6 +23,11 @@ from playwright.sync_api import (
 from config.base_config import config
 from tests.shared.pages.chat_page import ChatPage
 
+# One worker for every module that writes this account's chats and groups: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_chats")
+
 # Config so tenant renames stay one-line fixes
 CHAT_USER_SEARCH = config.get("test_chat_user_search", "QA Engineer B")
 CHAT_USER_NAME = config.get("test_chat_user_name", "Chat Partner")
@@ -160,7 +165,7 @@ class TestChats:
         """
         name = self._own_a_group()
         self.chat.open_group(name)
-        stamp = datetime.datetime.now().strftime("%H%M%S")
+        stamp = datetime.datetime.now().strftime("%H%M%S%f")[:9]
         # oracle: send_message raises unless the text renders as sent
         self.chat.send_message(f"Group chat check {stamp}")
 
@@ -178,7 +183,7 @@ class TestChats:
         self.chat.open_chat_panel()
         self._open_partner_conversation()
 
-        stamp = datetime.datetime.now().strftime("%H%M%S")
+        stamp = datetime.datetime.now().strftime("%H%M%S%f")[:9]
         # oracle: send_message raises unless the sent text renders in the
         # thread; the run-unique text keeps it from matching an older message
         self.chat.send_message(f"Individual chat check {stamp}")

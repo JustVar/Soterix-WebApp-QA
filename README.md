@@ -111,9 +111,10 @@ To email the HTML report to someone, see `docs/EMAIL_REPORTS.md`.
 
 ### Parallel Runs (Experimental)
 
-`pytest <files> -n 2 --dist loadfile` runs one test file per worker. A
-2-worker run against the QA tenant worked without session conflicts, but
-shared tenant data and hardware suites set limits. Read
+`pytest tests/ui -n 4` runs four workers; pytest.ini's `--dist loadgroup`
+keeps every module that writes tenant state (its `xdist_group` mark) on one
+worker and serialises the searches. Never add your own `--dist`: it
+overrides the ini and the run refuses to start. Read
 [docs/PARALLEL_EXECUTION.md](docs/PARALLEL_EXECUTION.md) before using `-n`.
 
 ### Verification Mode (QA Reviewer Flow)

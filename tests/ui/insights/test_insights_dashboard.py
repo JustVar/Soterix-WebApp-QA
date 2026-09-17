@@ -27,6 +27,11 @@ from playwright.sync_api import expect
 
 from tests.shared.pages.insights_page import InsightsPage
 
+# One worker for every module that writes this account's dashboards and widgets: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_insights")
+
 CREATE_URL = "/insights/createNewDashboard"
 SYSTEM_STATUS_URL = "/insights/systemStatus"
 

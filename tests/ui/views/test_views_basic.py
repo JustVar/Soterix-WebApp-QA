@@ -4,6 +4,11 @@ from playwright.sync_api import expect
 
 from tests.shared.pages.views_page import ViewsPage
 
+# One worker for every module that writes this account's saved views, tabs, bookmarks and favourites: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_views")
+
 
 class TestViewsBasic:
     """Basic Views functionality tests."""
@@ -153,7 +158,7 @@ class TestViewsBasic:
         import datetime
 
         # Use a unique timestamped view name
-        view_name = f"SaveTest_{datetime.datetime.now().strftime('%H%M%S')}"
+        view_name = f"SaveTest_{datetime.datetime.now().strftime('%H%M%S%f')[:9]}"
         self._saved_view_names.append(view_name)
 
         # Add a new tab
@@ -239,7 +244,7 @@ class TestViewsBasic:
         """
         import datetime
 
-        view_name = f"OpenTest_{datetime.datetime.now().strftime('%H%M%S')}"
+        view_name = f"OpenTest_{datetime.datetime.now().strftime('%H%M%S%f')[:9]}"
         self._saved_view_names.append(view_name)
 
         # Create and save a view
@@ -317,7 +322,7 @@ class TestViewsBasic:
         import datetime
 
         # First create and save a view
-        view_name = f"DeleteTest_{datetime.datetime.now().strftime('%H%M%S')}"
+        view_name = f"DeleteTest_{datetime.datetime.now().strftime('%H%M%S%f')[:9]}"
         self._saved_view_names.append(view_name)
 
         self._add_tab_and_wait()

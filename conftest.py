@@ -32,6 +32,27 @@ logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s",
                     handlers=[RotatingFileHandler(LOG_FILE, maxBytes=512_000, backupCount=2)])
 
+def pytest_configure(config):
+    """Refuse a parallel run that would lose the tenant-state grouping.
+
+    pytest.ini sets `--dist loadgroup`, which keeps every module that
+    writes this account's state (its `xdist_group` mark) on one worker
+    and serialises the one search job the server allows. A `--dist` on
+    the command line overrides the ini silently; the docs said
+    `--dist loadfile` for a month and nobody could tell (audit
+    09/17/2026, row 86). Runs without -n are untouched.
+    """
+    try:
+        workers = config.getoption("numprocesses")
+        dist = config.getoption("dist")
+    except ValueError:  # why: xdist not loaded (-p no:xdist): nothing to guard
+        return
+    if workers and dist != "loadgroup":
+        raise pytest.UsageError(
+            f"-n {workers} with --dist {dist}: use -n alone. pytest.ini sets --dist loadgroup so the "
+            "modules that write tenant state stay on one worker (docs/PARALLEL_EXECUTION.md).")
+
+
 def pytest_addoption(parser):
     """Register the opt-in required to run hardware-disrupting tests."""
     parser.addoption(

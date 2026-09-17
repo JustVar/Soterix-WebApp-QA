@@ -13,6 +13,11 @@ from playwright.sync_api import expect
 from config.base_config import config
 from tests.shared.pages.chat_page import ChatPage
 
+# One worker for every module that writes this account's chats and groups: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_chats")
+
 CHAT_USER_SEARCH = config.get("test_chat_user_search", "QA Engineer B")
 CHAT_USER_NAME = config.get("test_chat_user_name", "Chat Partner")
 

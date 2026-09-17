@@ -25,6 +25,11 @@ from tests.shared.helpers.surface import require_items
 from tests.shared.pages.insights_page import InsightsPage
 from tests.shared.pages.views_page import ViewsPage
 
+# One worker for every module that writes this account's saved views, tabs, bookmarks and favourites: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_views")
+
 # The shared tenant renames sites, so the name lives in config
 SITE_NAME = config.get("test_site_name")
 
@@ -224,7 +229,7 @@ class TestViewsSubtabs:
            Expected: The view opens as a new tab or fills a tile.
         """
         import datetime
-        view_name = f"SubtabTest_{datetime.datetime.now().strftime('%H%M%S')}"
+        view_name = f"SubtabTest_{datetime.datetime.now().strftime('%H%M%S%f')[:9]}"
         self._saved_view_names.append(view_name)
 
         # Create a view to test with
@@ -273,7 +278,7 @@ class TestViewsSubtabs:
            Expected: The tile fills with the view content, or the view opens as a new tab.
         """
         import datetime
-        view_name = f"DragViewTest_{datetime.datetime.now().strftime('%H%M%S')}"
+        view_name = f"DragViewTest_{datetime.datetime.now().strftime('%H%M%S%f')[:9]}"
         self._saved_view_names.append(view_name)
 
         self._create_and_save_view(view_name)

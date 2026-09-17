@@ -11,6 +11,11 @@ from playwright.sync_api import Error as PlaywrightError, expect
 
 from tests.shared.pages.lpr_page import LprPage
 
+# One worker for every module that writes this account's LPR lists, views and widgets: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_lpr")
+
 
 class TestLprListOperations:
     """Tests for LPR list CRUD operations."""
@@ -151,7 +156,7 @@ class TestLprListOperations:
         create_btn.click()
 
         self.step_capture.mark(3, "Fill in list name")
-        timestamp = datetime.datetime.now().strftime("%H%M%S")
+        timestamp = datetime.datetime.now().strftime("%H%M%S%f")[:9]
         list_name = f"Test_List_{timestamp}"
 
         # Use specific modal input selector

@@ -7,6 +7,11 @@ from playwright.sync_api import expect
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.admin_page import AdminPage
 
+# One worker for every module that writes this account's users: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_users")
+
 
 class TestAdminUsers:
     """Tests for Admin > Users section."""

@@ -10,6 +10,11 @@ from config.base_config import config
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.admin_page import AdminPage
 
+# One worker for every module that writes this account's sites and devices: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_sites")
+
 # measured 09/12/2026 on US (register row 53): the list view's columns
 SITES_LIST_HEADERS = ["Site Name", "Enterprise", "Address", "Devices", "Version"]
 
@@ -318,7 +323,7 @@ class TestAdminSites:
         # label) never rendered, so no skip guard belongs here.
         self.admin.open_groups_dropdown()
 
-        timestamp = datetime.datetime.now().strftime("%H%M%S")
+        timestamp = datetime.datetime.now().strftime("%H%M%S%f")[:9]
         group_name = f"AutoTest Group {timestamp}"
         self._created_groups.append(group_name)
 
@@ -363,7 +368,7 @@ class TestAdminSites:
 
         # The fixture deletes the group by id at teardown, so the new
         # name needs no entry in the UI cleanup list
-        timestamp = datetime.datetime.now().strftime("%H%M%S")
+        timestamp = datetime.datetime.now().strftime("%H%M%S%f")[:9]
         new_name = f"AutoTest Edited {timestamp}"
         assert self.admin.edit_camera_group_by_name(group["name"], new_name) is True, (
             f"API-created group '{group['name']}' not found for rename"

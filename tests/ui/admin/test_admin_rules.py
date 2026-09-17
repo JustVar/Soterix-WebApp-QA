@@ -7,6 +7,11 @@ from playwright.sync_api import Error as PlaywrightError, expect
 from config.base_config import config
 from tests.shared.pages.admin_page import AdminPage
 
+# One worker for every module that writes this account's rules and their mute state: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_rules")
+
 RULE_TYPES = [
     "Entry-Exit",
     "Heat Map",
@@ -115,7 +120,7 @@ class TestAdminRules:
         Occupancy is the cheapest type to make: it configures through
         the full-view switch, so the wizard needs no canvas drawing.
         """
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S%f")[:-3]
         rule_name = f"Owned_Auto_{timestamp}"
         self.admin.click_add_new_rule()
         self._created_rules.append(rule_name)
@@ -305,7 +310,7 @@ class TestAdminRules:
 
         self._require_rule_type_card(rule_type)
 
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S%f")[:-3]
         rule_name = f"{rule_type.replace(' ', '_')}_Auto_{timestamp}"
 
         self._created_rules.append(rule_name)

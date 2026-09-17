@@ -17,6 +17,11 @@ from config.base_config import config
 from tests.shared.pages.insights_page import InsightsPage
 from tests.shared.pages.lpr_page import LprPage
 
+# One worker for every module that writes this account's LPR lists, views and widgets: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_lpr")
+
 # The shared tenant renames sites, so the name lives in config
 SITE_NAME = config.get("test_site_name")
 LPR_DESCRIPTION = "License Plate Recognition"

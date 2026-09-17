@@ -22,6 +22,11 @@ from playwright.sync_api import Error as PlaywrightError, expect
 from tests.shared.pages.sequence_page import SequencePage
 from tests.shared.pages.views_page import ViewsPage
 
+# One worker for every module that writes this account's camera sequences: under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_sequences")
+
 
 class TestCameraSequences:
     """Tests for camera sequence CRUD and views integration."""
@@ -145,7 +150,7 @@ class TestCameraSequences:
 
         # create_sequence fills the name, saves, and waits for the
         # form to close with its name input once the save lands
-        time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
         sequence_name = f"{time_stamp}_Automation_Test_create_sequence"
         self._created_sequences.append(sequence_name)
         self.seq.create_sequence(sequence_name)

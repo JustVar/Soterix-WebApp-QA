@@ -104,7 +104,7 @@ venv\Scripts\python.exe -m pytest -k "bookmark"                   # by name patt
 venv\Scripts\python.exe -m pytest tests/ui/views --headed         # watch the browser
 venv\Scripts\python.exe -m pytest tests/ui/views --headed --slowmo 500
 venv\Scripts\python.exe -m pytest tests/ui/views -s               # see page-object output live
-venv\Scripts\python.exe -m pytest -n 4 --dist loadfile tests/ui   # parallel (read-mostly modules only)
+venv\Scripts\python.exe -m pytest -n 4 tests/ui                   # parallel; never add --dist (pytest.ini groups tenant-state modules)
 venv\Scripts\python.exe -m pytest --collect-only tests/ui         # list tests, run nothing
 ```
 
