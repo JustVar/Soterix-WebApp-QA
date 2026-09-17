@@ -131,6 +131,32 @@ the tail of the log:
 ssh spartan1 'TARGET=tests/ui/maps TEST_TIMEOUT=300 /data/qa/ci/nightly.sh; tail -n 20 /data/qa/ci/nightly.log'
 ```
 
+## Updating Chrome on the box
+
+Chrome comes from Google's apt repository (`google-chrome.sources`), which
+`unattended-upgrades` does not cover (Ubuntu origins only), so the box's
+Chrome stays where it was installed until someone updates it. That is on
+purpose: a Chrome update is a deliberate act, done in daylight and
+verified, not something the nightly discovers. Windows laptops update
+themselves on relaunch, so they usually run a newer Chrome than the box;
+the tests are written for the current stable, and the box should not fall
+more than a major version behind it. The current stable per platform:
+`https://versionhistory.googleapis.com/v1/chrome/platforms/linux/channels/stable/versions`.
+
+```bash
+# 1. what is installed and what is offered
+ssh spartan1 'apt-cache policy google-chrome-stable | sed -n 2,3p'
+# 2. update (Google's repo is already configured; playwright install chrome did that on 09/11/2026)
+ssh spartan1 'sudo apt-get update -q && sudo apt-get install -y --only-upgrade google-chrome-stable && google-chrome --version'
+# 3. prove H.265 still decodes on the new Chrome, the way the nightly opens it
+ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && XDG_RUNTIME_DIR=/run/qa-weston WAYLAND_DISPLAY=wl-qa   CHROME_ARGS=--ozone-platform=wayland BOX=india venv/bin/python -c "from tests.shared.helpers.stream_health import decode_check;   print(decode_check(\"H.265\", \"chrome\", headed=True))"'
+```
+
+Step 3 must print `decodes: True` with `headed` in the browser name. A
+`False` means the new Chrome needs a flag again: read the H.265 notes
+under "What the box needs", try the probe with the eight-flag set recorded
+there, and put whatever works back into `CHROME_ARGS` in `nightly.sh`.
+
 ## Recovering a stuck nightly
 
 The script kills its own predecessor: the process group in its pid file,
