@@ -42,7 +42,35 @@ MSE_TYPES = {
     "H.265": ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'],
     "H.264": ['video/mp4; codecs="avc1.42E01E"'],
 }
-CODEC_TYPES = {8: "H.265"}   # the tenant's codecType values seen so far (stream_probe)
+# The tenant's codecType values seen so far: 8 on main gate (Newtown), 2 on
+# the Thermal-* lenses (Videonetics, 09/17/2026); the socket's own init
+# segment showed hvc1 for both, so both are H.265. The map is only the
+# fallback: codec_from_frames reads the truth from the frames.
+CODEC_TYPES = {8: "H.265", 2: "H.265"}
+
+
+def codec_from_frames(frames: list) -> str | None:
+    """The codec the media socket actually delivers, read from the fMP4
+    init segment (ftyp+moov sample entry: hvc1/hev1 is H.265, avc1/avc3
+    H.264) in the first binary frames; None when none parses. The channel
+    parameter map is not to be trusted alone: an unmapped codecType read
+    as "unknown", the decode check gave no verdict, the guard let the
+    livestream tests run, and three of four workers died on a tile Linux
+    Chrome could not decode (india, 09/17/2026, the four-hour run cap).
+    """
+    init = b"".join(f.get("data") or b"" for f in (frames or [])[:3] if f.get("opcode") == 2)
+    if not init:
+        return None
+    try:
+        from tools.stream_probe import parse_init_segment
+        seen = (parse_init_segment(init) or {}).get("codec") or ""
+    except Exception:  # why: an init segment that does not parse leaves the parameter map's codec in place
+        return None
+    if "265" in seen:
+        return "H.265"
+    if "264" in seen:
+        return "H.264"
+    return None
 
 
 def measure_stream(camera_name: str | None, seconds: int = DEFAULT_SECONDS) -> dict:
@@ -91,6 +119,10 @@ def measure_stream(camera_name: str | None, seconds: int = DEFAULT_SECONDS) -> d
                                         app_headers(token), float(seconds)))
         out["frames"] = sum(1 for f in rec.get("frames", []) if f.get("opcode") == 2)
         out["note"] = rec.get("error") or out["note"]
+        seen = codec_from_frames(rec.get("frames", []))
+        if seen:
+            out["codec_param"] = out["codec"]
+            out["codec"] = seen
     except Exception as e:  # why: the guard reports what stopped the measurement and skips nothing
         out["error"] = f"{type(e).__name__}: {e}"[:200]
     return out
@@ -153,6 +185,16 @@ def stream_skip_reason(measure: dict, box_name: str) -> str | None:
                 f"and this browser ({measure.get('browser')}) cannot decode it: MediaSource.isTypeSupported "
                 f"is false, so a tile's player never leaves readyState 0; the livestream tests need a "
                 f"runner whose Chrome decodes {measure.get('codec')} (Windows or Mac){tail}")
+    if int(measure.get("frames") or 0) > 0 and measure.get("decodes") is None:
+        # No verdict is not a green light: running a livestream test against
+        # a tile the browser may never decode hangs the driver on the
+        # after-test screenshot and ends the worker (three of four died,
+        # india 09/17/2026). Skip, and say what could not be confirmed.
+        why = (f"its codec is unknown ({measure.get('codec') or 'unread'})" if not MSE_TYPES.get(measure.get("codec") or "")
+               else f"the decode check did not run ({measure.get('browser') or 'no browser answer'})")
+        return (f"box {box_name} streams frames on camera '{measure.get('camera')}' but whether this "
+                f"browser decodes them could not be confirmed: {why}. The livestream tests skip rather "
+                f"than run against a tile that may never play{tail}")
     if int(measure.get("frames") or 0) > 0:
         return None
     note = f"; media socket: {measure['note']}" if measure.get("note") else ""

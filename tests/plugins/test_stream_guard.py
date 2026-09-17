@@ -69,7 +69,6 @@ def test_a_browser_without_the_decoder_is_a_skip_naming_the_codec_and_browser():
 def test_frames_mean_no_skip_and_so_does_a_failed_measurement():
     """Frames arrived and the browser decodes: run. Could not measure: run too, and say so."""
     assert sh.stream_skip_reason(ALIVE, 'us') is None
-    assert sh.stream_skip_reason({**ALIVE, 'decodes': None}, 'us') is None   # unknown codec: no verdict on decoding
     assert sh.stream_skip_reason(UNMEASURED, 'us') is None
     assert sh.describe(UNMEASURED).startswith("[STREAM] guard could not measure 'Soterix Multicam 1.15': ConnectionError")
     assert sh.describe(UNMEASURED).endswith('(no test skipped)')
@@ -179,3 +178,47 @@ def test_livestream_marker_is_registered_with_the_guard_in_its_text():
     text = (REPO_ROOT / 'pytest.ini').read_text(encoding='utf-8')
     line = next(ln for ln in text.splitlines() if ln.strip().startswith('livestream:'))
     assert 'STREAM_GUARD=off' in line
+
+
+def test_frames_with_no_decode_verdict_is_a_skip_that_says_what_was_unconfirmed():
+    """An unknown codec, or a decode check that did not run, must not let the
+    livestream tests run: on 09/17/2026 Thermal-14's codecType 2 was unmapped, the
+    check gave no verdict, the tests ran against a tile Linux Chrome cannot decode,
+    and three of four workers died on the after-test screenshot (four-hour cap)."""
+    unknown = sh.stream_skip_reason({**ALIVE, 'codec': 'codecType 2', 'decodes': None, 'browser': None}, 'india')
+    assert unknown
+    assert 'could not be confirmed' in unknown
+    assert 'codecType 2' in unknown
+    unrun = sh.stream_skip_reason({**ALIVE, 'codec': 'H.265', 'decodes': None,
+                                   'browser': 'check failed: TimeoutError'}, 'india')
+    assert unrun
+    assert 'decode check did not run' in unrun
+    assert 'TimeoutError' in unrun
+    # a real verdict still rules: decodes True runs, False skips
+    assert sh.stream_skip_reason({**ALIVE, 'codec': 'H.265', 'decodes': True}, 'us') is None
+
+
+def test_codec_is_read_from_the_socket_init_segment_not_the_parameter_map():
+    """The frames say hvc1: the guard reports H.265 whatever codecType the channel parameters carried."""
+    seen = {}
+
+    def fake_parse(buf):
+        seen['buf'] = buf
+        return {'codec': 'H.265 (HEVC)'}
+
+    import tools.stream_probe as sp
+    orig = sp.parse_init_segment
+    sp.parse_init_segment = fake_parse
+    try:
+        frames = [{'opcode': 2, 'data': b'ftyp...moov...'}, {'opcode': 2, 'data': b'moof'}]
+        assert sh.codec_from_frames(frames) == 'H.265'
+        assert seen['buf'].startswith(b'ftyp')
+        sp.parse_init_segment = lambda buf: {'codec': 'H.264 (AVC)'}
+        assert sh.codec_from_frames(frames) == 'H.264'
+        sp.parse_init_segment = lambda buf: {}
+        assert sh.codec_from_frames(frames) is None
+    finally:
+        sp.parse_init_segment = orig
+    assert sh.codec_from_frames([]) is None
+    assert sh.CODEC_TYPES[2] == 'H.265'
+
