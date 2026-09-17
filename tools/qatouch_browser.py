@@ -782,7 +782,7 @@ def _go_to_next_page(page):
     return False
 
 
-def scroll_to_find_case(page, title, max_attempts=80):  # noqa: ARG001 - callers pass it, the body never reads it (register row 63)
+def scroll_to_find_case(page, title):
     """Find a case in the paginated list.
 
     Strategy:
@@ -2904,7 +2904,7 @@ def _steps_match(existing: list[dict], desired: list[dict]) -> bool:
     return True
 
 
-def cmd_sync_steps(step_dir=None, csv_file=None, case_keys=None, dry_run=False,  # noqa: ARG001 - csv_file is accepted and never read (register row 63)
+def cmd_sync_steps(step_dir=None, case_keys=None, dry_run=False,
                    limit=None, include_manual=False, manual_only=False,
                    batch=None, resume=False):
     """Sync step definitions from JSON files into QA Touch Steps tab.
@@ -4254,9 +4254,14 @@ def main():
         return
 
     if cmd == 'sync-steps':
+        # sync-steps reads the step JSON files, never a CSV: a --csv here
+        # used to be accepted and silently ignored (register row 63)
+        if csv_file != DEFAULT_CSV:
+            print('sync-steps takes no --csv: its input is the step JSON files under '
+                  'tests/steps/ (use --step-dir DIR to point elsewhere)')
+            sys.exit(2)
         cmd_sync_steps(
             step_dir=step_dir,
-            csv_file=csv_file if csv_file != DEFAULT_CSV else None,
             case_keys=case_keys,
             dry_run=dry_run,
             limit=limit,

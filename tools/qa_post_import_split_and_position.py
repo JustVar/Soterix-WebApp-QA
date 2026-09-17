@@ -432,7 +432,6 @@ def sync_case(
     page,
     project_key: str,
     case_key: str,
-    title: str,  # noqa: ARG001 - the caller passes it, the body never reads it (register row 63)
     steps: list[str],
     expecteds: list[str],
     dry_run: bool,
@@ -615,7 +614,6 @@ def main(argv: list[str] | None = None) -> int:
                     page=page,
                     project_key=args.project_key,
                     case_key=case_key,
-                    title=title,
                     steps=payload["steps"],
                     expecteds=payload["expecteds"],
                     dry_run=args.dry_run,
