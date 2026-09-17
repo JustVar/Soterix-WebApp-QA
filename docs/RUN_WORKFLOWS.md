@@ -112,14 +112,26 @@ venv\Scripts\python.exe tools\publish_run.py            # newest run
 venv\Scripts\python.exe tools\publish_run.py --dry-run  # show, send nothing
 ```
 
-The command copies the run folder plus the archive's front-door pages and
-prints the resulting URL. Host and paths are overridable with
-`QA_RUNS_HOST` / `QA_RUNS_DIR` / `QA_RUNS_URL`.
+The command copies the run folder and prints the resulting URL. The
+archive's own `index.html` and `health.html` are not sent (each machine's
+copies list only its own runs), so a published run shows in the host's
+index when the box's next run rebuilds it, and in nginx's folder listing
+at once. Host and paths are overridable with `QA_RUNS_HOST` /
+`QA_RUNS_DIR` / `QA_RUNS_URL`.
+
+**One archive, many runners: the run says where it came from.** Since
+09/17/2026 (soterix-qa-shared v0.29.0) every run records the machine that
+ran it, the OS user, the account it signed in as, the box and the Chrome
+version, so a laptop run published beside the nightly reads apart on the
+index (machine badge beside the box badge, both in the filter) and on the
+run page (Machine, Operator, Account, Tenant). Nothing to set: run and
+publish as before, from any machine, box or environment.
 
 **Scheduled runs live on spartan1 as plain cron** (since 09/01/2026):
 `/data/qa/ci/nightly.sh` (the copy of record is `deploy/spartan1/nightly.sh`),
 daily 04:00 America/Chicago. It resets the clone to `origin/main`, installs
-pins, runs `tests/ui` headless once per box (`india`, then `us`; a box
+pins, runs `tests/ui` once per box, headed on the box's Weston display since
+09/17/2026 (deploy/spartan1/README.md; `india`, then `us`; a box
 whose `QA_<BOX>_USER` is not in the box's `.env` is skipped and said so),
 and copies each archive into the served directory, so the runs are
 browsable at the URL above when they finish. Each run's `run.html` and its
