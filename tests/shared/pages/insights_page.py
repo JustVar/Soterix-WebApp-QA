@@ -15,6 +15,8 @@ from playwright.sync_api import (
     expect,
 )
 
+from tests.shared.helpers.shown_name import shown_as
+
 # Graph type indices in the dropdown
 GRAPH_INDEX = {"Line": 0, "Bar": 1, "Pie": 4, "Heat": 5}
 
@@ -415,9 +417,11 @@ class InsightsPage:
                 # about 0.5 s after a click once the list has settled; a
                 # single click fired before it settled was the Heat_Person
                 # miss, so click with a short retry.
+                # the list cuts a long name in the DOM ('Soterix Multica...' on
+                # US, 09/17/2026), so match the name or its ellipsis cut
                 target = (
                     self.page.locator(".location-popup-accordian")
-                    .filter(has_text=camera_name)
+                    .filter(has_text=shown_as(camera_name))
                     # .first: a hidden copy of the list renders first, and
                     # the selected check counts matching rows by name across
                     # both copies, so clicking either row applies the state
@@ -434,7 +438,7 @@ class InsightsPage:
                 picked_name = camera_name
                 selected = self.page.locator(
                     ".location-popup-accordian.camera-selected"
-                ).filter(has_text=camera_name)
+                ).filter(has_text=shown_as(camera_name))
                 for _ in range(5):
                     if selected.count():
                         break
