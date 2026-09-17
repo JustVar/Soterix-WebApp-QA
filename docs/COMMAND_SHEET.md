@@ -39,13 +39,18 @@ git clone https://github.com/Soterix-Systems/Soterix-WebApp-QA.git
 cd Soterix-WebApp-QA
 python -m venv venv
 venv\Scripts\python.exe -m pip install -r requirements.txt
-venv\Scripts\python.exe -m playwright install chromium
+git config core.hooksPath tools/hooks
 copy .env.template .env
 ```
 
-Then open `.env` and set `QA_USER` and `QA_PASSWORD`. That is all a
-test run needs. The other variables are optional integrations; the
-comments in `.env.template` explain each one.
+No browser download: the suite drives the Google Chrome already on the
+machine (section 1). The `git config` line turns on the repo's git hooks
+for this clone (section 9).
+
+Then open `.env`: `BOX` names the tenant (`india` by default) and that
+box's pair, `QA_INDIA_USER` and `QA_INDIA_PASSWORD`, is what signs in.
+That is all a test run needs. The other variables are optional
+integrations; the comments in `.env.template` explain each one.
 
 ## 4. Key settings
 
@@ -197,13 +202,16 @@ The QA Touch side has its own ledger, `history/qatouch_counts.jsonl`:
 and `tools/qatouch_ledger.py --backfill` rebuilds it from the snapshots
 on disk. Both ledgers render on the inventory page under Growth.
 
-Two hooks live in `tools/hooks/`. Install both once, into `.git/hooks/`
-with no extension:
+Two hooks live in `tools/hooks/`. One command, once per clone, points git
+at that folder, so the hooks are the tracked files themselves and a change
+to them reaches you with the next pull:
 
 ```
-cp tools/hooks/pre-commit  .git/hooks/pre-commit
-cp tools/hooks/commit-msg  .git/hooks/commit-msg
+git config core.hooksPath tools/hooks
 ```
+
+(Older clones copied the two files into `.git/hooks/`; that still works,
+but those copies do not follow the tracked ones.)
 
 `pre-commit` runs the four checks of CI's collect gate that fit in
 seconds, plus two of its own, so a commit that would fail the gate

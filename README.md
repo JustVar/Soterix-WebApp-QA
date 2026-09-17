@@ -26,15 +26,21 @@ if you're working on them.
 
 ## Quick Setup
 
-Prereqs: Python 3.11+, Git. (Node.js not required - the Playwright browsers installer is bundled with the Python package.)
+Prereqs: Python 3.11+, Git, Google Chrome. The suite drives branded Chrome
+(`--browser-channel chrome` in pytest.ini), so Chrome must be installed on
+the machine; Playwright's own Chromium is not used and not downloaded.
+Node.js is not required.
 
 ```powershell
 python -m venv venv
 venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-python -m playwright install chromium
+git config core.hooksPath tools/hooks
 ```
+
+The last line turns on the repo's two git hooks (the pre-commit gates and
+the commit-message check) for this clone; see docs/COMMAND_SHEET.md.
 
 That is the whole setup. `requirements.txt` pulls in the shared QA pipeline
 (`soterix-qa-shared`) for you, over HTTPS, using the same GitHub login your
@@ -43,7 +49,7 @@ separately from this one: if pip reports a 404, ask for it rather than
 hunting for a token.
 
 `requirements.txt` pins exact versions (playwright 1.62.0, pytest-playwright
-0.8.0), so a fresh clone installs the same set the suite was verified against.
+0.9.0), so a fresh clone installs the same set the suite was verified against.
 Upgrade deliberately: change the pin, run a suite, then commit.
 
 `requirements.txt` pins the shared pipeline to a TAG, so everyone runs the
@@ -67,7 +73,8 @@ Copy the env template and fill in the automation credentials:
 
 ```powershell
 copy .env.template .env
-# edit .env: set QA_USER and QA_PASSWORD - that's all you need to run tests
+# edit .env: BOX names the tenant (india by default); fill that box's pair,
+# QA_INDIA_USER and QA_INDIA_PASSWORD - that's all you need to run tests
 ```
 
 ## Environment Config
@@ -278,8 +285,8 @@ gates before every commit.
 
 ## CI Notes
 
-- `python -m playwright install chromium` must run in CI before pytest.
-- Secrets (`QA_USER`, `QA_PASSWORD`) come from CI secrets, not `.env`.
+- Google Chrome must be on the runner before pytest: the suite drives branded Chrome (`--browser-channel chrome`); the smoke workflow installs it with `python -m playwright install chrome`.
+- Secrets (`BOX` and its `QA_<BOX>_USER` / `QA_<BOX>_PASSWORD` pair) come from CI secrets, not `.env`.
 - Leave `BUG_CREATION_ENABLED` unset in CI - the bug filer is still WIP and must not file real bugs from an automated run.
 - Lab servers handle the actual smoke/sanity execution; CI is for syntax + smoke validation, not full runs.
 
