@@ -14,8 +14,10 @@
 # dependabot and other real bots co-author legitimately, and four such
 # lines already sit in this history.
 #
-# Install: copy this file to .git/hooks/commit-msg (no extension) and
-# make it executable. Bypass only for a genuine emergency:
+# Install, once per clone: git config core.hooksPath tools/hooks
+# (README > Quick Setup). CI runs this same file on every commit a push
+# brings (.github/workflows/collect-gate.yml), so a commit made without
+# the hook meets it there. Bypass only for a genuine emergency:
 # git commit --no-verify.
 msg_file="$1"
 

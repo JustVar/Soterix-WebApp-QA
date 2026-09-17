@@ -8,7 +8,9 @@
 # because the hook ran only its own two and the inventory. CI alone also
 # runs `pytest --setup-plan` (fixture wiring, 25 s); that stays in CI.
 #
-# Install: copy this file to .git/hooks/pre-commit (no extension).
+# Install, once per clone: git config core.hooksPath tools/hooks
+# (README > Quick Setup). CI runs the same conventions check on the
+# lines a push adds, so a commit made without this hook meets it there.
 # Bypass only for a genuine emergency: git commit --no-verify.
 #
 # Why each check is here:

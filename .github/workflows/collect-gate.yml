@@ -38,6 +38,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The whole history: the conventions step diffs this push against
+          # its base, and the attribution step reads every commit it brings.
+          fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
@@ -90,6 +94,44 @@ jobs:
       # reason in the commit message). See tools/lint_baseline.py.
       - name: Lint, against the recorded baseline
         run: python tools/lint_baseline.py
+
+      # The house conventions on the lines this push adds: the same check
+      # the pre-commit hook runs on staged lines, so a commit made without
+      # the hook (a clone that never ran `git config core.hooksPath
+      # tools/hooks`) meets it here. The base is the push's previous head,
+      # or the pull request's target. secret_check stays hook-only: its
+      # secrets are the values in a developer's .env, which this runner
+      # does not have.
+      - name: House conventions on the added lines
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          case "$base" in ""|0000000000000000000000000000000000000000) base="HEAD~1" ;; esac
+          git rev-parse -q --verify "$base^{commit}" > /dev/null || base="HEAD~1"
+          echo "base: $base"
+          python tools/convention_check.py --base "$base"
+
+      # The attribution gate on every commit this push brings, run as the
+      # tracked hook itself (tools/hooks/commit-msg) so the two cannot drift.
+      - name: Commit messages name no AI tool, model or co-author
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          case "$base" in ""|0000000000000000000000000000000000000000) base="HEAD~1" ;; esac
+          git rev-parse -q --verify "$base^{commit}" > /dev/null || base="HEAD~1"
+          echo "base: $base"
+          rc=0
+          for sha in $(git rev-list "$base..HEAD"); do
+            git log -n 1 --format=%B "$sha" > /tmp/msg.txt
+            sh tools/hooks/commit-msg /tmp/msg.txt || { echo "  in commit $sha"; rc=1; }
+          done
+          exit $rc
 
       # A shim that stops being a module alias breaks silently: the repo's
       # own suites stay green while every monkeypatch seam quietly stops
