@@ -31,45 +31,50 @@ because it existed nowhere in git.
   H.265 (measured 09/11 and 09/17/2026). The tenants stream H.265 and
   Chrome on Linux has no software decoder for it: it answers false to
   `MediaSource.isTypeSupported` for hvc1/hev1 unless it reaches a GPU
-  decoder through VA-API. The box decodes it since 09/17/2026 through its
-  CPU's Intel UHD 770 graphics (enabled in the BIOS that day; before that no
-  Intel device was on the PCI bus), Ubuntu's `intel-media-va-driver`
-  (`vainfo` on `/dev/dri/renderD128` lists VAProfileHEVCMain) and a headless
-  Weston (`qa-weston.service` here) for Chrome's Wayland backend. The
-  nightly finds the Weston socket and runs the web-app legs headed on it
-  with these flags in `CHROME_ARGS`, which the test session (conftest's
-  launch args), the stream guard and tools/stream_probe.py all read. What
-  was measured for each, so nobody re-runs the dead ends:
-  - `--render-node-override=/dev/dri/renderD128`: without it Chrome opens
-    the NVIDIA render node (renderD129) and never calls libva; the Intel
-    driver cannot initialise there. With it, libva loads iHD and
-    isTypeSupported turns true.
-  - `--enable-features=VaapiVideoDecodeLinuxGL,PlatformHEVCDecoderSupport,VaapiIgnoreDriverChecks,AcceleratedVideoDecodeLinuxGL`:
-    VA-API decoding and H.265 on Linux, both off by default.
-  - `--use-gl=angle --use-angle=gl-egl`: real GL on the Intel GPU through
-    Mesa's EGL. Under Xvfb or headless the default is a software renderer.
-  - `--ozone-platform=wayland`, with the session HEADED (`--headed`): the
-    decoder produced frames on every backend, but every backend except
-    Wayland lost the GPU process on the first frame it handed to the
-    compositor (`Could not find SharedImageBackingFactory ... BGRA_8888,
-    gmb_type: platform`) and the player reported PIPELINE_ERROR_DECODE:
-    headless, Xvfb, X11, with native GPU memory buffers, zero-copy, no GPU
-    compositing, the legacy decoder. Chrome's `--headless` switches to the
-    headless backend whatever `--ozone-platform` says, so the tests run
-    headed. On Wayland (Weston headless, GL renderer) Thermal-14 played at
-    2560x1440, 9 fps, 160 frames in 24 s, 0 dropped, no error; the US
-    Multicam at 640x360.
-  - `LIBVA_DRIVER_NAME=iHD`, and for Weston `__EGL_VENDOR_LIBRARY_FILENAMES`
-    (Mesa's vendor file): the NVIDIA driver also offers VA-API and EGL and
-    must not be picked.
-  Dead ends, all still installed and harmless: the NVIDIA RTX A400 through
-  `nvidia-vaapi-driver` 0.0.8 (a community shim; the tile reached
-  readyState 1 then PIPELINE_ERROR_DECODE, 09/11), `xvfb` (no GL on the
-  GPU under it), `--ozone-platform=drm` (not in Google Chrome's build).
-  Without the Weston socket the nightly runs headless as before and the
-  stream guard skips the livestream tests with the measured reason; the
-  Windows runner (`deploy/windows-runner/`) stays as the documented
-  fallback.
+  decoder through VA-API, and it hands the decoded frames to the
+  compositor only from its Wayland backend. The box decodes it since
+  09/17/2026 through its CPU's Intel UHD 770 graphics (enabled in the BIOS
+  that day; before that no Intel device was on the PCI bus), Ubuntu's
+  `intel-media-va-driver` (`vainfo` on the Intel render node lists
+  VAProfileHEVCMain) and a headless Weston with a GL renderer on that GPU
+  (`qa-weston.service` here). What the nightly needs, all of it:
+  - `XDG_RUNTIME_DIR` and `WAYLAND_DISPLAY` naming the Weston socket;
+  - Chrome HEADED (`--headed`): `--headless` switches Chrome to its own
+    headless backend whatever the ozone flag says, and that backend loses
+    the GPU process on the first decoded frame;
+  - `CHROME_ARGS="--ozone-platform=wayland"`: without it Chrome picks X11,
+    and with no X server it does not start. Under Wayland Chrome takes
+    the GPU from the compositor: the render node, the VA-API driver and
+    the GL renderer all resolve to the Intel device on their own.
+  The test session (conftest's launch args), the stream guard and
+  tools/stream_probe.py read the same CHROME_ARGS, so the guard measures
+  the browser the tests get; its skip reason names how it opened Chrome
+  (headed or headless, how many flags), so a wiring fault reads as one.
+  Audited 09/17/2026 against the real tests, four workers, headed on
+  Weston: this one-flag set and an eight-flag set (VA-API and HEVC
+  features on, the GPU blocklist ignored, driver checks ignored, the
+  render node pinned, `LIBVA_DRIVER_NAME=iHD`) gave identical outcomes on
+  the Views half (25 passed, the same 8 failures: the save-view defect and
+  bookmarks); the probe played Thermal-14 (2560x1440, 9 fps, 0 dropped)
+  under every flag subset tried, including none but the ozone flag. Chrome
+  153 has VA-API decoding and HEVC on by default on Linux; a later Chrome
+  may need a flag again, and the guard's `[STREAM]` line (`decodes H.265:
+  NO`) is where that shows. Chrome on the box is not auto-updated
+  (unattended-upgrades allows Ubuntu origins only), so a Chrome update is
+  a deliberate act: re-run the probe after one.
+  Dead ends, so nobody re-runs them: every non-Wayland backend (headless,
+  Xvfb, X11, with native GPU memory buffers, zero-copy, no GPU
+  compositing, the legacy decoder) decodes frames and then loses the GPU
+  process handing them on (`Could not find SharedImageBackingFactory ...
+  BGRA_8888, gmb_type: platform`); under Xvfb or headless Chrome opens the
+  NVIDIA render node and never calls libva unless the node is pinned; the
+  NVIDIA RTX A400 through `nvidia-vaapi-driver` 0.0.8 (a community shim)
+  reached readyState 1 then PIPELINE_ERROR_DECODE (09/11);
+  `--ozone-platform=drm` is not in Google Chrome's build. All of that is
+  still installed and harmless. Without the Weston socket the nightly runs
+  headless as before and the stream guard skips the livestream tests with
+  the measured reason; the Windows runner (`deploy/windows-runner/`) stays
+  as the documented fallback.
 - `/data/qa/ci/Soterix-WebApp-QA/.env` (mode 600) with the QA Touch keys
   and one account per box the nightly runs: `QA_INDIA_USER`,
   `QA_INDIA_PASSWORD`, `QA_US_USER`, `QA_US_PASSWORD`. The suite reads the

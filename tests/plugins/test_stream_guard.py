@@ -285,6 +285,7 @@ def test_decode_check_opens_the_browser_the_tests_get(monkeypatch):
     out = sh.decode_check('H.265', 'chrome', headed=True)
     assert out['decodes'] is True
     assert seen == {'channel': 'chrome', 'headless': False, 'args': ['--ozone-platform=wayland']}
+    assert out['browser'].endswith(', headed, 1 flag')
     sh.decode_check('H.265', 'chrome')
     assert seen['headless'] is True
 

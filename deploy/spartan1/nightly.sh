@@ -87,25 +87,24 @@ fi
   venv/bin/pip install -q -r requirements.txt
 
   # H.265 (09/17/2026). The tenants stream H.265, and Chrome on Linux
-  # decodes it only through the GPU's VA-API decoder, and only on its
-  # Wayland backend. The box's Intel graphics (enabled in the BIOS that
-  # day) and a headless Weston (qa-weston.service) provide both. When the
-  # Weston socket is there, the web-app legs run headed on it with these
-  # flags; without it they run headless and the stream guard skips the
-  # livestream tests with the measured reason. Each flag is needed
-  # (deploy/spartan1/README.md): the render node pins Chrome to the Intel
-  # device (it opens the NVIDIA one otherwise and VA-API stays off), the
-  # features turn on VA-API decoding and H.265 on Linux, and gl-egl gives
-  # Chrome real GL on that GPU instead of a software renderer.
+  # decodes it only through the GPU's VA-API decoder, and hands the frames
+  # on only from its Wayland backend. The box's Intel graphics and a
+  # headless Weston (qa-weston.service) provide both. When the Weston
+  # socket is there, the web-app legs run headed on it (--headless would
+  # switch Chrome to its own headless backend) with Chrome told to use
+  # Wayland; under Wayland Chrome finds the Intel GPU, its VA-API driver
+  # and GL on its own (audited 09/17, deploy/spartan1/README.md). Without
+  # the socket they run headless and the stream guard skips the
+  # livestream tests with the measured reason.
   WESTON_DIR="${QA_WESTON_DIR:-/run/qa-weston}"
   HEADED=""
   if [ -S "$WESTON_DIR/wl-qa" ]; then
-    export XDG_RUNTIME_DIR="$WESTON_DIR" WAYLAND_DISPLAY=wl-qa LIBVA_DRIVER_NAME=iHD
-    export CHROME_ARGS="--ozone-platform=wayland --use-gl=angle --use-angle=gl-egl --ignore-gpu-blocklist --render-node-override=/dev/dri/renderD128 --enable-features=VaapiVideoDecodeLinuxGL,PlatformHEVCDecoderSupport,VaapiIgnoreDriverChecks,AcceleratedVideoDecodeLinuxGL"
+    export XDG_RUNTIME_DIR="$WESTON_DIR" WAYLAND_DISPLAY=wl-qa
+    export CHROME_ARGS="--ozone-platform=wayland"
     HEADED="--headed"
     echo "H.265: Weston display at $WESTON_DIR/wl-qa; the web-app legs run headed on it"
   else
-    echo "H.265: no Weston display at $WESTON_DIR/wl-qa (qa-weston.service); the livestream tests skip by measurement"
+    echo "H.265: no Weston display at $WESTON_DIR/wl-qa (qa-weston.service, deploy/spartan1/README.md); the livestream tests skip by measurement"
   fi
 
   for box in $BOXES; do
@@ -157,7 +156,7 @@ fi
   # fails once per camera, loudly, so it is skipped here and said so.
   if [ "$C2C" = 1 ] && grep -q "^C2C_CAMERA_PASS=." .env 2>/dev/null; then
     started=$(date +%s)
-    # CHROME_ARGS= : the Wayland flags above are for headed Chrome; this leg
+    # CHROME_ARGS= : the Wayland flag above is for headed Chrome; this leg
     # is headless and its camera pages need no GPU decoder.
     CHROME_ARGS= C2C_REQUIRE_HARDWARE=1 QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest tests/c2c \
       -rfEs --maxfail="$MAXFAIL" \

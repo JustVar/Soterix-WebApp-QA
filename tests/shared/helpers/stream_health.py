@@ -179,12 +179,17 @@ def decode_check(codec: str | None, channel: str | None, headed: bool = False) -
 
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
-            browser = p.chromium.launch(channel=channel or None, headless=not headed, args=chrome_args())
+            flags = chrome_args()
+            browser = p.chromium.launch(channel=channel or None, headless=not headed, args=flags)
             page = browser.new_page()
             page.goto("about:blank")
             supported = page.evaluate(
                 "types => types.some(t => window.MediaSource && MediaSource.isTypeSupported(t))", types)
-            name = f"{'Chrome' if channel == 'chrome' else 'Chromium'} {browser.version} on {platform.system()}"
+            # The name says how Chrome was opened: a false from a headless
+            # or flagless launch on a box that decodes headed with its flags
+            # is a wiring fault, and the skip reason must show it.
+            name = (f"{'Chrome' if channel == 'chrome' else 'Chromium'} {browser.version} on {platform.system()}, "
+                    f"{'headed' if headed else 'headless'}, {len(flags)} flag{'' if len(flags) == 1 else 's'}")
             browser.close()
         return {"decodes": bool(supported), "browser": name}
     except Exception as e:  # why: a check that could not run is 'unknown', which skips nothing
