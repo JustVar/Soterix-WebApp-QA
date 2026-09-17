@@ -146,21 +146,37 @@ def stream_guard(config, items, box_name: str) -> None:
     if not targets or not stream_health.guard_enabled() or config.getoption("--collect-only", default=False):
         return
     # Two facts: the socket's frame count, and whether THIS browser decodes
-    # what the channel streams (Chrome on Linux has no H.265 decoder).
-    measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"),
-                                   config.getoption("--browser-channel", default=None))
+    # what the channel streams. "This browser" is the one the tests get:
+    # the session's channel, flags (CHROME_ARGS) and headed-ness, since
+    # Chrome on Linux decodes H.265 only headed on a Wayland display with
+    # spartan1's flags (deploy/spartan1/README.md, 09/17/2026).
+    channel = config.getoption("--browser-channel", default=None)
+    headed = bool(config.getoption("--headed", default=False))
+    measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"), channel, headed=headed)
     print(stream_health.describe(measure))
     if measure.get("frames") == 0 and not measure.get("error"):
         # a second look before skipping the whole session on one empty
         # window: the US camera read 0 frames and then 117 a minute
         # apart (09/12/2026), and one 8 s sample had skipped 43 tests
-        measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"),
-                                       config.getoption("--browser-channel", default=None))
+        measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"), channel, headed=headed)
         print("[STREAM] second measurement: " + stream_health.describe(measure))
     reason = stream_health.stream_skip_reason(measure, box_name)
     if reason:
         for item in targets:
             item.add_marker(pytest.mark.skip(reason=reason))
+
+
+@pytest.fixture(scope="session")
+def browser_type_launch_args(browser_type_launch_args):
+    """pytest-playwright's launch options plus the flags in CHROME_ARGS.
+
+    The inner fixture is the plugin's own (headed, channel, slow-mo); this
+    override appends the session's Chrome flags to it, so the browser the
+    tests get is the one the stream guard measured
+    (stream_health.chrome_args). Unset, nothing changes.
+    """
+    from tests.shared.helpers import stream_health
+    return stream_health.launch_args_with_chrome_flags(browser_type_launch_args)
 
 
 def _from_env_or_config(env_key: str, cfg_key: str, default: str = "") -> str:

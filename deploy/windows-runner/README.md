@@ -2,11 +2,12 @@
 
 The tests marked `livestream` need a tile that plays. The QA tenants stream
 H.265, and Chrome decodes it only through a platform decoder: Windows
-Chrome has one, Chrome on spartan1 (Linux, even through its NVIDIA GPU)
-does not (measured 09/11/2026, `deploy/spartan1/README.md`). So spartan1
-runs everything and skips the livestream tests with that reason, and one
-Windows machine runs just those, on a schedule, publishing each run to the
-same archive at http://10.2.0.2/qa-runs/.
+Chrome has one out of the box; Chrome on Linux only through a GPU's VA-API
+on a Wayland display, which spartan1 has since 09/17/2026
+(`deploy/spartan1/README.md`), so its nightly runs the livestream tests.
+This runner is the fallback for the day that path breaks: one Windows
+machine runs just those tests, on a schedule, publishing each run to the
+same archive at http://10.2.0.2/qa-runs/. Nothing here is scheduled today.
 
 | File here | What it does |
 |---|---|

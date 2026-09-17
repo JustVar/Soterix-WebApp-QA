@@ -288,8 +288,10 @@ it honest.
    one media socket to the box's test camera and counts the frames;
    `conftest.stream_guard` skips the tests marked `livestream` with the
    count when it is 0, or with the codec and browser when this browser
-   cannot decode what the channel streams (Chrome on Linux has no H.265
-   decoder; the tenants stream H.265), and skips nothing when the
+   cannot decode what the channel streams (the tenants stream H.265;
+   Chrome on Linux decodes it only through a GPU's VA-API on a Wayland
+   display, which spartan1 has: deploy/spartan1/README.md), and skips
+   nothing when the
    measurement itself failed. Nine of the 17 web-app failures of the 09/11/2026 full run
    were that one condition read nine ways. Mark a test `livestream` when
    it needs frames on a tile (Save on a view, a drag onto a tile, the

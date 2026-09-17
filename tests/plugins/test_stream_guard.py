@@ -39,9 +39,9 @@ class FakeItem:
         return [m.kwargs.get('reason', '') for m in self.markers if m.name == 'skip']
 
 
-def _config(collect_only: bool = False, channel: str | None = 'chrome'):
+def _config(collect_only: bool = False, channel: str | None = 'chrome', headed: bool = False):
     def getoption(name, default=None):
-        return {'--collect-only': collect_only, '--browser-channel': channel}.get(name, default)
+        return {'--collect-only': collect_only, '--browser-channel': channel, '--headed': headed}.get(name, default)
     return SimpleNamespace(getoption=getoption)
 
 
@@ -62,7 +62,7 @@ def test_a_browser_without_the_decoder_is_a_skip_naming_the_codec_and_browser():
     reason = sh.stream_skip_reason(NO_DECODER, 'us')
     assert reason.startswith("box us streams H.265 on camera 'Soterix Multicam 1.15' and this browser "
                              "(Chrome 153.0.8010.36 on Linux) cannot decode it")
-    assert 'Windows or Mac' in reason
+    assert 'Windows, Mac, or spartan1 headed on its Weston display' in reason
     assert sh.stream_skip_reason({**DEAD, 'decodes': False, 'browser': 'x'}, 'us').startswith('box us streams H.265')
 
 
@@ -93,7 +93,7 @@ def test_decode_check_without_a_known_codec_gives_no_verdict():
 def test_assess_skips_the_decode_check_when_the_measurement_failed(monkeypatch):
     """No browser is opened for a channel that could not be measured."""
     monkeypatch.setattr(sh, 'measure_stream', lambda camera, seconds=8: dict(UNMEASURED))
-    monkeypatch.setattr(sh, 'decode_check', lambda codec, channel: pytest.fail('browser opened'))
+    monkeypatch.setattr(sh, 'decode_check', lambda codec, channel, headed=False: pytest.fail('browser opened'))
     out = sh.assess('x', 'chrome')
     assert (out['decodes'], out['browser']) == (None, None)
 
@@ -113,7 +113,7 @@ def test_hook_measures_twice_on_an_empty_sample_and_skips_only_the_livestream_te
     and then 117 a minute apart, 09/12/2026); two empties skip the livestream
     items only, with the same reason, using the session's browser channel."""
     calls: list = []
-    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8: (calls.append((camera, channel)), dict(DEAD))[1])
+    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8, headed=False: (calls.append((camera, channel)), dict(DEAD))[1])
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'Soterix Multicam 1.15'})
     monkeypatch.delenv('STREAM_GUARD', raising=False)
     items = [FakeItem('livestream', 'views'), FakeItem('views'), FakeItem('livestream')]
@@ -127,7 +127,7 @@ def test_hook_measures_twice_on_an_empty_sample_and_skips_only_the_livestream_te
 def test_hook_measures_once_when_the_stream_is_alive(monkeypatch):
     """A first sample with frames is the measurement: one call, no skips."""
     calls: list = []
-    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8: (calls.append((camera, channel)), dict(ALIVE))[1])
+    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8, headed=False: (calls.append((camera, channel)), dict(ALIVE))[1])
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'Soterix Multicam 1.15'})
     monkeypatch.delenv('STREAM_GUARD', raising=False)
     items = [FakeItem('livestream', 'views'), FakeItem('views')]
@@ -140,7 +140,7 @@ def test_hook_measures_once_when_the_stream_is_alive(monkeypatch):
 def test_hook_second_sample_with_frames_skips_nothing(monkeypatch):
     """An empty first sample and a live second one: the session runs."""
     answers = [dict(DEAD), dict(ALIVE)]
-    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8: answers.pop(0))
+    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8, headed=False: answers.pop(0))
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'Soterix Multicam 1.15'})
     monkeypatch.delenv('STREAM_GUARD', raising=False)
     items = [FakeItem('livestream', 'views')]
@@ -164,7 +164,7 @@ def test_hook_does_not_measure_without_a_livestream_test_or_on_collect_only_or_w
 
 def test_hook_keeps_the_tests_when_the_measurement_failed(monkeypatch, capsys):
     """A failed measurement leaves every test to run and says so on the terminal."""
-    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8: dict(UNMEASURED))
+    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8, headed=False: dict(UNMEASURED))
     monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'x'})
     monkeypatch.delenv('STREAM_GUARD', raising=False)
     item = FakeItem('livestream')
@@ -221,4 +221,81 @@ def test_codec_is_read_from_the_socket_init_segment_not_the_parameter_map():
         sp.parse_init_segment = orig
     assert sh.codec_from_frames([]) is None
     assert sh.CODEC_TYPES[2] == 'H.265'
+
+
+# ---------------------------------------------------------------- the session's Chrome flags
+
+def test_chrome_args_come_from_the_environment_and_default_to_none():
+    """CHROME_ARGS is the one variable every Chrome the suite opens reads; unset means no extra flag."""
+    assert sh.chrome_args({}) == []
+    assert sh.chrome_args({'CHROME_ARGS': ''}) == []
+    flags = sh.chrome_args({'CHROME_ARGS': '--ozone-platform=wayland --enable-features=A,B  --use-angle=gl-egl'})
+    assert flags == ['--ozone-platform=wayland', '--enable-features=A,B', '--use-angle=gl-egl']
+
+
+def test_launch_args_gain_the_flags_and_keep_the_plugins_own():
+    """The override appends to pytest-playwright's options and never drops headed or channel."""
+    base = {'headless': False, 'channel': 'chrome', 'args': ['--x']}
+    assert sh.launch_args_with_chrome_flags(base, {}) is base
+    out = sh.launch_args_with_chrome_flags(base, {'CHROME_ARGS': '--a --b'})
+    assert out == {'headless': False, 'channel': 'chrome', 'args': ['--x', '--a', '--b']}
+    assert base['args'] == ['--x']
+
+
+def test_decode_check_opens_the_browser_the_tests_get(monkeypatch):
+    """The guard's verdict is worth nothing from a different browser: the check
+    launches with the session's flags and headed-ness (spartan1 decodes H.265 only
+    headed on Wayland with its flags, 09/17/2026)."""
+    seen: dict = {}
+
+    class Page:
+        def goto(self, url):
+            pass
+
+        def evaluate(self, js, arg=None):
+            return True
+
+    class Browser:
+        version = '153.0'
+
+        def new_page(self):
+            return Page()
+
+        def close(self):
+            pass
+
+    class Chromium:
+        def launch(self, **kw):
+            seen.clear()
+            seen.update(kw)
+            return Browser()
+
+    class PW:
+        chromium = Chromium()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    import playwright.sync_api as api
+    monkeypatch.setattr(api, 'sync_playwright', lambda: PW())
+    monkeypatch.setenv('CHROME_ARGS', '--ozone-platform=wayland')
+    out = sh.decode_check('H.265', 'chrome', headed=True)
+    assert out['decodes'] is True
+    assert seen == {'channel': 'chrome', 'headless': False, 'args': ['--ozone-platform=wayland']}
+    sh.decode_check('H.265', 'chrome')
+    assert seen['headless'] is True
+
+
+def test_hook_passes_the_sessions_headedness_to_the_measurement(monkeypatch):
+    """A --headed session is measured headed; the default session headless."""
+    calls: list = []
+    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8, headed=False: (calls.append(headed), dict(ALIVE))[1])
+    monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'Thermal-14'})
+    monkeypatch.delenv('STREAM_GUARD', raising=False)
+    conftest.stream_guard(_config(headed=True), [FakeItem('livestream')], 'india')
+    conftest.stream_guard(_config(), [FakeItem('livestream')], 'india')
+    assert calls == [True, False]
 

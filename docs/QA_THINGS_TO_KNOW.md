@@ -399,6 +399,12 @@ Facts that need care:
   frames arrive. A "stream plays" oracle cannot pass for an H.265 camera in
   that browser. The same tile in branded Chrome (`--channel chrome`)
   answered `true` and reached `readyState 4` with 95 decoded frames in 12 s.
+- Chrome on Linux (09/17/2026) has no software H.265 decoder either: it
+  decodes through the GPU's VA-API, and only on its Wayland backend.
+  spartan1 does that headed on a headless Weston with the flags in
+  `CHROME_ARGS` (deploy/spartan1/README.md); the same variable feeds the
+  test session, the stream guard's decode check and the probe, so all
+  three see the same browser.
 - When the streaming host is down for the account, every media socket
   receives one frame and closes after about 30 s, and every tile - and the
   full screen player - shows "The camera failed to load" about 35 s after

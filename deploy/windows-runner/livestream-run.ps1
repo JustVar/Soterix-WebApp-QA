@@ -5,11 +5,11 @@
 
 .DESCRIPTION
   Why a Windows machine: the QA tenants stream H.265, and Chrome decodes it
-  only through a platform decoder. Windows Chrome has one; Chrome on spartan1
-  (Linux, even with its NVIDIA GPU through VA-API) stops at
-  PIPELINE_ERROR_DECODE. So spartan1 runs everything and skips the livestream
-  tests with that measured reason, and this machine runs just those
-  (deploy/spartan1/README.md, register row 45).
+  only through a platform decoder. Windows Chrome has one out of the box.
+  Since 09/17/2026 spartan1 decodes it too (Intel GPU, VA-API, headed on a
+  headless Weston: deploy/spartan1/README.md) and its nightly runs the
+  livestream tests; this machine is the fallback for the day that breaks
+  (register row 47).
 
   Same guards as deploy/spartan1/nightly.sh, in PowerShell 5.1:
   1. One run at a time: a stale predecessor (pid file) is killed with its

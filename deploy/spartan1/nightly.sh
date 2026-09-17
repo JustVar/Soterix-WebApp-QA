@@ -86,6 +86,28 @@ fi
   echo "code: $(git log -1 --format='%h %s')"
   venv/bin/pip install -q -r requirements.txt
 
+  # H.265 (09/17/2026). The tenants stream H.265, and Chrome on Linux
+  # decodes it only through the GPU's VA-API decoder, and only on its
+  # Wayland backend. The box's Intel graphics (enabled in the BIOS that
+  # day) and a headless Weston (qa-weston.service) provide both. When the
+  # Weston socket is there, the web-app legs run headed on it with these
+  # flags; without it they run headless and the stream guard skips the
+  # livestream tests with the measured reason. Each flag is needed
+  # (deploy/spartan1/README.md): the render node pins Chrome to the Intel
+  # device (it opens the NVIDIA one otherwise and VA-API stays off), the
+  # features turn on VA-API decoding and H.265 on Linux, and gl-egl gives
+  # Chrome real GL on that GPU instead of a software renderer.
+  WESTON_DIR="${QA_WESTON_DIR:-/run/qa-weston}"
+  HEADED=""
+  if [ -S "$WESTON_DIR/wl-qa" ]; then
+    export XDG_RUNTIME_DIR="$WESTON_DIR" WAYLAND_DISPLAY=wl-qa LIBVA_DRIVER_NAME=iHD
+    export CHROME_ARGS="--ozone-platform=wayland --use-gl=angle --use-angle=gl-egl --ignore-gpu-blocklist --render-node-override=/dev/dri/renderD128 --enable-features=VaapiVideoDecodeLinuxGL,PlatformHEVCDecoderSupport,VaapiIgnoreDriverChecks,AcceleratedVideoDecodeLinuxGL"
+    HEADED="--headed"
+    echo "H.265: Weston display at $WESTON_DIR/wl-qa; the web-app legs run headed on it"
+  else
+    echo "H.265: no Weston display at $WESTON_DIR/wl-qa (qa-weston.service); the livestream tests skip by measurement"
+  fi
+
   for box in $BOXES; do
     # The suite reads QA_<BOX>_USER / QA_<BOX>_PASSWORD from .env for the
     # box it is asked for (config/env/qa.py). Without them a run would
@@ -98,8 +120,9 @@ fi
     started=$(date +%s)
     # Guard 2. `timeout` exit 124 means the run cap ended it. Google Chrome
     # is on the box since 09/11/2026 (playwright install chrome), so
-    # pytest.ini's channel applies; note Chrome on Linux has no H.265
-    # decoder, so the livestream tests skip here by measurement. --maxfail ends a
+    # pytest.ini's channel applies; the livestream tests run when the
+    # Weston display is up (the H.265 block above) and skip by measurement
+    # otherwise. --maxfail ends a
     # run whose failures are systemic (every test erroring at setup) while
     # pytest can still write its summary and archive: the first three
     # scheduled runs (09/09-09/11/2026) all hit the run cap instead, and
@@ -108,7 +131,7 @@ fi
     # QA_RUNS_LIVE_DIR: the run's live record (live.json) is also written
     # into the served directory, so the archive index and health page at
     # http://10.2.0.2/qa-runs/ show the run in progress and its estimate.
-    BOX="$box" QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" \
+    BOX="$box" QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" $HEADED \
       -n "$WORKERS" -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?
@@ -134,7 +157,9 @@ fi
   # fails once per camera, loudly, so it is skipped here and said so.
   if [ "$C2C" = 1 ] && grep -q "^C2C_CAMERA_PASS=." .env 2>/dev/null; then
     started=$(date +%s)
-    C2C_REQUIRE_HARDWARE=1 QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest tests/c2c \
+    # CHROME_ARGS= : the Wayland flags above are for headed Chrome; this leg
+    # is headless and its camera pages need no GPU decoder.
+    CHROME_ARGS= C2C_REQUIRE_HARDWARE=1 QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest tests/c2c \
       -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?

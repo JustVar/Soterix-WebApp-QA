@@ -71,6 +71,7 @@ from playwright.sync_api import sync_playwright
 
 from config.base_config import config
 from tests.shared.api.client import ApiError, InternalApi
+from tests.shared.helpers.stream_health import chrome_args
 from tests.shared.pages.login_page import LoginPage
 from tests.shared.pages.views_page import ViewsPage
 
@@ -648,21 +649,13 @@ class Capture:
         return [u for u in self.frames if MEDIA_WS in u]
 
 
-def chrome_args() -> list[str]:
-    """Extra Chrome launch flags from CHROME_ARGS (space-separated).
-
-    spartan1 decodes H.265 only with its NVIDIA GPU behind VA-API, which
-    Chrome reaches headed on a virtual display with
-    --ignore-gpu-blocklist --enable-features=VaapiOnNvidiaGPUs,... --use-gl=angle
-    --use-angle=gl (measured 09/11/2026, deploy/spartan1/README.md). The
-    same variable feeds the test session's browser (conftest.py), so the
-    probe measures the browser the tests get.
-    """
-    return (os.environ.get("CHROME_ARGS") or "").split()
-
-
 def open_browser(p, headed: bool, channel: str | None):
-    """Launch, hook, log in and land on Views. Returns (browser, page, views, capture)."""
+    """Launch, hook, log in and land on Views. Returns (browser, page, views, capture).
+
+    The launch flags are the session's (CHROME_ARGS, stream_health.chrome_args),
+    so the probe measures the browser the tests get; on spartan1 that is
+    headed Chrome on its Weston display (deploy/spartan1/README.md).
+    """
     browser = p.chromium.launch(headless=not headed, channel=channel, args=chrome_args())
     ctx = browser.new_context(ignore_https_errors=True, viewport={"width": 1600, "height": 900})
     ctx.add_init_script(HOOK)

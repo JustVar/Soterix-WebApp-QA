@@ -11,6 +11,7 @@ because it existed nowhere in git.
 | File here | Lives on the box at | What it does |
 |---|---|---|
 | `nightly.sh` | `/data/qa/ci/nightly.sh` | The nightly QA run: reset the clone to `origin/main`, install, pytest once per box (`india`, then `us`), then the Camera 2 Cloud suite (`tests/c2c`, serial, against the lab cameras, only when `.env` has `C2C_CAMERA_PASS`; `C2C=0` skips it), publish evidence minus trace zips. Cron at 04:00 America/Chicago (`/etc/cron.d/qa-nightly-run`). One nightly at a time, 600 s per test, 4 h per box, and a box's run ends after 200 failures so pytest still writes its summary and archive; when the 4 h cap fires anyway, the labelled screenshots and live log are kept beside the archive as `<stamp>__tests-ui-<box>-PARTIAL-run-cap`. While a box's run is going, `live.json` in the served directory feeds the in-progress banner on the index and health pages. |
+| `qa-weston.service` | `/etc/systemd/system/qa-weston.service` | The headless Wayland display Chrome needs to decode H.265 on the box's Intel GPU: a GL renderer on that GPU, no monitor, one socket at `/run/qa-weston/wl-qa`. The nightly runs the web-app legs headed on it when the socket is up (What the box needs, H.265). |
 | `qa-runs-prune` | `/usr/local/bin/qa-runs-prune` | Deletes run folders older than 30 days. Cron at 03:00. |
 | `nginx-qa-runs.conf` | inside `/etc/nginx/sites-enabled/default` | The `/qa-runs/` location: serves `/data/qa/runs` read-only, basic auth, dotfiles denied. |
 
@@ -27,45 +28,48 @@ because it existed nowhere in git.
   3.12 on the box) and Google Chrome, installed 09/11/2026 with
   `sudo venv/bin/python -m playwright install chrome` (153 at the time), so
   pytest.ini's `--browser-channel chrome` applies as it does on a laptop.
-  Measured the same day: Chrome on Linux answers false to
-  `MediaSource.isTypeSupported` for H.265 (hvc1/hev1) while Windows Chrome
-  answers true, and the QA tenants stream H.265 (codecType 8). So the
-  tests that need a playing tile cannot pass on this box; the session
-  stream guard (tests/shared/helpers/stream_health.py) skips them here with
-  that measurement, and they run on a Windows or Mac runner.
-
-  The box has an NVIDIA RTX A400 (driver 610.57), whose NVDEC decodes
-  H.265, and the chain was tried on 09/11/2026 (all still installed, all
-  harmless to leave): `nvidia-vaapi-driver` 0.0.8, `vainfo`, `libva2`,
-  `xvfb`, and `soterix` in the `render` and `video` groups. What each step
-  answered, so the next attempt starts where this one stopped:
-  - `vainfo` with `LIBVA_DRIVER_NAME=nvidia NVD_BACKEND=egl` lists
-    VAProfileHEVCMain (the `direct` backend fails to init on driver 610).
-  - Chrome headless, any flags: `MediaSource.isTypeSupported` false for HEVC.
-  - Chrome HEADED under `xvfb-run` with `CHROME_ARGS="--ignore-gpu-blocklist
-    --enable-features=VaapiOnNvidiaGPUs,VaapiVideoDecodeLinuxGL,PlatformHEVCDecoderSupport,VaapiIgnoreDriverChecks,AcceleratedVideoDecodeLinuxGL
-    --use-gl=angle --use-angle=gl"` (tools/stream_probe.py reads that variable):
-    isTypeSupported true for the tenant's exact type
-    (`hvc1.1.6.L153.B0,flac`), the tile's player reaches readyState 1 with
-    its 640x360 metadata, then `PIPELINE_ERROR_DECODE`; the VA driver log
-    shows profile queries and a terminate, never a decode session. The same
-    proof on a Windows Chrome plays at readyState 4 within 5 s.
-  - Not tried: the upstream driver built from source (Ubuntu ships 0.0.8;
-    the project does not support Chromium), a Windows VM with the GPU passed
-    through. Until one of those is proven, the livestream tests run from a
-    Windows or Mac Chrome.
-  - The better untried path (read 09/14/2026): the box's CPU is an
-    i7-14700, whose own Intel UHD 770 graphics carry a hardware HEVC
-    decoder, and no Intel display device is on the PCI bus, so it is
-    switched off in the BIOS. Chrome's Linux HEVC path is VA-API, and
-    Intel's driver is the mainstream one (the NVIDIA bridge above is a
-    community shim its project does not support for Chromium). To try:
-    enable the CPU graphics in the BIOS, `apt install
-    intel-media-va-driver-non-free`, check `vainfo` lists VAProfileHEVCMain
-    on the new render node (renderD129), then repeat the headed probe above
-    with `LIBVA_DRIVER_NAME=iHD` and without the NVIDIA feature flags. A
-    Windows VM under KVM (the box has /dev/kvm and 15 GB) with the HEVC
-    Video Extensions is the fallback that also needs no separate machine.
+  H.265 (measured 09/11 and 09/17/2026). The tenants stream H.265 and
+  Chrome on Linux has no software decoder for it: it answers false to
+  `MediaSource.isTypeSupported` for hvc1/hev1 unless it reaches a GPU
+  decoder through VA-API. The box decodes it since 09/17/2026 through its
+  CPU's Intel UHD 770 graphics (enabled in the BIOS that day; before that no
+  Intel device was on the PCI bus), Ubuntu's `intel-media-va-driver`
+  (`vainfo` on `/dev/dri/renderD128` lists VAProfileHEVCMain) and a headless
+  Weston (`qa-weston.service` here) for Chrome's Wayland backend. The
+  nightly finds the Weston socket and runs the web-app legs headed on it
+  with these flags in `CHROME_ARGS`, which the test session (conftest's
+  launch args), the stream guard and tools/stream_probe.py all read. What
+  was measured for each, so nobody re-runs the dead ends:
+  - `--render-node-override=/dev/dri/renderD128`: without it Chrome opens
+    the NVIDIA render node (renderD129) and never calls libva; the Intel
+    driver cannot initialise there. With it, libva loads iHD and
+    isTypeSupported turns true.
+  - `--enable-features=VaapiVideoDecodeLinuxGL,PlatformHEVCDecoderSupport,VaapiIgnoreDriverChecks,AcceleratedVideoDecodeLinuxGL`:
+    VA-API decoding and H.265 on Linux, both off by default.
+  - `--use-gl=angle --use-angle=gl-egl`: real GL on the Intel GPU through
+    Mesa's EGL. Under Xvfb or headless the default is a software renderer.
+  - `--ozone-platform=wayland`, with the session HEADED (`--headed`): the
+    decoder produced frames on every backend, but every backend except
+    Wayland lost the GPU process on the first frame it handed to the
+    compositor (`Could not find SharedImageBackingFactory ... BGRA_8888,
+    gmb_type: platform`) and the player reported PIPELINE_ERROR_DECODE:
+    headless, Xvfb, X11, with native GPU memory buffers, zero-copy, no GPU
+    compositing, the legacy decoder. Chrome's `--headless` switches to the
+    headless backend whatever `--ozone-platform` says, so the tests run
+    headed. On Wayland (Weston headless, GL renderer) Thermal-14 played at
+    2560x1440, 9 fps, 160 frames in 24 s, 0 dropped, no error; the US
+    Multicam at 640x360.
+  - `LIBVA_DRIVER_NAME=iHD`, and for Weston `__EGL_VENDOR_LIBRARY_FILENAMES`
+    (Mesa's vendor file): the NVIDIA driver also offers VA-API and EGL and
+    must not be picked.
+  Dead ends, all still installed and harmless: the NVIDIA RTX A400 through
+  `nvidia-vaapi-driver` 0.0.8 (a community shim; the tile reached
+  readyState 1 then PIPELINE_ERROR_DECODE, 09/11), `xvfb` (no GL on the
+  GPU under it), `--ozone-platform=drm` (not in Google Chrome's build).
+  Without the Weston socket the nightly runs headless as before and the
+  stream guard skips the livestream tests with the measured reason; the
+  Windows runner (`deploy/windows-runner/`) stays as the documented
+  fallback.
 - `/data/qa/ci/Soterix-WebApp-QA/.env` (mode 600) with the QA Touch keys
   and one account per box the nightly runs: `QA_INDIA_USER`,
   `QA_INDIA_PASSWORD`, `QA_US_USER`, `QA_US_PASSWORD`. The suite reads the
@@ -100,6 +104,20 @@ the running one its old file and gives cron the new one.
 # nginx: after editing /etc/nginx/sites-enabled/default
 ssh spartan1 'sudo nginx -t && sudo systemctl reload nginx'
 ```
+
+```bash
+# qa-weston.service: the headless display for H.265 (What the box needs)
+ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && \
+  git show origin/main:deploy/spartan1/qa-weston.service | sudo tee /etc/systemd/system/qa-weston.service > /dev/null && \
+  sudo systemctl daemon-reload && sudo systemctl enable --now qa-weston.service && sleep 3 && \
+  systemctl is-active qa-weston.service && ls -l /run/qa-weston/wl-qa && \
+  journalctl -u qa-weston.service --no-pager | grep "GL renderer"'
+```
+
+The last line must name the Intel GPU (`GL renderer: Mesa Intel(R) Graphics`);
+a software renderer or the NVIDIA one means the vendor file or the render
+node changed. The nightly log then opens with `H.265: Weston display at
+/run/qa-weston/wl-qa`, and each box's `[STREAM]` line ends `decodes H.265: yes`.
 
 Try it before the cron does, on a small target and a short cap, and read
 the tail of the log:

@@ -23,6 +23,7 @@ measured fact, never a guess. STREAM_GUARD=off runs the tests anyway.
 from __future__ import annotations
 
 import os
+import shlex
 
 MARKER = "livestream"
 GUARD_ENV = "STREAM_GUARD"
@@ -33,6 +34,33 @@ _OFF = {"0", "off", "false", "no"}
 def guard_enabled(environ=None) -> bool:
     environ = os.environ if environ is None else environ
     return (environ.get(GUARD_ENV) or "").strip().lower() not in _OFF
+
+
+CHROME_ARGS_ENV = "CHROME_ARGS"
+
+
+def chrome_args(environ=None) -> list[str]:
+    """Extra Chrome launch flags for this session, from CHROME_ARGS.
+
+    One variable feeds every Chrome the suite opens: the test session
+    (conftest's browser_type_launch_args), this guard's decode check and
+    tools/stream_probe.py, so what the guard measures is the browser the
+    tests get. spartan1 sets it in deploy/spartan1/nightly.sh: Chrome on
+    Linux decodes the tenants' H.265 only through the GPU's VA-API
+    decoder, and only on its Wayland backend (measured 09/17/2026,
+    deploy/spartan1/README.md). Empty when unset.
+    """
+    environ = os.environ if environ is None else environ
+    return shlex.split(environ.get(CHROME_ARGS_ENV) or "")
+
+
+def launch_args_with_chrome_flags(base: dict, environ=None) -> dict:
+    """The session's browser launch options with CHROME_ARGS appended to
+    their args; the options untouched when the variable is empty."""
+    extra = chrome_args(environ)
+    if not extra:
+        return base
+    return {**base, "args": [*base.get("args", []), *extra]}
 
 
 # What a tile's player asks MediaSource for, per codec the tenant streams.
@@ -128,14 +156,18 @@ def measure_stream(camera_name: str | None, seconds: int = DEFAULT_SECONDS) -> d
     return out
 
 
-def decode_check(codec: str | None, channel: str | None) -> dict:
+def decode_check(codec: str | None, channel: str | None, headed: bool = False) -> dict:
     """Can the session's browser decode `codec` through MediaSource?
 
-    Chrome on Windows and Mac decodes H.265; Chrome on Linux and
-    Playwright's Chromium answer false to MediaSource.isTypeSupported for
-    hvc1 and hev1 (measured 09/11/2026: spartan1's Chrome 153 false, a
-    Windows Chrome 152 true), and the QA tenants stream H.265. A tile's
-    player then never leaves readyState 0, whatever the socket delivers.
+    Chrome on Windows and Mac decodes H.265 out of the box. Chrome on
+    Linux has no software H.265 decoder: it answers false to
+    MediaSource.isTypeSupported for hvc1 and hev1 unless it reaches a GPU
+    decoder through VA-API, which it does only on its Wayland backend
+    with the flags spartan1 sets in CHROME_ARGS (measured 09/17/2026,
+    deploy/spartan1/README.md). So the check opens Chrome the way the
+    tests will: the session's flags, headed when the session is. A tile's
+    player on a browser that answered false never leaves readyState 0,
+    whatever the socket delivers.
     Returns {'decodes': True | False | None, 'browser': str | None}; None
     when the codec is unknown or the check could not run.
     """
@@ -147,7 +179,7 @@ def decode_check(codec: str | None, channel: str | None) -> dict:
 
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
-            browser = p.chromium.launch(channel=channel or None, headless=True)
+            browser = p.chromium.launch(channel=channel or None, headless=not headed, args=chrome_args())
             page = browser.new_page()
             page.goto("about:blank")
             supported = page.evaluate(
@@ -159,11 +191,13 @@ def decode_check(codec: str | None, channel: str | None) -> dict:
         return {"decodes": None, "browser": f"check failed: {type(e).__name__}"}
 
 
-def assess(camera_name: str | None, channel: str | None, seconds: int = DEFAULT_SECONDS) -> dict:
+def assess(camera_name: str | None, channel: str | None, seconds: int = DEFAULT_SECONDS,
+           headed: bool = False) -> dict:
     """The two facts the guard needs: the socket's frame count and whether
-    the browser can decode what the channel streams."""
+    the browser the tests get (channel, CHROME_ARGS, headed) can decode
+    what the channel streams."""
     measure = measure_stream(camera_name, seconds)
-    measure.update(decode_check(measure.get("codec"), channel) if not measure.get("error")
+    measure.update(decode_check(measure.get("codec"), channel, headed=headed) if not measure.get("error")
                    else {"decodes": None, "browser": None})
     return measure
 
@@ -184,7 +218,8 @@ def stream_skip_reason(measure: dict, box_name: str) -> str | None:
         return (f"box {box_name} streams {measure.get('codec')} on camera '{measure.get('camera')}' "
                 f"and this browser ({measure.get('browser')}) cannot decode it: MediaSource.isTypeSupported "
                 f"is false, so a tile's player never leaves readyState 0; the livestream tests need a "
-                f"runner whose Chrome decodes {measure.get('codec')} (Windows or Mac){tail}")
+                f"runner whose Chrome decodes {measure.get('codec')}: Windows, Mac, or spartan1 headed on "
+                f"its Weston display (deploy/spartan1/README.md){tail}")
     if int(measure.get("frames") or 0) > 0 and measure.get("decodes") is None:
         # No verdict is not a green light: running a livestream test against
         # a tile the browser may never decode hangs the driver on the
