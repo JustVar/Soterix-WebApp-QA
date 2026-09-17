@@ -133,6 +133,10 @@ ssh spartan1 'TARGET=tests/ui/maps TEST_TIMEOUT=300 /data/qa/ci/nightly.sh; tail
 
 ## Updating Chrome on the box
 
+The archive index (http://10.2.0.2/qa-runs/) opens with a runners line: each
+machine's Chrome from its newest run, and `stable X is out: update it` when
+Google's stable is newer. That line is the prompt for this section.
+
 Chrome comes from Google's apt repository (`google-chrome.sources`), which
 `unattended-upgrades` does not cover (Ubuntu origins only), so the box's
 Chrome stays where it was installed until someone updates it. That is on

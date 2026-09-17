@@ -554,6 +554,11 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
     """
     import os
 
+    # The archive's provenance names the Chrome this session opened: the
+    # first page fixture to know it writes it, later calls are no-ops.
+    from plugins.run_archive import record_browser_version
+    record_browser_version(browser.version, request.config.getoption("--browser-channel", default=None))
+
     context = None
     page = None
     video = None
