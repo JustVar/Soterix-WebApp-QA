@@ -87,9 +87,21 @@ setup step that Justin does one time on the box.
 
 | Protection | What it stops | Setup |
 |---|---|---|
-| The evidence scan | A password or a session cookie in a log file that the archive serves. `nightly.sh` runs `tools/evidence_scan.py --redact` on each new run folder before it copies the folder. If the scan fails, the nightly publishes nothing. | Install `nightly.sh` ("Install a change on the box"). |
-| The publish account | A laptop key that can read the box's `.env`. `tools/publish_run.py` copies with sftp, so the account `qa-publish` needs no shell. It can write in `/data/qa/runs` and do nothing else. | `sudo sh deploy/spartan1/setup-publish-user.sh` |
+| The evidence scan | A password or a session cookie in a log file that the archive serves. `nightly.sh` runs `tools/evidence_scan.py --redact` on each new run folder, and copies only a folder that the scan marked as clean. | Install `nightly.sh` ("Install a change on the box"). Then scan what the archive has now, one time: see below. |
+| The publish account | A laptop key that can read the box. `tools/publish_run.py` copies with sftp, so the account `qa-publish` needs no shell. sshd keeps it in a jail that holds the served run folders and nothing else. | `sudo sh deploy/spartan1/setup-publish-user.sh` |
 | HTTPS | The archive password in clear text on the network. The archive moves to `https://10.2.0.2:8444/qa-runs/`. The old address redirects to it. | `sudo sh deploy/spartan1/setup-https-archive.sh` |
+
+### Scan what the archive has now
+
+The nightly scans new folders only. Do this one time, after you install
+`nightly.sh`, for the folders that the archive got before the scan existed:
+
+```bash
+ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && venv/bin/python tools/evidence_scan.py --runs-dir /data/qa/runs --redact'
+```
+
+The command prints the file and the kind of each secret that it masked. It
+does not print a value.
 
 ### Set up the publish account
 
@@ -100,20 +112,38 @@ setup step that Justin does one time on the box.
    not:
 
    ```bash
-   sftp qa-publish@10.2.0.2      # "pwd" must print /data/qa/runs
+   sftp qa-publish@10.2.0.2      # "pwd" must print /runs, and "ls /" must show runs only
    ssh qa-publish@10.2.0.2 id    # must not print a uid
    ```
 
-4. The person adds `QA_RUNS_HOST=qa-publish@10.2.0.2` to their `.env`.
+4. The person adds `QA_RUNS_HOST=qa-publish@10.2.0.2` to their `.env`. No
+   other setting is necessary: for this account the tool uses the path
+   `/runs`, which is the served directory inside the jail.
 5. When each laptop uses the new account, remove the laptop keys from
    `/home/soterix/.ssh/authorized_keys`. Keep the keys of the people who
    operate the box.
 
-The script stops and removes its sshd file if sshd refuses it, or if the
-sftp-only rule would also apply to user `soterix`.
+What the script does:
 
-A laptop cannot replace a run of the nightly, because those folders belong
-to user `soterix`. It can replace a run that a laptop published.
+- It makes the account with no shell and no password, and the group
+  `qa-runs` for the account and user `soterix`.
+- It sets `/data/qa/runs` to mode 3775. The group can add a folder. Only
+  the owner of a folder can rename it or remove it, so a laptop cannot
+  replace a run of the nightly or the index page. It can replace a run that
+  it published.
+- It makes the jail `/srv/qa-publish`, which root owns, and mounts the
+  served directory in it as `/runs` (1 line in `/etc/fstab`).
+- It adds `/etc/ssh/sshd_config.d/qa-publish.conf`: sftp only, in the jail,
+  no port forwarding.
+- It sets the `.env` of the clone to mode 600 if it has a different mode.
+
+Before it reloads sshd, the script compares the sshd settings of user
+`soterix` from before and after. It also makes sure that the jail and the
+sftp-only rule apply to `qa-publish`. If a check fails, it removes its sshd
+file and does not reload.
+
+The `add-key` command accepts a file with 1 public key on 1 line. It refuses
+a private key file and a file with 2 keys.
 
 ### Move the archive to HTTPS
 
@@ -188,6 +218,8 @@ A good night has these lines, in this order: `nightly start`, `code:`,
 | `pytest exit: 7` | The preflight refused the run. The tenant did not answer, or it refused the account. | Read the `PREFLIGHT:` line above the exit line. |
 | `pytest exit: 124` | The leg hit the 4 hour cap. The script kept the screenshots and the log in a `PARTIAL-run-cap` folder. | Find the test that stalled. The last lines of `run.log` in that folder name it. |
 | `THIS RUN WAS NOT ARCHIVED` | The archive step failed. The line gives the error and the free disk space. | Free disk space if it is low, then run the leg again. |
+| `evidence_scan: N run folder(s) read, M secret(s) redacted.` | The scan ran. `M` above 0 means that a log held a secret, and the served copy has `***` in its place. | For `M` above 0, read the lines above it. They name the file and the kind of secret. Find the code that printed it, and correct it. |
+| `evidence scan had errors ... was not published` | The scan could not read or write a file in a run folder. That folder has no `.evidence_scanned` mark, and the archive does not have it. The other folders are served. | Read the `ERROR` line above it. It names the file. Correct the file's permissions. The next nightly scans the folder again and publishes it. |
 | `served index rebuild FAILED` | The health tool failed. The run folders are served, but the index is old. | Run `venv/bin/python tools/health_summary.py --runs-dir /data/qa/runs` on the box and read the error. |
 
 If the log is good but a run is not in the archive, check the disk:
@@ -432,7 +464,9 @@ The evidence below `reports/` is not tracked, so the reset does not delete it.
 
 ## Retention and safety
 
-- The served archive at `/data/qa/runs` keeps a run for 30 days.
+- The served archive at `/data/qa/runs` keeps a run for 30 days. The prune
+  also removes what a publish leaves behind (`.pub-tmp-*`, `.pub-old-*`)
+  after 2 days.
 - The clone keeps the newest 20 runs of each target. The india leg and the
   us leg have the same target, so that is approximately 10 nights. It also
   keeps no more than 100 runs and no more than 10 GB in total. The oldest

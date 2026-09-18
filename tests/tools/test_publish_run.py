@@ -201,3 +201,23 @@ def test_the_published_copy_is_masked_and_the_local_run_is_not(tmp_path, monkeyp
     assert 'masked 1 secret(s)' in out
     assert 'hunter2-long' not in out
 
+
+def test_the_publish_account_gets_its_jail_path(runs, monkeypatch):
+    """qa-publish is jailed: the served directory is /runs for it, and QA_RUNS_DIR still wins when set."""
+    monkeypatch.delenv('QA_RUNS_DIR', raising=False)
+    monkeypatch.setenv('QA_RUNS_HOST', 'qa-publish@10.2.0.2')
+    calls = _capture(monkeypatch)
+    assert pr.main([]) == 0
+    assert 'mkdir "/runs/.pub-tmp-' in _sftp_call(calls)[1]
+    monkeypatch.setenv('QA_RUNS_DIR', '/elsewhere')
+    calls.clear()
+    assert pr.main([]) == 0
+    assert 'mkdir "/elsewhere/.pub-tmp-' in _sftp_call(calls)[1]
+
+
+def test_a_path_that_sftp_would_expand_is_refused():
+    """sftp expands * ? [ in the local path of put, in quotes too."""
+    for name in ('2026-09-01_10-39-03__tests[ui]', '2026-09-01_10-39-03__te*'):
+        with pytest.raises(ValueError, match='cannot be published'):
+            pr.sftp_batch(pr.Path(name), '/runs', stamp='1')
+

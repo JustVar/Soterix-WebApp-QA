@@ -55,3 +55,11 @@ def test_a_file_it_does_not_know_is_refused():
     assert redirect.rewrite('server {\n\tlisten 80;\n}\n') is None
     nested = SITE.replace('\t\tautoindex on;\n', '\t\tif ($x) {\n\t\t\treturn 403;\n\t\t}\n')
     assert redirect.rewrite(nested) is None
+
+
+def test_a_second_server_or_a_block_of_a_different_kind_is_refused():
+    """2 archive blocks (a second server) or a /qa-runs/ proxy block: the file is for a person to edit."""
+    assert redirect.rewrite(SITE + SITE.replace('listen 80', 'listen 8080')) is None
+    proxy = SITE.replace('\tlocation = / {', '\tlocation /qa-runs/live/ {\n\t\tproxy_pass http://127.0.0.1:9;\n\t}\n\tlocation = / {')
+    assert redirect.rewrite(proxy) is None
+

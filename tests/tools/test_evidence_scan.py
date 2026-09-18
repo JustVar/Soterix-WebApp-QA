@@ -18,7 +18,7 @@ import pytest  # noqa: E402
 from tools import evidence_scan as es  # noqa: E402
 
 COOKIE = 'A1B2C3D4E5F60718293A4B5C6D7E8F90'
-ENV_SECRETS = {'QA_INDIA_PASSWORD': 'Tr1cky-Value-77'}
+ENV_SECRETS = {'QA_INDIA_PASSWORD': 'Tr1cky-Value-77', 'C2C_CAMERA_PASS': 'Sp&rt<an"0!x'}
 
 LEFT_ALONE = [
     "login_data = {'email': 'qa@example.com', 'password': '***'}",
@@ -32,6 +32,13 @@ LEFT_ALONE = [
     'Authorization: Bearer <token>',
     'x-vsaas-key header is missing',
     'waiting for locator("input[type=\'password\']") to be visible',
+    'password: "Enter your password"',
+    '<input placeholder="Password" password="required field">',
+    'autocomplete="current-password" name="password" value=""',
+    '3 passed, 1 failed in 12.4s',
+    'bypass=true&compass=north',
+    'password=***&next=/home',
+    'see https://playwright.dev/python/docs/api/class-page#page-goto for the options',
 ]
 
 
@@ -50,6 +57,27 @@ FOUND = [
     ("headers = {'x-vsaas-key': 'k3y-0123456789abcdef'}", 'integration key', 'k3y-0123456789abcdef'),
     ("login_data = {'email': 'qa@example.com', 'password': 'hunter2-long'}", 'password value', 'hunter2-long'),
     ('the form was sent with Tr1cky-Value-77 in it', '.env value of QA_INDIA_PASSWORD', 'Tr1cky-Value-77'),
+    # the forms a report gives a traceback (audit 09/18/2026: run.html held the first one, unseen)
+    ('E  {&quot;email&quot;: &quot;qa@example.com&quot;, &quot;password&quot;: &quot;hunter2-long&quot;}', 'password value', 'hunter2-long'),
+    ('E  {&#x27;password&#x27;: &#x27;hunter2-long&#x27;}', 'password value', 'hunter2-long'),
+    ('data-jsonblob="{&#34;password&#34;: &#34;hunter2-long&#34;}"', 'password value', 'hunter2-long'),
+    ('"longrepr": "{\\"password\\": \\"hunter2-long\\"}"', 'password value', 'hunter2-long'),
+    ('"password":"hunter2-long"', 'password value', 'hunter2-long'),
+    ("'user_password': 'hunter2-long'", 'password value', 'hunter2-long'),
+    ("pwd='hunter2-long'", 'password value', 'hunter2-long'),
+    # bare values: a URL, a form body, an env line
+    ('POST /login?username=justin&password=Hunter22xyz HTTP/1.1', 'password value', 'Hunter22xyz'),
+    ('QA_INDIA_PASSWORD=Hunter22xyz', 'password value', 'Hunter22xyz'),
+    # cookies and tokens in their other shapes
+    ("{'name': 'JSESSIONID', 'value': '" + COOKIE + "', 'domain': 'x'}", 'session cookie', COOKIE),
+    ('{"name": "JSESSIONID", "value": "' + COOKIE + '"}', 'session cookie', COOKIE),
+    ('Set-Cookie: JSESSIONID=ABC123DEF456; HttpOnly', 'session cookie', 'ABC123DEF456'),
+    ('Authorization: Basic YWRtaW46aHVudGVyMg==', 'basic auth', 'YWRtaW46aHVudGVyMg'),
+    ('opening rtsp://admin:hunter2-long@10.2.0.50/stream1', 'password in a URL', 'hunter2-long'),
+    # a .env value with HTML, URL and JSON special characters, in each form
+    ('<td>Sp&amp;rt&lt;an&quot;0!x</td>', '.env value of C2C_CAMERA_PASS', 'Sp&amp;rt&lt;an&quot;0!x'),
+    ('body: user=root&pw=Sp%26rt%3Can%220%21x', '.env value of C2C_CAMERA_PASS', 'Sp%26rt%3Can%220%21x'),
+    ('"text": "typed Sp&rt<an\\"0!x"', '.env value of C2C_CAMERA_PASS', 'Sp&rt<an\\"0!x'),
 ]
 
 
@@ -57,10 +85,10 @@ FOUND = [
 def test_a_secret_is_named_and_masked_and_the_rest_of_the_line_stays(line, what, secret):
     """The finding names the kind, the clean text has no secret, and the words around it are still there."""
     clean, found = es.scan_text('first line\n' + line, ENV_SECRETS)
-    assert [(f['line'], f['what']) for f in found] == [(2, what)]
+    assert {(f['line'], f['what']) for f in found} == {(2, what)}
     assert secret not in clean
     assert es.MASK in clean
-    assert clean.startswith('first line\n' + line[:8])
+    assert clean.startswith('first line\n' + line[:line.index(secret)])   # the words before the secret stay
 
 
 def test_a_finding_never_holds_the_value():
@@ -109,3 +137,41 @@ def test_no_target_or_two_targets_is_a_tool_error(tmp_path):
     """One run folder or --runs-dir, not none and not the two."""
     assert es.main([]) == 2
     assert es.main([str(tmp_path), '--runs-dir', str(tmp_path)]) == 2
+
+
+def test_a_redacted_file_keeps_its_line_endings(tmp_path):
+    """Only the secret's bytes change: CRLF stays CRLF, LF stays LF, a lone CR stays."""
+    run = tmp_path / 'runs' / '2026-09-18_09-00-06__tests-ui'
+    run.mkdir(parents=True)
+    raw = b"a\r\n'password': 'hunter2-long'\r\nprogress\rdone\nb\n"
+    (run / 'x.log').write_bytes(raw)
+    found, errors = es.scan_run(run, {}, redact=True)
+    assert len(found) == 1
+    assert errors == []
+    assert (run / 'x.log').read_bytes() == raw.replace(b'hunter2-long', b'***')
+
+
+def test_a_file_that_cannot_be_written_fails_loud_and_does_not_stop_the_other_folders(tmp_path, monkeypatch, capsys):
+    """Folder A holds a secret in a file that refuses the write: exit 2, A gets no marker, clean folder B gets one."""
+    runs = tmp_path / 'runs'
+    a = runs / '2026-09-17_09-00-06__tests-ui'
+    b = runs / '2026-09-18_09-00-06__tests-ui'
+    a.mkdir(parents=True)
+    b.mkdir()
+    (a / 'x.log').write_text("'password': 'hunter2-long'", encoding='utf-8')
+    (b / 'y.log').write_text('nothing here', encoding='utf-8')
+    real_open = open
+
+    def refuse_write(path, mode='r', *args, **kwargs):
+        if 'w' in mode and str(path).endswith('x.log'):
+            raise PermissionError(13, 'read-only')
+        return real_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr('builtins.open', refuse_write)
+    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(tmp_path / 'no.env')]) == 2
+    assert not (a / es.DONE_MARKER).exists()
+    assert (b / es.DONE_MARKER).exists()
+    captured = capsys.readouterr()
+    assert 'could not be written' in captured.err
+    assert 'hunter2-long' not in captured.out + captured.err
+

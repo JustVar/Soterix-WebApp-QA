@@ -8,7 +8,9 @@ python3. It edits the file in place, and only when it finds what it expects:
   location /qa-runs/ { ... alias ... }  the archive over HTTP   -> the redirect
 
 A file that already holds the redirect is left as it is (exit 0). A file with
-no /qa-runs/ block, or with a nested block inside one, is not touched (exit 1).
+no /qa-runs/ block, with a nested block inside one, with 2 archive blocks (a
+second server), or with a /qa-runs/ block of a different kind is not touched
+(exit 1).
 """
 from __future__ import annotations
 
@@ -33,7 +35,12 @@ def rewrite(text: str) -> str | None:
         return None
     if len(blocks) == 1 and 'return 301 https://$host:8444' in blocks[0].group(0):
         return text
-    if not any('alias' in b.group(0) for b in blocks):
+    # Exactly what this script knows: 1 block with the alias, and at most 1
+    # more, the dotfile rule. A second server, or a /qa-runs/ block that does
+    # something else (a proxy), is for a person to edit.
+    alias = [b for b in blocks if 'alias' in b.group(0)]
+    others = [b for b in blocks if b not in alias]
+    if len(alias) != 1 or len(others) > 1 or any('deny all' not in b.group(0) for b in others):
         return None
     out = text[: blocks[0].start()] + REDIRECT
     cursor = blocks[0].end()

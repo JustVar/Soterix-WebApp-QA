@@ -31,7 +31,7 @@ HAD_LINK=no
 [ -e "$LINK" ] && HAD_LINK=yes
 
 restore() {
-  echo "nginx refused the new configuration: putting the old files back"
+  echo "$1: putting the old files back"
   cp -p "$BACKUP/default" "$(readlink -f "$DEFAULT")"
   if [ -f "$BACKUP/qa-runs" ]; then cp -p "$BACKUP/qa-runs" "$SITE"; else rm -f "$SITE"; fi
   [ "$HAD_LINK" = yes ] || rm -f "$LINK"
@@ -44,12 +44,13 @@ install -m 644 "$SITE_SRC" "$SITE"
 ln -sfn "$SITE" "$LINK"
 
 # 2. The port 80 site.
-python3 "$HERE/nginx_port80_redirect.py" "$(readlink -f "$DEFAULT")" || restore
+python3 "$HERE/nginx_port80_redirect.py" "$(readlink -f "$DEFAULT")" || restore "the port 80 site is not as expected"
 
 # 3. Test, then reload.
-nginx -t || restore
+nginx -t || restore "nginx refused the new configuration"
 systemctl reload nginx
 
 echo "done. The old files are in $BACKUP."
+echo "Do the 2 checks from a LAPTOP, not from this box: a firewall between them would not show here."
 echo "check:  curl -sk -o /dev/null -w '%{http_code}\n' https://10.2.0.2:8444/qa-runs/     (401: it asks for the password)"
 echo "check:  curl -s  -o /dev/null -w '%{http_code} %{redirect_url}\n' http://10.2.0.2/qa-runs/   (301 to https://10.2.0.2:8444/qa-runs/)"

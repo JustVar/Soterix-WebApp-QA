@@ -44,6 +44,7 @@ RUN_DIR_RE = re.compile(r'^20\d{2}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}__')
 
 DEFAULT_HOST = 'soterix@10.2.0.2'
 DEFAULT_DIR = '/data/qa/runs'
+PUBLISH_USER_DIR = '/runs'   # what the jailed qa-publish account sees (deploy/spartan1/setup-publish-user.sh)
 DEFAULT_URL = 'http://10.2.0.2/qa-runs'
 
 
@@ -87,7 +88,12 @@ def _staged_copy(run_dir: Path) -> Path:
     tmp = Path(tempfile.mkdtemp(prefix='qa-publish-'))
     staged = tmp / run_dir.name
     shutil.copytree(run_dir, staged, ignore=ignore)
-    _redact_staged(staged)
+    try:
+        _redact_staged(staged)
+    except BaseException:
+        # an unmasked copy must not stay in the temp folder
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
     return staged
 
 
@@ -102,7 +108,10 @@ def _redact_staged(staged: Path) -> None:
 
     env = evidence_scan.ENV_FILE
     secrets = secret_values(env.read_text(encoding='utf-8')) if env.is_file() else {}
-    found = evidence_scan.scan_run(staged, secrets, redact=True)
+    found, errors = evidence_scan.scan_run(staged, secrets, redact=True)
+    if errors:
+        # The copy could not be made clean, so it must not travel.
+        raise RuntimeError('evidence_scan could not clean the copy to publish: ' + '; '.join(errors))
     if found:
         print(f'  evidence_scan: masked {len(found)} secret(s) in the published copy:')
         for f in found:
@@ -111,8 +120,9 @@ def _redact_staged(staged: Path) -> None:
 
 def _q(path: str) -> str:
     """A path for an sftp batch line: double-quoted, forward slashes."""
-    if '"' in path or '\n' in path:
-        raise ValueError(f'a path with a quote or a newline cannot be published: {path!r}')
+    if any(c in path for c in '"\n*?['):
+        # sftp expands * ? [ in a local path, in quotes too
+        raise ValueError(f'a path with a quote, a newline or one of * ? [ cannot be published: {path!r}')
     return '"' + path.replace('\\', '/') + '"'
 
 
@@ -189,7 +199,8 @@ def main(argv: list[str] | None = None) -> int:
     from dotenv import load_dotenv
     load_dotenv(ROOT / '.env')
     host = os.environ.get('QA_RUNS_HOST', DEFAULT_HOST)
-    dest = os.environ.get('QA_RUNS_DIR', DEFAULT_DIR)
+    # The publish account lives in a jail where the served directory is /runs.
+    dest = os.environ.get('QA_RUNS_DIR') or (PUBLISH_USER_DIR if host.startswith('qa-publish@') else DEFAULT_DIR)
     url = os.environ.get('QA_RUNS_URL', DEFAULT_URL)
 
     if args.run:

@@ -7,16 +7,21 @@
 set -u
 ROOT=/data/qa/runs
 LOG=/data/qa/prune.log
+export LOG
 [ -d "$ROOT" ] || exit 0
-find "$ROOT" -maxdepth 1 -type d -name "20*__*" -mtime +30 | while read -r d; do
-    echo "$(date -Is) pruned $d" >> "$LOG"
-    rm -rf "$d"
-done
+cd "$ROOT" || exit 0
+# find hands each name to rm as 1 argument. The older loop read names line by
+# line, and a folder name that holds a newline became 2 names: the second
+# was removed relative to root's home. The publish account can create names
+# here, so the names are not trusted.
+remove() {
+    find "$ROOT" -maxdepth 1 -type d "$@" -exec sh -c \
+        'echo "$(date -Is) pruned $1" >> "$LOG"; rm -rf -- "$1"' _ {} \;
+}
+remove -name "20*__*" -mtime +30
 # What a laptop publish leaves behind (tools/publish_run.py copies over sftp,
 # which cannot delete a folder tree): the hidden temp of a copy that dropped,
 # and the old copy of a run that was published again. nginx never serves a
-# dot name. One day is enough for a copy that is still going.
-find "$ROOT" -maxdepth 1 -type d \( -name ".pub-tmp-*" -o -name ".pub-old-*" \) -mtime +1 | while read -r d; do
-    echo "$(date -Is) pruned $d" >> "$LOG"
-    rm -rf "$d"
-done
+# dot name. -ctime, not -mtime: the old copy keeps the modify time of the run,
+# and the rename sets its change time. They go after 2 full days.
+remove \( -name ".pub-tmp-*" -o -name ".pub-old-*" \) -ctime +1

@@ -150,9 +150,10 @@ fi
     echo "=== $box pytest exit: $rc after $(( $(date +%s) - started ))s (124 = run cap, 7 = the preflight refused the run: read the PREFLIGHT line above)"
     if [ "$rc" = 124 ]; then
       # The archive is written at session end, which a kill never reaches.
-      # Keep what exists: labelled screenshots and the live log. Traces and
-      # videos stay off the served directory (session cookies, passwords).
-      part="$SERVE/$(date +%Y-%m-%d_%H-%M-%S)__tests-ui-$box-PARTIAL-run-cap"
+      # Keep what exists: labelled screenshots and the live log. The folder
+      # is made beside the archived runs, not in the served directory, so
+      # the evidence scan below reads its log before anything is served.
+      part="reports/runs/$(date +%Y-%m-%d_%H-%M-%S)__tests-ui-$box-PARTIAL-run-cap"
       mkdir -p "$part" && rsync -a reports/screenshots logs/run.log "$part/" 2>/dev/null
       echo "=== $box run cap hit: partial evidence kept at $part"
     fi
@@ -177,7 +178,7 @@ fi
     rc=$?
     echo "=== c2c pytest exit: $rc after $(( $(date +%s) - started ))s (124 = run cap)"
     if [ "$rc" = 124 ]; then
-      part="$SERVE/$(date +%Y-%m-%d_%H-%M-%S)__tests-c2c-PARTIAL-run-cap"
+      part="reports/runs/$(date +%Y-%m-%d_%H-%M-%S)__tests-c2c-PARTIAL-run-cap"
       mkdir -p "$part" && rsync -a reports/screenshots logs/run.log "$part/" 2>/dev/null
       echo "=== c2c run cap hit: partial evidence kept at $part"
     fi
@@ -196,16 +197,16 @@ fi
   # Before anything is served: mask secret values and secret-shaped text in
   # the run folders' text files (tools/evidence_scan.py). On 09/14/2026 a
   # traceback put an account password into a per-test log, and it was served
-  # for 4 days. A folder is read one time, then marked. If the scan itself
-  # fails, nothing new is published: the index below still rebuilds.
-  if venv/bin/python tools/evidence_scan.py --runs-dir reports/runs --redact; then
-    for d in reports/runs/20*/; do
-      [ -d "$d" ] || continue
-      rsync -a --exclude="*.zip" "$d" "$SERVE/$(basename "$d")/"
-    done
-  else
-    echo "=== evidence scan FAILED (exit $?): no run folder was published tonight"
-  fi
+  # for 4 days. A folder is read one time, then marked, and only a folder
+  # with the mark is copied. A folder that the scan could not clean (a file
+  # it could not read or write) has no mark: it stays in the clone, the
+  # others are served, and the line below says so.
+  venv/bin/python tools/evidence_scan.py --runs-dir reports/runs --redact \
+    || echo "=== evidence scan had errors (exit $?): a folder with no .evidence_scanned mark was not published"
+  for d in reports/runs/20*/; do
+    [ -f "$d/.evidence_scanned" ] || continue
+    rsync -a --exclude="*.zip" "$d" "$SERVE/$(basename "$d")/"
+  done
   # The served index and health page must list what the SERVED directory
   # holds. The archive plugin rebuilds only the clone's own index, and the
   # copy served since 09/01 listed none of the runs copied after it
