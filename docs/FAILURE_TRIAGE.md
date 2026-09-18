@@ -1,28 +1,63 @@
-# Failure triage with Playwright traces
+# Failure triage
 
-Every failed UI test now saves a Playwright trace. A trace holds a DOM snapshot
-for each action, all network requests, console messages, and a timeline. You no
-longer need to rerun a flaky test to see what happened.
+This file tells you how to find the cause of a failed test. Start with the
+table. It covers the failures that have one known cause.
+
+## Start here
+
+Open the run's `run.html` first. On your machine it is at
+`reports/runs/<run>/run.html`. For a nightly run it is in the archive at
+`http://10.2.0.2/qa-runs/`.
+
+| What you see | Check | Verdict | Action |
+|---|---|---|---|
+| A "read this first" line in the terminal summary or at the top of `run.html` | The line names an error that 5 or more failures share, a skip reason that more than 20 skips share, or tests that did not run. | The run has 1 cause. | Correct that cause before you open a single failure. |
+| The run stopped at once with a `PREFLIGHT:` line and exit code 7 | The line says if the tenant did not answer or if it refused the account. It quotes the tenant's message. | No test ran. The tests are not at fault. | Correct the tenant problem or the account pair in `.env`, then run again. `PREFLIGHT=off` skips the check. |
+| A failure with a `[LOGIN]` line | The line quotes the text on the login form: an error, a captcha or a lockout. | The tenant refused the login. | Correct the account. The later tests in that process fail with the same line and do not submit the form again. |
+| A locator timeout, and the FAILED screenshot shows the login form | The traceback ends with a `[SESSION]` section. | The server dropped the session. The locator is not at fault. | Run the test again. See register row 75. |
+| `no search job was sent ... site/search answered HTTP 400` | Run the test alone. If it passes, a different search held the slot. | The server runs 1 search job at a time. | See register row 100. Do not change the test. |
+| Livestream tests skipped with a `[STREAM]` reason | The reason says how the guard opened Chrome and what it measured. | The browser on that machine cannot decode the stream. | On spartan1, read "A leg is missing" in `deploy/spartan1/README.md`. On a laptop, use Google Chrome, not Chromium. |
+| A locator timeout, and the screenshot shows the correct page | Open the trace and read the DOM snapshot at the failed action. | A renamed site or camera, or a changed control. | For renamed tenant data, correct `config/env/qa.py`. For a changed control, correct the page object. |
+| A control shows a spinner that does not stop, and no request leaves | Open the Console tab of the trace. | A Content Security Policy refusal is an app defect. | Report it. See register row 56. |
+| A test has the label `crashed` | Read `log/run.log` in the run folder for the last test on that worker. | The browser or the worker stopped. | See register row 91 for the known stall on the box. |
+| A test failed in the nightly and passes on your machine | Open the "Tests to watch" table on the health page. | The test is intermittent if it passed and failed in its last 20 runs. | Add a register row. Do not add a rerun mark without a row. |
+| `THIS RUN WAS NOT ARCHIVED` in the terminal | The line gives the error and the free disk space. | The run has no evidence folder. | Free disk space, then run again. |
+
+If no row fits, open the trace. Then read "Traps" at the end of this file
+before you change a wait.
 
 ## Where traces come from
 
-Two mechanisms record traces. Both keep a trace only when the test fails.
+Each failed UI test saves a Playwright trace. A trace holds a DOM snapshot
+for each action, all network requests, the console messages and a timeline.
+You do not need to run a test again to see what happened.
 
-- The `--tracing=retain-on-failure` flag in `pytest.ini` covers tests that use
-  the plugin's `page` fixture.
-- The `authenticated_page` fixture in `conftest.py` records its own trace,
-  because it creates its own browser context and the plugin flag does not see
-  it. Most UI tests use this fixture.
+2 mechanisms record traces. Both keep a trace only when the test fails.
 
-Traces land in `reports/artifacts/` as `<test-id>-trace.zip`. A failed login
-also saves a trace, named `<test-id>-login-failure-trace.zip`.
+- The `--tracing=retain-on-failure` flag in `pytest.ini` covers tests that
+  use the plugin's `page` fixture.
+- The `authenticated_page` fixture in `conftest.py` records its own trace.
+  It makes its own browser context, which the plugin flag does not see.
+  Most UI tests use this fixture.
 
-The `authenticated_page` fixture also records a video of every test and keeps
-it only on failure, as `reports/artifacts/<test-id>-video.webm` next to the
-trace. Set `RECORD_VIDEO=off` to skip the recording.
+During a run, traces go to `reports/artifacts/` as `<test-id>-trace.zip`. A
+failed login also saves a trace with the name
+`<test-id>-login-failure-trace.zip`.
 
-**Each pytest run clears `reports/artifacts/` at start.** Copy a trace out of
-the folder before you start the next run if you want to keep it.
+The `authenticated_page` fixture also records a video of each test and keeps
+it only on failure, as `<test-id>-video.webm` in the same folder. Set
+`RECORD_VIDEO=off` to skip the recording.
+
+Each run empties `reports/artifacts/` at its start. You do not lose the
+traces: at the end of each run the archive copies them to
+`reports/runs/<run>/traces/`. Only a run with `RUN_ARCHIVE=off` leaves its
+traces in `reports/artifacts/` alone.
+
+A trace from a nightly run stays on spartan1. To get one, do the procedure
+"Get a trace from a nightly run" in `deploy/spartan1/README.md`.
+
+A trace holds a session cookie, and sometimes a password. Do not attach a
+trace to a ticket or a chat.
 
 ## Where run outputs live
 
@@ -123,29 +158,24 @@ command showed the site list in the picker. The site was renamed from
 
 ## Screenshots
 
-`--screenshot=only-on-failure` in `pytest.ini` saves a screenshot for failed
-tests that use the plugin's `page` fixture. For `authenticated_page` tests, use
-the trace instead. The trace contains a screenshot of every action.
+Each UI test that reaches its body gets 1 final screenshot with the label
+PASSED or FAILED. A test whose setup failed with a page open gets the label
+SETUP FAILED. A drag test also keeps up to 8 frames from the middle of the
+drag. The files are in `reports/screenshots/` during the run and in
+`reports/runs/<run>/screenshots/` after it. `run.html` shows them on each
+test.
 
-## Traps this app has taught us (check these before blaming timing)
+Set `REPORT_SCREENSHOTS=off` to stop the screenshots. The trace also holds a
+screenshot of each action.
 
-- **Start at "read this first".** When five or more failures share one
-  error, or more than twenty skips share one reason, or collected tests
-  never ran, the terminal summary and the top of run.html say so in one
-  line each. Fix that line before you open any single failure: a tenant
-  that is down or a browser that is missing otherwise reads as hundreds
-  of unrelated timeouts.
+## Traps
 
-- **The run ended at once with a `PREFLIGHT:` line and exit code 7.** No test
-  ran, on purpose: the tenant did not answer, or it refused the account,
-  and the line says which, quoting the tenant's own message. Fix the cause
-  (the tenant, the account pair in `.env`) and run again; `PREFLIGHT=off`
-  skips the check when you need the old behaviour.
-- **A test failed with a `[LOGIN]` line.** The form stayed up after submit
-  with an error, a captcha or a lockout text on it; the line quotes what
-  was on screen. Every later test in that process fails with the same
-  line in a second and does not submit the form again, so one refused
-  login is one failed attempt, not four hundred.
+The app taught us these. Read them before you blame the timing.
+
+The table in "Start here" covers the run-level signals: "read this first",
+`PREFLIGHT:`, `[LOGIN]`, `[SESSION]` and `[STREAM]`. Without those signals, a
+tenant that is down or a browser that is missing reads as hundreds of
+timeouts that look unrelated.
 
 Measured mechanisms from the 08/2026 rebuilds. Each one cost at least
 one diagnosis round; check the list before opening a trace.

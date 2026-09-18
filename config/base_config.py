@@ -61,8 +61,8 @@ def load_config():
 
     # Overlay the active box's test data onto the top-level keys, so
     # config.get("test_site_name") etc. always name the ACTIVE box's
-    # tenant (BOX=us -> Spartan0) and tests stay box-agnostic. The env
-    # module's top-level test_* keys remain the default-box values.
+    # tenant (BOX=us -> Spartan0) and tests stay box-agnostic. An env
+    # module with boxes keeps its test_* keys in boxes.<box>.test_data only.
     box = os.environ.get("BOX", cfg.get("default_box", "")).strip().lower()
     boxes = cfg.get("boxes") or {}
     # A typo'd BOX must fail here, loudly, like get_box_config does -

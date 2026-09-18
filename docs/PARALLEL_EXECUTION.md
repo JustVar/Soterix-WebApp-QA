@@ -102,7 +102,8 @@ Result: 42 passed, 0 failed, in 630 s.
   server-side searches), which is the expected loadfile behavior: the
   longest file sets the floor.
 
-Decision recorded above: `-n 4 --dist loadfile` is the recommended
-regression command; mutating, hardware, upload, and verify-mode runs
-stay serial. Revisit `-n 6`/`-n auto` only if regression wall-clock
-becomes a problem and the account survives more concurrent sessions.
+The decision of that period was `-n 4 --dist loadfile`. It does not apply
+now. Since 09/18/2026 the command is `pytest tests/ui -n 4`, and
+`pytest.ini` sets `--dist loadgroup` (see "How to run"). Hardware, upload
+and verify-mode runs stay serial. Think about `-n 6` again only if the
+regression run becomes too slow and the account accepts more sessions.

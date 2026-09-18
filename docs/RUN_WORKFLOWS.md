@@ -44,10 +44,16 @@ below.
 
 ## Scenario 1: a Scheduled Run Finishes
 
-Scheduled runs are armed, so QA Touch is already updated when the run
-ends. Nobody transcribes results.
+Today: the nightly on spartan1 is unarmed. It writes nothing to QA Touch
+and it adds no ledger row. The run archive at `http://10.2.0.2/qa-runs/` is
+its only record. This stays so until the run-key strategy for the nightly
+is decided.
 
-1. **Green:** done. The ledger row is the record. Nobody opens anything.
+The plan: scheduled runs are armed, so QA Touch has the results when the
+run ends, and no person copies results by hand. The steps below apply
+today, but the ledger row in step 1 applies only when the run is armed.
+
+1. **Green:** done. When the run is armed, the ledger row is the record.
 2. **Red:** open the run's `run.html`. Failures are sorted first with the
    evidence inline. Triage each failure one of two ways:
    - **App bug.** The failure is scored into `tools/review_queue.json`.

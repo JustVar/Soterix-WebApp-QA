@@ -1,117 +1,184 @@
 # spartan1 deployment
 
-The CI host serving the run archive and running the nightly QA suite. These
-files are the live configuration on spartan1 (10.2.0.2), version-controlled
-here so they are auditable and recoverable rather than living only on the
-box. The adversarial audit flagged that the nightly script was unauditable
-because it existed nowhere in git.
+spartan1 (10.2.0.2) runs the nightly QA suite and serves the run archive.
+The files in this folder are the copies of record for the configuration on
+the box. Edit a file here, push it, then install it on the box.
 
 ## What runs on spartan1
 
-| File here | Lives on the box at | What it does |
+| File here | Path on the box | What it does |
 |---|---|---|
-| `nightly.sh` | `/data/qa/ci/nightly.sh` | The nightly QA run: reset the clone to `origin/main`, install, pytest once per box (`india`, then `us`), then the Camera 2 Cloud suite (`tests/c2c`, serial, against the lab cameras, only when `.env` has `C2C_CAMERA_PASS`; `C2C=0` skips it), publish evidence minus trace zips. Cron at 04:00 America/Chicago (`/etc/cron.d/qa-nightly-run`). One nightly at a time, 600 s per test, 4 h per box, and a box's run ends after 200 failures so pytest still writes its summary and archive; when the 4 h cap fires anyway, the labelled screenshots and live log are kept beside the archive as `<stamp>__tests-ui-<box>-PARTIAL-run-cap`. While a box's run is going, `live.json` in the served directory feeds the in-progress banner on the index and health pages. |
-| `qa-weston.service` | `/etc/systemd/system/qa-weston.service` | The headless Wayland display Chrome needs to decode H.265 on the box's Intel GPU: a GL renderer on that GPU, no monitor, one socket at `/run/qa-weston/wl-qa`. The nightly runs the web-app legs headed on it when the socket is up (What the box needs, H.265). |
-| `qa-runs-prune` | `/usr/local/bin/qa-runs-prune` | Deletes run folders older than 30 days. Cron at 03:00. |
-| `nginx-qa-runs.conf` | inside `/etc/nginx/sites-enabled/default` | The `/qa-runs/` location: serves `/data/qa/runs` read-only, basic auth, dotfiles denied. |
+| `nightly.sh` | `/data/qa/ci/nightly.sh` | The nightly run. See "What the nightly does". |
+| `cron.d-qa-nightly-run` | `/etc/cron.d/qa-nightly-run` | Starts `nightly.sh` at 09:00 UTC each day as user `soterix`. That is 04:00 in Chicago during daylight time. |
+| `cron.d-qa-runs-prune` | `/etc/cron.d/qa-runs-prune` | Starts `qa-runs-prune` at 03:00 UTC each day as root. |
+| `qa-runs-prune` | `/usr/local/bin/qa-runs-prune` | Deletes served run folders that are older than 30 days. |
+| `qa-weston.service` | `/etc/systemd/system/qa-weston.service` | The headless Wayland display that Chrome needs to decode H.265. See "H.265 on the box". |
+| `nginx-qa-runs.conf` | inside `/etc/nginx/sites-enabled/default` | The `/qa-runs/` location. It serves `/data/qa/runs` read-only with basic auth and denies dotfiles. |
+
+## What the nightly does
+
+1. It stops a nightly that is still alive from the day before, and releases
+   the run lock.
+2. It resets the clone at `/data/qa/ci/Soterix-WebApp-QA` to `origin/main`
+   and installs the requirements.
+3. It checks the Weston display and writes one `H.265:` line.
+4. It runs `tests/ui` one time for each box: `india`, then `us`. Each run
+   uses 4 workers.
+5. It runs the Camera 2 Cloud suite (`tests/c2c`) one time, with 1 worker,
+   against the lab cameras.
+6. It copies each run folder to `/data/qa/runs` without the trace zips.
+7. It rebuilds the served index and the health page.
+
+Limits: 600 s for each test, 4 hours for each leg, and a leg stops after 200
+failures. While a leg runs, `live.json` in the served directory feeds the
+"in progress" banner on the index and health pages.
+
+The nightly is unarmed. It does not write to QA Touch and it does not add a
+ledger row.
+
+You can run the script by hand with a smaller scope:
+
+```bash
+TARGET=tests/ui/licenses /data/qa/ci/nightly.sh   # one module
+BOXES=india /data/qa/ci/nightly.sh                # one box
+BOXES= /data/qa/ci/nightly.sh                     # cameras only
+C2C=0 /data/qa/ci/nightly.sh                      # no camera run
+TEST_TIMEOUT=120 /data/qa/ci/nightly.sh           # a short cap for a trial
+```
 
 ## Access
 
-- SSH alias `spartan1` = `soterix@10.2.0.2`.
-- The archive is at `http://10.2.0.2/qa-runs/` behind HTTP basic auth (user
-  `qa`; password in the team password store).
-- Two read-only per-repo deploy keys on the box pull the repos over SSH.
+- The box is on the lab network, 10.2.0.0/24. From a different network, ask
+  Justin for the route.
+- Log in as user `soterix` with an SSH key. Justin adds new keys to
+  `/home/soterix/.ssh/authorized_keys`.
+- Add this to `~/.ssh/config` on your machine. The commands in this file use
+  the alias.
+
+  ```
+  Host spartan1
+      HostName 10.2.0.2
+      User soterix
+  ```
+
+- The archive is at `http://10.2.0.2/qa-runs/`. It uses HTTP basic auth with
+  the user `qa`. The password is in the team password store.
+- The box pulls the repos over SSH with 2 deploy keys. Each key is read-only
+  and belongs to one repo.
+- User `soterix` owns `/data/qa/ci`, so an install of `nightly.sh` does not
+  need sudo. The systemd unit, the cron files and nginx need sudo.
 
 ## What the box needs
 
-- The clone at `/data/qa/ci/Soterix-WebApp-QA` with a venv (`venv/`, Python
-  3.12 on the box) and Google Chrome, installed 09/11/2026 with
-  `sudo venv/bin/python -m playwright install chrome` (153 at the time), so
-  pytest.ini's `--browser-channel chrome` applies as it does on a laptop.
-  H.265 (measured 09/11 and 09/17/2026). The tenants stream H.265 and
-  Chrome on Linux has no software decoder for it: it answers false to
-  `MediaSource.isTypeSupported` for hvc1/hev1 unless it reaches a GPU
-  decoder through VA-API, and it hands the decoded frames to the
-  compositor only from its Wayland backend. The box decodes it since
-  09/17/2026 through its CPU's Intel UHD 770 graphics (enabled in the BIOS
-  that day; before that no Intel device was on the PCI bus), Ubuntu's
-  `intel-media-va-driver` (`vainfo` on the Intel render node lists
-  VAProfileHEVCMain) and a headless Weston with a GL renderer on that GPU
-  (`qa-weston.service` here). What the nightly needs, all of it:
-  - `XDG_RUNTIME_DIR` and `WAYLAND_DISPLAY` naming the Weston socket;
-  - Chrome HEADED (`--headed`): `--headless` switches Chrome to its own
-    headless backend whatever the ozone flag says, and that backend loses
-    the GPU process on the first decoded frame;
-  - `CHROME_ARGS="--ozone-platform=wayland"`: without it Chrome picks X11,
-    and with no X server it does not start. Under Wayland Chrome takes
-    the GPU from the compositor: the render node, the VA-API driver and
-    the GL renderer all resolve to the Intel device on their own.
-  The test session (conftest's launch args), the stream guard and
-  tools/stream_probe.py read the same CHROME_ARGS, so the guard measures
-  the browser the tests get; its skip reason names how it opened Chrome
-  (headed or headless, how many flags), so a wiring fault reads as one.
-  Audited 09/17/2026 against the real tests, four workers, headed on
-  Weston: this one-flag set and an eight-flag set (VA-API and HEVC
-  features on, the GPU blocklist ignored, driver checks ignored, the
-  render node pinned, `LIBVA_DRIVER_NAME=iHD`) gave identical outcomes on
-  the Views half (25 passed, the same 8 failures: the save-view defect and
-  bookmarks); the probe played Thermal-14 (2560x1440, 9 fps, 0 dropped)
-  under every flag subset tried, including none but the ozone flag. Chrome
-  153 has VA-API decoding and HEVC on by default on Linux; a later Chrome
-  may need a flag again, and the guard's `[STREAM]` line (`decodes H.265:
-  NO`) is where that shows. Chrome on the box is not auto-updated
-  (unattended-upgrades allows Ubuntu origins only), so a Chrome update is
-  a deliberate act: re-run the probe after one.
-  Dead ends, so nobody re-runs them: every non-Wayland backend (headless,
-  Xvfb, X11, with native GPU memory buffers, zero-copy, no GPU
-  compositing, the legacy decoder) decodes frames and then loses the GPU
-  process handing them on (`Could not find SharedImageBackingFactory ...
-  BGRA_8888, gmb_type: platform`); under Xvfb or headless Chrome opens the
-  NVIDIA render node and never calls libva unless the node is pinned; the
-  NVIDIA RTX A400 through `nvidia-vaapi-driver` 0.0.8 (a community shim)
-  reached readyState 1 then PIPELINE_ERROR_DECODE (09/11);
-  `--ozone-platform=drm` is not in Google Chrome's build. All of that is
-  still installed and harmless. Without the Weston socket the nightly runs
-  headless as before and the stream guard skips the livestream tests with
-  the measured reason; the Windows runner (`deploy/windows-runner/`) stays
-  as the documented fallback.
-- `/data/qa/ci/Soterix-WebApp-QA/.env` (mode 600) with the QA Touch keys
-  and one account per box the nightly runs: `QA_INDIA_USER`,
-  `QA_INDIA_PASSWORD`, `QA_US_USER`, `QA_US_PASSWORD`. The suite reads the
-  box's own pair when `BOX` is set (config/env/qa.py); a legacy `QA_USER`
-  alone is not enough, and a box without its pair is skipped with a line in
-  the log.
+- The clone at `/data/qa/ci/Soterix-WebApp-QA` with a venv at `venv/`
+  (Python 3.12).
+- Google Chrome from Google's apt repository. `pytest.ini` sets
+  `--browser-channel chrome`, the same as on a laptop. Do not install
+  Playwright's Chromium.
+- `/data/qa/ci/Soterix-WebApp-QA/.env` with mode 600. It holds one account
+  pair for each box: `QA_INDIA_USER`, `QA_INDIA_PASSWORD`, `QA_US_USER`,
+  `QA_US_PASSWORD`. The nightly skips a box that has no pair and writes a
+  line in the log. A `QA_USER` value alone is not sufficient.
+- `C2C_CAMERA_PASS` in the same `.env` for the camera suite. Without it the
+  nightly skips that suite and writes a line in the log.
+- The packages in "H.265 on the box".
 
-## Deploying a change
+## A leg is missing or a run looks wrong
 
-The copy here is the one of record. Edit it here, run it through review
-like any other file, push, then install it from the box's own clone; cron
-reads the file on each run, so nothing reloads. Copy from the clone, not
-from a Windows checkout: Git on Windows may hand you the file with CRLF
-line endings, and `/bin/sh` refuses a script whose first line ends in `\r`.
+Read the log first. Each nightly writes a block to `/data/qa/ci/nightly.log`.
+
+```bash
+ssh spartan1 'grep -n "nightly start" /data/qa/ci/nightly.log | tail -n 1'
+ssh spartan1 'tail -n 80 /data/qa/ci/nightly.log'
+```
+
+A good night has these lines, in this order: `nightly start`, `code:`,
+`H.265:`, `india pytest exit`, `us pytest exit`, `c2c pytest exit`,
+`served index and health page rebuilt`, `nightly done`.
+
+| Line in the log | Meaning | Action |
+|---|---|---|
+| No `nightly start` line for today | Cron did not start the script. | Make sure that `/etc/cron.d/qa-nightly-run` exists and that `systemctl is-active cron` prints `active`. |
+| `previous nightly (group N) still alive after a day: killing it` | The run of the day before did not finish. The script stopped it. | Find the test that stalled in the run of the day before. |
+| `pytest from an earlier run still alive with no pid file: killing it` | The same, but the pid file was gone. | The same. |
+| `code:` names an old commit | The fetch failed, so the clone did not move. | Run the `git fetch` by hand on the box and read the error. |
+| `H.265: Weston display at ...` | The display is up. The legs run headed and the livestream tests run. | None. |
+| `H.265: no Weston socket ...` | Weston is not running. | `sudo systemctl start qa-weston` |
+| `H.265: the Weston socket exists but nothing answers on it` | Weston stopped and left its socket file. | `sudo systemctl restart qa-weston` |
+| `H.265: no Intel render node ...` | The CPU graphics are off in the BIOS, or the i915 driver did not load. | Enable the CPU graphics in the BIOS. |
+| `=== <box> skipped: QA_<BOX>_USER is not set` | The `.env` on the box has no account pair for that box. | Add the pair to the `.env` on the box. |
+| `=== c2c skipped: C2C_CAMERA_PASS is not set` | The `.env` on the box has no camera password. | Add it to the `.env` on the box. |
+| `pytest exit: 0` | All tests passed. | None. |
+| `pytest exit: 1` | Some tests failed. This is the usual result. A leg that stopped at 200 failures also gives 1. | Open the run in the archive. |
+| `pytest exit: 2` | The run was interrupted. | Read the lines above the exit line. |
+| `pytest exit: 3` | pytest had an internal error. | Read the `INTERNALERROR` lines above the exit line. |
+| `pytest exit: 4` | pytest refused the command line. | Read the usage error above the exit line. |
+| `pytest exit: 7` | The preflight refused the run. The tenant did not answer, or it refused the account. | Read the `PREFLIGHT:` line above the exit line. |
+| `pytest exit: 124` | The leg hit the 4 hour cap. The script kept the screenshots and the log in a `PARTIAL-run-cap` folder. | Find the test that stalled. The last lines of `run.log` in that folder name it. |
+| A leg ends in 0 s | The run lock refused the leg. | The script releases the lock on the next night. To do it now, see "Stop a stuck nightly". |
+| `THIS RUN WAS NOT ARCHIVED` | The archive step failed. The line gives the error and the free disk space. | Free disk space if it is low, then run the leg again. |
+| `served index rebuild FAILED` | The health tool failed. The run folders are served, but the index is old. | Run `venv/bin/python tools/health_summary.py --runs-dir /data/qa/runs` on the box and read the error. |
+
+If the log is good but a run is not in the archive, check the disk:
+`ssh spartan1 'df -h /data'`.
+
+## Get a trace from a nightly run
+
+A trace holds a session cookie, and sometimes a password. For that reason
+the trace zips stay in the clone on the box. The served archive does not
+have them. The clone keeps the newest 20 runs of each target.
+
+1. Open the failure in the served `run.html`. It shows the run folder name
+   and the file name of the trace.
+2. List the traces of that run:
+
+   ```bash
+   ssh spartan1 'ls /data/qa/ci/Soterix-WebApp-QA/reports/runs/<run>/traces/'
+   ```
+
+3. Copy the trace to your machine:
+
+   ```bash
+   scp "spartan1:/data/qa/ci/Soterix-WebApp-QA/reports/runs/<run>/traces/<name>-trace.zip" .
+   ```
+
+4. Open it: `venv\Scripts\playwright show-trace <name>-trace.zip`
+5. Delete your copy when you are done. Do not attach a trace to a ticket or
+   a chat.
+
+## Install a change on the box
+
+Install from the clone on the box, not from a Windows checkout. Git on
+Windows can give the file CRLF line endings, and `/bin/sh` refuses them.
+
+### nightly.sh
 
 ```bash
 ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && \
-  git show origin/main:deploy/spartan1/nightly.sh > /tmp/nightly.sh.new && sh -n /tmp/nightly.sh.new && \
-  sudo cp /tmp/nightly.sh.new /data/qa/ci/nightly.sh.new && sudo chmod 755 /data/qa/ci/nightly.sh.new && \
-  sudo mv /data/qa/ci/nightly.sh.new /data/qa/ci/nightly.sh && echo installed'
+  git show origin/main:deploy/spartan1/nightly.sh > /data/qa/ci/nightly.sh.new && \
+  sh -n /data/qa/ci/nightly.sh.new && chmod 755 /data/qa/ci/nightly.sh.new && \
+  mv /data/qa/ci/nightly.sh.new /data/qa/ci/nightly.sh && echo installed'
 ```
 
-Two rules in that command. It reads the file from `origin/main` with `git show`
-rather than resetting the clone, so a nightly that is running from the clone
-is not disturbed. And it installs by rename, never by copying over the live
-file: a shell reads its script as it runs, so overwriting `nightly.sh`
-in place can hand a running nightly half of the new text. A rename leaves
-the running one its old file and gives cron the new one.
+The command has 2 rules.
+
+- It reads the file with `git show`. It does not reset the clone, so a
+  nightly that runs from the clone is not disturbed.
+- It installs with a rename. A shell reads its script while it runs. If you
+  copy over the live file, a nightly that is running can read half of the
+  new text.
+
+Cron reads the file at each start, so you do not reload anything.
+
+Then run a trial with a small target, and read the end of the log:
 
 ```bash
-
-# nginx: after editing /etc/nginx/sites-enabled/default
-ssh spartan1 'sudo nginx -t && sudo systemctl reload nginx'
+ssh spartan1 'TARGET=tests/ui/maps TEST_TIMEOUT=300 /data/qa/ci/nightly.sh; tail -n 20 /data/qa/ci/nightly.log'
 ```
 
+### qa-weston.service
+
 ```bash
-# qa-weston.service: the headless display for H.265 (What the box needs)
 ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && \
   git show origin/main:deploy/spartan1/qa-weston.service | sudo tee /etc/systemd/system/qa-weston.service > /dev/null && \
   sudo systemctl daemon-reload && sudo systemctl enable --now qa-weston.service && sleep 3 && \
@@ -119,88 +186,176 @@ ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && \
   journalctl -u qa-weston.service --no-pager | grep "GL renderer"'
 ```
 
-The last line must name the Intel GPU (`GL renderer: Mesa Intel(R) Graphics`);
-a software renderer or the NVIDIA one means the vendor file or the render
-node changed. The nightly log then opens with `H.265: Weston display at
-/run/qa-weston/wl-qa`, and each box's `[STREAM]` line ends `decodes H.265: yes`.
-When the display is not usable the `H.265:` line names what is missing: no
-socket, a socket that nothing answers on (a stale file after Weston died),
-or no Intel render node. The `[STREAM]` line is in the run's terminal
-summary under `stream guard`: the controller measures once for all workers.
+The last line must name the Intel GPU: `GL renderer: Mesa Intel(R) Graphics`.
+If it names a software renderer or the NVIDIA GPU, the vendor file or the
+render node changed.
 
-Try it before the cron does, on a small target and a short cap, and read
-the tail of the log:
+### Cron files
 
 ```bash
-ssh spartan1 'TARGET=tests/ui/maps TEST_TIMEOUT=300 /data/qa/ci/nightly.sh; tail -n 20 /data/qa/ci/nightly.log'
+ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && \
+  git show origin/main:deploy/spartan1/cron.d-qa-nightly-run | sudo tee /etc/cron.d/qa-nightly-run > /dev/null'
 ```
 
-## Updating Chrome on the box
+Use the same command for `cron.d-qa-runs-prune` and `/etc/cron.d/qa-runs-prune`.
 
-The archive index (http://10.2.0.2/qa-runs/) opens with a runners line: each
-machine's Chrome from its newest run, and `stable X is out: update it` when
-Google's stable is newer. That line is the prompt for this section.
+### nginx
 
-Chrome comes from Google's apt repository (`google-chrome.sources`), which
-`unattended-upgrades` does not cover (Ubuntu origins only), so the box's
-Chrome stays where it was installed until someone updates it. That is on
-purpose: a Chrome update is a deliberate act, done in daylight and
-verified, not something the nightly discovers. Windows laptops update
-themselves on relaunch, so they usually run a newer Chrome than the box;
-the tests are written for the current stable, and the box should not fall
-more than a major version behind it. The current stable per platform:
+Edit `/etc/nginx/sites-enabled/default` on the box, then:
+
+```bash
+ssh spartan1 'sudo nginx -t && sudo systemctl reload nginx'
+```
+
+## H.265 on the box
+
+The tenants stream H.265. Chrome on Linux has no software decoder for it.
+Chrome decodes H.265 only through the GPU's VA-API decoder, and it shows
+the decoded frames only from its Wayland backend.
+
+The box has these parts. Measured 09/17/2026, versions read 09/18/2026.
+
+| Part | On the box |
+|---|---|
+| GPU | The CPU's Intel UHD 770 graphics, enabled in the BIOS. |
+| VA-API driver | Ubuntu package `intel-media-va-driver` 24.1.0. |
+| Check tool | Ubuntu package `vainfo` 2.12.0. |
+| Display | Ubuntu package `weston` 13.0.0, started by `qa-weston.service`, with a GL renderer on the Intel GPU. |
+| Browser | `google-chrome-stable` 153.0.8010.47. |
+| Groups of user `soterix` | `video` and `render`. |
+
+The nightly sets 4 things for the web-app legs when the display is up:
+
+- `XDG_RUNTIME_DIR=/run/qa-weston` and `WAYLAND_DISPLAY=wl-qa`. They name
+  the Weston socket.
+- `--headed`. With `--headless`, Chrome uses its own headless backend and
+  ignores the Wayland flag. That backend loses the GPU process on the first
+  decoded frame.
+- `CHROME_ARGS="--ozone-platform=wayland"`. Without it Chrome selects X11.
+  The box has no X server, so Chrome does not start.
+
+No other Chrome flag is necessary. Under Wayland, Chrome finds the Intel
+GPU, the VA-API driver and the GL renderer without help. An audit on
+09/17/2026 compared this 1 flag with a set of 8 flags on the real tests
+with 4 workers. The results were identical.
+
+The test session, the stream guard and `tools/stream_probe.py` read the
+same `CHROME_ARGS`. Thus the guard measures the browser that the tests get.
+The guard's skip reason says how it opened Chrome: headed or headless, and
+the number of flags.
+
+When the display is not usable, the legs run headless and the stream guard
+skips the livestream tests. The skip reason gives the measurement. The
+Windows runner in `deploy/windows-runner/` is the fallback for those tests.
+
+### Prove that H.265 decodes
+
+```bash
+ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && XDG_RUNTIME_DIR=/run/qa-weston WAYLAND_DISPLAY=wl-qa \
+  CHROME_ARGS=--ozone-platform=wayland BOX=india venv/bin/python -c \
+  "from tests.shared.helpers.stream_health import decode_check; print(decode_check(\"H.265\", \"chrome\", headed=True))"'
+```
+
+The output must show `decodes: True`, and the browser name must contain
+`headed`. In a run, the `[STREAM]` line is in the terminal summary below
+`stream guard`. On a good run it ends with `decodes H.265: yes`.
+
+### Set up H.265 on a second Linux machine
+
+1. Make sure that the machine has an Intel GPU:
+   `grep -l 0x8086 /sys/class/drm/renderD*/device/vendor` must print a path.
+   If it prints nothing, enable the CPU graphics in the BIOS.
+2. Install the packages: `sudo apt-get install intel-media-va-driver vainfo weston`.
+3. Make sure that the decoder is there: `vainfo` on the Intel render node
+   must list `VAProfileHEVCMain`.
+4. Add the test user to the groups `video` and `render`.
+5. Install Google Chrome from Google's apt repository.
+6. Install `qa-weston.service`. See "Install a change on the box".
+7. Do the procedure in "Prove that H.265 decodes".
+
+### Approaches that failed
+
+Do not try these again. All were measured on 09/11 and 09/17/2026.
+
+- Each backend that is not Wayland (headless, Xvfb, X11) decodes frames and
+  then loses the GPU process. The error is `Could not find
+  SharedImageBackingFactory ... BGRA_8888, gmb_type: platform`. Native GPU
+  memory buffers, zero copy, no GPU compositing and the legacy decoder did
+  not change that.
+- Under Xvfb or headless, Chrome opens the NVIDIA render node and does not
+  call libva unless you pin the node.
+- The NVIDIA RTX A400 with `nvidia-vaapi-driver` 0.0.8 reached readyState 1
+  and then gave `PIPELINE_ERROR_DECODE`.
+- `--ozone-platform=drm` is not in Google Chrome's build.
+
+The packages from those attempts are still on the box. They do no harm.
+
+## Update Chrome on the box
+
+The archive index opens with a runners line. It shows each machine's Chrome
+from its newest run. When Google's stable version is newer, it shows `stable
+X is out: update it`. Do this procedure when you see that text.
+
+Chrome on the box does not update itself. `unattended-upgrades` covers
+Ubuntu origins only, and Chrome comes from Google's apt repository. This is
+intended: do the update in the daytime and verify it. Windows laptops update
+Chrome at each relaunch, so they are usually ahead of the box. Do not let the
+box fall more than 1 major version behind the stable version. The stable
+version for each platform is at
 `https://versionhistory.googleapis.com/v1/chrome/platforms/linux/channels/stable/versions`.
 
+1. Read what is installed and what is offered:
+
+   ```bash
+   ssh spartan1 'apt-cache policy google-chrome-stable | sed -n 2,3p'
+   ```
+
+2. Update:
+
+   ```bash
+   ssh spartan1 'sudo apt-get update -q && sudo apt-get install -y --only-upgrade google-chrome-stable && google-chrome --version'
+   ```
+
+3. Do the procedure in "Prove that H.265 decodes".
+
+If step 3 shows `decodes: False`, the new Chrome needs a flag again. Try the
+probe with these flags, which were the set of 8 in the audit: VA-API and
+HEVC features on, the GPU blocklist ignored, the driver checks ignored, the
+render node pinned, and `LIBVA_DRIVER_NAME=iHD`. Put the flags that work in
+`CHROME_ARGS` in `nightly.sh`.
+
+## Stop a stuck nightly
+
+The script stops the nightly of the day before at its start, so a stuck
+nightly clears on the next night. Only Justin stops a nightly by hand.
+
 ```bash
-# 1. what is installed and what is offered
-ssh spartan1 'apt-cache policy google-chrome-stable | sed -n 2,3p'
-# 2. update (Google's repo is already configured; playwright install chrome did that on 09/11/2026)
-ssh spartan1 'sudo apt-get update -q && sudo apt-get install -y --only-upgrade google-chrome-stable && google-chrome --version'
-# 3. prove H.265 still decodes on the new Chrome, the way the nightly opens it
-ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && XDG_RUNTIME_DIR=/run/qa-weston WAYLAND_DISPLAY=wl-qa   CHROME_ARGS=--ozone-platform=wayland BOX=india venv/bin/python -c "from tests.shared.helpers.stream_health import decode_check;   print(decode_check(\"H.265\", \"chrome\", headed=True))"'
-```
-
-Step 3 must print `decodes: True` with `headed` in the browser name. A
-`False` means the new Chrome needs a flag again: read the H.265 notes
-under "What the box needs", try the probe with the eight-flag set recorded
-there, and put whatever works back into `CHROME_ARGS` in `nightly.sh`.
-
-## Recovering a stuck nightly
-
-The script kills its own predecessor: the process group in its pid file,
-and since 09/11/2026 any pytest still running from the clone (a stalled run
-whose pid file was gone kept the single-run lock, and the next nightly's
-legs all exited in 0 s), then releases the in-repo run lock. So a stuck
-nightly clears itself the next night. To clear one now:
-
-```bash
-ssh spartan1 'pkill -u soterix -f "[n]ightly.sh"; pkill -u soterix -f "[p]ytest tests/ui"; sleep 5; \
-  pkill -u soterix -KILL -f "[p]ytest tests/ui"; pkill -u soterix -KILL -f "playwright/driver/[n]ode"; \
+ssh spartan1 'pkill -u soterix -f "[n]ightly.sh"; pkill -u soterix -f "[p]ytest tests/"; sleep 5; \
+  pkill -u soterix -KILL -f "[p]ytest tests/"; pkill -u soterix -KILL -f "playwright/driver/[n]ode"; \
   pkill -u soterix -KILL -f "[m]s-playwright"; rm -rf /tmp/playwright-artifacts-* /data/qa/ci/nightly.pid; \
-  pgrep -u soterix -fc "[p]ytest tests/ui|[m]s-playwright"'   # expect 0
+  pgrep -u soterix -fc "[p]ytest tests/|[m]s-playwright"'   # the result must be 0
 ```
 
-The brackets are not decoration. `pkill -f "pytest tests/ui"` also matches
-the SSH shell running that very command line, kills it, and reports
-nothing; the runs survive. `[p]ytest` matches `pytest` in a process list
-but not the literal `[p]ytest` in its own command line (09/08/2026, learned
-the slow way).
+Keep the brackets. `pkill -f "pytest tests/"` also matches the SSH shell
+that runs the command, and stops it. `[p]ytest` matches `pytest` in the
+process list, but it does not match its own command line.
 
-If the clone has drifted (the log says `Not possible to fast-forward`, or
-`code:` names an old commit), the script's reset fixes it on its next run;
-by hand it is `git -C /data/qa/ci/Soterix-WebApp-QA fetch origin && git -C
-/data/qa/ci/Soterix-WebApp-QA reset --hard origin/main`. Evidence under
-`reports/` is untracked and survives the reset.
+If the clone has drifted, the script's reset corrects it on the next run.
+To do it by hand:
+
+```bash
+ssh spartan1 'git -C /data/qa/ci/Soterix-WebApp-QA fetch origin && git -C /data/qa/ci/Soterix-WebApp-QA reset --hard origin/main'
+```
+
+The evidence below `reports/` is not tracked, so the reset does not delete it.
 
 ## Retention and safety
 
-- Evidence is pruned after 30 days on the box. The permanent record is the
-  git ledger (`history/*.jsonl`), not the evidence.
-- Trace zips never reach the box: a trace carries live session cookies
-  and, on a fresh-login test, the account password in a request body.
-  `nightly.sh` rsyncs with `--exclude=*.zip`, and `tools/publish_run.py`
-  stages a copy without them. Keep traces local for `playwright
-  show-trace`. The failure videos beside the traces DO travel: run.html
-  links each one, and a password field shows dots on screen. Until
-  09/11/2026 the whole traces/ folder was held back, so every video link on
-  the served pages was dead.
+- The served archive at `/data/qa/runs` keeps a run for 30 days.
+- The clone keeps the newest 20 runs of each target, and 100 runs in total.
+- The permanent record is the git ledger (`history/*.jsonl`). You can make
+  the evidence again if you run the tests again.
+- Trace zips do not go to the served archive. `nightly.sh` copies with
+  `--exclude=*.zip`, and `tools/publish_run.py` stages a copy without them.
+- The failure videos do go to the served archive. `run.html` links each
+  one. A video shows the screen, and a password field shows dots.

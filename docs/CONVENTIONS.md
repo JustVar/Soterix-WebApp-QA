@@ -244,8 +244,8 @@ Rules for any new fixture:
 1. Every name starts with `AutoTest ` so a leftover on the shared tenant
    is recognisable. The fixtures refuse other names.
 2. Verify the write with a read before the test gets it. The envelope
-   text is not a signal: `addgroup` answers "Successfully Retrieved!",
-   and a bookmark `DELETE` answers "Successfully deleted!" while the row
+   text is not a signal: `addgroup` answers `Successfully Retrieved!`,
+   and a bookmark `DELETE` answers `Successfully deleted!` while the row
    stays in the list with `deletedAt` above 0 (a live row holds -1).
    Check `code`, then confirm in `location/tree` or the list.
 3. The fixture deletes what it made at teardown and confirms the
@@ -287,7 +287,7 @@ it honest.
    100% with nothing, naming the job, its scope and its counts; a click
    that sent no job, a job that never finished, or a bad response fails.
    Before it, 24 of the 49 failures in the 09/04/2026 full run were
-   "Timeout 60000ms" on a box that simply had no events.
+   "Timeout 60000ms" on a box that had no events.
    When the artifact is the stream itself, the proof is a measurement
    made once per session: `tests/shared/helpers/stream_health.py` opens
    one media socket to the box's test camera and counts the frames;
@@ -446,20 +446,37 @@ manually. Nothing below runs unless you opt in. Treat it as in development.
   `--unmapped` and `--dead-keys` select the tests that still need a
   case across the tree.
 
-1. Create the test file under its product root (`config/products.py`):
+The steps, in order:
+
+1. Create the test file below its product root (`config/products.py`):
    `tests/ui/{module}/` for NexaiQ-Core, `tests/c2c/` for Camera 2 Cloud. The
-   root decides the QA Touch project the run reports to and the sidecar path
-   (`tests/steps/ui/{module}/`, `tests/steps/c2c/`).
+   root sets the QA Touch project that the run reports to.
 2. Write the title and the `Steps:` block in the docstring.
-3. Add the relevant markers from `pytest.ini`.
-4. Use existing page objects, or create new ones in `tests/shared/pages/`.
-5. If the test belongs in the QA verification pipeline, wire up `step_capture`
-   in the setup fixture and add `.mark()` calls (see below). Optional otherwise.
-6. Create the matching JSON sidecar in `tests/steps/ui/{module}/` (only if the
-   test uses step capture).
-7. Generate, import, and map the QA Touch case with the three commands
-   above. The mapping lives in `config/qatouch_case_mapping.json`, never
-   in an in-test marker.
+3. Add the applicable markers from `pytest.ini`.
+4. Use the page objects in `tests/shared/pages/`. Add a page object only
+   when none fits.
+5. If the test changes the account's state (a saved view, a rule, a user, a
+   widget), give the module its group:
+   `pytestmark = pytest.mark.xdist_group("account_<family>")`. The families
+   are in [PARALLEL_EXECUTION.md](PARALLEL_EXECUTION.md). Tests in 1 group
+   run on 1 worker, so they do not change the same data at the same time.
+   `tests/plugins/test_xdist_groups.py` fails when a module that writes
+   state has no group.
+6. Give each thing that the test creates a name that ends in
+   `%H%M%S%f`. With 4 workers, 2 tests can make a name in the same second.
+7. If the test belongs in the QA verification pipeline, add `step_capture`
+   to the setup fixture and add `.mark()` calls (see "Step capture"). Then
+   create the JSON sidecar in `tests/steps/ui/{module}/`. For other tests,
+   skip this step.
+8. Run the test on each box that has the feature: `BOX=india`, then `BOX=us`.
+9. Stage the new file, then run `python tools/test_inventory.py`. It writes
+   `docs/TEST_INVENTORY.md` again. The pre-commit hook refuses a commit when
+   that file is stale.
+10. Make the QA Touch case with the first command above, and read the
+    preview. Then ask Justin to do the import. The import creates cases in
+    QA Touch, and QA Touch has no delete API. After the import, run the
+    third command. The mapping is in `config/qatouch_case_mapping.json`,
+    never in a marker in the test file.
 
 **Build on the foundations, not beside them.** Each of these exists because
 a class of tests failed or lied for weeks before it did (register items 14,

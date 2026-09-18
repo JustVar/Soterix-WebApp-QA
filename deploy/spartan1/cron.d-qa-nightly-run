@@ -1,0 +1,1 @@
+0 9 * * * soterix /data/qa/ci/nightly.sh

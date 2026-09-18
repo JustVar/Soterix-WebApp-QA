@@ -145,13 +145,38 @@ a message that names the run that holds the lock.
 | Where | What |
 |-------|------|
 | `reports/runs/<start>__<target>/run.html` | Start here for a run. A one-sentence verdict, then the failures, grouped when they share an error, each with its error, call log, screenshots, video, and the show-trace command. Then the notes (the advisory lines), the slowest 5, passed, and skipped. Every test carries a strip of its last 20 outcomes and a label for what changed since the previous run |
-| `reports/runs/index.html` | One row per run, newest first, with its product, counts, outcome (Passed, Failed, Interrupted, Error, or No tests, the exit code in the tooltip), notes count, and three links: `Run Report` (run.html), `Raw pytest-html` (report.html), `Folder`. The filter box keeps the rows that hold the typed text |
+| `reports/runs/index.html` | One row for each run, newest first. See "How to read the archive index" below |
 | `reports/runs/health.html` | Test Health, built by `run.py health`. One tile per product: runs, pass rate, tests to watch, modules, last run. Then one row per module (the folder under `tests/`: Views, Admin, Tools) with its runs, pass rate over test outcomes, passed and failed counts, mean full-module run, notes, and newest run as a date with its outcome. Every run of a module counts toward it, a run of 1 test included. `Show runs` under a module lists its runs: the date, what ran (whole module, a marker, or 1 test by its title), and the outcome. Then the tests to watch, each with its last 20 outcomes |
 | `reports/runs/<start>__<target>/` | That run's report, screenshots, traces, videos, results JSON, and `advisories.txt` |
 | `reports/report.html` | The latest run's report (failures show their screenshot and a trace link) |
 | `reports/screenshots/<test>__PASSED.png` | The latest run's labeled end-state screenshots; drags also keep a `__mid-drag-1.png` frame |
 | `reports/artifacts/*-trace.zip` | The latest run's failure traces |
 | The end of the console output | A `run advisories` section: the `[VIEWS]`, `[LPR]`, and `[EXPORT]` lines the page objects printed |
+
+### How to read the archive index
+
+The same page is on your machine (`reports/runs/index.html`) and on spartan1
+(`http://10.2.0.2/qa-runs/`).
+
+- **The Runners line** at the top shows each machine and the Chrome version
+  of its newest run. `(stable X is out: update it)` after a machine means
+  that its Chrome is behind Google's stable version. For spartan1, do the
+  procedure "Update Chrome on the box" in `deploy/spartan1/README.md`.
+- **The target** is what the run was asked to test, for example `tests/ui`.
+- **The box badge** after the target is the tenant: `india` or `us`.
+- **The machine badge** after the box is the computer that ran the tests.
+  `spartan1` is the nightly. A different name is a laptop.
+- **The counts** are passed, failed, skipped and errors.
+- **The outcome** is Passed, Failed, Interrupted, Error or No tests. Hold the
+  pointer on it to see the exit code.
+- **Notes** is the number of advisory lines in the run.
+- **The links** are `Run Report` (`run.html`, start here), `Raw pytest-html`
+  (`report.html`) and `Folder`.
+
+The filter box keeps the rows that contain the text you type. It also
+searches words that the row does not show: the account, the operator (the
+user who started the run) and the Chrome version. For example, type `us` to
+see one tenant, or type a machine name to see the runs of one laptop.
 
 Open a trace:
 
@@ -254,7 +279,7 @@ review a teammate's change.
 | No tests collected | The file must be under `tests/` and be named `test_*.py`; hardware tests need `--run-destructive` |
 | A site or camera name is not found | The shared tenant renamed it. Update `config/env/qa.py`; see `docs/FAILURE_TRIAGE.md` |
 | `reports/report.html` looks stale | The run used `--html=<other path>`; the archive under `reports/runs/` has every run |
-| `[TRACE] Could not finalize trace` or `[VIDEO] Could not finalize video`, or a failed test has no trace, video, or screenshot | The file path is too long. Windows refuses a path past 260 characters unless long paths are on. Enable them (registry key `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem`, value `LongPathsEnabled` = 1, needs admin) or clone the repo closer to the drive root. The reports shorten file names on their own past 250 characters, so only a very deep checkout hits this |
+| `[TRACE] Could not finalize trace` or `[VIDEO] Could not finalize video`, or a failed test has no trace, video, or screenshot | The file path is too long. Windows refuses a path past 260 characters unless long paths are on. Enable them (registry key `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem`, value `LongPathsEnabled` = 1, needs admin) or clone the repo closer to the drive root. The reports shorten a file name that is longer than 250 characters, so only a deep checkout has this problem |
 
 ## 10. Read next
 

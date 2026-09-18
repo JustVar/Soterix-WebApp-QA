@@ -10,25 +10,21 @@ config = {
     "allow_write": True,
     "allow_delete": True,
 
-    # Test Data Configuration
-    "test_site_name": "Newtown Action Area",
+    # Test data (site, camera, chat partner) belongs to a box, not to the
+    # environment: edit boxes.<box>.test_data below. There are no top-level
+    # test_* keys. Until 09/18/2026 there were, every box overrode them, and
+    # an edit to them changed nothing.
     # NOTE: the rule wizard hides cameras that are at rule capacity.
-    # If this camera is missing from the wizard device list, check for
+    # If the test camera is missing from the wizard device list, check for
     # leftover *_Auto_* rules on it and delete them (verified 08/2026)
-    "test_camera_name": "main gate",
-    # Chat panel: the user the messaging tests chat with. The search
-    # term must match them in the chat user search; the name is the
-    # full display name shown on their conversation row.
-    "test_chat_user_search": "QA Engineer B",
-    "test_chat_user_name": "Chat Partner",
 
     # Box configurations. Each box names the environment variables that hold
     # the account to use, so every tester signs in as themselves.
     "boxes": {
-        # Per-box test_data overrides the top-level test_* keys when that
-        # box is active (BOX env var; overlay happens in
-        # config/base_config.py load_config), so config.get("test_site_name")
-        # is always the ACTIVE box's site and no test needs box logic.
+        # The active box's test_data becomes top-level keys at load (BOX
+        # env var; overlay happens in config/base_config.py load_config),
+        # so config.get("test_site_name") is always the ACTIVE box's site
+        # and no test needs box logic.
         "india": {
             "email_env": "QA_INDIA_USER",
             "password_env": "QA_INDIA_PASSWORD",

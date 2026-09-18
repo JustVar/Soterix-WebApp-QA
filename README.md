@@ -8,7 +8,7 @@ folder name may still be the old one.
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **435 product test functions in 60 suite files** (09/18/2026): 402 NexaiQ-Core tests under `tests/ui/` and 33 Camera 2 Cloud tests under `tests/c2c/` (the cameras' own web UIs, run serially against the lab registry `tests/data/c2c_cameras.yaml`). pytest collects them as 762 items: the Core tests carry the browser parameter (432), and the c2c tests parametrize over the 10 enabled cameras into 330. The other 533 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 669 pins live in the shared package. Whole repo: 1295. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message. `docs/TEST_INVENTORY.md` lists every product test by product and module, with its growth week by week since 02/2026 (`history/test_counts.jsonl`, appended by `tools/test_inventory.py --record`).
+- **435 product test functions in 60 suite files** (09/18/2026): 402 NexaiQ-Core tests under `tests/ui/` and 33 Camera 2 Cloud tests under `tests/c2c/` (the cameras' own web UIs, run serially against the lab registry `tests/data/c2c_cameras.yaml`). pytest collects them as 762 items: the Core tests carry the browser parameter (432), and the c2c tests parametrize over the 10 enabled cameras into 330. The other 550 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 669 pins live in the shared package. Whole repo: 1312. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message. `docs/TEST_INVENTORY.md` lists every product test by product and module, with its growth week by week since 02/2026 (`history/test_counts.jsonl`, appended by `tools/test_inventory.py --record`).
 
 ## How We Run Today
 
@@ -109,14 +109,17 @@ pytest -m "admin and not slow"             # combined markers
 pytest tests/ui/login/test_login_valid.py -v --headed
 ```
 
-An HTML report is written to `reports/report.html` on every run (configured in
-`pytest.ini`). Open it, review pass/fail, and report results manually.
+Each run keeps its evidence in its own folder, `reports/runs/<run>/`. Open
+`reports/runs/<run>/run.html` first. It gives the verdict in 1 sentence and
+shows the failures first, each with its error, screenshots, video and trace
+command. `reports/runs/index.html` lists the runs on your machine, newest
+first. The nightly runs are at `http://10.2.0.2/qa-runs/`.
 
-Every failed test also saves a Playwright trace (DOM snapshots per action,
-network, console, timeline) to `reports/artifacts/`. View one with
-`playwright show-trace <file>` or inspect it from the terminal with
-`playwright trace`. The folder is cleared at the start of each run, so copy a
-trace out before the next run if you want to keep it. Full guide:
+`reports/report.html` and `reports/artifacts/` hold the newest run only. The
+next run writes over them. The run folder keeps a copy, so you do not need
+to save a trace by hand.
+
+To find the cause of a failure, start at the table in
 [docs/FAILURE_TRIAGE.md](docs/FAILURE_TRIAGE.md).
 
 To email the HTML report to someone, see `docs/EMAIL_REPORTS.md`.
@@ -297,6 +300,9 @@ gates before every commit.
 
 ## More Documentation
 
+- `docs/QA_THINGS_TO_KNOW.md` - patterns and workarounds for this app's UI: each entry gives the problem, the cause and the fix
+- `docs/CI.md` - the checks that run on each push, and what to do when one fails
+- `deploy/spartan1/README.md` - the nightly machine: access, the log, how to get a trace, how to install a change
 - `docs/RUN_WORKFLOWS.md` - what happens after a run: the pane of glass, triage, hosting plan
 - `docs/AUDIT_FINDINGS.md` - the 2026-09 adversarial audit: 30 findings with disposition (fixed/deferred)
 - `docs/CONVENTIONS.md` - engineering conventions: page objects, waits, step capture, markers, adding tests

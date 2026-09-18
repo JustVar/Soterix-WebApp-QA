@@ -1,7 +1,51 @@
-# CI - scheduled automation
+# CI
 
-One workflow: `.github/workflows/qa-nightly.yml`. It is the scheduler for
-everything that must not depend on one laptop. Two jobs:
+The repo has 2 workflows.
+
+| Workflow | When it runs | What it does |
+|---|---|---|
+| `.github/workflows/collect-gate.yml` | On each push to `main` and on each pull request | Checks the change. It does not open a browser and it sends no request to a tenant. |
+| `.github/workflows/qa-nightly.yml` | By hand only | Holds the QA Touch canary and a smoke job. The nightly test run is not here. It is a cron job on spartan1. |
+
+Both workflows run on the company repo, `Soterix-Systems/Soterix-WebApp-QA`.
+The jobs skip themselves on the personal mirror, which has no secrets.
+
+## The collect gate
+
+A push is not done until this gate is green. To see the result:
+
+```
+gh run list -R Soterix-Systems/Soterix-WebApp-QA --limit 3
+gh run watch <run-id> -R Soterix-Systems/Soterix-WebApp-QA
+```
+
+The `collect` job does these steps in order. The first step that fails
+stops the job.
+
+| Step | What it proves | If it fails |
+|---|---|---|
+| Imports and fixture wiring | `pytest --collect-only` and `pytest --setup-plan` work for the whole repo. | Correct the import or the fixture that the error names. |
+| Collected-test floor | The number of collected tests did not fall (`tools/collect_floor.py`). | If you removed tests on purpose, run `python tools/collect_floor.py --update` and commit the result alone. If you did not, a merge lost files: find them. |
+| Offline suites | `pytest tests/plugins tests/tools tests/helpers` passes. | Run the same command on your machine. |
+| Test inventory is current | `docs/TEST_INVENTORY.md` agrees with the tests. | Run `python tools/test_inventory.py` and commit the file. |
+| Lint | `ruff` finds nothing (`tools/lint_baseline.py`). | Correct the finding that the message names. |
+| House conventions on the added lines | `tools/convention_check.py` finds no HIGH item on the lines that the push adds. | Correct the line. The pre-commit hook does the same check. |
+| Commit messages | No commit in the push names an AI tool, a model or a co-author (`tools/hooks/commit-msg`). | Write the commit message again. |
+| Shim guards | `tests/plugins/test_shims.py` passes. | A shim is a module in this repo that points at the shared package. Read the docstring at the top of the test file. |
+
+The `shim-matrix` job runs the shim guards on Python 3.11, 3.12, 3.13 and
+3.14.
+
+The pre-commit hook does most of these checks before the commit. To turn
+the hooks on in a new clone, run `git config core.hooksPath tools/hooks`
+one time. `secret_check` runs in the hook only, because it compares with
+the values in your `.env`.
+
+The gate needs 1 secret, `QA_SHARED_DEPLOY_KEY`. See "Secrets".
+
+## The manual workflow
+
+`.github/workflows/qa-nightly.yml` has 2 jobs:
 
 **The GitHub side is manual (decided 2026-08-18); the live schedule is a
 cron on spartan1** (since 2026-09-01, see `docs/RUN_WORKFLOWS.md` and
@@ -52,6 +96,11 @@ Set in Settings > Secrets and variables > Actions on the COMPANY repo:
 | `QATOUCH_DOMAIN` | canary, uploads | `QATOUCH_DOMAIN` (e.g. `soterixsystems`) |
 | `QATOUCH_PROJECT_ID` | canary, uploads | `QATOUCH_PROJECT_ID` (e.g. `JlW1`) |
 | `QA_USER`, `QA_PASSWORD` | smoke login | `QA_USER`, `QA_PASSWORD` |
+| `QA_SHARED_DEPLOY_KEY` | collect gate | None. It is the private half of a read-only deploy key on `Soterix-Systems/SOTERIX-QA-SHARED`. The gate uses it to install the shared package. |
+
+If `QA_SHARED_DEPLOY_KEY` is lost, make a new key pair. Add the public half
+to the shared repo as a read-only deploy key, and put the private half in
+this secret. The key cannot push, and it cannot read this repo.
 
 Never set `BUG_CREATION_ENABLED` in CI - Jira filing stays a deliberate,
 local, human-triggered act.
