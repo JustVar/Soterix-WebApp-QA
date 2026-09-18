@@ -47,7 +47,7 @@ The local folder can still have the old repo name, `playwright-soterix-qa`.
 
 Prereqs: Python 3.11+, Git, Google Chrome. The suite drives branded Chrome
 (`--browser-channel chrome` in pytest.ini), so Chrome must be installed on
-the machine; Playwright's own Chromium is not used and not downloaded.
+the machine. Playwright's own Chromium is not used and not downloaded.
 Node.js is not required.
 
 ```powershell
@@ -66,7 +66,7 @@ in this repo's docs is written that way. Clone near the drive root
 `-c core.longpaths=true` to clone, and evidence file names get shortened.
 
 The last line turns on the repo's two git hooks (the pre-commit gates and
-the commit-message check) for this clone; see docs/COMMAND_SHEET.md.
+the commit-message check) for this clone. See docs/COMMAND_SHEET.md.
 
 That is the whole setup. `requirements.txt` pulls in the shared QA pipeline
 (`soterix-qa-shared`) for you, over HTTPS, using the same GitHub login your
@@ -111,7 +111,7 @@ Only these are needed to run tests:
 |---|---|---|
 | `ENV` | no (defaults to `qa`) | `qa` \| `stage` \| `prod` - selects `config/env/{name}.py` |
 | `APP_TYPE` | no | `customer` (default) \| `partner` - appends `_pat` to module path |
-| `BOX` + `QA_<BOX>_USER` / `QA_<BOX>_PASSWORD` | yes | The tenant to test and its account pair (`login_data` in conftest.py); the legacy `QA_USER` / `QA_PASSWORD` pair signs in only when `BOX` is unset |
+| `BOX` + `QA_<BOX>_USER` / `QA_<BOX>_PASSWORD` | yes | The tenant to test and its account pair (`login_data` in conftest.py). The legacy `QA_USER` / `QA_PASSWORD` pair signs in only when `BOX` is unset |
 
 The QA Touch and Jira variables (`QATOUCH_*`, `JIRA_*`, `BUG_CREATION_ENABLED`) are only
 read by the optional integrations and can be left unset - see
@@ -145,7 +145,7 @@ To email the HTML report to someone, see `docs/EMAIL_REPORTS.md`.
 
 ### Parallel Runs
 
-`pytest tests/ui -n 4` runs four workers; pytest.ini's `--dist loadgroup`
+`pytest tests/ui -n 4` runs 4 workers. `--dist loadgroup` in pytest.ini
 keeps every module that writes tenant state (its `xdist_group` mark) on one
 worker and serialises the searches. Never add your own `--dist`: it
 overrides the ini and the run refuses to start. Read
@@ -213,7 +213,7 @@ docs/                      # Setup guides, integration plans, maintenance remind
 
 Opt in with `pytest --qatouch-upload --qatouch-run <KEY>`, or run the orchestrated
 pipeline with `python tools/run_suite.py smoke` (clones the per-suite template into a
-fresh run key so history is preserved; `--dry-run` prints what would happen).
+fresh run key so history is preserved, and `--dry-run` prints what would happen).
 
 - **Case mapping** lives in `config/qatouch_case_mapping.json` (nodeid -> case_key). The
   reporter also honours a `@pytest.mark.qatouch("KEY")` marker, but **the test files
@@ -222,7 +222,7 @@ fresh run key so history is preserved; `--dry-run` prints what would happen).
   mappings to the JSON, never to a test. Checked with `tools/qatouch_mapper.py` and
   `tools/qatouch_sync_check.py`.
 - **Mapping coverage is currently minimal**, and affects reporting only. An unmapped test
-  runs and passes/fails exactly as normal; only its upload is skipped.
+  runs and passes or fails as normal. Only its upload is skipped.
 - **Two endpoints:** legacy `PATCH .../status/multiple` (status only, default), or the
   Playwright endpoint via `QATOUCH_USE_PLAYWRIGHT_ENDPOINT=1` (adds per-test
   `execution_time` and failure screenshots).
@@ -242,12 +242,12 @@ touching Jira. Do not flip it to `true` until the flow has been validated end to
   as infrastructure-broken and nothing is filed.
 - `--no-bug-filing` skips the step entirely.
 - The review queue (`tools/review_queue.json`, `--review` / `--list`) still exists but is
-  unreachable from the default flow; pass `auto_create=False` to reinstate the
+  unreachable from the default flow. Pass `auto_create=False` to reinstate the
   human-disposition gate.
 
 ## Step Capture & Verification
 
-Tests may opt into the `step_capture` fixture to mark logical steps (one `.mark(n, "description")` call after each action). Roughly 20 test files currently use it; it is optional, and a test without it runs normally. Two consumers:
+Tests may opt into the `step_capture` fixture to mark logical steps (one `.mark(n, "description")` call after each action). Approximately 20 test files use it. It is optional, and a test without it runs normally. Two consumers:
 
 1. **JSON sidecars** under `tests/steps/` define the step text + expected outcomes per test.
 2. **`--verify-mode`** captures per-step screenshots into `verification_output/screenshots/` for asynchronous QA review - only for tests that request the fixture.
@@ -258,15 +258,15 @@ Convention details + examples: `docs/CONVENTIONS.md` under Step capture.
 
 - **Type:** `smoke`, `sanity`, `regression`, `api`, `ui`
 - **Feature:** `admin`, `views_devices`, `events`, `search`, `media`, `maps`, `chats`, `licenses`, `insights`, `notifications`, `sequences`, etc.
-- **Meta:** `slow` (>30s), `intermittent` (fails now and then; never `flaky`, which reruns), `wip` (skip in CI)
-- **Mapping:** `qatouch(case_key)` / `qatouch_project(project_key)` - recognised by the reporter but intentionally unused in the shared test files; keep mappings in `config/qatouch_case_mapping.json` instead
+- **Meta:** `slow` (>30s), `intermittent` (fails now and then. Do not use `flaky`, which reruns the test), `wip` (skip in CI)
+- **Mapping:** `qatouch(case_key)` / `qatouch_project(project_key)` - recognised by the reporter but intentionally unused in the shared test files. Keep mappings in `config/qatouch_case_mapping.json`
 
 Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`.
 
 ## Auth & Session Caching
 
 - `authenticated_page` fixture: loads cached `.auth_state.json` (~2-3s) instead of a full UI login (~65s).
-- First run logs in via UI and saves browser storage state; subsequent runs reload + validate it; re-login fires only if the cached state expired.
+- The first run logs in through the UI and saves the browser storage state. Later runs load it and validate it. A new login occurs only if the cached state expired.
 - Under pytest-xdist each worker gets its own cache file (`.auth_state.<worker>.json`), so workers never race on one file.
 - The fixture also records a Playwright trace for every test and keeps it only on failure - this is what makes the traces in `reports/artifacts/` work for the ~90% of UI tests that use `authenticated_page` (the plugin's `--tracing` flag only covers its own `page` fixture).
 - API auth: `AuthHelper.login()` prefers OAuth bearer tokens with UI fallback. Tokens are reused across the entire pytest session.
@@ -290,7 +290,7 @@ python -m ruff check tests/ui/login
 python -m ruff check plugins/
 ```
 
-The Playwright/pytest-aware rule set is the headline difference from a generic ruff config: `PT` enforces fixture conventions (`@pytest.fixture` not `@pytest.fixture()`, parametrize value style, etc.), `BLE` flags blind `except Exception` in test code where it usually hides real problems, and `T20` catches leftover `print()` statements in test bodies. Tools and discovery scripts keep their `print()` usage by per-file-ignore. New code should aim for zero new lints; existing remaining issues are tracked for incremental cleanup.
+The rule set knows pytest and Playwright. `PT` enforces the fixture conventions. `BLE` finds a blind `except Exception` in test code, where it usually hides a real problem. `T20` finds a `print()` left in a test body. Tools and discovery scripts keep their `print()` calls through a per-file ignore. The repo has 0 findings, and `tools/lint_baseline.py` fails the commit and the CI gate on a new one.
 
 Ruff cannot see the house testing rules, so a second gate does:
 
@@ -303,17 +303,17 @@ python tools/convention_check.py --all
 ```
 
 HIGH findings (uncommented sleeps, QA Touch markers in test files) block
-the commit; MEDIUM findings (absolute count oracles, `img[src]` icon
+the commit. MEDIUM findings (absolute count oracles, `img[src]` icon
 guesses, hardcoded tenant names) warn. The default mode diffs against
 HEAD, so debt in files you did not touch never blocks you. Run both
 gates before every commit.
 
 ## CI Notes
 
-- Google Chrome must be on the runner before pytest: the suite drives branded Chrome (`--browser-channel chrome`); the smoke workflow installs it with `python -m playwright install chrome`.
+- Google Chrome must be on the runner before pytest: the suite drives branded Chrome (`--browser-channel chrome`). The smoke workflow installs it with `python -m playwright install chrome`.
 - The smoke workflow signs in with the legacy `QA_USER` / `QA_PASSWORD` secrets (no `BOX`), from CI secrets, not `.env`.
 - Leave `BUG_CREATION_ENABLED` unset in CI - the bug filer is still WIP and must not file real bugs from an automated run.
-- Lab servers handle the actual smoke/sanity execution; CI is for syntax + smoke validation, not full runs.
+- spartan1 runs the full suite each night (`deploy/spartan1/README.md`). CI checks each change without a browser. It does not run the suite.
 
 ## More Documentation
 
@@ -325,7 +325,7 @@ gates before every commit.
 - `docs/CONVENTIONS.md` - engineering conventions: page objects, waits, step capture, markers, adding tests
 - `docs/FAILURE_TRIAGE.md` - reading failure traces (GUI + terminal)
 - `docs/TEAM_CHANGES.md` - reviewing teammates' script changes before refactors (`tools/team_changes.py`)
-- `docs/TEST_REPAIRS.md` - register of tests needing repair, reinvestigation, or a verify run; work it before writing new tests
+- `docs/TEST_REPAIRS.md` - the register of what is broken, with an owner and a next action for each open item. Work it before you write new tests
 - `docs/PARALLEL_EXECUTION.md` - pytest-xdist status, risks, experiment log
 - `docs/STYLE.md` - writing style for docs, comments, and commit messages
 - `docs/CREDENTIALS_SETUP.md` - credential configuration walkthrough
