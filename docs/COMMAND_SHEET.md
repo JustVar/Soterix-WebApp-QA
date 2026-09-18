@@ -188,6 +188,7 @@ Set these in `.env` or in the shell for one run.
 | `RUN_ARCHIVE` | `off` | Disables the per-run archive |
 | `RECORD_VIDEO` | `off` | Disables the per-test video. Default: record every test, keep the clip only on failure |
 | `RUN_GUARD` | `off` | Disables the one-run-at-a-time guard |
+| `STREAM_GUARD` | `off` | Runs the `livestream` tests without the stream measurement (its line is in the summary under `stream guard`) |
 | `PREFLIGHT` | `off` | Skips the session preflight (one captcha-free sign-in before any browser opens; a refusal ends the run with exit code 7 and one `PREFLIGHT:` line) |
 | `SEND_TEST_REPORT` + `REPORT_RECIPIENT` | `1` + an address | Emails the report after the run |
 | `PWDEBUG` | `1` | Opens the Playwright Inspector and steps through the test |

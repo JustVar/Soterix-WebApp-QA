@@ -193,7 +193,8 @@ def decode_check(codec: str | None, channel: str | None, headed: bool = False) -
             browser.close()
         return {"decodes": bool(supported), "browser": name}
     except Exception as e:  # why: a check that could not run is 'unknown', which skips nothing
-        return {"decodes": None, "browser": f"check failed: {type(e).__name__}"}
+        first = (str(e).splitlines() or [""])[0][:160]
+        return {"decodes": None, "browser": f"check failed: {type(e).__name__}: {first}"}
 
 
 def assess(camera_name: str | None, channel: str | None, seconds: int = DEFAULT_SECONDS,

@@ -123,6 +123,10 @@ The last line must name the Intel GPU (`GL renderer: Mesa Intel(R) Graphics`);
 a software renderer or the NVIDIA one means the vendor file or the render
 node changed. The nightly log then opens with `H.265: Weston display at
 /run/qa-weston/wl-qa`, and each box's `[STREAM]` line ends `decodes H.265: yes`.
+When the display is not usable the `H.265:` line names what is missing: no
+socket, a socket that nothing answers on (a stale file after Weston died),
+or no Intel render node. The `[STREAM]` line is in the run's terminal
+summary under `stream guard`: the controller measures once for all workers.
 
 Try it before the cron does, on a small target and a short cap, and read
 the tail of the log:

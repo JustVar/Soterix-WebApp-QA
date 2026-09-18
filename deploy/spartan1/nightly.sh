@@ -97,14 +97,27 @@ fi
   # the socket they run headless and the stream guard skips the
   # livestream tests with the measured reason.
   WESTON_DIR="${QA_WESTON_DIR:-/run/qa-weston}"
+  # A probe, not a file test: a socket file outlives a dead Weston, and
+  # every Chrome launch then failed on a cause nobody could see. The
+  # Intel render node is checked too: without it Chrome answers "cannot
+  # decode" and the skip text pointed at Weston (failure-mode audit
+  # 09/18/2026).
+  WESTON_WHY=""
+  if [ ! -S "$WESTON_DIR/wl-qa" ]; then
+    WESTON_WHY="no Weston socket at $WESTON_DIR/wl-qa (sudo systemctl start qa-weston)"
+  elif ! python3 -c 'import socket,sys; s=socket.socket(socket.AF_UNIX); s.settimeout(3); s.connect(sys.argv[1])' "$WESTON_DIR/wl-qa" 2>/dev/null; then
+    WESTON_WHY="the Weston socket exists but nothing answers on it: a stale socket (sudo systemctl restart qa-weston)"
+  elif ! grep -qs 0x8086 /sys/class/drm/renderD*/device/vendor; then
+    WESTON_WHY="no Intel render node under /sys/class/drm: the CPU graphics are off in the BIOS or the i915 driver did not load"
+  fi
   HEADED=""
-  if [ -S "$WESTON_DIR/wl-qa" ]; then
+  if [ -z "$WESTON_WHY" ]; then
     export XDG_RUNTIME_DIR="$WESTON_DIR" WAYLAND_DISPLAY=wl-qa
     export CHROME_ARGS="--ozone-platform=wayland"
     HEADED="--headed"
     echo "H.265: Weston display at $WESTON_DIR/wl-qa; the web-app legs run headed on it"
   else
-    echo "H.265: no Weston display at $WESTON_DIR/wl-qa (qa-weston.service, deploy/spartan1/README.md); the livestream tests skip by measurement"
+    echo "H.265: $WESTON_WHY. The legs run headless and the livestream tests skip by measurement (deploy/spartan1/README.md)"
   fi
 
   for box in $BOXES; do

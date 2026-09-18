@@ -300,3 +300,57 @@ def test_hook_passes_the_sessions_headedness_to_the_measurement(monkeypatch):
     conftest.stream_guard(_config(), [FakeItem('livestream')], 'india')
     assert calls == [True, False]
 
+
+# ---------------------------------------------------------------- one measurement per run, shown in the summary
+
+def _node(config):
+    return SimpleNamespace(config=config, workerinput={})
+
+
+def test_the_controller_measures_once_and_hands_it_to_every_worker(monkeypatch):
+    """Four workers, one measurement: each gets the same JSON, and the lines are kept for the summary."""
+    calls: list = []
+    monkeypatch.setattr(sh, 'assess', lambda camera, channel, seconds=8, headed=False: (calls.append(1), dict(ALIVE))[1])
+    monkeypatch.setattr(conftest, 'ENV_SETTINGS', {'test_camera_name': 'Thermal-14'})
+    monkeypatch.setattr(conftest, '_may_collect_livestream', lambda config: True)
+    monkeypatch.setattr(conftest, '_STREAM_LINES', [])
+    monkeypatch.delenv('STREAM_GUARD', raising=False)
+    config = _config()
+    nodes = [_node(config) for _ in range(4)]
+    for node in nodes:
+        conftest.pytest_configure_node(node)
+    assert calls == [1]
+    assert len({n.workerinput[conftest.WORKER_MEASURE_KEY] for n in nodes}) == 1
+    assert conftest._STREAM_LINES[0].startswith("[STREAM] 'Soterix Multicam 1.15'")
+
+
+def test_a_worker_uses_the_controllers_measurement_and_measures_nothing(monkeypatch):
+    """With the measurement in workerinput the worker skips on it and never calls assess."""
+    import json
+    monkeypatch.setattr(sh, 'assess', lambda *a, **k: pytest.fail('a worker measured'))
+    monkeypatch.delenv('STREAM_GUARD', raising=False)
+    config = _config()
+    config.workerinput = {conftest.WORKER_MEASURE_KEY: json.dumps(DEAD)}
+    items = [FakeItem('livestream'), FakeItem('views')]
+    conftest.stream_guard(config, items, 'us')
+    assert items[0].skip_reasons == [sh.stream_skip_reason(DEAD, 'us')]
+    assert items[1].markers == []
+
+
+def test_no_livestream_target_means_no_controller_measurement(monkeypatch, tmp_path):
+    """A target with no livestream test costs no login, socket or Chrome launch; the marker in a file does."""
+    (tmp_path / 'test_plain.py').write_text('def test_x(): pass\n', encoding='utf-8')
+    config = SimpleNamespace(rootpath=tmp_path, args=[str(tmp_path)],
+                             getoption=lambda name, default=None: default)
+    assert conftest._may_collect_livestream(config) is False
+    (tmp_path / 'test_live.py').write_text('import pytest\n@pytest.mark.livestream\ndef test_y(): pass\n', encoding='utf-8')
+    assert conftest._may_collect_livestream(config) is True
+    excluded = SimpleNamespace(rootpath=tmp_path, args=[str(tmp_path)],
+                               getoption=lambda name, default=None: 'not livestream' if name == 'markexpr' else default)
+    assert conftest._may_collect_livestream(excluded) is False
+
+
+def test_every_run_has_a_per_test_cap():
+    """pytest.ini carries --timeout, so a bare run cannot hang for good on one stuck browser call."""
+    assert '--timeout=600' in (REPO_ROOT / 'pytest.ini').read_text(encoding='utf-8')
+

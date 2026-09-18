@@ -154,7 +154,10 @@ def _run(target: list[str], extra: list[str], check: bool,
     if newest and newest != before:
         print(f'Run report:    {(newest[0] / "run.html").resolve()}')
     else:
-        print('Run report:    none (no test ran, the guard refused the run, or RUN_ARCHIVE=off)')
+        marker = ROOT / 'logs' / 'archive_failed.txt'
+        why = marker.read_text(encoding='utf-8').strip() if marker.is_file() else ''
+        print(f'Run report:    none. {why}' if why else
+              'Run report:    none (no test ran, the guard refused the run, or RUN_ARCHIVE=off)')
     print(f'Archive index: {(RUNS_DIR / "index.html").resolve()}')
     return rc
 

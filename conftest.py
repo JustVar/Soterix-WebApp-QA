@@ -1,5 +1,6 @@
 # conftest.py
 import importlib
+import json
 import logging
 import os
 import re
@@ -180,6 +181,75 @@ def pytest_collection_modifyitems(config, items):
     stream_guard(config, items, box_name)
 
 
+# The stream guard's lines for the terminal summary: under -n the workers'
+# prints never reach the terminal, and the README tells people to read
+# the [STREAM] line (measured lost, failure-mode audit 09/18/2026).
+_STREAM_LINES: list[str] = []
+WORKER_MEASURE_KEY = "qa_stream_measure"
+
+
+def _measure_stream(config) -> dict:
+    """The guard's measurement, with its second look, and its lines kept for the summary."""
+    from tests.shared.helpers import stream_health
+    channel = config.getoption("--browser-channel", default=None)
+    headed = bool(config.getoption("--headed", default=False))
+    camera = ENV_SETTINGS.get("test_camera_name")
+    measure = stream_health.assess(camera, channel, headed=headed)
+    _STREAM_LINES.append(stream_health.describe(measure))
+    if measure.get("frames") == 0 and not measure.get("error"):
+        # a second look before skipping the whole session on one empty
+        # window: the US camera read 0 frames and then 117 a minute
+        # apart (09/12/2026), and one 8 s sample had skipped 43 tests
+        measure = stream_health.assess(camera, channel, headed=headed)
+        _STREAM_LINES.append("[STREAM] second measurement: " + stream_health.describe(measure))
+    return measure
+
+
+def _may_collect_livestream(config) -> bool:
+    """Whether the session's targets can hold a `livestream` test, read from
+    the files: the controller of an xdist run never collects, and a
+    measurement costs a login, a socket and a Chrome launch."""
+    from tests.shared.helpers import stream_health
+    if "not " + stream_health.MARKER in (config.getoption("markexpr", default="") or ""):
+        return False
+    root = Path(str(config.rootpath))
+    for arg in (config.args or ["tests/ui"]):
+        path = Path(str(arg).split("::")[0])
+        path = path if path.is_absolute() else root / path
+        files = [path] if path.is_file() else sorted(path.rglob("test_*.py")) if path.is_dir() else []
+        for file in files:
+            try:
+                if stream_health.MARKER in file.read_text(encoding="utf-8", errors="replace"):
+                    return True
+            except OSError:  # why: an unreadable file cannot veto the measurement; the next file decides
+                continue
+    return False
+
+
+def pytest_configure_node(node):
+    """xdist controller, once per worker: hand every worker the ONE
+    measurement. Each worker used to measure for itself at collection:
+    four logins, four sockets, four Chrome launches, four verdicts that
+    could disagree, and no line on the terminal."""
+    from tests.shared.helpers import stream_health
+    config = node.config
+    if not stream_health.guard_enabled() or config.getoption("--collect-only", default=False):
+        return
+    if not hasattr(config, "_qa_stream_measure"):
+        config._qa_stream_measure = _measure_stream(config) if _may_collect_livestream(config) else None
+    if config._qa_stream_measure is not None:
+        node.workerinput[WORKER_MEASURE_KEY] = json.dumps(config._qa_stream_measure, default=str)
+
+
+def pytest_terminal_summary(terminalreporter):
+    """The stream guard's measurement, where the reader is."""
+    if not _STREAM_LINES:
+        return
+    terminalreporter.section("stream guard")
+    for line in _STREAM_LINES:
+        terminalreporter.write_line(line)
+
+
 def stream_guard(config, items, box_name: str) -> None:
     """Measure the box's stream once and skip the `livestream` tests with the
     measurement when the media socket delivers no frames (nine failures of
@@ -196,16 +266,13 @@ def stream_guard(config, items, box_name: str) -> None:
     # the session's channel, flags (CHROME_ARGS) and headed-ness, since
     # Chrome on Linux decodes H.265 only headed on a Wayland display with
     # spartan1's flags (deploy/spartan1/README.md, 09/17/2026).
-    channel = config.getoption("--browser-channel", default=None)
-    headed = bool(config.getoption("--headed", default=False))
-    measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"), channel, headed=headed)
-    print(stream_health.describe(measure))
-    if measure.get("frames") == 0 and not measure.get("error"):
-        # a second look before skipping the whole session on one empty
-        # window: the US camera read 0 frames and then 117 a minute
-        # apart (09/12/2026), and one 8 s sample had skipped 43 tests
-        measure = stream_health.assess(ENV_SETTINGS.get("test_camera_name"), channel, headed=headed)
-        print("[STREAM] second measurement: " + stream_health.describe(measure))
+    shared = (getattr(config, "workerinput", None) or {}).get(WORKER_MEASURE_KEY)
+    if shared:
+        measure = json.loads(shared)   # the controller measured once for every worker
+    else:
+        measure = _measure_stream(config)
+        for line in _STREAM_LINES[-2:]:
+            print(line)
     reason = stream_health.stream_skip_reason(measure, box_name)
     if reason:
         for item in targets:
