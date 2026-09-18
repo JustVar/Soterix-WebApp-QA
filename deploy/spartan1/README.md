@@ -234,7 +234,7 @@ The tenants stream H.265. Chrome on Linux has no software decoder for it.
 Chrome decodes H.265 only through the GPU's VA-API decoder, and it shows
 the decoded frames only from its Wayland backend.
 
-The box has these parts. Measured 09/17/2026, versions read 09/18/2026.
+The box has these parts. The versions were read on 09/18/2026.
 
 | Part | On the box |
 |---|---|
@@ -256,9 +256,9 @@ The nightly sets 4 things for the web-app legs when the display is up:
   The box has no X server, so Chrome does not start.
 
 No other Chrome flag is necessary. Under Wayland, Chrome finds the Intel
-GPU, the VA-API driver and the GL renderer without help. An audit on
-09/17/2026 compared this 1 flag with a set of 8 flags on the real tests
-with 4 workers. The results were identical.
+GPU, the VA-API driver and the GL renderer without help. An audit compared
+this 1 flag with a set of 8 flags on the real tests with 4 workers, on
+Chrome 153. The results were identical.
 
 The test session, the stream guard and `tools/stream_probe.py` read the
 same `CHROME_ARGS`. Thus the guard measures the browser that the tests get.
@@ -296,7 +296,7 @@ The output must show `'decodes': True`, and the browser name must contain
 
 ### Approaches that failed
 
-Do not try these again. All were measured on 09/11 and 09/17/2026.
+Do not try these again. Each one was measured on the box.
 
 - Each backend that is not Wayland (headless, Xvfb, X11) decodes frames and
   then loses the GPU process. The error is `Could not find

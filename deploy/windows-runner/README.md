@@ -3,7 +3,7 @@
 The tests marked `livestream` need a tile that plays. The QA tenants stream
 H.265, and Chrome decodes it only through a platform decoder: Windows
 Chrome has one out of the box; Chrome on Linux only through a GPU's VA-API
-on a Wayland display, which spartan1 has since 09/17/2026
+on a Wayland display, which spartan1 has
 (`deploy/spartan1/README.md`), so its nightly runs the livestream tests.
 This runner is the fallback for the day that path breaks: one Windows
 machine runs just those tests, on a schedule, publishing each run to the

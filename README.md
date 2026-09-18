@@ -1,28 +1,47 @@
 # Soterix WebApp QA
 
-**Start here:** `python run.py smoke` runs the smoke suite and prints where the report is. [docs/COMMAND_SHEET.md](docs/COMMAND_SHEET.md) has every command to install, run, and read results, on one page.
+## What this repo does
 
-End-to-end UI test suite for **NexaiQ-Core** (Soterix's cloud video platform).
-The repo was renamed from `playwright-soterix-qa` on 2026-08-07; the local
-folder name may still be the old one.
+This repo tests the Soterix web application, NexaiQ-Core, through the
+browser, the same way a user operates it. It also tests the web pages of the
+Camera 2 Cloud cameras in the lab. Each night the tests run on the 2 QA
+tenants (`india` and `us`), and a report shows what failed and why.
 
-- **Framework:** Playwright (Python) + pytest + pytest-playwright
-- **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **435 product test functions in 60 suite files** (09/18/2026): 402 NexaiQ-Core tests under `tests/ui/` and 33 Camera 2 Cloud tests under `tests/c2c/` (the cameras' own web UIs, run serially against the lab registry `tests/data/c2c_cameras.yaml`). pytest collects them as 762 items: the Core tests carry the browser parameter (432), and the c2c tests parametrize over the 10 enabled cameras into 330. The other 553 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 669 pins live in the shared package. Whole repo: 1315. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message. `docs/TEST_INVENTORY.md` lists every product test by product and module, with its growth week by week since 02/2026 (`history/test_counts.jsonl`, appended by `tools/test_inventory.py --record`).
+The API tests are in a different repo, Soterix-API-QA.
 
-## How We Run Today
+## How it works
 
-**Run the tests, read the report, report results manually.** That's the current process.
+1. The tests are Python. Playwright operates Google Chrome, and pytest runs
+   the tests. Page objects in `tests/shared/pages/` hold the locators, so a
+   change in the app is corrected in 1 place.
+2. `BOX` in your `.env` selects the tenant. The account and the test data
+   (site, camera) come from `config/env/`, not from the tests.
+3. Each run keeps its evidence in `reports/runs/<run>/`: a report page
+   (`run.html`), a screenshot of each test, and a video and a Playwright
+   trace of each failure.
+4. A machine in the lab, spartan1, runs all the tests each night and serves
+   the reports at `http://10.2.0.2/qa-runs/`.
+5. Git hooks and a CI gate check each change without a browser: imports,
+   lint, the house conventions and the number of collected tests.
+6. The upload of results to QA Touch and the automatic Jira bugs are
+   optional and off by default. Today the team reads the report and reports
+   the results by hand.
 
-```powershell
-pytest -m smoke                 # or any subset - see Running Tests below
-```
+## Start here
 
-QA Touch result upload and automatic Jira bug filing are **built but not in active use.**
-They are opt-in, off by default, and still being fine-tuned - treat them as
-work-in-progress rather than part of the workflow. Nothing in the default test run
-touches QA Touch or Jira. See [Optional integrations](#optional-integrations-work-in-progress)
-if you're working on them.
+- To run something now: `python run.py smoke` runs the smoke suite and
+  prints where the report is.
+- All commands on 1 page: [docs/COMMAND_SHEET.md](docs/COMMAND_SHEET.md).
+- A test failed: [docs/FAILURE_TRIAGE.md](docs/FAILURE_TRIAGE.md).
+- What is broken and who owns it: [docs/TEST_REPAIRS.md](docs/TEST_REPAIRS.md).
+- Before you write a test: [docs/CONVENTIONS.md](docs/CONVENTIONS.md), section "Adding a test".
+- The list of all tests, by product and module:
+  [docs/TEST_INVENTORY.md](docs/TEST_INVENTORY.md). The README gives no
+  counts, because they go stale. `config/collect_floor.json` records the
+  number of collected tests, and `tools/collect_floor.py` fails a run that
+  collects fewer.
+
+The local folder can still have the old repo name, `playwright-soterix-qa`.
 
 ## Quick Setup
 
@@ -40,7 +59,7 @@ git config core.hooksPath tools/hooks
 
 No activation step on purpose: PowerShell's default execution policy
 blocks `Activate.ps1`, and a `pip` that is not the venv's installs into the
-global Python without a word (measured on a fresh clone, 09/18/2026).
+global Python without a word.
 Calling the venv's `python.exe` by path sidesteps both, so every command
 in this repo's docs is written that way. Clone near the drive root
 (`C:\qa\...`): a deep path pushes Windows past its path cap, git then needs
@@ -124,7 +143,7 @@ To find the cause of a failure, start at the table in
 
 To email the HTML report to someone, see `docs/EMAIL_REPORTS.md`.
 
-### Parallel Runs (Experimental)
+### Parallel Runs
 
 `pytest tests/ui -n 4` runs four workers; pytest.ini's `--dist loadgroup`
 keeps every module that writes tenant state (its `xdist_group` mark) on one
@@ -139,12 +158,10 @@ overrides the ini and the run refuses to start. Read
 pytest --headed --slowmo 300 --verify-mode -k "test_export_clip"
 ```
 
-> **Rebuilt (2026-08-08):** the interactive `--step-review` flag was lost
-> in the July branch reconciliation and has been rebuilt in
-> `plugins/verification_runner.py` from the contract in
-> `docs/VERIFICATION_WORKFLOW.md`: per-step terminal prompts, safety
-> guards, `step_verdicts` in the evidence JSON, and the headed step
-> overlay. Add it to a headed `--verify-mode` run to review step by step.
+Add `--step-review` to a headed `--verify-mode` run to review a test step
+by step: the terminal asks for a verdict after each step, and the verdicts
+go into the evidence JSON. The contract is in
+`docs/VERIFICATION_WORKFLOW.md`.
 
 ## Project Structure
 
@@ -304,7 +321,7 @@ gates before every commit.
 - `docs/CI.md` - the checks that run on each push, and what to do when one fails
 - `deploy/spartan1/README.md` - the nightly machine: access, the log, how to get a trace, how to install a change
 - `docs/RUN_WORKFLOWS.md` - what happens after a run: the pane of glass, triage, hosting plan
-- `docs/AUDIT_FINDINGS.md` - the 2026-09 adversarial audit: 30 findings with disposition (fixed/deferred)
+- `docs/AUDIT_FINDINGS.md` - the adversarial audit: 30 findings, each fixed or deferred
 - `docs/CONVENTIONS.md` - engineering conventions: page objects, waits, step capture, markers, adding tests
 - `docs/FAILURE_TRIAGE.md` - reading failure traces (GUI + terminal)
 - `docs/TEAM_CHANGES.md` - reviewing teammates' script changes before refactors (`tools/team_changes.py`)
@@ -318,4 +335,4 @@ gates before every commit.
 - `docs/EMAIL_REPORTS.md` - emailing the HTML run report via Microsoft Graph
 - `docs/API_ENDPOINTS.md` - REST endpoint catalog + coverage status
 - `docs/BRUNO_GUIDE.md` - interactive API exploration with Bruno
-- QA roadmap: `dashboards/soterix-internal-dashboards/docs/QA_ROADMAP.md` (single source of truth for all QA work; split from the old unified roadmap 2026-08-08)
+- QA roadmap: `dashboards/soterix-internal-dashboards/docs/QA_ROADMAP.md` (the single source of truth for all QA work)
