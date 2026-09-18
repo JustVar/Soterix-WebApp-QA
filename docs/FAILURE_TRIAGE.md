@@ -129,6 +129,13 @@ the trace instead. The trace contains a screenshot of every action.
 
 ## Traps this app has taught us (check these before blaming timing)
 
+- **Start at "read this first".** When five or more failures share one
+  error, or more than twenty skips share one reason, or collected tests
+  never ran, the terminal summary and the top of run.html say so in one
+  line each. Fix that line before you open any single failure: a tenant
+  that is down or a browser that is missing otherwise reads as hundreds
+  of unrelated timeouts.
+
 - **The run ended at once with a `PREFLIGHT:` line and exit code 7.** No test
   ran, on purpose: the tenant did not answer, or it refused the account,
   and the line says which, quoting the tenant's own message. Fix the cause
