@@ -26,6 +26,12 @@ UNMEASURED = {**DEAD, 'error': 'ConnectionError: no route to host', 'decodes': N
 NO_DECODER = {**ALIVE, 'decodes': False, 'browser': 'Chrome 153.0.8010.36 on Linux'}
 
 
+@pytest.fixture(autouse=True)
+def _own_summary_lines(monkeypatch):
+    """These pins feed the guard made-up measurements; without this they landed in the real
+    session's 'stream guard' summary, where '0 frames' and 'no route to host' read as real."""
+    monkeypatch.setattr(conftest, '_STREAM_LINES', [])
+
 class FakeItem:
     def __init__(self, *marks: str) -> None:
         self.keywords = dict.fromkeys(marks, True)
