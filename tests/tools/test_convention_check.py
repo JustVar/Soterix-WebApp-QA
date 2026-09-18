@@ -386,3 +386,33 @@ def test_swallowed_default_timeout_is_clean_when_the_handler_raises_or_fails():
 def test_swallowed_default_timeout_survives_a_file_that_does_not_parse():
     """A half-written file is another rule's problem: this one returns nothing."""
     assert cc.check_swallowed_default_timeout('x.py', ['def broken(:', '    try:']) == []
+
+
+def test_an_absolute_count_and_the_words_of_a_message_are_not_a_strong_oracle():
+    """'count() > 0' is presence, and "not found" in the message is not a negative expectation."""
+    for weak in ('    assert page.rows.count() > 0, "Create List button not found"',
+                 '    assert len(versions) >= 1, "No version info in the page"',
+                 '    assert icon.is_visible(), "the icon is not in the row"'):
+        assert not cc.is_strong_oracle(weak), weak
+    lines = ['def test_button_shows(page):', '    """Title."""',
+             '    assert page.button.count() > 0, "Create List button not found"']
+    assert [f['rule'] for f in cc.check_presence_only_tests('tests/ui/x/test_x.py', lines)] == ['presence-only-oracle']
+
+
+def test_a_real_comparison_stays_strong():
+    """A baseline, a text, a negative and a combined condition still count."""
+    for strong in ('    assert after > before, "no row was added"',
+                   '    assert page.rows.count() == before + 1',
+                   '    assert name not in names',
+                   '    assert rows.count() > 0 and rows.first.inner_text() == name',
+                   '    expect(row).to_have_text(name)',
+                   '    expect(toast).not_to_be_visible()'):
+        assert cc.is_strong_oracle(strong), strong
+
+
+def test_no_oracle_rule_reads_only_files_that_pytest_collects():
+    """A scenario file (no test_ prefix) holds bodies that pass or die on purpose."""
+    lines = ['def test_a1():', '    """Runs first."""', '    time.sleep(0.5)  # why: pacing']
+    assert cc.check_no_oracle_tests('tests/plugins/xdist_crash_scenario.py', lines) == []
+    assert [f['rule'] for f in cc.check_no_oracle_tests('tests/plugins/test_x.py', lines)] == ['no-oracle-test']
+

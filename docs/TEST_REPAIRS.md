@@ -62,10 +62,16 @@ under App defects in this file.
 | 98 | The Neurosen environment waits for its deployment | [BLOCKED] | Justin | When the deployment exists: fill `default_site_id` and `test_data`, measure the `without` map, create the Neurosen cases. | From row 44. Decide on a `tests/neurosen/` root when the first Neurosen-only test lands. |
 | 99 | A search over a camera that is unreachable never finishes | [APP QUESTION] | App team | Say if such a search must finish or fail fast. | From row 76. On india it crept at about 1 percent per minute. The drawing search budget is 240 s for this reason. |
 | 100 | The server runs 1 search job at a time and has no cancel | [APP DEFECT] | App team | Clear the locked slot. Add a cancel, or free the slot when the user leaves the page or logs out. | From row 78. A logout while a job runs locks the slot for every account. While it is locked, the 6 search livestream tests held 1 worker for 40 minutes. When the slot is free, Justin validates the search gap and the `account_search` group with 4 workers. |
+| 104 | 25 product tests check only that something is there | [OPEN 09/18] | Justin | Give each test an oracle that says what the action changed. Start with the 11 LPR tests. | The checker read them as strong until 09/18: `count() > 0` holds a comparison, and the message of an assert held the word `not`. `python tools/convention_check.py --all` lists them as `presence-only-oracle`. The 09/12 sweep (row 53) did not see them for the same reason. |
 
-Quality gates, all at zero since 08/17/2026. The checker enforces them on
-every commit: tests with no oracle, passes that exit early, except blocks that
-swallow a failure, and sleeps with no comment (outside the c2c hold).
+Quality gates. The checker blocks each of these on the lines that a commit
+adds: a test with no oracle, a pass that exits early, an except block that
+hides a failure, and a sleep with no comment. The product tests have 0 of
+each. The standing debt is in the older page objects, and
+`python tools/convention_check.py --all` counts it: 85 except handlers with
+no reason, 29 actions with the default timeout in a `try` that hides the
+failure, and 25 tests that check only that something is there (rows 102
+and 104).
 
 ## Nightly log
 

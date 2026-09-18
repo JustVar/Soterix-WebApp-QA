@@ -104,6 +104,23 @@ STRONG_ORACLE_RE = re.compile(
     r"to_be_(?:checked|disabled|enabled|editable|empty|focused|hidden|in_viewport)|"
     r"pytest\.(?:fail|raises)|wait_for\s*\(\s*state\s*=\s*[\"'](?:hidden|detached)"
 )
+# Two ways a presence check read as strong until 09/18/2026 (25 product tests):
+# the message of an assert holds "not" or "in" ('"Create List button not
+# found"'), and `count() > 0` holds a comparison. The message is cut off
+# before the line is judged, and an absolute count alone is presence.
+ASSERT_MESSAGE_RE = re.compile(r""",\s*\(?\s*[fFrR]?["'].*$""")
+ABSOLUTE_SIZE_RE = re.compile(
+    r"\.count\(\)\s*(?:>\s*0|>=\s*1|!=\s*0)|\blen\([^)]*\)\s*(?:>\s*0|>=\s*1|!=\s*0)")
+
+
+def is_strong_oracle(line: str) -> bool:
+    """True when the line says what changed: see STRONG_ORACLE_RE, minus the 2 leaks above."""
+    code = ASSERT_MESSAGE_RE.sub("", line) if re.search(r"\bassert\b", line) else line
+    if ABSOLUTE_SIZE_RE.search(code) and not re.search(r"\band\b|\bor\b", code):
+        return False
+    return bool(STRONG_ORACLE_RE.search(code))
+
+
 # A DOM wait of a minute or more: 60000-99999 or any six-digit timeout.
 LONG_WAIT_RE = re.compile(
     r"\.(?:wait_for|to_be_visible|to_be_attached|to_be_hidden|wait_for_selector|"
@@ -513,8 +530,13 @@ def check_no_oracle_tests(path: str, lines: list[str]) -> list[dict]:
     raising wait is green no matter what the app does. A body line
     mentioning 'oracle' excuses a deliberate delegation to a raising
     page-object call - the comment names where the failure comes from.
+
+    Only files that pytest collects (test_*.py): a scenario file that a pin
+    runs in a subprocess holds bodies that pass or die on purpose.
     """
     findings = []
+    if not Path(path).name.startswith("test_"):
+        return findings
     for idx, line in enumerate(lines):
         m = TEST_DEF_RE.match(line)
         if not m:
@@ -609,7 +631,7 @@ def check_presence_only_tests(path: str, lines: list[str]) -> list[dict]:
         code = [b for b in body if b.strip() and not b.strip().startswith(("#", '"', "'"))]
         if not any(ORACLE_RE.search(b) for b in code):
             continue  # no-oracle-test reports this one
-        if any(STRONG_ORACLE_RE.search(b) for b in code):
+        if any(is_strong_oracle(b) for b in code):
             continue
         findings.append({
             "sev": "MEDIUM", "rule": "presence-only-oracle",
