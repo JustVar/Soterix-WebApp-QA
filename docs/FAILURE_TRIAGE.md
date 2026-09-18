@@ -7,7 +7,7 @@ table. It covers the failures that have one known cause.
 
 Open the run's `run.html` first. On your machine it is at
 `reports/runs/<run>/run.html`. For a nightly run it is in the archive at
-`http://10.2.0.2/qa-runs/`.
+`https://10.2.0.2:8444/qa-runs/`.
 
 | What you see | Check | Verdict | Action |
 |---|---|---|---|

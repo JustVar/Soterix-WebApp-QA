@@ -7,7 +7,7 @@ on a Wayland display, which spartan1 has
 (`deploy/spartan1/README.md`), so its nightly runs the livestream tests.
 This runner is the fallback for the day that path breaks: one Windows
 machine runs just those tests, on a schedule, publishing each run to the
-same archive at http://10.2.0.2/qa-runs/. Nothing here is scheduled today.
+same archive at https://10.2.0.2:8444/qa-runs/. Nothing here is scheduled today.
 
 | File here | What it does |
 |---|---|
@@ -46,10 +46,11 @@ same archive at http://10.2.0.2/qa-runs/. Nothing here is scheduled today.
   `QA_US_PASSWORD`. A box without its pair is skipped with a line in the
   log. Copy the QA Touch keys too only if this machine should upload;
   the scheduled run does not.
-- An SSH key that reaches spartan1 as `soterix`, for publishing:
-  `ssh-keygen` on the machine, then the public key added to
-  `/home/soterix/.ssh/authorized_keys` on the box (Justin). Prove it with
-  `ssh soterix@10.2.0.2 true` from the same account the task runs as.
+- An SSH key for the publish account on spartan1: `ssh-keygen` on the
+  machine, then Justin adds the public key with `setup-publish-user.sh
+  add-key` (`deploy/spartan1/README.md`, "Hardening"). To prove it, run
+  `sftp qa-publish@10.2.0.2` from the same account that the task runs as.
+  `pwd` must print `/runs`.
 
 ## Install
 
@@ -58,7 +59,7 @@ cd C:\qa\Soterix-WebApp-QA
 # 1. a trial on this machine, one box, no reset, no publish
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\windows-runner\livestream-run.ps1 -Boxes us -NoReset -NoPublish
 Get-Content logs\livestream-run.log -Tail 30
-# 2. the same with a publish, then find the run at http://10.2.0.2/qa-runs/
+# 2. the same with a publish, then find the run at https://10.2.0.2:8444/qa-runs/
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\windows-runner\livestream-run.ps1 -Boxes us -NoReset
 # 3. the schedule
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\windows-runner\register-task.ps1

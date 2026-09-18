@@ -11,7 +11,7 @@
 #
 # Unarmed on purpose for now: no QA Touch write, no ledger row. Evidence
 # archives locally and is copied to the directory nginx serves, so each run
-# is browsable at http://10.2.0.2/qa-runs/ when it finishes.
+# is browsable at https://10.2.0.2:8444/qa-runs/ when it finishes.
 #
 # Three guards, each earned by the week of 09/02-09/08/2026 when every
 # nightly hung and nothing was archived:
@@ -142,7 +142,7 @@ fi
     # error and skip in this log at the end.
     # QA_RUNS_LIVE_DIR: the run's live record (live.json) is also written
     # into the served directory, so the archive index and health page at
-    # http://10.2.0.2/qa-runs/ show the run in progress and its estimate.
+    # https://10.2.0.2:8444/qa-runs/ show the run in progress and its estimate.
     BOX="$box" QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" $HEADED \
       -n "$WORKERS" -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal

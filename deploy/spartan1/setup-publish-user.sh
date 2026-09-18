@@ -72,8 +72,9 @@ install -d -m 755 "$JAIL_RUNS"
 grep -qs "^$RUNS $JAIL_RUNS " /etc/fstab || echo "$RUNS $JAIL_RUNS none bind 0 0" >> /etc/fstab
 mountpoint -q "$JAIL_RUNS" || mount "$JAIL_RUNS"
 
-# 4. sshd: sftp only, inside the jail, files group-writable so the nightly
-#    (soterix) and the prune can manage what a laptop published.
+# 4. sshd: sftp only, inside the jail. What a laptop publishes belongs to
+#    the account with the modes the laptop sent (644 and 755, measured), so
+#    only root removes it: the prune does, or a person with sudo.
 probe() { sshd -T -C "user=$1,host=spartan1,addr=10.2.0.1"; }
 before=$(probe soterix) || { echo "sshd -T failed before any change: nothing was changed"; exit 1; }
 cat > "$SSHD_DROPIN.new" <<EOF

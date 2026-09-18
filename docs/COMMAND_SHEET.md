@@ -156,7 +156,7 @@ a message that names the run that holds the lock.
 ### How to read the archive index
 
 The same page is on your machine (`reports/runs/index.html`) and on spartan1
-(`http://10.2.0.2/qa-runs/`).
+(`https://10.2.0.2:8444/qa-runs/`).
 
 - **The Runners line** at the top shows each machine and the Chrome version
   of its newest run. `(stable X is out: update it)` after a machine means

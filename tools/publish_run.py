@@ -18,8 +18,8 @@ autoindex lists the runs on the host. Nothing is deleted on the host; the
 30-day prune there is the only thing that removes runs. The full workflow:
 docs/RUN_WORKFLOWS.md.
 
-The destination defaults to soterix@10.2.0.2:/data/qa/runs and can be
-overridden with QA_RUNS_HOST / QA_RUNS_DIR. Copying uses sftp, which every
+The destination defaults to the publish account, qa-publish@10.2.0.2, and
+its folder /runs. It can be overridden with QA_RUNS_HOST / QA_RUNS_DIR. Copying uses sftp, which every
 QA machine already has (Windows ships OpenSSH), authenticated by whatever
 key reaches the host. sftp and nothing else, on purpose: the publish account
 on the box (qa-publish, deploy/spartan1/README.md) has no shell, so a laptop
@@ -42,10 +42,10 @@ ROOT = Path(__file__).resolve().parent.parent
 RUNS = ROOT / 'reports' / 'runs'
 RUN_DIR_RE = re.compile(r'^20\d{2}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}__')
 
-DEFAULT_HOST = 'soterix@10.2.0.2'
+DEFAULT_HOST = 'qa-publish@10.2.0.2'
 DEFAULT_DIR = '/data/qa/runs'
 PUBLISH_USER_DIR = '/runs'   # what the jailed qa-publish account sees (deploy/spartan1/setup-publish-user.sh)
-DEFAULT_URL = 'http://10.2.0.2/qa-runs'
+DEFAULT_URL = 'https://10.2.0.2:8444/qa-runs'
 
 
 def newest_run(runs_dir: Path | None = None) -> Path | None:

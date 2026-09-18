@@ -69,10 +69,9 @@ make sure that the last block in the log ends with `nightly done`.
       User soterix
   ```
 
-- The archive is at `http://10.2.0.2/qa-runs/`. After the HTTPS setup in
-  "Hardening" it is at `https://10.2.0.2:8444/qa-runs/`, and the old address
-  redirects to it. It uses basic auth with the user `qa`. The password is
-  in the team password store.
+- The archive is at `https://10.2.0.2:8444/qa-runs/`. The old address,
+  `http://10.2.0.2/qa-runs/`, redirects to it. It uses basic auth with the
+  user `qa`. The password is in the team password store.
 - To publish a run from a laptop, a person needs a key on the account
   `qa-publish`, not on `soterix`. See "Hardening".
 - The box pulls the repos over SSH with 2 deploy keys. Each key is read-only
@@ -82,8 +81,9 @@ make sure that the last block in the log ends with `nightly done`.
 
 ## Hardening
 
-The box has 3 protections for the evidence that it serves. Each one has a
-setup step that Justin does one time on the box.
+The box has 3 protections for the evidence that it serves. The setup of
+each one was done on 09/18/2026. This section is the record of what was
+done, and the procedure for a new box.
 
 | Protection | What it stops | Setup |
 |---|---|---|
@@ -116,12 +116,14 @@ does not print a value.
    ssh qa-publish@10.2.0.2 id    # must not print a uid
    ```
 
-4. The person adds `QA_RUNS_HOST=qa-publish@10.2.0.2` to their `.env`. No
-   other setting is necessary: for this account the tool uses the path
-   `/runs`, which is the served directory inside the jail.
-5. When each laptop uses the new account, remove the laptop keys from
-   `/home/soterix/.ssh/authorized_keys`. Keep the keys of the people who
-   operate the box.
+4. The person needs no setting. `tools/publish_run.py` uses this account
+   and the path `/runs`, which is the served directory inside the jail.
+5. Keep `/home/soterix/.ssh/authorized_keys` for the people who operate the
+   box. Do not add a key there for a person who only publishes runs.
+
+To remove a run that a laptop published, use sudo on the box:
+`sudo rm -rf /data/qa/runs/<run>`. The files belong to `qa-publish`, so user
+`soterix` cannot remove them. The prune removes them after 30 days.
 
 What the script does:
 
@@ -153,9 +155,22 @@ a private key file and a file with 2 keys.
    removes what a publish leaves behind.
 
 The site uses the box's mkcert certificate, the same one as the asset
-tracker. The certificate names `spartan1` and `10.2.0.2`. A laptop that
-trusts the asset tracker page also trusts the archive. For a laptop that
-does not, read `docs/CA_CERT_DISTRIBUTION.md` in the asset tracker repo.
+tracker. The certificate names `spartan1` and `10.2.0.2`, and it is good
+until 10/12/2028.
+
+Who needs the certificate authority (CA) file on their machine:
+
+- No person needs it to run tests, to publish a run or to use the tools.
+  The tests talk to the QA tenants, not to the box. A publish uses sftp,
+  which does not use certificates. No tool in the repos reads the archive
+  over HTTPS.
+- A person who opens the archive in a browser sees a warning page if the CA
+  is not installed. They can continue past it, and the connection is still
+  encrypted. To remove the warning, install the CA one time:
+  `docs/CA_CERT_DISTRIBUTION.md` in the asset tracker repo. A laptop that
+  opens the asset tracker with no warning already has it.
+- `curl` in Git Bash has its own CA list and does not read the Windows
+  store. Use `curl -k` for a check from Git Bash.
 
 The script keeps the old files in `/etc/nginx/qa-runs-backup-<time>/`. If
 nginx refuses the new configuration, the script puts the old files back.
