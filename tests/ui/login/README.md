@@ -35,8 +35,7 @@ pytest tests/ui/login/test_login_valid.py::test_logout -v -s
 ```
 
 Ensure environment variables are set (see `.env.template`):
-- `QA_USER` - test account email
-- `QA_PASSWORD` - password
+- `BOX` and its `QA_<BOX>_USER` / `QA_<BOX>_PASSWORD` pair (the legacy `QA_USER` / `QA_PASSWORD` when `BOX` is unset)
 - `BASE_URL` - base URL for the environment (defaults to QA site)
 
 ## Migration notes (Selenium -> Playwright)

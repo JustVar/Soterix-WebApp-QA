@@ -567,7 +567,7 @@ class EventsPage:
         full completion, as it can take several minutes for large clips.
         """
         if filename is None:
-            filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
 
         self.export_button.click()
         self.export_popup.wait_for(state="visible", timeout=10000)

@@ -448,7 +448,7 @@ class FullScreenPage:
         Pass True only when a Media copy is the point.
         """
         if filename is None:
-            filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
 
         self.open_bookmark_options(index)
         self.bookmark_options.nth(1).click()
@@ -529,7 +529,7 @@ class FullScreenPage:
         Media copy cannot be deleted back off the tenant.
         """
         if filename is None:
-            filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
 
         self.open_bookmark_options(index)
         self.bookmark_options.nth(2).click()
@@ -547,7 +547,7 @@ class FullScreenPage:
     def rename_bookmark(self, index: int = 0, new_name: str | None = None) -> str:
         """Rename a bookmark via the options menu. Returns the new name."""
         if new_name is None:
-            new_name = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            new_name = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
 
         self.open_bookmark_options(index)
         self.bookmark_options.nth(0).click()

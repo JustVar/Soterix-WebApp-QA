@@ -120,8 +120,11 @@ def test_expected_trace_path_shape():
     assert got.name == 'tests-ui-x.py-test_t-chromium-trace.zip'
 
 
-def test_expected_trace_path_keeps_the_150_cap():
-    """The trace cap is conftest's 150, not the screenshot's 120."""
+def test_expected_trace_path_keeps_the_150_cap(tmp_path, monkeypatch):
+    """The trace cap is conftest's 150, not the screenshot's 120. From a short
+    root: on a deep checkout fit_name shortens the name to the path cap, and
+    this pin is about the stem rule, not the machine it runs on."""
+    monkeypatch.setattr(rm, 'TRACE_DIR', Path(tmp_path.anchor) / 's')
     path = rm._expected_trace_path('y' * 300)
     stem = path.name.removesuffix('-trace.zip')
     assert len(stem) == 150
@@ -312,16 +315,20 @@ def test_drain_twice_yields_nothing_the_second_time():
 # Mid-drag frame naming (stem and suffix of the final shot, plus the index)
 # ---------------------------------------------------------------------------
 
-def test_capture_filename_shape():
-    """A mid-drag frame is named <stem>__<suffix>__mid-drag-<n>.png."""
+def test_capture_filename_shape(tmp_path, monkeypatch):
+    """A mid-drag frame is named <stem>__<suffix>__mid-drag-<n>.png (from a
+    short root, so a deep checkout does not shorten the name under the pin)."""
+    monkeypatch.setattr(rm, 'SCREENSHOT_DIR', Path(tmp_path.anchor) / 's')
     name = rm._capture_filename('tests/ui/x.py::test_t[chromium]',
                                 'FAILED', 'mid-drag', 1)
     assert name == 'tests-ui-x.py-test_t-chromium__FAILED__mid-drag-1.png'
 
 
-def test_capture_filename_reuses_the_capped_safe_stem():
-    """Longest possible name: 120-char stem + SETUP_FAILED + index. At 150
-    chars the absolute path stays under Windows' 260 from this checkout."""
+def test_capture_filename_reuses_the_capped_safe_stem(tmp_path, monkeypatch):
+    """Longest possible name: 120-char stem + SETUP_FAILED + index, from a
+    short root. A deep checkout (a root past about 70 characters) made this
+    and two sibling pins fail and block every commit there, 09/18/2026."""
+    monkeypatch.setattr(rm, 'SCREENSHOT_DIR', Path(tmp_path.anchor) / 's')
     name = rm._capture_filename('x' * 300, 'SETUP_FAILED', 'mid-drag', 8)
     assert name == 'x' * 120 + '__SETUP_FAILED__mid-drag-8.png'
     assert len(name) == 150

@@ -204,7 +204,7 @@ class TestViewsBookmarks:
            Expected: The export progress bar appears and completes.
         """
         stamp = self._own_a_bookmark()
-        filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
         # oracle: export_bookmark raises unless the export dialog opens
         # and the progress bar appears and completes
         self.fs.export_bookmark(index=self._index(stamp), filename=filename)
@@ -220,7 +220,7 @@ class TestViewsBookmarks:
            Expected: The dialog reports the share succeeded.
         """
         stamp = self._own_a_bookmark()
-        filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
         self.fs.share_bookmark(
             index=self._index(stamp),
             email="person@example.com",

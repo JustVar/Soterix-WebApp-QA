@@ -38,6 +38,15 @@ A version number from each command means the setup is ready.
 git clone https://github.com/Soterix-Systems/Soterix-WebApp-QA.git
 cd Soterix-WebApp-QA
 python -m venv venv
+```
+
+Clone near the drive root (`C:\qa\Soterix-WebApp-QA`, say): a deep path
+pushes Windows past its path cap, git then needs `-c core.longpaths=true`
+just to clone, and evidence file names get shortened to fit. No
+`Activate.ps1`: PowerShell's default policy blocks it, so every command
+here calls the venv's `python.exe` by path.
+
+```
 venv\Scripts\python.exe -m pip install -r requirements.txt
 git config core.hooksPath tools/hooks
 copy .env.template .env
@@ -45,7 +54,7 @@ copy .env.template .env
 
 No browser download: the suite drives the Google Chrome already on the
 machine (section 1). The `git config` line turns on the repo's git hooks
-for this clone (section 9).
+for this clone (section 8).
 
 Then open `.env`: `BOX` names the tenant (`india` by default) and that
 box's pair, `QA_INDIA_USER` and `QA_INDIA_PASSWORD`, is what signs in.
@@ -221,7 +230,8 @@ lines the commit adds (a HIGH finding blocks); `docs/TEST_INVENTORY.md`
 must match the tests on disk (regenerate with
 `python tools/test_inventory.py`); no file may gain lint findings; the
 collected-test floor holds; and the offline suites (`tests/plugins`,
-`tests/tools`, `tests/helpers`) pass. About six seconds. The offline run
+`tests/tools`, `tests/helpers`) pass. Ten to thirty seconds, most of it the
+last two steps (measured 09/18/2026). The offline run
 changes nothing a live UI run writes: archive, run record, run guard and
 screenshots are off and its reports go to `logs/`. CI alone keeps
 `pytest --setup-plan` (fixture wiring, 25 s).

@@ -18,9 +18,13 @@ if str(REPO_ROOT) not in sys.path:
 import conftest  # noqa: E402
 
 # A module that does any of these writes the account's state; two workers
-# on it race. The list is the audit's grep; a new writer joins it by
-# failing this pin.
-WRITES_STATE = re.compile(r"\b(create_|delete_|rename_|mute_|save_view|add_bookmark|_own_a_|toggle_user|invite)")
+# on it race. The list is the audit's grep plus the review's additions
+# (api fixtures that create, favourites, exports, widget writes, the
+# notification mute); a new writer joins it by failing this pin.
+# create_widget_button is a read-only visibility check, hence the lookahead.
+WRITES_STATE = re.compile(
+    r"\b(create_(?!widget_button)|delete_|rename_|mute_|_mute_notifications|save_view|add_bookmark|_own_a_"
+    r"|toggle_user|favou?rite|api_saved_view|api_bookmark|api_camera_group|export_)")
 GROUP_RE = re.compile(r'^pytestmark = pytest\.mark\.xdist_group\("(\w+)"\)', re.MULTILINE)
 
 
@@ -63,10 +67,13 @@ def test_a_command_line_dist_that_undoes_the_grouping_is_refused():
 
 
 def test_generated_names_carry_more_than_seconds():
-    """Two workers can create in the same second; a name with only %H%M%S collides."""
+    """Two workers can create in the same second; a name with only %H%M%S
+    collides. Page objects and api fixtures name things too, and an export
+    file name is a tenant name, so tests/shared is in and nothing is carved out."""
     offenders = []
-    for path in sorted((REPO_ROOT / "tests" / "ui").rglob("test_*.py")):
-        for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            if re.search(r"%H%M%S[\"')}]", line) and "filename" not in line:
-                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{i}")
+    for root in ("tests/ui", "tests/shared"):
+        for path in sorted((REPO_ROOT / root).rglob("*.py")):
+            for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if re.search(r"%H%M%S[\"')}]", line):
+                    offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{i}")
     assert not offenders, "second-resolution names (add %f): " + ", ".join(offenders)

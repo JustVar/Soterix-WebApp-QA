@@ -12,6 +12,7 @@ Rules (docs/CONVENTIONS.md, "Test data through the API"):
 from __future__ import annotations
 
 import base64
+import datetime
 import os
 import time
 
@@ -30,7 +31,8 @@ SNAP_PNG = base64.b64decode(
 
 
 def _stamp() -> str:
-    return time.strftime("%H%M%S")
+    # milliseconds too: two xdist workers can create in the same second
+    return datetime.datetime.now().strftime("%H%M%S%f")[:9]
 
 
 # ------------------------------------------------------------ tree helpers

@@ -161,7 +161,7 @@ class SequencePage:
             The sequence name used.
         """
         if name is None:
-            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
             name = f"{timestamp}_Automation_Test_create_sequence"
 
         self.sequence_name_input.wait_for(state="visible", timeout=10000)

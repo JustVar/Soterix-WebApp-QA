@@ -120,7 +120,7 @@ class TestEventsPlayback:
         self.events.play_event(0, timeout=60000)
         expect(self.events.export_button).to_be_visible(timeout=10000)
 
-        filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
         returned_name = self.events.export_event(filename=filename)
 
         assert returned_name == filename, (

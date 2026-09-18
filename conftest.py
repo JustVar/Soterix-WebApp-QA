@@ -20,7 +20,7 @@ from config.base_config import config  # dict resolved from ENV
 from plugins.paths import fit_name
 from tests.shared.auth_state import auth_state_filename
 
-pytest_plugins = ['plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
+pytest_plugins = ['plugins.xdist_recovery', 'plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
                   'plugins.run_archive', 'plugins.single_run_guard',
                   'tests.shared.api.fixtures']
 
@@ -266,8 +266,8 @@ def login_data():
     1. If the BOX env var is set, use that box's account from config/env/
        (for example BOX=india on ENV=qa). The box names the password variable
        to read from .env.
-    2. Otherwise read QA_USER and QA_PASSWORD from .env. This is the default
-       and matches how the team runs the suite today.
+    2. Otherwise read QA_USER and QA_PASSWORD from .env: the legacy pair,
+       for a .env without BOX (the template ships BOX=india).
     """
     expected_landing = os.environ.get("EXPECTED_LANDING", "/dashboard")
 
@@ -276,10 +276,14 @@ def login_data():
         from config.base_config import get_credentials
         creds = get_credentials()
         if not creds.get("email") or not creds.get("password"):
+            settings = active_box_settings(ENV_SETTINGS, box)
+            email_env = settings.get("email_env") or f"QA_{box.upper()}_USER"
+            password_env = settings.get("password_env") or f"QA_{box.upper()}_PASSWORD"
+            empty = [k for k in (email_env, password_env) if not os.environ.get(k)]
             raise ValueError(
-                f"BOX='{box}' is set but its credentials are incomplete. The "
-                f"box's password variable is empty or missing in .env; see the "
-                f"password_env key for this box in config/env/.")
+                f"BOX='{box}' is set but {' and '.join(empty) or 'its account pair'} is empty in .env. "
+                f"Fill both {email_env} and {password_env} (README > Quick Setup), or unset BOX to sign "
+                f"in with the legacy QA_USER / QA_PASSWORD pair.")
         logging.getLogger(__name__).info(f"[CREDENTIALS] Using box '{box}' account from env config")
         return {"username": creds["email"], "password": creds["password"],
                 "expected_landing": expected_landing}

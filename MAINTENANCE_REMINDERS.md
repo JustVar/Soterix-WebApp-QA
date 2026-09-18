@@ -75,7 +75,7 @@
   `pip list --outdated`, raise the pin, `pip install -r requirements.txt`,
   run a suite, then commit the new pin.
 - Update Playwright browsers after a playwright upgrade:
-  `playwright install chromium`
+  `playwright install chrome`
 - Watch: pytest-playwright 0.8.0 declares support through Python 3.13 only
   and we run 3.14. No failures seen so far. Re-check the pytest-playwright
   changelog for a 3.14 release on each quarterly pass.

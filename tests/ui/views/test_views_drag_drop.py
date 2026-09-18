@@ -6,6 +6,11 @@ from config.base_config import config
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.views_page import ViewsPage
 
+# One worker for every module that writes this account's saved views (api_saved_view makes one): under
+# -n they would otherwise spread across workers and race on the same
+# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+pytestmark = pytest.mark.xdist_group("account_views")
+
 
 class TestViewsDragDrop:
     """Tests for drag-and-drop functionality in Views."""

@@ -291,7 +291,7 @@ class InsightsPage:
 
         # Generate unique widget name
         now = datetime.datetime.now()
-        ts = now.strftime("%Y%m%d%H%M%S")
+        ts = now.strftime("%Y%m%d%H%M%S%f")[:-3]
         widget_name = f"{graph_name}_{category_name}_{ts}"
 
         # Click Create New Widget

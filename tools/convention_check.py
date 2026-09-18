@@ -59,7 +59,7 @@ QATOUCH_RE = re.compile(r"@pytest\.mark\.qatouch")
 # The flaky mark is pytest-rerunfailures' own: it retries on any failure,
 # once even bare. A hidden retry the register never sees (17 tests, audit
 # 09/17/2026). The label is `intermittent`.
-FLAKY_MARK_RE = re.compile(r"@pytest\.mark\.flaky\b")
+FLAKY_MARK_RE = re.compile(r"\bmark\.flaky\b")   # @pytest.mark.flaky, pytestmark =, marks=, an alias
 ABS_COUNT_RE = re.compile(r"\.count\(\)\s*(?:>\s*0|>=\s*[01])\b")
 IMG_SRC_RE = re.compile(r"img\[src\*?=")
 TENANT_NAME_RE = re.compile(r"[\"'](?:Driver Site|Hanwha)")

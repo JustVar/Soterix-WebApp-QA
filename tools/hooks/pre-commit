@@ -35,7 +35,7 @@
 #   run record, run guard and screenshots are off, and its html report
 #   goes to logs/hook_report.html instead of reports/report.html.
 #
-# About six seconds in all, most of it the last two.
+# Ten to thirty seconds in all, most of it the last two (measured 09/18/2026).
 py=venv/Scripts/python.exe
 $py tools/secret_check.py || exit 1
 $py tools/convention_check.py || exit 1

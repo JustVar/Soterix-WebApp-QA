@@ -353,6 +353,7 @@ def test_the_flaky_mark_is_refused_in_any_form_and_intermittent_passes():
     label is intermittent. The strings are joined so this pin is not a hit."""
     mark = '@pytest.mark.'
     lines = ['    ' + mark + 'flaky(reruns=1)', '    ' + mark + 'flaky', '    ' + mark + 'intermittent',
-             '    ' + mark + 'flakyish']
-    rules = [[f['rule'] for f in cc.check_line('tests/ui/x/test_x.py', lines, i, mapped=set())] for i in range(4)]
-    assert rules == [['flaky-marker'], ['flaky-marker'], [], []]
+             '    ' + mark + 'flakyish', 'pytestmark = pytest.mark.' + 'flaky',
+             '    pytest.param(1, marks=pytest.mark.' + 'flaky(reruns=2))', '    @mark.' + 'flaky']
+    rules = [[f['rule'] for f in cc.check_line('tests/ui/x/test_x.py', lines, i, mapped=set())] for i in range(7)]
+    assert rules == [['flaky-marker'], ['flaky-marker'], [], [], ['flaky-marker'], ['flaky-marker'], ['flaky-marker']]

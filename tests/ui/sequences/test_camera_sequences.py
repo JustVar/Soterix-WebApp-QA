@@ -22,10 +22,11 @@ from playwright.sync_api import Error as PlaywrightError, expect
 from tests.shared.pages.sequence_page import SequencePage
 from tests.shared.pages.views_page import ViewsPage
 
-# One worker for every module that writes this account's camera sequences: under
+# One worker for every module that writes this account's notification mute state (it mutes notifications first) and sequences: under
 # -n they would otherwise spread across workers and race on the same
 # tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
-pytestmark = pytest.mark.xdist_group("account_sequences")
+pytestmark = pytest.mark.xdist_group("account_rules")
+
 
 
 class TestCameraSequences:

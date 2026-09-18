@@ -225,7 +225,7 @@ the API and proves only the delete. `test_create_camera_group` keeps the
 UI path because the create is what it proves.
 
 The client and fixtures live in `tests/shared/api/`. `conftest.py`
-registers them. They need `QA_USER`, `QA_PASSWORD` and `TEST_SITE_ID` in
+registers them. They need the box account pair (or the legacy `QA_USER` / `QA_PASSWORD`) and `TEST_SITE_ID` in
 `.env`. The API test repo is a separate project. Never import from it.
 
 - `api`: a logged-in session for the test site. It skips when a variable

@@ -8,7 +8,7 @@ folder name may still be the old one.
 
 - **Framework:** Playwright (Python) + pytest + pytest-playwright
 - **Targets:** `qa`, `stage`, `prod` environments, customer or partner app type
-- **437 product test functions in 59 suite files** (09/11/2026): 405 NexaiQ-Core tests under `tests/ui/` and 32 Camera 2 Cloud tests under `tests/c2c/` (the cameras' own web UIs, run serially against the lab registry `tests/data/c2c_cameras.yaml`). pytest collects them as 755 items: the Core tests carry the browser parameter (435), and the c2c tests parametrize over the 10 enabled cameras into 320. The other 421 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 655 pins live in the shared package. Whole repo: 1176. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message. `docs/TEST_INVENTORY.md` lists every product test by product and module, with its growth week by week since 02/2026 (`history/test_counts.jsonl`, appended by `tools/test_inventory.py --record`).
+- **435 product test functions in 60 suite files** (09/18/2026): 402 NexaiQ-Core tests under `tests/ui/` and 33 Camera 2 Cloud tests under `tests/c2c/` (the cameras' own web UIs, run serially against the lab registry `tests/data/c2c_cameras.yaml`). pytest collects them as 762 items: the Core tests carry the browser parameter (432), and the c2c tests parametrize over the 10 enabled cameras into 330. The other 533 collected items are pins for the framework's own tools and plugins (`tests/tools`, `tests/plugins`, `tests/helpers`); a further 669 pins live in the shared package. Whole repo: 1295. API tests live in Soterix-API-QA; `legacy/` and `legacy-selenium-tests/` are excluded from collection. `config/collect_floor.json` records the counts and `tools/collect_floor.py` fails a run that collects fewer; a drop needs a reason in the commit message. `docs/TEST_INVENTORY.md` lists every product test by product and module, with its growth week by week since 02/2026 (`history/test_counts.jsonl`, appended by `tools/test_inventory.py --record`).
 
 ## How We Run Today
 
@@ -33,11 +33,18 @@ Node.js is not required.
 
 ```powershell
 python -m venv venv
-venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+venv\Scripts\python.exe -m pip install --upgrade pip
+venv\Scripts\python.exe -m pip install -r requirements.txt
 git config core.hooksPath tools/hooks
 ```
+
+No activation step on purpose: PowerShell's default execution policy
+blocks `Activate.ps1`, and a `pip` that is not the venv's installs into the
+global Python without a word (measured on a fresh clone, 09/18/2026).
+Calling the venv's `python.exe` by path sidesteps both, so every command
+in this repo's docs is written that way. Clone near the drive root
+(`C:\qa\...`): a deep path pushes Windows past its path cap, git then needs
+`-c core.longpaths=true` to clone, and evidence file names get shortened.
 
 The last line turns on the repo's two git hooks (the pre-commit gates and
 the commit-message check) for this clone; see docs/COMMAND_SHEET.md.
@@ -79,15 +86,13 @@ copy .env.template .env
 
 ## Environment Config
 
-| Var | Required | Purpose |
-|---|---|---|
 Only these are needed to run tests:
 
 | Var | Required | Purpose |
 |---|---|---|
-| `ENV` | yes | `qa` \| `stage` \| `prod` - selects `config/env/{name}.py` |
+| `ENV` | no (defaults to `qa`) | `qa` \| `stage` \| `prod` - selects `config/env/{name}.py` |
 | `APP_TYPE` | no | `customer` (default) \| `partner` - appends `_pat` to module path |
-| `QA_USER` / `QA_PASSWORD` | yes | Automation credentials (the `login_data` fixture in conftest.py reads these) |
+| `BOX` + `QA_<BOX>_USER` / `QA_<BOX>_PASSWORD` | yes | The tenant to test and its account pair (`login_data` in conftest.py); the legacy `QA_USER` / `QA_PASSWORD` pair signs in only when `BOX` is unset |
 
 The QA Touch and Jira variables (`QATOUCH_*`, `JIRA_*`, `BUG_CREATION_ENABLED`) are only
 read by the optional integrations and can be left unset - see
@@ -286,7 +291,7 @@ gates before every commit.
 ## CI Notes
 
 - Google Chrome must be on the runner before pytest: the suite drives branded Chrome (`--browser-channel chrome`); the smoke workflow installs it with `python -m playwright install chrome`.
-- Secrets (`BOX` and its `QA_<BOX>_USER` / `QA_<BOX>_PASSWORD` pair) come from CI secrets, not `.env`.
+- The smoke workflow signs in with the legacy `QA_USER` / `QA_PASSWORD` secrets (no `BOX`), from CI secrets, not `.env`.
 - Leave `BUG_CREATION_ENABLED` unset in CI - the bug filer is still WIP and must not file real bugs from an automated run.
 - Lab servers handle the actual smoke/sanity execution; CI is for syntax + smoke validation, not full runs.
 
