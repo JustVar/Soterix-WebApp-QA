@@ -19,21 +19,23 @@ autoindex lists the runs on the host. Nothing is deleted on the host; the
 docs/RUN_WORKFLOWS.md.
 
 The destination defaults to soterix@10.2.0.2:/data/qa/runs and can be
-overridden with QA_RUNS_HOST / QA_RUNS_DIR. Copying uses scp, which every
+overridden with QA_RUNS_HOST / QA_RUNS_DIR. Copying uses sftp, which every
 QA machine already has (Windows ships OpenSSH), authenticated by whatever
-key reaches the host. If scp asks for a password, ask for your key to be
-added to the box rather than typing one every time.
+key reaches the host. sftp and nothing else, on purpose: the publish account
+on the box (qa-publish, deploy/spartan1/README.md) has no shell, so a laptop
+key that can publish cannot read the box's .env or touch the nightly. If the
+copy fails on the key, ask for your key to be added to the box.
 
-Exit codes: 0 published, 1 scp failed, 2 nothing valid to publish.
+Exit codes: 0 published, 1 the copy failed, 2 nothing valid to publish.
 """
 from __future__ import annotations
 
 import argparse
 import os
 import re
-import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -85,7 +87,56 @@ def _staged_copy(run_dir: Path) -> Path:
     tmp = Path(tempfile.mkdtemp(prefix='qa-publish-'))
     staged = tmp / run_dir.name
     shutil.copytree(run_dir, staged, ignore=ignore)
+    _redact_staged(staged)
     return staged
+
+
+def _redact_staged(staged: Path) -> None:
+    """Mask secrets in the copy that travels. The local original stays as it
+    is, for the person who is debugging with it. A password reached the served
+    archive through a per-test log on 09/14/2026 (tools/evidence_scan.py)."""
+    if str(ROOT) not in sys.path:   # run as a script, sys.path[0] is tools/, not the repo
+        sys.path.insert(0, str(ROOT))
+    from tools import evidence_scan
+    from tools.secret_check import secret_values
+
+    env = evidence_scan.ENV_FILE
+    secrets = secret_values(env.read_text(encoding='utf-8')) if env.is_file() else {}
+    found = evidence_scan.scan_run(staged, secrets, redact=True)
+    if found:
+        print(f'  evidence_scan: masked {len(found)} secret(s) in the published copy:')
+        for f in found:
+            print(f"    {f['path']}:{f['line']}  {f['what']}")
+
+
+def _q(path: str) -> str:
+    """A path for an sftp batch line: double-quoted, forward slashes."""
+    if '"' in path or '\n' in path:
+        raise ValueError(f'a path with a quote or a newline cannot be published: {path!r}')
+    return '"' + path.replace('\\', '/') + '"'
+
+
+def sftp_batch(staged: Path, dest: str, stamp: str) -> str:
+    """The batch that publishes one staged run folder.
+
+    Atomic on the host: the folder goes to a hidden `.pub-tmp-<name>-<stamp>`
+    first and one `rename` moves it into place. A copy that drops mid-way (a
+    lost tunnel) leaves only the hidden temp, never a partial run folder that
+    the archive lists. A run that is published again moves the old copy to
+    `.pub-old-...` first, because sftp cannot delete a folder tree. nginx
+    never serves a dot name, and the box's prune removes both kinds after a
+    day. A leading `-` lets a line fail: the old copy is usually not there.
+    """
+    name = staged.name
+    tmp = f'{dest}/.pub-tmp-{name}-{stamp}'
+    final = f'{dest}/{name}'
+    return '\n'.join([
+        f'mkdir {_q(tmp)}',
+        f'put -r {_q(str(staged))} {_q(tmp + "/")}',
+        f'-rename {_q(final)} {_q(f"{dest}/.pub-old-{name}-{stamp}")}',
+        f'rename {_q(tmp + "/" + name)} {_q(final)}',
+        f'rmdir {_q(tmp)}',
+    ]) + '\n'
 
 
 def publish(run_dir: Path, host: str, dest: str,
@@ -99,39 +150,27 @@ def publish(run_dir: Path, host: str, dest: str,
     not bound as a default, so a test's monkeypatch of subprocess.run
     actually intercepts.
 
-    Atomic on the host: the folder is scp'd to a hidden `.pub-tmp-<name>`
-    first, then moved into place with a single `mv`, which is atomic on one
-    filesystem. An scp interrupted mid-transfer (a dropped WireGuard tunnel)
-    therefore leaves only a hidden temp - never a partial run folder that
-    the archive lists and a reviewer opens as if it were complete. The temp
-    name starts with a dot, so nginx's dotfile-deny never serves it either.
-
-    scp runs with BatchMode (never drops to an interactive password prompt on
+    sftp runs with BatchMode (never drops to an interactive password prompt on
     a revoked key) and a connect timeout (an unreachable-but-not-refusing
     host fails fast instead of hanging the publish).
     """
     opts = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10']
-    tmp = f'{dest}/.pub-tmp-{run_dir.name}'
-    final = f'{dest}/{run_dir.name}'
     if dry_run:
-        print(f'  would stage {run_dir.name} without the trace zips, scp it '
-              f'to {host}:{tmp}, then mv it to {final}')
+        print(f'  would stage {run_dir.name} without the trace zips, mask any secret in '
+              f'the copy, and sftp it to {host}:{dest}/{run_dir.name}')
         return 0
     import shutil
     run = runner or subprocess.run
     staged = _staged_copy(run_dir)
     try:
-        # Clear any leftover temp from a prior interrupted publish, copy, then
-        # atomically swing it into place (removing an old copy first, since mv
-        # onto a non-empty dir is not a replace).
-        q_tmp, q_final = shlex.quote(tmp), shlex.quote(final)   # a run folder name reaches a remote shell
-        run(['ssh', *opts, host, f'rm -rf {q_tmp}'], check=False)
-        scp = run(['scp', '-q', '-r', *opts, str(staged), f'{host}:{tmp}'], check=False)
-        if scp.returncode != 0:
-            run(['ssh', *opts, host, f'rm -rf {q_tmp}'], check=False)
-            return 1
-        mv = run(['ssh', *opts, host, f'rm -rf {q_final} && mv {q_tmp} {q_final}'], check=False)
-        return 0 if mv.returncode == 0 else 1
+        batch = sftp_batch(staged, dest, stamp=str(int(time.time())))
+        done = run(['sftp', '-q', '-b', '-', *opts, host], input=batch, text=True,
+                   capture_output=True, check=False)
+        # sftp echoes each line, and the old-copy rename fails on a first
+        # publish by design: its output is shown only when the copy failed.
+        if done.returncode != 0:
+            print((getattr(done, 'stderr', '') or '').strip())
+        return 0 if done.returncode == 0 else 1
     finally:
         shutil.rmtree(staged.parent, ignore_errors=True)
 
@@ -145,6 +184,10 @@ def main(argv: list[str] | None = None) -> int:
                         help='print the copy command without running it')
     args = parser.parse_args(argv)
 
+    # QA_RUNS_HOST lives in .env with the other per-person settings. A value
+    # already in the environment wins (load_dotenv does not override).
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / '.env')
     host = os.environ.get('QA_RUNS_HOST', DEFAULT_HOST)
     dest = os.environ.get('QA_RUNS_DIR', DEFAULT_DIR)
     url = os.environ.get('QA_RUNS_URL', DEFAULT_URL)
@@ -172,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
     if code == 0 and not args.dry_run:
         print(f'  done: {url}/{run_dir.name}/run.html')
     elif code != 0:
-        print('  scp failed. Is the host reachable and your key installed? '
+        print('  the copy failed. Is the host reachable and your key installed? '
               'See docs/RUN_WORKFLOWS.md.')
     return code
 

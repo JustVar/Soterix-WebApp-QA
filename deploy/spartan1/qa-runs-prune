@@ -12,3 +12,11 @@ find "$ROOT" -maxdepth 1 -type d -name "20*__*" -mtime +30 | while read -r d; do
     echo "$(date -Is) pruned $d" >> "$LOG"
     rm -rf "$d"
 done
+# What a laptop publish leaves behind (tools/publish_run.py copies over sftp,
+# which cannot delete a folder tree): the hidden temp of a copy that dropped,
+# and the old copy of a run that was published again. nginx never serves a
+# dot name. One day is enough for a copy that is still going.
+find "$ROOT" -maxdepth 1 -type d \( -name ".pub-tmp-*" -o -name ".pub-old-*" \) -mtime +1 | while read -r d; do
+    echo "$(date -Is) pruned $d" >> "$LOG"
+    rm -rf "$d"
+done

@@ -44,25 +44,30 @@ def runs(tmp_path, monkeypatch):
 
 
 def _capture(monkeypatch):
+    """Every subprocess call as (cmd, batch text). Nothing runs."""
     calls = []
     class Proc:
         returncode = 0
-    monkeypatch.setattr(pr.subprocess, 'run', lambda cmd, check: calls.append(cmd) or Proc())
+    def fake_run(cmd, input=None, **_kw):
+        calls.append((cmd, input or ''))
+        return Proc()
+    monkeypatch.setattr(pr.subprocess, 'run', fake_run)
     return calls
 
 
-def _scp_call(calls):
-    """The scp command among the ssh/scp sequence (ssh rm, scp, ssh mv)."""
-    return next(c for c in calls if c and c[0] == 'scp')
+def _sftp_call(calls):
+    """(cmd, batch) of the one sftp call a publish makes."""
+    assert [c[0][0] for c in calls] == ['sftp'], 'a publish is one sftp call: the publish account has no shell'
+    return calls[0]
 
 
 def test_default_is_the_newest_run(runs, monkeypatch, capsys):
     """With no argument, the newest archived run is the one published."""
     calls = _capture(monkeypatch)
     assert pr.main([]) == 0
-    cmd = _scp_call(calls)
-    assert any('2026-09-01_10-39-03__tests-ui-licenses' in a for a in cmd)
-    assert not any('2026-08-31' in a for a in cmd)
+    _cmd, batch = _sftp_call(calls)
+    assert '2026-09-01_10-39-03__tests-ui-licenses' in batch
+    assert '2026-08-31' not in batch
 
 
 def test_trace_zips_stay_local_and_videos_travel(runs, monkeypatch, tmp_path):
@@ -74,10 +79,10 @@ def test_trace_zips_stay_local_and_videos_travel(runs, monkeypatch, tmp_path):
     staged_paths = []
     class Proc:
         returncode = 0
-    def fake_run(cmd, check):
-        if cmd and cmd[0] == 'scp':
-            staged = pr.Path(cmd[-2])        # the source arg to scp
-            staged_paths.append(sorted(p.name for p in staged.rglob('*')))
+    def fake_run(cmd, input=None, **_kw):
+        put = next(line for line in input.splitlines() if line.startswith('put -r '))
+        staged = pr.Path(put.split('"')[1])   # the first quoted path is the local source
+        staged_paths.append(sorted(p.name for p in staged.rglob('*')))
         return Proc()
     monkeypatch.setattr(pr.subprocess, 'run', fake_run)
     assert pr.main([]) == 0
@@ -94,7 +99,7 @@ def test_the_local_index_is_not_pushed_over_the_hosts(runs, monkeypatch):
     is partial and must not overwrite the host's fuller view."""
     calls = _capture(monkeypatch)
     assert pr.main([]) == 0
-    joined = ' '.join(str(a) for c in calls for a in c)
+    joined = ' '.join(str(a) for cmd, batch in calls for a in [*cmd, batch])
     assert 'index.html' not in joined
     assert 'health.html' not in joined
 
@@ -103,7 +108,7 @@ def test_a_named_run_is_published_exactly(runs, monkeypatch):
     """Naming a run publishes that run, not the newest."""
     calls = _capture(monkeypatch)
     assert pr.main(['2026-08-31_12-00-00__tests']) == 0
-    assert any('2026-08-31_12-00-00__tests' in a for a in _scp_call(calls))
+    assert '2026-08-31_12-00-00__tests' in _sftp_call(calls)[1]
 
 
 def test_a_missing_run_refuses_with_the_available_names(runs, monkeypatch, capsys):
@@ -143,12 +148,10 @@ def test_dry_run_runs_nothing(runs, monkeypatch, capsys):
     assert 'would stage' in capsys.readouterr().out
 
 
-def test_scp_failure_is_exit_1_with_a_hint(runs, monkeypatch, capsys):
-    """A failed copy exits 1 and tells the reader about key setup. The partial
-    temp is cleaned up rather than left as a half-run."""
-    def fake_run(cmd, check):
-        rc = 1 if cmd and cmd[0] == 'scp' else 0
-        return type('P', (), {'returncode': rc})()
+def test_a_failed_copy_is_exit_1_with_a_hint(runs, monkeypatch, capsys):
+    """A failed copy exits 1 and tells the reader about key setup."""
+    def fake_run(cmd, input=None, **_kw):
+        return type('P', (), {'returncode': 1})()
     monkeypatch.setattr(pr.subprocess, 'run', fake_run)
     assert pr.main([]) == 1
     assert 'key installed' in capsys.readouterr().out
@@ -160,5 +163,41 @@ def test_host_and_dir_come_from_the_environment(runs, monkeypatch):
     monkeypatch.setenv('QA_RUNS_DIR', '/srv/runs')
     calls = _capture(monkeypatch)
     assert pr.main([]) == 0
-    scp = _scp_call(calls)
-    assert scp[-1].startswith('me@elsewhere:/srv/runs/.pub-tmp-')
+    cmd, batch = _sftp_call(calls)
+    assert cmd[-1] == 'me@elsewhere'
+    assert 'mkdir "/srv/runs/.pub-tmp-' in batch
+
+
+def test_the_batch_lands_the_folder_with_one_rename_and_tolerates_no_old_copy():
+    """Hidden temp first, the old copy moved aside (allowed to fail), one rename into place, temp removed."""
+    lines = pr.sftp_batch(pr.Path('C:/tmp/stage/2026-09-01_10-39-03__tests-ui'), '/data/qa/runs', stamp='17').splitlines()
+    assert lines == [
+        'mkdir "/data/qa/runs/.pub-tmp-2026-09-01_10-39-03__tests-ui-17"',
+        'put -r "C:/tmp/stage/2026-09-01_10-39-03__tests-ui" "/data/qa/runs/.pub-tmp-2026-09-01_10-39-03__tests-ui-17/"',
+        '-rename "/data/qa/runs/2026-09-01_10-39-03__tests-ui" "/data/qa/runs/.pub-old-2026-09-01_10-39-03__tests-ui-17"',
+        'rename "/data/qa/runs/.pub-tmp-2026-09-01_10-39-03__tests-ui-17/2026-09-01_10-39-03__tests-ui" "/data/qa/runs/2026-09-01_10-39-03__tests-ui"',
+        'rmdir "/data/qa/runs/.pub-tmp-2026-09-01_10-39-03__tests-ui-17"',
+    ]
+
+
+def test_a_name_that_would_break_the_batch_is_refused():
+    """A quote in a path would end the quoted argument and start a new sftp command."""
+    with pytest.raises(ValueError, match='cannot be published'):
+        pr.sftp_batch(pr.Path('2026-09-01_10-39-03__te"sts'), '/data/qa/runs', stamp='1')
+
+
+def test_the_published_copy_is_masked_and_the_local_run_is_not(tmp_path, monkeypatch, capsys):
+    """A password in a per-test log is *** in the staged copy; the original keeps it for the person debugging."""
+    from tools import evidence_scan
+    monkeypatch.setattr(evidence_scan, 'ENV_FILE', tmp_path / 'no.env')
+    run = tmp_path / '2026-09-18_09-00-06__tests-ui'
+    (run / 'log').mkdir(parents=True)
+    line = "E   {'email': 'qa@example.com', 'password': 'hunter2-long'}"
+    (run / 'log' / 'test_login.log').write_text(line, encoding='utf-8')
+    staged = pr._staged_copy(run)
+    assert 'hunter2-long' not in (staged / 'log' / 'test_login.log').read_text(encoding='utf-8')
+    assert (run / 'log' / 'test_login.log').read_text(encoding='utf-8') == line
+    out = capsys.readouterr().out
+    assert 'masked 1 secret(s)' in out
+    assert 'hunter2-long' not in out
+

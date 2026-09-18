@@ -13,7 +13,9 @@ the box. Edit a file here, push it, then install it on the box.
 | `cron.d-qa-runs-prune` | `/etc/cron.d/qa-runs-prune` | Starts `qa-runs-prune` at 03:00 UTC each day as root. |
 | `qa-runs-prune` | `/usr/local/bin/qa-runs-prune` | Deletes served run folders that are older than 30 days. |
 | `qa-weston.service` | `/etc/systemd/system/qa-weston.service` | The headless Wayland display that Chrome needs to decode H.265. See "H.265 on the box". |
-| `nginx-qa-runs.conf` | inside `/etc/nginx/sites-enabled/default` | The `/qa-runs/` location. It serves `/data/qa/runs` read-only with basic auth and denies dotfiles. |
+| `nginx-qa-runs-site.conf` | `/etc/nginx/sites-available/qa-runs` | The archive over HTTPS on port 8444. It serves `/data/qa/runs` read-only with basic auth and does not serve a name that starts with a dot. |
+| `setup-https-archive.sh`, `nginx_port80_redirect.py` | Run from the clone | The one-time move of the archive to HTTPS. See "Hardening". |
+| `setup-publish-user.sh` | Run from the clone | The one-time setup of the publish account, and the command that adds a person's key. See "Hardening". |
 
 ## What the nightly does
 
@@ -67,12 +69,66 @@ make sure that the last block in the log ends with `nightly done`.
       User soterix
   ```
 
-- The archive is at `http://10.2.0.2/qa-runs/`. It uses HTTP basic auth with
-  the user `qa`. The password is in the team password store.
+- The archive is at `http://10.2.0.2/qa-runs/`. After the HTTPS setup in
+  "Hardening" it is at `https://10.2.0.2:8444/qa-runs/`, and the old address
+  redirects to it. It uses basic auth with the user `qa`. The password is
+  in the team password store.
+- To publish a run from a laptop, a person needs a key on the account
+  `qa-publish`, not on `soterix`. See "Hardening".
 - The box pulls the repos over SSH with 2 deploy keys. Each key is read-only
   and belongs to one repo.
 - User `soterix` owns `/data/qa/ci`, so an install of `nightly.sh` does not
   need sudo. The systemd unit, the cron files and nginx need sudo.
+
+## Hardening
+
+The box has 3 protections for the evidence that it serves. Each one has a
+setup step that Justin does one time on the box.
+
+| Protection | What it stops | Setup |
+|---|---|---|
+| The evidence scan | A password or a session cookie in a log file that the archive serves. `nightly.sh` runs `tools/evidence_scan.py --redact` on each new run folder before it copies the folder. If the scan fails, the nightly publishes nothing. | Install `nightly.sh` ("Install a change on the box"). |
+| The publish account | A laptop key that can read the box's `.env`. `tools/publish_run.py` copies with sftp, so the account `qa-publish` needs no shell. It can write in `/data/qa/runs` and do nothing else. | `sudo sh deploy/spartan1/setup-publish-user.sh` |
+| HTTPS | The archive password in clear text on the network. The archive moves to `https://10.2.0.2:8444/qa-runs/`. The old address redirects to it. | `sudo sh deploy/spartan1/setup-https-archive.sh` |
+
+### Set up the publish account
+
+1. On the box, from the clone: `sudo sh deploy/spartan1/setup-publish-user.sh`
+2. For each person who publishes runs, copy their public key to the box and
+   run: `sudo sh deploy/spartan1/setup-publish-user.sh add-key <person>.pub`
+3. From that person's laptop, make sure that sftp works and a shell does
+   not:
+
+   ```bash
+   sftp qa-publish@10.2.0.2      # "pwd" must print /data/qa/runs
+   ssh qa-publish@10.2.0.2 id    # must not print a uid
+   ```
+
+4. The person adds `QA_RUNS_HOST=qa-publish@10.2.0.2` to their `.env`.
+5. When each laptop uses the new account, remove the laptop keys from
+   `/home/soterix/.ssh/authorized_keys`. Keep the keys of the people who
+   operate the box.
+
+The script stops and removes its sshd file if sshd refuses it, or if the
+sftp-only rule would also apply to user `soterix`.
+
+A laptop cannot replace a run of the nightly, because those folders belong
+to user `soterix`. It can replace a run that a laptop published.
+
+### Move the archive to HTTPS
+
+1. On the box, from the clone: `sudo sh deploy/spartan1/setup-https-archive.sh`
+2. Do the 2 checks that the script prints.
+3. Install the new `qa-runs-prune` ("Install a change on the box"). It also
+   removes what a publish leaves behind.
+
+The site uses the box's mkcert certificate, the same one as the asset
+tracker. The certificate names `spartan1` and `10.2.0.2`. A laptop that
+trusts the asset tracker page also trusts the archive. For a laptop that
+does not, read `docs/CA_CERT_DISTRIBUTION.md` in the asset tracker repo.
+
+The script keeps the old files in `/etc/nginx/qa-runs-backup-<time>/`. If
+nginx refuses the new configuration, the script puts the old files back.
 
 ## What the box needs
 

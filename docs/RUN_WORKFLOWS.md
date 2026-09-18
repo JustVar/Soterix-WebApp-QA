@@ -118,6 +118,13 @@ venv\Scripts\python.exe tools\publish_run.py            # newest run
 venv\Scripts\python.exe tools\publish_run.py --dry-run  # show, send nothing
 ```
 
+Before the copy, the command removes the trace zips and masks each secret
+that `tools/evidence_scan.py` finds in the copy. Your local run folder does
+not change. The copy uses sftp, so your key needs the publish account
+`qa-publish` on the box and no shell there. Set
+`QA_RUNS_HOST=qa-publish@10.2.0.2` in your `.env` when Justin has added your
+key (`deploy/spartan1/README.md`, "Hardening").
+
 The command copies the run folder and prints the resulting URL. The
 archive's own `index.html` and `health.html` are not sent (each machine's
 copies list only its own runs), so a published run shows in the host's
