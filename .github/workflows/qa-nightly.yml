@@ -91,6 +91,18 @@ jobs:
         run: |
           echo "HTTP status from the QA tenant:"
           curl -sS -o /dev/null -w '%{http_code}\n' --max-time 30 https://qa.example.invalid
+      # requirements.txt names the private shared package over HTTPS. The
+      # same read-only deploy key and one-repo rewrite as collect-gate.yml:
+      # without them this install fails (found 09/18/2026, before the job
+      # had ever run). The secret exists on the company repo only.
+      - uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
+      - name: Send the shared package over the deploy key
+        run: >
+          git config --global
+          url."git@github.com:Soterix-Systems/SOTERIX-QA-SHARED.git".insteadOf
+          "https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git"
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Install browser

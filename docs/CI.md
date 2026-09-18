@@ -9,9 +9,10 @@ The repo has 2 workflows.
 
 The collect gate runs on the company repo,
 `Soterix-Systems/Soterix-WebApp-QA`. Its jobs skip themselves on the
-personal mirror, which has no secrets. You can start the manual workflow
-from the company repo or from the mirror. Only its schedule is limited to
-the company repo.
+personal mirror, which has no secrets. The manual workflow starts from the
+company repo or from the mirror, but its jobs need secrets. The `smoke` job
+needs `QA_SHARED_DEPLOY_KEY`, which is on the company repo only. Start it
+there.
 
 ## The collect gate
 
@@ -74,7 +75,7 @@ if: github.event_name != 'schedule' || github.repository == 'Soterix-Systems/Sot
 ```
 
 Without it every schedule fires twice - two quota draws, two QA Touch writes.
-Manual runs work from either org on purpose. Do not remove the guard.
+The guard lets a manual run start from either org on purpose. Do not remove it.
 
 ## Minutes budget (hosted runners)
 
@@ -99,7 +100,7 @@ Set in Settings > Secrets and variables > Actions on the COMPANY repo:
 | `QATOUCH_DOMAIN` | canary, uploads | `QATOUCH_DOMAIN` (e.g. `soterixsystems`) |
 | `QATOUCH_PROJECT_ID` | canary, uploads | `QATOUCH_PROJECT_ID` (e.g. `JlW1`) |
 | `QA_USER`, `QA_PASSWORD` | smoke login | `QA_USER`, `QA_PASSWORD` |
-| `QA_SHARED_DEPLOY_KEY` | collect gate | None. It is the private half of a read-only deploy key on `Soterix-Systems/SOTERIX-QA-SHARED`. The gate uses it to install the shared package. |
+| `QA_SHARED_DEPLOY_KEY` | collect gate, smoke | None. It is the private half of a read-only deploy key on `Soterix-Systems/SOTERIX-QA-SHARED`. The gate uses it to install the shared package. |
 
 If `QA_SHARED_DEPLOY_KEY` is lost, make a new key pair. Add the public half
 to the shared repo as a read-only deploy key, and put the private half in
