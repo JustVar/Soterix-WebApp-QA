@@ -98,14 +98,15 @@ class InsightsPage:
         """Navigate to the Insights page via the nav link."""
         # Check if already on Insights page
         if self.all_insights_tab.count() > 0:
-            # Close any open sub-tab first
-            try:
-                self.close_tab_icon.click()
+            # Close an open sub-tab first. Ask before clicking: with no
+            # sub-tab open, a bare click waited its default 30 s for an icon
+            # that is not there and the handler swallowed the timeout, on
+            # every widget search (measured 09/18/2026: 30.0 s per call,
+            # about 7 minutes of each nightly leg).
+            if self.close_tab_icon.is_visible():
+                self.close_tab_icon.click(timeout=5000)
+                # a settle, not an oracle: callers wait on their own next element
                 self._appears_hidden(self.close_tab_icon, timeout=5000)
-            # no open sub-tab means nothing to close; callers wait on
-            # their own next element
-            except Exception:
-                pass
             return
 
         self.insights_nav_link.click()

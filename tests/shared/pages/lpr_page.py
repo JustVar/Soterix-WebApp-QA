@@ -795,28 +795,13 @@ class LprPage:
         except Exception:
             pass
 
-        # Try navigating to Views (rendered at the root URL, so the
-        # subtab bar is the arrival signal)
-        try:
-            views_btn = self.page.locator("span:has-text('Views')").first
-            if self._appears(views_btn, timeout=10000):
-                views_btn.click()
-                self.page.locator(".viewTabs").first.wait_for(
-                    state="visible", timeout=15000
-                )
-        # recovery helper: the views click is one attempt, and the caller
-        # asserts the .viewTabs marker
-        except Exception:
-            print("[LPR] Views button not found, continuing")
-
-        # Remove any overlay
-        try:
-            self.page.locator("body").first.click()
-        # the body click only clears a stray overlay; the caller asserts the
-        # views marker
-        except Exception:
-            pass
-
+        # go_to_views_page returns at once when the subtab bar shows, and
+        # raises when Views does not open. The copy of its click that lived
+        # here had no force and no timeout: the span never passed the
+        # click checks, the click waited its default 30 s, the handler
+        # printed 'not found', and the test passed because it had started
+        # on Views (measured 09/18/2026: 31 s in every nightly).
+        self.go_to_views_page()
         print("[LPR] Safe reset done")
 
     # ===================== Wait helpers =====================

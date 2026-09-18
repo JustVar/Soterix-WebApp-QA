@@ -654,6 +654,14 @@ python tools/convention_check.py
   `pytest.skip` raised from an except handler; an except handler with no
   why-comment that neither re-raises nor fails (`except-without-why`); and,
   on added lines, a new UI test without a `Steps:` block.
+- **HIGH on added lines, MEDIUM for the 29 older sites:** an action that
+  waits for its element (`click`, `fill`, `hover`, `wait_for`, `inner_text`
+  and the like) with no `timeout=`, in a `try` whose handlers do not raise
+  (`swallowed-default-timeout`). When the element is absent, the action
+  waits 30 s, the handler hides the timeout, and the test passes. One such
+  click in `InsightsPage.navigate` cost 7 minutes of each nightly leg
+  (register row 102). Ask first with `is_visible()` or `count()`, or give
+  the action a short `timeout=`.
 - **MEDIUM, warns:** absolute `count() > 0` oracles, `img[src]` icon locator
   guesses, hardcoded tenant data names, a skip reason that guesses at the
   app, a test body with no oracle or with presence-only oracles

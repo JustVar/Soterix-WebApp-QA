@@ -32,6 +32,7 @@ Exit codes: 0 = clean (MEDIUM findings only warn), 1 = HIGH findings,
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import subprocess
@@ -380,6 +381,66 @@ def check_except_blocks(path: str, lines: list[str]) -> list[dict]:
     return findings
 
 
+# Locator calls that wait for their element, 30 s by default. keyboard.press
+# waits for nothing and is left out below.
+_WAITING_ACTIONS = {
+    "click", "dblclick", "hover", "tap", "fill", "check", "uncheck",
+    "select_option", "press", "wait_for", "inner_text", "text_content",
+    "get_attribute", "scroll_into_view_if_needed",
+}
+_RAISING_CALLS = {"fail", "skip", "xfail", "exit"}
+
+
+def _handler_swallows(handler: ast.ExceptHandler) -> bool:
+    """True when nothing in the handler raises, fails or skips."""
+    for node in ast.walk(handler):
+        if isinstance(node, ast.Raise):
+            return False
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                and node.func.attr in _RAISING_CALLS):
+            return False
+    return True
+
+
+def check_swallowed_default_timeout(path: str, lines: list[str]) -> list[dict]:
+    """A waiting action with no timeout=, in a try whose handlers swallow.
+
+    When the element is absent the action waits Playwright's default 30 s,
+    the handler hides the timeout, and the test passes 30 s slower each time.
+    InsightsPage.navigate did this on every widget search: 7 minutes of each
+    nightly leg, for months, behind green results (09/18/2026). Ask first
+    (is_visible(), count()) or give the action a short timeout=.
+    """
+    try:
+        tree = ast.parse("\n".join(lines))
+    except SyntaxError:
+        return []
+    findings = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Try) and node.handlers
+                and all(_handler_swallows(h) for h in node.handlers)):
+            continue
+        for stmt in node.body:
+            for call in ast.walk(stmt):
+                if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute)
+                        and call.func.attr in _WAITING_ACTIONS):
+                    continue
+                if any(k.arg == "timeout" for k in call.keywords):
+                    continue
+                owner = call.func.value
+                if isinstance(owner, ast.Attribute) and owner.attr == "keyboard":
+                    continue
+                findings.append({
+                    "sev": "MEDIUM", "rule": "swallowed-default-timeout",
+                    "path": path, "line": call.lineno,
+                    "text": lines[call.lineno - 1].strip(),
+                    "msg": f".{call.func.attr}() has no timeout= and its try swallows "
+                           "the failure: an absent element costs a silent 30 s. Ask "
+                           "first (is_visible(), count()) or pass a short timeout=.",
+                })
+    return findings
+
+
 def check_skip_in_except(path: str, lines: list[str]) -> list[dict]:
     """pytest.skip raised from an except handler.
 
@@ -691,6 +752,7 @@ def main() -> int:
             findings.extend(check_except_blocks(path, lines))
             findings.extend(check_except_without_why(path, lines))
             findings.extend(check_skip_in_except(path, lines))
+            findings.extend(check_swallowed_default_timeout(path, lines))
             findings.extend(check_speculative_skips(path, lines))
             findings.extend(check_no_oracle_tests(path, lines))
             findings.extend(check_presence_only_tests(path, lines))
@@ -714,6 +776,10 @@ def main() -> int:
             for f in check_speculative_skips(path, lines):
                 if f["line"] in added:
                     findings.append(f)
+            # anchors on the action's own line
+            for f in check_swallowed_default_timeout(path, lines):
+                if f["line"] in added:
+                    findings.append(f)
             for f in check_no_oracle_tests(path, lines) + check_presence_only_tests(path, lines):
                 block = _block_range(lines, f["line"] - 1)
                 if f["line"] in added or any(
@@ -731,8 +797,10 @@ def main() -> int:
         # A NEW test lands with its Steps block (CONVENTIONS.md > Adding a
         # test): on added lines that rule blocks. Whole-repo scans keep it
         # a warning, because 269 existing tests still owe theirs.
+        # The swallowed default timeout blocks on added lines for the same
+        # reason: the existing sites are standing debt, a new one is a choice.
         for f in findings:
-            if f["rule"] == "test-without-steps":
+            if f["rule"] in ("test-without-steps", "swallowed-default-timeout"):
                 f["sev"] = "HIGH"
 
     high = [f for f in findings if f["sev"] == "HIGH"]

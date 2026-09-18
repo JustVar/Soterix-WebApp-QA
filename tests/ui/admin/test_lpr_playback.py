@@ -110,14 +110,20 @@ class TestLprCameraPlayback:
         """Verify safe reset lands on the Views page.
 
         Steps:
-        1. Reload the browser page.
+        1. Click LPR in the left sidebar.
+           Expected: The LPR camera page opens and the URL ends with /lpr.
+        2. Reload the browser page.
            Expected: The application loads again.
-        2. Click Views in the left sidebar.
+        3. Click Views in the left sidebar.
            Expected: The address is the site root and the subtab bar reads Devices, My Views, Insights, Maps, Channels.
         """
-        self.step_capture.mark(1, "Call safe reset to Views")
+        # Start away from Views: a reset that does nothing must fail here
+        self.step_capture.mark(1, "Navigate to LPR camera page")
+        self.lpr.ensure_lpr_camera_page()
+        assert "/lpr" in self.page.url, "Not on LPR camera page"
+        self.step_capture.mark(2, "Call safe reset to Views")
         self.lpr.safe_reset_to_views()
-        self.step_capture.mark(2, "Verify the Views page is active")
+        self.step_capture.mark(3, "Verify the Views page is active")
         # Views renders at the root URL; its subtab bar names the five views
         expect(self.page).to_have_url(re.compile(r"^https?://[^/]+/?$"), timeout=15000)
         tabs = self.page.locator(".viewTabs").first

@@ -50,11 +50,16 @@
       "steps": [
         {
           "n": 1,
+          "action": "Click LPR in the left sidebar.",
+          "expected": "The LPR camera page opens and the URL ends with /lpr."
+        },
+        {
+          "n": 2,
           "action": "Reload the browser page.",
           "expected": "The application loads again."
         },
         {
-          "n": 2,
+          "n": 3,
           "action": "Click Views in the left sidebar.",
           "expected": "The address is the site root and the subtab bar reads Devices, My Views, Insights, Maps, Channels."
         }

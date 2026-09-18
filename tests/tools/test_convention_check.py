@@ -357,3 +357,32 @@ def test_the_flaky_mark_is_refused_in_any_form_and_intermittent_passes():
              '    pytest.param(1, marks=pytest.mark.' + 'flaky(reruns=2))', '    @mark.' + 'flaky']
     rules = [[f['rule'] for f in cc.check_line('tests/ui/x/test_x.py', lines, i, mapped=set())] for i in range(7)]
     assert rules == [['flaky-marker'], ['flaky-marker'], [], [], ['flaky-marker'], ['flaky-marker'], ['flaky-marker']]
+
+
+
+def test_swallowed_default_timeout_flags_the_action_not_the_try():
+    """A click with no timeout in a try that only passes: the finding sits on the click's line."""
+    lines = [
+        'def navigate(self):',
+        '    try:',
+        '        self.close_icon.click()',
+        '        self.other.click(timeout=5000)',
+        '        self.page.keyboard.press("Escape")',
+        '    except Exception:  # nothing to close',
+        '        pass',
+    ]
+    findings = cc.check_swallowed_default_timeout('x.py', lines)
+    assert [(f['rule'], f['line']) for f in findings] == [('swallowed-default-timeout', 3)]
+    assert findings[0]['sev'] == 'MEDIUM'
+
+
+def test_swallowed_default_timeout_is_clean_when_the_handler_raises_or_fails():
+    """A handler that re-raises, fails or skips hides nothing, so its try is left alone."""
+    for tail in ('        raise', '        pytest.' + 'fail("no close icon")'):
+        lines = ['def f(self):', '    try:', '        self.icon.click()', '    except Exception:', tail]
+        assert not cc.check_swallowed_default_timeout('x.py', lines), tail
+
+
+def test_swallowed_default_timeout_survives_a_file_that_does_not_parse():
+    """A half-written file is another rule's problem: this one returns nothing."""
+    assert cc.check_swallowed_default_timeout('x.py', ['def broken(:', '    try:']) == []
