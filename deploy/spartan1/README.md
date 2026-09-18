@@ -39,12 +39,18 @@ ledger row.
 You can run the script by hand with a smaller scope:
 
 ```bash
-TARGET=tests/ui/licenses /data/qa/ci/nightly.sh   # one module
-BOXES=india /data/qa/ci/nightly.sh                # one box
+TARGET=tests/ui/licenses /data/qa/ci/nightly.sh   # one module on each box, and the full camera suite
+BOXES=india /data/qa/ci/nightly.sh                # one box, and the full camera suite
 BOXES= /data/qa/ci/nightly.sh                     # cameras only
 C2C=0 /data/qa/ci/nightly.sh                      # no camera run
 TEST_TIMEOUT=120 /data/qa/ci/nightly.sh           # a short cap for a trial
+TARGET=tests/ui/maps BOXES=india C2C=0 /data/qa/ci/nightly.sh   # the smallest trial
 ```
+
+`TARGET` changes the web-app legs only. The camera suite always runs in
+full unless you set `C2C=0`. A run by hand stops a nightly that is in
+progress. The nightly starts at 09:00 UTC. Before you start a run by hand,
+make sure that the last block in the log ends with `nightly done`.
 
 ## Access
 
@@ -81,6 +87,14 @@ TEST_TIMEOUT=120 /data/qa/ci/nightly.sh           # a short cap for a trial
   line in the log. A `QA_USER` value alone is not sufficient.
 - `C2C_CAMERA_PASS` in the same `.env` for the camera suite. Without it the
   nightly skips that suite and writes a line in the log.
+- Read access to the shared package. `requirements.txt` names
+  `soterix-qa-shared` with an HTTPS address, and the repo is private. The
+  box has a read-only deploy key for it, a `Host github-shared` entry in
+  `~/.ssh/config` that uses the key, and this rewrite:
+  `git config --global url."git@github-shared:Soterix-Systems/SOTERIX-QA-SHARED.git".insteadOf "https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git"`.
+  Without them the `pip install` in the nightly fails.
+- No `QATOUCH_UPLOAD` or `QATOUCH_RUN_KEY` line in the `.env`. One of them
+  arms the nightly.
 - The packages in "H.265 on the box".
 
 ## A leg is missing or a run looks wrong
@@ -109,13 +123,14 @@ A good night has these lines, in this order: `nightly start`, `code:`,
 | `=== <box> skipped: QA_<BOX>_USER is not set` | The `.env` on the box has no account pair for that box. | Add the pair to the `.env` on the box. |
 | `=== c2c skipped: C2C_CAMERA_PASS is not set` | The `.env` on the box has no camera password. | Add it to the `.env` on the box. |
 | `pytest exit: 0` | All tests passed. | None. |
-| `pytest exit: 1` | Some tests failed. This is the usual result. A leg that stopped at 200 failures also gives 1. | Open the run in the archive. |
-| `pytest exit: 2` | The run was interrupted. | Read the lines above the exit line. |
+| `pytest exit: 1` | Some tests failed. This is the usual result. | Open the run in the archive. |
+| `pytest exit: 2` after minutes or hours | A web-app leg stopped at 200 failures. The log says `stopping after 200 failures`. The archive index shows "Interrupted". | Open the run in the archive. Its `One cause` line names the shared error. |
+| `pytest exit: 2` after 0 s or 1 s | The run lock refused the leg. A pytest run from the clone was alive, or it left its lock. | Make sure that no pytest runs on the box. Then release the lock: `ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && venv/bin/python tools/run_lock.py release --env qa --force'` |
 | `pytest exit: 3` | pytest had an internal error. | Read the `INTERNALERROR` lines above the exit line. |
 | `pytest exit: 4` | pytest refused the command line. | Read the usage error above the exit line. |
+| `pytest exit: 5` | pytest collected no tests. The `TARGET` path is wrong. | Correct `TARGET`. |
 | `pytest exit: 7` | The preflight refused the run. The tenant did not answer, or it refused the account. | Read the `PREFLIGHT:` line above the exit line. |
 | `pytest exit: 124` | The leg hit the 4 hour cap. The script kept the screenshots and the log in a `PARTIAL-run-cap` folder. | Find the test that stalled. The last lines of `run.log` in that folder name it. |
-| A leg ends in 0 s | The run lock refused the leg. | The script releases the lock on the next night. To do it now, see "Stop a stuck nightly". |
 | `THIS RUN WAS NOT ARCHIVED` | The archive step failed. The line gives the error and the free disk space. | Free disk space if it is low, then run the leg again. |
 | `served index rebuild FAILED` | The health tool failed. The run folders are served, but the index is old. | Run `venv/bin/python tools/health_summary.py --runs-dir /data/qa/runs` on the box and read the error. |
 
@@ -126,7 +141,8 @@ If the log is good but a run is not in the archive, check the disk:
 
 A trace holds a session cookie, and sometimes a password. For that reason
 the trace zips stay in the clone on the box. The served archive does not
-have them. The clone keeps the newest 20 runs of each target.
+have them. The clone keeps a run for a short time only: see "Retention
+and safety". Get the trace in the first 3 days.
 
 1. Open the failure in the served `run.html`. It shows the run folder name
    and the file name of the trace.
@@ -173,7 +189,7 @@ Cron reads the file at each start, so you do not reload anything.
 Then run a trial with a small target, and read the end of the log:
 
 ```bash
-ssh spartan1 'TARGET=tests/ui/maps TEST_TIMEOUT=300 /data/qa/ci/nightly.sh; tail -n 20 /data/qa/ci/nightly.log'
+ssh spartan1 'TARGET=tests/ui/maps BOXES=india C2C=0 TEST_TIMEOUT=300 /data/qa/ci/nightly.sh; tail -n 20 /data/qa/ci/nightly.log'
 ```
 
 ### qa-weston.service
@@ -198,6 +214,11 @@ ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && git fetch -q origin && \
 ```
 
 Use the same command for `cron.d-qa-runs-prune` and `/etc/cron.d/qa-runs-prune`.
+For the prune script, use it for `qa-runs-prune` and
+`/usr/local/bin/qa-runs-prune`, then run `sudo chmod 755` on the file.
+
+Run the `ssh` commands in this file from Git Bash. PowerShell changes the
+quotes inside them.
 
 ### nginx
 
@@ -256,7 +277,7 @@ ssh spartan1 'cd /data/qa/ci/Soterix-WebApp-QA && XDG_RUNTIME_DIR=/run/qa-weston
   "from tests.shared.helpers.stream_health import decode_check; print(decode_check(\"H.265\", \"chrome\", headed=True))"'
 ```
 
-The output must show `decodes: True`, and the browser name must contain
+The output must show `'decodes': True`, and the browser name must contain
 `headed`. In a run, the `[STREAM]` line is in the terminal summary below
 `stream guard`. On a good run it ends with `decodes H.265: yes`.
 
@@ -318,7 +339,7 @@ version for each platform is at
 
 3. Do the procedure in "Prove that H.265 decodes".
 
-If step 3 shows `decodes: False`, the new Chrome needs a flag again. Try the
+If step 3 shows `'decodes': False`, the new Chrome needs a flag again. Try the
 probe with these flags, which were the set of 8 in the audit: VA-API and
 HEVC features on, the GPU blocklist ignored, the driver checks ignored, the
 render node pinned, and `LIBVA_DRIVER_NAME=iHD`. Put the flags that work in
@@ -332,9 +353,13 @@ nightly clears on the next night. Only Justin stops a nightly by hand.
 ```bash
 ssh spartan1 'pkill -u soterix -f "[n]ightly.sh"; pkill -u soterix -f "[p]ytest tests/"; sleep 5; \
   pkill -u soterix -KILL -f "[p]ytest tests/"; pkill -u soterix -KILL -f "playwright/driver/[n]ode"; \
-  pkill -u soterix -KILL -f "[m]s-playwright"; rm -rf /tmp/playwright-artifacts-* /data/qa/ci/nightly.pid; \
-  pgrep -u soterix -fc "[p]ytest tests/|[m]s-playwright"'   # the result must be 0
+  pkill -u soterix -KILL -f "[m]s-playwright|[c]hrome"; rm -rf /tmp/playwright-artifacts-* /data/qa/ci/nightly.pid; \
+  cd /data/qa/ci/Soterix-WebApp-QA && venv/bin/python tools/run_lock.py release --env qa --force; \
+  pgrep -u soterix -fc "[p]ytest tests/|[m]s-playwright|[c]hrome"'   # the result must be 0
 ```
+
+The patterns are the same as in `nightly.sh`. The box runs Google Chrome,
+so a check for `ms-playwright` alone does not see the browsers.
 
 Keep the brackets. `pkill -f "pytest tests/"` also matches the SSH shell
 that runs the command, and stops it. `[p]ytest` matches `pytest` in the
@@ -352,7 +377,10 @@ The evidence below `reports/` is not tracked, so the reset does not delete it.
 ## Retention and safety
 
 - The served archive at `/data/qa/runs` keeps a run for 30 days.
-- The clone keeps the newest 20 runs of each target, and 100 runs in total.
+- The clone keeps the newest 20 runs of each target. The india leg and the
+  us leg have the same target, so that is approximately 10 nights. It also
+  keeps no more than 100 runs and no more than 10 GB in total. The oldest
+  runs go first, and 1 livestream trace can be near 1 GB.
 - The permanent record is the git ledger (`history/*.jsonl`). You can make
   the evidence again if you run the tests again.
 - Trace zips do not go to the served archive. `nightly.sh` copies with

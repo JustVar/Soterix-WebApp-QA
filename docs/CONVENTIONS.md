@@ -457,11 +457,12 @@ The steps, in order:
    when none fits.
 5. If the test changes the account's state (a saved view, a rule, a user, a
    widget), give the module its group:
-   `pytestmark = pytest.mark.xdist_group("account_<family>")`. The families
-   are in [PARALLEL_EXECUTION.md](PARALLEL_EXECUTION.md). Tests in 1 group
-   run on 1 worker, so they do not change the same data at the same time.
-   `tests/plugins/test_xdist_groups.py` fails when a module that writes
-   state has no group.
+   `pytestmark = pytest.mark.xdist_group("account_<family>")`. The table
+   of families is in [PARALLEL_EXECUTION.md](PARALLEL_EXECUTION.md). Tests
+   in 1 group run on 1 worker, so they do not change the same data at the
+   same time. `tests/plugins/test_xdist_groups.py` finds most modules that
+   write state with no group, from the names of the helpers they call. It
+   cannot find all of them, so add the group yourself.
 6. Give each thing that the test creates a name that ends in
    `%H%M%S%f`. With 4 workers, 2 tests can make a name in the same second.
 7. If the test belongs in the QA verification pipeline, add `step_capture`

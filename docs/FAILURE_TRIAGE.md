@@ -11,15 +11,15 @@ Open the run's `run.html` first. On your machine it is at
 
 | What you see | Check | Verdict | Action |
 |---|---|---|---|
-| A "read this first" line in the terminal summary or at the top of `run.html` | The line names an error that 5 or more failures share, a skip reason that more than 20 skips share, or tests that did not run. | The run has 1 cause. | Correct that cause before you open a single failure. |
+| A `read this first` section in the terminal summary, or a list below the verdict in `run.html` that starts with `One cause,` | The line names an error that 5 or more failures share, a skip reason that more than 20 skips share, or tests that did not run. | The run has 1 cause. | Correct that cause before you open a single failure. |
 | The run stopped at once with a `PREFLIGHT:` line and exit code 7 | The line says if the tenant did not answer or if it refused the account. It quotes the tenant's message. | No test ran. The tests are not at fault. | Correct the tenant problem or the account pair in `.env`, then run again. `PREFLIGHT=off` skips the check. |
 | A failure with a `[LOGIN]` line | The line quotes the text on the login form: an error, a captcha or a lockout. | The tenant refused the login. | Correct the account. The later tests in that process fail with the same line and do not submit the form again. |
 | A locator timeout, and the FAILED screenshot shows the login form | The traceback ends with a `[SESSION]` section. | The server dropped the session. The locator is not at fault. | Run the test again. See register row 75. |
 | `no search job was sent ... site/search answered HTTP 400` | Run the test alone. If it passes, a different search held the slot. | The server runs 1 search job at a time. | See register row 100. Do not change the test. |
-| Livestream tests skipped with a `[STREAM]` reason | The reason says how the guard opened Chrome and what it measured. | The browser on that machine cannot decode the stream. | On spartan1, read "A leg is missing" in `deploy/spartan1/README.md`. On a laptop, use Google Chrome, not Chromium. |
+| Livestream tests skipped, and the reason starts with `box <name> streams` or `box <name>: the media socket` | Read the reason. The terminal also has a `[STREAM]` line below `stream guard`. | The reason gives 1 of 3 causes: this browser cannot decode the codec, the camera sent 0 frames, or the decode check did not run. | For the browser on spartan1, read "A leg is missing" in `deploy/spartan1/README.md`. On a laptop, use Google Chrome, not Chromium. For 0 frames, check the camera in the app. |
 | A locator timeout, and the screenshot shows the correct page | Open the trace and read the DOM snapshot at the failed action. | A renamed site or camera, or a changed control. | For renamed tenant data, correct `config/env/qa.py`. For a changed control, correct the page object. |
 | A control shows a spinner that does not stop, and no request leaves | Open the Console tab of the trace. | A Content Security Policy refusal is an app defect. | Report it. See register row 56. |
-| A test has the label `crashed` | Read `log/run.log` in the run folder for the last test on that worker. | The browser or the worker stopped. | See register row 91 for the known stall on the box. |
+| A failure whose error says `worker 'gwN' crashed while running` | Read `log/run.log` in the run folder for the last test on that worker. | The browser or the worker stopped. | See register row 91 for the known stall on the box. |
 | A test failed in the nightly and passes on your machine | Open the "Tests to watch" table on the health page. | The test is intermittent if it passed and failed in its last 20 runs. | Add a register row. Do not add a rerun mark without a row. |
 | `THIS RUN WAS NOT ARCHIVED` in the terminal | The line gives the error and the free disk space. | The run has no evidence folder. | Free disk space, then run again. |
 
@@ -69,8 +69,9 @@ The archive keeps the evidence of past runs. After every run,
 `plugins/run_archive.py` copies the report, the screenshots, the traces, the
 videos, and the results JSON to `reports/runs/<start-time>__<target>/`. Open
 `reports/runs/index.html` to browse the archived runs, newest first. The
-archive keeps the newest 20 runs of each target, and 100 runs in total, so
-repeated runs of one test do not push out a full-suite archive. Set
+archive keeps the newest 20 runs of each target, 100 runs in total, and
+no more than 10 GB (`QA_ARCHIVE_MAX_GB` changes that). The oldest runs go
+first. Repeated runs of one test do not push out a full-suite archive. Set
 `RUN_ARCHIVE=off` to disable it.
 
 Start a triage at the run's `run.html`. It opens with a one-sentence
@@ -173,7 +174,7 @@ screenshot of each action.
 The app taught us these. Read them before you blame the timing.
 
 The table in "Start here" covers the run-level signals: "read this first",
-`PREFLIGHT:`, `[LOGIN]`, `[SESSION]` and `[STREAM]`. Without those signals, a
+`PREFLIGHT:`, `[LOGIN]`, `[SESSION]` and the stream guard. Without those signals, a
 tenant that is down or a browser that is missing reads as hundreds of
 timeouts that look unrelated.
 

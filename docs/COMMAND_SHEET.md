@@ -175,8 +175,9 @@ The same page is on your machine (`reports/runs/index.html`) and on spartan1
 
 The filter box keeps the rows that contain the text you type. It also
 searches words that the row does not show: the account, the operator (the
-user who started the run) and the Chrome version. For example, type `us` to
-see one tenant, or type a machine name to see the runs of one laptop.
+user who started the run) and the Chrome version. For example, type
+`india` to see one tenant, or type a machine name to see the runs of one
+laptop. Short text such as `us` also matches inside names.
 
 Open a trace:
 

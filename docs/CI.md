@@ -7,8 +7,11 @@ The repo has 2 workflows.
 | `.github/workflows/collect-gate.yml` | On each push to `main` and on each pull request | Checks the change. It does not open a browser and it sends no request to a tenant. |
 | `.github/workflows/qa-nightly.yml` | By hand only | Holds the QA Touch canary and a smoke job. The nightly test run is not here. It is a cron job on spartan1. |
 
-Both workflows run on the company repo, `Soterix-Systems/Soterix-WebApp-QA`.
-The jobs skip themselves on the personal mirror, which has no secrets.
+The collect gate runs on the company repo,
+`Soterix-Systems/Soterix-WebApp-QA`. Its jobs skip themselves on the
+personal mirror, which has no secrets. You can start the manual workflow
+from the company repo or from the mirror. Only its schedule is limited to
+the company repo.
 
 ## The collect gate
 
@@ -136,7 +139,7 @@ and re-run; nothing else to rebuild.
 ## First-run checklist
 
 1. Push this branch to the company repo.
-2. Add the five secrets.
+2. Add the secrets in the table.
 3. Actions > QA nightly > Run workflow (the `smoke` job) - read the
    reachability probe line and the login result. That answers the open
    hosted-runner question from the 2026-08-18 grounding research.

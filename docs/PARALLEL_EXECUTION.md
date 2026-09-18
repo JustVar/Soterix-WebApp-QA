@@ -29,6 +29,24 @@ concurrent sessions on one account.
 
 Do not use `-n auto`. QA Touch uploads and `--verify-mode` run serial.
 
+## The groups
+
+Give a new module the group of the data that it writes.
+
+| Group | Data | Modules on 09/18/2026 |
+|---|---|---|
+| `account_search` | The account's 1 search job | The 5 modules in `search/`, and `events/` filters, playback and search |
+| `account_views` | Saved views, favorites, bookmarks | `views/`: basic, bookmarks, drag_drop, favorites, subtabs |
+| `account_rules` | Rules, notifications, sequences | `admin/test_admin_rules`, the 2 modules in `notifications/`, `sequences/test_camera_sequences` |
+| `account_users` | Users | `admin/test_admin_users` |
+| `account_sites` | Sites | `admin/test_admin_sites` |
+| `account_lpr` | Plate lists | `admin/test_lpr_navigation`, `test_lpr_operations`, `test_lpr_views` |
+| `account_chats` | Chat groups and messages | `chats/test_chats` |
+| `account_media` | Clips and folders | `media/test_media_operations` |
+| `account_insights` | Dashboards and widgets | The 2 modules in `insights/`, and `admin/test_lpr_widgets` |
+
+To see the group of each module, run `grep -rn "xdist_group(" tests/ui`.
+
 ## What already works
 
 - **Auth cache per worker.** `auth_state_path` in `conftest.py` returns
