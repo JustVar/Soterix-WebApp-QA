@@ -43,8 +43,11 @@ def targets_a_tenant(args: list[str]) -> bool:
     if not paths:
         return True
     for path in paths:
-        text = path.as_posix().lstrip("./")
-        if not any(text == root or text.startswith(root + "/") for root in NO_TENANT_ROOTS):
+        # relative or absolute: a root counts wherever it sits in the path
+        # (an absolute path to a pin once read as a tenant target and the
+        # offline suite asked the tenant for a login, 09/18/2026)
+        text = "/" + path.as_posix().lstrip("./") + "/"
+        if not any(f"/{root}/" in text for root in NO_TENANT_ROOTS):
             return True
     return False
 

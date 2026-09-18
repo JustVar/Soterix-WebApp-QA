@@ -35,6 +35,10 @@ def test_only_sessions_that_can_reach_a_tenant_get_a_preflight():
     assert pf.targets_a_tenant(["tests/plugins", "tests/ui/login"]) is True
     assert pf.targets_a_tenant(["tests/plugins", "tests/tools", "tests/helpers"]) is False
     assert pf.targets_a_tenant(["tests\\c2c"]) is False
+    # absolute paths too: a pin launched by absolute path once read as a tenant target
+    assert pf.targets_a_tenant(["C:/work/repo/tests/plugins/xdist_crash_scenario.py"]) is False
+    assert pf.targets_a_tenant(["/data/qa/ci/repo/tests/c2c/test_c2c_auth.py::test_x"]) is False
+    assert pf.targets_a_tenant(["/data/qa/ci/repo/tests/ui/maps"]) is True
     assert pf.skip_reason(_config(["tests/ui"]), {}) is None
     assert pf.skip_reason(_config(["tests/ui"]), {"PREFLIGHT": "off"}) == "PREFLIGHT=off"
     assert "worker" in pf.skip_reason(_config(["tests/ui"], worker=True), {})
@@ -44,6 +48,7 @@ def test_only_sessions_that_can_reach_a_tenant_get_a_preflight():
 
 
 def test_a_sign_in_that_works_says_nothing():
+    """A token back means no line, and the run goes on."""
     assert pf.check(URL, "someone@example.test", "pw", login=lambda *a: "JSESSION") is None
 
 
@@ -74,6 +79,7 @@ def test_each_failure_class_gets_its_own_named_line():
 
 
 def test_the_password_never_appears_in_a_refusal_line():
+    """The refusal quotes the tenant, never the password it was given."""
     def refused(base, account, password):
         raise ApiError(3001, 401, f"bad {password}"[:4], "/login")
     assert "hunter-two" not in pf.check(URL, "u@example.test", "hunter-two", login=refused)

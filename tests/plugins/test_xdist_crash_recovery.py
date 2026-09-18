@@ -25,8 +25,10 @@ def _run(tmp_path: Path, two_deaths: bool) -> tuple[int, str]:
     (tmp_path / "pytest.ini").write_text(
         "[pytest]\naddopts = -p no:cacheprovider --dist loadgroup\nmarkers =\n    xdist_group: scope\n",
         encoding="utf-8")
+    # PREFLIGHT off: the scenario sits under this repo, so its conftest loads, and an
+    # offline pin must never ask a tenant for a login
     env = {**os.environ, "RUN_GUARD": "off", "RUN_ARCHIVE": "off", "REPORT_SCREENSHOTS": "off",
-           "PYTHONPATH": str(REPO_ROOT)}
+           "PREFLIGHT": "off", "PYTHONPATH": str(REPO_ROOT)}
     if two_deaths:
         env["XDIST_SCENARIO_TWO_DEATHS"] = "1"
     else:
