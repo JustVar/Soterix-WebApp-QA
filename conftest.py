@@ -54,6 +54,30 @@ def pytest_configure(config):
             "modules that write tenant state stay on one worker (docs/PARALLEL_EXECUTION.md).")
 
 
+def _session_account() -> tuple[str, str, str]:
+    """(account, password, box) the UI login will use: the box pair when BOX
+    is set, else the legacy QA_USER pair. The same choice login_data makes."""
+    box = (os.environ.get("BOX") or "").strip()
+    if box:
+        from config.base_config import get_credentials
+        creds = get_credentials()
+        return creds.get("email") or "", Secret(creds.get("password") or ""), box
+    return os.environ.get("QA_USER") or "", Secret(os.environ.get("QA_PASSWORD") or ""), ""
+
+
+def pytest_sessionstart(session):
+    """Ask once whether the tenant answers and the account signs in, before
+    any browser opens; refuse the run with one named line when not
+    (tests/shared/helpers/preflight.py)."""
+    from tests.shared.helpers import preflight
+    if preflight.skip_reason(session.config):
+        return
+    account, password, box = _session_account()
+    refusal = preflight.check(str(ENV_SETTINGS.get("base_url") or ""), account, password, box=box)
+    if refusal:
+        pytest.exit(refusal, returncode=preflight.EXIT_CODE)
+
+
 def pytest_addoption(parser):
     """Register the opt-in required to run hardware-disrupting tests."""
     parser.addoption(
@@ -368,19 +392,26 @@ SESSION_DROP_NOTE = (
 
 
 def _session_drop_note(item, rep) -> str | None:
-    """The session-drop line for a failed call whose page shows the login
-    screen, else None. The page is the one authenticated_page stashed on
-    the item; a page already closed has no URL and gets no note."""
-    if rep.when != "call" or not rep.failed:
+    """The session-drop line for a failed setup or call whose page shows
+    the login screen, else None. The page is the one authenticated_page
+    stashed on the item; a fixture layered on it that navigates in setup
+    bounces the same way, and so does a second tab of the same context
+    (both measured without a note, 09/18/2026). A page already closed has
+    no URL and gets no note."""
+    if rep.when not in ("setup", "call") or not rep.failed:
         return None
     page = getattr(item, "qa_page", None)
     if page is None:
         return None
     try:
-        url = page.url
+        urls = [page.url]
     except Exception:  # why: a closed page raises; the note is optional
         return None
-    return SESSION_DROP_NOTE if LOGIN_SCREEN in url else None
+    try:
+        urls += [p.url for p in page.context.pages if p is not page]
+    except Exception:  # why: the other tabs are a bonus; the test's own page already answered
+        pass
+    return SESSION_DROP_NOTE if any(LOGIN_SCREEN in u for u in urls) else None
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -565,6 +596,38 @@ def auth_state_path(base_url):
     )
 
 
+# The first refused login of this process, kept so the tests after it fail
+# in a second with the same line instead of submitting the form again.
+_LOGIN_REFUSED: list[str] = []
+
+
+def _login_refusal(lp, page, account: str) -> str | None:
+    """The line that names a rejected login, or None when the form is gone.
+
+    LoginPage.login swallows its own wait, and the 60 s wait after it then
+    failed as 'Timeout 60000ms exceeded' with the app's message never
+    quoted: 73 s per test, the form resubmitted each time (measured on a
+    loopback app, 09/18/2026). A form still up with an error, a captcha or
+    a lockout text on it is a refusal; a form still up with none of those
+    is left to the wait below, because a slow tenant looks the same.
+    """
+    try:
+        if LOGIN_SCREEN not in page.url:
+            return None
+        message = lp.get_error_message()
+        captcha = lp.has_captcha()
+        lockout = lp.has_lockout_message()
+    except Exception:  # why: reading the form is a courtesy; the wait below still decides
+        return None
+    if not (message or captcha or lockout):
+        return None
+    box = (os.environ.get("BOX") or "").strip()
+    return (f"[LOGIN] {page.url} kept the login form after submit. On screen: {message or 'no message'!r}. "
+            f"Captcha shown: {'yes' if captcha else 'no'}. Lockout text: {'yes' if lockout else 'no'}. "
+            f"Account: {account}{f' (box {box})' if box else ''}. Later tests fail with this line "
+            f"and do not submit the form again.")
+
+
 @pytest.fixture
 def authenticated_page(browser, auth_state_path, base_url, login_data, request):
     """Provide a Playwright page with cached authentication.
@@ -626,6 +689,10 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
                 pass
 
     if context is None:
+        # A login this process already saw refused is not submitted again:
+        # every retry is one more failed attempt against the account.
+        if _LOGIN_REFUSED:
+            pytest.fail(_LOGIN_REFUSED[0], pytrace=False)
         # No valid cache - perform fresh login
         print("[AUTH] Performing fresh login...")
         context = browser.new_context(**_video_context_args())
@@ -638,6 +705,10 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
             from tests.shared.pages.login_page import LoginPage
             lp = LoginPage(page, base_url)
             lp.login(login_data['username'], login_data['password'])
+            refusal = _login_refusal(lp, page, login_data['username'])
+            if refusal:
+                _LOGIN_REFUSED.append(refusal)
+                raise AssertionError(refusal)
 
             # Wait for login to complete (not on login page anymore)
             page.wait_for_function(

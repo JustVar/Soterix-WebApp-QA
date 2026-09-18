@@ -9,6 +9,15 @@ SHORT_WAIT = 2000
 LOGIN_WAIT = 10000
 
 
+def _active_base_url() -> str:
+    """The base url of the environment ENV selects, or '' when it cannot load."""
+    try:
+        from config.base_config import config
+        return str(config.get("base_url") or "")
+    except Exception:  # why: a page object must still construct when the env module cannot load; the caller's page.url is next
+        return ""
+
+
 class LoginPage:
     """Playwright Page Object Model for the application's login page.
 
@@ -25,8 +34,11 @@ class LoginPage:
                 attempt to derive from `page.url`.
         """
         self.page = page
-        # Allow backward-compatible construction from callers that only pass `page`.
-        raw_base = base_url or os.environ.get('BASE_URL') or (getattr(page, 'url', None) or '')
+        # A caller that passes only `page` gets the ACTIVE environment's
+        # base url. The old fallback read BASE_URL from .env whatever ENV
+        # said, and an ENV=neurosen experiment signed in to the QA tenant
+        # through it (09/18/2026).
+        raw_base = base_url or _active_base_url() or (getattr(page, 'url', None) or '')
         self.base_url = raw_base.rstrip("/")
 
         # selector fallbacks

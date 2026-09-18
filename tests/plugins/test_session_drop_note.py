@@ -56,10 +56,16 @@ def test_a_failure_on_the_login_screen_gets_the_note():
     assert "login screen" in note
 
 
+def test_a_setup_failure_on_the_login_screen_gets_the_note_too():
+    """A fixture layered on authenticated_page that navigates in setup bounces the same
+    way; measured without a note on 09/18/2026, so the setup phase counts now."""
+    note = conftest._session_drop_note(FakeItem(FakePage(LOGIN)), FakeReport(when="setup"))
+    assert note == conftest.SESSION_DROP_NOTE
+
+
 @pytest.mark.parametrize(("item", "rep"), [
     pytest.param(FakeItem(FakePage(MAPS)), FakeReport(), id="failed elsewhere"),
     pytest.param(FakeItem(FakePage(LOGIN)), FakeReport(failed=False), id="passed on login"),
-    pytest.param(FakeItem(FakePage(LOGIN)), FakeReport(when="setup"), id="setup phase"),
     pytest.param(FakeItem(FakePage(LOGIN)), FakeReport(when="teardown"), id="teardown phase"),
     pytest.param(FakeItem(), FakeReport(), id="no page stashed"),
     pytest.param(FakeItem(FakePage(None)), FakeReport(), id="page already closed"),

@@ -85,7 +85,7 @@ def main() -> int:
             user = box_creds.get("email") or os.environ["QA_USER"]
             password = box_creds.get("password") or os.environ["QA_PASSWORD"]
             print(f"[EXPLORE] Logging in as {user}")
-            LoginPage(page).login(user, password)
+            LoginPage(page, config["base_url"]).login(user, password)
 
         shots = REPO / "reports" / "probe_shots"
         counter = {"n": 0}

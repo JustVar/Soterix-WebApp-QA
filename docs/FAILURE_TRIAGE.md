@@ -129,6 +129,17 @@ the trace instead. The trace contains a screenshot of every action.
 
 ## Traps this app has taught us (check these before blaming timing)
 
+- **The run ended at once with a `PREFLIGHT:` line and exit code 7.** No test
+  ran, on purpose: the tenant did not answer, or it refused the account,
+  and the line says which, quoting the tenant's own message. Fix the cause
+  (the tenant, the account pair in `.env`) and run again; `PREFLIGHT=off`
+  skips the check when you need the old behaviour.
+- **A test failed with a `[LOGIN]` line.** The form stayed up after submit
+  with an error, a captcha or a lockout text on it; the line quotes what
+  was on screen. Every later test in that process fails with the same
+  line in a second and does not submit the form again, so one refused
+  login is one failed attempt, not four hundred.
+
 Measured mechanisms from the 08/2026 rebuilds. Each one cost at least
 one diagnosis round; check the list before opening a trace.
 

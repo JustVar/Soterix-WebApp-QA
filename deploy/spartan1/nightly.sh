@@ -134,7 +134,7 @@ fi
       -n "$WORKERS" -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?
-    echo "=== $box pytest exit: $rc after $(( $(date +%s) - started ))s (124 = run cap)"
+    echo "=== $box pytest exit: $rc after $(( $(date +%s) - started ))s (124 = run cap, 7 = the preflight refused the run: read the PREFLIGHT line above)"
     if [ "$rc" = 124 ]; then
       # The archive is written at session end, which a kill never reaches.
       # Keep what exists: labelled screenshots and the live log. Traces and
