@@ -17,6 +17,7 @@ import pytest
 # side effect - import it here so the rule is set for the session.
 import plugins.products
 from config.base_config import config  # dict resolved from ENV
+from config.secret import Secret
 from plugins.paths import fit_name
 from tests.shared.auth_state import auth_state_filename
 
@@ -225,7 +226,7 @@ def build_no_tenant_login_data() -> dict[str, str]:
       2) default_user / default_password from the active env config
     """
     username = _from_env_or_config("AUTO_USER", "default_user")
-    password = _from_env_or_config("AUTO_PASSWORD", "default_password")
+    password = Secret(_from_env_or_config("AUTO_PASSWORD", "default_password"))
     expected_landing = os.environ.get("EXPECTED_LANDING", "/dashboard")
 
     missing = []
@@ -285,11 +286,11 @@ def login_data():
                 f"Fill both {email_env} and {password_env} (README > Quick Setup), or unset BOX to sign "
                 f"in with the legacy QA_USER / QA_PASSWORD pair.")
         logging.getLogger(__name__).info(f"[CREDENTIALS] Using box '{box}' account from env config")
-        return {"username": creds["email"], "password": creds["password"],
+        return {"username": creds["email"], "password": Secret(creds["password"]),
                 "expected_landing": expected_landing}
 
     user = os.environ.get("QA_USER")
-    password = os.environ.get("QA_PASSWORD")
+    password = Secret(os.environ.get("QA_PASSWORD") or "")
     if not user or not password:
         raise ValueError("QA_USER and QA_PASSWORD must be set in environment or .env file. See .env.template")
     logging.getLogger(__name__).info("[CREDENTIALS] Using QA_USER from environment")

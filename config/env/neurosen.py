@@ -15,6 +15,8 @@ Run with ENV=neurosen; the one box is `lab`.
 """
 import os
 
+from config.secret import Secret
+
 _BASE_URL = os.environ.get("NEUROSEN_BASE_URL", "").strip().rstrip("/")
 
 config = {
@@ -79,6 +81,6 @@ def get_credentials(box_name=None):
     box_config = get_box_config(box_name)
     return {
         "email": os.environ.get(box_config["email_env"], ""),
-        "password": os.environ.get(box_config["password_env"], ""),
+        "password": Secret(os.environ.get(box_config["password_env"], "")),
         "site_id": box_config["default_site_id"],
     }

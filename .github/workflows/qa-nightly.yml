@@ -102,12 +102,18 @@ jobs:
           ENV: qa
           QA_USER: ${{ secrets.QA_USER }}
           QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
-        run: python -m pytest ${{ inputs.target }} -x
+          # through the environment, never pasted into the shell line
+          TARGET: ${{ inputs.target }}
+        run: python -m pytest "$TARGET" -x
       - name: Upload report and traces
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: smoke-report
-          path: reports/
+          # no trace zips: a CI login is always fresh, and a trace of it
+          # holds the password (the same rule tools/publish_run.py keeps)
+          path: |
+            reports/
+            !reports/**/*.zip
           retention-days: 7
           if-no-files-found: ignore

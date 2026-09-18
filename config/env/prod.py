@@ -1,5 +1,7 @@
 import os
 
+from config.secret import Secret
+
 config = {
     "base_url": "https://app.example.invalid",
     "api_base_url": "https://app.example.invalid/v-apiserver",
@@ -46,7 +48,7 @@ def get_credentials(box_name=None):
     box_config = get_box_config(box_name)
     email = box_config.get("email") or os.environ.get(
         box_config.get("email_env", ""), "")
-    password = os.environ.get(box_config["password_env"], "")
+    password = Secret(os.environ.get(box_config["password_env"], ""))
     return {
         "email": email,
         "password": password,

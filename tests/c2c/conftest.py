@@ -35,12 +35,14 @@ from pathlib import Path
 import pytest
 import yaml
 
+from config.secret import Secret
+
 # Default fallback config when no YAML registry is used
 DEFAULT_CAMERA = {
     "id": "default",
     "ip": os.environ.get("C2C_CAMERA_IP", "10.2.0.129"),
     "user": os.environ.get("C2C_CAMERA_USER", "root"),
-    "password": os.environ.get("C2C_CAMERA_PASS", ""),
+    "password": Secret(os.environ.get("C2C_CAMERA_PASS", "")),
     "model": "BC-5V-1",
     "manufacturer": "SOTERIX SYSTEMS",
     "max_resolution": "2592x1944",
@@ -82,7 +84,7 @@ def _load_cameras():
     # shared lab login here instead, overridable per environment.
     for cam in enabled:
         cam.setdefault("user", os.environ.get("C2C_CAMERA_USER", "root"))
-        cam.setdefault("password", os.environ.get("C2C_CAMERA_PASS", ""))
+        cam.setdefault("password", Secret(os.environ.get("C2C_CAMERA_PASS", "")))
     return enabled if enabled else [DEFAULT_CAMERA]
 
 

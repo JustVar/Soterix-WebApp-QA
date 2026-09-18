@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -123,12 +124,13 @@ def publish(run_dir: Path, host: str, dest: str,
         # Clear any leftover temp from a prior interrupted publish, copy, then
         # atomically swing it into place (removing an old copy first, since mv
         # onto a non-empty dir is not a replace).
-        run(['ssh', *opts, host, f'rm -rf {tmp}'], check=False)
+        q_tmp, q_final = shlex.quote(tmp), shlex.quote(final)   # a run folder name reaches a remote shell
+        run(['ssh', *opts, host, f'rm -rf {q_tmp}'], check=False)
         scp = run(['scp', '-q', '-r', *opts, str(staged), f'{host}:{tmp}'], check=False)
         if scp.returncode != 0:
-            run(['ssh', *opts, host, f'rm -rf {tmp}'], check=False)
+            run(['ssh', *opts, host, f'rm -rf {q_tmp}'], check=False)
             return 1
-        mv = run(['ssh', *opts, host, f'rm -rf {final} && mv {tmp} {final}'], check=False)
+        mv = run(['ssh', *opts, host, f'rm -rf {q_final} && mv {q_tmp} {q_final}'], check=False)
         return 0 if mv.returncode == 0 else 1
     finally:
         shutil.rmtree(staged.parent, ignore_errors=True)
