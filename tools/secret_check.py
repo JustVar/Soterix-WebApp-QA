@@ -39,6 +39,11 @@ PLACEHOLDER_RE = re.compile(
     r'^(changeme|password|secret|xxx+|your[-_ ]|<.*>|\$\{.*\}|none|null|true|false|\d+|\d{4}-\d{2}-\d{2}.*)$', re.I)
 
 
+# The last word of the key, not a part of it: PASSWORD_MIN_LENGTH, PASS_RATE_THRESHOLD and
+# BYPASS_TIMEOUT_MS hold numbers that are not secrets, and the scan would mask each one in the logs.
+DIGIT_SECRET_KEY_RE = re.compile(r'(?:^|_)(?:PASS|PASSWORD|PASSWD|PWD|PIN)$', re.I)
+
+
 def secret_values(env_text: str) -> dict[str, str]:
     """{KEY: value} for the credential-looking keys in an env file's text."""
     # python-dotenv reads the text, as the suite does. A hand parser kept the inline comment of
@@ -56,7 +61,7 @@ def secret_values(env_text: str) -> dict[str, str]:
             continue
         # a placeholder is not a secret. An all-digit value is one when its key says password:
         # a camera PIN of 8 digits was dropped as "a number".
-        if PLACEHOLDER_RE.match(value) and not (value.isdigit() and re.search(r'PASS', key, re.I)):
+        if PLACEHOLDER_RE.match(value) and not (value.isdigit() and DIGIT_SECRET_KEY_RE.search(key)):
             continue
         found[key] = value
     return found

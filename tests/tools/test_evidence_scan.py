@@ -196,3 +196,17 @@ def test_a_long_line_with_no_secret_is_read_in_a_moment():
     assert time.perf_counter() - start < 5
     assert [f['what'] for f in found] == ['password in a URL']
     assert 'Hunter22x' not in clean
+
+
+@pytest.mark.parametrize("line", [
+    "10.2.0.9-rtsp://admin:Hunter22x@10.2.0.9/live",
+    "camera-stream-endpoint-rtsp://admin:Hunter22x@10.2.0.9/live",
+    "2026-09-21T10:25:54.rtsp://admin:Hunter22x@cam/live",
+    "https://oauth2:" + "e" * 403 + "@gitlab.example.test/repo.git",
+])
+def test_a_password_in_a_url_is_found_whatever_stands_before_the_scheme(line):
+    """A bounded scheme was fast and missed each of these (audit 09/21/2026); the literal :// finds them."""
+    clean, found = es.scan_text(line, {})
+    assert [f["what"] for f in found] == ["password in a URL"]
+    assert "Hunter22x" not in clean
+    assert "e" * 403 not in clean

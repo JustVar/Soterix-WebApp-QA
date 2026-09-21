@@ -1136,7 +1136,7 @@ Product: NexaiQ-Core (web app). Files: __init__.py, test_notifications.py, test_
 - Muting a rule from Admin changes that rule's icon to Unmute and stops its notifications; the only real check lives in test_admin_rules, not in this group.
 - A created sequence appears in the sidebar under its name (or the sidebar count grows by one) after Save.
 - Sequence edit: rename via update_sequence_name, timing change 5 Sec -> 10 Seconds (timing_dropdown_5s / timing_option_10s), click_update; the page object has these and no test calls them.
-- Sequence delete as a tested behaviour with a by-name oracle; delete_last_sequence runs only in teardown and swallows every failure.
+- Sequence delete as a tested behaviour. `delete_sequence(name)` deletes by exact name and proves it by the count, but it runs only in teardown.
 - Adding a sequence to a Views tile and seeing it cycle cameras; the file header promises it, no test touches ViewsPage.
 - Selecting individual cameras (select_first_camera has zero callers) and confirming only those cameras are in the saved sequence.
 - The sequence-page search filters the camera list down to the matching camera; only the input echo is checked.

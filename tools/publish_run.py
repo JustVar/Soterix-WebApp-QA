@@ -108,6 +108,11 @@ def _redact_staged(staged: Path) -> None:
 
     env = evidence_scan.ENV_FILE
     secrets = secret_values(env.read_text(encoding='utf-8')) if env.is_file() else {}
+    if not secrets:
+        # The nightly publishes nothing in this case. A person who publishes 1 run by hand is
+        # told, and decides: the patterns still mask a cookie, a token and a password in a URL.
+        print(f'WARNING: no secret values read from {env}. The copy is checked for the shapes of a '
+              'secret only, not for the values of this machine.', file=sys.stderr)
     found, errors = evidence_scan.scan_run(staged, secrets, redact=True)
     if errors:
         # The copy could not be made clean, so it must not travel.
@@ -198,7 +203,7 @@ def main(argv: list[str] | None = None) -> int:
     # already in the environment wins (load_dotenv does not override).
     from dotenv import load_dotenv
     load_dotenv(ROOT / '.env')
-    host = os.environ.get('QA_RUNS_HOST') or DEFAULT_HOST   # `or`: a blank line in .env is not a host
+    host = (os.environ.get('QA_RUNS_HOST') or '').strip() or DEFAULT_HOST   # a blank line in .env is not a host
     # The publish account lives in a jail where the served directory is /runs.
     dest = os.environ.get('QA_RUNS_DIR') or (PUBLISH_USER_DIR if host.startswith('qa-publish@') else DEFAULT_DIR)
     url = os.environ.get('QA_RUNS_URL', DEFAULT_URL)

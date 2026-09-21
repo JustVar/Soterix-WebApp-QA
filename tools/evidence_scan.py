@@ -66,10 +66,12 @@ PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ('bearer token', re.compile(r'Bearer\s+(?P<s>[A-Za-z0-9._~+/-]{20,}=*)', re.I)),
     ('basic auth', re.compile(r'Authorization' + _Q + r'?\s*[:=]\s*' + _Q + r'?Basic\s+(?P<s>[A-Za-z0-9+/]{8,}=*)', re.I)),
     ('integration key', re.compile(r'x-vsaas-key' + _Q + r'?\s*[:=]\s*' + _Q + r'?(?P<s>[A-Za-z0-9._-]{12,})', re.I)),
-    # Bounded, and anchored on the left: with no anchor each start position of a long run of
-    # letters scanned to the end of the run (measured 09/21/2026: a 200 KB line took 110 s, and
-    # the nightly runs this scan with no time limit before it publishes anything).
-    ('password in a URL', re.compile(r'(?<![A-Za-z0-9+.-])[a-z][a-z0-9+.-]{0,20}://[^/\s:@]{1,200}:(?P<s>[^@\s/]{3,200})@', re.I)),
+    # No scheme in the pattern. `[a-z][a-z0-9+.-]*://` made each start position of a long run of
+    # letters scan to the end of the run (measured 09/21/2026: a 200 KB line took 110 s, and the
+    # nightly runs this scan with no time limit before it publishes). A bounded scheme was fast and
+    # missed `10.2.0.9-rtsp://user:pw@` and a token of 400 characters. The literal `://` is anchor
+    # enough: 0.01 s on a 1 MB line of each character class.
+    ('password in a URL', re.compile(r'://[^/\s:@]{1,200}:(?P<s>[^@\s/]{3,2000})@')),
     # a password key with a quoted value: 'password': 'x', "password":"x", &quot;password&quot;: &quot;x&quot;
     ('password value', re.compile(r'(?<![A-Za-z])(?:pass(?:word|wd)?|pwd)' + _Q + r'?\s*[:=]\s*(?P<q>' + _Q
                                   + r')(?P<s>(?:(?!(?P=q)).){4,}?)(?P=q)', re.I)),

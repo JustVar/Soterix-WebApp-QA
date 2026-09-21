@@ -9,11 +9,14 @@ live file.
 from __future__ import annotations
 
 import sys
+import textwrap
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+import pytest  # noqa: E402
 
 from tools import convention_check as cc  # noqa: E402
 
@@ -416,3 +419,74 @@ def test_no_oracle_rule_reads_only_files_that_pytest_collects():
     assert cc.check_no_oracle_tests('tests/plugins/xdist_crash_scenario.py', lines) == []
     assert [f['rule'] for f in cc.check_no_oracle_tests('tests/plugins/test_x.py', lines)] == ['no-oracle-test']
 
+
+MULTI_LINE_SIGNATURE = '''
+def test_download(
+    page,
+    tmp_path,
+):
+    with page.expect_download() as info:
+        page.click("#csv")
+
+
+def test_gives_up(
+    page,
+):
+    if not page.url:
+        return
+    assert page.url
+'''
+
+
+def test_a_signature_over_several_lines_has_its_body_read():
+    """The `):` that closes a long signature is not the end of the test: its oracle is seen, and so is its bare return."""
+    lines = MULTI_LINE_SIGNATURE.splitlines()
+    assert cc.check_no_oracle_tests("tests/ui/test_x.py", lines) == []
+    early = cc.check_early_exit_tests("tests/ui/test_x.py", lines)
+    assert [f["text"] for f in early] == ["return"]
+
+
+def test_a_nested_handler_and_a_fixture_named_test_are_not_test_exits():
+    """A return inside a nested def with a long signature, inside an async def, or inside a fixture named test_* is not flagged."""
+    # indented, then dedented: text at column 0 would end this test's body for the checker's own block reader
+    source = textwrap.dedent('''
+        import pytest
+
+
+        @pytest.fixture
+        def test_site():
+            return "Newtown"
+
+
+        def test_blocks_images(page):
+            def handler(
+                route,
+            ):
+                return route.abort()
+
+            async def later():
+                return 1
+
+            page.route("**/*.png", handler)
+            assert page.url
+    ''')
+    lines = source.splitlines()
+    assert cc.check_early_exit_tests("tests/ui/test_x.py", lines) == []
+    assert cc.check_no_oracle_tests("tests/ui/test_x.py", lines) == []
+
+
+@pytest.mark.parametrize("body", [
+    "page.wait_for_url('**/views')",
+    "with page.expect_response('**/api'):\n        page.click('#go')",
+    "mock.assert_called_once_with(3)",
+])
+def test_a_call_that_raises_when_the_thing_does_not_happen_is_an_oracle(body):
+    """wait_for_url, expect_response and a mock's assert_called raise on a miss, so the test can fail."""
+    lines = f"def test_x(page, mock):\n    {body}\n".splitlines()
+    assert cc.check_no_oracle_tests("tests/ui/test_x.py", lines) == []
+
+
+def test_a_sleep_is_not_an_oracle():
+    """wait_for_timeout never raises: a body with only that is still a test with no oracle."""
+    lines = "def test_x(page):\n    page.wait_for_timeout(500)  # settle: the panel animates\n".splitlines()
+    assert [f["rule"] for f in cc.check_no_oracle_tests("tests/ui/test_x.py", lines)] == ["no-oracle-test"]

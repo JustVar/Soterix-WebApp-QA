@@ -62,16 +62,24 @@ def test_every_module_that_writes_tenant_state_declares_a_group():
                          + ", ".join(missing))
 
 
+# A module holds 1 group. This one creates widgets (account_insights), and 1 of its tests drops
+# a card on an LPR tile. The drop needs 1 empty tile, which each layout has; see the test's comment.
+LPR_TILES_IN_ANOTHER_GROUP = {"tests/ui/admin/test_lpr_widgets.py"}
+
+
 def test_modules_that_share_state_with_no_telling_name_are_in_their_group():
     """Each module of SHARED_STATE carries its group, and a module that plays a camera on the LPR page is in the list."""
     for rel, group in SHARED_STATE.items():
         found = GROUP_RE.search((REPO_ROOT / rel).read_text(encoding="utf-8"))
         assert found, f"{rel} must be in the xdist group {group}"
         assert found.group(1) == group, f"{rel} must be in the xdist group {group}"
-    for path in sorted((REPO_ROOT / "tests" / "ui").rglob("test_lpr_*.py")):
+    # each call that puts something on the LPR page's tiles, in each file of tests/ui
+    for path in sorted((REPO_ROOT / "tests" / "ui").rglob("test_*.py")):
         rel = path.relative_to(REPO_ROOT).as_posix()
-        if ".play_camera(" in path.read_text(encoding="utf-8"):
-            assert rel in SHARED_STATE, f"{rel} plays a camera on the LPR page: add it to SHARED_STATE and to account_lpr"
+        text = path.read_text(encoding="utf-8")
+        if "LprPage" in text and re.search(r"\.(play_camera|drop_widget_on_tile)\(", text):
+            assert rel in SHARED_STATE or rel in LPR_TILES_IN_ANOTHER_GROUP, (
+                f"{rel} uses the tiles of the LPR camera page: add it to SHARED_STATE and to account_lpr")
 
 
 def test_a_command_line_dist_that_undoes_the_grouping_is_refused():

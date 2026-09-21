@@ -77,3 +77,10 @@ def test_secret_values_reads_the_file_the_way_the_suite_does():
     """An inline comment and an escaped quote are not a part of the value, and an all-digit password is a secret."""
     text = 'QA_PASSWORD=Hunter22x # the india one\nCAM_PASSWORD=12345678\nAPI_TOKEN="ab\\"cdefgh"\nRETRY_KEY=12345678\n'
     assert sc.secret_values(text) == {'QA_PASSWORD': 'Hunter22x', 'CAM_PASSWORD': '12345678', 'API_TOKEN': 'ab"cdefgh'}
+
+
+def test_an_all_digit_value_is_a_secret_only_under_a_key_that_ends_in_a_password_word():
+    """C2C_CAMERA_PASS and QA_PASSWORD keep their digits; PASSWORD_MIN_LENGTH and BYPASS_TIMEOUT_MS are settings, not secrets."""
+    text = ("C2C_CAMERA_PASS=12345678\nQA_PASSWORD=87654321\nPASSWORD_MIN_LENGTH=12345678\n"
+            "BYPASS_TIMEOUT_MS=120000\nPASS_RATE_THRESHOLD=100000\n")
+    assert sc.secret_values(text) == {"C2C_CAMERA_PASS": "12345678", "QA_PASSWORD": "87654321"}

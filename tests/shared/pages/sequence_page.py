@@ -98,9 +98,7 @@ class SequencePage:
             ).first.wait_for(state="visible", timeout=10000)
         # arrival is the callers' oracle: _navigate_and_verify
         # (test_camera_sequences.py) expects this same marker union,
-        # select_first_camera's retry waits on the camera list after this,
-        # and _cleanup_sequences calls this in teardown, where delete_sequence then
-        # waits for the sidebar item and reports a miss
+        # and select_first_camera's retry waits on the camera list after this
         except Exception:
             pass
 

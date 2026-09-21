@@ -96,7 +96,9 @@ def _expire(nodeid: str, cap_s: float, in_worker: bool) -> None:
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_protocol(item: pytest.Item, nextitem: pytest.Item | None):
-    # each rerun is one more full attempt inside this same protocol call
+    # each rerun is one more full attempt inside this same protocol call, so the cap (the
+    # TEST_WALL_CAP value too) is for 1 attempt. Only --reruns is read: the flaky marker is
+    # refused by the checker and the ini sets no reruns.
     reruns = int(item.config.getoption("reruns", None) or 0)
     cap_s = wall_cap(_item_timeout(item), os.environ) * (reruns + 1)
     timer = None

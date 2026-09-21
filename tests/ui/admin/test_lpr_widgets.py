@@ -146,6 +146,11 @@ class TestLprWidgets:
         self.step_capture.mark(4, "Search the widget")
         self.lpr.search_widgets(name)
 
+        # This module is in account_insights (it creates widgets), and a module holds 1 group.
+        # The drop uses the tiles of the LPR camera page, whose layout the account_lpr modules
+        # change on a different worker. It needs 1 empty tile, and the layout test plays no
+        # camera, so each layout it sets has one. Not measured under a race:
+        # tests/plugins/test_xdist_groups.py names this file as the known case.
         self.step_capture.mark(5, "Drag the card onto the last empty tile")
         # oracle: drop_widget_on_tile raises unless a tile is consumed
         # and the widget renders outside the panel

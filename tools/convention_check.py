@@ -92,7 +92,11 @@ PARAM_SUFFIX_RE = re.compile(r"\[.*\]$")
 ORACLE_RE = re.compile(
     r"\bassert\b|\bexpect\s*\(|\bexpect\.soft\s*\(|"
     r"pytest\.(?:fail|raises|xfail)|"
-    r"\.wait_for\s*\(|wait_for_function\s*\("
+    r"\.wait_for\s*\(|wait_for_(?:function|url|selector)\s*\(|"
+    # each of these raises when the thing does not happen: a download, a response, a popup,
+    # a mock that was not called. wait_for_timeout is a sleep, and is not here.
+    r"\bexpect_(?:download|response|request|popup|event|navigation|file_chooser|console_message)\s*\(|"
+    r"\.assert_(?:called|any_call|has_calls|not_called|awaited)\w*\s*\("
 )
 # An oracle that says what CHANGED, not just that something is on screen:
 # a comparison, a text/count/url/attribute expectation, a negative
@@ -358,8 +362,22 @@ def check_line(path: str, lines: list[str], idx: int,
 
 
 def _block_range(lines: list[str], idx: int) -> range:
-    """Line indexes of the indented block that starts after line idx."""
+    """Line indexes of the indented block that starts after line idx.
+
+    A signature over several lines closes with `):` at the def's own indent. Read as the
+    end of the block, that line gave the def an empty body: a real test was "a test with
+    no oracle", and a bare return in it was never seen (audit 09/21/2026). The block
+    starts after the line that closes the brackets.
+    """
     indent = len(lines[idx]) - len(lines[idx].lstrip())
+    depth, start = 0, idx
+    while start < len(lines):
+        code = lines[start].split("#", 1)[0]
+        depth += sum(code.count(c) for c in "([{") - sum(code.count(c) for c in ")]}")
+        if depth <= 0:
+            break
+        start += 1
+    idx = min(start, len(lines) - 1)
     end = idx + 1
     while end < len(lines):
         line = lines[end]
@@ -367,6 +385,17 @@ def _block_range(lines: list[str], idx: int) -> range:
             break
         end += 1
     return range(idx + 1, end)
+
+
+def _is_fixture(lines: list[str], idx: int) -> bool:
+    """True when the def at idx has a pytest.fixture decorator: a fixture named test_* is not a test."""
+    i = idx - 1
+    # walk up over the decorator lines (and the lines of a decorator that spans several)
+    while i >= 0 and lines[i].strip() and not lines[i].strip().startswith(("def ", "class ", "async def ")):
+        if "pytest.fixture" in lines[i] or lines[i].strip().startswith("@fixture"):
+            return True
+        i -= 1
+    return False
 
 
 def check_except_blocks(path: str, lines: list[str]) -> list[dict]:
@@ -543,7 +572,7 @@ def check_no_oracle_tests(path: str, lines: list[str]) -> list[dict]:
             continue
         # a def quoted inside a string (a tool's own pins carry sample
         # test files) is not a test
-        if inside_triple_quote(lines, idx):
+        if inside_triple_quote(lines, idx) or _is_fixture(lines, idx):
             continue
         body = [lines[i] for i in _block_range(lines, idx)]
         if any("oracle" in b.lower() for b in body):
@@ -657,23 +686,21 @@ def check_early_exit_tests(path: str, lines: list[str]) -> list[dict]:
     """
     findings = []
     for idx, line in enumerate(lines):
-        if not TEST_DEF_RE.match(line):
+        if not TEST_DEF_RE.match(line) or _is_fixture(lines, idx):
             continue
         # returns inside functions NESTED in the test body (response
         # listeners, local helpers) are those functions' own control
-        # flow, not test exits
-        nested_def_indent = None
+        # flow, not test exits. The nested block comes from _block_range,
+        # so a nested signature over several lines is read whole.
+        nested_end = -1
         for i in _block_range(lines, idx):
+            if i <= nested_end:
+                continue
             body_line = lines[i]
             stripped = body_line.strip()
-            indent = len(body_line) - len(body_line.lstrip())
-            if nested_def_indent is not None:
-                if stripped and indent <= nested_def_indent:
-                    nested_def_indent = None
-                else:
-                    continue
-            if re.match(r"def \w+", stripped):
-                nested_def_indent = indent
+            if re.match(r"(?:async\s+)?def \w+", stripped):
+                nested = _block_range(lines, i)
+                nested_end = nested.stop - 1
                 continue
             if not re.match(r"^\s*return\b", body_line):
                 continue
