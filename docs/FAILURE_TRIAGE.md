@@ -78,10 +78,10 @@ first. Repeated runs of one test do not push out a full-suite archive. Set
 Start a triage at the run's `run.html`. The page has 3 levels, and it shows
 a level only when you ask for it.
 
-1. The verdict. One line gives the result and the count of causes:
-   `14 of 330 failed. 5 causes.` The line below it gives the passed and
-   skipped counts and the change from the previous run of these tests. The
-   facts below that are the duration, the machine, the box and the commit.
+1. The verdict. The product is at the top in large type. One line gives
+   the result and the count of causes: `14 of 330 failed. 5 causes.` The
+   line below it gives the passed and skipped counts. The facts below that
+   are the duration, the machine, the box and the commit.
 2. The causes, the map and the tests.
    - A cause is 1 error. Failures that share an error are 1 line, with the
      count in front. The error's first line is compared with numbers, quoted
@@ -98,8 +98,18 @@ a level only when you ask for it.
      and a dot is a pass. `config/run_axis.py` gives the names.
    - The tabs `Failed`, `Skipped`, `Passed` and `All` select the tests in
      the list and the rows of the map. The map hides the rows with no match,
-     and `Show all` brings them back. The filter box narrows the list to the
-     tests that match a word: a title, a node id, a case key or a module.
+     and `Show all` brings them back.
+   - The line below the tabs is the change since the previous run of these
+     tests: `New failures`, `Still failing`, `Fixed` and `New tests`, each
+     with its count. Click one to list those tests, and click it again to go
+     back. `Open that run` opens the previous run.
+   - The list groups the tests by module. A list of more than 40 tests opens
+     with each module folded to 1 line with its count. Click a module to
+     open it, or use `Expand all` and `Collapse all`.
+   - The filter box narrows the list and the map to the tests that match a
+     word: a title, a node id, a case key or a module. Press `/` to type in
+     it. When no test under the open tab matches, the page says so, and it
+     gives a link when the word matches under a different tab.
 3. One test. Click a test in a cause, a square of the map or a row of the
    list. The test opens in the pane on the right, under 4 tabs.
    - `Error`: the error message, then the full traceback and the captured
