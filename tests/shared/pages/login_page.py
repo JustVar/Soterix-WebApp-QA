@@ -127,7 +127,7 @@ class LoginPage:
             try:
                 btn = p.locator(selector).first
                 if btn.is_visible(timeout=SHORT_WAIT):
-                    btn.click()
+                    btn.click(timeout=10000)
                     return True
             # submit-button fallback probe: an absent candidate never reaches
             # this except (is_visible() ignores its timeout and returns False
@@ -143,7 +143,7 @@ class LoginPage:
         # Fallback: try role-based
         try:
             if p.get_by_role("button", name="Login").count():
-                p.get_by_role("button", name="Login").click()
+                p.get_by_role("button", name="Login").click(timeout=10000)
                 return True
         # last-candidate probe: on failure the method returns False and
         # login() falls back to a direct submit click
@@ -168,7 +168,7 @@ class LoginPage:
                 # reCAPTCHA iframe pacing: the anchor becomes clickable
                 # a beat after it renders, with no DOM signal
                 p.wait_for_timeout(SHORT_WAIT)
-                anchor.click()
+                anchor.click(timeout=10000)
                 try:
                     p.wait_for_function(
                         "() => { const r = document.querySelector('textarea.g-recaptcha-response'); return r && r.value && r.value.length > 0; }",
@@ -293,7 +293,7 @@ class LoginPage:
                 except Exception:
                     pass
                 if loc.count():
-                    txt = loc.first.text_content()
+                    txt = loc.first.text_content(timeout=5000)
                     if txt:
                         return txt.strip()
             # error-selector fallback probe: a failing candidate is a miss,
@@ -353,7 +353,7 @@ class LoginPage:
             try:
                 loc = self.page.locator(s)
                 if loc.count() > 0 and loc.first.is_visible():
-                    return loc.first.text_content().strip()
+                    return loc.first.text_content(timeout=5000).strip()
             # optional-link probe: a failing candidate is a miss, the method
             # returns None and the caller decides what to assert
             except Exception:
@@ -417,7 +417,7 @@ class LoginPage:
                     loc = popover.locator(child_sel)
                     if loc.count() > 0:
                         for i in range(loc.count()):
-                            txt = loc.nth(i).text_content()
+                            txt = loc.nth(i).text_content(timeout=5000)
                             if txt and txt.strip():
                                 items.append(txt.strip())
                         if items:
@@ -440,7 +440,7 @@ class LoginPage:
             try:
                 loc = self.page.locator(s).first
                 if loc.is_visible(timeout=SHORT_WAIT):
-                    loc.click()
+                    loc.click(timeout=10000)
                     return self
             # sign-out selector fallback: a missed candidate continues, the
             # raise after the loop reports the failure if none matched

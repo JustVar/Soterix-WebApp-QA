@@ -429,7 +429,7 @@ class ViewsPage:
                 # Leave the row first: re-hovering a row the pointer is
                 # already on fires no new enter event.
                 self.page.mouse.move(0, 0)
-                camera.hover()
+                camera.hover(timeout=10000)
                 checkbox.wait_for(state="visible", timeout=5000)
                 try:
                     checkbox.click(timeout=5000)

@@ -637,7 +637,7 @@ class LprPage:
             btn = self.page.get_by_text(label, exact=True).first
             try:
                 if btn.is_visible():
-                    btn.click()
+                    btn.click(timeout=10000)
                     # Clearing re-renders the tiles with no other signal
                     self.page.wait_for_timeout(1500)
                     return

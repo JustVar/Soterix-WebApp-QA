@@ -69,19 +69,19 @@ class TestCameraSequences:
             bell = self.page.locator(".header-right-group .icon").nth(1)
             if not bell.is_visible():
                 return
-            bell.click()
+            bell.click(timeout=10000)
             # img asset, this app's icon pattern (not MUI svg)
             mute_btn = self.page.locator("img[src*='media/MuteNotification']")
             try:
                 mute_btn.first.wait_for(state="visible", timeout=3000)
-                mute_btn.first.click()
+                mute_btn.first.click(timeout=10000)
             # the panel may open without the mute control; closing the
             # panel below is all that matters
             except PlaywrightError:
                 pass
             # Close the panel by clicking the bell again; the mute
             # icon leaving marks it closed
-            bell.click()
+            bell.click(timeout=10000)
             try:
                 mute_btn.first.wait_for(state="hidden", timeout=3000)
             # a lingering panel is non-critical; tests wait on their

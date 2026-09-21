@@ -34,12 +34,12 @@ class TestViewsDragDrop:
             while tabs.count() > 1:
                 before = tabs.count()
                 last_tab = tabs.last
-                last_tab.hover()
+                last_tab.hover(timeout=10000)
                 # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
                 close_icon = last_tab.locator("img[src*='closeIcon']")
                 if close_icon.count() == 0:
                     break
-                close_icon.click()
+                close_icon.click(timeout=10000)
                 # the tab leaving is the closed signal; a timeout
                 # raises into the cleanup except below
                 expect(tabs).to_have_count(before - 1, timeout=10000)

@@ -38,14 +38,14 @@ class TestViewsBasic:
             while tabs.count() > 1:
                 before = tabs.count()
                 last_tab = tabs.last
-                last_tab.hover()
+                last_tab.hover(timeout=10000)
                 # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
                 close_icon = last_tab.locator("img[src*='closeIcon']")
                 try:
                     close_icon.wait_for(state="visible", timeout=2000)
                 except Exception:
                     break
-                close_icon.click()
+                close_icon.click(timeout=10000)
                 expect(tabs).to_have_count(before - 1, timeout=5000)
         # cleanup only: page and context are per-test (authenticated_page
         # closes both right after teardown), so a tab left open cannot leak

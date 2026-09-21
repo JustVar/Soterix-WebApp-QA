@@ -660,7 +660,7 @@ python tools/convention_check.py
   a value, a count against a baseline, a text, a state, or that the other
   page's marker is gone. If the check is in a page-object call that raises,
   write a comment with the word "oracle" that names the call.
-- **HIGH on added lines, MEDIUM for the 29 older sites:** an action that
+- **HIGH on added lines, 0 in the repo:** an action that
   waits for its element (`click`, `fill`, `hover`, `wait_for`, `inner_text`
   and the like) with no `timeout=`, in a `try` whose handlers do not raise
   (`swallowed-default-timeout`). When the element is absent, the action

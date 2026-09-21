@@ -323,7 +323,7 @@ class EventsPage:
             try:
                 loc = self.page.get_by_text(label, exact=False).first
                 if loc.is_visible(timeout=1000):
-                    loc.click()
+                    loc.click(timeout=10000)
                     clicked = True
                     break
             # each label is one guess at the current dropdown text; a miss
@@ -535,7 +535,7 @@ class EventsPage:
         play_icon = self.page.locator("img[alt='Play Video']").first
         try:
             play_icon.wait_for(state="visible", timeout=5000)
-            play_icon.click()
+            play_icon.click(timeout=10000)
         except Exception:
             # Overlay may not have activated; click with force
             play_icon.click(force=True)
@@ -656,7 +656,7 @@ class EventsPage:
         counter = self.pinned_counter.first
         try:
             if counter.is_visible():
-                return counter.inner_text().strip()
+                return counter.inner_text(timeout=5000).strip()
         # probe: the counter hides at zero pins and can detach mid-read;
         # '' only means "no change seen yet" to pin_event's before/after
         # poll, which re-reads on the next tick and reports if the counter

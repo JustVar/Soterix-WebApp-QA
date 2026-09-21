@@ -403,7 +403,7 @@ class CameraHardwarePage:
             "button:has-text('Apply'):visible, input[value='Apply']:visible").first
         try:
             with self.page.expect_response(lambda r: "action=apply" in r.url, timeout=10000):
-                button.click()
+                button.click(timeout=10000)
         except PlaywrightTimeoutError:  # why: an Apply with nothing changed sends no request; the caller's own check on the saved value decides
             pass
         self._wait_content_settled()

@@ -317,7 +317,7 @@ class AdminPage:
         clicked = None
         try:
             confirm.first.wait_for(state="visible", timeout=5000)
-            confirm.first.click()
+            confirm.first.click(timeout=10000)
             clicked = confirm.first
         except Exception:
             # Fallback: broader text match for MUI styled "buttons" (div-based)
@@ -1238,7 +1238,7 @@ class AdminPage:
                 ).first
                 try:
                     if name_input.is_visible() and not name_input.input_value():
-                        name_input.fill(rule_name)
+                        name_input.fill(rule_name, timeout=10000)
                 # probe of an optional per-step name input: the Name the
                 # Rule prompt fill raises and the caller asserts the row
                 # by name

@@ -174,10 +174,10 @@ class SequencePage:
         # before falling back to the forced-click path
         try:
             expect(self.save_button).to_be_enabled(timeout=5000)
-            self.save_button.click()
+            self.save_button.click(timeout=10000)
         except AssertionError:
             try:
-                self.save_button.click(force=True)
+                self.save_button.click(force=True, timeout=10000)
             except PlaywrightError:
                 # If disabled button can't be clicked, use JavaScript click
                 self.page.evaluate("document.querySelector('button.modalSaveBtn').click()")
@@ -237,7 +237,7 @@ class SequencePage:
         ).first
         try:
             delete_item.wait_for(state="visible", timeout=5000)
-            delete_item.click()
+            delete_item.click(timeout=10000)
         except Exception:
             # Fallback: ArrowDown to Delete (second option), then Enter
             self.page.keyboard.press("ArrowDown")
@@ -256,7 +256,7 @@ class SequencePage:
             try:
                 confirm = self.page.locator(sel).first
                 confirm.wait_for(state="visible", timeout=5000)
-                confirm.click()
+                confirm.click(timeout=10000)
                 # The dialog leaves the DOM with the clicked button
                 self._appears_hidden(confirm, timeout=10000)
                 return
