@@ -596,6 +596,8 @@ class InsightsPage:
             self.page.locator(".MuiPopover-root").wait_for(
                 state="hidden", timeout=5000
             )
+        # a popover that stays gets Escape. The download button wait below
+        # raises when the report panel never opens
         except Exception:
             self.page.keyboard.press("Escape")
 
@@ -611,6 +613,8 @@ class InsightsPage:
             with self.page.expect_download(timeout=90000):
                 try:
                     self.report_download_button.click(timeout=5000)
+                # an overlay can block the plain click, so the handler clicks with
+                # force. expect_download around it raises when no download starts
                 except PlaywrightError:
                     # Overlay might block - force click as fallback
                     self.report_download_button.click(force=True)
@@ -670,6 +674,8 @@ class InsightsPage:
         try:
             locator.wait_for(state="visible", timeout=timeout)
             return True
+        # not visible in time is the answer False. Callers branch on it or
+        # use it as a settle before a wait that raises
         except PlaywrightError:
             return False
 
@@ -679,6 +685,9 @@ class InsightsPage:
         try:
             locator.wait_for(state="hidden", timeout=timeout)
             return True
+        # still visible in time is the answer False. Callers use it as a
+        # settle after a menu closes. delete_widget returns its own count
+        # check, which the test asserts
         except PlaywrightError:
             return False
 

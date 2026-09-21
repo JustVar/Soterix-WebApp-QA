@@ -318,6 +318,8 @@ class TestSearchDeeper:
             try:
                 if self.search.result_images.nth(i).is_visible():
                     visible += 1
+                # a read that raises ends the count early. visible then stays
+                # below count, and the equality assert under the loop fails.
             except Exception:
                 break
 

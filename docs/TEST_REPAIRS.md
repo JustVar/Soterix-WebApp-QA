@@ -65,11 +65,11 @@ under App defects in this file.
 Quality gates. The checker blocks each of these on the lines that a commit
 adds: a test with no oracle, a pass that exits early, an except block that
 hides a failure, and a sleep with no comment. The product tests have 0 of
-each. The standing debt is in the older page objects, and
-`python tools/convention_check.py --all` counts it: 85 except handlers with
-no reason. The actions with the default timeout in a `try` that hides the
-failure are at 0 (row 102), and so are the tests that checked only that
-something is there (row 104).
+each, and since 09/21/2026 the repo has 0 of each:
+`python tools/convention_check.py --all` reports no HIGH finding. The except
+handlers with no reason went from 85 to 0 (row 109), the actions with the
+default timeout in a `try` that hides the failure from 29 to 0 (row 102), and
+the tests that checked only that something is there from 25 to 0 (row 104).
 
 ## Nightly log
 
@@ -166,6 +166,8 @@ These rows are history. Each keeps the words of the day it closed.
 | 106 | 8 LPR event tests each waited 30 s to prove that the india feed is empty | [DONE 09/21] | The first test that finds the feed empty pays the 30 s. For the next 5 minutes the others wait 5 s (`_feed_wait_ms` in test_lpr_events.py). Found in the list of slow phases that each run prints since row 102: about 4 minutes of the india leg. |
 | 104 | 25 product tests checked only that something was there | [DONE 09/21] | The checker read them as strong: `count() > 0` holds a comparison, and the message of an assert held the word `not`. Each test now compares with a fact measured on the tenant: the LPR pages by their own search box and columns, login by the address, the site dropdowns by the configured site (the Maps one cuts long names), an audit row by its 5 cells and its date, fullscreen by the video element. 2 first tries failed on the tenant and were corrected. The rule `presence-only-oracle` now blocks on added lines. |
 | 107 | The archive pages were hard to read, and a grouped test had lost its history | [DONE 09/21] | soterix-qa-shared v0.31.2. pytest-xdist adds `@<group>` to the node id of a test with an `xdist_group` mark. Read as a new test, each grouped test showed `New test`, stood 2 times under Tests to watch, and lost its QA Touch case in the archive. One identity now. The run page has a grid of labelled facts, failures that fold when there are more than 3, and no box with a fixed light background (dark mode hid its text). Tests to watch went from 360 rows to 1 row for each test, in 1 block for each module. `python -m plugins.run_report` did nothing, silently: the shim now calls main(). The actions list of a page printed what was typed into a password field: the evidence scan masked it before it was served, and the page does not print it now. |
+| 108 | The health page pooled india and us | [DONE 09/21] | soterix-qa-shared v0.32.0. A test that fails on 1 tenant read as 50% flaky and named no box. A watch row now says `fails only on us: india 0 of 6, us 4 of 4`, and the Modules table has the pass rate of each box. First read on the box: 33 tests fail only on us and 12 only on india. The run header is a ruled ledger band, not tiles with a side accent. |
+| 109 | 85 except handlers hid a failure and gave no reason | [DONE 09/21] | 79 got a reason that names what reports the real fault. 6 hid a real fault and were fixed. `create_sequence` force-clicked a disabled Save and only printed when the form stayed open, so 2 tests passed with nothing saved: it raises. The sequence cleanup deleted the LAST sidebar item once for each recorded name, and a name is recorded before its create, so a failed create deleted a sequence of a different person on the shared tenant: `delete_sequence(name)` deletes by exact name, and the cleanup raises when one stays. `logout()` opened /auth/login itself when Sign out went nowhere, so the redirect tests could not fail: it raises. 2 dead license methods that only printed a switch that did not flip are gone. Sequences 7 passed, logout, login and licenses 23 passed on india. |
 
 ## Done - 08/24-09/02 repairs and the exact-name locator series
 

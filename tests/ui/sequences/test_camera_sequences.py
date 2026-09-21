@@ -47,21 +47,26 @@ class TestCameraSequences:
         self._cleanup_sequences()
 
     def _cleanup_sequences(self):
-        """Delete any sequences created during the test."""
+        """Delete each sequence this test made, by its exact name, and say so when one stays.
+
+        By name: the old body deleted the LAST item of the sidebar once for each recorded
+        name. A name is recorded before its create, so a create that failed made the
+        cleanup delete a sequence of a different person on the shared tenant.
+        """
         if not self._created_sequences:
             return
-        try:
-            self.seq.navigate()
-            for _ in self._created_sequences:
-                try:
-                    self.seq.delete_last_sequence()
-                except Exception as e:
-                    print(f"Cleanup: failed to delete sequence: {e}")
-                    break
-        # teardown: a failed navigate must not mask the test result;
-        # leaked sequences keep their automation names for manual cleanup
-        except Exception as e:
-            print(f"Cleanup: failed to navigate for sequence cleanup: {e}")
+        errors = []
+        self.seq.navigate()
+        for name in self._created_sequences:
+            try:
+                self.seq.delete_sequence(name)
+            # typed: a refused delete or an item that never leaves is what this collects, and
+            # the raise after the loop reports it. Anything else is a real fault and goes up.
+            except (PlaywrightError, RuntimeError) as e:
+                errors.append(f"{name}: {e}")
+        self._created_sequences = []
+        if errors:
+            raise RuntimeError("sequence cleanup failed: " + "; ".join(errors))
 
     def _mute_notifications(self):
         """Mute and close notification panel so it doesn't block sidebar icons."""

@@ -319,6 +319,9 @@ class AdminPage:
             confirm.first.wait_for(state="visible", timeout=5000)
             confirm.first.click(timeout=10000)
             clicked = confirm.first
+        # the role-named Delete button is one of several confirm layouts. The
+        # fallbacks below try the others, and the last one clicks with no guard,
+        # so a dialog with no Delete control at all raises there
         except Exception:
             # Fallback: broader text match for MUI styled "buttons" (div-based)
             fallback = self.page.locator(
@@ -343,6 +346,9 @@ class AdminPage:
         if clicked is not None:
             try:
                 clicked.wait_for(state="hidden", timeout=15000)
+            # a confirm control that stays is logged, not raised, because the app
+            # can refuse a delete. test_delete_user asserts that the filtered list
+            # shrinks by one, and the fixture cleanup looks for the row again
             except Exception:
                 print("[ADMIN] Delete confirm did not close within 15s - "
                       "the delete may have been rejected")
@@ -541,6 +547,9 @@ class AdminPage:
             self.rule_delete_icons.first.wait_for(
                 state="visible", timeout=5000
             )
+        # no delete icon under the name filter means the rule is not listed.
+        # False is that answer: test_delete_rule asserts on it and the fixture
+        # cleanup prints it
         except Exception:
             self.search_rule("")
             return False
@@ -739,6 +748,9 @@ class AdminPage:
         detail = self.page.get_by_text("Groups:", exact=True).first
         try:
             detail.wait_for(state="visible", timeout=10000)
+        # a click during list hydration is dropped without a sign. The handler
+        # clicks one more time, and its own detail wait raises if the site
+        # detail still does not open
         except Exception:
             # Retry only while the list is still mounted (its Version
             # lines are list-only): re-clicking the site name on an
@@ -798,6 +810,8 @@ class AdminPage:
         row_anchor = self.page.get_by_text(name, exact=True).first
         try:
             row_anchor.wait_for(state="visible", timeout=5000)
+        # the named row is not listed, which is the documented False. The
+        # delete test asserts on the result, and the cleanup callers print it
         except Exception:
             return False
         icon = row_anchor.locator("xpath=../..").locator(
@@ -805,12 +819,17 @@ class AdminPage:
         ).first
         try:
             icon.wait_for(state="visible", timeout=5000)
+        # a row with no delete icon cannot be deleted from here. False goes to
+        # the same callers: the delete test fails on it and cleanup prints it
         except Exception:
             return False
         icon.click()
         dialog_shown = True
         try:
             self.group_delete_confirm.wait_for(state="visible", timeout=3000)
+        # the confirm dialog is optional: the 2026-08 dropdown deletes at once
+        # when none shows. The delete test expects the named row to leave the
+        # list, which fails if the delete did not land
         except Exception:
             dialog_shown = False
         if dialog_shown:
@@ -867,6 +886,9 @@ class AdminPage:
         self.create_button.wait_for(state="visible", timeout=10000)
         try:
             self.create_button.click(timeout=15000)
+        # an inert Create control gets a second click on its text node. That
+        # click raises when no Create text exists, and the form-closed wait
+        # below raises when the group was not created
         except Exception:
             # The MuiBox control occasionally stays inert to the
             # element click; the exact text node accepts it
@@ -883,6 +905,8 @@ class AdminPage:
         row_anchor = self.page.get_by_text(name, exact=True).first
         try:
             row_anchor.wait_for(state="visible", timeout=5000)
+        # the named row is not listed, which is the documented False. The
+        # rename test asserts that the result is True
         except Exception:
             return False
         icon = row_anchor.locator("xpath=../..").locator(
@@ -923,6 +947,9 @@ class AdminPage:
         dialog_shown = True
         try:
             self.group_delete_confirm.wait_for(state="visible", timeout=3000)
+        # only the absence of the dialog is accepted: the 2026-08 dropdown
+        # deletes at once when none shows. This method does not verify the
+        # delete. The caller must assert on the group count
         except Exception:
             dialog_shown = False  # no dialog: the delete applies immediately
         if dialog_shown:
@@ -1130,6 +1157,9 @@ class AdminPage:
         card = modal.get_by_text(rule_type, exact=True).first
         try:
             card.wait_for(state="visible", timeout=10000)
+        # a rule type the picker does not offer is the documented False. The
+        # owned-rule helper asserts on it, and the per-type test skips on it
+        # after _require_rule_type_card looked for the same card
         except Exception:
             print(f"[ADMIN] Rule type card '{rule_type}' not in the picker")
             return False
@@ -1158,6 +1188,9 @@ class AdminPage:
             ).first
             try:
                 fv_visible = full_view.is_visible()
+            # visibility probe of a prompt that only the Set Rule step shows. A
+            # read that raises counts as not visible for this pass of the loop.
+            # A walk that never saves raises the stall error below
             except Exception:
                 fv_visible = False
             region_prompt = self.page.get_by_text(
@@ -1165,6 +1198,9 @@ class AdminPage:
             ).first
             try:
                 region_visible = region_prompt.is_visible()
+            # same probe for the Create Region prompt. A read that raises counts
+            # as not visible for this pass. The caller asserts the saved row by
+            # name, and a walk that never saves raises the stall error below
             except Exception:
                 region_visible = False
 
@@ -1208,6 +1244,9 @@ class AdminPage:
             try:
                 nxt.wait_for(state="visible", timeout=5000)
                 nxt.click(timeout=10000)
+            # Next is absent on the Save step, and a backdrop can block the pointer
+            # click on other steps. The handler retries through JS or logs. A walk
+            # that does not advance ends in the stall error below
             except Exception as e:
                 # A lingering invisible backdrop can eat pointer
                 # clicks; a JS click is safe because a disabled Next
@@ -1251,6 +1290,9 @@ class AdminPage:
             ).first
             try:
                 save_visible = save.is_visible()
+            # visibility probe: Save shows only on the last step. A read that
+            # raises counts as not visible, the loop goes to its next pass, and a
+            # walk that never finds Save raises the stall error below
             except Exception:
                 save_visible = False
             if save_visible:
@@ -1265,6 +1307,9 @@ class AdminPage:
                 prompt_shown = True
                 try:
                     prompt.wait_for(state="visible", timeout=5000)
+                # only the absence of the Name the Rule prompt is accepted. The
+                # wizard-closed wait below raises if the save did not land, and the
+                # caller asserts the rule row by name
                 except Exception:
                     prompt_shown = False  # no prompt: saved directly
                 if prompt_shown:
@@ -1305,6 +1350,9 @@ class AdminPage:
         try:
             expect(locator).not_to_have_count(before, timeout=int(timeout_s * 1000))
             return True
+        # a one-camera list never moves the count, so a miss is logged and
+        # returned. _check_wizard_camera then waits for the exact camera row
+        # and raises if the filter did not show it
         except AssertionError:
             print(f"[ADMIN] {action}: count stayed at {before} for "
                   f"{timeout_s:.0f}s")

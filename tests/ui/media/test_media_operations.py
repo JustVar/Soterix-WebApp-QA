@@ -43,6 +43,8 @@ class TestMediaClipOperations:
         for action in reversed(self._cleanup_actions):
             try:
                 action()
+                # collected, not swallowed: every failed restore joins the errors list,
+                # and the RuntimeError below fails the teardown with all of them
             except Exception as e:
                 errors.append(str(e))
         if errors:
@@ -126,6 +128,9 @@ class TestMediaClipOperations:
                 self.media.open_folder(folder)
                 if first in self.media.item_names():
                     self.media.remove_from_folder(first)
+                # a folder that cannot be emptied must not be deleted, because the
+                # delete takes its clip with it. This branch runs only after the
+                # test body failed or skipped, so no pass depends on it.
             except (PlaywrightError, RuntimeError):
                 print(f"[MEDIA] could not empty folder '{folder}'; "
                       "NOT deleting it - the clip inside must survive")
@@ -486,6 +491,8 @@ class TestMediaFolderOperations:
         for action in reversed(self._cleanup_actions):
             try:
                 action()
+                # collected, not swallowed: every failed restore joins the errors list,
+                # and the RuntimeError below fails the teardown with all of them
             except Exception as e:
                 errors.append(str(e))
         if errors:

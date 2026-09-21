@@ -80,6 +80,9 @@ class SequencePage:
             pass
         try:
             self.sequence_icon.click(timeout=5000)
+        # the secondaryHeader overlay can intercept the pointer click. The JS
+        # click below raises if the icon is gone, and the tests expect the
+        # sequence page markers after navigate returns
         except Exception:
             # secondaryHeader still intercepting - use JS click to bypass
             self.sequence_icon.evaluate("el => el.click()")
@@ -92,8 +95,8 @@ class SequencePage:
         # arrival is the callers' oracle: _navigate_and_verify
         # (test_camera_sequences.py) expects this same marker union,
         # select_first_camera's retry waits on the camera list after this,
-        # and _cleanup_sequences calls this in teardown where a miss is only
-        # logged
+        # and _cleanup_sequences calls this in teardown, where delete_sequence then
+        # waits for the sidebar item and reports a miss
         except Exception:
             pass
 
@@ -121,6 +124,9 @@ class SequencePage:
         # Wait for checkboxes to be present - retry navigate if not found
         try:
             self.camera_checkboxes.first.wait_for(state="attached", timeout=15000)
+        # no checkbox means the JS click navigation did not land. The handler
+        # navigates one more time, and its own checkbox wait raises if the
+        # list is still absent
         except Exception:
             # JS click navigation may not have landed - retry navigation
             self.navigate()
@@ -175,17 +181,23 @@ class SequencePage:
         try:
             expect(self.save_button).to_be_enabled(timeout=5000)
             self.save_button.click(timeout=10000)
+        # Save did not become enabled in 5 s. A forced click is one more try. The
+        # form-closed check below raises when the save did not land.
         except AssertionError:
             try:
                 self.save_button.click(force=True, timeout=10000)
+            # The forced click raised. A JavaScript click is the last try, and the
+            # form-closed check below raises when it did nothing.
             except PlaywrightError:
-                # If disabled button can't be clicked, use JavaScript click
                 self.page.evaluate("document.querySelector('button.modalSaveBtn').click()")
 
-        # The form closes with its name input once the save lands
+        # The form closes with its name input once the save lands. Until 09/21/2026 a
+        # form that stayed open only printed a line: a forced click on a disabled Save
+        # raises nothing, and the 2 tests that end here passed with nothing saved.
         if not self._appears_hidden(self.sequence_name_input, timeout=15000):
-            print("[SEQUENCE] Save clicked but the name input is still "
-                  "visible after 15s")
+            raise AssertionError(
+                f"Save was clicked but the sequence form stayed open for 15 s: "
+                f"the sequence '{name}' was not saved")
 
         return name
 
@@ -215,6 +227,35 @@ class SequencePage:
 
     # --- Delete Sequence ---
 
+    def sequence_item(self, name: str):
+        """The sidebar item of the sequence with exactly this name."""
+        return self.sidebar_items.filter(has=self.page.get_by_text(name, exact=True))
+
+    def delete_sequence(self, name: str) -> bool:
+        """Delete the sequence with exactly this name. False when no such sequence is listed.
+
+        By name, never by position. The cleanup used delete_last_sequence, which removes
+        whatever is last in the sidebar: a sequence of a different person on the shared
+        tenant when this test's own create had failed (found 09/21/2026). Raises when the
+        item is still listed after the delete.
+        """
+        item = self.sequence_item(name)
+        # The list hydrates a beat after the page settles: wait before the name reads as absent
+        try:
+            item.first.wait_for(state="visible", timeout=10000)
+        # absent after 10 s means there is nothing of ours to delete, and the caller is told
+        except PlaywrightError:
+            return False
+        # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
+        item.first.locator("img[src*='3-dot']").click(timeout=10000)
+        self.page.locator("[role='menuitem']:has-text('Delete'):visible").first.click(timeout=10000)
+        confirm = self.page.get_by_role("button", name="Delete", exact=True)
+        # some builds delete with no dialog, so the confirm is optional. The wait below is the proof.
+        if self._appears(confirm.first, timeout=5000):
+            confirm.first.click(timeout=10000)
+        item.first.wait_for(state="hidden", timeout=15000)
+        return True
+
     def delete_last_sequence(self):
         """Delete the last sequence in the sidebar list via the 3-dot menu.
 
@@ -238,6 +279,9 @@ class SequencePage:
         try:
             delete_item.wait_for(state="visible", timeout=5000)
             delete_item.click(timeout=10000)
+        # the Delete menu item did not show, so the keyboard picks it. Only
+        # fixture teardown calls this method: no test asserts on the delete,
+        # and a leftover sequence keeps its automation name for manual cleanup
         except Exception:
             # Fallback: ArrowDown to Delete (second option), then Enter
             self.page.keyboard.press("ArrowDown")
@@ -290,6 +334,8 @@ class SequencePage:
         try:
             locator.wait_for(state="visible", timeout=timeout)
             return True
+        # probe: a timeout is the False answer, not a fault. The caller
+        # decides what False means
         except PlaywrightError:
             return False
 
@@ -299,6 +345,9 @@ class SequencePage:
         try:
             locator.wait_for(state="hidden", timeout=timeout)
             return True
+        # probe: a timeout is the False answer, not a fault. navigate and
+        # delete_last_sequence use it as an optional settle wait.
+        # create_sequence raises on a False, and click_update logs it
         except PlaywrightError:
             return False
 
@@ -310,6 +359,9 @@ class SequencePage:
                 expect(checkbox).to_be_checked(timeout=5000)
             else:
                 expect(checkbox).not_to_be_checked(timeout=5000)
+        # a checkbox that did not change is logged, not raised. The tests
+        # expect the checked state themselves after select_all_cameras and
+        # after each advanced-option toggle
         except AssertionError:
             print(f"[SEQUENCE] Checkbox did not become "
                   f"{'checked' if checked else 'unchecked'} within 5s")

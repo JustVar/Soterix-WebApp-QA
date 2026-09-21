@@ -86,6 +86,8 @@ class TestChats:
         try:
             self.page.keyboard.press("Escape")
             self.chat.refresh_panel()
+            # collected, not swallowed: a failed panel reset joins the errors
+            # list, and the RuntimeError at the end fails the teardown
         except (PlaywrightError, RuntimeError) as e:
             errors.append(f"panel reset: {e}")
         for name in reversed(self._owned_groups):
@@ -105,6 +107,8 @@ class TestChats:
                 continue
             try:
                 self.chat.delete_group(name)
+                # collected, not swallowed: a group the app did not delete is named
+                # in the RuntimeError that fails the teardown below
             except (PlaywrightError, RuntimeError) as e:
                 errors.append(f"{name}: {e}")
         self._owned_groups = []

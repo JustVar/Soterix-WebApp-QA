@@ -364,6 +364,9 @@ class TestEventWallConfig:
         card.get_by_text("View", exact=True).first.click()
         try:
             arrival.wait_for(state="visible", timeout=7000)
+            # a dropped View click is the known hydration miss. The handler
+            # clicks one more time, and the second wait raises if the arrival
+            # marker still does not show.
         except PlaywrightError:
             card.get_by_text("View", exact=True).first.click()
             arrival.wait_for(state="visible", timeout=15000)

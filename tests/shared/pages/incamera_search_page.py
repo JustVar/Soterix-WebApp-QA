@@ -168,6 +168,8 @@ class InCameraSearchPage:
         try:
             locator.wait_for(state="visible", timeout=timeout)
             return True
+        # no play icon in time is the answer False. play_result then clicks
+        # the result itself, and its wait for the player raises
         except PlaywrightError:
             return False
 
@@ -177,5 +179,8 @@ class InCameraSearchPage:
         try:
             locator.wait_for(state="hidden", timeout=timeout)
             return True
+        # still visible in time is the answer False. The filter methods use
+        # it as a settle after a pick, and the next filter click raises on a
+        # list left open
         except PlaywrightError:
             return False

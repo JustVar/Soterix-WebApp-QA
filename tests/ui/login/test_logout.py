@@ -92,6 +92,8 @@ def test_cannot_access_app_after_logout(authenticated_page, base_url):
     page.goto(base_url)
     try:
         page.wait_for_url('**/auth/login**', timeout=15000)
+        # a slow redirect is not the verdict. The assert below reads the
+        # login form and the address, and fails if the app let the user in.
     except Exception:
         # the URL wait missed; give the redirect one more beat and
         # let the assert below decide
@@ -165,6 +167,8 @@ def test_logout_from_different_pages(authenticated_page, base_url, path, page_na
     # Wait for the SPA to fully render the page header with avatar
     try:
         page.locator('.MuiAvatar-root').first.wait_for(state="visible", timeout=20000)
+        # this wait is a readiness aid only. lp.logout() waits for the same
+        # avatar and raises if it never shows, so a dead header errors there.
     except Exception:
         # Some pages render the header after heavy content; one more
         # bounded beat before logout tries anyway

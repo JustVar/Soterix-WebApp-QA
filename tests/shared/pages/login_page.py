@@ -1,7 +1,7 @@
 import os
 import re
 
-from playwright.sync_api import Page
+from playwright.sync_api import Error as PlaywrightError, Page
 
 # Timeouts (milliseconds)
 RECAPTCHA_TIMEOUT = 15000
@@ -175,6 +175,8 @@ class LoginPage:
                         timeout=RECAPTCHA_TIMEOUT,
                     )
                     return True
+                # no token on this attempt. The loop tries again and returns False
+                # after the last one. login() submits anyway and its callers assert
                 except Exception:
                     # reCAPTCHA challenge polling beat before the next
                     # frame candidate
@@ -377,6 +379,8 @@ class LoginPage:
         """Return True when the profile dropdown menu is visible."""
         try:
             return self.page.locator('text=Sign out').is_visible()
+        # a page that cannot answer reads as a closed menu. The test asserts
+        # that this returns True
         except Exception:
             return False
 
@@ -454,17 +458,16 @@ class LoginPage:
         self.click_sign_out()
         try:
             self.page.wait_for_url('**/auth/login**', timeout=LOGIN_WAIT)
-        except Exception:
+        except PlaywrightError:
             # Some app versions redirect to root or a different auth URL;
             # the URL wait missed, so give the redirect a beat before
             # checking the login form
             self.page.wait_for_timeout(5000)
-            # Verify we're actually logged out by checking for login form
             if not self.is_login_page():
-                # Try navigating to login page directly
-                self.page.goto(f"{self.base_url}/auth/login", wait_until="domcontentloaded")
-                # the login form hydrates after domcontentloaded with no
-                # marker of its own; the return value is checked by callers
-                self.page.wait_for_timeout(2000)
+                # Until 09/21/2026 this branch opened /auth/login itself, and
+                # is_login_page() then said yes: the logout tests passed on a
+                # Sign out that went nowhere. A logout that does not land fails here.
+                raise AssertionError(
+                    f"Sign out did not open the login page: the address is {self.page.url}") from None
         return self
 

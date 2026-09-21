@@ -55,6 +55,8 @@ class TestAdminSites:
         try:
             locator.first.wait_for(state="visible", timeout=timeout)
             return True
+            # probe: a timeout is the answer False, not a fault. Each caller
+            # fails, asserts or skips with a reason when it gets False.
         except Exception:
             return False
 
@@ -114,6 +116,9 @@ class TestAdminSites:
                 state="visible", timeout=3000
             )
             redesigned = True
+            # the Add Devices marker no longer renders, so the timeout is the
+            # normal case. False means no skip: the sorting test goes on and its
+            # own sort checks report.
         except Exception:
             redesigned = False
         if redesigned:

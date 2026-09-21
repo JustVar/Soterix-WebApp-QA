@@ -27,6 +27,8 @@ def _first_visible(locator: Locator, timeout_ms: int) -> bool:
     try:
         locator.first.wait_for(state="visible", timeout=timeout_ms)
         return True
+    # a timeout is the answer False. require_items turns that answer into
+    # a skip or a fail that names the surface
     except PlaywrightError:
         return False
 

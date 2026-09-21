@@ -430,6 +430,8 @@ class SearchPage:
         """Wait for a clicked dropdownItem to leave with its list."""
         try:
             option.wait_for(state="hidden", timeout=5000)
+        # the selection click already happened, so a list that stays open is
+        # logged. If it covers the next control, that click times out and says so
         except PlaywrightError:
             print("[SEARCH] Dropdown option list still open 5s after "
                   "selection")
@@ -572,6 +574,8 @@ class SearchPage:
                 state="visible", timeout=timeout
             )
             return True
+        # no Replay icon in time is the answer False. Every caller asserts
+        # that this returns True
         except Exception:
             return False
 
@@ -688,6 +692,8 @@ class SearchPage:
         try:
             locator.wait_for(state="visible", timeout=timeout)
             return True
+        # not visible in time is the answer False. The camera hover loop
+        # raises after three misses, and an empty option list fails its caller
         except PlaywrightError:
             return False
 
@@ -697,6 +703,8 @@ class SearchPage:
         try:
             locator.wait_for(state="hidden", timeout=timeout)
             return True
+        # still visible in time is the answer False. Both callers use it as a
+        # settle after a close, and the next click raises on a list left open
         except PlaywrightError:
             return False
 

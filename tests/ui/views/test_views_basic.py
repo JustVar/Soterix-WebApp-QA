@@ -43,6 +43,9 @@ class TestViewsBasic:
                 close_icon = last_tab.locator("img[src*='closeIcon']")
                 try:
                     close_icon.wait_for(state="visible", timeout=2000)
+                    # cleanup only: a tab that shows no close icon on hover cannot
+                    # be closed, so the loop ends. The page is per-test, so the tab
+                    # cannot leak into another test.
                 except Exception:
                     break
                 close_icon.click(timeout=10000)
@@ -70,6 +73,9 @@ class TestViewsBasic:
         saved_view = self.page.locator(f"span[title='{view_name}']")
         try:
             saved_view.wait_for(state="visible", timeout=5000)
+            # cleanup helper: each test records the name before its save, so a
+            # test that stopped early has no view to delete.
+            # test_delete_saved_view owns the delete oracle.
         except Exception:
             return  # View not present - nothing to delete
         saved_view.hover()

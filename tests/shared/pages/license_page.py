@@ -247,12 +247,6 @@ class LicensePage:
         # Collapse removes the feature rows again
         self._row_count_changed(before, "collapse")
 
-    def toggle_site_enable(self, index: int = 0):
-        """Toggle the enable/disable switch for a site."""
-        self._toggle_switch(self.site_toggle_switches.nth(index))
-
-    # ----- Device List -----
-
     def get_device_count(self) -> int:
         """Count devices in the device list page."""
         return self.device_list_rows.count()
@@ -531,6 +525,9 @@ class LicensePage:
         try:
             locator.wait_for(state="visible", timeout=timeout)
             return True
+        # not visible in time is the answer False. The navigation and assign
+        # callers branch on it, and the others use it as a settle before a
+        # wait that raises
         except PlaywrightError:
             return False
 
@@ -540,6 +537,8 @@ class LicensePage:
         try:
             locator.wait_for(state="hidden", timeout=timeout)
             return True
+        # still visible in time is the answer False. Callers use it as a
+        # settle after a dialog closes, and the test asserts the table after
         except PlaywrightError:
             return False
 
@@ -572,25 +571,6 @@ class LicensePage:
             self.page.wait_for_timeout(250)  # poll tick for row change
         print(f"[LICENSE] Site {action} clicked but the row count "
               f"stayed at {before} for {timeout_s:.0f}s")
-
-    def _toggle_switch(self, switch):
-        """Click a MUI switch and wait for its input state to flip."""
-        checkbox = switch.locator("input[type='checkbox']").first
-        try:
-            before = checkbox.is_checked()
-        except PlaywrightError:
-            before = None
-        switch.click()
-        if before is None:
-            return
-        try:
-            if before:
-                expect(checkbox).not_to_be_checked(timeout=10000)
-            else:
-                expect(checkbox).to_be_checked(timeout=10000)
-        except AssertionError:
-            print("[LICENSE] Switch clicked but its state did not flip "
-                  "within 10s")
 
     def get_page_title_text(self) -> str:
         """Return the main heading text on the current licenses sub-page."""

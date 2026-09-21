@@ -220,6 +220,8 @@ class LprPage:
         # register item 18).
         try:
             row.wait_for(state="visible", timeout=10000)
+        # no row after 10 s means the list is not on the tenant, which is the
+        # state this delete wants. ensure_lpr_lists_page put the Lists page up
         except PlaywrightError:
             return
         # img asset icon: locate by src, not alt (CONVENTIONS > Locators)
@@ -419,6 +421,8 @@ class LprPage:
         # rendering, that click closed it - one more click self-heals
         try:
             site_rows.first.wait_for(state="visible", timeout=15000)
+        # the header is a toggle, so one more click opens a panel the first
+        # click closed. The wait in the handler raises when no site row shows
         except PlaywrightError:
             dropdown_btn.click()
             site_rows.first.wait_for(state="visible", timeout=15000)
@@ -492,6 +496,8 @@ class LprPage:
         # forced retry self-heals before failing loud.
         try:
             expect(empty_tiles).to_have_count(before - 1, timeout=10000)
+        # the handler logs the drop that landed nothing and drags again with
+        # force. Its expect raises when the forced drop lands nothing too
         except AssertionError:
             # greppable trace of the healed no-op: the forced retry
             # keeps the run green, so without this line the unforced
@@ -600,10 +606,14 @@ class LprPage:
         # the site once if the group list does not appear
         try:
             group.wait_for(state="visible", timeout=3000)
+        # the tree drops a click during hydration, so the handler clicks the
+        # site again. Its last group wait raises when the tree never expands
         except PlaywrightError:
             site.click()
             try:
                 group.wait_for(state="visible", timeout=15000)
+            # second lost click: log it and click once more. The wait after that
+            # has no handler, so a tree that stays shut fails here
             except PlaywrightError:
                 print("[LPR] Site click did not expand the tree, retrying")
                 site.click()
@@ -846,5 +856,7 @@ class LprPage:
         try:
             locator.wait_for(state="visible", timeout=timeout)
             return True
+        # a timeout is the answer False, and the caller owns the verdict.
+        # Nothing in the suite calls this helper today
         except PlaywrightError:
             return False

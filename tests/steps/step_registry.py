@@ -63,6 +63,8 @@ def load_steps(test_nodeid: str) -> list[dict[str, Any]] | None:
     try:
         with open(json_path, encoding='utf-8') as f:
             data = json.load(f)
+    # a sidecar that does not load reads as a test with no steps. The
+    # warning names the file, and the test still runs and reports
     except (json.JSONDecodeError, OSError) as e:
         log.warning('Failed to load step file %s: %s', json_path, e)
         return None
@@ -117,6 +119,8 @@ def load_step_file(json_path: Path) -> dict[str, Any] | None:
     try:
         with open(json_path, encoding='utf-8') as f:
             return json.load(f)
+    # the warning names the file that did not load. get_step_coverage
+    # skips it, so the coverage count leaves its tests out
     except (json.JSONDecodeError, OSError) as e:
         log.warning('Failed to load step file %s: %s', json_path, e)
         return None

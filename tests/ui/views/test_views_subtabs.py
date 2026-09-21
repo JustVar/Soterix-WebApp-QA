@@ -81,6 +81,9 @@ class TestViewsSubtabs:
                 close_icon = last_tab.locator("img[src*='closeIcon']")
                 try:
                     close_icon.wait_for(state="visible", timeout=2000)
+                    # cleanup only: no close icon on hover means this tab cannot be
+                    # closed, so the loop ends. The page and context are per-test,
+                    # so the open tab is gone with them.
                 except Exception:
                     break
                 close_icon.click(timeout=10000)
@@ -129,6 +132,9 @@ class TestViewsSubtabs:
         checkbox = thumbnail.locator(".sidebar-custom-checkbox")
         try:
             checkbox.wait_for(state="visible", timeout=timeout)
+            # probe: a checkbox that never shows is the answer None. The map and
+            # channel tests assert on None. The insights test tries a fallback
+            # and then skips with its measured reason.
         except Exception:
             return None
         return checkbox
@@ -740,6 +746,9 @@ class TestViewsSubtabs:
         saved_view = self.page.locator(f"span[title='{view_name}']")
         try:
             saved_view.wait_for(state="visible", timeout=5000)
+            # cleanup helper: each test records the name before its save, so a
+            # test that stopped early has no view to delete. The delete oracle
+            # is test_delete_saved_view in test_views_basic.py.
         except Exception:
             return  # View not present - nothing to delete
         saved_view.hover()

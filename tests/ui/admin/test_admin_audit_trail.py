@@ -56,6 +56,9 @@ class TestAdminAuditTrail:
         card.get_by_text("View", exact=True).first.click()
         try:
             self.crumb.wait_for(state="visible", timeout=7000)
+            # a View click during cards hydration can be dropped. The handler
+            # clicks one more time, and the second wait raises if the breadcrumb
+            # still does not show, so a dead View button errors every test here.
         except PlaywrightError:
             card.get_by_text("View", exact=True).first.click()
             self.crumb.wait_for(state="visible", timeout=15000)

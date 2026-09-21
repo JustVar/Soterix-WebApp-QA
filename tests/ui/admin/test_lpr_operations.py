@@ -56,6 +56,8 @@ class TestLprListOperations:
             # must not be swallowed by a teardown
             try:
                 self.lpr.delete_list(name)
+                # collected, not swallowed: a list the app did not delete is named in
+                # the RuntimeError after the loop, and that error fails the teardown
             except (PlaywrightError, RuntimeError) as e:
                 errors.append(f"{name}: {e}")
         self._owned_lists = []

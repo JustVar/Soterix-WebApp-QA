@@ -258,6 +258,8 @@ class MediaPage:
         try:
             self.no_results_text.wait_for(state="visible", timeout=timeout)
             return True
+        # no empty-state text in time is the answer False. Callers then read
+        # the item names and fail when the tab shows neither
         except Exception:
             return False
 
@@ -649,6 +651,8 @@ class MediaPage:
         try:
             locator.wait_for(state="visible", timeout=timeout)
             return True
+        # not visible in time is the answer False. Callers branch on it or
+        # use it as a settle before the page-ready wait
         except PlaywrightError:
             return False
 
@@ -658,5 +662,7 @@ class MediaPage:
         try:
             locator.wait_for(state="hidden", timeout=timeout)
             return True
+        # still visible in time is the answer False. The delete flow raises
+        # on it, and the menu and loader callers use it as a settle
         except PlaywrightError:
             return False

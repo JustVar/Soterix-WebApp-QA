@@ -232,6 +232,8 @@ class ViewsPage:
         try:
             locator.first.wait_for(state="visible", timeout=timeout)
             return True
+        # not visible in time is the answer this helper returns. The caller
+        # picks the branch, and its next wait or click raises on a broken page
         except Exception:
             return False
 
@@ -433,12 +435,16 @@ class ViewsPage:
                 checkbox.wait_for(state="visible", timeout=5000)
                 try:
                     checkbox.click(timeout=5000)
+                # the pointer click is the first try. The DOM click in the handler
+                # raises on failure, and the outer handler counts that as one lost attempt
                 except PlaywrightError:
                     # a custom checkbox with no inner input: click the
                     # element itself, bounded so a reveal lost to a
                     # re-render retries instead of hanging
                     checkbox.first.evaluate("el => el.click()", timeout=5000)
                 return
+            # one lost reveal is not a failure. The loop hovers again, and the
+            # RuntimeError after three attempts reports the last error
             except PlaywrightError as e:
                 last = e
         raise RuntimeError(
@@ -471,6 +477,8 @@ class ViewsPage:
         if before_tiles > 0:
             try:
                 expect(self.drag_drop_tiles).not_to_have_count(before_tiles, timeout=10000)
+            # a camera can render without consuming a placeholder, so this logs
+            # the miss. The Devices checkbox test asserts that the content landed
             except AssertionError:
                 print("[VIEWS] Camera checkbox clicked but no tile was "
                       f"consumed within 10s (still {before_tiles} empty)")
@@ -534,6 +542,9 @@ class ViewsPage:
         if before_tiles > 0:
             try:
                 expect(self.drag_drop_tiles).not_to_have_count(before_tiles, timeout=10000)
+            # a camera can render without consuming a placeholder, so this logs
+            # the miss. Stream callers wait for the video tile, which raises. The
+            # save-view callers check the save only
             except AssertionError:
                 print("[VIEWS] Camera checkbox clicked but no tile was "
                       f"consumed within 10s (still {before_tiles} empty)")
@@ -1106,6 +1117,9 @@ class ViewsPage:
         try:
             expect(loaders).to_have_count(0, timeout=timeout_ms)
             return True
+        # a loader that stays is logged and returns False. This is a settle,
+        # not the stream oracle: assert_tile_streaming and the content-health
+        # log report a dead stream
         except AssertionError:
             print(f"[VIEWS] {loaders.count()} tile loader(s) still up after "
                   f"{timeout_ms / 1000:.0f}s")
@@ -1454,6 +1468,8 @@ class ViewsPage:
         timeline = video_tile.locator("#svg-line-2")
         try:
             timeline.locator("xpath=..").hover(timeout=5000)
+        # the parent svg hover is the first try. The forced hover in the
+        # handler raises on failure, and the share icon click needs the reveal
         except Exception:
             timeline.hover(force=True)
 

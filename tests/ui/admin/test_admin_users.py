@@ -53,6 +53,9 @@ class TestAdminUsers:
         try:
             self.admin.options_icon.first.wait_for(state="visible", timeout=timeout)
             return True
+            # teardown probe, called only from the cleanup above: a timeout means
+            # no user row shows. Before the delete that is nothing to delete, and
+            # after it that is a good delete. test_delete_user owns the oracle.
         except Exception:
             return False
 

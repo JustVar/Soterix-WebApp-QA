@@ -536,6 +536,8 @@ class EventsPage:
         try:
             play_icon.wait_for(state="visible", timeout=5000)
             play_icon.click(timeout=10000)
+        # the hover overlay may not activate, so the handler clicks with
+        # force and raises on failure. Callers expect the player controls after
         except Exception:
             # Overlay may not have activated; click with force
             play_icon.click(force=True)
@@ -617,6 +619,9 @@ class EventsPage:
         try:
             locator.wait_for(state="visible", timeout=timeout)
             return True
+        # not visible in time is the answer False. The camera menu methods
+        # skip a node that is absent, and camera_menu_counts and
+        # select_first_available_camera then wait for a camera, which raises
         except PlaywrightError:
             return False
 
@@ -626,6 +631,8 @@ class EventsPage:
         try:
             locator.wait_for(state="hidden", timeout=timeout)
             return True
+        # still visible in time is the answer False. Callers log a control
+        # that stays or close the menu another way, and the test asserts after
         except PlaywrightError:
             return False
 

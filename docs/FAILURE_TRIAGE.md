@@ -127,7 +127,10 @@ outcome. Then "Tests to watch": every test that failed at least once in its last
 20 results, with its strip, its flaky rate, and the date of its last
 failure. The tests sit in 1 block for each module, worst first, and a block
 opens on a click. A test that runs with parameters (each camera, each graph
-type) is 1 row that says how many of its variants failed. Check it before you call
+type) is 1 row that says how many of its variants failed. When a test ran
+on 2 boxes, its row says so: `fails only on us: india 0 of 6, us 4 of 4`
+means a tenant problem, not a test problem. The Modules table has a
+"By box" column with the pass rate of each box. Check it before you call
 a failure new. A run that recorded no product is named by its targets,
 so every line carries one.
 

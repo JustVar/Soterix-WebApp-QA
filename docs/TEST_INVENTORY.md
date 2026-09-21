@@ -67,7 +67,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `tests/legacy/` | 3 | 138 | no | Retired Selenium-era login and web-client tests, kept for reference. Excluded from collection by pytest.ini norecursedirs. |
 | `tests/plugins/` | 18 | 232 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
 | `tests/tools/` | 21 | 208 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
-| `soterix-qa-shared` | 22 | 557 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
+| `soterix-qa-shared` | 22 | 561 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
 | `Soterix-API-QA` | 1 | 11 | in Soterix-API-QA | Pins for the API repo's own plugins and shims. Run in that repo. |
 | **This repo** | **45** | **595** | | |
 
