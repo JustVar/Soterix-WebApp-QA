@@ -34,6 +34,7 @@ stronger check.
 from __future__ import annotations
 
 import os
+import shlex
 from collections.abc import Mapping
 from typing import Any
 
@@ -58,7 +59,16 @@ def drag_mode(environ: Mapping[str, str] | None = None) -> str:
     forced = (env.get(MODE_ENV) or "").strip().lower()
     if forced in ("js", "pointer"):
         return forced
-    return "js" if WAYLAND_FLAG in (env.get("CHROME_ARGS") or "") else "pointer"
+    # split as the launch does (stream_health.chrome_args): --ozone-platform="wayland" reaches
+    # Chrome with no quotes, and --ozone-platform-hint=wayland selects it too
+    try:
+        flags = shlex.split(env.get("CHROME_ARGS") or "")
+    # an unbalanced quote: the launch reads the same text and fails loud there, so this only picks a mode
+    except ValueError:
+        flags = (env.get("CHROME_ARGS") or "").split()
+    # hint=auto is not read as Wayland: on a laptop it selects what the desktop has
+    on_wayland = any(f in (WAYLAND_FLAG, "--ozone-platform-hint=wayland") for f in flags)
+    return "js" if on_wayland else "pointer"
 
 
 def js_drop(source: Any, target: Any) -> int:
@@ -66,7 +76,7 @@ def js_drop(source: Any, target: Any) -> int:
     src = source.element_handle(timeout=10000)
     dst = target.element_handle(timeout=10000)
     kinds = source.page.evaluate(JS_DROP, [src, dst])
-    print(f"[DRAG] drag events fired from JavaScript (Chrome on Wayland); data kinds set by the app: {kinds}")
+    print(f"[DRAG] drag events fired from JavaScript; data kinds set by the app: {kinds}")
     return int(kinds or 0)
 
 

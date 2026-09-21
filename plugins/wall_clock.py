@@ -1,9 +1,9 @@
 """A hard wall-clock cap on one test: setup, call and teardown together.
 
-pytest-timeout arms one timer for each phase. When a browser stops answering,
-the timer ends the call, and then the teardown asks the same dead browser to
-close a tab or stop a trace. That second call never returns, and no timer is
-left to end it. On 09/20/2026 the us leg of the nightly sat in such a teardown
+pytest-timeout arms one timer for a test. When a browser stops answering, that
+timer ends the call, and then the teardown asks the same dead browser to close a
+tab or stop a trace. That second call never returns, and no timer is left to
+end it. On 09/20/2026 the us leg of the nightly sat in such a teardown
 for 3.5 hours, until the 4 hour run cap, and the india leg did the same after 6
 workers had died on the same cause (register row 91, a pointer drag that stops
 Chrome on the box's display).
@@ -79,7 +79,7 @@ def _item_timeout(item: pytest.Item) -> float:
 
 def _expire(nodeid: str, cap_s: float, in_worker: bool) -> None:
     msg = (f"[WALL-CLOCK] {nodeid} did not end in {cap_s:g} s (setup, call and teardown together). "
-           "A call on a browser that stopped answering does not return, and the per-phase timeout was already used"
+           "A call that does not return keeps a test alive after its timeout was used, or with no timeout set"
            + (": ending this worker so the run goes on." if in_worker
               else ". This is a plain session, so it is left to the person who runs it."))
     print("\n" + msg, file=sys.stderr, flush=True)  # noqa: T201 - the one line a person must see when a test is ended
@@ -96,10 +96,14 @@ def _expire(nodeid: str, cap_s: float, in_worker: bool) -> None:
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_protocol(item: pytest.Item, nextitem: pytest.Item | None):
-    cap_s = wall_cap(_item_timeout(item), os.environ)
+    # each rerun is one more full attempt inside this same protocol call
+    reruns = int(item.config.getoption("reruns", None) or 0)
+    cap_s = wall_cap(_item_timeout(item), os.environ) * (reruns + 1)
     timer = None
     if cap_s > 0:
-        in_worker = bool(os.environ.get("PYTEST_XDIST_WORKER"))
+        # workerinput, not PYTEST_XDIST_WORKER: a plain pytest that a worker started as a
+        # subprocess inherits that variable, and it is not a worker
+        in_worker = hasattr(item.config, "workerinput")
         timer = threading.Timer(cap_s, _expire, args=(item.nodeid, cap_s, in_worker))
         timer.daemon = True
         timer.start()

@@ -145,13 +145,14 @@ def api() -> InternalApi:
     with both values when they disagree.
     """
     from config.base_config import get_credentials
+    from config.secret import Secret
     try:
         box = get_credentials()
     # an unknown or unconfigured box falls back to QA_USER below
     except (KeyError, RuntimeError):
         box = {}
     user = box.get("email") or os.environ.get("QA_USER")
-    password = box.get("password") or os.environ.get("QA_PASSWORD")
+    password = box.get("password") or Secret(os.environ.get("QA_PASSWORD") or "")
     site_id = box.get("site_id") or os.environ.get("TEST_SITE_ID")
     missing = [
         key for key, value in

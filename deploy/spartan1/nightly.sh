@@ -41,9 +41,10 @@ MAXFAIL="${MAXFAIL:-200}"             # failures+errors that end a box's run ear
                                       # 120 was too close: c2c ran early and 09/11 had 116 by mid-run
 C2C="${C2C:-1}"                      # 0 skips the Camera 2 Cloud run
 
-# Guard 1: become a process group of our own, so one kill reaches pytest,
-# the Playwright driver and every browser it started. `-w` keeps a manual
-# run in the foreground.
+# Guard 1: become a process group of our own, so the next nightly can find
+# and end this one by its group. `timeout` puts each pytest leg in a group
+# of its own, so guard 2 (pgrep, below) ends what the group kill does not
+# reach. `-w` keeps a manual run in the foreground.
 if [ -z "${NIGHTLY_GROUP:-}" ]; then
   NIGHTLY_GROUP=1 exec setsid -w "$0" "$@"
 fi
@@ -52,11 +53,14 @@ fi
   echo "=== $(date -Is) nightly start (target: $TARGET, boxes: $BOXES)"
   if [ -f "$PIDFILE" ]; then
     old=$(cat "$PIDFILE")
-    if [ -n "$old" ] && kill -0 -- "-$old" 2>/dev/null; then
+    # No `--`: /bin/sh is dash on the box, and dash answers `kill -0 -- -N` with "Illegal number: -".
+    # With the error sent to /dev/null this guard never fired (found 09/21/2026), and only the
+    # pgrep guard below stopped an earlier run.
+    if [ -n "$old" ] && kill -0 "-$old" 2>/dev/null; then
       echo "previous nightly (group $old) still alive after a day: killing it"
-      kill -TERM -- "-$old" 2>/dev/null
+      kill -TERM "-$old" 2>/dev/null
       sleep 10
-      kill -KILL -- "-$old" 2>/dev/null
+      kill -KILL "-$old" 2>/dev/null
     fi
   fi
   # The pid file is not the only witness: on 09/11/2026 a stalled run had

@@ -41,16 +41,22 @@ PLACEHOLDER_RE = re.compile(
 
 def secret_values(env_text: str) -> dict[str, str]:
     """{KEY: value} for the credential-looking keys in an env file's text."""
+    # python-dotenv reads the text, as the suite does. A hand parser kept the inline comment of
+    # `KEY=value # note` as a part of the value and kept the backslash of an escaped quote, so
+    # such a secret never matched the evidence (audit 09/21/2026).
+    import io
+
+    from dotenv import dotenv_values
     found: dict[str, str] = {}
-    for raw in env_text.splitlines():
-        line = raw.strip()
-        if not line or line.startswith('#') or '=' not in line:
-            continue
-        key, _, value = line.partition('=')
-        key, value = key.strip().removeprefix('export ').strip(), value.strip().strip('"').strip("'")
+    for key, value in dotenv_values(stream=io.StringIO(env_text)).items():
+        value = (value or '').strip()
         if not SECRET_KEY_RE.search(key) or NOT_SECRET_KEY_RE.search(key):
             continue
-        if len(value) < MIN_LEN or PLACEHOLDER_RE.match(value):
+        if len(value) < MIN_LEN:
+            continue
+        # a placeholder is not a secret. An all-digit value is one when its key says password:
+        # a camera PIN of 8 digits was dropped as "a number".
+        if PLACEHOLDER_RE.match(value) and not (value.isdigit() and re.search(r'PASS', key, re.I)):
             continue
         found[key] = value
     return found

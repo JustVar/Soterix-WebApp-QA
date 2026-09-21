@@ -11,7 +11,7 @@ from tests.shared.pages.fullscreen_page import FullScreenPage
 from tests.shared.pages.incamera_search_page import InCameraSearchPage
 from tests.shared.pages.views_page import ViewsPage
 
-# One search job per account and no cancel (register row 78): every
+# One search job per account and no cancel (register row 100): every
 # searching module shares this xdist group so --dist loadgroup runs them
 # on one worker, and tests/shared/helpers/search_gap.py spaces the searches.
 pytestmark = pytest.mark.xdist_group("account_search")

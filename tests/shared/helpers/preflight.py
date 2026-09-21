@@ -98,7 +98,9 @@ def skip_reason(config, environ: Mapping[str, str] | None = None) -> str | None:
         return f"{SWITCH}=off"
     if hasattr(config, "workerinput"):
         return "xdist worker (the controller asked once)"
-    for option in ("collectonly", "setupplan", "setuponly"):
+    # each of these runs a session start and no test (--fixtures, --fixtures-per-test and
+    # --cache-show signed in to the tenant until 09/21/2026)
+    for option in ("collectonly", "setupplan", "setuponly", "showfixtures", "show_fixtures_per_test", "cacheshow"):
         if config.getoption(option, default=False):
             return f"--{option}: no test runs"
     if not targets_a_tenant(list(config.args)):

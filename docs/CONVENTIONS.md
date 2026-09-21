@@ -140,7 +140,7 @@ once independently in the wait conversion (August 2026). Use them:
   seconds (Newtown before its rebuild) collisions are rare; on Videonetics
   an analytics job scans video for minutes and they are common. The fix is
   to serialise the searching tests (Search, Events, drawing) onto one
-  worker; register row 78 tracks it, and it is unresolved as of 09/16.
+  worker; register row 100 tracks the app-side fix.
 - **Identity lookups match the exact name, escaped** (locator series
   09/2026, TEST_REPAIRS items 14 and 18-20). Finding a specific
   camera/site/list/view by its name uses `get_by_text` / `get_by_title` /
@@ -368,7 +368,7 @@ manually. Nothing below runs unless you opt in. Treat it as in development.
     unreachable, the run counts as infrastructure-broken and no bugs are filed.
   - The step is gated by `BUG_CREATION_ENABLED=true` in `.env`. Until then it
     dry-runs and returns a fake `AUTO-XXXX` issue dict for inspection.
-  - Use `--no-bug-filing` to skip the step entirely.
+  - The step is opt-in: it runs only with `--file-bugs` on `tools/run_suite.py`.
 - **Reporter endpoint:** defaults to the legacy status-only PATCH. Set
   `QATOUCH_USE_PLAYWRIGHT_ENDPOINT=1` for the bulk endpoint (per-result
   execution time plus failure screenshots captured from the live page). Set

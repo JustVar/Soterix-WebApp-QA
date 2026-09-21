@@ -124,12 +124,14 @@ def test_redact_cleans_the_file_marks_the_folder_and_skips_it_next_time(tmp_path
     """--redact masks the secret, leaves the zip alone, exits 0, and a second pass reads 0 folders."""
     run = _run_folder(tmp_path)
     runs = run.parent
-    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(tmp_path / 'no.env')]) == 0
+    env = tmp_path / 'box.env'
+    env.write_text('QA_INDIA_PASSWORD=Tr1cky-Value-77\n', encoding='utf-8')
+    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(env)]) == 0
     assert 'hunter2-long' not in (run / 'log' / 'test_login.log').read_text(encoding='utf-8')
     assert (run / 'traces' / 'a-trace.zip').read_bytes().endswith(COOKIE.encode())
     assert (run / es.DONE_MARKER).exists()
     capsys.readouterr()
-    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(tmp_path / 'no.env')]) == 0
+    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(env)]) == 0
     assert '0 run folder(s) read' in capsys.readouterr().out
 
 
@@ -167,11 +169,30 @@ def test_a_file_that_cannot_be_written_fails_loud_and_does_not_stop_the_other_fo
             raise PermissionError(13, 'read-only')
         return real_open(path, mode, *args, **kwargs)
 
+    env = tmp_path / 'box.env'
+    env.write_text('QA_INDIA_PASSWORD=Tr1cky-Value-77' + chr(10), encoding='utf-8')
     monkeypatch.setattr('builtins.open', refuse_write)
-    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(tmp_path / 'no.env')]) == 2
+    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(env)]) == 2
     assert not (a / es.DONE_MARKER).exists()
     assert (b / es.DONE_MARKER).exists()
     captured = capsys.readouterr()
     assert 'could not be written' in captured.err
     assert 'hunter2-long' not in captured.out + captured.err
 
+
+def test_a_pass_with_no_secret_values_does_not_mark_the_folder(tmp_path):
+    """With no .env the scan reads shapes only, so the folder stays unmarked and is read again when the values are back."""
+    run = _run_folder(tmp_path)
+    assert es.main(['--runs-dir', str(run.parent), '--redact', '--env', str(tmp_path / 'no.env')]) == 0
+    assert 'hunter2-long' not in (run / 'log' / 'test_login.log').read_text(encoding='utf-8')
+    assert not (run / es.DONE_MARKER).exists()
+
+
+def test_a_long_line_with_no_secret_is_read_in_a_moment():
+    """A 200 KB run of letters took 110 s with the unanchored URL pattern; the nightly scans with no time limit."""
+    import time
+    start = time.perf_counter()
+    clean, found = es.scan_text('a' * 200_000 + ' rtsp://admin:Hunter22x@10.2.0.9/live', {})
+    assert time.perf_counter() - start < 5
+    assert [f['what'] for f in found] == ['password in a URL']
+    assert 'Hunter22x' not in clean

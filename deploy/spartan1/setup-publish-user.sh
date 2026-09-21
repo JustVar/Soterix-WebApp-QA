@@ -68,9 +68,12 @@ chmod 3775 "$RUNS"
 # 3. The jail. sshd refuses a chroot that root does not own, so the served
 #    directory is bind-mounted into a root-owned folder.
 install -d -m 755 -o root -g root "$JAIL"
-install -d -m 755 "$JAIL_RUNS"
+# Not when it is mounted: install -d on the mount point is a chmod of /data/qa/runs itself, and a
+# second run of this script took its sticky bit and its group write away (audit 09/21/2026).
+mountpoint -q "$JAIL_RUNS" || install -d -m 755 "$JAIL_RUNS"
 grep -qs "^$RUNS $JAIL_RUNS " /etc/fstab || echo "$RUNS $JAIL_RUNS none bind 0 0" >> /etc/fstab
 mountpoint -q "$JAIL_RUNS" || mount "$JAIL_RUNS"
+chmod 3775 "$RUNS"   # after the mount too: the mode is the last word of steps 2 and 3
 
 # 4. sshd: sftp only, inside the jail. What a laptop publishes belongs to
 #    the account with the modes the laptop sent (644 and 755, measured), so

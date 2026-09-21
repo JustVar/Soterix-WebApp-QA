@@ -71,3 +71,9 @@ def test_main_is_quiet_without_an_env_file(tmp_path, capsys):
     """A machine with no .env has nothing to compare against and must not block."""
     assert sc.main(['--env', str(tmp_path / 'missing.env')]) == 0
     assert 'nothing to compare' in capsys.readouterr().out
+
+
+def test_secret_values_reads_the_file_the_way_the_suite_does():
+    """An inline comment and an escaped quote are not a part of the value, and an all-digit password is a secret."""
+    text = 'QA_PASSWORD=Hunter22x # the india one\nCAM_PASSWORD=12345678\nAPI_TOKEN="ab\\"cdefgh"\nRETRY_KEY=12345678\n'
+    assert sc.secret_values(text) == {'QA_PASSWORD': 'Hunter22x', 'CAM_PASSWORD': '12345678', 'API_TOKEN': 'ab"cdefgh'}

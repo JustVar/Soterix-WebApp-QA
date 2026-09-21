@@ -27,8 +27,11 @@ the box. Edit a file here, push it, then install it on the box.
    uses 4 workers.
 5. It runs the Camera 2 Cloud suite (`tests/c2c`) one time, with 1 worker,
    against the lab cameras.
-6. It copies each run folder to `/data/qa/runs` without the trace zips.
-7. It rebuilds the served index and the health page.
+6. It scans each new run folder for secrets and puts `***` in the place of
+   each one (`tools/evidence_scan.py --redact`). See Hardening.
+7. It copies each scanned run folder to `/data/qa/runs` without the trace
+   zips. A folder that the scan did not mark stays in the clone.
+8. It rebuilds the served index and the health page.
 
 Limits: 600 s for each test, 4 hours for each leg, and a leg stops after 200
 failures. While a leg runs, `live.json` in the served directory feeds the
@@ -221,7 +224,8 @@ A good night has these lines, in this order: `nightly start`, `code:`,
 | `[gwN] node down: Not properly terminated` | A worker was ended. The screenshot watchdog (45 s) or the wall-clock watchdog (22 minutes for 1 test) did it, or the worker died. The run goes on with a new worker, and that 1 test fails. | Read the `report_media:` line above it, or `logs/wall_clock.log` in the clone. Each names the test. |
 | `pytest exit: 124` | The leg hit the 4 hour cap. The script kept the screenshots and the log in a `PARTIAL-run-cap` folder. | Find the test that stalled. The last lines of `run.log` in that folder name it. |
 | `THIS RUN WAS NOT ARCHIVED` | The archive step failed. The line gives the error and the free disk space. | Free disk space if it is low, then run the leg again. |
-| `evidence_scan: N run folder(s) read, M secret(s) redacted.` | The scan ran. `M` above 0 means that a log held a secret, and the served copy has `***` in its place. | For `M` above 0, read the lines above it. They name the file and the kind of secret. Find the code that printed it, and correct it. |
+| `evidence_scan: N run folder(s) read, M secret(s) redacted, E error(s).` | The scan ran. `M` above 0 means that a log held a secret, and the served copy has `***` in its place. `E` above 0 means that a file could not be read or written, and that run folder is not published. | For `M` above 0, read the lines above it. They name the file and the kind of secret. Find the code that printed it, and correct it. For `E` above 0, read the `could not be` lines, correct the file's owner or mode, and run the nightly's scan command again. |
+| `evidence_scan: no secret values read from ...` | The clone's `.env` is missing or has no secret. The scan marks no folder, so no run is published. | Put the `.env` back (see What the box needs), then run the scan command from Hardening. |
 | `evidence scan had errors ... was not published` | The scan could not read or write a file in a run folder. That folder has no `.evidence_scanned` mark, and the archive does not have it. The other folders are served. | Read the `ERROR` line above it. It names the file. Correct the file's permissions. The next nightly scans the folder again and publishes it. |
 | `served index rebuild FAILED` | The health tool failed. The run folders are served, but the index is old. | Run `venv/bin/python tools/health_summary.py --runs-dir /data/qa/runs` on the box and read the error. |
 

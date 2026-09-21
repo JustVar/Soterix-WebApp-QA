@@ -44,6 +44,9 @@ def test_only_sessions_that_can_reach_a_tenant_get_a_preflight():
     assert "worker" in pf.skip_reason(_config(["tests/ui"], worker=True), {})
     assert "collectonly" in pf.skip_reason(_config(["tests/ui"], collectonly=True), {})
     assert "setupplan" in pf.skip_reason(_config([], setupplan=True), {})
+    # the listing commands start a session and run no test
+    for option in ("showfixtures", "show_fixtures_per_test", "cacheshow"):
+        assert option in pf.skip_reason(_config(["tests/ui"], **{option: True}), {})
     assert "no tenant test" in pf.skip_reason(_config(["tests/plugins"]), {})
 
 

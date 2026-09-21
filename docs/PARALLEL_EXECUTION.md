@@ -14,7 +14,7 @@ Nothing else. pytest.ini carries `--dist loadgroup`, which schedules by
 views, rules, users, sites, LPR lists, chats, clips, sequences, dashboards)
 declares one, so its tests run on one worker in their written order, and
 the search and events modules share `account_search` because the server
-runs one search job at a time (register row 78). Modules without a mark
+runs one search job at a time (register row 100). Modules without a mark
 spread test by test. Never add `--dist` on the command line: it overrides
 the ini silently, and `conftest.pytest_configure` refuses the run. A pin
 (`tests/plugins/test_xdist_groups.py`) fails when a module that writes

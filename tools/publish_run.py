@@ -134,8 +134,8 @@ def sftp_batch(staged: Path, dest: str, stamp: str) -> str:
     lost tunnel) leaves only the hidden temp, never a partial run folder that
     the archive lists. A run that is published again moves the old copy to
     `.pub-old-...` first, because sftp cannot delete a folder tree. nginx
-    never serves a dot name, and the box's prune removes both kinds after a
-    day. A leading `-` lets a line fail: the old copy is usually not there.
+    never serves a dot name, and the box's prune removes both kinds after 2
+    days. A leading `-` lets a line fail: the old copy is usually not there.
     """
     name = staged.name
     tmp = f'{dest}/.pub-tmp-{name}-{stamp}'
@@ -198,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
     # already in the environment wins (load_dotenv does not override).
     from dotenv import load_dotenv
     load_dotenv(ROOT / '.env')
-    host = os.environ.get('QA_RUNS_HOST', DEFAULT_HOST)
+    host = os.environ.get('QA_RUNS_HOST') or DEFAULT_HOST   # `or`: a blank line in .env is not a host
     # The publish account lives in a jail where the served directory is /runs.
     dest = os.environ.get('QA_RUNS_DIR') or (PUBLISH_USER_DIR if host.startswith('qa-publish@') else DEFAULT_DIR)
     url = os.environ.get('QA_RUNS_URL', DEFAULT_URL)

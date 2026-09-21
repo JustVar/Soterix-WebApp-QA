@@ -66,7 +66,10 @@ PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ('bearer token', re.compile(r'Bearer\s+(?P<s>[A-Za-z0-9._~+/-]{20,}=*)', re.I)),
     ('basic auth', re.compile(r'Authorization' + _Q + r'?\s*[:=]\s*' + _Q + r'?Basic\s+(?P<s>[A-Za-z0-9+/]{8,}=*)', re.I)),
     ('integration key', re.compile(r'x-vsaas-key' + _Q + r'?\s*[:=]\s*' + _Q + r'?(?P<s>[A-Za-z0-9._-]{12,})', re.I)),
-    ('password in a URL', re.compile(r'[a-z][a-z0-9+.-]*://[^/\s:@]+:(?P<s>[^@\s/]{3,})@', re.I)),
+    # Bounded, and anchored on the left: with no anchor each start position of a long run of
+    # letters scanned to the end of the run (measured 09/21/2026: a 200 KB line took 110 s, and
+    # the nightly runs this scan with no time limit before it publishes anything).
+    ('password in a URL', re.compile(r'(?<![A-Za-z0-9+.-])[a-z][a-z0-9+.-]{0,20}://[^/\s:@]{1,200}:(?P<s>[^@\s/]{3,200})@', re.I)),
     # a password key with a quoted value: 'password': 'x', "password":"x", &quot;password&quot;: &quot;x&quot;
     ('password value', re.compile(r'(?<![A-Za-z])(?:pass(?:word|wd)?|pwd)' + _Q + r'?\s*[:=]\s*(?P<q>' + _Q
                                   + r')(?P<s>(?:(?!(?P=q)).){4,}?)(?P=q)', re.I)),
@@ -166,7 +169,8 @@ def main(argv: list[str] | None = None) -> int:
 
     secrets = secret_values(args.env.read_text(encoding='utf-8')) if args.env.is_file() else {}
     if not secrets:
-        print(f'evidence_scan: no secret values read from {args.env}; the scan uses the patterns only', file=sys.stderr)
+        print(f'evidence_scan: no secret values read from {args.env}; the scan uses the patterns only, '
+              'and marks no folder as scanned (the nightly publishes only marked folders)', file=sys.stderr)
 
     if args.run_dir:
         run_dirs = [args.run_dir]
@@ -190,7 +194,9 @@ def main(argv: list[str] | None = None) -> int:
         all_errors.extend(errors)
         # Only a --redact pass with no error marks a folder: it is then clean
         # at rest and the next pass can skip it. A report pass writes nothing.
-        if args.runs_dir and args.redact and not errors:
+        # and only when the scan knew the secret values: a pass with no .env reads shapes only,
+        # and a folder it marked would never be read again once the .env is back
+        if args.runs_dir and args.redact and not errors and secrets:
             try:
                 marker.write_text('scanned by tools/evidence_scan.py\n', encoding='utf-8')
             except OSError as e:

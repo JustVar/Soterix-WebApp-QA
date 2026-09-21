@@ -5,7 +5,7 @@ REST call (14 shapes tried, all 404/400), not a WebSocket frame (none sent
 around a search), and not logout (the job outlives the session). The slot
 frees only about 16 s after the client stops polling, or when the job
 completes, which is minutes for a 30-day analytics scan on the Videonetics
-site (register row 78, all measured 09/16/2026). So a test's search that
+site (register row 100, all measured 09/16/2026). So a test's search that
 lands inside the 16 s after the previous search test's page closed answers
 code 400, and the collision is with the PRIOR test's job, not between
 concurrent workers: it happened even in a single serial process.

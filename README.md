@@ -240,7 +240,7 @@ touching Jira. Do not flip it to `true` until the flow has been validated end to
   mandatory NC Bug fields via `config/jira_field_mapping.py`.
 - Only suppression is an env-health probe: if `base_url` is unreachable the run is treated
   as infrastructure-broken and nothing is filed.
-- `--no-bug-filing` skips the step entirely.
+- The step is opt-in: it runs only with `--file-bugs` on `tools/run_suite.py`. Without the flag, no bug is filed.
 - The review queue (`tools/review_queue.json`, `--review` / `--list`) still exists but is
   unreachable from the default flow. Pass `auto_create=False` to reinstate the
   human-disposition gate.
