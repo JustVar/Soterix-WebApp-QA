@@ -22,7 +22,7 @@ from config.secret import Secret
 from plugins.paths import fit_name
 from tests.shared.auth_state import auth_state_filename
 
-pytest_plugins = ['plugins.xdist_recovery', 'plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
+pytest_plugins = ['plugins.xdist_recovery', 'plugins.wall_clock', 'plugins.qatouch_reporter', 'plugins.verification_runner', 'plugins.report_media',
                   'plugins.run_archive', 'plugins.single_run_guard',
                   'tests.shared.api.fixtures']
 

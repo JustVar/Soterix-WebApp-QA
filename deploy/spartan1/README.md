@@ -231,6 +231,7 @@ A good night has these lines, in this order: `nightly start`, `code:`,
 | `pytest exit: 4` | pytest refused the command line. | Read the usage error above the exit line. |
 | `pytest exit: 5` | pytest collected no tests. The `TARGET` path is wrong. | Correct `TARGET`. |
 | `pytest exit: 7` | The preflight refused the run. The tenant did not answer, or it refused the account. | Read the `PREFLIGHT:` line above the exit line. |
+| `[gwN] node down: Not properly terminated` | A worker was ended. The screenshot watchdog (45 s) or the wall-clock watchdog (22 minutes for 1 test) did it, or the worker died. The run goes on with a new worker, and that 1 test fails. | Read the `report_media:` line above it, or `logs/wall_clock.log` in the clone. Each names the test. |
 | `pytest exit: 124` | The leg hit the 4 hour cap. The script kept the screenshots and the log in a `PARTIAL-run-cap` folder. | Find the test that stalled. The last lines of `run.log` in that folder name it. |
 | `THIS RUN WAS NOT ARCHIVED` | The archive step failed. The line gives the error and the free disk space. | Free disk space if it is low, then run the leg again. |
 | `evidence_scan: N run folder(s) read, M secret(s) redacted.` | The scan ran. `M` above 0 means that a log held a secret, and the served copy has `***` in its place. | For `M` above 0, read the lines above it. They name the file and the kind of secret. Find the code that printed it, and correct it. |
