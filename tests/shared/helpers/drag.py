@@ -17,6 +17,14 @@ Measured on the box on 09/18 and 09/21/2026 with the LPR camera playback class:
   camera row. It does not for an LPR widget card (the drop landed nothing), so
   try an element on the box before you move its drag here.
 
+The Views page object's `mouse_drag` and the 3 `drag_to` calls of the Views
+tests use the same rule. On 09/20/2026 the us leg of the nightly hung in one of
+them. Measured on the box on 09/21/2026 with test_views_drag_drop and
+test_views_subtabs, on us and on india: 16 of 16 JavaScript drops landed (a
+camera, a location, a map, a channel, a saved view, an insight), no fallback
+was used, and no run hung. The failures that stayed are in the register
+(row 56) and are not drags.
+
 Windows Chrome ran the class 2 times with the pointer drag and no hang, so each
 other machine keeps it: a pointer drag is what a user does, and it is the
 stronger check.

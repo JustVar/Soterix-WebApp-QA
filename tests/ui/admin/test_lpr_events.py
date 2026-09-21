@@ -6,6 +6,7 @@ card opens an inline clip player with a video, a position/duration
 strip, and Share / Export / Create Link / fullscreen / seek controls.
 """
 import re
+import time
 
 import pytest
 from playwright.sync_api import TimeoutError as PWTimeoutError, expect
@@ -13,6 +14,24 @@ from playwright.sync_api import TimeoutError as PWTimeoutError, expect
 from tests.shared.pages.lpr_page import LprPage
 
 # Position/duration readout in the clip player ('00:00 / 00:20')
+# When the feed was last measured empty in this process (time.monotonic()).
+# An empty feed costs the full wait to prove. On india the feed is empty most
+# nights, and 8 tests each paid the 30 s (09/21/2026 nightly: 4 minutes of the
+# leg). The first test pays it. For the next 5 minutes the others wait 5 s: a
+# feed that fills in that time still shows within it.
+_FEED_EMPTY = {"at": None}
+FEED_WAIT_MS = 30000
+FEED_RECHECK_MS = 5000
+FEED_EMPTY_HOLDS_S = 300
+
+
+def _feed_wait_ms(now: float | None = None) -> int:
+    """The wait for the first event card: short when the feed was measured empty a moment ago."""
+    now = time.monotonic() if now is None else now
+    at = _FEED_EMPTY["at"]
+    return FEED_RECHECK_MS if at is not None and now - at < FEED_EMPTY_HOLDS_S else FEED_WAIT_MS
+
+
 TIME_STRIP_RE = re.compile(r"\d{2}:\d{2} / \d{2}:\d{2}")
 # A card's full timestamp line carries the date too (tolerant of the
 # time and date landing in sibling nodes)
@@ -42,7 +61,7 @@ class TestLprEventPlayback:
         self.lpr.ensure_lpr_camera_page()
         cards = self.lpr.event_cards()
         try:
-            cards.first.wait_for(state="visible", timeout=30000)
+            cards.first.wait_for(state="visible", timeout=_feed_wait_ms())
         # deliberate: this timeout means the feed is empty, and the
         # branch below proves that before it skips - it fails loud when
         # the feed HAS content and only the card anchor missed
@@ -58,7 +77,9 @@ class TestLprEventPlayback:
                     "The feed shows event content but no card matched "
                     "the timestamp anchor - the card locator rotted"
                 )
+            _FEED_EMPTY["at"] = time.monotonic()
             pytest.skip("No LPR events in the live feed")
+        _FEED_EMPTY["at"] = None
         return cards
 
     @pytest.mark.ui

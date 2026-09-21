@@ -21,6 +21,7 @@ import pytest
 from playwright.sync_api import expect
 
 from config.base_config import config
+from tests.shared.helpers.drag import drop
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.insights_page import InsightsPage
 from tests.shared.pages.views_page import ViewsPage
@@ -788,7 +789,7 @@ class TestViewsSubtabs:
         # mouse drag - a single-jump drag_to reaches the app's drag
         # layer as a text selection, not a drag.
         if force:
-            source.drag_to(target, force=True)
+            drop(source, target, force=True)
         else:
             self.views.mouse_drag(source, target)
 

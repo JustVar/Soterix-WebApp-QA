@@ -3,6 +3,7 @@ import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
 
 from config.base_config import config
+from tests.shared.helpers.drag import drop
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.views_page import ViewsPage
 
@@ -322,7 +323,7 @@ class TestViewsDragDrop:
             # Fallback: try drag
             print("No checkbox - trying drag")
             target_tile = self.views.drag_drop_tiles.first
-            map_thumbnail.drag_to(target_tile)
+            drop(map_thumbnail, target_tile)
         self._wait_tile_consumed(initial_tile_count)
         self.views.log_new_content_issues(health, "map add")
 
@@ -399,7 +400,7 @@ class TestViewsDragDrop:
             # Direct click or drag
             print("Trying direct interaction with channel")
             target_tile = self.views.drag_drop_tiles.first
-            channel_element.drag_to(target_tile)
+            drop(channel_element, target_tile)
         self._wait_tile_consumed(initial_tile_count)
         self.views.log_new_content_issues(health, "channel add")
 

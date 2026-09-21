@@ -8,6 +8,8 @@ from playwright.sync_api import (
     expect,
 )
 
+from tests.shared.helpers.drag import drag_mode, js_drop
+
 # A filled grid tile (probed 08/25/2026 on the QA tenant, Chrome channel):
 # div.video_container.new_video_player > div.player__wrapper holds
 # canvas#video-png.canvas-container-reference, video.player, the spinner
@@ -320,6 +322,14 @@ class ViewsPage:
         # the ladder's landed-check decide the outcome
         if handle.count():
             source = handle.first
+        # Headed Chrome on the box's Wayland display stops for good inside
+        # some pointer drags (tests/shared/helpers/drag.py, register row 91:
+        # the 09/20/2026 us leg sat in this gesture until the run cap). There
+        # the same drag events are fired from JavaScript. No frame is
+        # stashed: no pointer is down, so there is no drag to show.
+        if drag_mode() == "js":
+            js_drop(source, target)
+            return
         source.hover()
         self.page.mouse.down()
         try:
