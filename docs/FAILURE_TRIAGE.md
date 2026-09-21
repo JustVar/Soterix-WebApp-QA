@@ -86,7 +86,10 @@ the previous 20 runs of these tests, or "Seen before (last on <date>)"
 with a link to that run. Each failure shows the error message, the failing
 Playwright action with its call log, the 15 actions before it, the console
 errors, every screenshot of the test (final and mid-drag), the video clip,
-and the exact `show-trace` command for its trace. Passed and skipped tests
+and the exact `show-trace` command for its trace. A run with more than 3 failures shows each failure folded to 3 lines: its
+title, its facts and the first line of its error. Click a failure to open
+it, or use "Expand all". Failures that share an error fold below that error.
+Passed and skipped tests
 sit below in collapsed lists with their final screenshots, grouped by
 module. Mid-drag frames stay on disk and show only on a failure card.
 
@@ -120,9 +123,11 @@ then a table with the pass rate over test outcomes, the mean duration of
 a full-module run, the notes count (the advisory lines, linked to the
 newest run's), and the newest run as a date with its outcome in words.
 "Show runs" under a module lists its runs: the date, what ran, and the
-outcome. Then a "Tests to watch" table: every test that failed at least
-once in its last 20 results, with its strip, its flaky rate, and the
-date of its last failure, sorted by flaky rate. Check it before you call
+outcome. Then "Tests to watch": every test that failed at least once in its last
+20 results, with its strip, its flaky rate, and the date of its last
+failure. The tests sit in 1 block for each module, worst first, and a block
+opens on a click. A test that runs with parameters (each camera, each graph
+type) is 1 row that says how many of its variants failed. Check it before you call
 a failure new. A run that recorded no product is named by its targets,
 so every line carries one.
 
