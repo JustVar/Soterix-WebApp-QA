@@ -26,6 +26,14 @@ WRITES_STATE = re.compile(
     r"\b(create_(?!widget_button)|delete_|rename_|mute_|_mute_notifications|save_view|add_bookmark|_own_a_"
     r"|toggle_user|favou?rite|api_saved_view|api_bookmark|api_camera_group|export_)")
 GROUP_RE = re.compile(r'^pytestmark = pytest\.mark\.xdist_group\("(\w+)"\)', re.MULTILINE)
+# State that no method name gives away: the module and the group it must be in. The LPR camera
+# page keeps its layout on the server for each user, so each module that drops a camera on its
+# tiles shares that layout with the test that changes it.
+SHARED_STATE = {
+    "tests/ui/admin/test_lpr_grid_and_timer.py": "account_lpr",
+    "tests/ui/admin/test_lpr_camera_selection.py": "account_lpr",
+    "tests/ui/admin/test_lpr_playback.py": "account_lpr",
+}
 
 
 def _config(workers, dist, loaded=True):
@@ -52,6 +60,18 @@ def test_every_module_that_writes_tenant_state_declares_a_group():
     assert not missing, ("these modules write tenant state and carry no xdist_group; add "
                          "pytestmark = pytest.mark.xdist_group(\"account_<family>\") (docs/PARALLEL_EXECUTION.md): "
                          + ", ".join(missing))
+
+
+def test_modules_that_share_state_with_no_telling_name_are_in_their_group():
+    """Each module of SHARED_STATE carries its group, and a module that plays a camera on the LPR page is in the list."""
+    for rel, group in SHARED_STATE.items():
+        found = GROUP_RE.search((REPO_ROOT / rel).read_text(encoding="utf-8"))
+        assert found, f"{rel} must be in the xdist group {group}"
+        assert found.group(1) == group, f"{rel} must be in the xdist group {group}"
+    for path in sorted((REPO_ROOT / "tests" / "ui").rglob("test_lpr_*.py")):
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        if ".play_camera(" in path.read_text(encoding="utf-8"):
+            assert rel in SHARED_STATE, f"{rel} plays a camera on the LPR page: add it to SHARED_STATE and to account_lpr"
 
 
 def test_a_command_line_dist_that_undoes_the_grouping_is_refused():

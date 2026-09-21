@@ -40,7 +40,7 @@ Give a new module the group of the data that it writes.
 | `account_rules` | Rules, notifications, sequences | `admin/test_admin_rules`, the 2 modules in `notifications/`, `sequences/test_camera_sequences` |
 | `account_users` | Users | `admin/test_admin_users` |
 | `account_sites` | Sites | `admin/test_admin_sites` |
-| `account_lpr` | Plate lists | `admin/test_lpr_navigation`, `test_lpr_operations`, `test_lpr_views` |
+| `account_lpr` | Plate lists, and the layout of the LPR camera page (kept on the server for each user) | `admin/test_lpr_navigation`, `test_lpr_operations`, `test_lpr_views`, `test_lpr_grid_and_timer`, `test_lpr_camera_selection`, `test_lpr_playback` |
 | `account_chats` | Chat groups and messages | `chats/test_chats` |
 | `account_media` | Clips and folders | `media/test_media_operations` |
 | `account_insights` | Dashboards and widgets | The 2 modules in `insights/`, and `admin/test_lpr_widgets` |
