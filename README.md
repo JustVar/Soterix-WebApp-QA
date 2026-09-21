@@ -20,7 +20,7 @@ The API tests are in a different repo, Soterix-API-QA.
    (`run.html`), a screenshot of each test, and a video and a Playwright
    trace of each failure.
 4. A machine in the lab, spartan1, runs all the tests each night and serves
-   the reports at `https://10.2.0.2:8444/qa-runs/`.
+   the reports at `http://10.2.0.2/qa-runs/`.
 5. Git hooks and a CI gate check each change without a browser: imports,
    lint, the house conventions and the number of collected tests.
 6. The upload of results to QA Touch and the automatic Jira bugs are
@@ -132,7 +132,7 @@ Each run keeps its evidence in its own folder, `reports/runs/<run>/`. Open
 `reports/runs/<run>/run.html` first. It gives the verdict in 1 sentence and
 shows the failures first, each with its error, screenshots, video and trace
 command. `reports/runs/index.html` lists the runs on your machine, newest
-first. The nightly runs are at `https://10.2.0.2:8444/qa-runs/`.
+first. The nightly runs are at `http://10.2.0.2/qa-runs/`.
 
 `reports/report.html` and `reports/artifacts/` hold the newest run only. The
 next run writes over them. The run folder keeps a copy, so you do not need

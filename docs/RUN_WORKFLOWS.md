@@ -29,7 +29,7 @@ the next run can overwrite anything. Three pages make the archive readable:
   tests to watch, each module's last run. Regenerate it with
   `python run.py health`.
 
-The hosted archive at https://10.2.0.2:8444/qa-runs/ is behind basic auth over HTTPS
+The hosted archive at http://10.2.0.2/qa-runs/ is behind HTTP basic auth
 (user `qa`; the password is in the team password store, not in git). It is
 one shared read-only viewing credential, so a dropped WireGuard unit or a
 new reviewer needs no per-person setup. The publish command below uses SSH,
@@ -45,7 +45,7 @@ below.
 ## Scenario 1: a Scheduled Run Finishes
 
 Today: the nightly on spartan1 is unarmed. It writes nothing to QA Touch
-and it adds no ledger row. The run archive at `https://10.2.0.2:8444/qa-runs/` is
+and it adds no ledger row. The run archive at `http://10.2.0.2/qa-runs/` is
 its only record. This stays so until the run-key strategy for the nightly
 is decided.
 
@@ -193,7 +193,7 @@ either direction. GitHub-HOSTED runs (`qa-nightly.yml` today) upload
 | Git ledger (`history/`) | working, first rows committed |
 | Jira approval queue | working, double-gated |
 | GitHub artifact on CI runs | working, 7-day retention |
-| nginx on spartan1 | working: https://10.2.0.2:8444/qa-runs/ (HTTPS on port 8444, the old address redirects), basic auth (user `qa`), dot names not served |
+| nginx on spartan1 | working: http://10.2.0.2/qa-runs/ HTTP basic auth (user `qa`), dot names not served. The box is on a private network that people reach by VPN |
 | 30-day prune cron on spartan1 | working, mutation-tested in both directions |
 | Nightly cron on spartan1 (`/data/qa/ci/nightly.sh`) | runs the web app per box, then `tests/c2c` once against the lab cameras (serial, `C2C_REQUIRE_HARDWARE=1`, since 09/11/2026); proven end to end 09/01 on one file; hung every night 09/02-09/08 (no timeout, stale clone, runs piling up); rebuilt 09/08 with the three guards, both boxes; scheduled runs since 09/12; since 09/17/2026 the web-app legs run headed on the box's Weston display when its socket is up, so the livestream tests run there (`qa-weston.service`, `deploy/spartan1/README.md`) |
 | Windows runner for the livestream tests (`deploy/windows-runner/`) | fallback since 09/17/2026: spartan1 decodes H.265 itself (Intel GPU through VA-API, headed on a headless Weston) and its nightly runs the livestream tests; the scripts stay proven on a laptop (one-file run, exit codes, the run cap killing the tree) and unscheduled |

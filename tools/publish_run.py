@@ -45,7 +45,7 @@ RUN_DIR_RE = re.compile(r'^20\d{2}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}__')
 DEFAULT_HOST = 'qa-publish@10.2.0.2'
 DEFAULT_DIR = '/data/qa/runs'
 PUBLISH_USER_DIR = '/runs'   # what the jailed qa-publish account sees (deploy/spartan1/setup-publish-user.sh)
-DEFAULT_URL = 'https://10.2.0.2:8444/qa-runs'
+DEFAULT_URL = 'http://10.2.0.2/qa-runs'
 
 
 def newest_run(runs_dir: Path | None = None) -> Path | None:

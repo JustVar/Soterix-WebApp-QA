@@ -7,7 +7,7 @@ on a Wayland display, which spartan1 has
 (`deploy/spartan1/README.md`), so its nightly runs the livestream tests.
 This runner is the fallback for the day that path breaks: one Windows
 machine runs just those tests, on a schedule, publishing each run to the
-same archive at https://10.2.0.2:8444/qa-runs/. Nothing here is scheduled today.
+same archive at http://10.2.0.2/qa-runs/. Nothing here is scheduled today.
 
 | File here | What it does |
 |---|---|
@@ -59,7 +59,7 @@ cd C:\qa\Soterix-WebApp-QA
 # 1. a trial on this machine, one box, no reset, no publish
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\windows-runner\livestream-run.ps1 -Boxes us -NoReset -NoPublish
 Get-Content logs\livestream-run.log -Tail 30
-# 2. the same with a publish, then find the run at https://10.2.0.2:8444/qa-runs/
+# 2. the same with a publish, then find the run at http://10.2.0.2/qa-runs/
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\windows-runner\livestream-run.ps1 -Boxes us -NoReset
 # 3. the schedule
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\windows-runner\register-task.ps1

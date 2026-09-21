@@ -13,8 +13,7 @@ the box. Edit a file here, push it, then install it on the box.
 | `cron.d-qa-runs-prune` | `/etc/cron.d/qa-runs-prune` | Starts `qa-runs-prune` at 03:00 UTC each day as root. |
 | `qa-runs-prune` | `/usr/local/bin/qa-runs-prune` | Deletes served run folders that are older than 30 days. |
 | `qa-weston.service` | `/etc/systemd/system/qa-weston.service` | The headless Wayland display that Chrome needs to decode H.265. See "H.265 on the box". |
-| `nginx-qa-runs-site.conf` | `/etc/nginx/sites-available/qa-runs` | The archive over HTTPS on port 8444. It serves `/data/qa/runs` read-only with basic auth and does not serve a name that starts with a dot. |
-| `setup-https-archive.sh`, `nginx_port80_redirect.py` | Run from the clone | The one-time move of the archive to HTTPS. See "Hardening". |
+| `nginx-qa-runs.conf` | inside `/etc/nginx/sites-enabled/default` | The `/qa-runs/` locations. They serve `/data/qa/runs` read-only with basic auth and do not serve a name that starts with a dot. |
 | `setup-publish-user.sh` | Run from the clone | The one-time setup of the publish account, and the command that adds a person's key. See "Hardening". |
 
 ## What the nightly does
@@ -69,8 +68,7 @@ make sure that the last block in the log ends with `nightly done`.
       User soterix
   ```
 
-- The archive is at `https://10.2.0.2:8444/qa-runs/`. The old address,
-  `http://10.2.0.2/qa-runs/`, redirects to it. It uses basic auth with the
+- The archive is at `http://10.2.0.2/qa-runs/`. It uses basic auth with the
   user `qa`. The password is in the team password store.
 - To publish a run from a laptop, a person needs a key on the account
   `qa-publish`, not on `soterix`. See "Hardening".
@@ -81,7 +79,7 @@ make sure that the last block in the log ends with `nightly done`.
 
 ## Hardening
 
-The box has 3 protections for the evidence that it serves. The setup of
+The box has 2 protections for the evidence that it serves. The setup of
 each one was done on 09/18/2026. This section is the record of what was
 done, and the procedure for a new box.
 
@@ -89,7 +87,6 @@ done, and the procedure for a new box.
 |---|---|---|
 | The evidence scan | A password or a session cookie in a log file that the archive serves. `nightly.sh` runs `tools/evidence_scan.py --redact` on each new run folder, and copies only a folder that the scan marked as clean. | Install `nightly.sh` ("Install a change on the box"). Then scan what the archive has now, one time: see below. |
 | The publish account | A laptop key that can read the box. `tools/publish_run.py` copies with sftp, so the account `qa-publish` needs no shell. sshd keeps it in a jail that holds the served run folders and nothing else. | `sudo sh deploy/spartan1/setup-publish-user.sh` |
-| HTTPS | The archive password in clear text on the network. The archive moves to `https://10.2.0.2:8444/qa-runs/`. The old address redirects to it. | `sudo sh deploy/spartan1/setup-https-archive.sh` |
 
 ### Scan what the archive has now
 
@@ -147,33 +144,23 @@ file and does not reload.
 The `add-key` command accepts a file with 1 public key on 1 line. It refuses
 a private key file and a file with 2 keys.
 
-### Move the archive to HTTPS
+### Why the archive is not on HTTPS
 
-1. On the box, from the clone: `sudo sh deploy/spartan1/setup-https-archive.sh`
-2. Do the 2 checks that the script prints.
-3. Install the new `qa-runs-prune` ("Install a change on the box"). It also
-   removes what a publish leaves behind.
+The archive uses basic auth over HTTP, so its password is readable to a
+person who listens inside the lab network. That risk was accepted on
+09/21/2026. The box is on a private network that people reach by VPN, and
+the password opens test reports only. Keep that password for the archive
+alone: do not use an account password for it.
 
-The site uses the box's mkcert certificate, the same one as the asset
-tracker. The certificate names `spartan1` and `10.2.0.2`, and it is good
-until 10/12/2028.
+HTTPS was tried from 09/18 to 09/21/2026 with the asset tracker's
+certificate. Each person then saw a browser warning, or had to install the
+CA file. The files of that setup are in the git history
+(`setup-https-archive.sh`, `nginx-qa-runs-site.conf`) and on the box in
+`/etc/nginx/qa-runs-backup-20260921-154624-https/`.
 
-Who needs the certificate authority (CA) file on their machine:
-
-- No person needs it to run tests, to publish a run or to use the tools.
-  The tests talk to the QA tenants, not to the box. A publish uses sftp,
-  which does not use certificates. No tool in the repos reads the archive
-  over HTTPS.
-- A person who opens the archive in a browser sees a warning page if the CA
-  is not installed. They can continue past it, and the connection is still
-  encrypted. To remove the warning, install the CA one time:
-  `docs/CA_CERT_DISTRIBUTION.md` in the asset tracker repo. A laptop that
-  opens the asset tracker with no warning already has it.
-- `curl` in Git Bash has its own CA list and does not read the Windows
-  store. Use `curl -k` for a check from Git Bash.
-
-The script keeps the old files in `/etc/nginx/qa-runs-backup-<time>/`. If
-nginx refuses the new configuration, the script puts the old files back.
+If your browser still opens port 8444 for the old address, it kept the
+redirect of those 3 days. Clear the cached data for `10.2.0.2`, or open the
+address in a private window.
 
 ## What the box needs
 
