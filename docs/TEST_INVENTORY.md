@@ -518,7 +518,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 
 | Test | Title | Steps | QA Touch |
 |---|---|---|---|
-| `test_camera_sequences.py::TestCameraSequences::test_add_created_sequence_to_views` | The sequences sidebar lists the tenant's sequences by name | yes | bjX2EP |
+| `test_camera_sequences.py::TestCameraSequences::test_add_created_sequence_to_views` | A saved sequence is listed by its name in the Sequences section of the Views sidebar | yes | bjX2EP |
 | `test_camera_sequences.py::TestCameraSequences::test_create_camera_sequence` | Create a new camera sequence with a timestamped name | - | LD3x9E |
 | `test_camera_sequences.py::TestCameraSequences::test_create_sequence_with_advanced_options` | Create a sequence with offline camera refrain and reverse play options | - | 0rzgKw |
 | `test_camera_sequences.py::TestCameraSequences::test_edit_sequence` | Verify the sequences page offers a sequence to edit | yes | 8Vv2V9 |

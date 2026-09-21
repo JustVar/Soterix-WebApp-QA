@@ -39,7 +39,8 @@ class TestCameraSequences:
         step_capture.set_page(self.page)
         self.views = ViewsPage(self.page)
         self.seq = SequencePage(self.page)
-        self._created_sequences = []
+        self._created_sequences = []   # recorded BEFORE the create: a save can land after its check failed
+        self._saved_sequences = []     # recorded AFTER create_sequence returned: these must be there to delete
         # Dismiss event notifications that may overlay the sequence icon
         self._mute_notifications()
         yield
@@ -56,15 +57,20 @@ class TestCameraSequences:
         if not self._created_sequences:
             return
         errors = []
-        self.seq.navigate()
         for name in self._created_sequences:
             try:
-                self.seq.delete_sequence(name)
-            # typed: a refused delete or an item that never leaves is what this collects, and
+                found = self.seq.delete_sequence(name)
+            # typed: a refused delete or a count that does not go down is what this collects, and
             # the raise after the loop reports it. Anything else is a real fault and goes up.
-            except (PlaywrightError, RuntimeError) as e:
+            except (PlaywrightError, AssertionError, RuntimeError) as e:
                 errors.append(f"{name}: {e}")
+                continue
+            # A sequence whose create returned must be in the list. "Not listed" then means the
+            # sidebar shows the name in a different form, and the sequence stays on the tenant.
+            if not found and name in self._saved_sequences:
+                errors.append(f"{name}: saved by this test, and not found in the sidebar to delete")
         self._created_sequences = []
+        self._saved_sequences = []
         if errors:
             raise RuntimeError("sequence cleanup failed: " + "; ".join(errors))
 
@@ -160,25 +166,33 @@ class TestCameraSequences:
         sequence_name = f"{time_stamp}_Automation_Test_create_sequence"
         self._created_sequences.append(sequence_name)
         self.seq.create_sequence(sequence_name)
+        self._saved_sequences.append(sequence_name)
+        # the oracle: the saved sequence is listed by its name in the Sequences section
+        self.seq.open_sequences_list()
+        expect(self.seq.sequence_item(sequence_name)).to_have_count(1, timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.sequences
     def test_add_created_sequence_to_views(self):
-        """The sequences sidebar lists the tenant's sequences by name.
+        """A saved sequence is listed by its name in the Sequences section of the Views sidebar.
 
         Steps:
-        1. Open the Sequences page.
-           Expected: The sidebar lists at least one sequence and no entry is blank.
+        1. Click the sequence icon, select all cameras, enter a name and click Save.
+           Expected: The form closes.
+        2. On Views, open the Sequences section of the left sidebar.
+           Expected: The section lists the new sequence by its name, 1 time.
         """
+        # Until 09/21/2026 this test counted the rows of the sidebar, which are the sites,
+        # and called them sequences. It passed with no sequence on the tenant.
         self._navigate_and_verify()
-
-        # Check for sequence items in the sidebar
-        sequence_items = self.page.locator('div.sidebarlist-item-button')
-        sequence_items.first.wait_for(state="visible", timeout=10000)
-        expect(sequence_items).not_to_have_count(0)
-        names = [" ".join(t.split()) for t in sequence_items.all_inner_texts()]
-        assert all(names), f"a sidebar sequence item is blank: {names}"
-        print(f"[OK] Found {len(names)} sidebar items - sequences available")
+        self.seq.select_all_cameras()
+        time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+        sequence_name = f"{time_stamp}_Automation_Test_listed_sequence"
+        self._created_sequences.append(sequence_name)
+        self.seq.create_sequence(sequence_name)
+        self._saved_sequences.append(sequence_name)
+        self.seq.open_sequences_list()
+        expect(self.seq.sequence_item(sequence_name)).to_have_count(1, timeout=15000)
 
     @pytest.mark.ui
     @pytest.mark.sequences
@@ -217,9 +231,12 @@ class TestCameraSequences:
         expect(self.seq.play_reverse_checkbox).to_be_checked(timeout=5000)
 
         # create_sequence saves and waits for the form to close
-        sequence_name = (
-            "Play offline cameras selection in camera sequence "
-            "through automation"
-        )
+        # a stamp, like the other create test: a fixed name met its own leftovers from earlier nights
+        time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+        sequence_name = f"{time_stamp}_Automation_Test_offline_cameras_sequence"
         self._created_sequences.append(sequence_name)
         self.seq.create_sequence(sequence_name)
+        self._saved_sequences.append(sequence_name)
+        # the oracle: the saved sequence is listed by its name in the Sequences section
+        self.seq.open_sequences_list()
+        expect(self.seq.sequence_item(sequence_name)).to_have_count(1, timeout=15000)

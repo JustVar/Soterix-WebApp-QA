@@ -50,7 +50,11 @@ class SequencePage:
             "input[name='playReverseOrder']"
         )
 
-        # Sidebar items (sequence list)
+        # Rows of the Views sidebar. They are the SITES until the Sequences section is open
+        # (measured 09/21/2026 on india: 17 rows before, 64 with the section open). A saved
+        # sequence is a row with span[title="<its name>"], and its 3-dot menu has Edit and
+        # Delete. Until that day this locator was read as "the sequence list", so the cleanup
+        # never found a sequence and 55 of them piled up on india from 08/08.
         self.sidebar_items = page.locator(
             "div.MuiListItemButton-root.sidebarlist-item-button"
         )
@@ -227,88 +231,56 @@ class SequencePage:
 
     # --- Delete Sequence ---
 
+    def open_sequences_list(self):
+        """Show the saved sequences: the Sequences section of the Views sidebar.
+
+        The section is a toggle with no state attribute. The row count says which way the
+        click went: opening adds rows, and a click that removed rows closed an open section,
+        so it is clicked one more time.
+        """
+        # the create form is a modal over Views, and its backdrop stops each click below it
+        if self.sequence_name_input.is_visible():
+            self.page.keyboard.press("Escape")
+            self.sequence_name_input.wait_for(state="hidden", timeout=10000)
+        self.sequences_title.first.wait_for(state="visible", timeout=20000)
+        before = self.sidebar_items.count()
+        self.sequences_title.first.click(timeout=10000)
+        self.page.wait_for_timeout(1500)  # the section renders its rows with no other signal
+        if self.sidebar_items.count() < before:
+            self.sequences_title.first.click(timeout=10000)
+            self.page.wait_for_timeout(1500)  # the same render, for the second click
+
     def sequence_item(self, name: str):
-        """The sidebar item of the sequence with exactly this name."""
-        return self.sidebar_items.filter(has=self.page.get_by_text(name, exact=True))
+        """The row of the saved sequence with exactly this name (open_sequences_list first)."""
+        return self.sidebar_items.filter(has=self.page.get_by_title(name, exact=True))
 
     def delete_sequence(self, name: str) -> bool:
-        """Delete the sequence with exactly this name. False when no such sequence is listed.
+        """Delete 1 sequence with exactly this name. False when no such sequence is listed.
 
-        By name, never by position. The cleanup used delete_last_sequence, which removes
-        whatever is last in the sidebar: a sequence of a different person on the shared
-        tenant when this test's own create had failed (found 09/21/2026). Raises when the
-        item is still listed after the delete.
+        By name, never by position. The cleanup used a method that removed whatever was last
+        in the sidebar: a sequence of a different person on the shared tenant when this test's
+        own create had failed (found 09/21/2026). The proof is the count of items with this
+        name: it must go down by 1. Waiting for "the first item" to hide cannot tell a delete
+        from a second item with the same name taking its place.
         """
+        self.open_sequences_list()
         item = self.sequence_item(name)
         # The list hydrates a beat after the page settles: wait before the name reads as absent
         try:
             item.first.wait_for(state="visible", timeout=10000)
-        # absent after 10 s means there is nothing of ours to delete, and the caller is told
+        # absent after 10 s means no item of this name is listed, and the caller decides what that means
         except PlaywrightError:
             return False
+        before = item.count()
         # img asset icon: alt unreliable, locate by src (CONVENTIONS > Locators)
         item.first.locator("img[src*='3-dot']").click(timeout=10000)
         self.page.locator("[role='menuitem']:has-text('Delete'):visible").first.click(timeout=10000)
         confirm = self.page.get_by_role("button", name="Delete", exact=True)
-        # some builds delete with no dialog, so the confirm is optional. The wait below is the proof.
+        # some builds delete with no dialog, so the confirm is optional. The count below is the proof.
         if self._appears(confirm.first, timeout=5000):
             confirm.first.click(timeout=10000)
-        item.first.wait_for(state="hidden", timeout=15000)
+        expect(item).to_have_count(before - 1, timeout=15000)
         return True
-
-    def delete_last_sequence(self):
-        """Delete the last sequence in the sidebar list via the 3-dot menu.
-
-        Opens the 3-dot menu on the last sidebar item and selects Delete.
-        """
-        if self.sidebar_items.count() == 0:
-            return
-
-        last_item = self.sidebar_items.last
-        last_item.wait_for(state="visible", timeout=10000)
-
-        # Click 3-dot menu scoped to the last sidebar item
-        three_dot = last_item.locator("img[src*='3-dot']")
-        three_dot.wait_for(state="visible", timeout=10000)
-        three_dot.click()
-
-        # Click Delete from the context menu - find the visible menu item
-        delete_item = self.page.locator(
-            "[role='menuitem']:has-text('Delete'):visible"
-        ).first
-        try:
-            delete_item.wait_for(state="visible", timeout=5000)
-            delete_item.click(timeout=10000)
-        # the Delete menu item did not show, so the keyboard picks it. Only
-        # fixture teardown calls this method: no test asserts on the delete,
-        # and a leftover sequence keeps its automation name for manual cleanup
-        except Exception:
-            # Fallback: ArrowDown to Delete (second option), then Enter
-            self.page.keyboard.press("ArrowDown")
-            self.page.keyboard.press("Enter")
-
-        # Wait for and click the confirmation dialog; each candidate
-        # selector carries its own bounded wait
-        confirm_selectors = [
-            "button:has-text('Delete')",
-            "button:has-text('Yes')",
-            "button:has-text('Confirm')",
-            "div.MuiBox-root:text-is('Delete')",
-            "div.MuiBox-root:text-is('Yes')",
-        ]
-        for sel in confirm_selectors:
-            try:
-                confirm = self.page.locator(sel).first
-                confirm.wait_for(state="visible", timeout=5000)
-                confirm.click(timeout=10000)
-                # The dialog leaves the DOM with the clicked button
-                self._appears_hidden(confirm, timeout=10000)
-                return
-            # cleanup path: each confirm label is one guess; a miss falls to
-            # the next, and test teardown tolerates a leftover sequence
-            except Exception:
-                continue
-        # If no confirmation dialog found, the delete completed directly
 
     # --- Advanced Options ---
 
@@ -345,8 +317,8 @@ class SequencePage:
         try:
             locator.wait_for(state="hidden", timeout=timeout)
             return True
-        # probe: a timeout is the False answer, not a fault. navigate and
-        # delete_last_sequence use it as an optional settle wait.
+        # probe: a timeout is the False answer, not a fault. navigate uses it as
+        # an optional settle wait.
         # create_sequence raises on a False, and click_update logs it
         except PlaywrightError:
             return False
