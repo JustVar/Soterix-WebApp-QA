@@ -10,6 +10,7 @@ import pytest
 from playwright.sync_api import expect
 
 from config.base_config import config
+from tests.shared.helpers.shown_name import is_shown_as
 from tests.shared.helpers.surface import require_items
 from tests.shared.pages.maps_page import MapsPage
 
@@ -56,6 +57,10 @@ class TestMapsDeeper:
         """Verify site dropdown shows available sites."""
         sites = self.maps.get_site_options()
         assert len(sites) > 0, "Expected at least one site in the dropdown"
+        # the list is the account's sites: the configured test site is one of them. This
+        # dropdown cuts a long name and adds an ellipsis, so the cut form counts too.
+        assert any(is_shown_as(s, self.site_name) for s in sites), (
+            f"the site dropdown lists {sites}, and the test site {self.site_name!r} is not one of them")
 
     @pytest.mark.ui
     @pytest.mark.maps
@@ -115,6 +120,9 @@ class TestMapsDeeper:
         assert device_elements.count() > 0, (
             "Expected device count elements on map cards"
         )
+        # a device count is a number, not an empty label
+        first_count = " ".join(device_elements.first.inner_text().split())
+        assert re.search(r"\d", first_count) is not None, f"the first map card's device count reads {first_count!r}"
 
     # --- Camera overlay ---
 

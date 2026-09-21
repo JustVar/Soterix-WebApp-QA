@@ -34,6 +34,8 @@ def test_profile_menu_contains_sign_out(authenticated_page, base_url):
     # Directly check that "Sign out" text is visible in the opened menu
     sign_out = page.locator('text=Sign out')
     assert sign_out.is_visible(), "Expected 'Sign out' option in profile menu"
+    # the open menu has 1 Sign out item that the user can see, and its text is exact
+    expect(page.get_by_text("Sign out", exact=True).filter(visible=True)).to_have_count(1)
 
 
 @pytest.mark.ui
@@ -135,6 +137,8 @@ def test_relogin_after_logout(authenticated_page, base_url, login_data):
 
     lp.login(login_data['username'], login_data['password'])
     assert lp.is_logged_in(), "Should be logged in after re-login"
+    # the second login changed the address: the browser left the login page
+    assert "/auth/login" not in page.url, f"the address is still the login page: {page.url}"
 
 
 @pytest.mark.ui

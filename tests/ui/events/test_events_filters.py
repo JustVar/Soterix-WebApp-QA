@@ -7,6 +7,7 @@ import pytest
 from playwright.sync_api import expect
 
 from config.base_config import config
+from tests.shared.helpers.shown_name import shown_as
 from tests.shared.pages.events_page import EventsPage
 
 # One search job per account and no cancel (register row 78): every
@@ -41,6 +42,10 @@ class TestEventsFilters:
         """Verify site dropdown shows at least one selectable site."""
         sites = self.events.get_site_options()
         assert len(sites) > 0, "Expected at least one site in the dropdown"
+        # the list is the account's sites: the configured test site is one of them, and no site shows 2 times
+        site_name = config.get("test_site_name")
+        assert site_name in sites, f"the site dropdown lists {sites}, and the test site {site_name!r} is not one of them"
+        assert len(sites) == len(set(sites)), f"the site dropdown lists a site 2 times: {sites}"
 
     @pytest.mark.ui
     @pytest.mark.events
@@ -59,6 +64,10 @@ class TestEventsFilters:
         assert len(initial_sites) > 0, "At least one site should be available"
 
         self.events.select_site(None)
+        # the selection shows: the 'Select Site' placeholder is gone, and the page reads the
+        # name of the site that was picked (the app can cut a long name and add an ellipsis)
+        expect(self.events.site_dropdown).to_have_count(0, timeout=10000)
+        expect(self.page.get_by_text(shown_as(config.get("test_site_name"))).first).to_be_visible()
 
         # After site selection, rules dropdown should be enabled with options
         rules = self.events.get_rule_options()

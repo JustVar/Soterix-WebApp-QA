@@ -822,7 +822,9 @@ def main() -> int:
         # The swallowed default timeout blocks on added lines for the same
         # reason: the existing sites are standing debt, a new one is a choice.
         for f in findings:
-            if f["rule"] in ("test-without-steps", "swallowed-default-timeout"):
+            # presence-only-oracle joined on 09/21/2026, when the last of the 25
+            # tests it found got a real oracle: the debt is 0, so a new one is a choice.
+            if f["rule"] in ("test-without-steps", "swallowed-default-timeout", "presence-only-oracle"):
                 f["sev"] = "HIGH"
 
     high = [f for f in findings if f["sev"] == "HIGH"]

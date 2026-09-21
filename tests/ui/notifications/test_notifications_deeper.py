@@ -187,6 +187,8 @@ class TestNotificationsDeeper:
             text = panel.first.inner_text().strip()
             # Panel should have some text (notifications or "no notifications" message)
             assert len(text) > 0, "Notification panel should have text content"
+            # content, not a bare frame: the text holds a word of 3 letters or more
+            assert re.search(r"[A-Za-z]{3,}", text) is not None, f"the notification panel reads {text[:80]!r}"
         else:
             # No panel class found - the panel may use a different structure
             # Just verify the mute button is present (panel is open)

@@ -255,6 +255,9 @@ class TestViewsPlayback:
         fs.recover_stream_if_failed()
 
         assert fs.is_streaming(), "Second camera should stream in fullscreen"
+        # The oracle is assert_stream_playing. is_streaming only says that no spinner and no failure text show. The video
+        # element's own word is the proof: a decoded frame, and a currentTime that moves.
+        fs.assert_stream_playing()
 
     @pytest.mark.ui
     @pytest.mark.views_playback

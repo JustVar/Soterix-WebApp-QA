@@ -654,6 +654,12 @@ python tools/convention_check.py
   `pytest.skip` raised from an except handler; an except handler with no
   why-comment that neither re-raises nor fails (`except-without-why`); and,
   on added lines, a new UI test without a `Steps:` block.
+- **HIGH on added lines, 0 in the repo:** a test whose checks only say that
+  something is there (`presence-only-oracle`). `count() > 0` is presence, and
+  the words of an assert message do not count. Say what the action changed:
+  a value, a count against a baseline, a text, a state, or that the other
+  page's marker is gone. If the check is in a page-object call that raises,
+  write a comment with the word "oracle" that names the call.
 - **HIGH on added lines, MEDIUM for the 29 older sites:** an action that
   waits for its element (`click`, `fill`, `hover`, `wait_for`, `inner_text`
   and the like) with no `timeout=`, in a `try` whose handlers do not raise

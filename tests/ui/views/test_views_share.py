@@ -1,9 +1,14 @@
 """Share Live View test - share a live camera stream via email and copy link."""
+import re
+
 import pytest
 
 from tests.shared.pages.views_page import ViewsPage
 
 SITE_NAME = None
+
+
+SHARE_LINK_RE = re.compile(r"https?://[^/\s]+/\S+")
 
 
 @pytest.mark.ui
@@ -40,6 +45,8 @@ def test_share_live_view(authenticated_page):
     )
     # Copy puts the share link on the clipboard; the helper reads it back
     assert copied.startswith("http"), f"Copy put {copied!r} on the clipboard, not a share link"
+    # a full link with a host and a path, and no spaces or line breaks around it
+    assert SHARE_LINK_RE.fullmatch(copied) is not None, f"Copy put {copied!r} on the clipboard, not one clean link"
 
     # If we got here without an exception, the share flow completed.
     # The share dialog opened, email was filled, Share was clicked,

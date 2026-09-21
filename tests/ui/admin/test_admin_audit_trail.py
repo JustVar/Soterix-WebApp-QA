@@ -274,8 +274,13 @@ class TestAdminAuditTrail:
         1. Open Admin > General, click View on the Audit Trail card.
            Expected: At least one audit record is listed.
         """
-        self._first_row()
+        first = self._first_row()
         assert self.rows.count() >= 1, "Expected at least one record"
+        # a real record, not a placeholder: 1 cell for each column, and a date with digits in the Date & Time cell
+        cells = first.locator("td")
+        expect(cells).to_have_count(len(AdminPage.AUDIT_TRAIL_HEADERS))
+        when = cells.nth(AdminPage.AUDIT_TRAIL_HEADERS.index("Date & Time")).inner_text().strip()
+        assert re.search(r"\d{4}|\d{1,2}:\d{2}", when) is not None, f"the Date & Time cell reads {when!r}"
 
     # --- Navigation ---
 

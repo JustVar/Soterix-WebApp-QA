@@ -61,7 +61,6 @@ under App defects in this file.
 | 98 | The Neurosen environment waits for its deployment | [BLOCKED] | Justin | When the deployment exists: fill `default_site_id` and `test_data`, measure the `without` map, create the Neurosen cases. | From row 44. Decide on a `tests/neurosen/` root when the first Neurosen-only test lands. |
 | 99 | A search over a camera that is unreachable never finishes | [APP QUESTION] | App team | Say if such a search must finish or fail fast. | From row 76. On india it crept at about 1 percent per minute. The drawing search budget is 240 s for this reason. |
 | 100 | The server runs 1 search job at a time and has no cancel | [APP DEFECT] | App team | Clear the locked slot. Add a cancel, or free the slot when the user leaves the page or logs out. | From row 78. A logout while a job runs locks the slot for every account. While it is locked, the 6 search livestream tests held 1 worker for 40 minutes. When the slot is free, Justin validates the search gap and the `account_search` group with 4 workers. |
-| 104 | 14 product tests check only that something is there | [WIP 09/21] | Justin | Give each test an oracle that says what the action changed. Next: the 4 login tests, then events, maps, views. | 25 on 09/18. The 11 LPR tests are done (09/21): the 4 LPR admin pages share the address /admin, so each test names its page by its own search box and column headers, and by the absence of the other page's. `python tools/convention_check.py --all` lists the rest as `presence-only-oracle`. |
 
 Quality gates. The checker blocks each of these on the lines that a commit
 adds: a test with no oracle, a pass that exits early, an except block that
@@ -69,8 +68,8 @@ hides a failure, and a sleep with no comment. The product tests have 0 of
 each. The standing debt is in the older page objects, and
 `python tools/convention_check.py --all` counts it: 85 except handlers with
 no reason, 29 actions with the default timeout in a `try` that hides the
-failure, and 25 tests that check only that something is there (rows 102
-and 104).
+failure (row 102). The tests that checked only that something is there are
+at 0 (row 104).
 
 ## Nightly log
 
@@ -165,6 +164,7 @@ These rows are history. Each keeps the words of the day it closed.
 | 91 | On the box, Linux Chrome stalled in the LPR camera playback class | [DONE 09/21] | The stall is in the pointer drag that plays the camera, not in the screenshot that was blamed first: Chrome on the Wayland display stops drawing in the middle of the drag and answers nothing after it. `play_camera` now uses `tests/shared/helpers/drag.py`, which fires the drag events from JavaScript on that display only. Measured on the box: pointer drag 4 of 4 class runs hung, JavaScript drag 5 of 5 finished with 25 of 25 streams played. The Views drags use the same helper since 09/21: the us leg of 09/20 hung in one of them, and on the box 16 of 16 JavaScript drops landed on us and india. Each other machine keeps the pointer drag. The widget drop keeps it too: that card does not accept the JavaScript events. |
 | 105 | On 09/20 the india leg and the us leg each ran to the 4 hour cap | [DONE 09/21] | The cause was row 91: a pointer drag stopped Chrome. pytest-timeout ended the call, and then the teardown asked the same dead browser to close a tab. That call did not return, and the timeout has 1 timer for each phase. `plugins/wall_clock.py` caps a test at 2 times its timeout plus 120 s for setup, call and teardown together, and ends the worker. Its pin runs a teardown that does not return: 1 failed, 7 passed, in 8 s. |
 | 106 | 8 LPR event tests each waited 30 s to prove that the india feed is empty | [DONE 09/21] | The first test that finds the feed empty pays the 30 s. For the next 5 minutes the others wait 5 s (`_feed_wait_ms` in test_lpr_events.py). Found in the list of slow phases that each run prints since row 102: about 4 minutes of the india leg. |
+| 104 | 25 product tests checked only that something was there | [DONE 09/21] | The checker read them as strong: `count() > 0` holds a comparison, and the message of an assert held the word `not`. Each test now compares with a fact measured on the tenant: the LPR pages by their own search box and columns, login by the address, the site dropdowns by the configured site (the Maps one cuts long names), an audit row by its 5 cells and its date, fullscreen by the video element. 2 first tries failed on the tenant and were corrected. The rule `presence-only-oracle` now blocks on added lines. |
 
 ## Done - 08/24-09/02 repairs and the exact-name locator series
 

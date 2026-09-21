@@ -46,8 +46,9 @@ class TestViewsFullscreen:
     @pytest.mark.livestream
     def test_enter_fullscreen(self):
         """Verify clicking zoom icon enters full screen and video streams."""
+        # the oracle is in _enter_fullscreen: assert_stream_playing reads the video element
+        # itself (readyState 3 or more, and a currentTime that moves) and raises when it does not play
         fs = self._enter_fullscreen()
-
         assert fs.is_streaming(), "Video should be streaming in full screen"
 
     @pytest.mark.ui

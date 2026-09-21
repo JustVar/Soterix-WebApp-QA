@@ -230,6 +230,9 @@ class TestAdminSites:
 
         versions = self.admin.get_site_versions()
         assert len(versions) > 0, "No version info found on Sites page"
+        # each label carries a version, not an empty 'Version:'
+        empty = [v for v in versions if re.search(r"Version:\s*\S", v) is None]
+        assert empty == [], f"these site cards show no version after the label: {empty}"
 
     @pytest.mark.ui
     @pytest.mark.admin
