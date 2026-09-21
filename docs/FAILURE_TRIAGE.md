@@ -89,7 +89,7 @@ a level only when you ask for it.
      15000 ms timeout on the same step are 1 cause. Where the texts differ
      in a name or an address, the line shows `...`. The right side says
      `new` when none of the previous 20 runs shows that error, or
-     `since <date>` for the newest earlier run that shows it. Click a cause
+     `last seen <date>` for the newest earlier run that shows it. Click a cause
      to list its tests.
    - The map shows only for a run that has a second axis. The Camera 2
      Cloud suite runs each test on each camera, so its map is tests by

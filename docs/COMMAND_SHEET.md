@@ -197,8 +197,8 @@ Each run folder also holds `log/`. `run.log` has the session's logging
 and then, one section per test, the output pytest captured for every
 passed and skipped test. Each failed test has its own file beside it
 with its captured output and traceback. `run.html` links a failed
-test's file from its card, and `run.log` from the header and the Passed
-section.
+test's file from its Evidence tab, and `run.log` from Run details and from
+the Evidence tab of a passed test.
 
 `docs/FAILURE_TRIAGE.md` explains how to read a trace and lists the
 traps this app has taught us. Check that list before you blame timing.

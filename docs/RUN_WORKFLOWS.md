@@ -23,8 +23,9 @@ Every run archives itself to `reports/runs/<timestamp>__<target>/` before
 the next run can overwrite anything. Three pages make the archive readable:
 
 - `reports/runs/index.html` lists every archived run, newest first.
-- Each run's `run.html` shows failures first, each with its error, call
-  log, screenshots, video, and a ready-made trace command.
+- Each run's `run.html` opens on the causes of its failures. A click on a
+  test shows its error, call log, screenshots, video, and a ready-made
+  trace command (docs/FAILURE_TRIAGE.md describes the page).
 - `reports/runs/health.html` is the cross-run view: pass rate per module,
   tests to watch, each module's last run. Regenerate it with
   `python run.py health`.
@@ -54,8 +55,8 @@ run ends, and no person copies results by hand. The steps below apply
 today, but the ledger row in step 1 applies only when the run is armed.
 
 1. **Green:** done. When the run is armed, the ledger row is the record.
-2. **Red:** open the run's `run.html`. Failures are sorted first with the
-   evidence inline. Triage each failure one of two ways:
+2. **Red:** open the run's `run.html`. It lists the causes first, and a
+   click on a test opens its evidence. Triage each failure one of two ways:
    - **App bug.** The failure is scored into `tools/review_queue.json`.
      A person approves it in the review CLI before anything reaches Jira.
      Automation never files an unreviewed bug.
