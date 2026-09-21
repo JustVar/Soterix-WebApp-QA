@@ -17,6 +17,14 @@ except ModuleNotFoundError as exc:
         "Run: pip install -e ../soterix-qa-shared"
     ) from None
 
+# This repo's names for the map of a run page. The package knows a lab camera only as a
+# parameter text; config/run_axis.py reads its model and its address from the registry.
+from soterix_qa_shared.reporting import run_page as _page
+
+from config.run_axis import camera_columns
+
+_page.configure_axis(camera_columns)
+
 if __name__ == "__main__":       # BEFORE the alias swap, or the CLI is a silent exit-0 no-op.
     # It was one until 09/21/2026: the command that docs/FAILURE_TRIAGE.md gives
     # printed nothing and wrote nothing (found when 44 run pages did not rebuild).

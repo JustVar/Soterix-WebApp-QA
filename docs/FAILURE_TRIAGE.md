@@ -11,7 +11,7 @@ Open the run's `run.html` first. On your machine it is at
 
 | What you see | Check | Verdict | Action |
 |---|---|---|---|
-| A `read this first` section in the terminal summary, or a list below the verdict in `run.html` that starts with `One cause,` | The line names an error that 5 or more failures share, a skip reason that more than 20 skips share, or tests that did not run. | The run has 1 cause. | Correct that cause before you open a single failure. |
+| A `read this first` section in the terminal summary, or a first cause in `run.html` with most of the failures in its count | The line names an error that 5 or more failures share, a skip reason that more than 20 skips share, or tests that did not run. | The run has 1 cause. | Correct that cause before you open a single failure. |
 | The run stopped at once with a `PREFLIGHT:` line and exit code 7 | The line says if the tenant did not answer or if it refused the account. It quotes the tenant's message. | No test ran. The tests are not at fault. | Correct the tenant problem or the account pair in `.env`, then run again. `PREFLIGHT=off` skips the check. |
 | A failure with a `[LOGIN]` line | The line quotes the text on the login form: an error, a captcha or a lockout. | The tenant refused the login. | Correct the account. The later tests in that process fail with the same line and do not submit the form again. |
 | A locator timeout, and the FAILED screenshot shows the login form | The traceback ends with a `[SESSION]` section. | The server dropped the session. The locator is not at fault. | Run the test again. See register row 75. |
@@ -75,36 +75,65 @@ no more than 10 GB (`QA_ARCHIVE_MAX_GB` changes that). The oldest runs go
 first. Repeated runs of one test do not push out a full-suite archive. Set
 `RUN_ARCHIVE=off` to disable it.
 
-Start a triage at the run's `run.html`. It opens with a one-sentence
-verdict (`3 of 49 tests failed - 2 new failures, 1 still failing; 1 test skipped.`)
-and lists the failures first. Failures that share an error sit
-together under "N tests share this error". The error's first line is
-compared with numbers, quoted values, hex addresses, and locator text
-reduced, so a 30000 ms and a 15000 ms timeout on the same step are one
-error. Each failure says "New error" when that error appeared in none of
-the previous 20 runs of these tests, or "Seen before (last on <date>)"
-with a link to that run. Each failure shows the error message, the failing
-Playwright action with its call log, the 15 actions before it, the console
-errors, every screenshot of the test (final and mid-drag), the video clip,
-and the exact `show-trace` command for its trace. A run with more than 3 failures shows each failure folded to 3 lines: its
-title, its facts and the first line of its error. Click a failure to open
-it, or use "Expand all". Failures that share an error fold below that error.
-Passed and skipped tests
-sit below in collapsed lists with their final screenshots, grouped by
-module. Mid-drag frames stay on disk and show only on a failure card.
+Start a triage at the run's `run.html`. The page has 3 levels, and it shows
+a level only when you ask for it.
 
-Every test shows its readable title, its QA Touch case when the node id is
-mapped, its duration, a history strip, and a change label. The strip is
-one colored block per archived run of these tests, up to 20, oldest left
-and newest right. Hover a block for the run's date and outcome, click it
-to open that run. "passed 17/20" follows, and "flaky 15%" when the test
-both passed and failed in that window. The flaky rate is failures / runs
-the test was present in. The change label compares with the previous run
-of these tests, named by date under the header: New failure, Fixed, Still
-failing, or New test. The filter box at the top narrows the page to the
-tests that match a word. `python -m plugins.run_report latest` rebuilds
-the page for the newest run, or pass a run folder. `--all` builds the
-page of every archived run that has none.
+1. The verdict. One line gives the result and the count of causes:
+   `14 of 330 failed. 5 causes.` The line below it gives the passed and
+   skipped counts and the change from the previous run of these tests. The
+   facts below that are the duration, the machine, the box and the commit.
+2. The causes, the map and the tests.
+   - A cause is 1 error. Failures that share an error are 1 line, with the
+     count in front. The error's first line is compared with numbers, quoted
+     values, hex addresses and locator text reduced, so a 30000 ms and a
+     15000 ms timeout on the same step are 1 cause. Where the texts differ
+     in a name or an address, the line shows `...`. The right side says
+     `new` when none of the previous 20 runs shows that error, or
+     `since <date>` for the newest earlier run that shows it. Click a cause
+     to list its tests.
+   - The map shows only for a run that has a second axis. The Camera 2
+     Cloud suite runs each test on each camera, so its map is tests by
+     cameras. A column is 1 camera under its model, named by the end of its
+     address (`.129`). A red square is a failure, a hollow square is a skip
+     and a dot is a pass. `config/run_axis.py` gives the names.
+   - The tabs `Failed`, `Skipped`, `Passed` and `All` select the tests in
+     the list and the rows of the map. The map hides the rows with no match,
+     and `Show all` brings them back. The filter box narrows the list to the
+     tests that match a word: a title, a node id, a case key or a module.
+3. One test. Click a test in a cause, a square of the map or a row of the
+   list. The test opens in the pane on the right, under 4 tabs.
+   - `Error`: the error message, then the full traceback and the captured
+     output. For a skipped test the tab is `Result`, and it gives the reason.
+   - `Evidence`: every screenshot of the test (final and mid-drag), the last
+     15 Playwright actions with the failing one last, the console errors,
+     the video clip, the trace with its exact `show-trace` command, and the
+     test's log file.
+   - `History`: one block for each archived run of the test, up to 20,
+     oldest left and newest right. Click a block to open that run. `Passed
+     17/20` follows, and `Flaky 15%` when the test both passed and failed in
+     that window. The flaky rate is failures / runs the test was present in.
+     Below it are the change label (New failure, Fixed, Still failing or New
+     test) and whether the error is new.
+   - `Identity`: the node id, the QA Touch case, the module and the seconds
+     of setup, call and teardown.
+
+The pane shows the run's details while no test is selected: the outcome, the
+product, the target, the times, the tenant, the account, the browser and
+the links to the raw report, `run.log`, the archive index and the previous
+run. `Escape` brings the run's details back. `Notes` and `Slowest 5` open in
+the same pane. A link that ends in `#<test>` opens the page on that test.
+
+Times show in Central time on the 12 hour clock. The `12 h` switch beside
+the date changes the page to India time on the 24 hour clock, and the
+browser keeps the choice. A run records the UTC offset of its machine, so a
+run on the box (UTC) and a run on a laptop show on the same clock. A run
+made with soterix-qa-shared before v0.33.0 has no offset, and the page reads
+its times as the
+times of the machine that builds the page.
+
+`python -m plugins.run_report latest` rebuilds the page for the newest run,
+or pass a run folder. `--all` builds the page of every archived run that has
+none.
 
 The run's `log/` folder holds `run.log`, with the session's logging and
 then the output pytest captured for every passed and skipped test, one
