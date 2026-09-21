@@ -231,8 +231,12 @@ class SequencePage:
 
     # --- Delete Sequence ---
 
-    def open_sequences_list(self):
+    def open_sequences_list(self) -> bool:
         """Show the saved sequences: the Sequences section of the Views sidebar.
+
+        False when the sidebar has no Sequences section: the app shows the section only
+        while the tenant has a sequence (measured 09/21/2026 on india and us, after the
+        last one was deleted).
 
         The section is a toggle with no state attribute. The row count says which way the
         click went: opening adds rows, and a click that removed rows closed an open section,
@@ -242,13 +246,15 @@ class SequencePage:
         if self.sequence_name_input.is_visible():
             self.page.keyboard.press("Escape")
             self.sequence_name_input.wait_for(state="hidden", timeout=10000)
-        self.sequences_title.first.wait_for(state="visible", timeout=20000)
+        if not self._appears(self.sequences_title.first, timeout=20000):
+            return False
         before = self.sidebar_items.count()
         self.sequences_title.first.click(timeout=10000)
         self.page.wait_for_timeout(1500)  # the section renders its rows with no other signal
         if self.sidebar_items.count() < before:
             self.sequences_title.first.click(timeout=10000)
             self.page.wait_for_timeout(1500)  # the same render, for the second click
+        return True
 
     def sequence_item(self, name: str):
         """The row of the saved sequence with exactly this name (open_sequences_list first)."""
@@ -263,7 +269,8 @@ class SequencePage:
         name: it must go down by 1. Waiting for "the first item" to hide cannot tell a delete
         from a second item with the same name taking its place.
         """
-        self.open_sequences_list()
+        if not self.open_sequences_list():
+            return False
         item = self.sequence_item(name)
         # The list hydrates a beat after the page settles: wait before the name reads as absent
         try:
