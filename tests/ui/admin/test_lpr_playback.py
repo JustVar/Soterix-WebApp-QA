@@ -151,8 +151,11 @@ class TestLprCameraPlayback:
         self.lpr.play_camera(site_name=SITE_NAME, camera_name=CAMERA_NAME)
         self.step_capture.mark(3, "Activate the camera tile")
         self.lpr.activate_camera_tile()
-        # The live icon shows only on an activated tile
-        expect(self.page.locator("img[alt='live icon']")).to_have_count(1, timeout=10000)
+        # The live icon shows only on an activated tile. Visible ones only:
+        # the player keeps a second, hidden copy in its top bar (measured
+        # 09/18/2026: 0 x 0 px, the same src), and the count read 2.
+        live_icons = self.page.locator("img[alt='live icon']").filter(visible=True)
+        expect(live_icons).to_have_count(1, timeout=10000)
 
     @pytest.mark.ui
     @pytest.mark.admin

@@ -3,6 +3,8 @@ import re
 
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 
+from tests.shared.helpers.drag import drop
+
 # An event card's timestamp line ('1:37:38 AM | Aug 11 2026'). The
 # time part alone anchors the card; assertions add the date part.
 EVENT_TIME_RE = re.compile(r"\d{1,2}:\d{2}:\d{2} [AP]M")
@@ -452,6 +454,9 @@ class LprPage:
         )
         before = empty_tiles.count()
         tile.scroll_into_view_if_needed()
+        # A pointer drag on every machine: the widget card does not accept drag
+        # events fired from JavaScript (measured on the box 09/21/2026: the drop
+        # landed nothing), and this drag has not hung in a nightly.
         card.first.drag_to(tile)
 
         # baseline comparison: the drop consumed exactly one tile. An
@@ -663,7 +668,9 @@ class LprPage:
         before = self.page.locator("video").count()
         failed_before = self.page.locator("text=failed to load").count()
         tile.scroll_into_view_if_needed()
-        source.drag_to(tile)
+        # drop, not drag_to: Chrome on the box's Wayland display hangs inside
+        # some pointer drags (tests/shared/helpers/drag.py, register row 91)
+        drop(source, tile)
 
         # No loader wait: empty tiles keep placeholder spinners alive
         # forever (same trap as in-camera search), so CircularProgress

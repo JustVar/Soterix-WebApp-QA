@@ -260,6 +260,15 @@ timeouts that look unrelated.
 - **A drag that is not forced can complete and land nothing.** Try one more
   time with force. When a panel floats over the left tiles, drop on the last
   empty tile.
+- **On spartan1, a pointer drag can stop Chrome for good.** Chrome on the
+  Wayland display stops drawing in the middle of some drags. The drag call
+  does not return, its timeout does not fire, and each later call on the
+  page hangs, the after-test screenshot included. The sign is a test that
+  ends at the run's per-test timeout with its last log line before a drag.
+  Use `drop()` from `tests/shared/helpers/drag.py` for a drag that hung:
+  on that display it fires the drag events from JavaScript. First make
+  sure that the app accepts those events for that element. The LPR widget
+  card does not. TEST_REPAIRS row 91.
 - **The live player sometimes shows "The camera failed to load" over a frame
   that renders.** Click its refresh link one time
   (`recover_stream_if_failed`).
