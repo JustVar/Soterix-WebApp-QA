@@ -9,7 +9,7 @@ import re
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
 
-from tests.shared.pages.lpr_page import LprPage
+from tests.shared.pages.lpr_page import LIST_ROW_ICONS, PLATE_HEADERS, LprPage
 
 # One worker for every module that writes this account's LPR lists, views and widgets: under
 # -n they would otherwise spread across workers and race on the same
@@ -81,7 +81,10 @@ class TestLprListOperations:
         assert self.lpr.lpr_menu.count() > 0, "LPR menu not found"
 
         self.step_capture.mark(3, "Verify Create List button is visible")
-        assert self.lpr.create_list_button.count() > 0, "Create List button not visible"
+        expect(self.lpr.create_list_button.first).to_be_enabled(timeout=15000)
+        # The Lists page and not a different LPR page: its own search box, and not the Categories one
+        expect(self.lpr.list_search).to_be_visible()
+        expect(self.lpr.category_search).to_have_count(0)
 
         print("[PASS] Admin navigation and LPR access verified")
 
@@ -260,7 +263,9 @@ class TestLprListOperations:
         assert self.lpr.add_plate_button.count() > 0, "Add Plate button not found"
 
         self.step_capture.mark(5, "Verify plate table")
-        assert self.page.locator("table").count() > 0, "Plate table not found"
+        # The Plate page of the list: the plate columns, and the Lists search box is gone
+        expect(self.lpr.table_headers).to_have_text(PLATE_HEADERS)
+        expect(self.lpr.list_search).to_have_count(0)
 
         print(f"[PASS] Plate page for list '{list_name}' verified")
 
@@ -296,6 +301,9 @@ class TestLprListOperations:
         self.step_capture.mark(5, "Verify Delete icon")
         delete_icon = first_row.locator("img[aria-label='Delete']")
         assert delete_icon.count() > 0, "Delete icon not found"
+        # The row of a new list has exactly these 3 actions, in this order
+        labels = first_row.locator("img[aria-label]").evaluate_all("els => els.map(e => e.getAttribute('aria-label'))")
+        assert labels == LIST_ROW_ICONS, f"the list row has the actions {labels}, expected {LIST_ROW_ICONS}"
 
         print("[PASS] List actions (View/Edit/Delete) verified")
 
@@ -322,7 +330,10 @@ class TestLprListOperations:
 
         self.step_capture.mark(3, "Verify status toggle")
         toggle = first_row.locator("input[type='checkbox']")
-        assert toggle.count() > 0, "Status toggle not found"
+        # A new list has 1 status switch, it is on, and it can be used
+        expect(toggle).to_have_count(1)
+        expect(toggle).to_be_checked()
+        expect(toggle).to_be_enabled()
 
         self.step_capture.mark(4, "Verify toggle is clickable")
         toggle.first.scroll_into_view_if_needed()
@@ -473,6 +484,9 @@ class TestLprFilterOperations:
         self.step_capture.mark(4, "Verify Apply and Reset buttons visible")
         assert self.lpr.apply_filter_button.count() > 0, "Apply button not visible"
         assert self.lpr.reset_filter_button.count() > 0, "Reset button not visible"
+        # The open panel can be used: a text field takes input, and Apply can be clicked
+        expect(self.page.locator("input[placeholder='Enter Make']")).to_be_editable()
+        expect(self.lpr.apply_filter_button.first).to_be_enabled()
 
         self.step_capture.mark(5, "Close filter panel by clicking filter icon again")
         filter_icon.click()

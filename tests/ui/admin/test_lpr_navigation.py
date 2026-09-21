@@ -18,7 +18,7 @@ from playwright.sync_api import (
     expect,
 )
 
-from tests.shared.pages.lpr_page import LprPage
+from tests.shared.pages.lpr_page import CATEGORY_HEADERS, PLATE_HEADERS, LprPage
 
 # One worker for every module that writes this account's LPR lists, views and widgets: under
 # -n they would otherwise spread across workers and race on the same
@@ -85,9 +85,14 @@ class TestLprNavigation:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Verify 'Create List' button is visible")
-        assert self.lpr.create_list_button.count() > 0, "Create List button not found"
+        expect(self.lpr.create_list_button.first).to_be_enabled(timeout=15000)
 
         self.step_capture.mark(3, "Verify on LPR Lists page")
+        # The Lists page and not a different LPR page: its own search box shows,
+        # and the search boxes of the Categories and Plate pages do not.
+        expect(self.lpr.list_search).to_be_visible()
+        expect(self.lpr.category_search).to_have_count(0)
+        expect(self.lpr.plate_search).to_have_count(0)
         print("[PASS] Successfully navigated to LPR Lists page")
 
     @pytest.mark.ui
@@ -164,7 +169,10 @@ class TestLprNavigation:
         self.lpr.ensure_lpr_categories_page()
 
         self.step_capture.mark(3, "Verify 'Add Category' button is visible")
-        assert self.lpr.add_category_button.count() > 0, "Add Category button not found"
+        expect(self.lpr.add_category_button.first).to_be_enabled(timeout=15000)
+        # The Categories table and not the Lists one: its columns, and no list search box
+        expect(self.lpr.table_headers).to_have_text(CATEGORY_HEADERS)
+        expect(self.lpr.list_search).to_have_count(0)
 
         self.step_capture.mark(4, "Verify on Categories page")
         print("[PASS] Successfully navigated to Categories page")
@@ -217,7 +225,11 @@ class TestLprNavigation:
         self.step_capture.mark(3, "Verify on Lists page")
         # the Create List button is the Lists-page signal
         self.lpr.create_list_button.first.wait_for(state="visible", timeout=15000)
-        assert self.lpr.create_list_button.count() > 0, "Should be on Lists page"
+        # The click changed the page: the Categories search box and column are gone,
+        # and the Lists search box is back
+        expect(self.lpr.category_search).to_have_count(0)
+        expect(self.page.get_by_role("columnheader", name="Category Name", exact=True)).to_have_count(0)
+        expect(self.lpr.list_search).to_be_visible()
 
         self.step_capture.mark(4, "Navigation completed successfully")
         print("[PASS] Successfully navigated from Categories back to Lists")
@@ -252,7 +264,9 @@ class TestLprNavigation:
 
         self.step_capture.mark(4, "Verify 'Add Plate' button is visible")
         self.lpr.add_plate_button.first.wait_for(state="visible", timeout=30000)
-        assert self.lpr.add_plate_button.count() > 0, "Add Plate button not found"
+        # The Plate page of the list: the plate columns, and the Lists search box is gone
+        expect(self.lpr.table_headers).to_have_text(PLATE_HEADERS)
+        expect(self.lpr.list_search).to_have_count(0)
 
         self.step_capture.mark(5, "Verify on Plate page")
         print(f"[PASS] Successfully opened Plate page for list: {list_name}")
@@ -287,8 +301,11 @@ class TestLprNavigation:
         self.lpr.ensure_lpr_filter_panel(list_name)
 
         self.step_capture.mark(4, "Verify 'Apply' and 'Reset' buttons are visible")
-        assert self.lpr.apply_filter_button.count() > 0, "Apply button not found"
-        assert self.lpr.reset_filter_button.count() > 0, "Reset button not found"
+        # The panel is open and usable: its 2 text fields take input, and its 2 buttons can be clicked
+        expect(self.page.locator("input[placeholder='Enter Make']")).to_be_editable()
+        expect(self.page.locator("input[placeholder='Enter Vehicle Model']")).to_be_editable()
+        expect(self.lpr.apply_filter_button.first).to_be_enabled()
+        expect(self.lpr.reset_filter_button.first).to_be_enabled()
 
         self.step_capture.mark(5, "Verify filter panel is open")
         print("[PASS] Successfully opened filter panel")

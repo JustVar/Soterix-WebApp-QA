@@ -10,6 +10,13 @@ from tests.shared.helpers.drag import drop
 EVENT_TIME_RE = re.compile(r"\d{1,2}:\d{2}:\d{2} [AP]M")
 
 
+# What identifies each Admin > LPR page (measured on india, 09/21/2026). The
+# 4 pages share the address /admin, so the address cannot tell them apart.
+CATEGORY_HEADERS = ["Category Name", "List Type", "Quantity", "Status", "Operation"]
+PLATE_HEADERS = ["Plate Number", "Category", "Type", "Make", "Model", "Color", "Country", "Added Time", "Operation"]
+LIST_ROW_ICONS = ["View", "Edit", "Delete"]
+
+
 class LprPage:
     """Page object for LPR module functionality."""
 
@@ -30,6 +37,26 @@ class LprPage:
     @property
     def create_list_button(self):
         return self.page.locator("button:has-text('Create List')")
+
+    @property
+    def list_search(self):
+        """The search box that only the Lists page has."""
+        return self.page.locator("input[placeholder='Search by List Name']")
+
+    @property
+    def category_search(self):
+        """The search box that only the Categories page has."""
+        return self.page.locator("input[placeholder='Search by Category Name']")
+
+    @property
+    def plate_search(self):
+        """The search box that only a list's Plate page has."""
+        return self.page.locator("input[placeholder='Search by License Plate']")
+
+    @property
+    def table_headers(self):
+        """The visible column headers of the page's table."""
+        return self.page.locator("th").filter(visible=True)
 
     # Plate page
     @property

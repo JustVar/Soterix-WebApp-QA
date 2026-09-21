@@ -38,7 +38,9 @@ class TestLprViews:
         self.lpr.navigate_to_lpr()
 
         self.step_capture.mark(2, "Verify on LPR page")
-        assert self.lpr.create_list_button.count() > 0, "Not on LPR Lists page"
+        # The Lists page and not a different LPR page
+        expect(self.lpr.list_search).to_be_visible(timeout=15000)
+        expect(self.lpr.category_search).to_have_count(0)
 
         self.step_capture.mark(3, "Navigate to Views page")
         self.lpr.go_to_views_page()
