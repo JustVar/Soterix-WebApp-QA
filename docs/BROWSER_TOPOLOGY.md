@@ -136,15 +136,35 @@ run back to the archive.
 It is a test machine, so it can be set up as a kiosk. The state on 09/22/2026
 and what has to change:
 
-| Setting | Now | Needed |
+| Setting | State on 09/22 | Wanted |
 |---|---|---|
-| Sleep on AC | off | off (done 09/21) |
-| Display off on AC | after 5 minutes | never |
+| Sleep on AC | off | off |
+| Display off on AC | off | off |
 | Screen lock | nothing forces one | keep it that way |
-| Sign in after a restart | manual | automatic, or the browser cannot start |
-| Windows Update | can restart at any time | on demand only |
-| Chrome updates | automatic | on demand, so a run is never surprised |
-| Admin channel | SSH, which resets under load | measure WinRM, and keep box tasks local |
+| Chrome updates | updater services and task all disabled, pinned at 153.0.8010.53 | on demand, so a run is never surprised |
+| Windows Update | active hours 02:00 to 20:00 local | no restart during a run |
+| **Sign in after a restart** | **manual** | **automatic, or the browser cannot start** |
+| Admin channel | SSH, measured reliable | SSH, with WinRM as a second way in |
+
+Two of those rows were wrong when first written, and both were found by reading
+the machine rather than the script that set it up:
+
+- **Windows Update was set with Group Policy keys, on an edition that has no
+  policy engine.** This is Windows 11 *Home*. `NoAutoRebootWithLoggedOnUsers`
+  and `AUOptions` under `HKLM\SOFTWARE\Policies` were read by nothing, so the
+  machine was free to restart whenever it liked while the page said otherwise.
+  The keys are removed. Active hours is what Home honours, and it is set to
+  02:00-20:00 local, which covers the 09:00 UTC nightly at 03:00 local. The
+  span may be at most 18 hours, so 20:00-02:00 is left for Windows to restart in.
+- **Chrome's updater was only half off.** The scheduled task was disabled and
+  the check reported the updater services "do not exist on this box". They do:
+  `GoogleUpdaterService` and `GoogleUpdaterInternalService`, both Automatic and
+  merely stopped at the moment they were looked at. A stopped Automatic service
+  starts again. Both are Disabled now.
+
+Chrome no longer patches itself here, so somebody has to update it on purpose.
+That is the trade the row asks for: a known version beats a current one when the
+machine's job is to reproduce what a customer sees.
 
 A restart with no automatic sign-in leaves the machine with no desktop, and a
 headed browser cannot start without one. That is the single setting that

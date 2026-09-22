@@ -12,7 +12,8 @@ same archive at http://10.2.0.2/qa-runs/. Nothing here is scheduled today.
 | File here | What it does |
 |---|---|
 | `livestream-run.ps1` | The run: reset the clone to `origin/main`, install, `pytest tests/ui -m livestream` once per box (`india`, then `us`, 2 workers), publish each archived run with `tools/publish_run.py`. One run at a time, a 90 min cap per box, log in `logs\livestream-run.log`. |
-| `register-task.ps1` | Registers the daily scheduled task (05:00 local by default) that runs it. |
+| `register-task.ps1` | Registers the daily scheduled task (05:00 local by default) that runs it. Never run on spartan20 yet, because the `.env` is not there, so no livestream run is scheduled. |
+| `kiosk-setup.ps1` | Makes the machine able to run unattended: no sleep, no display timeout, Windows Update held to active hours, Chrome's updater off. Elevated, safe to run again, and it reads every setting back. |
 
 ## What the machine needs
 
