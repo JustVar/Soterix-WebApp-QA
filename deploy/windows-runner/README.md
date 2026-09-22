@@ -71,6 +71,20 @@ The task runs as the user who registered it, highest run level, without a
 stored password (S4U). If `publish_run.py` reports `scp failed` only under
 the task and not from a shell, re-register with `-StorePassword`.
 
+Those commands assume a shell **on the machine**. Over ssh, run the script
+through a scheduled task instead, never straight from the ssh session.
+
+Windows OpenSSH kills the whole process tree when the session closes, and
+`Start-Process`, `-WindowStyle Hidden` and `&` do not escape it. A run started
+that way dies the moment the ssh command returns, and it dies quietly: the
+first attempt wrote its lock, left both output files at 0 bytes, and left no
+end line in `livestream-run.log`, so the log looked like a run still in
+progress for half an hour. A scheduled task belongs to the scheduler, not to
+the session, and survives.
+
+The dead run's lock needs no cleaning up. `tools/run_lock.py` clears a lock
+whose holder process is gone, so the next run takes it.
+
 ## Reading a run
 
 - `logs\livestream-run.log`: one line per step, the pytest `-rfEs`
