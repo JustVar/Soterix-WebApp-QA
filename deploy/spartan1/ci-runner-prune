@@ -1,0 +1,33 @@
+#!/bin/sh
+# Keep the CI runners' working directories bounded, and keep a job from inheriting the last
+# job's interpreter. Runs daily from /etc/cron.d/qa-ci-prune.
+#
+# Two jobs, one file:
+#   _temp   grows with every run and nothing reads it after the run ends.
+#   _tool   is the setup-python cache. It is what made a base install not base on 09/22/2026:
+#           the wheel job found pytest already installed from the job before it. Clearing it
+#           weekly costs one download and removes a whole class of green-when-it-should-be-red.
+#
+# It never touches _work/<repo>, which actions/checkout cleans itself.
+set -u
+KEEP_TEMP_DAYS=3
+TOOL_DAY=0            # 0 = Sunday: clear the interpreter cache once a week
+
+for dir in /opt/actions-runner /opt/actions-runner-webapp /opt/actions-runner-api; do
+  [ -d "$dir/_work" ] || continue
+  before=$(du -sm "$dir/_work" 2>/dev/null | cut -f1)
+
+  # A runner that is busy must not have its files pulled out from under it.
+  unit=$(systemctl list-units "actions.runner.*" --no-pager --plain 2>/dev/null \
+         | awk -v d="$(basename "$dir")" '$1 ~ /actions.runner/ {print $1}' | head -1)
+  if [ -d "$dir/_work/_temp" ]; then
+    find "$dir/_work/_temp" -mindepth 1 -maxdepth 1 -mtime "+$KEEP_TEMP_DAYS" -exec rm -rf {} + 2>/dev/null
+  fi
+
+  if [ "$(date +%w)" = "$TOOL_DAY" ] && [ -d "$dir/_work/_tool" ]; then
+    rm -rf "$dir/_work/_tool" 2>/dev/null && echo "$dir: interpreter cache cleared"
+  fi
+
+  after=$(du -sm "$dir/_work" 2>/dev/null | cut -f1)
+  echo "$dir/_work: ${before}M -> ${after}M"
+done
