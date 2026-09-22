@@ -78,8 +78,13 @@ The split needs `playwright run-server`. Against it:
 - Whether H.265 decode survives a locked screen **could not be measured**. A
   lock sent from outside cannot be undone from outside, so the attempt would
   leave the machine locked with no way back in.
-- The machine's own SSH resets under Chrome load, while the browser port stays
-  healthy. The machine cannot be administered over SSH during a run.
+- Outbound SSH from that machine hangs when it needs an answer and has no
+  terminal: a `git clone` waiting on a host key, or an `sftp` reading an
+  interactive stdin. Each hung child holds its parent session open, which reads
+  as "SSH is unreliable" and is not. Measured 09/22/2026: 6 connections in a
+  row, each under a second, once the hung children were cleared. Anything run
+  there needs `BatchMode=yes`, `StrictHostKeyChecking=accept-new` and a batch
+  file rather than stdin.
 
 ### What the measurements also said, in its favour
 
