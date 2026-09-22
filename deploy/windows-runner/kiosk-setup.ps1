@@ -45,6 +45,17 @@ Set-ItemProperty -Path $ux -Name 'SmartActiveHoursState' -Value 0 -Type DWord
 Set-ItemProperty -Path $ux -Name 'ActiveHoursStart' -Value $ACTIVE_START -Type DWord
 Set-ItemProperty -Path $ux -Name 'ActiveHoursEnd' -Value $ACTIVE_END -Type DWord
 
+"== make the automatic sign-in checkbox reachable"
+# Windows 11 ships DevicePasswordLessBuildVersion=2, which hides "Users must
+# enter a user name and password to use this computer" from netplwiz entirely,
+# so the setting looks unavailable rather than unset. This only offers the
+# option. It signs nobody in and stores no password: a person ticks the box at
+# the machine, and Windows keeps that password as an LSA secret.
+$pwless = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\PasswordLess\Device'
+if (Test-Path $pwless) {
+    Set-ItemProperty -Path $pwless -Name 'DevicePasswordLessBuildVersion' -Value 0 -Type DWord
+}
+
 "== chrome: a browser that changes version mid-run changes the result"
 # Both the task AND the two services. Disabling the task alone leaves the
 # services Automatic, and a stopped Automatic service starts again.
@@ -72,6 +83,9 @@ Check 'active hours start' $now.ActiveHoursStart $ACTIVE_START
 Check 'active hours end'   $now.ActiveHoursEnd   $ACTIVE_END
 Check 'windows picks its own hours' $now.SmartActiveHoursState 0
 if ($edition -match 'Home') { Check 'inert policy keys removed' (Test-Path $pol) $false }
+if (Test-Path $pwless) {
+    Check 'netplwiz offers auto sign-in' (Get-ItemProperty $pwless -Name DevicePasswordLessBuildVersion).DevicePasswordLessBuildVersion 0
+}
 foreach ($svc in Get-Service -Name '*GoogleUpdater*' -ErrorAction SilentlyContinue) {
     Check "updater $($svc.Name.Substring(0, [Math]::Min(22, $svc.Name.Length)))" (Get-Service $svc.Name).StartType 'Disabled'
 }
