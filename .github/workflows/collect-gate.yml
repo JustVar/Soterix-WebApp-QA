@@ -15,12 +15,21 @@ name: collect-gate
 
 on:
   push:
-    branches: [main]
+    branches: [main, runner-trial]
   pull_request:
   schedule:
     # Sunday 06:00 UTC: the full interpreter matrix, which a push no longer runs.
     - cron: '0 6 * * 0'
   workflow_dispatch:
+    inputs:
+      hosted:
+        description: "Run on GitHub's runners instead of spartan1 (use when the box is down)"
+        type: boolean
+        default: false
+
+# spartan1 runs these jobs and costs no Actions minutes. The runner there is ghrunner, which
+# cannot read the nightly's .env and cannot write the published archive, and its service yields
+# CPU to the nightly. If the box is off, run this workflow by hand with `hosted` ticked.
 
 # This job only checks out and runs tests. qa-nightly.yml beside it already
 # scopes its token to read; this should not be looser.
@@ -39,7 +48,7 @@ jobs:
     # on every push and Dependabot PR. Skip there; the authoritative gate
     # (and Dependabot's real check) runs on the company repo.
     if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.hosted == 'true' && 'ubuntu-latest' || 'self-hosted' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -166,7 +175,7 @@ jobs:
     # the laptops and the other jobs here run, so a push is checked on the
     # version the team actually uses.
     if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.hosted == 'true' && 'ubuntu-latest' || 'self-hosted' }}
     strategy:
       fail-fast: false
       matrix:
