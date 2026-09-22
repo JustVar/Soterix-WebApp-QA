@@ -171,3 +171,32 @@ came before the 15:34 UTC cutover, and the 35 runs after it went to spartan1 for
 nothing. What is left on GitHub's machines is a pull request, which is deliberate,
 and Dependabot re-reading the workflow files, which happens only when those files
 change.
+
+## Dependabot runs on the personal mirrors, and cannot be switched off there
+
+Every repo has a personal mirror that receives the same pushes. Dependabot opens
+the same pull requests on both, and on the mirrors nobody merges them: 13 raised,
+0 merged, against 14 raised and 11 merged on the company repos.
+
+**There is no per-repo setting that stops this.** The Advanced Security page
+offers Enable for the dependency graph, alerts and security updates, but version
+updates have only a Configure button, which edits the YAML. Version updates are
+driven by `.github/dependabot.yml` on the default branch and nothing else. They
+run on the mirrors even though the dependency graph and the alerts there are
+both disabled, and even though Actions itself is disabled. The file is the same
+tracked file on both remotes, which is exactly why the file cannot be the
+control.
+
+Decided 09/22/2026: **live with it.** The alternatives cost more than the
+problem. Pointing the mirror's default branch at a branch without the file would
+make the mirror's landing page useless as a backup, and dropping the mirrors
+loses the end-of-day copy. The cost is a pull request list nobody reads and
+about 15 hosted jobs a month on an account sitting near 19 percent of its
+allowance.
+
+Reopen it if the mirror pull requests ever hide something that matters, or if
+the personal account approaches its limit.
+
+Keep Dependabot on the company repos. It matters more now, not less: every
+action is pinned to a commit SHA, and a SHA never moves on its own. Without
+something proposing the bump, a pin becomes a version nobody dares touch.
