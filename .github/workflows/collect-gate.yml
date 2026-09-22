@@ -15,7 +15,7 @@ name: collect-gate
 
 on:
   push:
-    branches: [main, runner-trial]
+    branches: [main]
   pull_request:
   schedule:
     # Sunday 06:00 UTC: the full interpreter matrix, which a push no longer runs.
