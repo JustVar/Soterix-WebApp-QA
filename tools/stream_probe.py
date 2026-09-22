@@ -128,6 +128,7 @@ Array.from(root.querySelectorAll('video')).map(v => ({
     cls: v.className, ready: v.readyState, w: v.videoWidth, h: v.videoHeight,
     muted: v.muted, t: v.currentTime,
     frames: v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality().totalVideoFrames : null,
+    dropped: v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality().droppedVideoFrames : null,
     audioBytes: v.webkitAudioDecodedByteCount}))
 """
 VIDEO_STATE_JS = "() => { const root = document; return (" + VIDEO_STATE_BODY.strip() + "); }"

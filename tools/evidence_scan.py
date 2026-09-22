@@ -107,11 +107,17 @@ def scan_text(text: str, secrets: dict[str, str]) -> tuple[str, list[dict]]:
     for idx, line in enumerate(text.split('\n'), 1):
         named: set[str] = set()
         for key, form in forms:
-            if form in line:
-                if key not in named:
-                    findings.append({'line': idx, 'what': f'.env value of {key}'})
-                    named.add(key)
-                line = line.replace(form, MASK)
+            # An all-digit secret needs a boundary: a 6-digit password masked as a bare substring
+            # ate ids, epochs and durations all over a published run (audit 09/22/2026).
+            hits = (list(re.finditer(rf'(?<!\d){re.escape(form)}(?!\d)', line)) if form.isdigit()
+                    else ([form] if form in line else []))
+            if not hits:
+                continue
+            if key not in named:
+                findings.append({'line': idx, 'what': f'.env value of {key}'})
+                named.add(key)
+            line = (re.sub(rf'(?<!\d){re.escape(form)}(?!\d)', MASK, line) if form.isdigit()
+                    else line.replace(form, MASK))
         for name, pattern in PATTERNS:
             def mask(m: re.Match[str], name: str = name, idx: int = idx) -> str:
                 if not _is_real(m.group('s')):

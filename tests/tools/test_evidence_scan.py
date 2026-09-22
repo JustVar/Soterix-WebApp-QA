@@ -210,3 +210,12 @@ def test_a_password_in_a_url_is_found_whatever_stands_before_the_scheme(line):
     assert [f["what"] for f in found] == ["password in a URL"]
     assert "Hunter22x" not in clean
     assert "e" * 403 not in clean
+
+
+def test_an_all_digit_secret_is_masked_only_on_its_own():
+    """A 6-digit password masked as a bare substring ate ids, epochs and durations in every published run."""
+    clean, found = es.scan_text("id 9912345678 epoch 1712345600 password 123456 here", {"QA_BOX_PASS": "123456"})
+    assert "9912345678" in clean
+    assert "1712345600" in clean
+    assert "password *** here" in clean
+    assert [f["what"] for f in found] == [".env value of QA_BOX_PASS"]

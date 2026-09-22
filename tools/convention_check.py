@@ -361,6 +361,9 @@ def check_line(path: str, lines: list[str], idx: int,
     return findings
 
 
+_QUOTED_RE = re.compile(r"'[^']*'|\"[^\"]*\"")
+
+
 def _block_range(lines: list[str], idx: int) -> range:
     """Line indexes of the indented block that starts after line idx.
 
@@ -372,8 +375,10 @@ def _block_range(lines: list[str], idx: int) -> range:
     indent = len(lines[idx]) - len(lines[idx].lstrip())
     depth, start = 0, idx
     while start < len(lines):
-        code = lines[start].split("#", 1)[0]
-        depth += sum(code.count(c) for c in "([{") - sum(code.count(c) for c in ")]}")
+        # strings first: a default like color="#fff" or label="(" would otherwise cut the
+        # signature short, and the def would read as a body-less test (audit 09/22/2026)
+        code = _QUOTED_RE.sub("", lines[start]).split("#", 1)[0]
+        depth += sum(code.count(ch) for ch in "([{") - sum(code.count(ch) for ch in ")]}")
         if depth <= 0:
             break
         start += 1
@@ -391,7 +396,10 @@ def _is_fixture(lines: list[str], idx: int) -> bool:
     """True when the def at idx has a pytest.fixture decorator: a fixture named test_* is not a test."""
     i = idx - 1
     # walk up over the decorator lines (and the lines of a decorator that spans several)
-    while i >= 0 and lines[i].strip() and not lines[i].strip().startswith(("def ", "class ", "async def ")):
+    # only the decorator lines above the def: a module constant that merely mentions the word
+    # must not exempt a real test (audit 09/22/2026)
+    while (i >= 0 and lines[i].strip().startswith(("@", ")", "]", "}"))) or (
+            i >= 0 and lines[i].strip() and lines[i][:1] in (" ", "	") and i < idx and lines[i].strip().endswith(",")):
         if "pytest.fixture" in lines[i] or lines[i].strip().startswith("@fixture"):
             return True
         i -= 1

@@ -490,3 +490,24 @@ def test_a_sleep_is_not_an_oracle():
     """wait_for_timeout never raises: a body with only that is still a test with no oracle."""
     lines = "def test_x(page):\n    page.wait_for_timeout(500)  # settle: the panel animates\n".splitlines()
     assert [f["rule"] for f in cc.check_no_oracle_tests("tests/ui/test_x.py", lines)] == ["no-oracle-test"]
+
+
+@pytest.mark.parametrize("signature", [
+    'def test_color(page, color="#fff"):',
+    "def test_label(page, label='('):",
+    'def test_both(page, a="#x", b="]"):',
+])
+def test_a_default_holding_a_bracket_or_a_hash_does_not_empty_the_body(signature):
+    """A string default must not cut the signature short: the body was unread, so a real oracle went missing."""
+    lines = [signature, "    assert page.title()"]
+    assert cc.check_no_oracle_tests("tests/ui/test_x.py", lines) == []
+    early = cc.check_early_exit_tests("tests/ui/test_x.py", [signature, "    return", "    assert 1"])
+    assert [f["text"] for f in early] == ["return"]
+
+
+def test_a_constant_that_mentions_a_fixture_does_not_exempt_a_test():
+    """_is_fixture reads the decorators above a def, not any line that holds the word."""
+    lines = ['USE = "pytest.fixture"', "def test_x(page):", "    print(1)"]
+    assert [f["rule"] for f in cc.check_no_oracle_tests("tests/ui/test_x.py", lines)] == ["no-oracle-test"]
+    fixture = ["@pytest.fixture", "def test_site():", '    return "Newtown"']
+    assert cc.check_no_oracle_tests("tests/ui/test_x.py", fixture) == []

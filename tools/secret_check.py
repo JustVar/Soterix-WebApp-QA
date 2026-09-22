@@ -53,7 +53,9 @@ def secret_values(env_text: str) -> dict[str, str]:
 
     from dotenv import dotenv_values
     found: dict[str, str] = {}
-    for key, value in dotenv_values(stream=io.StringIO(env_text)).items():
+    # interpolate=False: with it on, ${HOME}/x resolves to a real path, stops matching the
+    # placeholder rule, and the scan then masks that path in every published log (audit 09/22/2026)
+    for key, value in dotenv_values(stream=io.StringIO(env_text), interpolate=False).items():
         value = (value or '').strip()
         if not SECRET_KEY_RE.search(key) or NOT_SECRET_KEY_RE.search(key):
             continue

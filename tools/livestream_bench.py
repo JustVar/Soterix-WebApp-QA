@@ -81,9 +81,11 @@ def main() -> int:
         views.wait_for_page_load()
         views.expand_site_and_show_cameras(None)
         out["login_and_views_s"] = round(time.perf_counter() - t1, 1)
-        t2 = time.perf_counter()
         views.add_camera_via_checkbox(args.camera)
         page.locator(TILE).first.wait_for(state="attached", timeout=15000)
+        # the window opens once the tile is there. It used to open before the drop, so the wait for
+        # the tile counted as dead time and pulled the average down (audit 09/22/2026).
+        t2 = time.perf_counter()
         first = None
         total, last, restarts, rate_samples, last_dropped = 0, 0, 0, [], 0
         while time.perf_counter() - t2 < args.seconds:

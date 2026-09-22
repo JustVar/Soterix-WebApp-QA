@@ -84,3 +84,16 @@ def test_an_all_digit_value_is_a_secret_only_under_a_key_that_ends_in_a_password
     text = ("C2C_CAMERA_PASS=12345678\nQA_PASSWORD=87654321\nPASSWORD_MIN_LENGTH=12345678\n"
             "BYPASS_TIMEOUT_MS=120000\nPASS_RATE_THRESHOLD=100000\n")
     assert sc.secret_values(text) == {"C2C_CAMERA_PASS": "12345678", "QA_PASSWORD": "87654321"}
+
+
+def test_a_value_that_names_a_variable_is_kept_as_written():
+    """dotenv interpolates by default. With it on, ${HOME}/x resolved to this machine's real home
+    path, stopped looking like a placeholder, and the scan then masked that path out of every
+    published log (audit 09/22/2026). The value stays literal, so only the literal can match."""
+    import os
+    home = os.path.expanduser("~")
+    values = sc.secret_values("INTERP_PASSWORD=${HOME}/xyzzy\n")
+    assert values == {"INTERP_PASSWORD": "${HOME}/xyzzy"}
+    assert all(home not in v for v in values.values())
+    # a bare ${...} is still read as a placeholder and dropped
+    assert sc.secret_values("QA_PASSWORD=${NOT_SET}\n") == {}
