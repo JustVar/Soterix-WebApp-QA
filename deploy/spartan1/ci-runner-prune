@@ -17,15 +17,19 @@ for dir in /opt/actions-runner /opt/actions-runner-webapp /opt/actions-runner-ap
   [ -d "$dir/_work" ] || continue
   before=$(du -sm "$dir/_work" 2>/dev/null | cut -f1)
 
-  # A runner that is busy must not have its files pulled out from under it.
-  unit=$(systemctl list-units "actions.runner.*" --no-pager --plain 2>/dev/null \
-         | awk -v d="$(basename "$dir")" '$1 ~ /actions.runner/ {print $1}' | head -1)
   if [ -d "$dir/_work/_temp" ]; then
     find "$dir/_work/_temp" -mindepth 1 -maxdepth 1 -mtime "+$KEEP_TEMP_DAYS" -exec rm -rf {} + 2>/dev/null
   fi
 
+  # The interpreter cache is not a cache to a running job: `python -m venv` links the job's venv
+  # to the interpreter in here, so removing it mid-run breaks that job, not just its cache.
+  # A worker process means a job is in flight, and the cache waits for next week.
   if [ "$(date +%w)" = "$TOOL_DAY" ] && [ -d "$dir/_work/_tool" ]; then
-    rm -rf "$dir/_work/_tool" 2>/dev/null && echo "$dir: interpreter cache cleared"
+    if pgrep -u ghrunner -f "$dir/bin/Runner.Worker" >/dev/null 2>&1; then
+      echo "$dir: a job is running, interpreter cache kept"
+    else
+      rm -rf "$dir/_work/_tool" 2>/dev/null && echo "$dir: interpreter cache cleared"
+    fi
   fi
 
   after=$(du -sm "$dir/_work" 2>/dev/null | cut -f1)
