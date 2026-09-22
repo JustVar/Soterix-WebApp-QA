@@ -67,7 +67,7 @@
 
 ### JIRA NexaiQ-Core Custom Field Review
 - **Action:** Check if NexaiQ-Core (NC) project custom fields changed
-- **Command:** `python tools/test_jira_connection.py`
+- **Command:** `python tools/test_jira_connection.py` (reads only; `--create-test-bug` files a real ticket and needs `BUG_CREATION_ENABLED=true`)
 - **Update:** `smart_jira_bug_creator.py` if field IDs changed
 
 ### Dependency Updates
@@ -133,7 +133,7 @@
 4. Review `flaky_tests.json` for patterns
 
 ### If Jira Integration Breaks:
-1. Test connection: `python tools/test_jira_connection.py`
+1. Test connection: `python tools/test_jira_connection.py` (reads only)
 2. Verify API token still valid
 3. Check if project permissions changed
 4. Verify custom field IDs unchanged

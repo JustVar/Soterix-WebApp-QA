@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 """
-Test Jira connection and basic bug creation/cleanup.
+Check that this machine can reach Jira, and read what the project offers.
 
 Loads credentials from a local .env file (JIRA_URL, JIRA_USER, JIRA_TOKEN).
-Performs:
+Reads, and writes nothing:
  - list all projects
  - get project details for key/name containing 'NC'
  - list available issue types
  - list custom fields
- - create a test Bug prefixed with [TEST]
- - fetch and print the created bug
- - delete the created bug (cleanup)
+
+With `--create-test-bug` it also files one real Bug in the project, prefixed with [TEST], and
+leaves it for an admin to delete. That is an outward-facing write into the app team's tracker,
+so it needs the flag AND `BUG_CREATION_ENABLED=true`.
+
+Until 09/22/2026 the create had no gate and ran on every invocation, while MAINTENANCE_REMINDERS.md
+recommended this command for routine use. The docstring promised a cleanup the code never did
+(it printed "leave for admin cleanup"), so each routine check left a ticket behind.
 
 Run from the repo root.
 """
+import argparse
 import sys
 import traceback
 from os.path import exists
@@ -50,7 +56,7 @@ def get_cred(name):
     return v
 
 
-def main():
+def main(create_test_bug: bool = False):
     load_env()
 
     JIRA_URL = get_cred("JIRA_URL") or get_cred("JIRA_SERVER") or get_cred("JIRA_HOST")
@@ -180,17 +186,21 @@ def main():
                 # if createmeta fails, proceed with existing issue_dict (may still fail)
                 pass
 
-            print(f"Creating test issue in project {project.key} with type {issue_dict['issuetype']}")
-            test_issue = jira.create_issue(fields=issue_dict)
-            print(f"Created test issue: {test_issue.key}")
-            # add a comment to the issue
-            try:
-                comment_text = "Admin: Please delete this test bug"
-                comment = jira.add_comment(test_issue.key, comment_text)
-                print(f"Added comment to {test_issue.key}: id={getattr(comment, 'id', 'n/a')}")
-            except Exception:
-                print("Failed to add comment to test issue:")
-                traceback.print_exc()
+            if not create_test_bug:
+                print("Skipping the test bug: this is a read-only check. "
+                      "Pass --create-test-bug with BUG_CREATION_ENABLED=true to file one.")
+            else:
+                print(f"Creating test issue in project {project.key} with type {issue_dict['issuetype']}")
+                test_issue = jira.create_issue(fields=issue_dict)
+                print(f"Created test issue: {test_issue.key}")
+                # add a comment to the issue
+                try:
+                    comment_text = "Admin: Please delete this test bug"
+                    comment = jira.add_comment(test_issue.key, comment_text)
+                    print(f"Added comment to {test_issue.key}: id={getattr(comment, 'id', 'n/a')}")
+                except Exception:
+                    print("Failed to add comment to test issue:")
+                    traceback.print_exc()
         except Exception:
             print("Failed to create test issue:")
             traceback.print_exc()
@@ -218,9 +228,22 @@ def main():
         print(f"Created test issue {test_issue.key}. Skipping deletion per configuration; leave for admin cleanup.")
 
 
+def _cli() -> int:
+    parser = argparse.ArgumentParser(description="Check Jira connectivity. Reads only, unless asked to file a test bug.")
+    parser.add_argument('--create-test-bug', action='store_true',
+                        help='file one real [TEST] Bug in the project and leave it for an admin to delete')
+    args = parser.parse_args()
+    if args.create_test_bug and os.environ.get('BUG_CREATION_ENABLED', 'false').lower() != 'true':
+        print('--create-test-bug needs BUG_CREATION_ENABLED=true: it writes a real ticket into the '
+              "app team's project. Nothing was created.")
+        return 2
+    main(create_test_bug=args.create_test_bug)
+    return 0
+
+
 if __name__ == '__main__':
     try:
-        main()
+        sys.exit(_cli())
     except Exception:
         traceback.print_exc()
         sys.exit(1)

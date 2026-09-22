@@ -8,8 +8,14 @@ Playwright server on another machine launches (`--ws ws://host:3000/`).
 
 Read-only on the tenant: it logs in, drops the box's test camera on a Views tile, and reads the
 tile's <video> for `--seconds`. It prints one JSON line: whether the browser decodes the codec,
-the seconds to the first frame, the frames in the window, the restarts of the stream, the frame
-rate over the last 10 s, the wall time of login and navigation, and the time of one screenshot.
+the seconds to the first frame, the frames in the window, the frames the player dropped, the
+restarts of the stream, the frame rate over the whole window AND over its last 10 s, the wall time
+of login and navigation, and the time of one screenshot.
+
+What this tool cannot tell you: whether one browser is better than another. The cameras are
+configured at 10 fps, so every healthy browser lands near the same ceiling, and `frames` counts
+what the player displayed OR dropped (MDN, VideoPlaybackQuality.totalVideoFrames). Use it to answer
+"does this browser play the stream at all", not "which browser plays it better".
 The livestream tests need the frame rate;
 the rest says what a remote browser costs (measured 09/22/2026 for the Windows runner question).
 """
@@ -79,26 +85,36 @@ def main() -> int:
         views.add_camera_via_checkbox(args.camera)
         page.locator(TILE).first.wait_for(state="attached", timeout=15000)
         first = None
-        total, last, restarts, rate_samples = 0, 0, 0, []
+        total, last, restarts, rate_samples, last_dropped = 0, 0, 0, [], 0
         while time.perf_counter() - t2 < args.seconds:
             time.sleep(1)
             videos = page.evaluate(VIDEO_STATE_JS)
             frames = max((v.get("frames") or 0) for v in videos) if videos else 0
+            dropped = max((v.get("dropped") or 0) for v in videos) if videos else 0
             if frames and first is None:
                 first = round(time.perf_counter() - t2, 1)
             # the player replaces its <video> when the stream reconnects, and the count starts again
             if frames < last:
                 restarts += 1
                 last = 0
+            last_dropped = max(last_dropped, dropped)
             total += frames - last
             last = frames
             rate_samples.append((time.perf_counter() - t2, total))
         out["first_frame_s"] = first
         out["frames"] = total
         out["restarts"] = restarts
-        # the rate over the last 10 s, when the stream was up for them
-        window = [(t, f) for t, f in rate_samples if t >= rate_samples[-1][0] - 10]
-        out["fps"] = round((window[-1][1] - window[0][1]) / (window[-1][0] - window[0][0]), 1) if len(window) > 1 else None
+        out["dropped"] = last_dropped
+        # The rate over the WHOLE window is the honest headline. A tail rate flatters the run: the
+        # 09/22/2026 comparison published 9.1 fps from the last 10 s of a 40 s window whose average
+        # was 4.5, and the two numbers sat in the same register row contradicting each other.
+        span = rate_samples[-1][0] - rate_samples[0][0] if len(rate_samples) > 1 else 0
+        out["fps"] = round(total / span, 1) if span else None
+        tail = [(t, f) for t, f in rate_samples if t >= rate_samples[-1][0] - 10]
+        out["fps_last_10s"] = round((tail[-1][1] - tail[0][1]) / (tail[-1][0] - tail[0][0]), 1) if len(tail) > 1 else None
+        # The cameras are configured at 10 fps (reports/probe_health_us.json), so a browser cannot
+        # show more. Two browsers both near the cap are not separated by this number.
+        out["source_fps_configured"] = 10
         t3 = time.perf_counter()
         page.screenshot(path=str(ROOT / "logs" / "livestream_bench.png"))
         out["screenshot_s"] = round(time.perf_counter() - t3, 2)
