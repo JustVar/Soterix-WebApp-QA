@@ -166,9 +166,26 @@ Chrome no longer patches itself here, so somebody has to update it on purpose.
 That is the trade the row asks for: a known version beats a current one when the
 machine's job is to reproduce what a customer sees.
 
-A restart with no automatic sign-in leaves the machine with no desktop, and a
-headed browser cannot start without one. That is the single setting that
-decides whether the machine can work unattended.
+A restart with no automatic sign-in leaves the machine with no desktop. That was
+written down as the single setting deciding whether the machine can work
+unattended, and it is not, because these tests do not run headed.
+
+Measured on 09/22/2026, over ssh, which lands in session 0 with no desktop at
+all:
+
+```
+H.265: {'decodes': True, 'browser': 'Chrome 153.0.8010.53 on Windows, headless, 0 flags'}
+```
+
+Windows Chrome reaches the platform HEVC decoder headless and with no flags,
+which is the whole reason this machine was bought. Linux is the special case:
+spartan1 needs a headed Chrome on a headless Weston because Chrome only reaches
+VA-API that way.
+
+So automatic sign-in is worth having, and it is not load-bearing. What it buys
+is a machine that comes back by itself after a Windows restart, and a desktop
+for anyone who wants to watch a run. What it does not buy is the ability to run
+these tests at all, which works from session 0 today.
 
 ## Reopening this
 
