@@ -7,7 +7,10 @@ reached 90 percent. A runner on our own machine costs nothing per minute. This
 page says what to move, what not to move, what it costs to own, and in what
 order.
 
-This is a plan. Nothing here is built.
+**Built 09/22/2026.** All 3 repos now run their gates on spartan1 and bill nothing. How to keep
+them alive, and what the runner account may and may not reach:
+[deploy/spartan1/RUNNERS.md](../deploy/spartan1/RUNNERS.md). This page keeps the reasoning and
+the order of work it was built from.
 
 ## What runs today, and what it costs
 

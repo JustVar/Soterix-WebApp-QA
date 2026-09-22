@@ -165,6 +165,12 @@ If your browser still opens port 8444 for the old address, it kept the
 redirect of those 3 days. Clear the cached data for `10.2.0.2`, or open the
 address in a private window.
 
+## CI runners
+
+The box also runs the GitHub Actions gates of the 3 QA repos, as the user
+`ghrunner`, which cannot reach the nightly's credentials or the published
+archive. See [RUNNERS.md](RUNNERS.md).
+
 ## What the box needs
 
 - The clone at `/data/qa/ci/Soterix-WebApp-QA` with a venv at `venv/`
