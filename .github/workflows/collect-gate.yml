@@ -27,7 +27,9 @@ on:
         type: boolean
         default: false
 
-# spartan1 runs these jobs and costs no Actions minutes. The runner there is ghrunner, which
+# spartan1 runs these jobs and costs no Actions minutes. Two ways back to GitHub's machines:
+# the `hosted` input on a manual run, and the repository variable CI_RUNNER=hosted, which is the
+# one that reaches a push (a dispatch input is null on every automatic event). The runner there is ghrunner, which
 # cannot read the nightly's .env and cannot write the published archive, and its service yields
 # CPU to the nightly. If the box is off, run this workflow by hand with `hosted` ticked.
 
@@ -48,7 +50,7 @@ jobs:
     # on every push and Dependabot PR. Skip there; the authoritative gate
     # (and Dependabot's real check) runs on the company repo.
     if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
-    runs-on: ${{ github.event.inputs.hosted == 'true' && 'ubuntu-latest' || 'self-hosted' }}
+    runs-on: ${{ (github.event.inputs.hosted == 'true' || vars.CI_RUNNER == 'hosted') && 'ubuntu-latest' || 'self-hosted' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -175,11 +177,11 @@ jobs:
     # the laptops and the other jobs here run, so a push is checked on the
     # version the team actually uses.
     if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
-    runs-on: ${{ github.event.inputs.hosted == 'true' && 'ubuntu-latest' || 'self-hosted' }}
+    runs-on: ${{ (github.event.inputs.hosted == 'true' || vars.CI_RUNNER == 'hosted') && 'ubuntu-latest' || 'self-hosted' }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ (github.event_name == 'push' && fromJSON('["3.14"]')) || fromJSON('["3.11", "3.12", "3.13", "3.14"]') }}
+        python-version: ${{ (contains(fromJSON('["push","pull_request"]'), github.event_name) && fromJSON('["3.14"]')) || fromJSON('["3.11", "3.12", "3.13", "3.14"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v7
