@@ -29,8 +29,8 @@ account it runs as decides what a mistake can reach.
 - It cannot write `/data/qa/runs`, the nightly clone, or `nightly.sh`.
 - It has no sudo.
 - Its systemd services carry `CPUWeight=20`, `IOWeight=20` and
-  `MemoryHigh=4G`, `MemoryMax=6G` and `Restart=always`, so a CI job yields the
-  machine to the nightly rather than competing with it, and a crash or an
+  `MemoryHigh=1500M`, `MemoryMax=3G` and `Restart=always`, so a CI job yields
+  the machine to the nightly rather than competing with it, and a crash or an
   out-of-memory kill brings the runner back instead of leaving CI silently
   dead.
 
@@ -118,6 +118,26 @@ and fail only on the fallback, which is the 1 path used on a bad day.
 
 So the Sunday run is hosted. It uses the secret, proves the fallback still works, and runs the
 full interpreter matrix that a push no longer runs. About 15 job-minutes a week.
+
+## What it costs the box
+
+Measured 09/22/2026 on a 15 GB machine:
+
+| | Memory |
+|---|---|
+| 3 idle listeners | about 450 MB, and that is the standing cost |
+| 1 job, most of it pip | 790 MB on the smaller repos, and it reached 3.7 GB on the WebApp gate before the ceilings were set |
+
+`MemoryHigh=1500M` is the working limit: above it the kernel reclaims from the
+job rather than letting it grow, which costs the job a little speed and costs
+the nightly nothing. `MemoryMax=3G` is the backstop that stops 1 job taking the
+machine. The 3 together can reach 9 GB only if all 3 repos build at once, which
+needs 3 pushes in the same seconds.
+
+The peak is `pip`, not the tests. Each job installs into a venv of its own, so
+nothing is shared between jobs except the download cache at
+`~ghrunner/.cache/pip`, which is 122 MB and is only downloaded files. That cache
+is safe to keep: what leaked between jobs was installed packages, not downloads.
 
 ## The janitor
 
