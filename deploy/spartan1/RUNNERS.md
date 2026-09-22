@@ -13,21 +13,22 @@ GitHub charges for the minutes its own machines use. Ours do not. Since
 | `spartan1-webapp` | Soterix-WebApp-QA | `/opt/actions-runner-webapp` |
 | `spartan1-api` | Soterix-API-QA | `/opt/actions-runner-api` |
 
-GitHub scopes a runner to 1 repo, so each repo needs its own. All 3 run as
-the user **`ghrunner`** under systemd, and each has 1 runner, so the jobs of
+GitHub scopes a runner to 1 repo, so each repo needs its own. Each runs as **its own user** (`ghrunner-shared`, `ghrunner-webapp`, `ghrunner-api`)
+under systemd, because 1 shared user let a job in 1 repo read another repo's
+runner credentials, and each has 1 runner, so the jobs of
 1 workflow queue rather than run side by side. The jobs take seconds, so that
 is a queue of seconds.
 
 ## What the runner account may and may not do
 
-`ghrunner` exists only for CI. A workflow file runs whatever it says, so the
+Each `ghrunner-*` user exists only for CI, and only for its own repo. A workflow file runs whatever it says, so the
 account it runs as decides what a mistake can reach.
 
-- It is **not** `soterix`. That account owns the nightly, the `.env` with the
+- None is `soterix`. That account owns the nightly, the `.env` with the
   tenant credentials, and the published archive.
-- It cannot read `/data/qa/ci/Soterix-WebApp-QA/.env`.
-- It cannot write `/data/qa/runs`, the nightly clone, or `nightly.sh`.
-- It has no sudo.
+- None can read `/data/qa/ci/Soterix-WebApp-QA/.env`, or `/opt/asset_tracker/.env`.
+- None can write `/data/qa/runs`, the nightly clone, or `nightly.sh`.
+- None has sudo, and none can read another runner's credentials.
 - Its systemd services carry `CPUWeight=20`, `IOWeight=20` and
   `MemoryHigh=1500M`, `MemoryMax=3G` and `Restart=always`, so a CI job yields
   the machine to the nightly rather than competing with it, and a crash or an
@@ -37,15 +38,16 @@ account it runs as decides what a mistake can reach.
 Check all of that at any time:
 
 ```bash
-ssh spartan1 'sudo -u ghrunner test -r /data/qa/ci/Soterix-WebApp-QA/.env && echo PROBLEM || echo ok
-sudo -u ghrunner test -w /data/qa/runs && echo PROBLEM || echo ok
-sudo -u ghrunner sudo -n true 2>/dev/null && echo PROBLEM || echo ok'
+ssh spartan1 'for u in ghrunner-shared ghrunner-webapp ghrunner-api; do
+  sudo -u $u test -r /data/qa/ci/Soterix-WebApp-QA/.env && echo "$u PROBLEM" || echo "$u ok"
+  sudo -u $u test -w /data/qa/runs && echo "$u PROBLEM" || echo "$u ok"
+done'
 ```
 
 ## How it reaches the private shared package
 
-The gates install `soterix-qa-shared` from a private repo. `ghrunner` has its
-own key, `~/.ssh/shared_ro`, registered on SOTERIX-QA-SHARED as a
+The gates install `soterix-qa-shared` from a private repo. Each user has a copy of the
+key `~/.ssh/shared_ro`, registered on SOTERIX-QA-SHARED as a
 **read-only** deploy key, plus `~/.ssh/config` pointing github.com at it and a
 global git rewrite from the HTTPS url to the SSH one.
 
@@ -110,6 +112,14 @@ stops with "no retry needed", because an ephemeral runner is consumed after
 1 job and needs a fresh registration each time. A static machine wants a
 persistent runner.
 
+## A pull request never runs here
+
+A workflow file is part of the branch it sits on, so anyone who can open a pull
+request could otherwise run whatever they wrote, as the runner's own user, on
+the box that runs the nightly, with the secrets that job is given. Pull
+requests go to GitHub's machines, where that costs an attacker a throwaway
+container.
+
 ## The weekly run goes to GitHub on purpose
 
 spartan1 never uses the `QA_SHARED_DEPLOY_KEY` secret: `ghrunner` has its own key on disk and
@@ -136,7 +146,7 @@ needs 3 pushes in the same seconds.
 
 The peak is `pip`, not the tests. Each job installs into a venv of its own, so
 nothing is shared between jobs except the download cache at
-`~ghrunner/.cache/pip`, which is 122 MB and is only downloaded files. That cache
+`each runner user's `~/.cache/pip``, which is 122 MB and is only downloaded files. That cache
 is safe to keep: what leaked between jobs was installed packages, not downloads.
 
 ## The janitor

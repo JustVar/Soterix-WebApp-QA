@@ -129,7 +129,10 @@ What the script does:
 
 - It makes the account with no shell and no password, and the group
   `qa-runs` for the account and user `soterix`.
-- It sets `/data/qa/runs` to mode 3775. The group can add a folder. Only
+- It sets `/data/qa/runs` to mode 3770, and puts `www-data` in the group so
+  nginx still serves the archive. Nobody outside the group reads it: a CI job
+  on this box runs as its own user and must not see folders the evidence scan
+  rejected. The group can add a folder. Only
   the owner of a folder can rename it or remove it, so a laptop cannot
   replace a run of the nightly or the index page. It can replace a run that
   it published.

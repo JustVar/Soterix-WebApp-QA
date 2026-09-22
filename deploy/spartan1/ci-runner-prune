@@ -25,7 +25,11 @@ for dir in /opt/actions-runner /opt/actions-runner-webapp /opt/actions-runner-ap
   # to the interpreter in here, so removing it mid-run breaks that job, not just its cache.
   # A worker process means a job is in flight, and the cache waits for next week.
   if [ "$(date +%w)" = "$TOOL_DAY" ] && [ -d "$dir/_work/_tool" ]; then
-    if pgrep -u ghrunner -f "$dir/bin/Runner.Worker" >/dev/null 2>&1; then
+    # No -u: each runner has its own user since 09/22/2026 (runner-split-users.sh), and a guard
+    # that names one user would fail open for the other two. Fail closed when pgrep is missing.
+    if ! command -v pgrep >/dev/null 2>&1; then
+      echo "$dir: no pgrep, interpreter cache kept"
+    elif pgrep -f "$dir/bin/Runner.Worker" >/dev/null 2>&1; then
       echo "$dir: a job is running, interpreter cache kept"
     else
       rm -rf "$dir/_work/_tool" 2>/dev/null && echo "$dir: interpreter cache cleared"

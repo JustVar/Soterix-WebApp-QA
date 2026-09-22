@@ -63,7 +63,7 @@ install -d -m 700 -o "$USER_NAME" -g "$USER_NAME" "/home/$USER_NAME/.ssh"
 #    it (sticky). Without the sticky bit, write access to this directory
 #    alone let a laptop move a nightly run away, or replace index.html.
 chgrp "$GROUP" "$RUNS"
-chmod 3775 "$RUNS"
+chmod 3770 "$RUNS"
 
 # 3. The jail. sshd refuses a chroot that root does not own, so the served
 #    directory is bind-mounted into a root-owned folder.
@@ -73,7 +73,17 @@ install -d -m 755 -o root -g root "$JAIL"
 mountpoint -q "$JAIL_RUNS" || install -d -m 755 "$JAIL_RUNS"
 grep -qs "^$RUNS $JAIL_RUNS " /etc/fstab || echo "$RUNS $JAIL_RUNS none bind 0 0" >> /etc/fstab
 mountpoint -q "$JAIL_RUNS" || mount "$JAIL_RUNS"
-chmod 3775 "$RUNS"   # after the mount too: the mode is the last word of steps 2 and 3
+chmod 3770 "$RUNS"
+# 3770, not 3775: a CI job on this box runs as its own user and must not read the archive, which
+# holds folders the evidence scan rejected (audit 09/22/2026). nginx then cannot reach it through
+# the world bits, so it reaches it through the group instead.
+if id -nG www-data 2>/dev/null | tr " " "
+" | grep -qx "$GROUP"; then
+  echo "www-data is already in $GROUP"
+else
+  usermod -aG "$GROUP" www-data && systemctl reload nginx 2>/dev/null || true
+  echo "www-data added to $GROUP, nginx reloaded"
+fi   # after the mount too: the mode is the last word of steps 2 and 3
 
 # 4. sshd: sftp only, inside the jail. What a laptop publishes belongs to
 #    the account with the modes the laptop sent (644 and 755, measured), so
