@@ -147,7 +147,9 @@ fi
     # QA_RUNS_LIVE_DIR: the run's live record (live.json) is also written
     # into the served directory, so the archive index and health page at
     # http://10.2.0.2/qa-runs/ show the run in progress and its estimate.
-    BOX="$box" QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" $HEADED \
+    # QA_TRACES_PUBLISHED=0: the copy below leaves the trace zips behind, so the run page
+    # says where a trace is rather than linking one that answers 404 for every reader.
+    BOX="$box" QA_RUNS_LIVE_DIR="$SERVE" QA_TRACES_PUBLISHED=0 timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest "$TARGET" $HEADED \
       -n "$WORKERS" -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?
@@ -176,7 +178,9 @@ fi
     started=$(date +%s)
     # CHROME_ARGS= : the Wayland flag above is for headed Chrome; this leg
     # is headless and its camera pages need no GPU decoder.
-    CHROME_ARGS= C2C_REQUIRE_HARDWARE=1 QA_RUNS_LIVE_DIR="$SERVE" timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest tests/c2c \
+    # QA_TRACES_PUBLISHED=0: the copy below leaves the trace zips behind, so the run page
+    # says where a trace is rather than linking one that answers 404 for every reader.
+    CHROME_ARGS= C2C_REQUIRE_HARDWARE=1 QA_RUNS_LIVE_DIR="$SERVE" QA_TRACES_PUBLISHED=0 timeout -k 60 "$RUN_TIMEOUT" venv/bin/python -m pytest tests/c2c \
       -rfEs --maxfail="$MAXFAIL" \
       --timeout="$TEST_TIMEOUT" --timeout-method=signal
     rc=$?

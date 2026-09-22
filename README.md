@@ -36,6 +36,7 @@ The API tests are in a different repo, Soterix-API-QA.
 - What is broken and who owns it: [docs/TEST_REPAIRS.md](docs/TEST_REPAIRS.md).
 - Which machine runs the browser, and why: [docs/BROWSER_TOPOLOGY.md](docs/BROWSER_TOPOLOGY.md).
 - Concurrency and load work, planned: [docs/CONCURRENCY_PLAN.md](docs/CONCURRENCY_PLAN.md).
+- What CI costs and how to move it in-house: [docs/CI_ON_SPARTAN1.md](docs/CI_ON_SPARTAN1.md).
 - Before you write a test: [docs/CONVENTIONS.md](docs/CONVENTIONS.md), section "Adding a test".
 - The list of all tests, by product and module:
   [docs/TEST_INVENTORY.md](docs/TEST_INVENTORY.md). The README gives no

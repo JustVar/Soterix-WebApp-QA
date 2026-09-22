@@ -28,8 +28,8 @@ for 2 jobs:
 |---|---|---|
 | Address | 10.2.0.2 | 10.2.0.39 |
 | System | Ubuntu | Windows 11 Home |
-| Processor | i9-12900H | i9-12900H |
-| Memory | 62 GB | 32 GB |
+| Processor | 28 cores | i9-12900H, 20 threads |
+| Memory | 15 GB | 32 GB |
 | Graphics | Intel, VA-API | Intel Iris Xe |
 | Chrome | 153, headed on a Weston display | 153, headed on the desktop |
 | Runs the nightly | yes | no |
