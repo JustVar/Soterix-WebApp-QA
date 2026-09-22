@@ -112,8 +112,11 @@ gh workflow run ci.yml -R Soterix-Systems/SOTERIX-QA-SHARED -f hosted=true
 ```
 
 There is also the repository variable `CI_RUNNER`. Set it to `hosted` and every
-event goes to GitHub's machines, including a push; the `hosted` input only
-reaches a run somebody started by hand.
+event goes to GitHub's machines, a push included. The `hosted` input above only
+reaches a run somebody started by hand, so the variable is the one that helps
+when the box dies and people keep pushing. It was exercised on the API repo on
+09/22/2026 and does what it says. Remove it when the box is back, or every run
+bills minutes again.
 
 Nothing detects a dead box on its own. A queued job that never starts is the
 symptom, and it is not an error, so nobody is told. GitHub cancels it after 24

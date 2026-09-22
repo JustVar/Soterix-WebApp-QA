@@ -101,6 +101,33 @@ Honest list, because a runner is a service somebody has to keep alive:
 7. **Keep a hosted fallback** on `workflow_dispatch`, so a box outage does not
    stop work.
 
+All 7 are done, on 09/22/2026. Each repo's gate runs on spartan1 and reports an
+empty `billable`. Step 4 was shortened: the shared package ran both ways on the
+same push and agreed, so the week of double running was not needed.
+
+## The way back to GitHub's machines, measured
+
+Two ways, and they differ in what they reach:
+
+| | Reaches a push | Lasts |
+|---|---|---|
+| Repository variable `CI_RUNNER=hosted` | yes | until removed |
+| `hosted` ticked on a manual run | no | that run only |
+
+A dispatch input is null on an automatic event, so only the variable helps when
+the box dies and people keep pushing.
+
+The variable was exercised on the API repo on 09/22/2026: with it set, a push
+put both jobs on `ubuntu-latest` and the gate passed. Removing it put the next
+push back on spartan1. **The `hosted` dispatch input has still never been
+used**, so it is documented rather than proven.
+
+Remove the variable when the box is back, or every run bills again:
+
+```bash
+gh variable delete CI_RUNNER -R Soterix-Systems/<repo>
+```
+
 ## What would make this the wrong move
 
 - If the 4 cuts already brought usage well under the limit, this adds a service
@@ -110,12 +137,37 @@ Honest list, because a runner is a service somebody has to keep alive:
   nightly can miss a night and be re-run. CI cannot miss an hour without
   somebody noticing.
 
-## Open questions
+## What was actually being spent
 
-- What is the actual allowance, and what is actually consumed? The billing API
-  refused the token available here on 09/22/2026, so every number in this page
-  is a run count, not minutes. Read the real figure from the organisation's
-  billing page before building.
-- Does a private repo's Actions usage bill the organisation or the account that
-  owns the repo? The personal remotes and the company remotes may draw on
-  different allowances, which changes where the saving lands.
+The billing API refuses the token available here: the personal endpoint answers
+404 and the organisation endpoint asks for an `admin:org` scope. So this counts
+the thing that bills instead. **Each job on a GitHub-hosted runner is rounded up
+to a whole minute**, and a run on spartan1 reports an empty `billable` and
+contributes nothing. Counting hosted jobs is therefore a floor on minutes, and a
+close one.
+
+Hosted jobs from 09/01/2026 to 09/22/2026:
+
+| Owner | Hosted jobs | Where they came from |
+|---|---|---|
+| Soterix-Systems | 1866 | `collect-gate` on the WebApp repo (1324), `ci` on the shared package (381) |
+| JustVar | 387 | `ci` on the shared package mirror (372) |
+
+That answers both questions the plan opened with.
+
+**The two owners are billed separately.** They were measured separately and
+differ by nearly 5 times. The notice that said 1800 of 2000 minutes used arrived
+in Justin's own mail, but the number it carries tracks the organisation's 1866,
+not the account's 387, so the allowance near its limit is the organisation's.
+That is strong evidence rather than proof: confirm it on the organisation's
+billing page, which is the one place that states it outright.
+
+**A job count, not a run count, is what matters.** A push used to start 5 or 6
+jobs, so 282 runs of the WebApp gate cost 1324 minutes. Cutting the matrix on a
+push was worth more than cutting runs.
+
+Spend on 09/22/2026 shows the change landing: 79 of the day's 89 hosted jobs
+came before the 15:34 UTC cutover, and the 35 runs after it went to spartan1 for
+nothing. What is left on GitHub's machines is a pull request, which is deliberate,
+and Dependabot re-reading the workflow files, which happens only when those files
+change.
