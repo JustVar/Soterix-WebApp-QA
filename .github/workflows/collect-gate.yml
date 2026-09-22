@@ -13,6 +13,11 @@ name: collect-gate
 # This also gives Dependabot something to answer to. A pinned dependency that
 # nothing proves on bump is a pin that gets rubber-stamped.
 
+# Each action is pinned to a commit SHA, with its version in the comment beside it.
+# A tag moves: `actions/checkout@v4` is whatever that tag points at today, and
+# webfactory/ssh-agent is handed a private key. Dependabot reads the comment and
+# keeps the pin current, so this costs nothing to maintain.
+
 on:
   push:
     branches: [main]
@@ -64,12 +69,12 @@ jobs:
     if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
     runs-on: ${{ (github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event.inputs.hosted == 'true' || vars.CI_RUNNER == 'hosted') && 'ubuntu-latest' || 'self-hosted' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # The whole history: the conventions step diffs this push against
           # its base, and the attribution step reads every commit it brings.
           fetch-depth: 0
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.14"
       # requirements.txt names the shared package over HTTPS, which is what a
@@ -80,7 +85,7 @@ jobs:
       # repository. The rewrite is scoped to the single repo on purpose: a
       # blanket github.com rewrite would also catch anything else in this job
       # that clones over HTTPS.
-      - uses: webfactory/ssh-agent@v0.9.1
+      - uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555  # v0.10.0
         with:
           ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
       - name: Send the shared package over the deploy key
@@ -204,11 +209,11 @@ jobs:
       matrix:
         python-version: ${{ (contains(fromJSON('["push","pull_request"]'), github.event_name) && fromJSON('["3.14"]')) || fromJSON('["3.11", "3.12", "3.13", "3.14"]') }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: webfactory/ssh-agent@v0.9.1
+      - uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555  # v0.10.0
         with:
           ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
       - name: Send the shared package over the deploy key

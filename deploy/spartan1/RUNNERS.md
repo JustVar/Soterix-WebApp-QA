@@ -44,6 +44,36 @@ ssh spartan1 'for u in ghrunner-shared ghrunner-webapp ghrunner-api; do
 done'
 ```
 
+## The files on the box, and their copy here
+
+Every file this setup puts on spartan1 has a copy in this folder. A box that is
+rebuilt from the repo then comes back the same, and a change made by hand on the
+box shows up as a difference against a file somebody can read.
+
+| On the box | Here |
+|---|---|
+| `/etc/systemd/system/actions.runner.*.service.d/nice.conf` (one per runner) | `runner-nice.conf` |
+| `/etc/logrotate.d/ci-runner-prune` | `logrotate.d-ci-runner-prune` |
+| `/usr/local/bin/ci-runner-prune` | `ci-runner-prune` |
+| `/etc/cron.d/qa-ci-prune` | `cron.d-qa-ci-prune` |
+
+The drop-in is the same file for all 3 runners. Install it, or change it, for
+each one:
+
+```bash
+scp deploy/spartan1/runner-nice.conf spartan1:/tmp/nice.conf
+ssh spartan1 'for s in /etc/systemd/system/actions.runner.*.service; do
+  d="$s.d"; sudo install -d "$d"; sudo cp /tmp/nice.conf "$d/nice.conf"
+done; rm /tmp/nice.conf; sudo systemctl daemon-reload
+sudo systemctl restart actions.runner.\*.service'
+```
+
+Read back what is really there, which is the check that matters:
+
+```bash
+ssh spartan1 'systemctl show actions.runner.\* -p Id -p MemoryHigh -p MemoryMax'
+```
+
 ## How it reaches the private shared package
 
 The gates install `soterix-qa-shared` from a private repo. Each user has a copy of the
