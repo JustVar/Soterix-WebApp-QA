@@ -214,6 +214,10 @@ def _choose_camera(box_name: str) -> dict:
     _CAMERA_PICK = pick
     if pick.get("camera"):
         ENV_SETTINGS["test_camera_name"] = pick["camera"]
+    # The archive reads this out of the env config and writes the camera and its
+    # reason into the run's provenance, so the run page can name the camera and
+    # mark it when it changed between two runs.
+    ENV_SETTINGS["camera_pick"] = pick
     _STREAM_LINES.append(camera_pool.describe(pick))
     return pick
 

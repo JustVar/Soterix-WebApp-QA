@@ -40,19 +40,16 @@ CAMERA_SPECIFIC_MARKERS = ("lpr", "audio", "thermal", "ptz")
 
 
 def rotation_enabled(environ=None) -> bool:
-    """Rotation is OFF until the run page names the camera it drove.
+    """Rotation is on, and TEST_CAMERA_ROTATE=off stops it.
 
-    Deliberate sequencing, not caution for its own sake. Rotating first would
-    make a red test ambiguous: nobody could tell a regression from a camera this
-    test has never driven before, and an unreadable suite is worse than a
-    narrow one. Turn it on per run with TEST_CAMERA_ROTATE=1 to try it.
-
-    Flip this default to on once the run page carries the camera and marks it
-    when it changes (register row 129).
+    It was off while the run page still could not say which camera a run drove,
+    because rotating first would have made a red test ambiguous: nobody could
+    tell a regression from a camera the test had never driven. The page names
+    the camera and marks it when it changed since v0.35.0, so the rotation can
+    be read, and it is on.
     """
     environ = os.environ if environ is None else environ
-    value = (environ.get(ROTATE_ENV) or "").strip().lower()
-    return bool(value) and value not in _OFF
+    return (environ.get(ROTATE_ENV) or "").strip().lower() not in _OFF
 
 
 def pinned(environ=None) -> str | None:

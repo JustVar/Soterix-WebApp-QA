@@ -123,13 +123,12 @@ def test_one_online_camera_is_not_a_rotation():
     assert "nothing to rotate" in pick["reason"]
 
 
-def test_rotation_is_off_until_somebody_asks_for_it():
-    """Off by default: a rotated red test is unreadable until the run page says
-    which camera drove it, and an unreadable suite is worse than a narrow one.
+def test_rotation_is_on_and_can_be_switched_off():
+    """On since the run page can name the camera a run drove (v0.35.0). It was
+    off before that, because a rotated red test nobody can attribute is worse
+    than a narrow suite. A box that has to hold still needs a switch, not an edit.
     """
-    assert cp.choose(POOL, CONFIGURED, environ={})["camera"] == CONFIGURED
-    assert cp.choose(POOL, CONFIGURED, environ={})["rotated"] is False
-    assert cp.ROTATE_ENV in cp.choose(POOL, CONFIGURED, environ={})["reason"]
+    assert cp.choose(POOL, CONFIGURED, environ={})["rotated"] is True
     for off in ("0", "off", "false", "no", "OFF"):
         pick = cp.choose(POOL, CONFIGURED, environ={cp.ROTATE_ENV: off})
         assert pick["camera"] == CONFIGURED, f"{off} should stop the rotation"
