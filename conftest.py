@@ -211,6 +211,9 @@ def _choose_camera(box_name: str) -> dict:
         return _CAMERA_PICK
     from tests.shared.helpers import camera_pool
     pick = camera_pool.choose(camera_pool.load_pool(box_name), _CONFIGURED_CAMERA)
+    # How old the pool is, so a rotation over a list nobody has refreshed says so
+    # on the line people read rather than quietly narrowing.
+    pick["pool_age_days"] = camera_pool.pool_age_days(box_name)
     _CAMERA_PICK = pick
     if pick.get("camera"):
         ENV_SETTINGS["test_camera_name"] = pick["camera"]

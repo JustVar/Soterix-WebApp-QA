@@ -135,6 +135,42 @@ def test_rotation_is_on_and_can_be_switched_off():
     assert cp.choose(POOL, CONFIGURED, environ={cp.ROTATE_ENV: "1"})["rotated"] is True
 
 
+def test_a_pool_nobody_has_refreshed_says_so_on_the_line_people_read():
+    """The rotation narrows silently as the tenant changes: a retired camera
+    stays in the pool and a new one never enters it. Nothing refuses a stale
+    pool, because a run must not stop over a label, but nobody should have to
+    guess the pool's age either.
+    """
+    fresh = {**cp.choose(POOL, CONFIGURED, environ=ROTATING), "pool_age_days": 3}
+    assert "measured" not in cp.describe(fresh)
+    old = {**cp.choose(POOL, CONFIGURED, environ=ROTATING), "pool_age_days": cp.STALE_AFTER_DAYS + 5}
+    line = cp.describe(old)
+    assert f"measured {cp.STALE_AFTER_DAYS + 5} days ago" in line
+    assert "refresh it" in line
+    # An age nobody could work out is not an accusation.
+    assert "measured" not in cp.describe({**cp.choose(POOL, CONFIGURED, environ=ROTATING), "pool_age_days": None})
+
+
+def test_the_pools_age_is_read_from_the_file_and_never_raises():
+    """A missing file, a broken date or no date at all are all 'cannot tell'."""
+    assert cp.pool_age_days("us") is not None, "the committed pool records when it was measured"
+    assert cp.pool_age_days("us") >= 0
+    assert cp.pool_age_days("no-such-box") is None
+    bad = tmp_pool_with(None)
+    assert cp.pool_age_days("broken", root=bad) is None
+
+
+def tmp_pool_with(measured_at):
+    """A throwaway pool file whose measured_at is whatever the caller wants."""
+    import json
+    import tempfile
+    root = Path(tempfile.mkdtemp())
+    (root / "tests" / "data").mkdir(parents=True)
+    (root / "tests" / "data" / "camera_pool_broken.json").write_text(
+        json.dumps({"measured_at": measured_at, "channels": []}), encoding="utf-8")
+    return root
+
+
 def test_the_capability_comes_from_the_tests_own_markers():
     """Same shape as the box `without` map: a marker names the requirement."""
     assert cp.capability_for({"livestream": True, "audio": True}, CAPS) == "audio"

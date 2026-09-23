@@ -38,6 +38,12 @@ _OFF = {"0", "off", "false", "no"}
 # bug. test_camera_pool.py holds a box to this.
 CAMERA_SPECIFIC_MARKERS = ("lpr", "audio", "thermal", "ptz")
 
+# A pool older than this is reported, not refused. The tenant gains and loses
+# cameras, and a pool nobody refreshes narrows the rotation silently: the
+# retired cameras stay in it and the new ones never enter it. Saying the age on
+# every run is what stops that being invisible.
+STALE_AFTER_DAYS = 30
+
 
 def rotation_enabled(environ=None) -> bool:
     """Rotation is on, and TEST_CAMERA_ROTATE=off stops it.
@@ -157,6 +163,18 @@ def pool_path(box: str, root=None):
     return root / "tests" / "data" / f"camera_pool_{(box or '').strip().lower()}.json"
 
 
+def pool_age_days(box: str, root=None, when=None) -> int | None:
+    """How old the box's measured pool is, or None when it cannot be told."""
+    import json
+    try:
+        data = json.loads(pool_path(box, root).read_text(encoding="utf-8"))
+        measured = datetime.fromisoformat(str(data.get("measured_at")))
+    except (OSError, ValueError, TypeError):  # why: the age is a label on a line people read, never a reason to stop a run
+        return None
+    now = when or datetime.now(measured.tzinfo or UTC)
+    return max(0, (now - measured).days)
+
+
 def load_pool(box: str, root=None) -> list:
     """The box's last measured channel list, or [] when there is none.
 
@@ -188,4 +206,8 @@ def describe(pick: dict) -> str:
     line = f"[CAMERA] '{pick.get('camera')}': {pick.get('reason')}"
     if pick.get("rotated") and pick.get("configured") and pick["configured"] != pick.get("camera"):
         line += f" (configured: '{pick['configured']}')"
+    age = pick.get("pool_age_days")
+    if age is not None and age >= STALE_AFTER_DAYS:
+        line += (f" -- the pool was measured {age} days ago, so a renamed or retired camera is still "
+                 f"in it and a new one is not; refresh it (tests/shared/helpers/camera_pool.py)")
     return line

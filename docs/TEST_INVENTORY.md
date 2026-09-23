@@ -65,11 +65,11 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 |---|---|---|---|---|
 | `tests/helpers/` | 3 | 17 | yes | Pins for tests/shared/helpers (surface, search_job). Collected by bare pytest. |
 | `tests/legacy/` | 3 | 138 | no | Retired Selenium-era login and web-client tests, kept for reference. Excluded from collection by pytest.ini norecursedirs. |
-| `tests/plugins/` | 19 | 249 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
+| `tests/plugins/` | 19 | 251 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
 | `tests/tools/` | 22 | 230 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
 | `soterix-qa-shared` | 23 | 644 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
 | `Soterix-API-QA` | 1 | 11 | in Soterix-API-QA | Pins for the API repo's own plugins and shims. Run in that repo. |
-| **This repo** | **47** | **634** | | |
+| **This repo** | **47** | **636** | | |
 
 ## NexaiQ-Camera 2 Cloud
 
