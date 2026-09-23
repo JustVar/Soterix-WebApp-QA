@@ -191,7 +191,11 @@ def decode_check(codec: str | None, channel: str | None, headed: bool = False) -
             name = (f"{'Chrome' if channel == 'chrome' else 'Chromium'} {browser.version} on {platform.system()}, "
                     f"{'headed' if headed else 'headless'}, {len(flags)} flag{'' if len(flags) == 1 else 's'}")
             browser.close()
-        return {"decodes": bool(supported), "browser": name}
+        # os and headed are returned, not left inside the name string, because
+        # a rule reads them: headless Chrome on Windows answers true here and
+        # then never decodes a frame (measured 09/22/2026, register row 128).
+        return {"decodes": bool(supported), "browser": name,
+                "os": platform.system(), "headed": bool(headed)}
     except Exception as e:  # why: a check that could not run is 'unknown', which skips nothing
         first = (str(e).splitlines() or [""])[0][:160]
         return {"decodes": None, "browser": f"check failed: {type(e).__name__}: {first}"}
@@ -226,6 +230,21 @@ def stream_skip_reason(measure: dict, box_name: str) -> str | None:
                 f"is false, so a tile's player never leaves readyState 0; the livestream tests need a "
                 f"runner whose Chrome decodes {measure.get('codec')}: Windows, Mac, or spartan1 headed on "
                 f"its Weston display (deploy/spartan1/README.md){tail}")
+    # A true from the decode check is not a decoded frame. It is
+    # MediaSource.isTypeSupported, which reports what Chrome CLAIMS, and
+    # headless Chrome on Windows claims H.265 and then never decodes it: the
+    # player stays at readyState 1 with currentTime 0.00 while the socket
+    # delivers frames, and the app shows "The camera failed to load". Measured
+    # 09/22/2026 on one test run twice, minutes apart, same tenant, only this
+    # different: headless failed in 161 s, headed passed in 25 s (register row
+    # 128). Without this rule that machine ran 28 tests red instead of skipping.
+    if (measure.get("decodes") is True and measure.get("os") == "Windows"
+            and measure.get("headed") is False and (measure.get("codec") or "").upper() == "H.265"):
+        return (f"box {box_name} streams {measure.get('codec')} on camera '{measure.get('camera')}' and this "
+                f"browser ({measure.get('browser')}) is headless on Windows, which reports the codec as "
+                f"supported and then never decodes it, so the tile stays at readyState 1. Run the livestream "
+                f"tests headed on this machine (pytest --headed; the Windows runner's task logs on "
+                f"interactively for exactly this reason, deploy/windows-runner/README.md){tail}")
     if int(measure.get("frames") or 0) > 0 and measure.get("decodes") is None:
         # No verdict is not a green light: running a livestream test against
         # a tile the browser may never decode hangs the driver on the

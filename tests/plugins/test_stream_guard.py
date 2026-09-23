@@ -72,6 +72,41 @@ def test_a_browser_without_the_decoder_is_a_skip_naming_the_codec_and_browser():
     assert sh.stream_skip_reason({**DEAD, 'decodes': False, 'browser': 'x'}, 'us').startswith('box us streams H.265')
 
 
+def test_headless_on_windows_is_a_skip_even_though_the_codec_check_says_yes():
+    """The one case where a true from the decode check is wrong.
+
+    Headless Chrome on Windows answers MediaSource.isTypeSupported('hvc1') with
+    true and then never decodes: the player holds readyState 1 and currentTime
+    0.00 while the socket delivers frames. Measured 09/22/2026 on spartan20, the
+    same test headless and headed minutes apart (register row 128). Before this
+    rule the machine ran 28 tests red instead of skipping with a reason.
+    """
+    headless_win = {**ALIVE, 'decodes': True, 'os': 'Windows', 'headed': False,
+                    'browser': 'Chrome 153.0.8010.53 on Windows, headless, 0 flags'}
+    reason = sh.stream_skip_reason(headless_win, 'us')
+    assert reason is not None, 'a machine that cannot play the tile must skip, not fail 28 tests'
+    assert 'headless on Windows' in reason
+    assert 'never decodes it' in reason
+    assert 'readyState 1' in reason
+    assert '--headed' in reason
+
+
+def test_the_headless_windows_rule_does_not_catch_the_setups_that_work():
+    """Narrow on purpose: it is one measured fact, not a guess about headless.
+
+    Headed on Windows plays (measured, same run). Linux is spartan1's business:
+    it runs headed on Weston, and a Linux browser that cannot decode already
+    answers false, which the rule above it catches.
+    """
+    win = {**ALIVE, 'decodes': True, 'os': 'Windows', 'browser': 'Chrome 153 on Windows, headed, 0 flags'}
+    assert sh.stream_skip_reason({**win, 'headed': True}, 'us') is None
+    assert sh.stream_skip_reason({**win, 'os': 'Linux', 'headed': False}, 'us') is None
+    # H.264 headless on Windows is not what was measured, so it is not claimed.
+    assert sh.stream_skip_reason({**win, 'headed': False, 'codec': 'H.264'}, 'us') is None
+    # And a measurement with no os/headed at all (an older record) still runs.
+    assert sh.stream_skip_reason(ALIVE, 'us') is None
+
+
 def test_frames_mean_no_skip_and_so_does_a_failed_measurement():
     """Frames arrived and the browser decodes: run. Could not measure: run too, and say so."""
     assert sh.stream_skip_reason(ALIVE, 'us') is None
