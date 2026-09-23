@@ -72,6 +72,12 @@ tests/data/*
 # stops the run by name (the box run of 09/12/2026 did, on a clone that
 # had the registry but not this file).
 !tests/data/c2c_models.yaml
+# The camera pool a run rotates over, one file per box. Same reason as the two
+# above: small generated configuration that decides what the tests drive, not
+# bulk data. Without it every box silently falls back to its one configured
+# camera, which is a working rotation doing nothing, and CI cannot check the
+# pool it rotates over (the gate caught exactly that on 09/23/2026).
+!tests/data/camera_pool_*.json
 testcases_export.json
 
 # Generated tool output artifacts
