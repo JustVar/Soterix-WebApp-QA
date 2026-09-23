@@ -143,7 +143,7 @@ and what has to change:
 | Screen lock | nothing forces one | keep it that way |
 | Chrome updates | updater services and task all disabled, pinned at 153.0.8010.53 | on demand, so a run is never surprised |
 | Windows Update | active hours 02:00 to 20:00 local | no restart during a run |
-| **Sign in after a restart** | **manual** | **automatic, or the browser cannot start** |
+| Sign in after a restart | automatic | automatic, or the headed browser cannot start |
 | Admin channel | SSH, measured reliable | SSH, with WinRM as a second way in |
 
 Two of those rows were wrong when first written, and both were found by reading
@@ -166,26 +166,44 @@ Chrome no longer patches itself here, so somebody has to update it on purpose.
 That is the trade the row asks for: a known version beats a current one when the
 machine's job is to reproduce what a customer sees.
 
-A restart with no automatic sign-in leaves the machine with no desktop. That was
-written down as the single setting deciding whether the machine can work
-unattended, and it is not, because these tests do not run headed.
+**Automatic sign-in is the setting that decides whether this machine works.** A
+restart without it leaves no desktop, and the run is headed, so nothing plays.
 
-Measured on 09/22/2026, over ssh, which lands in session 0 with no desktop at
-all:
+That statement was briefly removed from this page on 09/22/2026 on the strength
+of this:
 
 ```
 H.265: {'decodes': True, 'browser': 'Chrome 153.0.8010.53 on Windows, headless, 0 flags'}
 ```
 
-Windows Chrome reaches the platform HEVC decoder headless and with no flags,
-which is the whole reason this machine was bought. Linux is the special case:
-spartan1 needs a headed Chrome on a headless Weston because Chrome only reaches
-VA-API that way.
+which was read as headless being fine. It is not evidence of that.
+`decode_check` calls `MediaSource.isTypeSupported`, so it reports what Chrome
+**claims**, and a claim is not a decoded frame. The run is the measurement, and
+it disagreed: 28 failed, 2 passed, 8 errors, every failure a tile that never
+played.
 
-So automatic sign-in is worth having, and it is not load-bearing. What it buys
-is a machine that comes back by itself after a Windows restart, and a desktop
-for anyone who wants to watch a run. What it does not buy is the ability to run
-these tests at all, which works from session 0 today.
+One test, twice, minutes apart, same tenant, only the browser mode different:
+
+| | headless | headed |
+|---|---|---|
+| Result | failed, 161 s | **passed, 25 s** |
+| `readyState` | 1 -> 1 | **4** |
+| `currentTime` | 0.00 -> 0.00 | 0.12 -> 0.14 |
+| Frames on the socket | 124 in 8 s | 116 in 8 s |
+| `isTypeSupported` | **yes** | yes |
+
+The socket delivers either way. Headless Chrome on Windows says it supports
+H.265 and then never decodes it, leaving the player at `readyState 1` while the
+app shows "The camera failed to load".
+
+So both machines run headed, for different reasons: Linux Chrome reaches H.265
+only through VA-API on Wayland, and Windows Chrome reaches it only with a
+desktop. The Windows scheduled task therefore logs on interactively, and the
+machine signs in automatically so that a desktop exists after a restart.
+
+A warning this leaves behind: **a passing `decode_check` does not mean a tile
+will play.** A failing one is still conclusive, and the guard's skip reasons
+still rest on it. Treat `true` as "not ruled out" (register row 128).
 
 ## Reopening this
 

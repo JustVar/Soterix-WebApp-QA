@@ -91,7 +91,16 @@ foreach ($box in ($Boxes -split '\s+' | Where-Object { $_ })) {
         continue
     }
     $env:BOX = $box
-    $pytestArgs = @('-m', 'pytest', $Target, '-n', "$Workers", '-rfEs', "--maxfail=$MaxFail", '-p', 'no:cacheprovider')
+    # --headed is not a preference here, it is the reason the run works.
+    # Headless Chrome on Windows answers MediaSource.isTypeSupported('hvc1')
+    # with true and then never decodes a frame: measured 09/22/2026 on one
+    # test, same minute, same tenant, only this flag different. Headless left
+    # the player at readyState 1 with currentTime 0.00 for 30 s while the
+    # socket delivered 124 frames in 8 s, and the app showed "The camera
+    # failed to load". Headed reached readyState 4 and passed in 25 s.
+    # A headed browser needs a desktop, which is why the task logs on
+    # interactively and why the machine signs in automatically.
+    $pytestArgs = @('-m', 'pytest', $Target, '-n', "$Workers", '-rfEs', "--maxfail=$MaxFail", '-p', 'no:cacheprovider', '--headed')
     # -Marker none runs the whole target (an empty string cannot be passed
     # through `powershell -File`).
     if ($Marker.Trim() -and $Marker.Trim() -ne 'none') { $pytestArgs += @('-m', $Marker.Trim()) }
