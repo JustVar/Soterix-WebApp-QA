@@ -171,6 +171,10 @@ def pytest_collection_modifyitems(config, items):
     from config.base_config import get_active_box
     box_name = get_active_box()
     box_settings = active_box_settings(ENV_SETTINGS, box_name)
+    # Which camera this run drives, before the guard measures one: the guard has
+    # to measure the camera the tests will actually use. Deterministic, so every
+    # xdist worker reaches the same answer on its own and none has to be told.
+    _choose_camera(box_name)
     for item in items:
         if not run_destructive and "destructive" in item.keywords:
             item.add_marker(destructive_skip)
@@ -179,6 +183,39 @@ def pytest_collection_modifyitems(config, items):
         if reason:
             item.add_marker(pytest.mark.skip(reason=reason))
     stream_guard(config, items, box_name)
+
+
+# What the run chose, for the summary line and the run record.
+_CAMERA_PICK: dict = {}
+# The camera config/env/ names, kept before anything overwrites it. Choosing
+# reads this, never ENV_SETTINGS: the choice WRITES test_camera_name, so a
+# second call would have treated the rotated camera as the configured one and
+# lost the fallback (seen in the offline suites, 09/23/2026).
+_CONFIGURED_CAMERA = ENV_SETTINGS.get("test_camera_name")
+
+
+def _choose_camera(box_name: str) -> dict:
+    """Point test_camera_name at this run's camera and remember why.
+
+    One camera for the whole run, so its tests are comparable with each other
+    and the run page's history strip keeps its meaning. A test that needs a
+    particular camera asks for it by marker and is not rotated
+    (tests/shared/helpers/camera_pool.py).
+
+    Chosen once per process. Collection can run more than once in one
+    interpreter (the pins run nested sessions), and a second choice would print
+    a second [CAMERA] line for a run that has one camera.
+    """
+    global _CAMERA_PICK
+    if _CAMERA_PICK:
+        return _CAMERA_PICK
+    from tests.shared.helpers import camera_pool
+    pick = camera_pool.choose(camera_pool.load_pool(box_name), _CONFIGURED_CAMERA)
+    _CAMERA_PICK = pick
+    if pick.get("camera"):
+        ENV_SETTINGS["test_camera_name"] = pick["camera"]
+    _STREAM_LINES.append(camera_pool.describe(pick))
+    return pick
 
 
 # The stream guard's lines for the terminal summary: under -n the workers'

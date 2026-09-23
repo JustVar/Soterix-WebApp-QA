@@ -68,7 +68,22 @@ config = {
                 # Spartan0 is the box's only site (site id 156); the camera
                 # is a live streaming one (probe 09/01/2026, 22 cameras)
                 "test_site_name": "Spartan0",
+                # The camera a test drives when it does not care which. The run
+                # rotates over the online cameras in
+                # tests/data/camera_pool_us.json instead, one per day, and this
+                # is the fallback when the pool is unmeasured or a capability
+                # has nothing online (tests/shared/helpers/camera_pool.py).
                 "test_camera_name": "Soterix Multicam 1.15",
+                # Cameras that satisfy a marker's requirement, so a test that
+                # needs one is never rotated onto a camera that cannot answer.
+                # Measured 09/23/2026 (16 online of 22, 7 vendors); the names
+                # are the tenant's, so re-probe after a rename.
+                # No `lpr` entry: this box skips the LPR tests (see `without`).
+                "camera_capabilities": {
+                    "audio": ["Advidia (Audio)", "Avigilon Intercom (Audio)", "iPro PTZ (Audio)"],
+                    "thermal": ["Avigilon Thermal"],
+                    "ptz": ["Uniview PTZ", "iPro PTZ (Audio)"],
+                },
                 # 'Dallas QA Lab' is the one real chat account on this
                 # tenant; 'qa' matches it alone (probed 09/04/2026).
                 # The only other searchable names are our own leaked
