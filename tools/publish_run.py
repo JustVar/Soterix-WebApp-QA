@@ -145,11 +145,20 @@ def sftp_batch(staged: Path, dest: str, stamp: str) -> str:
     name = staged.name
     tmp = f'{dest}/.pub-tmp-{name}-{stamp}'
     final = f'{dest}/{name}'
+    # `put -r` carries the LOCAL directory modes, and a Windows publisher's map
+    # to 0700, so nginx could not traverse into the published folder and the
+    # archive served nothing (first sftp publish from spartan20, 09/23/2026).
+    # The files were fine: the account's umask reached those, not these. So the
+    # directories are set here rather than hoped for, shallowest first so a
+    # parent is never left locking its children out.
+    dirs = sorted(d.relative_to(staged).as_posix() for d in staged.rglob('*') if d.is_dir())
+    chmods = [f'chmod 775 {_q(final)}'] + [f'chmod 775 {_q(final + "/" + d)}' for d in dirs]
     return '\n'.join([
         f'mkdir {_q(tmp)}',
         f'put -r {_q(str(staged))} {_q(tmp + "/")}',
         f'-rename {_q(final)} {_q(f"{dest}/.pub-old-{name}-{stamp}")}',
         f'rename {_q(tmp + "/" + name)} {_q(final)}',
+        *chmods,
         f'rmdir {_q(tmp)}',
     ]) + '\n'
 

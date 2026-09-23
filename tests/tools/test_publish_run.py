@@ -176,8 +176,40 @@ def test_the_batch_lands_the_folder_with_one_rename_and_tolerates_no_old_copy():
         'put -r "C:/tmp/stage/2026-09-01_10-39-03__tests-ui" "/data/qa/runs/.pub-tmp-2026-09-01_10-39-03__tests-ui-17/"',
         '-rename "/data/qa/runs/2026-09-01_10-39-03__tests-ui" "/data/qa/runs/.pub-old-2026-09-01_10-39-03__tests-ui-17"',
         'rename "/data/qa/runs/.pub-tmp-2026-09-01_10-39-03__tests-ui-17/2026-09-01_10-39-03__tests-ui" "/data/qa/runs/2026-09-01_10-39-03__tests-ui"',
+        'chmod 775 "/data/qa/runs/2026-09-01_10-39-03__tests-ui"',
         'rmdir "/data/qa/runs/.pub-tmp-2026-09-01_10-39-03__tests-ui-17"',
     ]
+
+
+def test_every_published_directory_is_made_readable_by_the_archive(tmp_path):
+    """nginx has to traverse into the run folder and its subfolders.
+
+    `put -r` carries the LOCAL directory modes. From Windows those map to 0700,
+    so the first sftp publish landed a folder the archive could not serve: the
+    files were group-readable, the directories were not. Nothing in the batch
+    said otherwise, so nothing did (09/23/2026).
+    """
+    run = tmp_path / '2026-09-23_14-05-21__tests-ui'
+    (run / 'log').mkdir(parents=True)
+    (run / 'screenshots').mkdir()
+    (run / 'artifacts' / 'videos').mkdir(parents=True)
+    (run / 'run.html').write_text('x', encoding='utf-8')
+
+    lines = pr.sftp_batch(run, '/data/qa/runs', stamp='17').splitlines()
+    chmods = [line for line in lines if line.startswith('chmod ')]
+    assert chmods == [
+        'chmod 775 "/data/qa/runs/2026-09-23_14-05-21__tests-ui"',
+        'chmod 775 "/data/qa/runs/2026-09-23_14-05-21__tests-ui/artifacts"',
+        'chmod 775 "/data/qa/runs/2026-09-23_14-05-21__tests-ui/artifacts/videos"',
+        'chmod 775 "/data/qa/runs/2026-09-23_14-05-21__tests-ui/log"',
+        'chmod 775 "/data/qa/runs/2026-09-23_14-05-21__tests-ui/screenshots"',
+    ], 'every directory, and a parent before the child it contains'
+    # and they run after the folder is in place, never against the temp name
+    assert lines.index('rename "/data/qa/runs/.pub-tmp-2026-09-23_14-05-21__tests-ui-17/'
+                       '2026-09-23_14-05-21__tests-ui" "/data/qa/runs/2026-09-23_14-05-21__tests-ui"') < lines.index(chmods[0])
+    assert lines[-1].startswith('rmdir ')
+    # a file is not chmod'd: the account's umask already reaches those
+    assert not any('run.html' in line for line in chmods)
 
 
 def test_a_name_that_would_break_the_batch_is_refused():
