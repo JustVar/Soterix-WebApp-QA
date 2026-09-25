@@ -1,0 +1,49 @@
+# Tests that are red because of an app defect somebody already knows about.
+#
+# The run page labels these "Known defect", filters them apart from the failures
+# still to be read, and the verdict counts them separately. Without this a
+# nightly showed about 30 red tests and a reader had to remember which were the
+# defects already being worked (09/25/2026).
+#
+# `row` is the register row (docs/TEST_REPAIRS.md), `since` the date the defect
+# was reported there, `what` one line in tester language. No ticket keys here:
+# those go stale, and the register's App defects section maps them.
+#
+# A test listed here that PASSES is shown as "Known defect, passed": the prompt
+# to retire its entry. A name must match exactly 1 test (a pin checks), as
+# `test_name` or `path::test_name` when a name is shared.
+- row: 56
+  since: 09/12/2026
+  what: Saving a view never finishes; the tenant's Content Security Policy refuses the data URL the app fetches
+  tests:
+    - test_save_view
+    - test_open_saved_view
+    - test_delete_saved_view
+    - test_my_views_add_saved_view_via_checkbox
+    - test_my_views_drag_saved_view_to_tile
+- row: 83
+  since: 09/23/2026
+  what: Add, rename and delete bookmark fail on Soterix Multicam and Axis cameras and pass on Hanwha, Avigilon and Uniview
+  tests:
+    - test_add_bookmark
+    - test_rename_bookmark
+    - test_delete_bookmark
+- since: 09/11/2026
+  what: The Licenses page's Download icon does nothing
+  tests:
+    - test_csv_download_triggers_file
+- since: 09/11/2026
+  what: Media folder operations answer wrongly on a folder that holds a clip (Create Link says Empty folder, Share and Export open nothing)
+  tests:
+    - test_folder_create_link
+    - test_folder_export
+    - test_folder_share
+- since: 08/17/2026
+  what: A user created through Admin > Users cannot be suspended or deleted; both REST calls answer 400
+  tests:
+    - test_delete_user
+    - test_toggle_user_status
+- since: 08/17/2026
+  what: The rules Edit icon opens a read-only drawer; the notification-edit form is gone since the rules redesign
+  tests:
+    - test_edit_rule_notification

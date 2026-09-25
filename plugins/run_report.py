@@ -24,6 +24,12 @@ from soterix_qa_shared.reporting import run_page as _page
 from config.run_axis import camera_columns
 
 _page.configure_axis(camera_columns)
+# The tests red for an app defect somebody already knows about, from
+# config/known_defects.yaml, so the run page can say which failures are
+# news and which are being worked.
+from tests.shared.helpers.known_defects import known_defect_for  # noqa: E402
+
+_archive.configure_known_defects(known_defect_for)
 
 if __name__ == "__main__":       # BEFORE the alias swap, or the CLI is a silent exit-0 no-op.
     # It was one until 09/21/2026: the command that docs/FAILURE_TRIAGE.md gives
