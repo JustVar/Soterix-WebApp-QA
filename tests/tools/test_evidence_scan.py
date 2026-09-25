@@ -37,6 +37,11 @@ LEFT_ALONE = [
     'autocomplete="current-password" name="password" value=""',
     '3 passed, 1 failed in 12.4s',
     'bypass=true&compass=north',
+    # the run page's own script: the pass/fail key of a JS object, masked to `pass: '***'`
+    # on every published run until 09/25/2026
+    "var NAMES = {fail: 'Failed', skip: 'Skipped', pass: 'Passed', unkn: 'Unknown', all: 'All'};",
+    "var WORDS = {fail: 'failed', skip: 'were skipped', pass: 'passed'};",
+    "{'pass': 'ok', 'fail': 'bad'}",
     'password=***&next=/home',
     'see https://playwright.dev/python/docs/api/class-page#page-goto for the options',
 ]

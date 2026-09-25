@@ -73,7 +73,12 @@ PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     # enough: 0.01 s on a 1 MB line of each character class.
     ('password in a URL', re.compile(r'://[^/\s:@]{1,200}:(?P<s>[^@\s/]{3,2000})@')),
     # a password key with a quoted value: 'password': 'x', "password":"x", &quot;password&quot;: &quot;x&quot;
-    ('password value', re.compile(r'(?<![A-Za-z])(?:pass(?:word|wd)?|pwd)' + _Q + r'?\s*[:=]\s*(?P<q>' + _Q
+    # Not bare `pass` here: with a quoted value it is the pass/fail key of a dict or a
+    # JS object far more often than a credential, and the run page's own script,
+    # `pass: 'Passed'`, was masked to `pass: '***'` on every published run (09/25/2026).
+    # `pass=` with a bare value stays in the pattern below: in a URL or a form body
+    # that shape is credential-shaped and nothing of ours writes it otherwise.
+    ('password value', re.compile(r'(?<![A-Za-z])(?:password|passwd|pwd)' + _Q + r'?\s*[:=]\s*(?P<q>' + _Q
                                   + r')(?P<s>(?:(?!(?P=q)).){4,}?)(?P=q)', re.I)),
     # a password key with a bare value: password=x in a URL, a form body or an env line
     ('password value', re.compile(r'(?<![A-Za-z])(?:pass(?:word|wd)?|pwd)=(?P<s>[^&\s"\'<>\\;,)}\]]{4,})', re.I)),

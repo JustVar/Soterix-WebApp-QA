@@ -70,6 +70,14 @@ def pytest_sessionstart(session):
     """Ask once whether the tenant answers and the account signs in, before
     any browser opens; refuse the run with one named line when not
     (tests/shared/helpers/preflight.py)."""
+    # The run's camera is chosen HERE, on every process, not only at collection.
+    # Under xdist the controller never collects, so a choice made there alone
+    # left the workers driving the rotated camera while the run record, built on
+    # the controller, named the configured one with no reason: 2 nightlies said
+    # 'Soterix Multicam 1.15' and their run.log named 1.18 (09/25/2026). The
+    # choice is deterministic, so every process reaches the same camera alone.
+    from config.base_config import get_active_box
+    _choose_camera(get_active_box())
     from tests.shared.helpers import preflight
     if preflight.skip_reason(session.config):
         return

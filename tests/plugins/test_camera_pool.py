@@ -232,3 +232,42 @@ def test_the_summary_line_names_the_camera_and_what_it_replaced():
     if pick["camera"] != CONFIGURED:
         assert CONFIGURED in line, "a rotated run must say which camera it replaced"
     assert cp.describe({}) == "[CAMERA] no choice recorded"
+
+
+def test_the_run_record_names_the_camera_on_a_process_that_never_collected(monkeypatch):
+    """Under xdist the controller never runs collection. A choice made only there
+    left the workers driving the rotated camera while the run record, built on
+    the controller, named the configured one with no reason: 2 nightlies said
+    'Soterix Multicam 1.15' and their run.log named 1.18 (09/25/2026). Session
+    start runs on every process, so the record and the tests agree.
+    """
+    import os
+
+    from soterix_qa_shared.reporting import run_archive
+
+    import conftest
+    from tests.shared.helpers import preflight
+
+    monkeypatch.setenv("BOX", "us")
+    monkeypatch.delenv(cp.ROTATE_ENV, raising=False)
+    monkeypatch.delenv(cp.PIN_ENV, raising=False)
+    monkeypatch.setattr(conftest, "_CAMERA_PICK", {})
+    monkeypatch.setattr(conftest, "_STREAM_LINES", [])
+    monkeypatch.setitem(conftest.ENV_SETTINGS, "test_camera_name", conftest.ENV_SETTINGS.get("test_camera_name"))
+    monkeypatch.delitem(conftest.ENV_SETTINGS, "camera_pick", raising=False)
+    monkeypatch.setattr(preflight, "skip_reason", lambda config: "offline pin")
+
+    class Session:
+        config = object()
+
+    conftest.pytest_sessionstart(Session())  # what the controller does; no collection follows
+
+    class Config:
+        def getoption(self, name, default=None):
+            return default
+
+    prov = run_archive._provenance(Config(), os.environ, product="NexaiQ-Core")
+    assert prov["camera_reason"], "a record with no reason is a rotation nobody can see"
+    assert "rotated" in prov["camera_reason"]
+    assert prov["camera"] == conftest._CAMERA_PICK["camera"]
+    assert any(line.startswith("[CAMERA]") for line in conftest._STREAM_LINES), "and the summary says it"
