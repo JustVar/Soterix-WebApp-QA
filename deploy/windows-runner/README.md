@@ -119,3 +119,12 @@ Remove-Item C:\qa\Soterix-WebApp-QA\logs\livestream-run.pid
   test, the account password). Failure videos do travel.
 - The clone is disposable: the reset at each run discards local edits, so
   never develop in it. Evidence under `reports\` is untracked and stays.
+
+## Who announces this machine's run
+
+Nothing on this machine posts anywhere. The run publishes to spartan1's
+archive, and spartan1 announces it: its nightly at the end of its own run and a
+sweep at 11:00 UTC both post any run of the day not yet announced, and name a
+run that is expected and missing, this one included
+(`deploy/spartan1/README.md`, "What announces a run").
+

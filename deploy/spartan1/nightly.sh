@@ -222,6 +222,12 @@ fi
   venv/bin/python tools/health_summary.py --runs-dir "$SERVE" > /dev/null \
     && echo "=== served index and health page rebuilt from $SERVE" \
     || echo "=== served index rebuild FAILED (health_summary exit $?)"
+  # Say what happened where people read: 1 Slack line for each run folder of
+  # today that has not been announced, and the runs expected today that have no
+  # folder. The 11:00 UTC sweep (cron.d-qa-run-announce) repeats this for a
+  # nightly that died before it got here. Never fails the nightly: the runs are
+  # archived either way, only the line would be missing.
+  venv/bin/python tools/announce_run.py --archive "$SERVE" --state /data/qa/ci/announced.json     --expect india us c2c spartan20     || echo "=== announce failed (exit $?): the runs are served, the Slack line is not"
   rm -f "$PIDFILE"
   echo "=== $(date -Is) nightly done"
 } >> "$LOG" 2>&1

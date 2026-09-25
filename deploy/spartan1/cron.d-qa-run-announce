@@ -1,0 +1,6 @@
+# The sweep behind the nightly's own announcement: at 11:00 UTC, after the last
+# leg should have ended (india 09:00, us about 09:40, c2c about 10:10, and the
+# Windows machine's run at 07:30), post any run of today not yet announced and
+# name any expected run that has no folder. A nightly that died before its own
+# announce line, or never started, is found here and nowhere else.
+0 11 * * * soterix cd /data/qa/ci/Soterix-WebApp-QA && venv/bin/python tools/announce_run.py --archive /data/qa/runs --state /data/qa/ci/announced.json --expect india us c2c spartan20 >> /data/qa/ci/announce.log 2>&1

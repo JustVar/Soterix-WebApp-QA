@@ -493,3 +493,28 @@ The evidence below `reports/` is not tracked, so the reset does not delete it.
   `--exclude=*.zip`, and `tools/publish_run.py` stages a copy without them.
 - The failure videos do go to the served archive. `run.html` links each
   one. A video shows the screen, and a password field shows dots.
+
+## What announces a run
+
+Nothing did, until 09/25/2026: a nightly that failed, or never ran, was found by
+somebody opening the archive.
+
+`tools/announce_run.py` posts to the Slack webhook in `.env`
+(`SLACK_WEBHOOK_URL`, channel `#qa-automation`) one line per run folder of the
+day that has not been announced, with the counts, the known-defect split the run
+page shows, the camera and a link, and one line naming the runs expected that
+day that have no folder. It runs twice, and says nothing twice:
+
+| When | From | Catches |
+|---|---|---|
+| the end of `nightly.sh` | the nightly itself | the normal night |
+| 11:00 UTC, `cron.d-qa-run-announce` | cron | a nightly that died before its own line, or never started; the Windows machine's 07:30 run |
+
+`/data/qa/ci/announced.json` holds the names already posted. A failed post
+records nothing, so the sweep repeats it. The webhook is never printed.
+
+```bash
+# see the lines without posting
+cd /data/qa/ci/Soterix-WebApp-QA && venv/bin/python tools/announce_run.py --archive /data/qa/runs --expect india us c2c spartan20 --dry-run
+```
+
