@@ -32,7 +32,11 @@
 param(
     [string]$Repo = "C:\qa\Soterix-WebApp-QA",
     [string]$At = "05:00",
-    [string]$User = "$env:USERDOMAIN\$env:USERNAME",
+    # The machine, never USERDOMAIN: a local account's domain is the computer,
+    # and on this box USERDOMAIN reads WORKGROUP, which names no account, so the
+    # first registration failed with "No mapping between account names and
+    # security IDs" (09/25/2026). Pass -User for a domain account.
+    [string]$User = "$env:COMPUTERNAME\$env:USERNAME",
     [string]$TaskName = "QA livestream run",
     [switch]$StorePassword,
     [switch]$Unregister

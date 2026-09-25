@@ -7,12 +7,15 @@ on a Wayland display, which spartan1 has
 (`deploy/spartan1/README.md`), so its nightly runs the livestream tests.
 This runner is the fallback for the day that path breaks: one Windows
 machine runs just those tests, on a schedule, publishing each run to the
-same archive at http://10.2.0.2/qa-runs/. Nothing here is scheduled today.
+same archive at http://10.2.0.2/qa-runs/. On spartan20 it runs daily at 02:30 local
+(07:30 UTC), which is inside the machine's Windows Update active hours and ends before
+spartan1's 09:00 UTC nightly starts: both drive the same US account, and the app
+runs one search job per account, so the two must not overlap.
 
 | File here | What it does |
 |---|---|
 | `livestream-run.ps1` | The run: reset the clone to `origin/main`, install, `pytest tests/ui -m livestream` once per box (`india`, then `us`, 2 workers), publish each archived run with `tools/publish_run.py`. One run at a time, a 90 min cap per box, log in `logs\livestream-run.log`. |
-| `register-task.ps1` | Registers the daily scheduled task (05:00 local by default) that runs it. Never run on spartan20 yet, because the `.env` is not there, so no livestream run is scheduled. |
+| `register-task.ps1` | Registers the daily scheduled task (05:00 local by default; spartan20 uses `-At 02:30`) that runs it, with an interactive logon because the run is headed. Registered on spartan20 on 09/25/2026. |
 | `kiosk-setup.ps1` | Makes the machine able to run unattended: no sleep, no display timeout, Windows Update held to active hours, Chrome's updater off. Elevated, safe to run again, and it reads every setting back. |
 
 ## What the machine needs
