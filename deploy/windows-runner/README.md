@@ -15,7 +15,7 @@ runs one search job per account, so the two must not overlap.
 | File here | What it does |
 |---|---|
 | `livestream-run.ps1` | The run: reset the clone to `origin/main`, install, `pytest tests/ui -m livestream` once per box (`india`, then `us`, 2 workers), publish each archived run with `tools/publish_run.py`. One run at a time, a 90 min cap per box, log in `logs\livestream-run.log`. |
-| `register-task.ps1` | Registers the daily scheduled task (05:00 local by default; spartan20 uses `-At 02:30`) that runs it, with an interactive logon because the run is headed. Registered on spartan20 on 09/25/2026. |
+| `register-task.ps1` | Registers the daily scheduled task (05:00 local by default; spartan20 uses `-At 02:30`) that runs it, with an interactive logon because the run is headed. Registered on spartan20 on 09/25/2026; since 09/28 with `-Boxes us`: the india leg took 16 to 52 minutes, hit the 60 minute cap once, and duplicated spartan1's own india run. `-Boxes india` by hand when spartan1's india leg is the thing in question. |
 | `kiosk-setup.ps1` | Makes the machine able to run unattended: no sleep, no display timeout, Windows Update held to active hours, Chrome's updater off. Elevated, safe to run again, and it reads every setting back. |
 
 ## What the machine needs

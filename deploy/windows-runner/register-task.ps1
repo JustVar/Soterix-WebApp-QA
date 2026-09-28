@@ -38,6 +38,11 @@ param(
     # security IDs" (09/25/2026). Pass -User for a domain account.
     [string]$User = "$env:COMPUTERNAME\$env:USERNAME",
     [string]$TaskName = "QA livestream run",
+    # Which box the task runs. Left out, the run script takes its own default,
+    # india then us. spartan20 runs us alone: its india leg took 16 to 52 minutes
+    # and hit the 60 minute cap on 09/27/2026, and spartan1 already runs india.
+    # One box only: with -File, PowerShell hands "india,us" over as 1 string.
+    [string]$Boxes = "",
     [switch]$StorePassword,
     [switch]$Unregister
 )
@@ -54,7 +59,7 @@ $script = Join-Path $Repo 'deploy\windows-runner\livestream-run.ps1'
 if (-not (Test-Path $script)) { throw "no run script at $script; clone the repo there first (README.md)" }
 
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' `
-    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$script`" -Repo `"$Repo`"" `
+    -Argument ("-NoProfile -ExecutionPolicy Bypass -File `"$script`" -Repo `"$Repo`"" + $(if ($Boxes) { " -Boxes $Boxes" } else { "" })) `
     -WorkingDirectory $Repo
 $trigger = New-ScheduledTaskTrigger -Daily -At $At
 $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 5) `
@@ -73,6 +78,7 @@ if ($StorePassword) {
 }
 $task = Get-ScheduledTask -TaskName $TaskName
 Write-Output "task '$TaskName': $($task.State), daily at $At as $User, script $script"
+Write-Output "boxes: $(if ($Boxes) { $Boxes } else { 'the run script''s default (india, then us)' })"
 Write-Output "logon type: $($task.Principal.LogonType)   (Interactive is required: the run is --headed)"
 $auto = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name AutoAdminLogon -ErrorAction SilentlyContinue).AutoAdminLogon
 if ($auto -ne '1') {
