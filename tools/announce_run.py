@@ -1,13 +1,13 @@
-"""Say what a run found where people read: one Slack line per run, and the runs
-that should have happened and did not.
+"""Say what a run found where people read: one Slack message a day, one line per
+run, and the runs that should have happened and did not.
 
 Until now a nightly that failed, or never ran, was found by somebody opening
-the archive. This posts to the webhook in .env (SLACK_WEBHOOK_URL) one line per
-run folder of today that has not been announced yet, with the counts and the
-known-defect split the run page shows, and one line naming the runs expected
-today that have no folder. A state file keeps the announced names, so the
-nightly can announce at its end and an 11:00 UTC sweep can catch what it
-missed without saying anything twice.
+the archive. This posts to the webhook in .env (SLACK_WEBHOOK_URL) a header
+with the date and one line per run folder of today that has not been announced
+yet. Each line leads with the number that needs a person, "N to look at", then
+the known defects, the counts, the camera and a link. A state file keeps the
+announced names, so the nightly can announce at its end and an 11:00 UTC sweep
+can catch what it missed without saying anything twice.
 
     python tools/announce_run.py --archive /data/qa/runs --state /data/qa/ci/announced.json \\
         --expect india us c2c spartan20 [--dry-run] [--date 2026-09-25]
@@ -22,15 +22,16 @@ import os
 import sys
 import urllib.error
 import urllib.request
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 BASE_URL = "http://10.2.0.2/qa-runs/"
 WEBHOOK_ENV = "SLACK_WEBHOOK_URL"
-LABELS = {"c2c": "c2c cameras", "spartan20": "us, from spartan20"}
-
-
-ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
+# The order the lines take: the boxes, the lab cameras, then the Windows machine.
+ORDER = {"india": 0, "us": 1, "c2c": 2}
+RED = ":red_circle:"
+GREEN = ":large_green_circle:"
+WARN = ":warning:"
 
 
 def webhook(environ=None, env_file: Path | None = None) -> str | None:
@@ -46,12 +47,20 @@ def webhook(environ=None, env_file: Path | None = None) -> str | None:
         return None
 
 
+ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
+
+
 def load_summary(folder: Path) -> dict | None:
     try:
         data = json.loads((folder / "summary.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):  # why: a folder with no readable record is not a run to announce; the sweep names it as missing when it was expected
         return None
     return data if isinstance(data, dict) else None
+
+
+def provenance(summary: dict) -> dict:
+    p = summary.get("provenance")
+    return p if isinstance(p, dict) else {}
 
 
 def kind_of(name: str, prov: dict) -> str:
@@ -63,40 +72,72 @@ def kind_of(name: str, prov: dict) -> str:
     return str(prov.get("box") or "").lower() or "unknown"
 
 
+def label_of(name: str, prov: dict) -> str:
+    """What the line calls the run: the box, and the machine when it is not the usual one."""
+    kind = kind_of(name, prov)
+    if kind == "c2c":
+        return "c2c"
+    box = str(prov.get("box") or "").lower() or "unknown"
+    # The Windows machine runs a box too; "us, from spartan20" hid an india leg
+    # behind a us label for 3 days (09/26-09/28/2026).
+    return f"{box} · spartan20" if kind == "spartan20" else box
+
+
+def sort_key(name: str, prov: dict) -> tuple:
+    kind = kind_of(name, prov)
+    box = str(prov.get("box") or "").lower()
+    return (ORDER.get(kind, 3), ORDER.get(box, 9), name)
+
+
 def tests_of(summary: dict) -> list[dict]:
     t = summary.get("tests") or []
     return list(t.values()) if isinstance(t, dict) else [x for x in t if isinstance(x, dict)]
 
 
 def line_for(name: str, summary: dict, base_url: str = BASE_URL) -> str:
-    """One Slack line: what the run page's verdict says, in one breath."""
-    prov = summary.get("provenance") if isinstance(summary.get("provenance"), dict) else {}
+    """One Slack line, leading with the number that needs a person.
+
+    `N to look at` is the failures the register does not already explain; it is
+    the number a reader acts on, so it comes first and in bold. The known
+    defects follow as a count, then passed and skipped, the camera, the link.
+    A record archived before the known-defect field existed says `N failed`
+    instead, because "0 known" would be a claim nobody measured.
+    """
+    prov = provenance(summary)
     counts = summary.get("counts") if isinstance(summary.get("counts"), dict) else {}
     tests = tests_of(summary)
     failed = int(counts.get("failed") or 0) + int(counts.get("errors") or 0)
     red = [t for t in tests if str(t.get("outcome") or "").lower() in ("failed", "error")]
-    # A run archived before the field existed carries no known_defect key at
-    # all; "0 known defects" would be a claim about it that nobody measured.
     has_known_field = any("known_defect" in t for t in tests)
     known = sum(1 for t in red if isinstance(t.get("known_defect"), dict))
-    kind = kind_of(name, prov)
-    parts = [f"*{LABELS.get(kind, kind)}* {int(counts.get('passed') or 0)} passed"]
-    if failed:
-        text = f"*{failed} failed*"
-        if has_known_field:
-            look = len(red) - known
-            text += (f" ({known} known defect{'' if known == 1 else 's'}, "
-                     + (f"*{look} to look at*" if look else "nothing new") + ")")
-        parts.append(text)
+    look = len(red) - known if has_known_field else failed
+
+    if not failed:
+        lead, mark = "nothing to look at", GREEN
+    elif has_known_field:
+        lead = f"*{look} to look at*" if look else "nothing to look at"
+        mark = RED if look else GREEN
     else:
-        parts.append("0 failed")
+        lead, mark = f"*{failed} failed*", RED
+    parts = [lead]
+    if has_known_field and known:
+        parts.append(f"{known} known")
+    parts.append(f"{int(counts.get('passed') or 0)} passed")
     parts.append(f"{int(counts.get('skipped') or 0)} skipped")
     # No camera on the c2c line: that run drives the lab cameras by registry,
     # and the record's camera is the box default, which means nothing there.
-    if prov.get("camera") and kind != "c2c":
-        parts.append(f"camera {prov['camera']}")
+    if prov.get("camera") and kind_of(name, prov) != "c2c":
+        parts.append(str(prov["camera"]))
     parts.append(f"<{base_url}{name}/run.html|run page>")
-    return " · ".join(parts)
+    return f"{mark} *{label_of(name, prov)}* — " + " · ".join(parts)
+
+
+def header(day: str) -> str:
+    try:
+        d = date.fromisoformat(day)
+        return f"*QA runs — {d.strftime('%a %d %b %Y')}*"
+    except ValueError:
+        return f"*QA runs — {day}*"
 
 
 def todays_runs(archive: Path, day: str) -> list[tuple[str, dict]]:
@@ -106,7 +147,7 @@ def todays_runs(archive: Path, day: str) -> list[tuple[str, dict]]:
             summary = load_summary(folder)
             if summary is not None:
                 out.append((folder.name, summary))
-    return out
+    return sorted(out, key=lambda ns: sort_key(ns[0], provenance(ns[1])))
 
 
 def load_state(path: Path | None) -> set[str]:
@@ -128,16 +169,18 @@ def compose(archive: Path, day: str, expect: list[str], announced: set[str], now
             base_url: str = BASE_URL) -> tuple[str, list[str]]:
     """The message and the names it announces. '' when there is nothing to say."""
     runs = todays_runs(archive, day)
-    seen = {kind_of(n, s.get("provenance") if isinstance(s.get("provenance"), dict) else {}) for n, s in runs}
+    seen = {kind_of(n, provenance(s)) for n, s in runs}
     fresh = [(n, s) for n, s in runs if n not in announced]
     lines = [line_for(n, s, base_url) for n, s in fresh]
     names = [n for n, _ in fresh]
     missing = [k for k in expect if k not in seen]
     marker = f"missing:{day}"
     if missing and marker not in announced:
-        lines.append(f"*Missing today:* {', '.join(missing)} — no run folder for {day} in the archive at {now_utc} UTC")
+        lines.append(f"{WARN} *Missing today:* {', '.join(missing)} — no run folder for {day} in the archive at {now_utc} UTC")
         names.append(marker)
-    return "\n".join(lines), names
+    if not lines:
+        return "", []
+    return "\n".join([header(day), *lines]), names
 
 
 def post(url: str, text: str, timeout: int = 15) -> int:

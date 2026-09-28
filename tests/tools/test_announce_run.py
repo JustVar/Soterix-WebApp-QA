@@ -1,4 +1,4 @@
-"""Pins for tools/announce_run.py: the Slack line a run ends with, and the line
+"""Pins for tools/announce_run.py: the Slack message a day ends with, and the line
 for a run that should have happened and did not.
 
 The rule that must never break: the webhook is never printed, not on success,
@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from tools import announce_run as ar
 
 HOOK = "https://hooks.slack.com/services/T000/B000/secret-part-of-the-url"
+LINK = "<http://10.2.0.2/qa-runs/{}/run.html|run page>"
 
 
 def _run(archive: Path, name: str, box: str, host: str, tests: list[dict], camera: str | None = "Axis P3247-LV"):
@@ -35,42 +36,56 @@ def _t(name, outcome, known=None, with_field=True):
     return t
 
 
-def test_the_line_reads_like_the_run_pages_verdict(tmp_path):
-    """Counts, the known-defect split, the camera and a link to the served page, in one breath."""
+def test_the_line_leads_with_the_number_that_needs_a_person(tmp_path):
+    """"N to look at" first and bold, then the known defects, the counts, the camera, the link."""
     tests = [_t("a", "passed"), _t("b", "failed", {"row": 56, "what": "CSP"}),
              _t("c", "failed", {"row": 83, "what": "bookmarks"}), _t("d", "failed"), _t("e", "skipped")]
     _run(tmp_path, "2026-09-25_09-40-01__tests-ui", "us", "spartan1", tests)
     text, names = ar.compose(tmp_path, "2026-09-25", [], set(), "11:00")
     assert names == ["2026-09-25_09-40-01__tests-ui"]
-    assert text == ("*us* 1 passed · *3 failed* (2 known defects, *1 to look at*) · 1 skipped · camera Axis P3247-LV · "
-                    "<http://10.2.0.2/qa-runs/2026-09-25_09-40-01__tests-ui/run.html|run page>")
+    assert text.split("\n") == [
+        "*QA runs — Fri 25 Sep 2026*",
+        ":red_circle: *us* — *1 to look at* · 2 known · 1 passed · 1 skipped · Axis P3247-LV · "
+        + LINK.format("2026-09-25_09-40-01__tests-ui"),
+    ]
 
 
-def test_when_every_failure_is_known_the_line_says_nothing_new(tmp_path):
-    """Errors count as failures here, the way the run page's verdict counts them."""
-    tests = [_t("b", "failed", {"row": 56, "what": "CSP"}), _t("c", "error", {"row": 56, "what": "CSP"})]
-    _run(tmp_path, "2026-09-25_09-00-05__tests-ui", "india", "spartan1", tests, camera=None)
+def test_a_run_with_nothing_new_is_green_and_says_so(tmp_path):
+    """Every failure known, or no failure at all: a green mark and no number to chase."""
+    _run(tmp_path, "2026-09-25_09-00-05__tests-ui", "india", "spartan1",
+         [_t("b", "failed", {"row": 56, "what": "CSP"}), _t("c", "error", {"row": 56, "what": "CSP"})], camera=None)
+    _run(tmp_path, "2026-09-25_09-40-01__tests-ui", "us", "spartan1", [_t("a", "passed")])
     text, _ = ar.compose(tmp_path, "2026-09-25", [], set(), "11:00")
-    assert "*india* 0 passed · *2 failed* (2 known defects, nothing new)" in text
-    assert "camera" not in text, "no camera in the record, no camera in the line"
+    lines = text.split("\n")[1:]
+    assert lines[0].startswith(":large_green_circle: *india* — nothing to look at · 2 known · 0 passed · 0 skipped · <")
+    assert lines[1].startswith(":large_green_circle: *us* — nothing to look at · 1 passed · 0 skipped · Axis")
+    assert "camera" not in text
+    assert "0 known" not in text
 
 
-def test_a_record_without_the_known_defect_field_makes_no_claim_about_it(tmp_path):
-    """A run archived before v0.36.0 has no known_defect field; '0 known defects' would be a lie."""
-    tests = [_t("b", "failed", with_field=False), _t("a", "passed", with_field=False)]
-    _run(tmp_path, "2026-09-25_09-40-01__tests-ui", "us", "spartan1", tests)
+def test_a_record_without_the_known_defect_field_says_failed_not_to_look_at(tmp_path):
+    """A run archived before v0.36.0 has no known_defect field; 'to look at' would claim a split nobody measured."""
+    _run(tmp_path, "2026-09-25_09-40-01__tests-ui", "us", "spartan1",
+         [_t("b", "failed", with_field=False), _t("a", "passed", with_field=False)])
     text, _ = ar.compose(tmp_path, "2026-09-25", [], set(), "11:00")
-    assert "*1 failed* ·" in text
+    assert ":red_circle: *us* — *1 failed* · 1 passed · 0 skipped ·" in text
     assert "known" not in text
+    assert "to look at" not in text
 
 
-def test_c2c_and_the_windows_machine_are_named_for_what_they_are(tmp_path):
-    """The archive holds 4 kinds of run a day; the line says which without the reader decoding a folder name."""
-    _run(tmp_path, "2026-09-25_10-09-11__tests-c2c", "us", "spartan1", [_t("a", "passed")])
-    _run(tmp_path, "2026-09-25_08-50-41__tests-ui-livestream", "us", "Spartan20", [_t("a", "passed")])
+def test_the_lines_are_ordered_and_the_windows_machine_names_its_box(tmp_path):
+    """india, us, c2c, then the Windows machine's legs, each named by the box it drove:
+    "us, from spartan20" hid an india leg behind a us label for 3 days (09/26-09/28/2026)."""
+    _run(tmp_path, "2026-09-25_02-30-09__tests-ui-livestream", "india", "Spartan20", [_t("a", "passed")], camera="Thermal-14")
+    _run(tmp_path, "2026-09-25_03-21-50__tests-ui-livestream", "us", "Spartan20", [_t("a", "passed")])
+    _run(tmp_path, "2026-09-25_10-09-11__tests-c2c", "india", "spartan1", [_t("a", "passed")], camera="Thermal-14")
+    _run(tmp_path, "2026-09-25_09-40-01__tests-ui", "us", "spartan1", [_t("a", "passed")])
+    _run(tmp_path, "2026-09-25_09-00-05__tests-ui", "india", "spartan1", [_t("a", "passed")], camera="Thermal-14")
     text, _ = ar.compose(tmp_path, "2026-09-25", [], set(), "11:00")
-    assert "*c2c cameras* 1 passed · 0 failed · 0 skipped · <" in text, "no camera on the c2c line: the box default means nothing there"
-    assert "*us, from spartan20* 1 passed" in text
+    labels = [line.split("*")[1] for line in text.split("\n")[1:]]
+    assert labels == ["india", "us", "c2c", "india · spartan20", "us · spartan20"]
+    c2c = next(line for line in text.split("\n") if "*c2c*" in line)
+    assert "Thermal-14" not in c2c, "no camera on the c2c line: the box default means nothing there"
 
 
 def test_the_expected_runs_that_have_no_folder_today_are_named_as_missing(tmp_path):
@@ -78,9 +93,9 @@ def test_the_expected_runs_that_have_no_folder_today_are_named_as_missing(tmp_pa
     _run(tmp_path, "2026-09-25_09-00-05__tests-ui", "india", "spartan1", [_t("a", "passed")])
     _run(tmp_path, "2026-09-24_09-40-01__tests-ui", "us", "spartan1", [_t("a", "passed")])  # yesterday's does not count
     text, names = ar.compose(tmp_path, "2026-09-25", ["india", "us", "c2c", "spartan20"], set(), "11:00")
-    assert "*Missing today:* us, c2c, spartan20 — no run folder for 2026-09-25 in the archive at 11:00 UTC" in text
+    assert ":warning: *Missing today:* us, c2c, spartan20 — no run folder for 2026-09-25 in the archive at 11:00 UTC" in text
     assert "missing:2026-09-25" in names
-    # once said, not said again that day
+    # once said, not said again that day, and nothing else to say means no header either
     text, names = ar.compose(tmp_path, "2026-09-25", ["us"], {"2026-09-25_09-00-05__tests-ui", "missing:2026-09-25"}, "12:00")
     assert text == ""
     assert names == []
