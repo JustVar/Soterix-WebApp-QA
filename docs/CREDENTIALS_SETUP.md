@@ -145,7 +145,7 @@ config when one is set, and `None` otherwise.
 
 The login-time site discovery (`/REST/site/user/{your-email}`) lives in the
 Soterix-API-QA repo with the API clients. See that repo's
-`docs/API_SURFACES.md`.
+`Soterix-API-QA/docs/API_SURFACES.md`.
 
 ### Manual Override (Optional)
 

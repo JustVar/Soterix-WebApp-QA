@@ -336,6 +336,5 @@ gates before every commit.
 - `docs/CONVENTIONS.md` - auth state cache behaviour (the original write-up is archived at `docs/archive/SESSION_CACHING_IMPLEMENTATION.md`)
 - `docs/VERIFICATION_WORKFLOW.md` - QA review flow for verification mode
 - `docs/EMAIL_REPORTS.md` - emailing the HTML run report via Microsoft Graph
-- `docs/API_ENDPOINTS.md` - REST endpoint catalog + coverage status
-- `docs/BRUNO_GUIDE.md` - interactive API exploration with Bruno
+- API endpoints, surfaces, testing notes and the Bruno guide live in the API repo, `Soterix-API-QA/docs/`, since the split of 08/07/2026
 - QA roadmap: `dashboards/soterix-internal-dashboards/docs/QA_ROADMAP.md` (the single source of truth for all QA work)

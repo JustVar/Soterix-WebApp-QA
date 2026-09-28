@@ -10,7 +10,11 @@
 # those go stale, and the register's App defects section maps them.
 #
 # A test listed here that PASSES is shown as "Known defect, passed": the prompt
-# to retire its entry. A name must match exactly 1 test (a pin checks), as
+# to retire its entry.
+#
+# `signature` (a regular expression matched against the failure's error line)
+# names a defect that hits whichever test touched it. `tests` names one that
+# lives in particular tests. An entry may carry either or both. A name must match exactly 1 test (a pin checks), as
 # `test_name` or `path::test_name` when a name is shared.
 - row: 56
   since: 09/12/2026
@@ -47,3 +51,7 @@
   what: The rules Edit icon opens a read-only drawer; the notification-edit form is gone since the rules redesign
   tests:
     - test_edit_rule_notification
+- row: 131
+  since: 09/25/2026
+  signature: no search job was sent within \d+ s of the click
+  what: The tenant's search API answers something other than a clean 200, so the click sends no job to poll (the search-errors bug)

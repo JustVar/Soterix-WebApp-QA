@@ -20,7 +20,7 @@ is stale.
 | `QATOUCH_NEW_CAPABILITIES.md` | Vendor features since 03/2026 and whether to adopt them | Engineers |
 | `docs/local/qa_touch_integration.md` | Deep reverse-engineering notes, numbered sections (§7.A.1 etc.) | Maintainer only (gitignored) |
 
-`docs/QA_Touch_Setup_Guide.md` is the original February setup walkthrough. It
+`docs/local/QA_Touch_Setup_Guide.md` (not tracked) is the original February setup walkthrough. It
 is finished work, kept locally for history, and **must not be used for current
 figures**. Same for `docs/local/qa_touch_import_capture_protocol.md`.
 
@@ -511,3 +511,17 @@ It found trap 4 on its first run.
 - `docs/QATOUCH_NEW_CAPABILITIES.md` - vendor features since 03/2026
 - `docs/qa_import_pipeline.md` - xlsx to QA Touch import runbook
 - `docs/NC_JIRA_QA_REFERENCE.md` - Jira field mappings
+
+## The import tools
+
+Run by hand, from the repo root with the venv. Until 09/28/2026 nothing named these, so a reader of the repo could not tell them from dead code.
+
+| Tool | What it does |
+|---|---|
+| `tools/audit_bulk_update.py` | Full audit of QATouch_BulkUpdate_Steps.xlsx against QA Touch export and Excel import |
+| `tools/build_bulk_update.py` | Build QA Touch Bulk Update XLSX with Excel steps and duplicate title fixes |
+| `tools/excel_step_importer.py` | Import human-written test steps from Excel into QA Touch step JSON files |
+| `tools/playwright_step_extractor.py` | Extract human-readable test steps from Playwright test code |
+| `tools/qatouch_suite_builder.py` | QA Touch Suite Builder - identifies test cases for SMOKE, SANITY, and REGRESSION suites |
+| `tools/review_queue.py` | Manage manual review queue and generate/send daily review reports |
+| `tools/step_quality_audit.py` | Step Quality Audit Tool |

@@ -11,6 +11,7 @@ file nor this repo to render the label.
 """
 from __future__ import annotations
 
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -40,8 +41,14 @@ def load(path: Path | None = None) -> list[dict]:
         if not isinstance(entry, dict) or not entry.get("what"):
             continue
         tests = [str(t).strip() for t in (entry.get("tests") or []) if str(t).strip()]
-        if tests:
-            out.append({**entry, "tests": tests})
+        signature = str(entry.get("signature") or "").strip()
+        if signature:
+            try:
+                re.compile(signature)
+            except re.error:  # why: a bad pattern must not stop the archive; the entry is dropped and the pin names it
+                continue
+        if tests or signature:
+            out.append({**entry, "tests": tests, "signature": signature})
     return out
 
 
@@ -53,9 +60,23 @@ def matches(nodeid: str, name: str) -> bool:
     return bare.rsplit("::", 1)[-1] == name
 
 
-def known_defect_for(nodeid: str) -> dict | None:
-    """What the run record carries for this test, or None: {row, since, what}."""
+def _record(entry: dict) -> dict:
+    return {"row": entry.get("row"), "since": str(entry.get("since") or ""), "what": str(entry["what"])}
+
+
+def known_defect_for(nodeid: str, error: str | None = None) -> dict | None:
+    """What the run record carries for this test, or None: {row, since, what}.
+
+    By test name first. Then, when the failure's error line is known, by
+    signature: a defect that hits whichever test touched it (the tenant's
+    search API answering something other than 200) is one entry, not a list
+    of tests that changes every night.
+    """
     for entry in load():
         if any(matches(nodeid, t) for t in entry["tests"]):
-            return {"row": entry.get("row"), "since": str(entry.get("since") or ""), "what": str(entry["what"])}
+            return _record(entry)
+    if error:
+        for entry in load():
+            if entry["signature"] and re.search(entry["signature"], error, re.I):
+                return _record(entry)
     return None

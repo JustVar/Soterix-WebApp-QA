@@ -90,3 +90,30 @@ def test_a_missing_or_broken_file_labels_nothing_and_stops_nothing(tmp_path):
         assert kd.load(junk) == [], "an entry with no what, or no tests, is not an entry"
     finally:
         kd.load.cache_clear()
+
+
+def test_a_defect_that_hits_by_error_signature_is_one_entry_not_a_list_of_tests():
+    """The tenant's search API failing hit 20 of 25 intermittent failures over 3 days,
+    on different tests each night (audit 09/28/2026). Naming tests would chase it
+    for ever; the error line names it once. Name first, signature second, and no
+    signature match without an error line."""
+    err = "AssertionError: Search: no search job was sent within 0 s of the click. A search response was not a clean 200"
+    hit = kd.known_defect_for("tests/ui/search/test_search_categories.py::TestSearch::test_event_search[chromium]", err)
+    assert hit
+    assert hit["row"] == 131
+    assert "search API" in hit["what"]
+    assert kd.known_defect_for("tests/ui/search/test_search_categories.py::TestSearch::test_event_search[chromium]") is None
+    assert kd.known_defect_for("tests/ui/search/x.py::test_y[chromium]", "AssertionError: something else") is None
+    named = kd.known_defect_for("tests/ui/views/test_views_basic.py::TestViewsBasic::test_save_view[chromium]", err)
+    assert named["row"] == 56, "a name match wins over a signature match"
+
+
+def test_a_signature_that_does_not_compile_drops_its_entry_and_nothing_else(tmp_path):
+    """One bad pattern must not take every label with it."""
+    kd.load.cache_clear()
+    try:
+        f = tmp_path / "d.yaml"
+        f.write_text("- what: fine\n  tests: [test_a]\n- what: broken\n  signature: '(unclosed'\n- what: ok\n  signature: 'x+'\n", encoding="utf-8")
+        assert [e["what"] for e in kd.load(f)] == ["fine", "ok"]
+    finally:
+        kd.load.cache_clear()

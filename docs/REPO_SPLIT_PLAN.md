@@ -12,13 +12,13 @@ The API suite now lives at https://github.com/Soterix-Systems/Soterix-API-QA.
 | API repo history | **Fresh start** - files copied in, one initial commit; old history stays viewable in the webapp repo |
 | Remotes | Soterix-Systems is the canonical org for both repos |
 | QA Touch | Single project `JlW1` for both repos; case mappings live only in each repo's `config/qatouch_case_mapping.json` (never in test files) |
-| Browser policy | `Soterix-API-QA` has **no Playwright dependency at all** - API auth is pure HTTP (see `docs/API_SURFACES.md`) |
+| Browser policy | `Soterix-API-QA` has **no Playwright dependency at all** - API auth is pure HTTP (see `Soterix-API-QA/docs/API_SURFACES.md`) |
 
 ## Why (one paragraph, for future readers)
 
 API tests used to fall back to driving a headed browser because the API login
 path was broken (wrong endpoint, unhashed password - fixed 2026-08-05/06, see
-`docs/API_SURFACES.md`). With that fixed, the API suite is verified to run with
+`Soterix-API-QA/docs/API_SURFACES.md`). With that fixed, the API suite is verified to run with
 zero browser launches and zero Playwright imports. Splitting gives API testing
 its own repo with a seconds-long dependency install, no interference with the
 webapp automation, and a clean home for the new integration-API surface. The
@@ -35,7 +35,7 @@ on top.*
    - browser-free API auth (`auth_helper.py`, `conftest.py`)
    - dead-host purge + doc corrections (docs/, tools/, `config/environments.yaml`)
    - `hardware-lab` prod box (`config/env/prod.py`)
-   - this plan + `docs/API_SURFACES.md`
+   - this plan + `Soterix-API-QA/docs/API_SURFACES.md`
 2. Push. Verify `git rev-parse HEAD origin/main` returns one SHA.
 3. Tag the state: `git tag pre-split && git push origin --tags`.
 
@@ -61,7 +61,7 @@ restructure, then validate before anything touches GitHub.
 | `plugins/qatouch_reporter.py` (+ its unit test) | same layout | each repo tests its own plugin copy. **Dormant by default** - it only uploads when `--qatouch-upload --qatouch-run <KEY>` (or the env-var equivalents) are passed, so carrying it costs nothing at run time |
 | `tools/qatouch_client.py` | `tools/` | **hard dependency of qatouch_reporter** (imported at upload time; needs only `requests`) |
 | `tools/`: `discover_cameras.py`, `print_qa_lab_session.py`, `download_openapi_spec.py`, `probe_login.py` (+ `discover_apis.py`, `extract_schemas.py` if grep confirms they import api_clients) | `tools/` | the only non-test consumers of `api_clients` |
-| `docs/API_SURFACES.md`, `docs/API_ENDPOINTS.md`, `docs/API_TESTING_NOTES.md`, `docs/BRUNO_GUIDE.md` | `docs/` | these are API docs; webapp repo keeps pointer stubs |
+| `Soterix-API-QA/docs/API_SURFACES.md`, `Soterix-API-QA/docs/API_ENDPOINTS.md`, `Soterix-API-QA/docs/API_TESTING_NOTES.md`, `Soterix-API-QA/docs/BRUNO_GUIDE.md` | `docs/` | these are API docs; webapp repo keeps pointer stubs |
 | `.gitignore` | `.gitignore` | trim to relevant entries |
 
 **Deliberately NOT copied:** QA Touch snapshots (~8 MB), `master_test_repository.json`

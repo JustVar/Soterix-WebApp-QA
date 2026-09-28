@@ -35,7 +35,7 @@ Track time in two buckets - the split is what makes the numbers useful later:
 Add-Content docs/time_log_temp.txt "END: $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 ```
 
-3. Calculate total and update PROJECT_HOURS_LOG.md
+3. Calculate total and update docs/local/PROJECT_HOURS_LOG.md (Justin's, not tracked)
 
 ---
 
@@ -89,6 +89,6 @@ $duration = (Get-Date) - [datetime]$env:SESSION_START; Write-Host "Session durat
 
 | File | Purpose |
 |------|---------|
-| docs/PROJECT_HOURS_LOG.md | Cumulative hours by session |
+| docs/local/PROJECT_HOURS_LOG.md (not tracked) | Cumulative hours by session |
 | docs/SESSION_SUMMARY_YYYY-MM-DD.md | Daily session details |
 | docs/time_log_temp.txt | Quick start/end timestamps (optional) |
