@@ -29,6 +29,8 @@ BASE_URL = "http://10.2.0.2/qa-runs/"
 WEBHOOK_ENV = "SLACK_WEBHOOK_URL"
 # The order the lines take: the boxes, the lab cameras, then the Windows machine.
 ORDER = {"india": 0, "us": 1, "c2c": 2}
+# How each run is written: the boxes and the lab cameras as names, not config keys.
+NAMES = {"india": "India", "us": "US", "c2c": "C2C", "spartan20": "Spartan20"}
 RED = ":red_circle:"
 GREEN = ":large_green_circle:"
 WARN = ":warning:"
@@ -76,11 +78,12 @@ def label_of(name: str, prov: dict) -> str:
     """What the line calls the run: the box, and the machine when it is not the usual one."""
     kind = kind_of(name, prov)
     if kind == "c2c":
-        return "c2c"
+        return NAMES["c2c"]
     box = str(prov.get("box") or "").lower() or "unknown"
+    box = NAMES.get(box, box)
     # The Windows machine runs a box too; "us, from spartan20" hid an india leg
     # behind a us label for 3 days (09/26-09/28/2026).
-    return f"{box} · spartan20" if kind == "spartan20" else box
+    return f"{box} · {NAMES['spartan20']}" if kind == "spartan20" else box
 
 
 def sort_key(name: str, prov: dict) -> tuple:
@@ -113,9 +116,9 @@ def line_for(name: str, summary: dict, base_url: str = BASE_URL) -> str:
     look = len(red) - known if has_known_field else failed
 
     if not failed:
-        lead, mark = "nothing to look at", GREEN
+        lead, mark = "Nothing to look at", GREEN
     elif has_known_field:
-        lead = f"*{look} to look at*" if look else "nothing to look at"
+        lead = f"*{look} to look at*" if look else "Nothing to look at"
         mark = RED if look else GREEN
     else:
         lead, mark = f"*{failed} failed*", RED
@@ -128,7 +131,7 @@ def line_for(name: str, summary: dict, base_url: str = BASE_URL) -> str:
     # and the record's camera is the box default, which means nothing there.
     if prov.get("camera") and kind_of(name, prov) != "c2c":
         parts.append(str(prov["camera"]))
-    parts.append(f"<{base_url}{name}/run.html|run page>")
+    parts.append(f"<{base_url}{name}/run.html|Run page>")
     return f"{mark} *{label_of(name, prov)}* — " + " · ".join(parts)
 
 
@@ -176,7 +179,7 @@ def compose(archive: Path, day: str, expect: list[str], announced: set[str], now
     missing = [k for k in expect if k not in seen]
     marker = f"missing:{day}"
     if missing and marker not in announced:
-        lines.append(f"{WARN} *Missing today:* {', '.join(missing)} — no run folder for {day} in the archive at {now_utc} UTC")
+        lines.append(f"{WARN} *Missing today:* {', '.join(NAMES.get(k, k) for k in missing)} — no run folder for {day} in the archive at {now_utc} UTC")
         names.append(marker)
     if not lines:
         return "", []

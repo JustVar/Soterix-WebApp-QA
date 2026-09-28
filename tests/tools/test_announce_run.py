@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from tools import announce_run as ar
 
 HOOK = "https://hooks.slack.com/services/T000/B000/secret-part-of-the-url"
-LINK = "<http://10.2.0.2/qa-runs/{}/run.html|run page>"
+LINK = "<http://10.2.0.2/qa-runs/{}/run.html|Run page>"
 
 
 def _run(archive: Path, name: str, box: str, host: str, tests: list[dict], camera: str | None = "Axis P3247-LV"):
@@ -45,7 +45,7 @@ def test_the_line_leads_with_the_number_that_needs_a_person(tmp_path):
     assert names == ["2026-09-25_09-40-01__tests-ui"]
     assert text.split("\n") == [
         "*QA runs — Fri 25 Sep 2026*",
-        ":red_circle: *us* — *1 to look at* · 2 known · 1 passed · 1 skipped · Axis P3247-LV · "
+        ":red_circle: *US* — *1 to look at* · 2 known · 1 passed · 1 skipped · Axis P3247-LV · "
         + LINK.format("2026-09-25_09-40-01__tests-ui"),
     ]
 
@@ -57,8 +57,8 @@ def test_a_run_with_nothing_new_is_green_and_says_so(tmp_path):
     _run(tmp_path, "2026-09-25_09-40-01__tests-ui", "us", "spartan1", [_t("a", "passed")])
     text, _ = ar.compose(tmp_path, "2026-09-25", [], set(), "11:00")
     lines = text.split("\n")[1:]
-    assert lines[0].startswith(":large_green_circle: *india* — nothing to look at · 2 known · 0 passed · 0 skipped · <")
-    assert lines[1].startswith(":large_green_circle: *us* — nothing to look at · 1 passed · 0 skipped · Axis")
+    assert lines[0].startswith(":large_green_circle: *India* — Nothing to look at · 2 known · 0 passed · 0 skipped · <")
+    assert lines[1].startswith(":large_green_circle: *US* — Nothing to look at · 1 passed · 0 skipped · Axis")
     assert "camera" not in text
     assert "0 known" not in text
 
@@ -68,7 +68,7 @@ def test_a_record_without_the_known_defect_field_says_failed_not_to_look_at(tmp_
     _run(tmp_path, "2026-09-25_09-40-01__tests-ui", "us", "spartan1",
          [_t("b", "failed", with_field=False), _t("a", "passed", with_field=False)])
     text, _ = ar.compose(tmp_path, "2026-09-25", [], set(), "11:00")
-    assert ":red_circle: *us* — *1 failed* · 1 passed · 0 skipped ·" in text
+    assert ":red_circle: *US* — *1 failed* · 1 passed · 0 skipped ·" in text
     assert "known" not in text
     assert "to look at" not in text
 
@@ -83,8 +83,8 @@ def test_the_lines_are_ordered_and_the_windows_machine_names_its_box(tmp_path):
     _run(tmp_path, "2026-09-25_09-00-05__tests-ui", "india", "spartan1", [_t("a", "passed")], camera="Thermal-14")
     text, _ = ar.compose(tmp_path, "2026-09-25", [], set(), "11:00")
     labels = [line.split("*")[1] for line in text.split("\n")[1:]]
-    assert labels == ["india", "us", "c2c", "india · spartan20", "us · spartan20"]
-    c2c = next(line for line in text.split("\n") if "*c2c*" in line)
+    assert labels == ["India", "US", "C2C", "India · Spartan20", "US · Spartan20"]
+    c2c = next(line for line in text.split("\n") if "*C2C*" in line)
     assert "Thermal-14" not in c2c, "no camera on the c2c line: the box default means nothing there"
 
 
@@ -93,7 +93,7 @@ def test_the_expected_runs_that_have_no_folder_today_are_named_as_missing(tmp_pa
     _run(tmp_path, "2026-09-25_09-00-05__tests-ui", "india", "spartan1", [_t("a", "passed")])
     _run(tmp_path, "2026-09-24_09-40-01__tests-ui", "us", "spartan1", [_t("a", "passed")])  # yesterday's does not count
     text, names = ar.compose(tmp_path, "2026-09-25", ["india", "us", "c2c", "spartan20"], set(), "11:00")
-    assert ":warning: *Missing today:* us, c2c, spartan20 — no run folder for 2026-09-25 in the archive at 11:00 UTC" in text
+    assert ":warning: *Missing today:* US, C2C, Spartan20 — no run folder for 2026-09-25 in the archive at 11:00 UTC" in text
     assert "missing:2026-09-25" in names
     # once said, not said again that day, and nothing else to say means no header either
     text, names = ar.compose(tmp_path, "2026-09-25", ["us"], {"2026-09-25_09-00-05__tests-ui", "missing:2026-09-25"}, "12:00")
