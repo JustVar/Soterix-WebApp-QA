@@ -99,8 +99,11 @@ version.
   first thumbnail.
 - **Server data the test needs:** `test_site_name`, `test_camera_name`
   and the chat keys in `config/env/qa.py` (`config.get("test_site_name")`),
-  never a literal site or camera name. Data the server lacks goes in its
-  `without` map, by marker, with the reason.
+  never a literal site or camera name, and never a literal as the
+  `config.get` default. When the file leaves the site or the camera blank,
+  the session reads them from the server before any test runs, so the
+  same reads work. Data the server lacks goes in its `without` map, by
+  marker, with the reason.
 - **Data the test creates:** own it and delete it, and let the teardown
   raise when the thing survives (`_own_a_rule`, `_own_a_group`,
   `_own_a_widget` in the admin, chats and views suites are the pattern).
@@ -281,23 +284,35 @@ Failed tests save a Playwright trace. See
 ## Environment config
 
 - `ENV` selects `config/env/<ENV>.py`. The default is `qa`. Every env file
-  has the same flat shape: `base_url`, `api_base_url`, `allow_write`,
-  `allow_delete`, `default_site_id`, `test_site_name`, `test_camera_name`,
+  has the same flat shape: `base_url`, `media_host`, `allow_write`,
+  `default_site_id`, `test_site_name`, `test_camera_name`,
   `test_chat_user_search`, `test_chat_user_name`, `camera_capabilities`
   and `without`. `get_credentials()` reads `QA_USER` and `QA_PASSWORD`
   from `.env`.
-- `allow_write` and `allow_delete` are the env guard. Where `allow_delete`
-  is False, tests marked `destructive` or `mutating` skip. Where
-  `allow_write` is False, the create and delete suites (`admin_users`,
-  `admin_rules`, `admin_sites`, `bookmark`, `sequences`) skip too. The
-  skip reason names the flag.
+- `media_host` is the wss host the app's live player opens. The stream
+  guard and `tools/stream_probe.py` open it to count frames. Read it from
+  the browser's network tab on a playing tile (the request whose path is
+  `/v3/api/ws`).
+- The site and the camera may stay blank. At session start the run then
+  reads them from the server (`tests/shared/api/discovery.py`): the first
+  site by name that is registered and has a camera, and the first camera
+  of that site by name. By name, never by the server's order, which
+  changes when a camera is added. A configured name is checked at session
+  start, and a name the server does not know stops the run with the names
+  it does know, exit code 7, like the preflight. The run record and the
+  run page name the site and the camera either way.
+- `allow_write` is the env guard. Where it is False, the create and delete
+  suites (`admin_users`, `admin_rules`, `admin_sites`, `bookmark`,
+  `sequences`) skip. The skip reason names the flag. The guard reads a
+  test's markers, never its keywords, because a parametrize id that spells
+  a marker name is not a marker.
 - `without` maps a marker to the reason this server cannot run it
   (`"lpr": "no plate camera on this server"`). The collection hook skips
   those tests with that reason, in 0.2 s and without a browser. Fill it
   only after you measured what the server lacks.
 - `camera_capabilities` maps a marker (`lpr`, `audio`, `thermal`, `ptz`)
   to the camera it needs. A run selected by that marker (`-m lpr`) drives
-  that camera. Empty means `test_camera_name` serves every marker.
+  that camera. Empty means the run's camera serves every marker.
 - These 3 (the env guard, `without`, `camera_capabilities`) and the
   measured skips below are the only sources of a skip. A test never skips
   on a guess.
@@ -311,8 +326,9 @@ UI path because the create is what it proves.
 
 The client and fixtures live in `tests/shared/api/`. `conftest.py`
 registers them. They sign in with `QA_USER` and `QA_PASSWORD` and write to
-`default_site_id`, the site that `test_site_name` names. The API test repo
-is a separate project. Never import from it.
+`default_site_id`, the site that `test_site_name` names, or the site the
+session read from the server when that key is blank. The API test repo is
+a separate project. Never import from it.
 
 - `api`: a logged-in session for the test site. It fails, with the key
   named, when `QA_USER`, `QA_PASSWORD` or `default_site_id` is missing,
@@ -397,12 +413,12 @@ the run record for skips that never turn green.
 
 Defined in `pytest.ini`. The main groups:
 
-- **Type:** `smoke`, `sanity`, `regression`, `ui`
+- **Type:** `smoke`, `sanity`, `ui`
 - **Feature:** `admin`, `views_devices`, `events`, `search`, `media`,
   `maps`, `chats`, `licenses`, and the rest
 - **Meta:** `slow` (over 30 s), `intermittent` (fails now and then. Never
   `flaky`, see Reruns), `livestream` (needs frames on a tile, the stream
-  guard decides), `destructive` and `mutating` (the env guard decides)
+  guard decides)
 
 Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`.
 

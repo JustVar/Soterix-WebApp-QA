@@ -3,8 +3,8 @@
 Replaces the browser-driven import for NEW cases. Needs only the API key -
 no browser, no session that expires, no reverse-engineered endpoints.
 
-    python tools/qatouch_csv_import.py preview cases.csv --project JlW1
-    python tools/qatouch_csv_import.py import cases.csv --project JlW1
+    python tools/qatouch_csv_import.py preview cases.csv --project <key>
+    python tools/qatouch_csv_import.py import cases.csv --project <key>
 
 Input is the CSV `tools/qatouch_cases_from_tests.py` writes from the test
 docstrings. This tool translates it to the column names the public endpoint
@@ -54,6 +54,8 @@ from dotenv import load_dotenv
 load_dotenv(ROOT / ".env")
 
 import requests
+
+from config.products import home_project
 
 API_URL = "https://api.qatouch.com/api/v1/testCase/import"
 CHUNK_SIZE = 100
@@ -282,8 +284,12 @@ def main():
                             ("import", "Create the cases in QA Touch")]:
         p = sub.add_parser(name, help=help_text)
         p.add_argument("csv", help="Path to the canonical CSV")
-        p.add_argument("--project", default=os.environ.get("QATOUCH_PROJECT_ID", "JlW1"),
-                       help="QA Touch project key (default: QATOUCH_PROJECT_ID)")
+        # The default: the project .env names in QATOUCH_PROJECT_ID, else the
+        # one the UI root reports to (config/products.py).
+        p.add_argument("--project",
+                       default=os.environ.get("QATOUCH_PROJECT_ID") or home_project("tests/ui/"),
+                       help="QA Touch project key (default: QATOUCH_PROJECT_ID, else the "
+                            "UI root's project in config/products.py)")
 
     args = parser.parse_args()
     if not args.command:

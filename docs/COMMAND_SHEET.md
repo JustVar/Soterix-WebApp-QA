@@ -37,8 +37,8 @@ A version number from each command means the setup is ready.
 The full walkthrough is "Day one" in the README. The commands:
 
 ```
-git clone https://github.com/Soterix-Systems/Soterix-WebApp-QA.git C:\qa\webapp-qa
-cd C:\qa\webapp-qa
+git clone https://github.com/Soterix-Systems/Soterix-WebApp-QA.git C:\qa\Soterix-WebApp-QA
+cd C:\qa\Soterix-WebApp-QA
 python -m venv venv
 venv\Scripts\python.exe -m pip install -r requirements.txt
 git config core.hooksPath tools/hooks
@@ -120,12 +120,10 @@ venv\Scripts\python.exe -m pytest --collect-only tests/ui         # list tests, 
 Never add `-q`. `pytest.ini` has one, and 2 make `-qq`, which hides the
 pass count.
 
-Two switches in `config/env/qa.py` add skips: `allow_write` and
-`allow_delete`. Where `allow_delete` is False, tests marked `destructive`
-or `mutating` skip. Where `allow_write` is False, the create and delete
-suites (`admin_users`, `admin_rules`, `admin_sites`, `bookmark`,
-`sequences`) skip too. The skip reason names the flag. No command line
-flag lifts these. Tests marked `destructive` also need `--run-destructive`.
+One switch in `config/env/qa.py` adds skips: `allow_write`. Where it is
+False, the create and delete suites (`admin_users`, `admin_rules`,
+`admin_sites`, `bookmark`, `sequences`) skip. The skip reason names the
+flag. No command line flag lifts it.
 
 Only 1 run can be active at a time. A second run stops at once with a
 message that names the run that holds the lock.
@@ -152,7 +150,9 @@ before you read a single failure.
 |------|----------------|---------------|
 | `PREFLIGHT:` | The server did not answer, or refused the account, or the site id does not match. | No test ran. Exit code 7. Correct `.env` or `config/env/qa.py`. `PREFLIGHT=off` skips the check. |
 | `[STREAM]` | Every run that can collect a `livestream` test. | What the guard measured on the test camera: the codec, the frames, and whether this Chrome decodes it. A second `[STREAM]` line is a second measurement after a 0-frame window. |
-| `[CAMERA]` | Only when the run drove a camera other than `test_camera_name`. | `TEST_CAMERA` pinned one, or a marker in `-m` selected the camera `camera_capabilities` lists for it. |
+| `[SITE]` | When `test_site_name` is blank in `config/env/qa.py`. | The site the run read from the server: the first site by name that has a camera. |
+| `[CAMERA]` | When the run drove a camera other than the one `test_camera_name` names. | The server offered it because the key is blank, `TEST_CAMERA` pinned one, or a marker in `-m` selected the camera `camera_capabilities` lists for it. |
+| `DISCOVERY:` | The server could not be read, or a configured site or camera name is unknown there. | No test ran. Exit code 7. The line lists the names the server knows. Correct `config/env/qa.py`, or leave the key blank. |
 | `[LOGIN]` | A browser login kept the form on screen. | The line quotes the message, and says whether a captcha or a lockout showed. Later tests in that process fail with the same line and do not submit the form again. |
 | `[SESSION]` | A test failed with the login screen open. | The server dropped the session mid-test. The locator is not at fault. |
 
@@ -228,7 +228,7 @@ same ones with the file that reads each.
 | `RUN_GUARD` | `off` | Disables the one-run-at-a-time guard. A second run beside a live one wipes the first run's evidence |
 | `STREAM_GUARD` | `off` | Runs the `livestream` tests without the stream measurement |
 | `PREFLIGHT` | `off` | Skips the session preflight (1 captcha-free sign-in before any browser opens) |
-| `TEST_CAMERA` | a camera name | Drives this camera instead of `test_camera_name` |
+| `TEST_CAMERA` | a camera name | Drives this camera for one run, whatever `config/env/qa.py` names or the server offers |
 | `TEST_WALL_CAP` | seconds | The cap after which the run ends a test that never returns. 0 turns it off |
 | `CHROME_ARGS` | Chrome flags | Extra flags for the test browser, the stream guard and the probe. For Linux, see `docs/LINUX_H265.md` |
 | `PWDEBUG` | `1` | Opens the Playwright Inspector and steps through the test |
@@ -287,7 +287,7 @@ once per clone. A change to a hook then reaches you with the next pull.
 | `[AUTH] Cached session unusable` then a fresh login | Normal. The cached session expired and the suite logged in again |
 | "The camera failed to load" in a screenshot | The server's stream failed, not the test. The page objects click the refresh link once. A stream that stays down fails loud |
 | The browser never appears | Add `--headed` |
-| No tests collected | The file must be under `tests/` and be named `test_*.py`. Tests marked `destructive` need `--run-destructive` |
+| No tests collected | The file must be under `tests/` and be named `test_*.py` |
 | A site or camera name is not found | The server renamed it. Update `config/env/qa.py`. See `docs/FAILURE_TRIAGE.md` |
 | `reports/report.html` looks stale | The run used `--html=<other path>`. The archive under `reports/runs/` has every run |
 | `[TRACE] Could not finalize trace` or `[VIDEO] Could not finalize video`, or a failed test has no trace, video or screenshot | The file path is too long. Windows refuses a path past 260 characters unless long paths are on. Enable them (registry key `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem`, value `LongPathsEnabled` = 1, needs admin) or clone the repo closer to the drive root |

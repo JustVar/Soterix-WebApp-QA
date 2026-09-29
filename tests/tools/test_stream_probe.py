@@ -274,7 +274,7 @@ def test_parse_h264_sps_crop_units_follow_chroma_format():
 def test_parse_ws_name_and_media_url_round_trip():
     """media_url builds the app's name=/src= query and parse_ws_name reads the seven path parts back; a url without name= parses to nothing."""
     url = sp.media_url(16, 121, 1, uid='abc')
-    assert url.startswith(sp.STREAM_HOST + '/v3/api/ws?name=')
+    assert url.startswith(sp.stream_host() + '/v3/api/ws?name=')  # the host is media_host in config/env/
     assert 'src=' in url
     assert '/' not in url.split('?', 1)[1]  # every slash in the path is percent-encoded
     assert sp.parse_ws_name(url) == {'site': '16', 'channel': '121', 'app': '0', 'live': '1',

@@ -1,6 +1,6 @@
 """Pins for the session-drop note conftest appends to a failure.
 
-Three failures in the 09/16/2026 nightly read as locator timeouts; their
+Three failures in a full UI run on 09/16/2026 read as locator timeouts; their
 screenshots showed the login screen, because the app had answered 401 to
 a live session and bounced the page to login mid-test. The note names
 that mechanism in the traceback itself, and only there: a failure on any

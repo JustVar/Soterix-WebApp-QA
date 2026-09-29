@@ -8,9 +8,10 @@ the pointer. These tests follow every pointer.
 
 The first test resolves every relative markdown link in README.md,
 AGENTS.md and the live docs. The second scans the live tree for the names
-of what left: the old hosts, the per-box account variables, the removed
-config function and the failure register. docs/ARCHIVE.md is the one page
-allowed to name them, because naming what left is its job.
+of what left: the old hosts, the two-tenant account variables, the removed
+config function, the failure register and the words of the old schedule.
+docs/ARCHIVE.md is the one page allowed to name them, because naming what
+left is its job.
 
 The scan reports a path and the term it holds, never the line, so a
 finding in a local file can never print a value.
@@ -36,9 +37,20 @@ DEAD_TERMS = (
     "QA_US_",
     "get_active_box",
     "TEST_REPAIRS.md",
+    "register row",
+    "india leg",
+    "per-box",
+    "per box",
+    "the nightly",
+    "CLAUDE.md",
+    "--run-destructive",
 )
 ALLOWED = {DOCS / "ARCHIVE.md", Path(__file__).resolve()}
-SCAN_ROOTS = ("config", "plugins", "tools", "tests")
+SCAN_ROOTS = ("config", "plugins", "tools", "tests", "deploy", ".github")
+# The tracked text files at the repo root, by name. Never the whole root:
+# .env and its backups are gitignored, private, and may hold anything.
+ROOT_FILES = (".env.template", ".gitattributes", ".gitignore", "conftest.py",
+              "pyproject.toml", "pytest.ini", "requirements.txt", "run.py")
 TEXT_SUFFIXES = {
     ".py", ".md", ".txt", ".json", ".yaml", ".yml", ".ini", ".toml", ".cfg",
     ".csv", ".ps1", ".sh", ".template", ".html", ".js", ".css", "",
@@ -86,8 +98,10 @@ def test_every_relative_link_in_the_live_docs_resolves():
 
 def live_files() -> list[Path]:
     """Every text file the scan covers: the two root pages, the live docs,
-    and the trees under config/, plugins/, tools/ and tests/."""
+    the tracked root files, and the trees under config/, plugins/, tools/,
+    tests/, deploy/ and .github/."""
     files = list(live_docs())
+    files += [REPO_ROOT / name for name in ROOT_FILES if (REPO_ROOT / name).is_file()]
     for root in SCAN_ROOTS:
         for path in sorted((REPO_ROOT / root).rglob("*")):
             if not path.is_file():

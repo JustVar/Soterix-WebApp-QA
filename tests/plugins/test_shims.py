@@ -68,8 +68,8 @@ from tools import retry_uploads as shim_retry  # noqa: E402
 def _real(p) -> Path:
     """Normalise both sides before comparing (Rule 7).
 
-    On Windows the same directory is reachable as C:\\Users\\JUSTIN~1\\... and
-    C:\\Users\\JustinVarughese\\...; pytest's rootpath and a test file's
+    On Windows the same directory is reachable as C:\\Users\\SOMEUS~1\\... and
+    C:\\Users\\someuser\\...; pytest's rootpath and a test file's
     __file__ do not always agree on which. Comparing the raw strings gives a
     false failure.
     """

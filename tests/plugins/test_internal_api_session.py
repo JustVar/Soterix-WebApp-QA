@@ -1,7 +1,7 @@
 """Pins for the internal API client's session renewal.
 
 The `api` fixture logs in once per session, and a full UI run outlives the
-tenant's token: on 09/15/2026 a test failed 28 minutes into the india leg
+tenant's token: on 09/15/2026 a test failed 28 minutes into a full UI run
 with status 3113, "Session expired! Re-login required!", which is not the
 app behaviour that test exists to prove. The client renews the session once
 and sends the request again.

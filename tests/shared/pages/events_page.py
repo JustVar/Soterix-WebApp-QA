@@ -192,7 +192,7 @@ class EventsPage:
         menu.wait_for(state="visible", timeout=10000)
 
         # Expand the site
-        # The node's own text is name+camera-count ('Newtown Action Area10',
+        # The node's own text is name+camera-count ('Some Site10',
         # probe 09/02/2026), so match the inner element that holds the exact
         # bare name - escaped, and never a substring of another site.
         site_node = menu.locator(".MuiListItemButton-root").filter(

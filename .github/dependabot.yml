@@ -25,13 +25,6 @@ updates:
         exclude-patterns: ["pytest*", "ruff"]
     commit-message:
       prefix: "deps"
-    # Dependabot's pip fetcher takes ANY .txt in the directory, not
-    # requirements.txt specifically, so it would also sweep the tracked
-    # requirements_legacy.txt - 132 pins, UTF-16 encoded, six of them
-    # contradicting requirements.txt. Ignore what only that file pins.
-    ignore:
-      - dependency-name: "pywin32"
-      - dependency-name: "pypiwin32"
 
   # The workflow files pin actions by major version (actions/checkout@v4).
   # A pinned action still moves underneath that tag, so this catches the

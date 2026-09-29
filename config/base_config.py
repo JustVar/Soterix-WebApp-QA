@@ -9,12 +9,12 @@ from dotenv import load_dotenv
 # Load .env if present: ENV, QA_USER, QA_PASSWORD and the run switches.
 load_dotenv()
 
-# Logging setup
+# The env log. conftest.py installs the one rotating handler for it; a
+# basicConfig here would win the race (this module imports first) and the
+# file would grow for good, which it once did (1.4 MB).
 LOG_DIR = Path("logs")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / "env_config.log"
-logging.basicConfig(filename=str(LOG_FILE), level=logging.INFO,
-                    format="%(asctime)s [%(levelname)s] %(message)s")
 
 # Map aliases to real environment modules. Every file under config/env/
 # has the same flat shape (see config/env/qa.py); a team with a second
@@ -22,14 +22,11 @@ logging.basicConfig(filename=str(LOG_FILE), level=logging.INFO,
 # runs with ENV=<name>.
 ENV_ALIAS = {
     "qa":    "config.env.qa",
-    "neurosen": "config.env.neurosen",   # the private cloud build, in the lab
+    "neurosen": "config.env.neurosen",   # the private cloud build of the web app
     "stage": "config.env.stage",
     "staging": "config.env.stage",
     "prod":  "config.env.prod",
     "production": "config.env.prod",
-    "uat":   "config.env.stage",   # until a dedicated UAT file exists
-    "demo":  "config.env.prod",
-    "user":  "config.env.prod",
 }
 
 
@@ -79,13 +76,8 @@ def get_credentials():
 
 
 def is_write_allowed():
-    """Check if write operations (POST/PUT) are allowed in current environment."""
+    """Whether the tests that create and delete data may run here (allow_write)."""
     return config.get("allow_write", False)
-
-
-def is_delete_allowed():
-    """Check if delete operations are allowed in current environment."""
-    return config.get("allow_delete", False)
 
 
 def _get_env_module():

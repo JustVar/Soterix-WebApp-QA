@@ -3,7 +3,6 @@
 Provides a unified interface for all consumers:
   - Verification plugin (per-step screenshot capture)
   - QA Touch sync (sync-steps command)
-  - QA Ops Hub (evidence review display)
 
 Step files live alongside tests, mirroring the test directory structure:
   tests/steps/ui/admin/test_admin_audit_trail.json   (Playwright tests)

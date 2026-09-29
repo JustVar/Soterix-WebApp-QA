@@ -148,8 +148,8 @@ class MapsPage:
         """Site names in the ALREADY OPEN dropdown, for a failure message.
 
         The rows' own names: the old reader walked every p, div and span
-        and returned the count badges beside the names ('Newtown Action
-        Area', '10', 'Example Corporat...', '1'), which read as
+        and returned the count badges beside the names ('Some Site',
+        '10', 'A Long Site Na...', '1'), which read as
         sites that do not exist.
         """
         return self.site_option_names()

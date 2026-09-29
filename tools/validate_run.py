@@ -38,6 +38,7 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(ROOT, '.env'))
 
+from config.products import home_project
 from tools.qatouch_client import (
     PYTEST_TO_QATOUCH,
     STATUS_NAMES,
@@ -224,7 +225,12 @@ def check_failures() -> int:
 def main():
     parser = argparse.ArgumentParser(description='Validate QA Touch upload results')
     parser.add_argument('run_key', nargs='?', help='QA Touch test run key')
-    parser.add_argument('--project', default=os.environ.get('QATOUCH_PROJECT_ID', 'JlW1'))
+    # The default: the project .env names in QATOUCH_PROJECT_ID, else the
+    # one the UI root reports to (config/products.py).
+    parser.add_argument('--project',
+                        default=os.environ.get('QATOUCH_PROJECT_ID') or home_project('tests/ui/'),
+                        help="QA Touch project key (default: QATOUCH_PROJECT_ID, else the "
+                             "UI root's project in config/products.py)")
     parser.add_argument('--local-count', type=int, default=None,
                         help='Number of results uploaded locally, for a count check')
     parser.add_argument('--check-failures', action='store_true',

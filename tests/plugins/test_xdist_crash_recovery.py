@@ -1,8 +1,8 @@
-"""Pins for plugins/xdist_recovery.py (register row 89): under --dist
-loadgroup a worker that dies costs the run one failure, the test it died
-on, and nothing else. Without the patch xdist 3.8.0 replays the crash on
-every replacement worker until its restart cap, and two replacements in a
-row end the session with a KeyError (the 09/18/2026 india leg). The
+"""Pins for plugins/xdist_recovery.py: under --dist loadgroup a worker
+that dies costs the run one failure, the test it died on, and nothing
+else. Without the patch xdist 3.8.0 replays the crash on every
+replacement worker until its restart cap, and two replacements in a row
+end the session with a KeyError (a full UI run on 09/18/2026). The
 scenario runs for real in a subprocess."""
 from __future__ import annotations
 

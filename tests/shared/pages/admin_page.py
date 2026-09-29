@@ -975,7 +975,7 @@ class AdminPage:
     def _select_wizard_site(self, site_name: str) -> None:
         """Select a site in the wizard's Select Devices site dropdown.
 
-        The step defaults to the account's first site (Newtown) and the
+        The step defaults to the account's first site and the
         camera tiles below follow this dropdown (probe 09/16/2026), so a
         run whose test_site_name is not that default sees the wrong
         site's cameras. A no-op when the dropdown already shows the site.

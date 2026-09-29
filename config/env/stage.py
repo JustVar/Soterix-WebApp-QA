@@ -1,7 +1,8 @@
 """The staging server. Same shape as config/env/qa.py. Run with ENV=stage.
 
-Writes are allowed, deletes are not. The test data keys are None until
-somebody measures them on that tenant.
+Writes are allowed. The site and the camera are None, so a run reads
+them from the server (config/env/qa.py explains the keys); media_host is
+None until somebody reads it from the browser's network tab there.
 """
 import os
 
@@ -9,9 +10,8 @@ from config.secret import Secret
 
 config = {
     "base_url": "https://staging.example.invalid",
-    "api_base_url": "https://staging.example.invalid/v-apiserver",
+    "media_host": None,
     "allow_write": True,
-    "allow_delete": False,
     "default_site_id": None,
     "test_site_name": None,
     "test_camera_name": None,

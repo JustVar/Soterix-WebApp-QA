@@ -1,5 +1,4 @@
-"""Pins for config/secret.py (register row 92): a password never prints
-itself. A fresh-login failure on 09/14/2026 printed login_data, password
+"""Pins for config/secret.py: a password never prints itself. A fresh-login failure on 09/14/2026 printed login_data, password
 included, into a published test log; every path that printed it goes
 through repr()."""
 from __future__ import annotations
@@ -35,7 +34,7 @@ def test_repr_is_masked_and_the_value_still_works_as_a_string():
 def test_pytests_own_traceback_repr_masks_it():
     """The frame-argument printer that leaked it is _pytest's saferepr."""
     from _pytest._io.saferepr import saferepr
-    assert VALUE not in saferepr({"username": "u", "password": Secret(VALUE), "expected_landing": "/x"})
+    assert VALUE not in saferepr({"username": "u", "password": Secret(VALUE)})
     assert VALUE not in saferepr(Secret(VALUE))
 
 

@@ -1,6 +1,6 @@
 """Pins for plugins/wall_clock.py: a test that never ends costs the run 1 failure and its cap, not the night.
 
-On 09/20/2026 two legs of the nightly sat in a teardown on a dead browser
+On 09/20/2026 two full UI runs sat in a teardown on a dead browser
 until the 4 hour run cap. The scenario runs for real in a subprocess.
 """
 from __future__ import annotations

@@ -1,6 +1,5 @@
 """In-Camera Search tests - forensic search within a specific camera's feed.
 
-Migrated from legacy Selenium test_incamera_search (lines 1381-1476).
 Tests the in-camera search overlay that opens from the video player controls,
 allowing Person/Vehicle search with filters within a single camera's feed.
 """

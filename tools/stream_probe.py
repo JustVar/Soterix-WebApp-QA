@@ -26,9 +26,10 @@ Modes:
 How the stream is identified (probed 2026-08-25, docs/QA_THINGS_TO_KNOW.md
 "Live stream delivery"):
 
-  * The tile opens wss://media.example.invalid/v3/api/ws?name=
+  * The tile opens <media_host>/v3/api/ws?name=
     <site>/<channel>/<app>/<live>/<stream>/<timestamp>/<uuid> from the
-    main thread and sends {"type":"mse","value":""}.
+    main thread and sends {"type":"mse","value":""}. media_host is the
+    wss host in config/env/ (read from the browser's network tab).
   * The server answers one TEXT frame naming the MediaSource mime type,
     e.g. video/mp4; codecs="hvc1.1.6.L153.B0,flac", then BINARY frames:
     an fMP4 init segment (ftyp + moov) and moof/mdat fragments, with JSON
@@ -76,7 +77,33 @@ from tests.shared.pages.views_page import ViewsPage
 TILE = "[class*='video_container'][class*='new_video_player']"
 MEDIA_WS = "/v3/api/ws"
 TIMELINE_WS = "/ws/timeline/"
-STREAM_HOST = "wss://media.example.invalid"
+
+
+def stream_host() -> str:
+    """The media socket host: media_host in config/env/, the wss host the
+    app's live player opens. Not a constant: it differs per server."""
+    host = str(config.get("media_host") or "").strip().rstrip("/")
+    if not host:
+        raise RuntimeError(
+            "media_host is not set in config/env/: the wss host the app's live player opens "
+            "(browser network tab on a playing tile, the request whose path is /v3/api/ws)")
+    return host
+
+
+def fill_site_and_camera_from_server() -> None:
+    """Read the site and the camera config/env/ leaves blank, the way a test
+    session does (tests/shared/api/discovery.py). Stops with the reason
+    when the server cannot be read or a configured name is unknown."""
+    from config.base_config import get_credentials
+    from tests.shared.api import discovery
+    if not discovery.needs_discovery(config):
+        return
+    try:
+        record = discovery.fill_config(config, get_credentials())
+    except discovery.DiscoveryError as exc:
+        raise SystemExit(f"DISCOVERY: {exc}") from None
+    print(f"[probe] site '{record['site_name']}' (siteId {record['site_id']}): {record['site_reason']}")
+    print(f"[probe] camera '{record['camera']}': {record['camera_reason']}")
 HANDSHAKE = '{"type":"mse","value":""}'
 # The app sends this literal placeholder in the src= parameter (08/25)
 SRC_PREFIX = "videonetics://<videoneticsAddr>/"
@@ -1173,7 +1200,7 @@ def media_url(site: int, channel: int, stream: int, app: int = 0, live: int = 1,
         params.append("name=" + quote(name, safe=""))
     if with_src:
         params.append("src=" + quote(SRC_PREFIX + name, safe=""))
-    return f"{STREAM_HOST}/v3/api/ws?" + "&".join(params)
+    return f"{stream_host()}/v3/api/ws?" + "&".join(params)
 
 
 async def direct_socket(url: str, headers: dict, seconds: float, handshake: str | None = HANDSHAKE) -> dict:
@@ -1242,7 +1269,7 @@ def timeline_command() -> str:
 
 
 async def direct_timeline(site: int, channel: int, headers: dict, seconds: float) -> dict:
-    url = f"{STREAM_HOST}/ws/timeline/site/{site}/channel/{channel}"
+    url = f"{stream_host()}/ws/timeline/site/{site}/channel/{channel}"
     return await direct_socket(url, headers, seconds, handshake=timeline_command())
 
 
@@ -1324,7 +1351,7 @@ def browser_free_experiment(api: InternalApi, token: str, site: int, channel_id:
 
     rows, tl = asyncio.run(run())
     return {
-        "url_pattern": f"{STREAM_HOST}/v3/api/ws?name=<site>/<channel>/0/1/<stream>/0/<uuid4>"
+        "url_pattern": f"{stream_host()}/v3/api/ws?name=<site>/<channel>/0/1/<stream>/0/<uuid4>"
                        "&src=videonetics://<videoneticsAddr>/<same path>  "
                        "(app=0, live=1, timestamp=0 for live, uuid random v4; values from the "
                        "08/25 browser capture)",
@@ -1583,8 +1610,9 @@ def run_experiment(args) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--camera", default=config.get("test_camera_name"),
-                        help="camera name as shown in the Views tree")
+    parser.add_argument("--camera", default=None,
+                        help="camera name as shown in the Views tree (default: test_camera_name in "
+                             "config/env/, or the camera the run reads from the server)")
     parser.add_argument("--site-id", type=int, default=None,
                         help="site to probe (default: default_site_id in config/env/)")
     parser.add_argument("--seconds", type=int, default=None,
@@ -1616,7 +1644,10 @@ def main() -> int:
                              "(browser path only; --no-browser uses a fixed 15 s connect timeout)")
     args = parser.parse_args()
     if args.site_id is None:
+        fill_site_and_camera_from_server()
         args.site_id = _account()[2]
+    if not args.camera:
+        args.camera = config.get("test_camera_name")
 
     if not args.camera and not (args.health and args.all_cameras):
         parser.error("--camera or --all-cameras (with --health) required")

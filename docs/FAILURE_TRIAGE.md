@@ -173,9 +173,9 @@ timing and the last steps, and `snapshot` shows the DOM at the moment of
 failure.
 
 Example: the Views suite failed on a site click. The `snapshot` command
-showed the site list in the picker. The site had been renamed from
-"Newtown ActionArea" to "Newtown Action Area". The fix was 1 line in
-`config/env/qa.py`. No rerun was needed.
+showed the site list in the picker, with the test's site renamed with a
+space added. The fix was 1 line in `config/env/qa.py`. No rerun was
+needed.
 
 ## Screenshots
 

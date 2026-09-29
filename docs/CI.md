@@ -5,7 +5,8 @@ each push to `main`, on each pull request, and by hand from the Actions tab.
 It runs on GitHub's machines (`ubuntu-latest`) with no secret and no
 repository variable. The shared package is a wheel under `vendor/`, so
 `pip install -r requirements.txt` is the whole setup. A push is not done
-until the gate is green. To see the result:
+until the gate is green. To see the result, open the repository's Actions
+tab, or use the GitHub CLI (`gh`, optional):
 
 ```
 gh run list --limit 3
@@ -29,9 +30,13 @@ the job. It opens no browser and sends no request to the QA server.
 
 ## Cost
 
-One job per push or pull request, about 2 minutes, most of it the pip
-install. This is an estimate: the first hosted run since the pivot has not
-been measured. Nothing is scheduled, so there is no cost between pushes.
+One job per push or pull request. Measured on 2026-09-29, the first hosted
+runs after the pivot: this repo's gate took 55 s, the API repo's 24 s, and
+the three jobs of soterix-qa-shared (the shared package, the wheel in
+`vendor/`) about 40 s together, most of it the pip install. GitHub bills a
+job by the started minute, so a push costs 1 to 2 minutes of the
+organisation's allowance. Nothing is scheduled, so there is no cost between
+pushes.
 
 ## The same checks on your machine
 

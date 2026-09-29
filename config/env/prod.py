@@ -1,9 +1,10 @@
 """The production server. Same shape as config/env/qa.py. Run with ENV=prod.
 
-Production is read-only: allow_write and allow_delete stay False, so the
-tests marked with a write or delete marker skip here at collection
-(conftest.py env_skip_reason). The account comes from QA_USER and
-QA_PASSWORD in .env, never from this file.
+Production is read-only: allow_write stays False, so the tests marked
+with a write marker skip here at collection (conftest.py
+env_skip_reason). The site and the camera are None, so a run reads them
+from the server (config/env/qa.py explains the keys). The account comes
+from QA_USER and QA_PASSWORD in .env, never from this file.
 """
 import os
 
@@ -11,9 +12,8 @@ from config.secret import Secret
 
 config = {
     "base_url": "https://app.example.invalid",
-    "api_base_url": "https://app.example.invalid/v-apiserver",
+    "media_host": None,
     "allow_write": False,
-    "allow_delete": False,
     "default_site_id": None,
     "test_site_name": None,
     "test_camera_name": None,

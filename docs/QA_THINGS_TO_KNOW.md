@@ -147,10 +147,12 @@ stay on a machine of the team's, not on GitHub's.
 
 ## Server and account
 
-- `config/env/qa.py` holds the server (`base_url`, `api_base_url`), the
+- `config/env/qa.py` holds the server (`base_url`, `media_host`), the
   site (`default_site_id`, `test_site_name`), the camera
-  (`test_camera_name`) and the chat partner. `.env` holds `QA_USER` and
-  `QA_PASSWORD`. No test names any of them.
+  (`test_camera_name`) and the chat partner. The site and the camera may
+  stay blank: the run then reads them from the server at session start
+  and names them on the `[SITE]` and `[CAMERA]` lines. `.env` holds
+  `QA_USER` and `QA_PASSWORD`. No test names any of them.
 - The server renames sites and cameras. When the configured site is
   missing, `ViewsPage.click_site` fails fast and lists the entries on
   screen, so the error names the fix. For other locators, the trace shows

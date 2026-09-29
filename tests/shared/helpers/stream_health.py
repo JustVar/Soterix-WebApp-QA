@@ -110,7 +110,7 @@ def measure_stream(camera_name: str | None, seconds: int = DEFAULT_SECONDS) -> d
     out: dict = {"camera": camera_name, "channel_id": None, "frames": 0,
                  "seconds": int(seconds), "codec": None, "error": None, "note": None}
     if not camera_name:
-        out["error"] = "no test_camera_name in config/env/"
+        out["error"] = "no test_camera_name in config/env/ and no camera read from the server"
         return out
     try:
         import asyncio

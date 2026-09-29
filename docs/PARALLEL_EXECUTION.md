@@ -61,8 +61,6 @@ To see the group of each module, run `grep -rn "xdist_group(" tests/ui`.
   names carry milliseconds (`%H%M%S%f`), never seconds alone.
 - **Higher worker counts are untested.** Think about `-n 6` only if the
   regression run becomes too slow and the account accepts more sessions.
-- **Destructive tests stay serial.** Never run anything marked
-  `destructive` or `mutating` with `-n`.
 - **Load.** Each worker is a full Chrome instance. Video-heavy suites
   multiply CPU and bandwidth per worker.
 - **Opt-in plugins stay serial.** The QA Touch reporter

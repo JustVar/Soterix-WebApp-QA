@@ -62,35 +62,24 @@ def _session_account() -> tuple[str, str]:
 def pytest_sessionstart(session):
     """Ask once whether the tenant answers and the account signs in, before
     any browser opens; refuse the run with one named line when not
-    (tests/shared/helpers/preflight.py)."""
+    (tests/shared/helpers/preflight.py). Then choose the run's site and
+    camera, which may ask the server too."""
+    from tests.shared.helpers import preflight
+    if not preflight.skip_reason(session.config):
+        account, password = _session_account()
+        refusal = preflight.check(str(ENV_SETTINGS.get("base_url") or ""), account, password)
+        if refusal:
+            pytest.exit(refusal, returncode=preflight.EXIT_CODE)
     # The run's camera is chosen HERE, on every process, not only at collection.
     # Under xdist the controller never collects, so a choice made there alone
     # leaves the workers driving one camera while the run record, built on
     # the controller, names another with no reason. The choice is
     # deterministic, so every process reaches the same camera alone.
     _choose_camera(session.config)
-    from tests.shared.helpers import preflight
-    if preflight.skip_reason(session.config):
-        return
-    account, password = _session_account()
-    refusal = preflight.check(str(ENV_SETTINGS.get("base_url") or ""), account, password)
-    if refusal:
-        pytest.exit(refusal, returncode=preflight.EXIT_CODE)
 
 
-def pytest_addoption(parser):
-    """Register the opt-in required to run hardware-disrupting tests."""
-    parser.addoption(
-        "--run-destructive",
-        action="store_true",
-        default=False,
-        help="Run tests marked 'destructive'. These interrupt real hardware. Off by default.",
-    )
-
-
-# Markers whose tests change hardware or tenant data, grouped by the
-# config/env/ flag that must be True for them to run (prod: both False).
-DELETE_MARKERS = ("destructive", "mutating")
+# Markers whose tests create and delete data on the server. They run only
+# where config/env/ sets allow_write True (prod: False).
 WRITE_MARKERS = ("admin_users", "admin_rules", "admin_sites", "bookmark", "sequences")
 
 # The collection hook receives pytest's own `config`, which shadows the
@@ -98,19 +87,21 @@ WRITE_MARKERS = ("admin_users", "admin_rules", "admin_sites", "bookmark", "seque
 ENV_SETTINGS = config
 
 
-def env_skip_reason(keywords, settings, env_name: str) -> str | None:
+def env_skip_reason(markers, settings, env_name: str) -> str | None:
     """Why the active environment refuses this test, or None to let it run.
 
+    `markers` is the set of marker names on the test, never item.keywords:
+    keywords also hold parametrize ids, and an id that spelled a marker
+    name once skipped the pins that prove the guard.
+
     A missing flag counts as False, the same default base_config's
-    is_write_allowed and is_delete_allowed use: an env file that says
-    nothing about writes gets none.
+    is_write_allowed uses: an env file that says nothing about writes gets
+    none.
     """
-    for flag, markers in (("allow_delete", DELETE_MARKERS), ("allow_write", WRITE_MARKERS)):
-        if settings.get(flag, False):
-            continue
-        for marker in markers:
-            if marker in keywords:
-                return (f"env {env_name}: {flag} is False in config/env/, so tests "
+    if not settings.get("allow_write", False):
+        for marker in WRITE_MARKERS:
+            if marker in markers:
+                return (f"env {env_name}: allow_write is False in config/env/, so tests "
                         f"marked '{marker}' do not run here")
     # The env's `without` map (config/env/<env>.py > without): what the
     # server itself lacks, by marker, with the reason. The reason is the
@@ -118,34 +109,27 @@ def env_skip_reason(keywords, settings, env_name: str) -> str | None:
     # not just "skipped". An env with no map refuses nothing.
     without = (settings or {}).get("without") or {}
     for marker, why in without.items():
-        if marker in keywords:
+        if marker in markers:
             return (f"env {env_name} is without '{marker}': {why} "
                     f"(config/env/{env_name}.py > without)")
     return None
 
 
+def marker_names(item) -> set[str]:
+    """The names of the markers on a collected test, own and inherited."""
+    return {mark.name for mark in item.iter_markers()}
+
+
 def pytest_collection_modifyitems(config, items):
-    """Skip what this run may not execute.
-
-    Destructive tests need --run-destructive: a test that interrupts real
-    hardware has to be a deliberate act, not the default.
-
-    The env guard has no opt-in flag. Prod is read-only by config, and
-    --run-destructive does not lift that.
-    """
-    run_destructive = config.getoption("--run-destructive")
-    destructive_skip = pytest.mark.skip(
-        reason="destructive: disrupts real hardware. Pass --run-destructive to run it."
-    )
+    """Skip what this run may not execute: the env guard has no opt-in
+    flag. Prod is read-only by config, and no command line lifts that."""
     env_name = (os.environ.get("ENV") or "qa").strip().lower()
     # Which camera this run drives, before the guard measures one: the guard has
     # to measure the camera the tests will actually use. Deterministic, so every
     # xdist worker reaches the same answer on its own and none has to be told.
     _choose_camera(config)
     for item in items:
-        if not run_destructive and "destructive" in item.keywords:
-            item.add_marker(destructive_skip)
-        reason = env_skip_reason(item.keywords, ENV_SETTINGS, env_name)
+        reason = env_skip_reason(marker_names(item), ENV_SETTINGS, env_name)
         if reason:
             item.add_marker(pytest.mark.skip(reason=reason))
     stream_guard(config, items)
@@ -177,11 +161,16 @@ def _choose_camera(config) -> dict:
     if _CAMERA_PICK:
         return _CAMERA_PICK
     from tests.shared.helpers import camera_pool
+    configured, configured_reason = _CONFIGURED_CAMERA, None
+    record = _discover_site_and_camera(config)
+    if record:
+        configured, configured_reason = record["camera"], record["camera_reason"]
     getoption = getattr(config, "getoption", None)
     markexpr = getoption("markexpr", default="") if getoption else ""
     capabilities = ENV_SETTINGS.get("camera_capabilities") or {}
     capability = camera_pool.capability_for(camera_pool.markexpr_words(markexpr), capabilities)
-    pick = camera_pool.choose(_CONFIGURED_CAMERA, capability=capability, capabilities=capabilities)
+    pick = camera_pool.choose(configured, capability=capability, capabilities=capabilities,
+                              configured_reason=configured_reason)
     _CAMERA_PICK = pick
     if pick.get("camera"):
         ENV_SETTINGS["test_camera_name"] = pick["camera"]
@@ -201,6 +190,42 @@ def _choose_camera(config) -> dict:
 # prints never reach the terminal, and the README tells people to read
 # the [STREAM] line.
 _STREAM_LINES: list[str] = []
+
+
+def _discover_site_and_camera(config) -> dict | None:
+    """Fill the site and the camera config/env/ leaves blank, from the server.
+
+    Returns the discovery record, or None when config/env/ names everything
+    (the server is not asked). The choice is by name order, so every xdist
+    process reaches the same site and camera alone
+    (tests/shared/api/discovery.py).
+
+    A server that cannot be read, or a configured name it does not know,
+    stops the run the way the preflight does: one line, exit code 7,
+    before any browser opens. With PREFLIGHT=off, and on an xdist worker
+    (the controller already asked), the error is a line in the summary
+    and the tests that need a camera fail on their own. A session that
+    runs no tenant test (--collect-only, the offline pins) asks nothing.
+    """
+    from tests.shared.api import discovery
+    from tests.shared.helpers import preflight
+    if not discovery.needs_discovery(ENV_SETTINGS):
+        return None
+    skipped = preflight.skip_reason(config)
+    if skipped and not skipped.startswith((f"{preflight.SWITCH}=off", "xdist worker")):
+        return None
+    try:
+        record = discovery.fill_config(ENV_SETTINGS, get_credentials())
+    except discovery.DiscoveryError as exc:
+        message = f"DISCOVERY: {exc}"
+        if skipped:
+            _STREAM_LINES.append(f"[CAMERA] {message}")
+            return None
+        pytest.exit(message, returncode=preflight.EXIT_CODE)
+    if record["site_reason"] != discovery.CONFIGURED_SITE_REASON:
+        _STREAM_LINES.append(f"[SITE] '{record['site_name']}' (siteId {record['site_id']}): "
+                             f"{record['site_reason']}")
+    return record
 WORKER_MEASURE_KEY = "qa_stream_measure"
 
 
@@ -335,8 +360,7 @@ def login_data():
         raise ValueError("QA_USER and QA_PASSWORD must be set in .env (copy .env.template). "
                          "The tests sign in as that account.")
     logging.getLogger(__name__).info("[CREDENTIALS] Using QA_USER from .env")
-    return {"username": user, "password": password,
-            "expected_landing": os.environ.get("EXPECTED_LANDING", "/dashboard")}
+    return {"username": user, "password": password}
 
 
 # ----------------

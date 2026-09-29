@@ -1,6 +1,5 @@
 """Camera Sequence tests - navigate, search, create, add to views, edit.
 
-Converted from legacy Selenium tests (lines 1478-1758 in test_vsaas_soterix.py).
 Covers the full camera sequencing workflow:
   - Navigate to the sequence page
   - Search for a camera
@@ -19,8 +18,23 @@ import datetime
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
 
+from config.base_config import config
 from tests.shared.pages.sequence_page import SequencePage
 from tests.shared.pages.views_page import ViewsPage
+
+
+def _required(key: str) -> str:
+    """The env file's value for `key`, or a failure that names the key.
+
+    A literal fallback here would drive the tests with another server's
+    names when this env file leaves the key blank, and the failure would
+    land on a locator instead of on the missing config.
+    """
+    value = config.get(key)
+    if not value:
+        raise RuntimeError(f"{key} is blank: set it in the env file under config/env/")
+    return value
+
 
 # One worker for every module that writes this account's notification mute state (it mutes notifications first) and sequences: under
 # -n they would otherwise spread across workers and race on the same
@@ -129,9 +143,7 @@ class TestCameraSequences:
         """Search for a camera on the sequence page."""
         self._navigate_and_verify()
 
-        # Get camera name from config
-        from config.base_config import config
-        camera_name = config.get("test_camera_name", "Hanwha")
+        camera_name = _required("test_camera_name")
 
         # search_camera waits for the filtered list to settle
         self.seq.search_camera(camera_name)

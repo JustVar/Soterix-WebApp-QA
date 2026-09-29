@@ -16,7 +16,8 @@ Three rules, in this order:
    under `camera_capabilities`. An empty map means the configured camera
    serves every marker.
 3. **Everything else drives the configured camera**, test_camera_name in
-   config/env/.
+   config/env/, or the camera the run read from the server when that key
+   is blank (tests/shared/api/discovery.py).
 
 The choice is deterministic, so every xdist worker and the controller reach
 the same camera alone and the run record agrees with the tests.
@@ -61,12 +62,15 @@ def markexpr_words(markexpr: str | None) -> set[str]:
 
 
 def choose(configured: str | None, environ=None,
-           capability: str | None = None, capabilities: dict | None = None) -> dict:
+           capability: str | None = None, capabilities: dict | None = None,
+           configured_reason: str | None = None) -> dict:
     """Pick the camera and say why, as a record the run keeps.
 
     Never raises and never returns nothing: a capability nobody has listed
     falls back to the configured name, so a run that asks for what the server
-    lacks leaves the suite exactly as it was and says so.
+    lacks leaves the suite exactly as it was and says so. `configured_reason`
+    is how the configured camera came to be (the server named it), for the
+    record.
     """
     def record(camera, reason):
         return {"camera": camera, "reason": reason, "configured": configured,
@@ -84,7 +88,7 @@ def choose(configured: str | None, environ=None,
         return record(configured, f"no camera is listed for '{capability}' in "
                                   f"camera_capabilities; kept the configured camera")
 
-    return record(configured, "the configured camera (test_camera_name in config/env/)")
+    return record(configured, configured_reason or "the configured camera (test_camera_name in config/env/)")
 
 
 def describe(pick: dict) -> str:

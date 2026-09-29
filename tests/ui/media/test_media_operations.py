@@ -11,8 +11,8 @@ Destructive semantics, measured on the app: deleting a folder deletes
 the clips grouped in it - permanently ("cannot be retrieved"); "Remove
 From Folder" un-groups a clip back to the level above without
 deleting. Destructive testing on the QA tenant's media is sanctioned
-(config/env/qa.py allow_delete). Folder deletion currently fails on
-the tenant (a filed app defect), so the folder-delete leg tripwires
+(config/env/qa.py allow_delete). Folder delete does not apply on this
+tenant (the server refuses it), so the folder-delete step tripwires
 into a skip, and the lifecycle test doubles as the repro for the
 folder-delete-removes-outside-clips report.
 """
@@ -82,8 +82,8 @@ class TestMediaClipOperations:
         return the clip WITHOUT deleting it, and deleting the emptied
         folder must not touch any clip outside it (a tester reported
         that it once did; this assert is the repro). A folder that survives
-        its delete is the filed folder-delete defect and skips, leaving
-        it for tools/tenant_cleanup.py.
+        its delete shows that folder delete does not apply on this tenant:
+        the test skips and leaves the folder for tools/tenant_cleanup.py.
 
         Steps:
         1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.
@@ -170,12 +170,12 @@ class TestMediaClipOperations:
         self.media.click_tab("Folders")
         try:
             self.media.delete_item_named(folder)
-        # deliberate: the server refuses folder deletes on this tenant
-        # (a filed app defect), so this handler catches a known app
-        # state, not a test failure
+        # deliberate: folder delete does not apply on this tenant (the
+        # server refuses it), so this handler catches a known app state,
+        # not a test failure
         except (PlaywrightError, RuntimeError):
             pytest.skip(
-                "Folder delete did not apply (a filed app defect); "
+                "Folder delete does not apply on this tenant; "
                 f"folder '{folder}' left for tenant_cleanup"
             )
 
@@ -556,7 +556,7 @@ class TestMediaFolderOperations:
             self.media.click_tab("Folders")
             try:
                 self.media.delete_item_named(folder)
-            except (PlaywrightError, RuntimeError):  # why: the refused folder delete is the filed app defect, not a failed restore; tenant_cleanup sweeps it
+            except (PlaywrightError, RuntimeError):  # why: folder delete does not apply on this tenant, so a refusal is not a failed restore; tenant_cleanup sweeps it
                 print(f"[MEDIA] folder '{folder}' left on the tenant "
                       "(folder-delete defect); tenant_cleanup will get it")
 

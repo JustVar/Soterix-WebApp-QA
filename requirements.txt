@@ -21,9 +21,9 @@ PyYAML==6.0.3
 # 0.16.2, both claiming ruff>=0.15.
 ruff==0.16.5
 
-# The shared QA pipeline: the QA Touch client, the result reporter, the Jira
-# layer and the CI gates. `plugins/` and `tools/` here are thin shims over it,
-# so without it pytest cannot even collect.
+# The shared QA pipeline: the QA Touch client, the result reporter and the
+# CI gates. `plugins/` and `tools/` here are thin shims over it, so without
+# it pytest cannot even collect.
 #
 # The package is a wheel file under vendor/, so `pip install -r requirements.txt`
 # is the ONLY setup step. It needs no GitHub grant and no CI secret. pip

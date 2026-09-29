@@ -64,6 +64,7 @@ import csv
 import datetime as dt
 import itertools
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -93,7 +94,10 @@ from tools.qatouch_mapping_audit import (
 
 TESTS_ROOTS = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS]   # config/products.py
 LOGS_DIR = ROOT / 'logs'
-DEFAULT_PROJECT = 'JlW1'
+# The project the cases go to unless --project says otherwise: the one
+# .env names in QATOUCH_PROJECT_ID, else the one the UI root reports to
+# (config/products.py).
+DEFAULT_PROJECT = os.environ.get('QATOUCH_PROJECT_ID') or home_project('tests/ui/')
 # Modules skipped unless --exclude-dir names others. A product root that
 # reports to a second QA Touch project would be listed here.
 DEFAULT_EXCLUDE: tuple[str, ...] = ()

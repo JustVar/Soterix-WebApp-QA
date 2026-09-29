@@ -23,7 +23,7 @@ You do NOT need to edit any files yourself - just fill out below.
 
 ## Why now / deployment point
 
-<!-- "After FT", "Before next release", "Q3 2026", etc. -->
+<!-- "Before next release", "Q3 2026", etc. -->
 
 ## Owner suggestion
 

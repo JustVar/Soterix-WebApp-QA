@@ -1,5 +1,5 @@
-"""Pins for the tenant-state grouping under xdist (audit 09/17/2026, register
-row 86): pytest.ini keeps --dist loadgroup, every module that writes this
+"""Pins for the tenant-state grouping under xdist (audit 09/17/2026):
+pytest.ini keeps --dist loadgroup, every module that writes this
 account's state declares an xdist_group, and a command-line --dist that
 would undo it is refused."""
 from __future__ import annotations

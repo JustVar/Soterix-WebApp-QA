@@ -1389,7 +1389,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_multiple_sites_displayed[chromium]": {
       "case_key": "kpZWyB",
@@ -1398,7 +1398,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_expand_site_shows_features[chromium]": {
       "case_key": "yaWrXx",
@@ -1415,7 +1415,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_site_enable_toggle_visible[chromium]": {
       "case_key": "kpZQW9",
@@ -1432,7 +1432,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignedTab::test_assigned_tab_refresh_behavior[chromium]": {
       "case_key": "5BRzD7",
@@ -1449,7 +1449,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_tooltip_text_for_icons[chromium]": {
       "case_key": "7ErvPG",
@@ -1458,7 +1458,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_search_with_valid_license_name[chromium]": {
       "case_key": "WEnMv2",
@@ -1475,7 +1475,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_search_with_license_key[chromium]": {
       "case_key": "bj04lQ",
@@ -1484,7 +1484,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_invalid_search_shows_no_results[chromium]": {
       "case_key": "M73Ezq",
@@ -1501,7 +1501,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_device_list_has_three_dot_menu[chromium]": {
       "case_key": "rGQX3P",
@@ -1510,7 +1510,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_suspend_option_available[chromium]": {
       "case_key": "Nj3zRv",
@@ -1519,7 +1519,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_unassign_option_available[chromium]": {
       "case_key": "wmjK6z",
@@ -1528,7 +1528,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_suspend_confirmation_popup[chromium]": {
       "case_key": "K4nzvM",
@@ -1537,7 +1537,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseDeviceList::test_unassign_confirmation_popup[chromium]": {
       "case_key": "yaWX9n",
@@ -1546,7 +1546,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_assignment.py::TestLicenseAssignModal::test_assign_button_visible[chromium]": {
       "case_key": "dypN4W",
@@ -1611,7 +1611,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_counts_persist_after_refresh[chromium]": {
       "case_key": "WEnv71",
@@ -1620,7 +1620,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_is_default[chromium]": {
       "case_key": "B86E2m",
@@ -1629,7 +1629,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_switch_between_tabs[chromium]": {
       "case_key": "8V1b21",
@@ -1638,7 +1638,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_displays_feature_list[chromium]": {
       "case_key": "RgGyrK",
@@ -1655,7 +1655,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_available_tab_retains_state_after_navigation[chromium]": {
       "case_key": "yaWXyb",
@@ -1664,7 +1664,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_search_bar_visible[chromium]": {
       "case_key": "M73zvX",
@@ -1673,7 +1673,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_navigation.py::TestLicenseNavigation::test_license_module_accessible_after_refresh[chromium]": {
       "case_key": "7Erv2q",
@@ -1682,7 +1682,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_admin_can_access_licenses[chromium]": {
       "case_key": "kpZW3B",
@@ -1691,7 +1691,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_permissions.py::TestLicensePermissions::test_license_page_no_duplicate_records[chromium]": {
       "case_key": "J8dzMz",
@@ -1700,7 +1700,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_clear_search_restores_list[chromium]": {
       "case_key": "RgGBx1",
@@ -1709,7 +1709,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseSearch::test_empty_search_does_not_filter[chromium]": {
       "case_key": "Drdz2P",
@@ -1718,7 +1718,7 @@
       "module": "Licenses",
       "auto_matched": false,
       "reviewed": true,
-      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin (register row 70)"
+      "source": "09/15/2026: re-pointed from the automation stub to the stepped twin"
     },
     "tests/ui/licenses/test_license_search.py::TestLicenseExport::test_csv_download_option_available[chromium]": {
       "case_key": "qzdV4P",

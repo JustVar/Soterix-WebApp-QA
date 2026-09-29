@@ -81,9 +81,7 @@ of the next Sanity or Regression run. Remove the tags by bulk edit, and
 write down which cases carried which tag, because that record is the only
 way back. A hold does not change runs that already exist: QA Touch copies
 the case list into a run when the run is created. For a run that is
-already open, set the held cases to **Not Applicable** instead. The PTZ
-modules were on hold this way on the QA Touch side when the framework was
-handed over.
+already open, set the held cases to **Not Applicable** instead.
 
 ## Executing test runs
 
@@ -142,6 +140,9 @@ Screenshots/Evidence:
 ```
 
 ## Jira from QA Touch
+
+The table shows one team's workflow as an example. Use the transitions of
+your own Jira project.
 
 | QA Touch result | Jira transition |
 |-----------------|-----------------|

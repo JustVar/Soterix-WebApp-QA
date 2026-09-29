@@ -12,8 +12,22 @@ from playwright.sync_api import expect
 from config.base_config import config
 from tests.shared.pages.chat_page import ChatPage
 
-CHAT_USER_SEARCH = config.get("test_chat_user_search", "QA Engineer B")
-CHAT_USER_NAME = config.get("test_chat_user_name", "Chat Partner")
+
+def _required(key: str) -> str:
+    """The env file's value for `key`, or a failure that names the key.
+
+    A literal fallback here would drive the tests with another server's
+    names when this env file leaves the key blank, and the failure would
+    land on a locator instead of on the missing config.
+    """
+    value = config.get(key)
+    if not value:
+        raise RuntimeError(f"{key} is blank: set it in the env file under config/env/")
+    return value
+
+
+CHAT_USER_SEARCH = _required("test_chat_user_search")
+CHAT_USER_NAME = _required("test_chat_user_name")
 
 GROUPS_ABSENT = (
     "The chat panel is open and shows no Create Group control: this tenant "

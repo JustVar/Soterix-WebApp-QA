@@ -27,6 +27,8 @@ tools/debug_screenshots/
 verification_output/
 config/verification_status.json
 config/audit_reports/
+# The run ledger: a run with --qatouch-upload appends to it on this machine
+history/
 
 # Maintainer-local notes and reference material (not part of the shared repo)
 docs/local/

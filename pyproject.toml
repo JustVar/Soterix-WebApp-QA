@@ -2,20 +2,17 @@
 # Project-wide line length. Long enough to keep test descriptions readable
 # but short enough to avoid the unreadable 200-char one-liners.
 line-length = 100
-target-version = "py311"
+target-version = "py314"
 
 # Skip generated / archived / vendor content.
 exclude = [
-    "legacy",
     "legacy-selenium-tests",
     "venv",
     ".venv",
     "build",
     "dist",
-    "config/audit_reports",
     "config/qatouch_snapshots",
     "vendor",
-    "verification_output",
     "logs",
 ]
 

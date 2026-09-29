@@ -72,7 +72,9 @@ Preview first, every time: the import is create-only, there is no delete
 API, and a case created by mistake goes through the manual DELETE-REQUEST
 process. The last command reads the cases back, matches the CSV's
 Reference column (the node id) to each new case, and writes the mapping
-rows.
+rows. `python tools/generate_step_stubs.py --from-docstrings <file>`
+refreshes the JSON step sidecars under `tests/steps/ui/<module>/` from the
+same docstrings and keeps each case key.
 
 `config/qatouch_snapshots/` holds the JSON snapshots of the cases, the
 backup of the authored steps. `--after-import` and `--dead-keys` read the

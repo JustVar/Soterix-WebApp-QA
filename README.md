@@ -28,16 +28,18 @@ else.
 1. Install Python 3.14 and Google Chrome. The tests drive the Chrome on
    your machine (`--browser-channel chrome` in `pytest.ini`). Playwright's
    own browser is not used, and Node.js is not needed.
-2. Clone into a short path, for example `C:\qa\webapp-qa`. A deep path
+2. Clone into a short path, for example `C:\qa\Soterix-WebApp-QA`. A deep path
    pushes Windows past its path cap, and evidence files then fail to write.
 
    ```
-   git clone https://github.com/Soterix-Systems/Soterix-WebApp-QA.git C:\qa\webapp-qa
-   cd C:\qa\webapp-qa
+   git clone https://github.com/Soterix-Systems/Soterix-WebApp-QA.git C:\qa\Soterix-WebApp-QA
+   cd C:\qa\Soterix-WebApp-QA
    ```
 
 3. Create the venv and install. The install takes the shared package from
-   `vendor/`, so it asks for no credential and works offline.
+   `vendor/`, so it asks for no credential and works offline. That package,
+   soterix-qa-shared, holds the QA Touch client, the run pages and the CI
+   gates. The wheel in `vendor/` is all this repo needs of it.
 
    ```
    python -m venv venv
@@ -64,9 +66,14 @@ else.
    ```
 
 6. If your server is not the one in `config/env/qa.py`, edit that file.
-   A new server needs 7 keys: `base_url`, `api_base_url`,
-   `default_site_id`, `test_site_name`, `test_camera_name`,
-   `test_chat_user_search` and `test_chat_user_name`. Fill
+   A new server needs 2 keys: `base_url` and `media_host`, the wss host
+   the live player opens. The file's comment says where to read it. The
+   site and the camera are optional. Leave `test_site_name` and
+   `test_camera_name` blank and the run picks them from the server: the
+   first site by name that has a camera, and its first camera by name.
+   Name them to drive one site and one camera on every run. Name the chat
+   partner in `test_chat_user_search` and `test_chat_user_name`.
+   `allow_write` False skips every test that creates data. Fill
    `camera_capabilities` only when a marker needs a particular camera.
    Fill `without` only after you measured what the server lacks. The
    file's header comment lists these keys.
@@ -118,8 +125,10 @@ test:
 | `[SESSION]` | The server dropped the session in the middle of a test, and the app went back to the login screen. The locator is not at fault. |
 | `[STREAM]` | What the stream guard measured on the test camera. It says whether the tests marked `livestream` ran, or why they skipped on this machine's Chrome. |
 
-A `[CAMERA]` line prints only when the run drove a different camera than
-`test_camera_name`, and says why.
+A `[CAMERA]` line prints when the run drove a camera other than the one
+`test_camera_name` names, and says why: the server offered it because the
+key is blank, `TEST_CAMERA` pinned it, or a marker chose it. A `[SITE]`
+line prints when the run read the site from the server.
 
 When a test is red, start at the table in
 [docs/FAILURE_TRIAGE.md](docs/FAILURE_TRIAGE.md). In the first week on a

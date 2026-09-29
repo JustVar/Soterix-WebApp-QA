@@ -147,6 +147,20 @@ def _login(page):
     page.locator('text=Views').first.wait_for(state='visible', timeout=30000)
 
 
+def _configured_site_name() -> str:
+    """test_site_name from config/env/, or the site the server names when
+    that key is blank (tests/shared/api/discovery.py, the same choice a
+    test session makes). A destructive tool cleans the site the tests use."""
+    from tests.shared.api import discovery
+    if discovery.needs_discovery(config):
+        try:
+            record = discovery.fill_config(config, get_credentials())
+        except discovery.DiscoveryError as exc:
+            raise SystemExit(f'DISCOVERY: {exc}') from None
+        print(f"[cleanup] site '{record['site_name']}' (siteId {record['site_id']}): {record['site_reason']}")
+    return config.get('test_site_name') or ''
+
+
 def _open_configured_site(page, admin) -> str:
     """Open the configured site, or say which sites ARE listed.
 
@@ -162,10 +176,10 @@ def _open_configured_site(page, admin) -> str:
              .map(h => (h.querySelector('p.MuiTypography-root')?.innerText || '').trim())
              .filter(Boolean)"""
     )
-    name = config.get('test_site_name') or ''
+    name = _configured_site_name()
     if not name:
         raise SystemExit(
-            'test_site_name is not set in config/env/, so this '
+            'test_site_name is not set in config/env/ and the server named none, so this '
             f'run has no site to clean. Sites on the tenant: {listed}'
         )
     if name not in listed:
@@ -429,9 +443,10 @@ def _bookmarks_step(apply: bool) -> list[str]:
     """
     from tests.shared.api.client import ApiError, InternalApi
     user, password = active_account()
+    _configured_site_name()
     site_id = get_credentials().get('site_id')
     if not site_id:
-        print('Bookmarks: skipped, default_site_id is not set in config/env/')
+        print('Bookmarks: skipped, default_site_id is not set in config/env/ and the server named no site')
         return []
     api = InternalApi(config['base_url'], site_id)
     try:

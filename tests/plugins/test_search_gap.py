@@ -66,6 +66,6 @@ def test_a_broken_stamp_does_not_block(gap):
     assert search_gap.seconds_until_free() == 0.0
 
 
-def test_the_stamp_is_server_wide_not_per_box(gap):
-    """The QA server runs one search job for every account, so every box waits on the same stamp."""
+def test_the_stamp_is_one_file_for_the_server(gap):
+    """The stamp is 1 file for the whole server: every account and every xdist worker waits on the same stamp."""
     assert search_gap.stamp_path().name == ".search_stopped.stamp"

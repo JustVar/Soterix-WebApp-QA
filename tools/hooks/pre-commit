@@ -1,8 +1,9 @@
 #!/bin/sh
 # The collect gate, before the commit exists. CI (.github/workflows/
-# collect-gate.yml) runs the same checks on every push. This hook runs
-# them first, on the laptop, cheapest first, so a commit that would fail
-# the gate fails here.
+# collect-gate.yml, docs/CI.md) runs the same checks on every push, and
+# AGENTS.md ("Hard rules") asks for them before every commit. This hook
+# runs them first, on your machine, cheapest first, so a commit that
+# would fail the gate fails here.
 #
 # Install, once per clone: git config core.hooksPath tools/hooks
 # (README > Day one). Bypass only for a genuine emergency:
@@ -10,8 +11,7 @@
 #
 # What each check is for:
 # - secret_check: no staged line may carry a credential value from .env.
-#   A camera login once reached two GitHub organisations through a
-#   QA Touch backup file that was committed.
+#   A value that reaches a remote stays in its history.
 # - convention_check: the house conventions, on the lines this commit
 #   adds. HIGH findings block. MEDIUM findings print and pass (justify
 #   them in the commit message).
