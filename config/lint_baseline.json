@@ -1,5 +1,0 @@
-{
-  "comment": "Per-file ruff finding counts. Lower is always fine; higher needs a reason. See tools/lint_baseline.py.",
-  "total": 0,
-  "files": {}
-}

@@ -3,10 +3,8 @@
 pytest-timeout arms one timer for a test. When a browser stops answering, that
 timer ends the call, and then the teardown asks the same dead browser to close a
 tab or stop a trace. That second call never returns, and no timer is left to
-end it. On 09/20/2026 the us leg of the nightly sat in such a teardown
-for 3.5 hours, until the 4 hour run cap, and the india leg did the same after 6
-workers had died on the same cause (register row 91, a pointer drag that stops
-Chrome on the box's display).
+end it. A scheduled run once sat in such a teardown for hours, until the run
+cap ended it, after a pointer drag had stopped Chrome on the display.
 
 This plugin starts one timer when a test starts. If the test has not ended
 after the cap, the plugin says so on stderr and ends the process:

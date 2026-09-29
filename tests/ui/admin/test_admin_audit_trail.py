@@ -10,9 +10,9 @@ and a Today range filter. The old suite clicked the card TITLE (a
 no-op) and probed the General cards page with unions broad enough
 to match it - its seven early-exit returns are gone with it.
 
-09/12/2026: every check reads a value: the breadcrumb's text, the
-column set, the record's date parsed against today, its cells, the
-absence of a pagination control on the one-page table (register row 53).
+Every check reads a value: the breadcrumb's text, the column set, the
+record's date parsed against today, its cells, the absence of a
+pagination control on the one-page table.
 """
 import datetime
 import re
@@ -44,7 +44,7 @@ class TestAdminAuditTrail:
         ).first
         # General is already proved up by the Rules sub-tab wait above,
         # so a missing card here is a regression in a permanent control,
-        # not an absent artifact (register item 25).
+        # not an absent artifact.
         card.wait_for(state="visible", timeout=10000)
         # exact=True: the card blurb contains 'review', so a substring
         # 'View' match clicks prose instead of the button. A View

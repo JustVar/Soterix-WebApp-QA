@@ -41,7 +41,7 @@ class FakeLocator:
     ({"DRAG_MODE": "sideways"}, "pointer"),
 ])
 def test_only_chrome_on_wayland_gets_the_javascript_drag(environ, mode):
-    """A laptop keeps the pointer drag; the box's Wayland flag selects JavaScript; DRAG_MODE overrides; a bad value changes nothing."""
+    """A laptop keeps the pointer drag; headed Chrome on Wayland selects JavaScript; DRAG_MODE overrides; a bad value changes nothing."""
     assert drag.drag_mode(environ) == mode
 
 

@@ -1,3 +1,2 @@
 tools/hooks/* text eol=lf
-# Files that run on Linux: CRLF from a Windows checkout breaks /bin/sh, cron and systemd.
-deploy/spartan1/* text eol=lf
+vendor/*.whl binary

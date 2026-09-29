@@ -21,7 +21,7 @@ class TestMaps:
         # every test here used to open the dropdown, take options[0]
         # and skip "No sites available" when the read came back empty,
         # so a tenant rename and a broken page reported the same
-        # (register item 25). select_site now raises naming the sites
+        # skip. select_site now raises naming the sites
         # that ARE offered.
         self.site_name = config.get("test_site_name")
 
@@ -29,7 +29,7 @@ class TestMaps:
         """A map card with cameras, after proving the card grid rendered.
 
         An empty grid is a data fact and skips; a grid that never
-        rendered is a fault and fails (register item 25).
+        rendered is a fault and fails.
         """
         require_items(
             self.maps.map_cards,
@@ -148,7 +148,7 @@ class TestMaps:
 
         # The old body skipped on the failure overlay and closed with
         # `assert True`, so a dead stream and a live one reported the
-        # same (register item 25). The overlay is the tenant's stream
+        # same. The overlay is the tenant's stream
         # failure, and its text is what run.py --retry-streams matches,
         # so it goes red and gets counted.
         assert not self.maps.is_stream_failed(), (

@@ -4,15 +4,13 @@ reports to.
 One place, read by the tools that walk the tree (run.py, the convention
 checker, the step-stub and case generators, the mapping audit, the
 inventory) and by plugins/products.py, which turns it into the archive's
-path rules. Before 09/11/2026 the Camera 2 Cloud tests sat under
-tests/ui/c2c/ and every tool carried its own "tests/ui" root; moving them
-to tests/c2c/ (a product of their own in QA Touch, run against the lab
-cameras rather than a tenant) meant touching six tools. A third product
-(Neurosen) adds one line here.
+path rules. Before 09/11/2026 every tool carried its own "tests/ui" root,
+so a second product root meant touching six tools. A second product adds
+one line here.
 
 Order matters where prefixes overlap: the first match wins.
 
-The Core root is shared: the same UI tests run against the QA boxes
+The Core root is shared: the same UI tests run against the QA server
 (project JlW1) and against the Neurosen private cloud (P0BK). An env
 file that names a `qatouch_project` re-points that root for the run
 (path_rules), so the archive names the product and the reporter picks
@@ -23,8 +21,7 @@ root's own project and other projects' keys live under `case_keys`.
 from __future__ import annotations
 
 PRODUCT_ROOTS: dict[str, str] = {
-    'tests/ui/': 'JlW1',     # NexaiQ-Core: the web app, run against a box (BOX=india|us)
-    'tests/c2c/': '60W5',    # Camera 2 Cloud: the cameras' own web UIs (tests/data/c2c_cameras.yaml)
+    'tests/ui/': 'JlW1',     # NexaiQ-Core: the web app, run against the QA server
 }
 
 
@@ -67,7 +64,7 @@ def product_root(path) -> str | None:
 def area_of(path) -> str | None:
     """The module a test file belongs to: the folder under the product root
     ('admin' for tests/ui/admin/test_x.py), or the root's own folder name
-    when the files sit directly in it ('c2c' for tests/c2c/test_x.py).
+    when the files sit directly in it ('ui' for tests/ui/test_x.py).
     None outside the product roots."""
     root = product_root(path)
     if root is None:

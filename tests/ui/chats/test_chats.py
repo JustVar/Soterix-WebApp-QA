@@ -1,15 +1,15 @@
 """Chat tests - panel open, messaging, and the group CRUD.
 
-The 2026-08 redesign made the panel a search-first overlay (see the
-chats row in docs/TEST_REPAIRS.md): search a user, click the result to
-land a conversation row, click the row to open the thread.
+The 2026-08 redesign made the panel a search-first overlay: search a
+user, click the result to land a conversation row, click the row to
+open the thread.
 
-Group creation is a box difference (register item 29): the US box has
-the Create Group button and the whole flow works; the india box has no
-entry point. The group tests prove the panel is open, then skip on a
-box without the button and run on one with it. Each makes the group it
-acts on and deletes it, and the teardown raises for any that survives
-- the shape the LPR lists got (items 27, 28).
+Group creation is a tenant setting, not an app version: a tenant with
+group chat shows a Create Group button in the open panel and the whole
+flow works, a tenant without it shows no entry point at all. The group
+tests prove the panel is open, then skip on a tenant without the button
+and run on one with it. Each makes the group it acts on and deletes it,
+and the teardown raises for any that survives.
 """
 import datetime
 
@@ -25,7 +25,7 @@ from tests.shared.pages.chat_page import ChatPage
 
 # One worker for every module that writes this account's chats and groups: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_chats")
 
 # Config so tenant renames stay one-line fixes
@@ -33,9 +33,9 @@ CHAT_USER_SEARCH = config.get("test_chat_user_search", "QA Engineer B")
 CHAT_USER_NAME = config.get("test_chat_user_name", "Chat Partner")
 
 GROUPS_ABSENT = (
-    "The chat panel is open and shows no Create Group control: group "
-    "creation has no entry point on this box (india, probed 09/04/2026 - "
-    "the US box has it, register item 29)"
+    "The chat panel is open and shows no Create Group control: this tenant "
+    "has no group chat, so the group tests need a tenant whose chat panel "
+    "shows a Create Group button"
 )
 
 
@@ -51,12 +51,12 @@ class TestChats:
         self._cleanup_groups()
 
     def _require_group_creation(self):
-        """Skip with proof on a box without the Create Group button.
+        """Skip with proof on a tenant without the Create Group button.
 
         The open panel (its search input) is the surface; the button
-        is the artifact. A panel with no button is the india box, a
-        panel that never opened is a fault, and open_chat_panel raises
-        on the second.
+        is the artifact. A panel with no button is a tenant without
+        group chat, a panel that never opened is a fault, and
+        open_chat_panel raises on the second.
         """
         self.chat.open_chat_panel()
         if not self.chat.group_creation_affordance():

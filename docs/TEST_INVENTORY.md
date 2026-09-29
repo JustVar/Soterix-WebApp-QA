@@ -6,55 +6,13 @@ docstrings and `config/qatouch_case_mapping.json`; rerun it after adding
 or renaming a test (`--check` tells you when it is stale). Tests that pin
 the harness rather than a product are counted separately under "Harness
 and other tests", so every test file under tests/ is accounted for once.
-Pytest collects more items than there are rows here: the c2c tests
-parametrize over the camera registry and every UI test carries the
-browser parameter.
+Pytest collects more items than there are rows here: every UI test
+carries the browser parameter.
 
 | Product | Modules | Files | Test functions | With Steps | Mapped to QA Touch |
 |---|---|---|---|---|---|
-| NexaiQ-Camera 2 Cloud | 1 | 8 | 33 | 33 | 33 |
 | NexaiQ-Core | 13 | 52 | 402 | 325 | 402 |
-| **Total** | | **60** | **435** | **358** | **435** |
-
-## Growth
-
-Test functions per product at the last commit of each week (`history/test_counts.jsonl`).
-Rows marked record also carry how many tests had Steps and a QA Touch case that day;
-backfilled rows count functions only. Append a row with `--record` after a batch of tests lands.
-
-| Date | Commit | NexaiQ-Camera 2 Cloud | NexaiQ-Core | NexaiQ-Core API | Total | Files | With Steps | Mapped | Source |
-|---|---|---|---|---|---|---|---|---|---|
-| 2026-09-08 | b14a3eb | 32 | 405 | 71 | 508 | 78 | 168 | 348 | record |
-| 2026-09-04 | 77148d5 | 32 | 405 | 71 | 508 | 78 | - | - | backfill |
-| 2026-08-28 | 990e1e6 | 32 | 405 | 58 | 495 | 75 | - | - | backfill |
-| 2026-08-21 | 7a05592 | 32 | 405 | 34 | 471 | 70 | - | - | backfill |
-| 2026-08-14 | f93464a | 32 | 405 | 33 | 470 | 69 | - | - | backfill |
-| 2026-08-09 | d7d9a10 | 32 | 405 | 33 | 470 | 68 | - | - | backfill |
-| 2026-07-31 | 8fcfa7c | 32 | 405 | 47 | 484 | 69 | - | - | backfill |
-| 2026-07-14 | 129a885 | 32 | 348 | 47 | 427 | 61 | - | - | backfill |
-| 2026-03-27 | 671d260 | - | 348 | 16 | 364 | 48 | - | - | backfill |
-| 2026-03-12 | b7b5e39 | - | 348 | 16 | 364 | 48 | - | - | backfill |
-| 2026-02-21 | 4916e57 | - | 348 | 16 | 364 | 48 | - | - | backfill |
-
-### QA Touch cases per project
-
-Cases per QA Touch project at each snapshot (`history/qatouch_counts.jsonl`,
-appended by `qatouch_analytics.py snapshot`). "Automated" is the cases whose key
-the mapping file points a test at; a product with no snapshot that day shows "-".
-
-| Date | NexaiQ-Camera 2 Cloud | NexaiQ-Core | NexaiQ-Neurosen | NexaiQ-Partner Admin Tool | NexaiQ-Technician App | NexiaQ-Mobile | Total cases | Automated |
-|---|---|---|---|---|---|---|---|---|
-| 2026-09-15 | - | 3303 | - | - | - | - | 3303 | 403 |
-| 2026-09-14 | - | 3275 | - | - | - | - | 3275 | 408 |
-| 2026-09-11 | 119 | - | - | - | - | - | 119 | 32 |
-| 2026-09-08 | 118 | 3170 | 0 | 772 | 0 | 10 | 4070 | 354 |
-| 2026-08-28 | 118 | 3101 | 0 | 772 | 0 | 10 | 4001 | 282 |
-| 2026-08-17 | - | 3096 | - | - | - | - | 3096 | 282 |
-| 2026-03-27 | - | 3134 | - | - | - | - | 3134 | 282 |
-| 2026-03-02 | - | 3011 | - | - | - | - | 3011 | 282 |
-| 2026-03-01 | - | 3011 | - | - | - | - | 3011 | 282 |
-| 2026-02-21 | - | 3011 | - | - | - | - | 3011 | 282 |
-| 2026-02-20 | - | 2969 | - | - | - | - | 2969 | 241 |
+| **Total** | | **52** | **402** | **325** | **402** |
 
 ## Harness and other tests
 
@@ -64,52 +22,9 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | Where | Files | Test functions | Collected | What they are |
 |---|---|---|---|---|
 | `tests/helpers/` | 3 | 17 | yes | Pins for tests/shared/helpers (surface, search_job). Collected by bare pytest. |
-| `tests/legacy/` | 3 | 138 | no | Retired Selenium-era login and web-client tests, kept for reference. Excluded from collection by pytest.ini norecursedirs. |
-| `tests/plugins/` | 20 | 259 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
-| `tests/tools/` | 23 | 239 | yes | Pins for the repo tools (tools/*.py): QA Touch import and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
-| `soterix-qa-shared` | 23 | 653 | in soterix-qa-shared | Pins for the shared QA package (QA Touch client, result reporter, run archive and report, gates). Run in that repo; this repo pins a release tag. |
-| `Soterix-API-QA` | 1 | 11 | in Soterix-API-QA | Pins for the API repo's own plugins and shims. Run in that repo. |
-| **This repo** | **49** | **653** | | |
-
-## NexaiQ-Camera 2 Cloud
-
-### c2c (33 tests in 8 files)
-
-| Test | Title | Steps | QA Touch |
-|---|---|---|---|
-| `test_c2c_auth.py::TestC2CAuth::test_camera_login_and_live_view` | Verify camera web UI login and session - happy path | yes | dyVv1W |
-| `test_c2c_auth.py::TestC2CAuth::test_camera_rejects_invalid_credentials` | Verify camera rejects invalid credentials | yes | xmQWzW |
-| `test_c2c_camera.py::TestC2CAdditionalSettings::test_corridor_mode_options` | Verify corridor mode warning and options without triggering reboot | yes | 11mnX0 |
-| `test_c2c_camera.py::TestC2CAdditionalSettings::test_roi_configuration` | Verify Region of Interest configuration page | yes | 21mgLn |
-| `test_c2c_camera.py::TestC2CAdditionalSettings::test_smart_stream_disabled` | Verify the Smart Stream page shows its configuration fields | yes | 5BLlr7 |
-| `test_c2c_camera.py::TestC2CAdditionalSettings::test_white_balance_modes` | Verify white balance configuration and modes | yes | aj1MGa |
-| `test_c2c_camera.py::TestC2CCameraSettings::test_exposure_and_daynight_defaults` | Verify exposure and day/night settings defaults | yes | zv5rPw |
-| `test_c2c_camera.py::TestC2CCameraSettings::test_image_adjustment_defaults_and_reset` | Verify image adjustment defaults and reset to default | yes | 3gxGz9 |
-| `test_c2c_camera.py::TestC2CCameraSettings::test_image_enhancement_and_backlight` | Verify image enhancement mirror/flip, 3D NR, LDC, and backlight WDR | yes | mBa6G9 |
-| `test_c2c_camera.py::TestC2CMotionDetection::test_motion_detection_zones` | Verify motion detection configuration and zones | yes | NjEqgE |
-| `test_c2c_camera.py::TestC2CPrivacyMask::test_privacy_mask_configuration` | Verify privacy mask configuration page and controls | yes | K4P6EB |
-| `test_c2c_liveview.py::TestC2CLiveView::test_live_view_controls` | Verify live view controls on main page | yes | 0r9mwl |
-| `test_c2c_liveview.py::TestC2CLiveView::test_speaker_and_alarm_controls` | Verify camera speaker and alarm controls on main page | yes | kpaJn9 |
-| `test_c2c_liveview.py::TestC2CSecurity::test_security_pages_accessible` | Verify user management and security configuration pages | yes | 41lEzw |
-| `test_c2c_network.py::TestC2CNetwork::test_network_status` | Verify network status displays correct configuration | yes | n8a7b8 |
-| `test_c2c_network.py::TestC2CNetwork::test_rtsp_stream_configuration` | Verify RTSP stream is accessible and configured correctly | yes | gQKR2z |
-| `test_c2c_plugins.py::TestC2CMultiLens::test_multi_lens_license_count_matches_lens_count` | Verify multi-lens camera has one license assigned per lens | yes | J89gEX |
-| `test_c2c_plugins.py::TestC2CSoterixCloud::test_cloud_connect_registered` | Verify camera is registered to Soterix staging cloud | yes | lRaP3e |
-| `test_c2c_plugins.py::TestC2CVCA::test_vca_enabled_with_correct_tracker` | Verify VCA is enabled with DL Object Tracker + Intrusion Detection | yes | Gdjxrr |
-| `test_c2c_plugins.py::TestC2CVCA::test_vca_rules_and_license` | Verify VCA has active rules and valid ProAI license | yes | EeLRZ6 |
-| `test_c2c_record.py::TestC2CRecord::test_record_management_and_sd_card_status` | Verify recording management and SD card status | yes | jP1VGa |
-| `test_c2c_system.py::TestC2CPlugins::test_plugin_storage_within_limits` | Verify plugin storage usage is below 90% | yes | 68prdv |
-| `test_c2c_system.py::TestC2CPlugins::test_plugins_installed_and_running` | Verify both SOTERIX and VCAedge-AI plugins are installed and running | yes | Pgp3nd |
-| `test_c2c_system.py::TestC2CSystemInfo::test_device_name_and_location_editable` | Verify device name and location are editable and persist | yes | J8jPJp |
-| `test_c2c_system.py::TestC2CSystemInfo::test_system_info_device_details` | Verify system information displays correct device details | yes | VKDEV9 |
-| `test_c2c_system.py::TestC2CSystemOps::test_camera_restart` | Verify camera can restart cleanly and retains settings | yes | ya5ljx |
-| `test_c2c_system.py::TestC2CSystemOps::test_configuration_backup_accessible` | Verify configuration backup page is accessible | yes | LD47GJ |
-| `test_c2c_system.py::TestC2CSystemOps::test_date_time_settings` | Verify date/time settings and language options | yes | wm5Gwb |
-| `test_c2c_system.py::TestC2CSystemOps::test_firmware_and_diagnostics_accessible` | Verify firmware version and system diagnostics are accessible | yes | pDaq23 |
-| `test_c2c_video.py::TestC2CAudio::test_audio_configuration_defaults` | Verify audio configuration defaults and controls | yes | XGvr1Z |
-| `test_c2c_video.py::TestC2COSD::test_osd_configuration` | Verify OSD date/time overlay is enabled and configurable | yes | qzaXrb |
-| `test_c2c_video.py::TestC2CVideoConfig::test_default_stream_configuration` | Verify default video stream configuration across all 3 streams | yes | 7ExN1X |
-| `test_c2c_video.py::TestC2CVideoConfig::test_stream_codec_and_resolution_change` | Verify the stream codec can be changed and applied | yes | 9erj9Q |
+| `tests/plugins/` | 22 | 258 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
+| `tests/tools/` | 14 | 181 | yes | Pins for the repo tools (tools/*.py): QA Touch case generation and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
+| **This repo** | **39** | **456** | | |
 
 ## NexaiQ-Core
 
@@ -240,7 +155,7 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_panel_survives_page_refresh` | The panel opens after a page refresh | yes | 21WWlQ |
 | `test_chats_deeper.py::TestChatsDeeper::test_chat_search_input_visible` | The panel search input is ready once the panel opens | yes | GdWznj |
 | `test_chats_deeper.py::TestChatsDeeper::test_click_search_result_opens_chat` | Clicking a search result reaches the conversation: a | yes | qzMNN3 |
-| `test_chats_deeper.py::TestChatsDeeper::test_create_group_button_present` | The Create Group button is in the open panel on a box that has it | yes | Ee61zV |
+| `test_chats_deeper.py::TestChatsDeeper::test_create_group_button_present` | The Create Group button is in the open panel on a tenant that has group chat | yes | Ee61zV |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_clear_resets_results` | Verify clearing the chat search empties the results and the field | yes | K49D4M |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_returns_results` | Searching the configured user returns a visible result | - | jPnm3Z |
 | `test_chats_deeper.py::TestChatsDeeper::test_search_with_no_match` | A chat search for a name nobody has lists no results | yes | XGQ22M |

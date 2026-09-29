@@ -11,7 +11,7 @@ from tests.shared.pages.fullscreen_page import FullScreenPage
 from tests.shared.pages.incamera_search_page import InCameraSearchPage
 from tests.shared.pages.views_page import ViewsPage
 
-# One search job per account and no cancel (register row 100): every
+# The app runs one search job per account and offers no cancel: every
 # searching module shares this xdist group so --dist loadgroup runs them
 # on one worker, and tests/shared/helpers/search_gap.py spaces the searches.
 pytestmark = pytest.mark.xdist_group("account_search")
@@ -45,7 +45,7 @@ class TestInCameraSearch:
 
             # expand_site_and_show_cameras only returns once cameras
             # are visible, so an empty count here contradicts it: the
-            # panel is broken, not empty (register item 25).
+            # panel is broken, not empty.
             assert thumb_count > 0, (
                 "The camera panel reports cameras visible but no "
                 ".cameraThumbnailWrapper is on screen, so no camera can be "
@@ -57,7 +57,7 @@ class TestInCameraSearch:
             # A tile that never appears is the tenant's stream failure,
             # and it goes red so it gets counted - run.py
             # --retry-streams reruns exactly that class. The old
-            # handler reported it as Blocked (register item 25).
+            # handler reported it as Blocked.
             video_tiles.first.wait_for(state="visible", timeout=30000)
 
         # Enter fullscreen; the stream-loaded wait is the entered signal
@@ -82,7 +82,7 @@ class TestInCameraSearch:
 
         # The setup put the camera in fullscreen and waited for its
         # stream, so the player chrome is up: a missing search icon is
-        # a regression, not an absent artifact (register item 25).
+        # a regression, not an absent artifact.
         expect(ics.search_icon.first).to_be_visible(timeout=10000)
 
         ics.open_search()

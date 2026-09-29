@@ -55,5 +55,5 @@ inside code blocks.
 
 Orwell wrote these rules for political prose, not technical writing. They give
 you good judgment and a short checklist. They do not give you a controlled
-vocabulary. For stricter rules that a machine can check, see `chelebi.md` in
+vocabulary. For stricter rules that a machine can check, see `ste.md` in
 this directory.

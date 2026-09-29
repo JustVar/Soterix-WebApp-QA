@@ -1,9 +1,10 @@
 """Which tests are red because of an app defect somebody already knows about.
 
-A nightly ends with about 30 red tests on each box. Most are defects already
-being worked, and nothing on the run page said so, so a reader had to remember
-which was which (09/25/2026). This reads config/known_defects.yaml and answers,
-for one test, "is this a known defect, and which".
+A full run ends with red tests that are defects already being worked, and
+nothing on the run page says so, so a reader has to remember which is
+which. This reads config/known_defects.yaml and answers, for one test, "is
+this a known defect, and which". The list ships empty: a team adds one
+entry per app defect it knows about.
 
 The answer travels INTO the run record at archive time, through the shared
 package's `configure_known_defects` hook, so a served page needs neither this
@@ -61,11 +62,11 @@ def matches(nodeid: str, name: str) -> bool:
 
 
 def _record(entry: dict) -> dict:
-    return {"row": entry.get("row"), "since": str(entry.get("since") or ""), "what": str(entry["what"])}
+    return {"since": str(entry.get("since") or ""), "what": str(entry["what"])}
 
 
 def known_defect_for(nodeid: str, error: str | None = None) -> dict | None:
-    """What the run record carries for this test, or None: {row, since, what}.
+    """What the run record carries for this test, or None: {since, what}.
 
     By test name first. Then, when the failure's error line is known, by
     signature: a defect that hits whichever test touched it (the tenant's

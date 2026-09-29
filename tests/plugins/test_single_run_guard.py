@@ -3,9 +3,10 @@
 The full decision matrix (free / held-by-live / held-by-stale / re-entrant /
 collect-only / xdist worker / kill switch), the blocked message, and the
 session hooks run against fakes and a temp lock dir - no browser, no
-subprocesses. The real two-process handshake (run_suite holds the lock,
-its pytest child honors the marker) is pinned here at both ends: the
-consumer via decide(), the producer via a source pin on run_suite.
+subprocesses. The guard exists because a second pytest beside a live run
+wipes the first run's screenshots and run.log. A wrapper that holds the
+lock and launches pytest is pinned at the consumer end: its child honors
+the marker or the parent PID through decide().
 
 Living under tests/plugins/ to be picked up by the default discovery
 without needing a new test root or collection config.
@@ -111,20 +112,21 @@ def test_own_pid_in_the_lock_is_reclaimed():
 
 def test_parent_held_lock_is_reentrant():
     """The pid-chain half of re-entrancy: a wrapper that holds the lock and
-    launches pytest directly (tools/guarded_run.py) is our parent process,
-    so its lock is ours to run under - not a rival to abort on."""
+    launches pytest directly is our parent process, so its lock is ours to
+    run under - not a rival to abort on."""
     assert _decide(_lock(pid=PARENT_PID)) == guard.SKIP
 
 
 def test_marker_env_var_is_reentrant():
-    """The marker half of re-entrancy: run_suite exports RUN_GUARD_HELD to
-    its pytest child, and the child stands aside on it."""
+    """The marker half of re-entrancy: a wrapper that holds the lock exports
+    RUN_GUARD_HELD to its pytest child, and the child stands aside on it."""
+    assert guard.HELD_MARKER == 'RUN_GUARD_HELD'
     assert _decide(_lock(), environ={'RUN_GUARD_HELD': '3000'}) == guard.SKIP
 
 
 def test_collect_only_skips_even_when_blocked():
-    """run_suite's planning pass collects while a lock may be active;
-    collection writes nothing shared, so it must never be refused."""
+    """A collect-only pass may run while a lock is active; collection
+    writes nothing shared, so it must never be refused."""
     assert _decide(_lock(), collect_only=True) == guard.SKIP
 
 
@@ -165,14 +167,14 @@ def test_real_staleness_check_is_the_default():
 @pytest.mark.parametrize(('environ', 'expected'), [
     ({}, 'qa'),                        # no ENV set - matches config's default
     ({'ENV': 'qa'}, 'qa'),
-    ({'ENV': ' STAGING '}, 'stage'),   # aliases collapse to run_lock's names
-    ({'ENV': 'uat'}, 'stage'),
-    ({'ENV': 'production'}, 'prod'),
-    ({'ENV': 'demo'}, 'prod'),
-    ({'ENV': 'unknown-box'}, 'unknown-box'),  # unknown names pass through
+    ({'ENV': ' STAGE '}, 'stage'),     # trimmed and lower-cased, nothing else
+    ({'ENV': 'Neurosen'}, 'neurosen'),
+    ({'ENV': 'unknown-name'}, 'unknown-name'),  # any name passes through
 ])
-def test_lock_env_lands_on_run_locks_names(environ, expected):
-    """ENV aliases collapse to run_lock's env names; unknown names pass through."""
+def test_lock_env_is_env_as_written(environ, expected):
+    """The lock is keyed on ENV as written, trimmed and lower-cased. No alias
+    folds: the cross-env scan treats every other lock file as a rival, so two
+    spellings of one environment still contend."""
     assert guard._lock_env(environ) == expected
 
 
@@ -249,7 +251,7 @@ def _session(config=None):
 def lock_dir(tmp_path, monkeypatch):
     """Point the real lock file into tmp and scrub the ambient variables
     that would flip the decision - this suite itself may be running under
-    run_suite (marker set), under xdist, or with RUN_GUARD exported."""
+    a wrapper (marker set), under xdist, or with RUN_GUARD exported."""
     monkeypatch.setattr(run_lock, 'LOCK_DIR', tmp_path)
     for var in ('RUN_GUARD', 'RUN_GUARD_HELD', 'PYTEST_XDIST_WORKER'):
         monkeypatch.delenv(var, raising=False)
@@ -353,7 +355,7 @@ def test_sessionstart_skips_when_the_parent_holds_the_lock(lock_dir, monkeypatch
 
 
 def test_sessionstart_honors_the_parent_marker(lock_dir, monkeypatch):
-    """The run_suite handshake, consumer side: with RUN_GUARD_HELD exported
+    """The wrapper handshake, consumer side: with RUN_GUARD_HELD exported
     the child neither blocks nor takes a lock of its own."""
     monkeypatch.setenv('RUN_GUARD_HELD', '4242')
     config = _FakeConfig()
@@ -426,20 +428,6 @@ def test_pid_alive_reads_access_denied_as_alive():
     with our rights. Denial must read as alive - never as a dead holder
     whose lock is free to reclaim."""
     assert run_lock._pid_alive(4) is True
-
-
-# ---------------------------------------------------------------------------
-# The producer half of the handshake
-# ---------------------------------------------------------------------------
-
-def test_run_suite_exports_the_marker_to_its_pytest_child():
-    """Producer and consumer live in different processes, so the consumer
-    tests above cannot see the export. This pins that run_suite still
-    passes RUN_GUARD_HELD to the child it launches while holding the lock -
-    without it the child is left leaning on the pid-chain fallback alone."""
-    source = (REPO_ROOT / 'tools' / 'run_suite.py').read_text(encoding='utf-8')
-    assert "env['RUN_GUARD_HELD']" in source
-    assert guard.HELD_MARKER == 'RUN_GUARD_HELD'
 
 
 # ---------------------------------------------------------------- cross-env
@@ -555,7 +543,7 @@ def test_reports_never_revive_a_rivals_lock(lock_dir, monkeypatch):
 
 
 def test_reports_stamp_the_parents_lock_under_the_marker(lock_dir, monkeypatch):
-    """A child under run_suite keeps the parent's lock alive: the parent
+    """A child under a wrapper's lock keeps that lock alive: the parent
     only waits on the child and would otherwise go stale at 4 h."""
     monkeypatch.setattr(guard, '_beat_state', None)
     monkeypatch.setenv('RUN_GUARD_HELD', '4242')

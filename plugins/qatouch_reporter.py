@@ -14,12 +14,12 @@ except ModuleNotFoundError as exc:
         raise                    # a dependency of the package is missing
     raise ModuleNotFoundError(
         "soterix-qa-shared is not installed. "
-        "Run: pip install -e ../soterix-qa-shared"
+        "Run: pip install -r requirements.txt"
     ) from None
 
-# Which mapping rows may upload is THIS repo's decision. Of its 378 rows
-# only 121 are reviewed; the rest were auto-matched by word overlap, and
-# uploading through one writes a real status onto a case no test verifies.
+# Which mapping rows may upload is THIS repo's decision: reviewed rows
+# only. Most rows were auto-matched by word overlap, and uploading through
+# one writes a real status onto a case no test verifies.
 # Injected BEFORE the alias swap.
 _mod.MAPPING_POLICY = _policy
 

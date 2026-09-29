@@ -1,17 +1,16 @@
-#!/usr/bin/env python3
 """Delete the automation's leftover data from the shared QA tenant.
 
-Targets ONLY names the suite itself creates (docs/TEST_REPAIRS.md row 7):
+Targets ONLY names the suite itself creates:
 
   - camera groups on the first site: "AutoTest Group *", "AutoTest Edited *",
     "Edited Group *", "2026*AutomationEdited *"
   - users whose card starts with "AutoTest" (the users tests' own name)
   - rules named "<type>_Auto_<stamp>" (the rules tests' own names). One
     leftover rule puts its camera at rule capacity and the wizard hides
-    that camera from every later run (register item 28), so this step
-    matters more than tidiness.
-  - chat groups named "AutoGroup_<stamp>" (the chats tests' own names;
-    US box only - india has no group feature)
+    that camera from every later run, so this step matters more than
+    tidiness.
+  - chat groups named "AutoGroup_<stamp>" (the chats tests' own names).
+    A tenant without the group feature has none and the step reports 0.
   - bookmarks on the configured site that the ACCOUNT ITSELF made and
     that carry a name the suite gives or gave: the app's default "New
     Bookmark", "AutoTest BM <stamp>", "AutoTest Bookmark <stamp>", and the
@@ -33,17 +32,14 @@ command line, and a run with --delete-channel does just that step.
     python tools/tenant_cleanup.py --delete-channel 123 --delete-channel Google
     python tools/tenant_cleanup.py --apply --delete-channel 123
 
-BOX picks the account, so BOX picks the TENANT this deletes from:
+The account is QA_USER / QA_PASSWORD from .env and the server is the one
+config/env/<ENV>.py names, both through get_credentials(), the same
+choice the tests make. It logs in headless and prints that address and
+the site before it lists anything - read those two lines before you pass
+--apply. A destructive tool that reads its account from a second place
+can delete from a tenant nobody meant.
 
-    BOX=us python tools/tenant_cleanup.py --apply
-
-It logs in headless as the active box's account and prints that address
-and the site before it lists anything - read those two lines before you
-pass --apply. Reading QA_USER directly sent every run to the default box
-whatever BOX said, so `BOX=us ... --apply` would have deleted from India
-(register item 30; item 23 was the same defect in explore_app.py).
-
-The site is the box's configured test_site_name, not whichever card the
+The site is the configured test_site_name, not whichever card the
 Sites page happens to list first. Every delete goes through the admin
 page object's name-scoped helpers, so a list that is still filtering can
 never hand the delete a stranger's row.
@@ -52,7 +48,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import os
 import re
 import sys
 from datetime import datetime
@@ -85,20 +80,18 @@ EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 RULE_PATTERN = re.compile(r'^\S+_Auto_\d{4,}')
 GROUP_PATTERN = re.compile(r'^AutoGroup_\d+$')
 # Media folders Group Clips creates get the default name Folder_<n>;
-# the folder tests own and delete theirs, and the ones that survive
-# (the folder-delete defect, register App defects) pile up as empty
-# first rows that made Create Link, Share and Export answer 'Empty
-# folder' in the 09/11/2026 full run.
+# the folder tests own and delete theirs, and the ones that survive a
+# refused delete pile up as empty first rows that make Create Link,
+# Share and Export answer 'Empty folder'.
 FOLDER_PATTERN = re.compile(r'^Folder_\d+$')
 # Bookmarks: the names the suite gives or gave. The UI test creates one
 # under the app's default name and renames its own to "AutoTest BM
 # <stamp>"; the API fixture names its "AutoTest Bookmark <stamp>"; the
-# suite before da239ac (08/2026) named them "DEL_<stamp>" and "Test
-# bookmark", and india still holds those. What survives a dead run is a
-# default-named row on the test camera, owned by the automation account
-# (US measured 09/14/2026: three, all test-auto-qa's). The owner check
-# is what keeps a real user's "New Bookmark" safe; on india the account
-# is a real user's, so the dry run is the place to read the list.
+# suite once named them "DEL_<stamp>" and "Test bookmark", and the
+# tenant still holds some of those. What survives a dead run is a
+# default-named row on the test camera, owned by the automation account.
+# The owner check is what keeps a real user's "New Bookmark" safe; when
+# the account is a real user's, the dry run is the place to read the list.
 STEPS = ('groups', 'rules', 'chats', 'folders', 'bookmarks', 'users')
 BOOKMARK_PATTERN = re.compile(
     r'^(New Bookmark|AutoTest BM \d+|AutoTest Bookmark \d+|DEL_\d+|Test bookmark)$')
@@ -128,22 +121,17 @@ GROUP_NAMES_JS = r"""() => [...document.querySelectorAll("img[alt='delete'].dele
 
 
 def active_account() -> tuple[str, str]:
-    """The active box's account, falling back to the default one.
+    """The account the tests use, from get_credentials() and nowhere else.
 
-    A destructive tool must never guess its tenant. get_credentials()
-    reads the box BOX names; the QA_USER fallback keeps a config with no
-    box definitions working.
+    A destructive tool must never guess its tenant, so there is no
+    fallback: an empty pair stops the run and names the keys.
     """
-    try:
-        creds = get_credentials()
-    except (KeyError, RuntimeError):
-        creds = {}
-    user = creds.get('email') or os.environ.get('QA_USER', '')
-    password = creds.get('password') or os.environ.get('QA_PASSWORD', '')
+    creds = get_credentials()
+    user = creds.get('email') or ''
+    password = creds.get('password') or ''
     if not user or not password:
         raise SystemExit(
-            'No account for this box. Set the box variables it names in '
-            '.env (see config/env/), or QA_USER / QA_PASSWORD.'
+            'No account: set QA_USER and QA_PASSWORD in .env (config/env/ names the server).'
         )
     return user, password
 
@@ -151,8 +139,7 @@ def active_account() -> tuple[str, str]:
 def _login(page):
     from tests.shared.pages.login_page import LoginPage
     user, password = active_account()
-    box = os.environ.get('BOX', '').strip().lower() or config.get('default_box', '')
-    print(f'Tenant:  box={box or "(default)"}  account={user}')
+    print(f'Tenant:  {config["base_url"]}  account={user}')
     LoginPage(page, config['base_url']).login(user, password)
     page.wait_for_function(
         "() => !window.location.href.includes('/auth/login')", timeout=60000)
@@ -161,12 +148,12 @@ def _login(page):
 
 
 def _open_configured_site(page, admin) -> str:
-    """Open the box's configured site, or say which sites ARE listed.
+    """Open the configured site, or say which sites ARE listed.
 
     Taking the first card meant a multi-site tenant got its groups
     cleaned on whichever site the page happened to list first - the
     same silent first-match this repo has repaired elsewhere. A
-    destructive tool names its target (register item 30).
+    destructive tool names its target.
     """
     headers = page.locator("*:has(> p.MuiTypography-root):has(img[alt='Options'])")
     headers.first.wait_for(state='visible', timeout=15000)
@@ -178,13 +165,13 @@ def _open_configured_site(page, admin) -> str:
     name = config.get('test_site_name') or ''
     if not name:
         raise SystemExit(
-            'test_site_name is not set for this box in config/env/, so this '
+            'test_site_name is not set in config/env/, so this '
             f'run has no site to clean. Sites on the tenant: {listed}'
         )
     if name not in listed:
         raise SystemExit(
             f'The configured site {name!r} is not on the Sites page. '
-            f'Sites listed: {listed}. Either BOX names the wrong tenant or '
+            f'Sites listed: {listed}. Either ENV names the wrong server or '
             f'test_site_name is stale in config/env/.'
         )
     admin.click_site(name)
@@ -384,8 +371,8 @@ def _groups_step(page, apply: bool) -> list[str]:
     """List, and with --apply delete, the suite's own leftover chat groups.
 
     The panel search never lists a group, so the conversation list is
-    read directly. A box without the group feature (india) has no
-    groups to find and the step reports zero.
+    read directly. A tenant without the group feature has no groups to
+    find and the step reports zero.
     """
     from tests.shared.pages.chat_page import ChatPage
     chat = ChatPage(page)
@@ -442,13 +429,9 @@ def _bookmarks_step(apply: bool) -> list[str]:
     """
     from tests.shared.api.client import ApiError, InternalApi
     user, password = active_account()
-    try:
-        site_id = get_credentials().get('site_id')
-    except (KeyError, RuntimeError):
-        site_id = None
-    site_id = site_id or os.environ.get('TEST_SITE_ID')
+    site_id = get_credentials().get('site_id')
     if not site_id:
-        print('Bookmarks: skipped, no site id for this box (site_id in config/env/ or TEST_SITE_ID)')
+        print('Bookmarks: skipped, default_site_id is not set in config/env/')
         return []
     api = InternalApi(config['base_url'], site_id)
     try:
@@ -609,9 +592,8 @@ def main() -> int:
             page.locator('.MuiModal-backdrop').first.wait_for(state='hidden', timeout=5000)
 
         # --- rules --- (before users: a leaked rule hides its camera from
-        # the wizard and fails every later run, register item 28, while
-        # the tenant refuses user deletes and that step must not abort
-        # the ones that matter)
+        # the wizard and fails every later run, while the tenant refuses
+        # user deletes and that step must not abort the ones that matter)
         if 'rules' in wanted:
             rules = _rules_step(page, admin, args.apply)
 
@@ -646,8 +628,8 @@ def main() -> int:
         for name in users:
             print(f'  user   {name}')
         if users and not args.apply:
-            print('  NOTE: the tenant refuses these deletes (register item '
-                  '11); expect them to survive --apply until the app fix.')
+            print('  NOTE: the tenant refuses user deletes (both REST calls answer 400); '
+                  'expect them to survive --apply until the app fix.')
         if args.apply:
             for name in users:
                 # typed: a refused or stalled delete is reported and the

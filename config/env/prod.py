@@ -1,3 +1,10 @@
+"""The production server. Same shape as config/env/qa.py. Run with ENV=prod.
+
+Production is read-only: allow_write and allow_delete stay False, so the
+tests marked with a write or delete marker skip here at collection
+(conftest.py env_skip_reason). The account comes from QA_USER and
+QA_PASSWORD in .env, never from this file.
+"""
 import os
 
 from config.secret import Secret
@@ -5,53 +12,20 @@ from config.secret import Secret
 config = {
     "base_url": "https://app.example.invalid",
     "api_base_url": "https://app.example.invalid/v-apiserver",
-
-    # Safety flags - production is READ-ONLY
     "allow_write": False,
     "allow_delete": False,
-
-    # Box configurations
-    "boxes": {
-        "soterix": {
-            "email": "test-auto-prod@soterixsystems.com",
-            "password_env": "TEST_AUTO_PROD_PASSWORD",
-            "default_site_id": None,  # TBD
-        },
-        # QA production box. Shared account; set HARDWARE_LAB_PASSWORD in .env.
-        "hardware-lab": {
-            "email": "hardware-lab@soterixsystems.com",
-            "password_env": "HARDWARE_LAB_PASSWORD",
-            "default_site_id": None,  # TBD
-        },
-    },
-
-    # Default box if not specified
-    "default_box": "soterix",
+    "default_site_id": None,
+    "test_site_name": None,
+    "test_camera_name": None,
+    "test_chat_user_search": None,
+    "test_chat_user_name": None,
+    "camera_capabilities": {},
+    "without": {},
 }
 
-# Helper to get active box config
-def get_box_config(box_name=None):
-    box = box_name or os.environ.get("BOX", config["default_box"])
-    if box not in config["boxes"]:
-        raise KeyError(
-            f"Unknown box '{box}' for this environment. "
-            f"Valid boxes: {sorted(config['boxes'])}")
-    return config["boxes"][box]
 
-# Helper to get credentials for active box
-def get_credentials(box_name=None):
-    """Credentials for a box.
-
-    A box gives either a literal `email` (shared accounts) or an `email_env`
-    naming the variable that holds it (per-tester accounts).
-    """
-    box_config = get_box_config(box_name)
-    email = box_config.get("email") or os.environ.get(
-        box_config.get("email_env", ""), "")
-    password = Secret(os.environ.get(box_config["password_env"], ""))
-    return {
-        "email": email,
-        "password": password,
-        "site_id": box_config["default_site_id"],
-    }
-
+def get_credentials():
+    """The account the tests sign in as, from .env, and the site its data goes to."""
+    return {"email": os.environ.get("QA_USER", ""),
+            "password": Secret(os.environ.get("QA_PASSWORD", "")),
+            "site_id": config["default_site_id"]}

@@ -2,9 +2,9 @@
 
 The live Event Wall is its own UI experience, separate from both the
 regular app (Views/Events pages included) and the wall's admin
-configuration surface (test_event_wall_config.py). Per Justin,
-08/13/2026: a user with local access enabled logs in, selects a site,
-and the wall appears - a different experience from the regular app.
+configuration surface (test_event_wall_config.py). A user with local
+access enabled logs in, selects a site, and the wall appears - a
+different experience from the regular app.
 
 Everything here holds as explicit skips until that special account is
 provisioned for automation. Activating this suite needs:

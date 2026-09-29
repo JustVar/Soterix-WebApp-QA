@@ -26,7 +26,7 @@ class TestMapsDeeper:
         # The configured site, not the dropdown's first entry: the old
         # setup read the options and skipped "No sites available" on an
         # empty read, so a tenant rename and a broken page reported the
-        # same (register item 25). select_site raises naming the sites
+        # same. select_site raises naming the sites
         # that ARE offered.
         self.site_name = config.get("test_site_name")
 
@@ -93,7 +93,7 @@ class TestMapsDeeper:
         """Verify the site has more than one map card (if applicable)."""
         self.maps.select_site(self.site_name)
         # The grid is proved up first, so a low count is the tenant's
-        # data and not a page that never rendered (register item 25).
+        # data and not a page that never rendered.
         count = require_items(
             self.maps.map_cards,
             container=self.maps.dropdown_text,

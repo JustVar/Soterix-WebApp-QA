@@ -271,7 +271,7 @@ class FullScreenPage:
 
     # --- Bookmarks panel methods ---
 
-    # Measured 09/12/2026 on US (register row 53): the fullscreen control
+    # Measured on the app: the fullscreen control
     # bar's icons by file name, the volume icon's two states, and the
     # bar's text ('<camera> | Live | hh:mm:ss AM Mon dd yyyy | 1X | ...').
     CONTROL_ICONS = ("exitFullScreen", "Live", "date-picker-icon", "icon-share", "Bookmark",
@@ -307,8 +307,8 @@ class FullScreenPage:
         if self.bookmark_items.count() and self.bookmark_items.first.is_visible():
             return
         # The failure overlay ('The camera failed to load') sits over
-        # the controls and intercepts the toggle click - two runs on
-        # 08/24/2026 died exactly there. Its refresh link is the
+        # the controls and intercepts the toggle click - two runs once
+        # died exactly there. Its refresh link is the
         # user-path recovery; a stream that stays failed raises a
         # clear error instead of a click timeout.
         self.recover_stream_if_failed()
@@ -441,9 +441,9 @@ class FullScreenPage:
 
         save_to_media writes a permanent copy into Media > Clips. It
         defaults OFF because the server refuses every clip delete
-        ("Data Not Deleted!", measured on BOTH boxes 09/03/2026), so a
-        copy made here can never be cleaned up: this call ticked the box
-        unconditionally and left 12 clips on the US tenant in one day.
+        ("Data Not Deleted!", measured on the app), so a copy made here
+        can never be cleaned up: this call ticked the box
+        unconditionally and left 12 clips on the tenant in one day.
         The export oracle is the progress bar, which does not need it.
         Pass True only when a Media copy is the point.
         """

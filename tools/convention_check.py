@@ -7,12 +7,11 @@ swallow failures into prints, skips raised from an except handler,
 skip reasons that guess at the app, test bodies with no oracle, early
 test-body returns (vacuous passes), .first/.last picks on union
 selectors, new tests that land without a title, without a
-"Steps:" block, or without a QA Touch mapping row, and Jira ticket
-keys anywhere in code, comments, or docstrings. Added 09/11/2026 from
-the coverage assessment (docs/TEST_COVERAGE_ASSESSMENT.md): except
-handlers with no why-comment that neither re-raise nor fail, DOM waits
-of a minute or more, .first on a text lookup, and test bodies whose
-only oracle is that something is visible.
+"Steps:" block, or without a QA Touch mapping row, Jira ticket keys
+anywhere in code, comments, or docstrings, except handlers with no
+why-comment that neither re-raise nor fail, DOM waits of a minute or
+more, .first on a text lookup, and test bodies whose only oracle is
+that something is visible.
 
 Every rule here started as a defect found in review; when a review
 finds a new class, it gets a detector so the class cannot recur.
@@ -45,12 +44,11 @@ MAPPING_PATH = REPO / "config" / "qatouch_case_mapping.json"
 # Only test code is checked. tools/ and plugins/ have their own rules
 # (see pyproject.toml per-file ignores).
 INCLUDE_PREFIXES = ("tests/",)
-EXCLUDE_PREFIXES = ("tests/legacy/",)
+EXCLUDE_PREFIXES = ()
 # The tests QA Touch cases are generated for and mapped to: the product
-# roots (tests/ui/ for Core, tests/c2c/ for Camera 2 Cloud), never the
-# tooling and plugin pins.
+# roots (config/products.py), never the tooling and plugin pins.
 sys.path.insert(0, str(REPO))
-from config.products import PRODUCT_ROOTS
+from config.products import PRODUCT_ROOTS, product_root
 
 PRODUCT_PREFIXES = tuple(PRODUCT_ROOTS)
 
@@ -58,12 +56,43 @@ SLEEP_RE = re.compile(r"(?:wait_for_timeout|time\.sleep)\s*\(")
 TICKET_RE = re.compile(r"\bNC-\d+\b")
 QATOUCH_RE = re.compile(r"@pytest\.mark\.qatouch")
 # The flaky mark is pytest-rerunfailures' own: it retries on any failure,
-# once even bare. A hidden retry the register never sees (17 tests, audit
-# 09/17/2026). The label is `intermittent`.
+# once even bare. A hidden retry no run page ever sees. The label is
+# `intermittent`.
 FLAKY_MARK_RE = re.compile(r"\bmark\.flaky\b")   # @pytest.mark.flaky, pytestmark =, marks=, an alias
 ABS_COUNT_RE = re.compile(r"\.count\(\)\s*(?:>\s*0|>=\s*[01])\b")
 IMG_SRC_RE = re.compile(r"img\[src\*?=")
-TENANT_NAME_RE = re.compile(r"[\"'](?:Driver Site|Hanwha)")
+
+# A site or camera name written into a test couples the test to one
+# server. The rule is built from the active env file's names, so it fires
+# on the server the team has, whatever its names are.
+
+
+def tenant_name_pattern(names: list[str | None] | None = None) -> re.Pattern[str] | None:
+    """A pattern for a quoted site or camera name, or None when no name is
+    known. Without `names` the active env file's test_site_name and
+    test_camera_name are read (config/env/<ENV>.py). A name is escaped, so
+    one with regex characters matches itself."""
+    if names is None:
+        try:
+            from config.base_config import config
+        except Exception:
+            return None   # no env file loads: the rule is off, the other rules still run
+        names = [config.get("test_site_name"), config.get("test_camera_name")]
+    kept = [n for n in names if n]
+    if not kept:
+        return None
+    return re.compile(r"[\"'](?:" + "|".join(re.escape(n) for n in kept) + ")")
+
+
+_tenant_cache: list[re.Pattern[str] | None] = []
+
+
+def _active_tenant_pattern() -> re.Pattern[str] | None:
+    if not _tenant_cache:
+        _tenant_cache.append(tenant_name_pattern())
+    return _tenant_cache[0]
+
+
 # locator("a, b").first/.last - .last can resolve to a hidden copy in
 # a different container (the video-canvas union lesson)
 UNION_PICK_RE = re.compile(
@@ -74,7 +103,7 @@ SKIP_RE = re.compile(r"\bpytest\.skip\s*\(")
 # A skip reason that hedges about the app records a guess, not a
 # measurement: the run then reports "not supported" for a locator
 # that simply moved. Measure it with tools/explore_app.py and say
-# what IS there (register item 25).
+# what IS there.
 SPECULATIVE_SKIP_RE = re.compile(
     r"\b(?:may|might|maybe|possibly|probably|perhaps|seems|likely)\b"
     r"|\bnot supported\b|\bwork differently\b",
@@ -131,7 +160,7 @@ LONG_WAIT_RE = re.compile(
     r"wait_for_url|wait_for_load_state|wait_for_function)\s*\([^)]*"
     r"timeout\s*=\s*(?:[6-9]\d{4}|\d{6,})\b"
 )
-# .first on a text lookup: identity by substring (register items 14, 21).
+# .first on a text lookup: identity by substring.
 TEXT_FIRST_RE = re.compile(r"(?:get_by_text\s*\(|has_text\s*=)[^\n]*\.first\b")
 
 
@@ -224,8 +253,8 @@ _mapped_cache: dict[Path, set[str]] = {}
 def mapped_tests(path: Path = MAPPING_PATH) -> set[str]:
     """Node ids in the mapping file with their [param] suffix removed,
     so a parametrized test counts as mapped when any of its ids is.
-    An unreadable file maps nothing: the rule then fires on every new
-    test instead of staying silent."""
+    A missing or unreadable file maps nothing, and the mapping rule
+    then stays silent (see product_has_mapping)."""
     if path not in _mapped_cache:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
@@ -236,12 +265,22 @@ def mapped_tests(path: Path = MAPPING_PATH) -> set[str]:
     return _mapped_cache[path]
 
 
+def product_has_mapping(path: str, mapped: set[str]) -> bool:
+    """Whether the mapping file holds any row for the product root `path`
+    sits under. A fresh project has no rows yet, and the mapping rule
+    must not turn every new test into a warning there."""
+    root = product_root(path)
+    return bool(root) and any(m.startswith(root) for m in mapped)
+
+
 def check_line(path: str, lines: list[str], idx: int,
-               mapped: set[str] | None = None) -> list[dict]:
+               mapped: set[str] | None = None,
+               tenant_re: re.Pattern[str] | None = None) -> list[dict]:
     """Return findings for one line (0-based idx) of a file.
 
     mapped is the set of mapped node ids (params stripped). None reads
-    the live mapping file."""
+    the live mapping file. tenant_re is the hardcoded-tenant-name
+    pattern. None reads the active env file's names."""
     line = lines[idx]
     stripped = line.strip()
     findings = []
@@ -250,8 +289,8 @@ def check_line(path: str, lines: list[str], idx: int,
     if TICKET_RE.search(line):
         findings.append({
             "sev": "MEDIUM", "rule": "ticket-in-code",
-            "msg": "Jira keys go stale in code. Describe the behavior; "
-                   "TEST_REPAIRS.md > App defects maps it to the ticket "
+            "msg": "Jira keys go stale in code. Describe the behavior in "
+                   "the comment and keep the ticket in the tracker "
                    "(CONVENTIONS.md > Code notes).",
         })
     if stripped.startswith("#") or inside_triple_quote(lines, idx):
@@ -276,7 +315,7 @@ def check_line(path: str, lines: list[str], idx: int,
         findings.append({
             "sev": "HIGH", "rule": "flaky-marker",
             "msg": "the flaky mark is pytest-rerunfailures' own: it retries on ANY "
-                   "failure, once even bare, and hides it from the register. Label "
+                   "failure, once even bare, and hides it from the run page. Label "
                    "with intermittent; only run.py --retry-streams reruns "
                    "(CONVENTIONS.md > Reruns).",
         })
@@ -293,7 +332,7 @@ def check_line(path: str, lines: list[str], idx: int,
             "msg": "is this a MUI icon? then use svg[data-testid='...Icon'] "
                    "(present on Events/Admin). A Next.js img asset keeps its "
                    "src basename - its alt text is empty or wrong on this "
-                   "app (measured 08/24/2026) - and says so in a why-comment "
+                   "app - and says so in a why-comment "
                    "(CONVENTIONS.md > Locators).",
         })
     if TEST_DEF_RE.match(line):
@@ -316,7 +355,10 @@ def check_line(path: str, lines: list[str], idx: int,
                        "steps and an Expected: line under each "
                        "(CONVENTIONS.md > Adding a test).",
             })
-        if nodeid not in (mapped if mapped is not None else mapped_tests()):
+        mapped_set = mapped if mapped is not None else mapped_tests()
+        # silent until the product has a mapping row: a fresh QA Touch
+        # project starts with none, and the first cases come from these tests
+        if nodeid not in mapped_set and product_has_mapping(path, mapped_set):
             findings.append({
                 "sev": "MEDIUM", "rule": "test-without-mapping",
                 "msg": "new test has no QA Touch case: python "
@@ -324,11 +366,12 @@ def check_line(path: str, lines: list[str], idx: int,
                        "import, then --after-import "
                        "(CONVENTIONS.md > Adding a test).",
             })
-    if TENANT_NAME_RE.search(line):
+    pattern = tenant_re if tenant_re is not None else _active_tenant_pattern()
+    if pattern is not None and pattern.search(line):
         findings.append({
             "sev": "MEDIUM", "rule": "hardcoded-tenant-name",
-            "msg": "the shared tenant renames things. Use test_site_name / "
-                   "test_camera_name from config/env/ instead.",
+            "msg": "a site or camera name in a test ties it to one server. "
+                   "Use test_site_name / test_camera_name from config/env/ instead.",
         })
     if UNION_PICK_RE.search(line):
         findings.append({
@@ -341,8 +384,8 @@ def check_line(path: str, lines: list[str], idx: int,
         findings.append({
             "sev": "MEDIUM", "rule": "long-blind-wait",
             "msg": "a DOM wait of a minute or more hides what the server said: "
-                   "24 of the 49 failures on 09/04/2026 were this on a tenant "
-                   "with no events. Follow the request instead "
+                   "on a server with no events the wait runs out and reports a "
+                   "timeout, not the answer. Follow the request instead "
                    "(tests/shared/helpers/search_job.py), or comment why the "
                    "wait is that long.",
         })
@@ -350,8 +393,8 @@ def check_line(path: str, lines: list[str], idx: int,
         findings.append({
             "sev": "MEDIUM", "rule": "first-on-text-lookup",
             "msg": ".first on a text lookup picks whichever element mentions "
-                   "the words first (register items 14 and 21: the wrong "
-                   "camera, the wrong rule). Match exactly (exact=True, "
+                   "the words first (the wrong camera, the wrong rule). "
+                   "Match exactly (exact=True, "
                    "title=, span[title=]) or scope to the row, or comment "
                    "why the first match is the one.",
         })
@@ -369,14 +412,14 @@ def _block_range(lines: list[str], idx: int) -> range:
 
     A signature over several lines closes with `):` at the def's own indent. Read as the
     end of the block, that line gave the def an empty body: a real test was "a test with
-    no oracle", and a bare return in it was never seen (audit 09/21/2026). The block
-    starts after the line that closes the brackets.
+    no oracle", and a bare return in it was never seen. The block starts after the line
+    that closes the brackets.
     """
     indent = len(lines[idx]) - len(lines[idx].lstrip())
     depth, start = 0, idx
     while start < len(lines):
         # strings first: a default like color="#fff" or label="(" would otherwise cut the
-        # signature short, and the def would read as a body-less test (audit 09/22/2026)
+        # signature short, and the def would read as a body-less test
         code = _QUOTED_RE.sub("", lines[start]).split("#", 1)[0]
         depth += sum(code.count(ch) for ch in "([{") - sum(code.count(ch) for ch in ")]}")
         if depth <= 0:
@@ -397,7 +440,7 @@ def _is_fixture(lines: list[str], idx: int) -> bool:
     i = idx - 1
     # walk up over the decorator lines (and the lines of a decorator that spans several)
     # only the decorator lines above the def: a module constant that merely mentions the word
-    # must not exempt a real test (audit 09/22/2026)
+    # must not exempt a real test
     while (i >= 0 and lines[i].strip().startswith(("@", ")", "]", "}"))) or (
             i >= 0 and lines[i].strip() and lines[i][:1] in (" ", "	") and i < idx and lines[i].strip().endswith(",")):
         if "pytest.fixture" in lines[i] or lines[i].strip().startswith("@fixture"):
@@ -462,8 +505,8 @@ def check_swallowed_default_timeout(path: str, lines: list[str]) -> list[dict]:
     When the element is absent the action waits Playwright's default 30 s,
     the handler hides the timeout, and the test passes 30 s slower each time.
     InsightsPage.navigate did this on every widget search: 7 minutes of each
-    nightly leg, for months, behind green results (09/18/2026). Ask first
-    (is_visible(), count()) or give the action a short timeout=.
+    full run, for months, behind green results. Ask first (is_visible(),
+    count()) or give the action a short timeout=.
     """
     try:
         tree = ast.parse("\n".join(lines))
@@ -501,9 +544,9 @@ def check_skip_in_except(path: str, lines: list[str]) -> list[dict]:
     The except-swallow rule catches a handler that prints or passes.
     A handler that skips is the same defect wearing a report: the run
     says "not supported" where the app actually raised, and nobody
-    reads a skip as a failure. Register item 25 found five of these -
-    a drag that threw, a dialog that never opened - each reported for
-    weeks as a missing feature.
+    reads a skip as a failure. One review found five of these, a drag
+    that threw and a dialog that never opened among them, each reported
+    for weeks as a missing feature.
 
     A why-comment on the except line (or the line above) excuses the
     deliberate ones: a fixture that skips because the environment is
@@ -611,10 +654,9 @@ def check_except_without_why(path: str, lines: list[str]) -> list[dict]:
     """Except handlers that neither re-raise nor fail and carry no why.
 
     A handler that returns False, sets None, continues or passes turns
-    the app's failure into a branch the test never reports. The coverage
-    assessment (docs/TEST_COVERAGE_ASSESSMENT.md, 09/08/2026) found 135
-    such handlers in the suite, 107 with no comment; each is a place a
-    real defect reads as a pass. A why-comment on the except line or the
+    the app's failure into a branch the test never reports. A review of
+    the suite found 135 such handlers, 107 with no comment; each is a
+    place a real defect reads as a pass. A why-comment on the except line or the
     line above excuses the deliberate ones; a body that raises,
     pytest.fails or asserts needs none.
     """
@@ -643,9 +685,9 @@ def check_except_without_why(path: str, lines: list[str]) -> list[dict]:
 def check_presence_only_tests(path: str, lines: list[str]) -> list[dict]:
     """Test bodies whose every oracle is that something is visible.
 
-    294 of the 508 product tests read this way on 09/08/2026
-    (docs/TEST_COVERAGE_ASSESSMENT.md): they prove the page shows a thing,
-    not that the action changed it, and most of them restate the wait
+    More than half of the product tests read this way when the rule was
+    added: they prove the page shows a thing, not that the action changed
+    it, and most of them restate the wait
     their own setup already made. A strong oracle compares a value, a
     count against a baseline, a URL, a text, or a state, or expects a
     negative. A body line mentioning 'oracle' excuses a deliberate
@@ -653,7 +695,7 @@ def check_presence_only_tests(path: str, lines: list[str]) -> list[dict]:
 
     Product tests only: a tool or plugin pin that asserts a startswith
     reads as presence to this heuristic, and the oracle scale was
-    written for tests of the product (09/11/2026).
+    written for tests of the product.
     """
     findings = []
     if not path.startswith(PRODUCT_PREFIXES):
@@ -676,7 +718,7 @@ def check_presence_only_tests(path: str, lines: list[str]) -> list[dict]:
             "msg": f"{m.group(1)} only checks that something is visible or "
                    "attached. Say what the action changed: compare a value, a "
                    "count against a baseline, a URL, a text, a state, or expect "
-                   "a negative (docs/TEST_COVERAGE_ASSESSMENT.md > oracle scale).",
+                   "a negative (CONVENTIONS.md > Adding a test).",
         })
     return findings
 
@@ -744,8 +786,8 @@ def wanted(path: str) -> bool:
 
 def git(*args: str) -> str:
     # utf-8, not the console's code page: a diff carrying smart quotes
-    # crashed the reader thread on Windows (cp1252, 09/14/2026) and the
-    # hook blocked the commit that fixed the converters' Unicode map
+    # crashed the reader thread on Windows (cp1252) and the hook blocked
+    # the commit that fixed it
     result = subprocess.run(
         ["git", *args], capture_output=True, text=True, check=False, cwd=REPO,
         encoding="utf-8", errors="replace",
@@ -853,12 +895,11 @@ def main() -> int:
                     findings.append(f)
         # A NEW test lands with its Steps block (CONVENTIONS.md > Adding a
         # test): on added lines that rule blocks. Whole-repo scans keep it
-        # a warning, because 269 existing tests still owe theirs.
+        # a warning, because existing tests still owe theirs.
         # The swallowed default timeout blocks on added lines for the same
         # reason: the existing sites are standing debt, a new one is a choice.
         for f in findings:
-            # presence-only-oracle joined on 09/21/2026, when the last of the 25
-            # tests it found got a real oracle: the debt is 0, so a new one is a choice.
+            # presence-only-oracle blocks too: its standing debt is 0, so a new one is a choice.
             if f["rule"] in ("test-without-steps", "swallowed-default-timeout", "presence-only-oracle",
                              "no-oracle-test", "early-exit-pass"):
                 f["sev"] = "HIGH"

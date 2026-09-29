@@ -10,7 +10,7 @@ none arrive it looks for the container. A container that is there with
 nothing in it is a data fact and skips, naming what IS on screen. A
 container that is not there is a broken page and fails.
 
-Register item 25 audited every skip in the UI suite against this rule.
+Every skip in the UI suite was audited against this rule.
 Use this helper rather than a bare `if locator.count() == 0: skip`,
 which cannot tell the two apart.
 """

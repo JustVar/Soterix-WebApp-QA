@@ -6,7 +6,7 @@ or Rules test suites. Every check reads a value the page shows: the
 header's tab labels, the selected tab's paint (its box paints
 rgb(3, 23, 31); the address stays /admin for every tab), the General
 cards' titles, blurbs and View buttons, the audit trail's breadcrumb
-and column headers (measured 09/12/2026 on US; register row 53).
+and column headers (all measured on the app).
 """
 import re
 
@@ -194,7 +194,7 @@ class TestAdminGeneral:
         self._open_general()
         # _open_general has already proved the section rendered, so a
         # missing Event Wall entry is a regression in a permanent
-        # control, not an absent artifact (register item 25).
+        # control, not an absent artifact.
         event_wall = self.page.get_by_text("Event Wall", exact=False).first
         event_wall.wait_for(state="visible", timeout=10000)
         event_wall.click()

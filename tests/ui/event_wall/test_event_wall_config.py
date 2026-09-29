@@ -1,7 +1,7 @@
 """Event Wall configuration tests (regular login).
 
 Event Wall is its own feature, deliberately separated from the
-regular app's Views/Events coverage (per Justin, 08/13/2026). It has
+regular app's Views/Events coverage. It has
 two surfaces that must not be mixed:
 
 - CONFIGURATION (this file): the regular login sets the wall up at
@@ -31,7 +31,7 @@ SITE_NAME = config.get("test_site_name")
 # ('Example Corporate Off...', no title attribute; probed 09/16/2026)
 SITE_ROW = shown_as(SITE_NAME) if SITE_NAME else None
 CAMERA_NAME = config.get("test_camera_name")
-# measured 09/12/2026 on US (register row 53): the table's columns and its empty row
+# measured on the app: the table's columns and its empty row
 EVENT_WALL_HEADERS = ["Configuration Name", "Site", "No of Devices", "Devices", ""]
 EVENT_WALL_EMPTY = "No configuration found."
 
@@ -59,7 +59,7 @@ class TestEventWallConfig:
         ).first
         # General is already proved up by the Rules sub-tab wait above,
         # so a missing card here is a regression in a permanent control,
-        # not an absent artifact (register item 25).
+        # not an absent artifact.
         card.wait_for(state="visible", timeout=10000)
         card.get_by_text("View", exact=True).first.click()
 
@@ -106,7 +106,7 @@ class TestEventWallConfig:
         The rows' own checkboxes are the expanded signal, not a camera
         name: the panel truncates names to 'Soterix Multica...' with no
         title attribute, so a text wait on the configured camera never
-        matched (09/11/2026 full run, both tests). The search box above
+        matched in a full run. The search box above
         the tree filters SITES, not cameras (probed the same day).
         Returns the count the group row declares ('All Cameras 22').
         """
@@ -209,7 +209,7 @@ class TestEventWallConfig:
         # .first: the panel lists each site once before it is expanded
         site_row = self.page.get_by_text(SITE_ROW).first
         expect(site_row).to_be_visible(timeout=10000)
-        # the row reads '<site> <device count>' (measured: 'Spartan0 22')
+        # the row reads '<site> <device count>': the site name, a space, a number
         site_text = " ".join(site_row.locator("xpath=..").inner_text().split())
         site_count = site_text.rsplit(" ", 1)[-1]
         shown_name = site_text.rsplit(" ", 1)[0]

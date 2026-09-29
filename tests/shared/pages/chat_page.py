@@ -2,7 +2,7 @@
 
 Models the redesigned Chat panel (2026-08): a search-first overlay
 opened from the header chat icon. All mechanisms below were measured
-08/13/2026 with tools/explore_app.py (docs/TEST_REPAIRS.md, chats row):
+on the app with tools/explore_app.py:
 
 - The header icon TOGGLES the panel. The open marker is the visible
   panel search input (placeholder 'Search'); the old Create Group
@@ -24,20 +24,21 @@ opened from the header chat icon. All mechanisms below were measured
 - Sent text renders as span.sentMsg in the thread - the delivered
   oracle. Callers pass run-unique text or the wait can match an older
   run's message.
-- Group creation is a BOX difference (both probed 09/04/2026). The
-  india box has no entry point at all. The US box renders a real
-  'Create Group' button, and the whole flow works: a Create New Group
-  dialog (Group Name, Select Group members), a group thread with
-  edit, delete and info icons. group_creation_affordance() reports
-  which box this is; the group tests skip with proof on india and run
-  on US (register item 29).
+- Group creation is a tenant setting. A tenant without group chat has
+  no entry point at all. A tenant with it renders a real 'Create
+  Group' button, and the whole flow works: a Create New Group dialog
+  (Group Name, Select Group members), a group thread with edit,
+  delete and info icons. group_creation_affordance() reports which
+  kind this tenant is; the group tests skip with proof on a tenant
+  without the button and run on one with it.
 - Four group traps, each paid for with a probe: the panel SEARCH finds
   users only, never a group, so the conversation list is the one
   oracle for a created group; the member autocomplete popper stays
   open over the Create button after a pick and needs an Escape; the
   Delete Group confirm controls are div.MuiBox-root, not buttons; and
   the panel does not repaint after a delete, so a row is read only
-  after refresh_panel() re-opens it (item 8's lesson again).
+  after refresh_panel() re-opens it (the bookmarks panel has the same
+  trap).
 - The group thread's edit icon is inert on the current build: no
   input, no modal, no change (probed 09/08/2026). group_rename_control()
   is the tripwire that fails loud the day it opens something.
@@ -96,7 +97,7 @@ class ChatPage:
         ).filter(visible=True)
         self.sent_messages = self.panel.locator("span.sentMsg")
 
-        # Groups (US box). The button is the entry point; the dialog's
+        # Groups (a tenant with group chat). The button is the entry point; the dialog's
         # two inputs each have a hidden mounted twin, so filter visible.
         self.group_create_button = self.panel.locator(
             "button.add-btn", has_text="Create Group"
@@ -141,8 +142,7 @@ class ChatPage:
         The list does not repaint after a group mutation: a deleted
         group's row stays on screen until the panel is re-opened, and
         a delete verified on the stale panel reads as refused
-        (measured 09/04/2026 - the same trap the bookmarks panel has,
-        register item 8).
+        (measured - the same trap the bookmarks panel has).
         """
         self.close_chat_panel()
         self.open_chat_panel()
@@ -238,9 +238,10 @@ class ChatPage:
     def group_creation_affordance(self) -> bool:
         """True when a visible Create Group control exists.
 
-        This is a box difference, not a version one: US shows the
-        button, india shows nothing (both probed 09/04/2026). The
-        group tests use it to skip with proof on india and run on US.
+        This is a tenant setting, not an app version: a tenant with
+        group chat shows the button, one without shows nothing. The
+        group tests use it to skip with proof on a tenant without the
+        button and run on one with it.
         """
         # is_visible() is False, not an error, when nothing matches
         return self.group_create_button.first.is_visible()

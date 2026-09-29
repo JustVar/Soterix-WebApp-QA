@@ -12,20 +12,13 @@ except ModuleNotFoundError as exc:
         raise                    # a dependency of the package is missing
     raise ModuleNotFoundError(
         "soterix-qa-shared is not installed. "
-        "Run: pip install -e ../soterix-qa-shared"
+        "Run: pip install -r requirements.txt"
     ) from None
 
-# This repo's names for the map of a run page. The package knows a lab camera only as a
-# parameter text; config/run_axis.py reads its model and its address from the registry.
-from soterix_qa_shared.reporting import run_page as _page
-
-from config.run_axis import camera_columns
-
-_page.configure_axis(camera_columns)
 # The tests red for an app defect somebody already knows about, from
 # config/known_defects.yaml, so the run page can say which failures are
 # news and which are being worked.
-from tests.shared.helpers.known_defects import known_defect_for  # noqa: E402
+from tests.shared.helpers.known_defects import known_defect_for
 
 _mod.configure_known_defects(known_defect_for)
 

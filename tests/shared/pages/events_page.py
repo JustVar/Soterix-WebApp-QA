@@ -231,7 +231,7 @@ class EventsPage:
         tooltip to go. A site row cut by CSS ('textEllipsis') opens a MUI
         tooltip with the full name on hover, and that popper sat over the
         'All Cameras' row and intercepted its click for the full 30 s
-        (india, 'Example Corporate Office', 09/16/2026)."""
+        (measured with the site 'Example Corporate Office')."""
         self.page.mouse.move(0, 0)
         tooltip = self.page.locator("[role='tooltip']")
         try:
@@ -245,7 +245,7 @@ class EventsPage:
         """Open the Locations & Cameras menu, expand the site to its
         cameras and return (the count the site node declares, the camera
         containers listed), then dismiss the menu. The site node reads
-        '<site> <count>' (measured 09/12/2026: 'Spartan0 22')."""
+        '<site> <count>': the site name, a space, a number."""
         self.camera_dropdown.click()
         menu = self.page.locator("#simple-menu")
         menu.wait_for(state="visible", timeout=10000)

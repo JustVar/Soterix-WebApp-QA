@@ -9,7 +9,7 @@ from tests.shared.pages.admin_page import AdminPage
 
 # One worker for every module that writes this account's rules and their mute state: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_rules")
 
 RULE_TYPES = [
@@ -52,9 +52,7 @@ class TestAdminRules:
             # first place. Leaking one rule is not a tidiness problem:
             # the wizard hides a camera at rule capacity, so a single
             # leftover made the configured camera vanish from Select
-            # Devices and every later run failed there (register
-            # item 25; the capacity behaviour is in Known app
-            # behavior).
+            # Devices and every later run failed there.
             try:
                 # Escape clears the details drawer; the wizard needs its
                 # own Exit button, which is what a test that died part
@@ -89,8 +87,8 @@ class TestAdminRules:
 
         click_add_new_rule already proved the picker opened, but the
         cards render a beat after it, so the old instant count() read
-        raced them and skipped on a card that was on its way (register
-        item 25). The skip now names the types the picker DOES show.
+        raced them and skipped on a card that was on its way. The skip
+        now names the types the picker DOES show.
         """
         card = self.page.locator(f"p:text-is('{rule_type}')")
         try:
@@ -115,7 +113,7 @@ class TestAdminRules:
         rule the tenant happens to hold, and skip "No rules with X
         icons found" when the list was empty. That skipped on a clean
         tenant and muted or deleted a real user's rule on a busy one -
-        the LPR list lesson (register items 25 and 27).
+        the LPR list lesson.
 
         Occupancy is the cheapest type to make: it configures through
         the full-view switch, so the wizard needs no canvas drawing.
@@ -260,7 +258,7 @@ class TestAdminRules:
 
         # Deleting index -1 took whichever rule the tenant listed last,
         # so a run could delete a team-owned rule; the test now deletes
-        # the one it made (register item 25).
+        # the one it made.
         assert self.admin.delete_rule_by_name(rule_name), (
             f"The rule '{rule_name}' this test created is not in the list, "
             f"so there was nothing to delete"

@@ -3,7 +3,7 @@
 Covers navigation, date filter, view switching, and tab navigation.
 Every check reads a value the page shows: the URL, the date filter's
 text, the selected tab's paint, the item layout, the names a search
-returns (measured 09/12/2026 on US; register row 53).
+returns (all measured on the app).
 
 Migrated from Selenium:
 - test_navigate_to_media_page (line 5827)

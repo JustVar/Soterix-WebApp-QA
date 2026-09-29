@@ -1,43 +1,41 @@
-﻿<#
+<#
 .SYNOPSIS
-  The scheduled livestream run on a Windows machine: pull, run the tests
-  marked `livestream` per box, publish each run to the archive on spartan1.
+  The scheduled run on a Windows machine: pull, run the tests marked
+  `livestream` (or any target), keep the run's report page on this machine.
 
 .DESCRIPTION
-  Why a Windows machine: the QA tenants stream H.265, and Chrome decodes it
+  Why a Windows machine: the QA server streams H.265, and Chrome decodes it
   only through a platform decoder. Windows Chrome has one out of the box.
-  Since 09/17/2026 spartan1 decodes it too (Intel GPU, VA-API, headed on a
-  headless Weston: deploy/spartan1/README.md) and its nightly runs the
-  livestream tests; this machine is the fallback for the day that breaks
-  (register row 47).
+  Chrome on Linux needs a GPU and a Wayland display (docs/LINUX_H265.md).
 
-  Same guards as deploy/spartan1/nightly.sh, in PowerShell 5.1:
+  Three guards, in PowerShell 5.1:
   1. One run at a time: a stale predecessor (pid file) is killed with its
      process tree before the new run starts.
-  2. A cap on the whole run per box: pytest-timeout's only Windows method
-     kills the whole session at the first hang, so the cap is on the process
-     instead (taskkill /T after RunCapMinutes).
+  2. A cap on the whole run: pytest-timeout's only Windows method kills the
+     whole session at the first hang, so the cap is on the process instead
+     (taskkill /T after RunCapMinutes).
   3. The clone follows origin/main exactly (git reset --hard); evidence under
      reports/ is untracked and survives.
 
+  The run writes its own report page under reports\runs\<run>\run.html. The
+  last log line names it. Nothing leaves the machine.
+
   Trials on a developer checkout: always pass -NoReset (the reset discards
-  uncommitted work) and usually -NoPublish.
+  uncommitted work).
 
 .EXAMPLE
-  .\livestream-run.ps1                                  # the scheduled form
-  .\livestream-run.ps1 -Boxes us -NoReset -NoPublish    # a trial on this checkout
-  .\livestream-run.ps1 -Target tests/ui/maps -Marker none -Boxes us -NoReset -NoPublish -DryRun
+  .\livestream-run.ps1                                   # the scheduled form
+  .\livestream-run.ps1 -NoReset                          # a trial on this checkout
+  .\livestream-run.ps1 -Target tests/ui/maps -Marker none -NoReset -DryRun
 #>
 param(
     [string]$Repo = "C:\qa\Soterix-WebApp-QA",
     [string]$Target = "tests/ui",
     [string]$Marker = "livestream",      # "none" runs the whole target
-    [string]$Boxes = "india us",
     [int]$Workers = 2,
     [int]$MaxFail = 50,
     [int]$RunCapMinutes = 90,
     [switch]$NoReset,
-    [switch]$NoPublish,
     [switch]$DryRun
 )
 
@@ -54,8 +52,18 @@ function Write-Log([string]$Message) {
     Write-Output $line
 }
 
-Write-Log "=== livestream run start (target: $Target, marker: '$Marker', boxes: $Boxes)"
+Write-Log "=== run start (target: $Target, marker: '$Marker')"
 if (-not (Test-Path $Python)) { Write-Log "no venv at $Python; see deploy/windows-runner/README.md"; exit 1 }
+
+# The suite reads QA_USER / QA_PASSWORD from .env (config/env/qa.py), or
+# from the environment when a trial sets them there. Without them it stops
+# at login, so stop here with a clear line instead.
+$envFile = Join-Path $Repo '.env'
+$inFile = (Test-Path $envFile) -and (Select-String -Path $envFile -Pattern '^QA_USER=.' -Quiet)
+if (-not $env:QA_USER -and -not $inFile) {
+    Write-Log "=== stopped: QA_USER is not set in $envFile (README.md, 'What the machine needs')"
+    exit 1
+}
 
 # Guard 1: one run at a time.
 if (Test-Path $PidFile) {
@@ -80,66 +88,58 @@ if ($NoReset) {
     & $Python -m pip install -q -r requirements.txt
 }
 
-$published = @()
-foreach ($box in ($Boxes -split '\s+' | Where-Object { $_ })) {
-    # The suite reads QA_<BOX>_USER / QA_<BOX>_PASSWORD from .env for the box
-    # it is asked for (config/env/qa.py); without them it stops at login.
-    $key = "QA_$($box.ToUpper())_USER"
-    $envFile = Join-Path $Repo '.env'
-    if (-not (Test-Path $envFile) -or -not (Select-String -Path $envFile -Pattern "^$key=." -Quiet)) {
-        Write-Log "=== $box skipped: $key is not set in $envFile"
-        continue
-    }
-    $env:BOX = $box
-    # --headed is not a preference here, it is the reason the run works.
-    # Headless Chrome on Windows answers MediaSource.isTypeSupported('hvc1')
-    # with true and then never decodes a frame: measured 09/22/2026 on one
-    # test, same minute, same tenant, only this flag different. Headless left
-    # the player at readyState 1 with currentTime 0.00 for 30 s while the
-    # socket delivered 124 frames in 8 s, and the app showed "The camera
-    # failed to load". Headed reached readyState 4 and passed in 25 s.
-    # A headed browser needs a desktop, which is why the task logs on
-    # interactively and why the machine signs in automatically.
-    $pytestArgs = @('-m', 'pytest', $Target, '-n', "$Workers", '-rfEs', "--maxfail=$MaxFail", '-p', 'no:cacheprovider', '--headed')
-    # -Marker none runs the whole target (an empty string cannot be passed
-    # through `powershell -File`).
-    if ($Marker.Trim() -and $Marker.Trim() -ne 'none') { $pytestArgs += @('-m', $Marker.Trim()) }
-    $out = Join-Path $LogDir "livestream-$box.out"
-    $err = Join-Path $LogDir "livestream-$box.err"
-    Write-Log "=== ${box}: $Python $($pytestArgs -join ' ')"
-    if ($DryRun) { continue }
-
-    $started = Get-Date
-    # Guard 2: the run cap. Start-Process so the cap can kill the whole tree.
-    $proc = Start-Process -FilePath $Python -ArgumentList $pytestArgs -WorkingDirectory $Repo `
-        -NoNewWindow -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
-    # PowerShell 5.1: ExitCode stays empty unless the handle was read before
-    # the process ended (the first trial logged "pytest exit:  after 50s").
-    $null = $proc.Handle
-    $finished = $proc.WaitForExit($RunCapMinutes * 60 * 1000)
-    $elapsed = [int]((Get-Date) - $started).TotalSeconds
-    if (-not $finished) {
-        Write-Log "=== $box run cap ($RunCapMinutes min) hit after ${elapsed}s: killing the process tree"
-        & taskkill /PID $proc.Id /T /F | Out-Null
-        $rc = 124
-    } else {
-        $rc = $proc.ExitCode
-    }
-    Write-Log "=== $box pytest exit: $rc after ${elapsed}s (124 = run cap)"
-    # The -rfEs summary is the last lines of the run's output.
-    if (Test-Path $out) { Get-Content $out -Tail 25 | ForEach-Object { Add-Content -Path $Log -Value "    $_" -Encoding utf8 } }
-
-    # Publish the archived run (written at session end, so not after a cap).
-    if ($NoPublish) {
-        Write-Log "=== ${box}: publish skipped (-NoPublish)"
-    } elseif ($rc -eq 124) {
-        Write-Log "=== ${box}: nothing archived to publish (the cap killed the session before it wrote)"
-    } else {
-        & $Python tools/publish_run.py 2>&1 | ForEach-Object { Add-Content -Path $Log -Value "    $_" -Encoding utf8 }
-        Write-Log "=== ${box}: publish exit $LASTEXITCODE (0 published, 1 scp failed, 2 nothing to publish)"
-        if ($LASTEXITCODE -eq 0) { $published += $box }
-    }
+# --headed is not a preference here, it is the reason the run works.
+# Headless Chrome on Windows answers MediaSource.isTypeSupported('hvc1')
+# with true and then never decodes a frame: measured on one test, same
+# minute, same server, only this flag different. Headless left the player
+# at readyState 1 with currentTime 0.00 for 30 s while the socket delivered
+# 124 frames in 8 s, and the app showed "The camera failed to load". Headed
+# reached readyState 4 and passed in 25 s. A headed browser needs a desktop,
+# which is why the task logs on interactively and why the machine signs in
+# automatically.
+$pytestArgs = @('-m', 'pytest', $Target, '-n', "$Workers", '-rfEs', "--maxfail=$MaxFail", '-p', 'no:cacheprovider', '--headed')
+# -Marker none runs the whole target (an empty string cannot be passed
+# through `powershell -File`).
+if ($Marker.Trim() -and $Marker.Trim() -ne 'none') { $pytestArgs += @('-m', $Marker.Trim()) }
+$out = Join-Path $LogDir 'livestream-run.out'
+$err = Join-Path $LogDir 'livestream-run.err'
+Write-Log "=== pytest: $Python $($pytestArgs -join ' ')"
+if ($DryRun) {
+    Remove-Item $PidFile -ErrorAction SilentlyContinue
+    Write-Log "=== dry run done (nothing ran)"
+    exit 0
 }
 
+$started = Get-Date
+# Guard 2: the run cap. Start-Process so the cap can kill the whole tree.
+$proc = Start-Process -FilePath $Python -ArgumentList $pytestArgs -WorkingDirectory $Repo `
+    -NoNewWindow -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+# PowerShell 5.1: ExitCode stays empty unless the handle was read before
+# the process ended (the first trial logged "pytest exit:  after 50s").
+$null = $proc.Handle
+$finished = $proc.WaitForExit($RunCapMinutes * 60 * 1000)
+$elapsed = [int]((Get-Date) - $started).TotalSeconds
+if (-not $finished) {
+    Write-Log "=== run cap ($RunCapMinutes min) hit after ${elapsed}s: killing the process tree"
+    & taskkill /PID $proc.Id /T /F | Out-Null
+    $rc = 124
+} else {
+    $rc = $proc.ExitCode
+}
+Write-Log "=== pytest exit: $rc after ${elapsed}s (124 = run cap)"
+# The -rfEs summary is the last lines of the run's output.
+if (Test-Path $out) { Get-Content $out -Tail 25 | ForEach-Object { Add-Content -Path $Log -Value "    $_" -Encoding utf8 } }
+
+# The run page is written at session end, so a capped run has none.
+$runsDir = Join-Path $Repo 'reports\runs'
+$page = $null
+if ($rc -ne 124 -and (Test-Path $runsDir)) {
+    $latest = Get-ChildItem $runsDir -Directory | Sort-Object LastWriteTime | Select-Object -Last 1
+    if ($latest -and (Test-Path (Join-Path $latest.FullName 'run.html'))) { $page = Join-Path $latest.FullName 'run.html' }
+}
 Remove-Item $PidFile -ErrorAction SilentlyContinue
-Write-Log "=== livestream run done (published: $($published -join ', '))"
+if ($page) {
+    Write-Log "=== run done: open $page"
+} else {
+    Write-Log "=== run done: no run page was written (a capped or crashed session writes none; read $out)"
+}

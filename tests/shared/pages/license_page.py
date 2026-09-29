@@ -164,7 +164,7 @@ class LicensePage:
         ready = self.total_licenses_widget.or_(self.breadcrumb.first)
         self._appears(ready.first, timeout=20000)
         # The table lands after the summary and re-renders once its data
-        # arrives (india: ten rows, read as none 09/11/2026): wait for rows
+        # arrives (ten rows were once read as none): wait for rows
         # and for their count to hold.
         self._table_settled()
 
@@ -369,7 +369,7 @@ class LicensePage:
 
     # ----- Readers: the numbers and names the tests reconcile -----
     #
-    # Measured on both boxes 09/11/2026. The summary block reads
+    # Measured on the app. The summary block reads
     # "Total Licenses 100  Active : 22  Available : 78  Suspended : 0"
     # (after the Sites and Site Admins blocks, which carry their own
     # Active/Suspended pairs); the Available table has the columns
@@ -476,7 +476,7 @@ class LicensePage:
 
         expand_site returns when the row count moves, which is the
         collapse container; its nested table lands a moment later and
-        grows row by row (india: 2 of 15 read on the first tick), so the
+        grows row by row (2 of 15 read on the first tick), so the
         answer is the count that held for a second.
         """
         deadline = time.monotonic() + timeout_s

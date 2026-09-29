@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate step definition stub JSON files from test source files.
 
 Scans test files using AST parsing, extracts class + method names,
@@ -20,7 +19,7 @@ Usage:
     # Rebuild title + steps FROM THE DOCSTRINGS, keeping each case_key
     python tools/generate_step_stubs.py --from-docstrings tests/ui/chats/test_chats.py
 
---from-docstrings is the sidecar sync (docs/TEST_REPAIRS.md item 5).
+--from-docstrings is the sidecar sync.
 A test's docstring is its QA Touch case: the first line is the title,
 the "Steps:" block holds the tester steps and each "Expected:" line
 what the tester sees. This mode copies exactly that into the sidecar
@@ -194,8 +193,8 @@ def find_test_files(paths: list[str] | None = None) -> list[Path]:
                 result.extend(sorted(path.rglob('test_*.py')))
         return result
 
-    # Default: every product root (config/products.py) and tests/api/
-    test_dirs = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS] + [TESTS_DIR / 'api']
+    # Default: every product root (config/products.py)
+    test_dirs = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS]
     result = []
     for d in test_dirs:
         if d.exists():
@@ -312,7 +311,7 @@ def process_from_docstrings(file_path: Path, dry_run: bool = False) -> bool:
             names = ', '.join(o.split('::', 1)[1] for o in others)
             print('    SHARED KEY   ' + name + ': ' + entry['case_key']
                   + ' is also claimed by ' + names
-                  + ' - a sync would write both tests into one case (register item 6)')
+                  + ' - a sync would write both tests into one case')
     if dry_run:
         return True
     output_path.parent.mkdir(parents=True, exist_ok=True)

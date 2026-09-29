@@ -8,7 +8,7 @@ from tests.shared.pages.lpr_page import LprPage
 
 # One worker for every module that writes this account's LPR lists, views and widgets: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_lpr")
 
 

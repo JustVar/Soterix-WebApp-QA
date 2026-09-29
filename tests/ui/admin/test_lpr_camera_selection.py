@@ -25,7 +25,7 @@ CAMERA_NAME = config.get("test_camera_name")
 
 # One worker for every module that uses the LPR camera page: its layout (1x1, 2x2, 3x3) is kept
 # on the server for each user, the layout test changes it, and the tests here measure tiles on
-# 2x2. Under -n two workers raced on it (pytest.ini --dist loadgroup; audit 09/21/2026).
+# 2x2. Under -n two workers raced on it (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_lpr")
 
 

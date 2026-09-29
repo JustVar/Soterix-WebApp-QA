@@ -6,18 +6,12 @@ pytest-html==4.2.0
 pytest-xdist==3.8.0
 requests==2.34.2
 aiohttp==3.14.3  # tools/stream_probe.py --no-browser (direct media socket)
-paramiko==5.0.0
-scp==0.16.1
 pytest-rerunfailures==16.6
-# Per-test ceiling for scheduled runs (deploy/spartan1/nightly.sh passes
-# --timeout). Playwright cannot time out a driver call that never answers;
-# this can. Off unless asked for: on Windows the only method kills the
-# whole run at the first hang, so local runs do not pass it.
+# The per-test ceiling (pytest.ini passes --timeout=600 on every run).
+# Playwright cannot time out a driver call that never answers. This can.
+# On Windows its only method kills the whole session at the first hang,
+# which is why the cap is generous.
 pytest-timeout==2.4.0
-jira==3.10.5
-lxml==6.1.2
-msal==1.38.0
-msgraph-core==1.5.1
 PyYAML==6.0.3
 
 # Linting / formatting
@@ -31,16 +25,24 @@ ruff==0.16.5
 # layer and the CI gates. `plugins/` and `tools/` here are thin shims over it,
 # so without it pytest cannot even collect.
 #
-# Over HTTPS on purpose, so `pip install -r requirements.txt` is the ONLY
-# setup step. The team's git already speaks HTTPS to github.com, so the
-# credential you use for `git clone` is the one pip uses here. You need read
-# access to the repo, which is separate from access to this one.
+# The package is a wheel file under vendor/, so `pip install -r requirements.txt`
+# is the ONLY setup step. It needs no GitHub grant and no CI secret. pip
+# resolves the `--find-links` path relative to this file, so the command works
+# from any folder when you name this file by path.
 #
-# Pinned to a TAG, not a branch, because a run's results are only comparable
-# if everyone is on the same pipeline.
+# Pinned to one version, because a run's results are only comparable if
+# everyone is on the same pipeline. tests/plugins/test_shared_package_pin.py
+# fails if the installed version, this line and the wheel in vendor/ disagree.
+#
+# UPDATING THE PACKAGE: in the package repo, bump the version in
+# pyproject.toml, push, wait for its CI, tag vX.Y.Z, then build the wheel:
+#     python -m build --wheel
+# Copy dist/soterix_qa_shared-X.Y.Z-py3-none-any.whl into vendor/, delete the
+# old wheel, change the version below, reinstall, run the offline suites, commit.
 #
 # CHANGING THE PACKAGE: clone it beside this repo and install it editable,
 # which overrides the pin until you reinstall:
 #     git clone https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git ../soterix-qa-shared
 #     pip install -e ../soterix-qa-shared
-soterix-qa-shared @ git+https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git@v0.37.0
+--find-links vendor
+soterix-qa-shared==0.38.0

@@ -1,10 +1,10 @@
 """Unit tests for the environment guard in conftest.py.
 
 The skip decisions run against fake items and fake env settings: no
-browser, no tenant. Each config/env/ profile (qa, stage, prod, and a
-partner file with no flags) is pinned per marker, and the collection hook
-is exercised end to end with a fake pytest config so the wiring cannot
-drift from the pure decision.
+browser, no tenant. Each config/env/ profile (qa, stage, prod, and a file
+with no flags) is pinned per marker, and the collection hook is exercised
+end to end with a fake pytest config so the wiring cannot drift from the
+pure decision.
 
 Living under tests/plugins/ to be picked up by the default discovery
 without needing a new test root or collection config.
@@ -30,11 +30,17 @@ import conftest  # noqa: E402
 QA = {'allow_write': True, 'allow_delete': True}
 STAGE = {'allow_write': True, 'allow_delete': False}
 PROD = {'allow_write': False, 'allow_delete': False}
-PARTNER = {}  # the *_pat.py files carry no flags at all
+NO_FLAGS = {}  # an env file that says nothing about writes
 
 DELETE_MARKERS = ('destructive', 'mutating')
 WRITE_MARKERS = ('admin_users', 'admin_rules', 'admin_sites', 'bookmark', 'sequences')
 READ_MARKERS = ('smoke', 'views_myviews', 'events', 'search', 'lpr', 'licenses')
+
+# The keys every config/env/ file carries, so a rename there cannot
+# silently switch a guard or a fixture off.
+FLAT_KEYS = {'base_url', 'api_base_url', 'allow_write', 'allow_delete', 'default_site_id',
+             'test_site_name', 'test_camera_name', 'test_chat_user_search',
+             'test_chat_user_name', 'camera_capabilities', 'without'}
 
 
 class FakeItem:
@@ -53,7 +59,9 @@ class FakeItem:
 
 
 def _config(run_destructive: bool = False):
-    return SimpleNamespace(getoption=lambda name: run_destructive if name == '--run-destructive' else None)
+    def getoption(name, default=None):
+        return run_destructive if name == '--run-destructive' else default
+    return SimpleNamespace(getoption=getoption)
 
 
 # ---------------------------------------------------------------------------
@@ -110,12 +118,12 @@ def test_stage_runs_write_and_read_tests(marker):
 def test_missing_flags_count_as_false(marker):
     """A profile with no flags refuses write and delete markers."""
     # Same default as base_config.is_write_allowed / is_delete_allowed.
-    assert conftest.env_skip_reason({marker: True}, PARTNER, 'qa') is not None
+    assert conftest.env_skip_reason({marker: True}, NO_FLAGS, 'qa') is not None
 
 
 def test_unmarked_test_runs_everywhere():
     """An unmarked test runs on every profile."""
-    for settings, env in ((QA, 'qa'), (STAGE, 'stage'), (PROD, 'prod'), (PARTNER, 'qa')):
+    for settings, env in ((QA, 'qa'), (STAGE, 'stage'), (PROD, 'prod'), (NO_FLAGS, 'qa')):
         assert conftest.env_skip_reason({}, settings, env) is None
 
 
@@ -176,59 +184,6 @@ def test_hook_names_the_env_alias_the_user_typed(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# The box guard: what a tenant does not have, by marker
-# ---------------------------------------------------------------------------
-
-US_WITHOUT_LPR = {'without': {'lpr': 'Spartan0 has no LPR cameras (Justin, 09/08/2026)'}}
-BOXES = {**QA, 'boxes': {'us': US_WITHOUT_LPR, 'india': {}}}
-
-
-def test_box_without_refuses_only_its_markers():
-    """A box's `without` map refuses tests carrying those markers, with the stated reason."""
-    reason = conftest.box_skip_reason({'lpr': True, 'admin': True}, US_WITHOUT_LPR, 'us')
-    assert reason == ("box us is without 'lpr': Spartan0 has no LPR cameras (Justin, 09/08/2026) "
-                      "(config/env/ > boxes > us > without)")
-    assert conftest.box_skip_reason({'admin': True, 'ui': True}, US_WITHOUT_LPR, 'us') is None
-    assert conftest.box_skip_reason({}, US_WITHOUT_LPR, 'us') is None
-
-
-def test_box_with_no_without_map_refuses_nothing():
-    """A box entry without the map, or no entry at all, lets every test run."""
-    assert conftest.box_skip_reason({'lpr': True}, {}, 'india') is None
-    assert conftest.box_skip_reason({'lpr': True}, None, 'india') is None
-    assert conftest.active_box_settings(QA, 'us') == {}
-    assert conftest.active_box_settings(BOXES, 'us') == US_WITHOUT_LPR
-
-
-def test_hook_skips_by_box_and_lets_the_other_box_run(monkeypatch):
-    """With BOX=us the hook skips lpr tests naming the box; with BOX=india it does not."""
-    monkeypatch.setattr(conftest, 'ENV_SETTINGS', BOXES)
-    monkeypatch.setenv('ENV', 'qa')
-    monkeypatch.setenv('BOX', 'us')
-    items = [FakeItem('lpr', 'admin', 'ui'), FakeItem('admin', 'ui')]
-    conftest.pytest_collection_modifyitems(_config(), items)
-    assert items[0].skip_reasons == [
-        "box us is without 'lpr': Spartan0 has no LPR cameras (Justin, 09/08/2026) "
-        "(config/env/ > boxes > us > without)"]
-    assert items[1].markers == []
-    monkeypatch.setenv('BOX', 'india')
-    item = FakeItem('lpr', 'admin', 'ui')
-    conftest.pytest_collection_modifyitems(_config(), [item])
-    assert item.markers == []
-
-
-def test_env_guard_speaks_before_the_box_guard(monkeypatch):
-    """A test refused by the env is reported by the env, not the box."""
-    monkeypatch.setattr(conftest, 'ENV_SETTINGS', {**PROD, 'boxes': {'us': {'without': {'admin_users': 'x'}}}})
-    monkeypatch.setenv('ENV', 'prod')
-    monkeypatch.setenv('BOX', 'us')
-    item = FakeItem('admin_users')
-    conftest.pytest_collection_modifyitems(_config(), [item])
-    assert len(item.skip_reasons) == 1
-    assert item.skip_reasons[0].startswith('env prod:')
-
-
-# ---------------------------------------------------------------------------
 # The marker names exist
 # ---------------------------------------------------------------------------
 
@@ -241,54 +196,85 @@ def test_guarded_markers_are_registered_in_pytest_ini():
 
 
 # ---------------------------------------------------------------------------
-# The env-level `without` map (config/env/neurosen.py)
+# The env-level `without` map: what the server lacks, by marker
 # ---------------------------------------------------------------------------
 
-NEUROSEN = {'allow_write': True, 'allow_delete': False,
-            'without': {'chats': 'Neurosen has no messaging (measured 2026-09-11)'}}
+LACKING = {'allow_write': True, 'allow_delete': False,
+           'without': {'chats': 'this server has no messaging (measured 2026-09-11)'}}
 
 
 def test_env_without_refuses_only_its_markers():
-    """An env's own `without` map skips the marked tests with the stated reason."""
-    reason = conftest.env_skip_reason({'chats': True, 'ui': True}, NEUROSEN, 'neurosen')
-    assert reason == ("env neurosen is without 'chats': Neurosen has no messaging (measured 2026-09-11) "
-                      "(config/env/neurosen.py > without)")
-    assert conftest.env_skip_reason({'views_myviews': True}, NEUROSEN, 'neurosen') is None
+    """The env's `without` map skips the marked tests with the stated reason."""
+    reason = conftest.env_skip_reason({'chats': True, 'ui': True}, LACKING, 'lab')
+    assert reason == ("env lab is without 'chats': this server has no messaging (measured 2026-09-11) "
+                      "(config/env/lab.py > without)")
+    assert conftest.env_skip_reason({'views_myviews': True}, LACKING, 'lab') is None
     assert conftest.env_skip_reason({'chats': True}, QA, 'qa') is None
+
+
+def test_env_with_no_without_map_refuses_nothing():
+    """A missing or empty map lets every marked test run."""
+    assert conftest.env_skip_reason({'lpr': True}, {**QA, 'without': {}}, 'qa') is None
+    assert conftest.env_skip_reason({'lpr': True}, {**QA, 'without': None}, 'qa') is None
 
 
 def test_env_flags_speak_before_the_env_without_map():
     """A test refused by allow_delete is reported by the flag, not the map."""
-    settings = {**NEUROSEN, 'without': {'mutating': 'x'}}
-    assert conftest.env_skip_reason({'mutating': True}, settings, 'neurosen').startswith(
-        'env neurosen: allow_delete is False')
+    settings = {**LACKING, 'without': {'mutating': 'x'}}
+    assert conftest.env_skip_reason({'mutating': True}, settings, 'lab').startswith(
+        'env lab: allow_delete is False')
 
 
 def test_hook_applies_the_env_without_map(monkeypatch):
     """The collection hook reads the env's map and names the env in the skip reason."""
-    monkeypatch.setattr(conftest, 'ENV_SETTINGS', {**NEUROSEN, 'boxes': {'lab': {}}, 'default_box': 'lab'})
-    monkeypatch.setenv('ENV', 'neurosen')
-    monkeypatch.setenv('BOX', 'lab')
+    monkeypatch.setattr(conftest, 'ENV_SETTINGS', LACKING)
+    monkeypatch.setenv('ENV', 'lab')
     items = [FakeItem('chats', 'ui'), FakeItem('ui')]
     conftest.pytest_collection_modifyitems(_config(), items)
     assert items[0].skip_reasons == [
-        "env neurosen is without 'chats': Neurosen has no messaging (measured 2026-09-11) "
-        "(config/env/neurosen.py > without)"]
+        "env lab is without 'chats': this server has no messaging (measured 2026-09-11) "
+        "(config/env/lab.py > without)"]
     assert items[1].markers == []
 
 
-def test_neurosen_env_file_has_the_shape_the_guards_read():
-    """The env file's keys, so a rename there cannot silently switch a guard off."""
+# ---------------------------------------------------------------------------
+# The env files have the flat shape the guards and fixtures read
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize('name', ['qa', 'stage', 'prod', 'neurosen'])
+def test_every_env_file_has_the_flat_shape(name):
+    """One shape for every server: the keys, the flags and get_credentials()."""
     import importlib
-    mod = importlib.import_module('config.env.neurosen')
+    mod = importlib.import_module(f'config.env.{name}')
     cfg = mod.config
-    assert cfg['qatouch_project'] == 'P0BK'
+    assert set(cfg) >= FLAT_KEYS, f'config/env/{name}.py is missing {sorted(FLAT_KEYS - set(cfg))}'
+    assert 'boxes' not in cfg
+    assert 'default_box' not in cfg
     assert isinstance(cfg['without'], dict)
-    assert cfg['base_url_env'] == 'NEUROSEN_BASE_URL'
-    assert set(cfg['boxes']) == {'lab'}
-    assert cfg['default_box'] == 'lab'
-    assert cfg['boxes']['lab']['email_env'] == 'NEUROSEN_USER'
-    assert (cfg['allow_write'], cfg['allow_delete']) == (True, False)
+    assert isinstance(cfg['camera_capabilities'], dict)
+    assert callable(getattr(mod, 'get_credentials', None))
+
+
+def test_get_credentials_reads_the_one_account_pair(monkeypatch):
+    """QA_USER and QA_PASSWORD, and the site is the file's default_site_id."""
+    from config.env import qa
+    from config.secret import Secret
+    monkeypatch.setenv('QA_USER', 'someone@example.test')
+    monkeypatch.setenv('QA_PASSWORD', 'not-a-real-password')
+    creds = qa.get_credentials()
+    assert creds['email'] == 'someone@example.test'
+    assert creds['password'] == 'not-a-real-password'
+    assert isinstance(creds['password'], Secret)
+    assert creds['site_id'] == qa.config['default_site_id']
+    monkeypatch.delenv('QA_USER')
+    monkeypatch.delenv('QA_PASSWORD')
+    assert (qa.get_credentials()['email'], qa.get_credentials()['password']) == ('', '')
+
+
+def test_prod_is_read_only_by_config():
+    """The production file keeps both flags False, so the write and delete markers skip there."""
+    from config.env import prod
+    assert (prod.config['allow_write'], prod.config['allow_delete']) == (False, False)
 
 
 def test_neurosen_refuses_to_load_without_its_address(monkeypatch):
@@ -298,7 +284,6 @@ def test_neurosen_refuses_to_load_without_its_address(monkeypatch):
     from config import base_config
     monkeypatch.setenv('ENV', 'neurosen')
     monkeypatch.delenv('NEUROSEN_BASE_URL', raising=False)
-    monkeypatch.delenv('BOX', raising=False)
     importlib.reload(importlib.import_module('config.env.neurosen'))
     with pytest.raises(RuntimeError, match='NEUROSEN_BASE_URL'):
         base_config.load_config()
@@ -307,3 +292,12 @@ def test_neurosen_refuses_to_load_without_its_address(monkeypatch):
     cfg = base_config.load_config()
     assert cfg['base_url'] == 'https://neurosen.lab.example'
     assert cfg['api_base_url'] == 'https://neurosen.lab.example/v-apiserver'
+    assert cfg['qatouch_project'] == 'P0BK'
+
+
+def test_an_unknown_env_is_refused_by_name(monkeypatch):
+    """A typo in ENV stops the run and lists the valid names."""
+    from config import base_config
+    monkeypatch.setenv('ENV', 'nowhere')
+    with pytest.raises(RuntimeError, match="Unknown ENV 'nowhere'"):
+        base_config.load_config()

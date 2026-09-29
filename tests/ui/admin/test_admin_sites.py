@@ -12,10 +12,10 @@ from tests.shared.pages.admin_page import AdminPage
 
 # One worker for every module that writes this account's sites and devices: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_sites")
 
-# measured 09/12/2026 on US (register row 53): the list view's columns
+# measured on the app: the list view's columns
 SITES_LIST_HEADERS = ["Site Name", "Enterprise", "Address", "Devices", "Version"]
 
 
@@ -74,8 +74,7 @@ class TestAdminSites:
         )
         # A tenant always has at least one site - it is what everything
         # else hangs off - so an empty Sites page is a broken page, not
-        # an absent artifact. Both of these used to skip (register
-        # item 25).
+        # an absent artifact. Both of these used to skip.
         headers.first.wait_for(state="visible", timeout=10000)
         name = headers.first.locator("p.MuiTypography-root").first.inner_text().strip()
         assert name, (
@@ -89,8 +88,7 @@ class TestAdminSites:
 
         Site cards are the surface. Cards with no online marker are the
         tenant's data; a page with no cards never rendered and is a
-        fault. The old `_appears` read reported both as one skip
-        (register item 25).
+        fault. The old `_appears` read reported both as one skip.
         """
         require_items(
             self.admin.online_status_icons,
@@ -439,7 +437,7 @@ class TestAdminSites:
         self._navigate_to_sites()
         # No pre-check: click_site raises naming every site that IS on
         # the page, which is the tenant-rename fix in one line. The old
-        # pre-check turned that into a skip (register item 25).
+        # pre-check turned that into a skip.
         self.admin.click_site(site_name)
 
         # Camera rows render async after the detail marker; each row

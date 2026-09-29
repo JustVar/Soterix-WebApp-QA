@@ -28,9 +28,9 @@ class MediaPage:
         self.date_filter = page.locator("[role='combobox']").first
 
         # The view toggle is a MUI toggle group of two buttons, aria-label
-        # 'table' and 'grid', aria-pressed on the active one (measured
-        # 09/12/2026 on US; the list button carries icon-table, so the old
-        # img[src*='icon-list'] locator never found it)
+        # 'table' and 'grid', aria-pressed on the active one (the list
+        # button carries icon-table, so the old img[src*='icon-list']
+        # locator never found it)
         self.list_view_button = page.locator("button[aria-label='table']")
         self.grid_view_button = page.locator("button[aria-label='grid']")
 
@@ -179,7 +179,7 @@ class MediaPage:
                 .map(i => Math.round(i.getBoundingClientRect().left))).size"""
         )
 
-    # Measured 09/12/2026 on US. The page has two tab rows: the scope
+    # Measured on the app. The page has two tab rows: the scope
     # buttons (All / My Media / Shared With Me), whose selected one paints
     # its background rgb(0, 67, 77); and the type tabs under them (All /
     # Clips / Folders / Vault), whose selected one paints its text
@@ -421,7 +421,7 @@ class MediaPage:
         ):
             raise RuntimeError(
                 f"Server refused to delete '{name}': 'Data Not "
-                "Deleted!' (app defect - register, App defects)"
+                "Deleted!' (an app defect)"
             )
         delete_btn.wait_for(state="hidden", timeout=15000)
         # No reload fallback here: a reload lands on the default
@@ -462,7 +462,7 @@ class MediaPage:
         """Un-group a named clip from the open folder view.
 
         'Remove From Folder' returns the clip to the level above
-        WITHOUT deleting it (confirmed by Justin, 09/02/2026). The row
+        WITHOUT deleting it (confirmed by hand). The row
         leaving the folder view is the applied signal.
         """
         row = self.item_row(name)
@@ -485,8 +485,8 @@ class MediaPage:
         row.locator("img[src*='icon-options']").first.click()
         self.click_menu_item("Create Link")
         # The tenant answers a folder with the toast 'Empty folder' even
-        # when the folder holds a clip (probed 09/11/2026 on US, the clip
-        # listed inside the folder): name that, not a timeout.
+        # when the folder holds a clip (probed with the clip listed
+        # inside the folder): name that, not a timeout.
         self._dialog_or_answer(self.page.get_by_text("Add Link Name").first,
                                f"Create Link on '{name}'")
 
@@ -580,14 +580,14 @@ class MediaPage:
         row = self.item_row(name)
         row.locator("img[alt='Share']").first.click()
 
-        # A folder's Share icon opens nothing on the tenant (probed
-        # 09/11/2026 on US); a clip's opens the e-mail dialog.
+        # A folder's Share icon opens nothing on the tenant; a clip's
+        # opens the e-mail dialog.
         self._dialog_or_answer(self.email_input, f"Share on '{name}'")
         self.email_input.fill(email)
 
         self.share_button.click()
-        # india 09/11: the e-mail dialog opened for a folder but no success
-        # panel followed; name what the page answered instead of a timeout
+        # The e-mail dialog once opened for a folder but no success panel
+        # followed; name what the page answered instead of a timeout
         self._dialog_or_answer(self.share_success.first, f"Sharing '{name}'")
 
     # --- Export ---
@@ -622,7 +622,7 @@ class MediaPage:
         answer = f"the toast {sorted(seen)}" if seen else "nothing, no toast"
         raise RuntimeError(
             f"{action} opened no dialog within {timeout // 1000} s; the page answered "
-            f"{answer} (folder operations: app defect - register, App defects)"
+            f"{answer} (folder operations: an app defect)"
         )
 
     # --- Search ---

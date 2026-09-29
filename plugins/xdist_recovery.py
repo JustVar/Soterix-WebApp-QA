@@ -1,18 +1,17 @@
 """Survive a worker that dies mid-run under --dist loadgroup.
 
 pytest-xdist 3.8.0's LoadScopeScheduling (the loadgroup scheduler) does
-two things wrong when a worker dies, measured 09/18/2026 (register row 89):
+two things wrong when a worker dies, both measured on a real run:
 
 1. remove_node re-queues the dead worker's units with the item it died on
    still pending, so every replacement worker replays that item and dies
    again, until --max-worker-restart (four times the worker count) ends
-   the session. The 09/18 india leg replayed two hung LPR screenshots
-   this way.
+   the session. A run once replayed two hung LPR screenshots this way.
 2. schedule() reschedules every node, including a replacement that has
    registered no collection yet, and _assign_work_unit raises
-   KeyError(<WorkerController gwN>): the INTERNALERROR that ended that
-   leg at 287 of 432 tests. --max-worker-restart 0 is no answer: the first
-   crash then shuts the session down with the queue unrun (measured).
+   KeyError(<WorkerController gwN>): an INTERNALERROR that ended a run
+   part way through its queue. --max-worker-restart 0 is no answer: the
+   first crash then shuts the session down with the queue unrun (measured).
 
 This plugin patches both at configure time: the crash item is marked
 complete before the units go back (the controller already reports it

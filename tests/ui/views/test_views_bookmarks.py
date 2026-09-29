@@ -25,7 +25,7 @@ from tests.shared.pages.views_page import ViewsPage
 
 # One worker for every module that writes this account's saved views, tabs, bookmarks and favourites: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_views")
 
 
@@ -67,8 +67,7 @@ def test_add_bookmark(authenticated_page):
     # A dead stream must say so here, named, the way the class fixture
     # does. Without this the failure overlay simply covers the panel
     # toggle and the test dies 30s later pointing at an icon, which
-    # reads as a locator bug and is not what --retry-streams matches
-    # (measured on US 09/03/2026).
+    # reads as a locator bug and is not what --retry-streams matches.
     fs.assert_stream_playing()
     fs.refresh_bookmarks_panel()
     before = fs.bookmark_texts()
@@ -86,7 +85,7 @@ def test_add_bookmark(authenticated_page):
 
 
 # The class setup drops the camera on a tile and waits for it to play, so
-# every test here needs frames (six setup errors a night on the box, 09/11).
+# every test here needs frames (a dead stream was six setup errors a run).
 @pytest.mark.livestream
 class TestViewsBookmarks:
     """Bookmark operations in full screen mode, each on its own bookmark."""

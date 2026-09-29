@@ -13,7 +13,7 @@ except ModuleNotFoundError as exc:
         raise                    # a dependency of the package is missing
     raise ModuleNotFoundError(
         "soterix-qa-shared is not installed. "
-        "Run: pip install -e ../soterix-qa-shared"
+        "Run: pip install -r requirements.txt"
     ) from None
 
 _ROOT = Path(__file__).resolve().parent.parent

@@ -13,8 +13,9 @@
 # no desktop and a headed browser cannot start.
 $ErrorActionPreference = 'Continue'
 
-# Active hours: local hours, 0-23, at most 18 apart. 02:00-20:00 covers the
-# 09:00 UTC nightly, which is 03:00 in Central time.
+# Active hours: local hours, 0-23, at most 18 apart. Windows does not restart
+# for an update inside them, so they must cover the hour the scheduled task
+# runs. 02:00-20:00 covers the 05:00 default in register-task.ps1.
 $ACTIVE_START = 2
 $ACTIVE_END = 20
 

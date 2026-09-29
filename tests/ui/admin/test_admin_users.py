@@ -9,7 +9,7 @@ from tests.shared.pages.admin_page import AdminPage
 
 # One worker for every module that writes this account's users: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_users")
 
 
@@ -139,8 +139,7 @@ class TestAdminUsers:
         # The filtered row is the artifact; the user table is the
         # surface that proves the page is up. An empty table after a
         # filter is the tenant's data, a table that never rendered is a
-        # fault, and the old handler reported both as the same skip
-        # (register item 25).
+        # fault, and the old handler reported both as the same skip.
         require_items(
             self.page.get_by_text("AutoTest"),
             # the user search box, not a row icon: a filter that
@@ -264,8 +263,7 @@ class TestAdminUsers:
 
         # delete_user raising is a failure of the delete flow, not an
         # absent artifact: the rows were already counted above. The old
-        # handler reported a missing confirmation dialog as Blocked
-        # (register item 25).
+        # handler reported a missing confirmation dialog as Blocked.
         self.admin.delete_user(match_text="AutoTest")
 
         # An app-side refusal shown to the user is a legitimate skip

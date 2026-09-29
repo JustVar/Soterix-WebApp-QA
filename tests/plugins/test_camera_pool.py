@@ -1,245 +1,104 @@
 """Pins for the camera picker: which camera a run drives, and why.
 
 The picker decides what every streaming test points at, so its failure mode
-matters more than its happy path. The rule it must never break: when anything
-is missing or unmeasured, fall back to the configured camera and say so, rather
+matters more than its happy path. The rule it must never break: when
+anything is missing, fall back to the configured camera and say so, rather
 than pick nothing and take the suite down.
 """
 import sys
-from datetime import date
 from pathlib import Path
-
-import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tests.shared.helpers import camera_pool as cp
 
-# A probe's channel list, trimmed to what the picker reads (tools/stream_probe.py
-# --health --all-cameras, US box 09/23/2026: 16 online of 22).
-#
 # why these names are written out rather than read from config/env/: this pin
-# tests the PICKER, not the tenant. It never opens a browser or reaches the
-# tenant, and the whole point is to fix the input so the choice is predictable.
-# Reading the live config here would make the assertions move when the tenant
-# is renamed, which is the opposite of what a pin is for. The names only have to
-# look like a tenant's; they do not have to be one.
-POOL = [
-    {"name": "Axis P3247-LV", "online": True},
-    {"name": "Avigilon Thermal", "online": True},
-    {"name": "Advidia (Audio)", "online": True},
-    {"name": "Soterix Multicam 1.15", "online": True},
-    {"name": "Hanwha Multi 1.11", "online": False},  # why fixed names: this pin tests the picker, never the tenant, so the input has to hold still
-    {"name": "Pelco SRXP4-5V10-EMD-IR", "online": False},
-]
-CAPS = {"audio": ["Advidia (Audio)", "iPro PTZ (Audio)"], "thermal": ["Avigilon Thermal"]}
-CONFIGURED = "Soterix Multicam 1.15"
+# tests the PICKER, not the tenant. Reading the live config here would make
+# the assertions move when the tenant is renamed, which is the opposite of
+# what a pin is for. The names only have to look like a tenant's.
+CAPS = {"audio": ["Front Desk (Audio)", "Lobby (Audio)"], "thermal": "Roof Thermal"}
+CONFIGURED = "Main Gate"
 NO_PIN: dict = {}
-# Rotation is opt-in until the run page names the camera, so the pins that
-# exercise it turn it on the way a person would.
-ROTATING = {cp.ROTATE_ENV: "1"}
 
 
-def test_only_online_cameras_rotate_and_the_order_is_the_name_not_the_tenants():
-    """The tenant's order changes when a camera is added, which would silently
-    re-point the rotation at a different camera for every test."""
-    assert cp.online_names(POOL) == [
-        "Advidia (Audio)", "Avigilon Thermal", "Axis P3247-LV", "Soterix Multicam 1.15"]
-    assert cp.online_names([]) == []
-    assert cp.online_names(None) == []
-    # Junk in the list does not take the picker down.
-    assert cp.online_names([None, "nonsense", {"online": True}, {"name": "  ", "online": True}]) == []
+def test_the_configured_camera_is_the_default_and_the_record_says_so():
+    """With no pin and no capability, the run drives test_camera_name."""
+    pick = cp.choose(CONFIGURED, environ=NO_PIN)
+    assert pick["camera"] == CONFIGURED
+    assert "configured camera" in pick["reason"]
+    assert pick["configured"] == CONFIGURED
+    assert pick["capability"] is None
 
 
-def test_the_day_picks_the_camera_so_two_runs_on_one_day_agree():
-    """A morning failure must mean the same thing when it is re-run after lunch."""
-    morning = cp.choose(POOL, CONFIGURED, when=date(2026, 9, 23), environ=ROTATING)
-    afternoon = cp.choose(POOL, CONFIGURED, when=date(2026, 9, 23), environ=ROTATING)
-    assert morning["camera"] == afternoon["camera"]
-    assert morning["rotated"] is True
-    tomorrow = cp.choose(POOL, CONFIGURED, when=date(2026, 9, 24), environ=ROTATING)
-    assert tomorrow["camera"] != morning["camera"], "a new day must move the rotation on"
-
-
-def test_the_rotation_reaches_every_online_camera():
-    """Random selection can miss a camera for weeks. Over as many days as there
-    are cameras, this one must have driven all of them."""
-    seen = {cp.choose(POOL, CONFIGURED, when=date.fromordinal(d), environ=ROTATING)["camera"]
-            for d in range(739_000, 739_000 + len(cp.online_names(POOL)))}
-    assert seen == set(cp.online_names(POOL))
-
-
-def test_a_pin_beats_the_rotation_and_says_so():
-    """TEST_CAMERA is how a rotated failure gets reproduced, so it outranks everything."""
-    pick = cp.choose(POOL, CONFIGURED, environ={cp.PIN_ENV: "Axis P3247-LV"})
+def test_a_pin_beats_everything_and_says_so():
+    """TEST_CAMERA is how a run gets reproduced on one camera, so it outranks everything."""
+    pick = cp.choose(CONFIGURED, environ={cp.PIN_ENV: "Axis P3247-LV"})
     assert pick["camera"] == "Axis P3247-LV"
     assert "pinned" in pick["reason"]
-    assert pick["rotated"] is False
     # Even against a capability, and even with whitespace round the name.
-    pinned_cap = cp.choose(POOL, CONFIGURED, environ={cp.PIN_ENV: "  Vivotek  "},
+    pinned_cap = cp.choose(CONFIGURED, environ={cp.PIN_ENV: "  Vivotek  "},
                            capability="audio", capabilities=CAPS)
     assert pinned_cap["camera"] == "Vivotek"
+    # An empty pin is no pin.
+    assert cp.pinned({cp.PIN_ENV: "   "}) is None
+    assert cp.pinned({}) is None
 
 
-def test_a_test_that_needs_a_capability_is_never_rotated():
-    """Audio tests need a microphone; LPR tests need plates. Rotating those
-    would fail them on data, which reads as an app bug and is not one."""
-    pick = cp.choose(POOL, CONFIGURED, capability="audio", capabilities=CAPS, environ=ROTATING)
-    assert pick["camera"] == "Advidia (Audio)", "the offline audio camera must not be chosen"
-    assert pick["rotated"] is False
+def test_a_capability_names_its_camera():
+    """Audio tests need a microphone; LPR tests need plates. The map names the
+    camera, as one name or as a list whose first entry wins."""
+    pick = cp.choose(CONFIGURED, capability="audio", capabilities=CAPS, environ=NO_PIN)
+    assert pick["camera"] == "Front Desk (Audio)"
     assert "audio" in pick["reason"]
+    assert pick["capability"] == "audio"
+    single = cp.choose(CONFIGURED, capability="thermal", capabilities=CAPS, environ=NO_PIN)
+    assert single["camera"] == "Roof Thermal"
 
 
-def test_a_capability_with_nothing_online_keeps_the_configured_camera():
+def test_a_capability_nobody_listed_keeps_the_configured_camera_and_says_so():
     """Better the old behaviour with a reason than a camera that cannot answer."""
-    dark = [{"name": "Advidia (Audio)", "online": False}, {"name": "Axis P3247-LV", "online": True}]
-    pick = cp.choose(dark, CONFIGURED, capability="audio", capabilities=CAPS, environ=ROTATING)
-    assert pick["camera"] == CONFIGURED
-    assert "no online camera has 'audio'" in pick["reason"]
-    # And a capability nobody has listed at all.
-    unlisted = cp.choose(POOL, CONFIGURED, capability="lpr", capabilities=CAPS, environ=ROTATING)
+    unlisted = cp.choose(CONFIGURED, capability="lpr", capabilities=CAPS, environ=NO_PIN)
     assert unlisted["camera"] == CONFIGURED
     assert "camera_capabilities" in unlisted["reason"]
+    empty = cp.choose(CONFIGURED, capability="lpr", capabilities={}, environ=NO_PIN)
+    assert empty["camera"] == CONFIGURED
+    blank = cp.choose(CONFIGURED, capability="audio", capabilities={"audio": []}, environ=NO_PIN)
+    assert blank["camera"] == CONFIGURED
 
 
-@pytest.mark.parametrize("pool,why", [
-    ([], "no online camera was measured"),
-    (None, "no online camera was measured"),
-    ([{"name": "x", "online": False}], "no online camera was measured"),
-])
-def test_an_unmeasured_or_dark_pool_leaves_the_suite_as_it_was(pool, why):
-    """The picker must never be the reason a run cannot start."""
-    pick = cp.choose(pool, CONFIGURED, environ=ROTATING)
-    assert pick["camera"] == CONFIGURED
-    assert why in pick["reason"]
-    assert pick["rotated"] is False
-
-
-def test_one_online_camera_is_not_a_rotation():
-    """Saying 'rotated' when there was no choice would make the run page lie."""
-    pick = cp.choose([{"name": "only one", "online": True}], CONFIGURED, environ=ROTATING)
-    assert pick["camera"] == "only one"
-    assert pick["rotated"] is False
-    assert "nothing to rotate" in pick["reason"]
-
-
-def test_rotation_is_on_and_can_be_switched_off():
-    """On since the run page can name the camera a run drove (v0.35.0). It was
-    off before that, because a rotated red test nobody can attribute is worse
-    than a narrow suite. A box that has to hold still needs a switch, not an edit.
-    """
-    assert cp.choose(POOL, CONFIGURED, environ={})["rotated"] is True
-    for off in ("0", "off", "false", "no", "OFF"):
-        pick = cp.choose(POOL, CONFIGURED, environ={cp.ROTATE_ENV: off})
-        assert pick["camera"] == CONFIGURED, f"{off} should stop the rotation"
-    assert cp.choose(POOL, CONFIGURED, environ={cp.ROTATE_ENV: "1"})["rotated"] is True
-
-
-def test_a_pool_nobody_has_refreshed_says_so_on_the_line_people_read():
-    """The rotation narrows silently as the tenant changes: a retired camera
-    stays in the pool and a new one never enters it. Nothing refuses a stale
-    pool, because a run must not stop over a label, but nobody should have to
-    guess the pool's age either.
-    """
-    fresh = {**cp.choose(POOL, CONFIGURED, environ=ROTATING), "pool_age_days": 3}
-    assert "measured" not in cp.describe(fresh)
-    old = {**cp.choose(POOL, CONFIGURED, environ=ROTATING), "pool_age_days": cp.STALE_AFTER_DAYS + 5}
-    line = cp.describe(old)
-    assert f"measured {cp.STALE_AFTER_DAYS + 5} days ago" in line
-    assert "refresh it" in line
-    # An age nobody could work out is not an accusation.
-    assert "measured" not in cp.describe({**cp.choose(POOL, CONFIGURED, environ=ROTATING), "pool_age_days": None})
-
-
-def test_the_pools_age_is_read_from_the_file_and_never_raises():
-    """A missing file, a broken date or no date at all are all 'cannot tell'."""
-    assert cp.pool_age_days("us") is not None, "the committed pool records when it was measured"
-    assert cp.pool_age_days("us") >= 0
-    assert cp.pool_age_days("no-such-box") is None
-    bad = tmp_pool_with(None)
-    assert cp.pool_age_days("broken", root=bad) is None
-
-
-def tmp_pool_with(measured_at):
-    """A throwaway pool file whose measured_at is whatever the caller wants."""
-    import json
-    import tempfile
-    root = Path(tempfile.mkdtemp())
-    (root / "tests" / "data").mkdir(parents=True)
-    (root / "tests" / "data" / "camera_pool_broken.json").write_text(
-        json.dumps({"measured_at": measured_at, "channels": []}), encoding="utf-8")
-    return root
-
-
-def test_the_capability_comes_from_the_tests_own_markers():
-    """Same shape as the box `without` map: a marker names the requirement."""
+def test_the_capability_comes_from_the_markers():
+    """A marker names the requirement; the words of a -m expression are markers too."""
     assert cp.capability_for({"livestream": True, "audio": True}, CAPS) == "audio"
     assert cp.capability_for({"livestream": True}, CAPS) is None
     assert cp.capability_for({}, CAPS) is None
     assert cp.capability_for({"audio": True}, None) is None
-
-
-def test_the_committed_pool_file_is_found_and_has_cameras_in_it():
-    """A wrong root made load_pool find nothing and fall back to the configured
-    camera without a word, which looks exactly like a working rotation doing
-    nothing (found 09/23/2026). The file it must find really is committed.
-    """
-    pool = cp.load_pool("us")
-    assert pool, f"no pool loaded from {cp.pool_path('us')}"
-    online = cp.online_names(pool)
-    assert len(online) > 1, "a pool with fewer than 2 online cameras cannot rotate"
-    pick = cp.choose(pool, CONFIGURED, environ=ROTATING)
-    assert pick["rotated"] is True
-    assert pick["camera"] in online
-
-
-def test_a_box_with_no_pool_file_is_not_an_error():
-    """india has no measured pool yet and must run exactly as it did."""
-    assert cp.load_pool("no-such-box") == []
-    assert cp.load_pool("") == []
-    pick = cp.choose(cp.load_pool("no-such-box"), CONFIGURED, environ=ROTATING)
-    assert pick["camera"] == CONFIGURED
-
-
-def test_a_rotating_box_names_cameras_for_every_requirement_its_tests_run():
-    """The trap this closes, before anyone falls into it.
-
-    india runs the LPR tests and has no pool file, so it does not rotate. The day
-    somebody probes india and commits one, the plate tests would rotate onto a
-    camera with no plates and fail as though the app were broken. A box may
-    rotate only once it names a camera for every camera-specific marker it does
-    not already skip.
-    """
-    from config.env import qa as qa_env
-    for box, settings in (qa_env.config.get("boxes") or {}).items():
-        if not cp.load_pool(box):
-            continue  # not rotating, nothing to satisfy
-        caps = (settings.get("test_data") or {}).get("camera_capabilities") or {}
-        skipped = set(settings.get("without") or {})
-        owed = [m for m in cp.CAMERA_SPECIFIC_MARKERS if m not in skipped and m not in caps]
-        assert not owed, (
-            f"box '{box}' rotates its camera but names none for {owed}. Either add them to "
-            f"camera_capabilities in config/env/qa.py, add the marker to this box's `without`, "
-            f"or delete {cp.pool_path(box).name} so the box stops rotating.")
+    assert cp.markexpr_words("lpr and not slow") == {"lpr", "slow"}
+    assert cp.markexpr_words("") == set()
+    assert cp.markexpr_words(None) == set()
+    assert cp.capability_for(cp.markexpr_words("audio or thermal"), CAPS) == "audio"
 
 
 def test_the_summary_line_names_the_camera_and_what_it_replaced():
     """The run page and the terminal both have to answer 'which camera was this?'"""
-    pick = cp.choose(POOL, CONFIGURED, when=date(2026, 9, 24), environ=ROTATING)
-    line = cp.describe(pick)
-    assert line.startswith("[CAMERA] ")
-    assert pick["camera"] in line
-    if pick["camera"] != CONFIGURED:
-        assert CONFIGURED in line, "a rotated run must say which camera it replaced"
+    line = cp.describe(cp.choose(CONFIGURED, environ={cp.PIN_ENV: "Axis P3247-LV"}))
+    assert line.startswith("[CAMERA] 'Axis P3247-LV': pinned by TEST_CAMERA")
+    assert f"(configured: '{CONFIGURED}')" in line, "a replaced camera must be named"
+    plain = cp.describe(cp.choose(CONFIGURED, environ=NO_PIN))
+    assert plain.startswith(f"[CAMERA] '{CONFIGURED}'")
+    assert "configured:" not in plain
     assert cp.describe({}) == "[CAMERA] no choice recorded"
+
+
+def test_the_capability_markers_are_the_ones_the_env_file_may_name():
+    """The env file comment and this tuple must agree, or a team names a marker nothing reads."""
+    assert cp.CAMERA_SPECIFIC_MARKERS == ("lpr", "audio", "thermal", "ptz")
 
 
 def test_the_run_record_names_the_camera_on_a_process_that_never_collected(monkeypatch):
     """Under xdist the controller never runs collection. A choice made only there
-    left the workers driving the rotated camera while the run record, built on
-    the controller, named the configured one with no reason: 2 nightlies said
-    'Soterix Multicam 1.15' and their run.log named 1.18 (09/25/2026). Session
-    start runs on every process, so the record and the tests agree.
+    leaves the workers driving one camera while the run record, built on the
+    controller, names another with no reason. Session start runs on every
+    process, so the record and the tests agree.
     """
     import os
 
@@ -248,9 +107,7 @@ def test_the_run_record_names_the_camera_on_a_process_that_never_collected(monke
     import conftest
     from tests.shared.helpers import preflight
 
-    monkeypatch.setenv("BOX", "us")
-    monkeypatch.delenv(cp.ROTATE_ENV, raising=False)
-    monkeypatch.delenv(cp.PIN_ENV, raising=False)
+    monkeypatch.setenv(cp.PIN_ENV, "Axis P3247-LV")
     monkeypatch.setattr(conftest, "_CAMERA_PICK", {})
     monkeypatch.setattr(conftest, "_STREAM_LINES", [])
     monkeypatch.setitem(conftest.ENV_SETTINGS, "test_camera_name", conftest.ENV_SETTINGS.get("test_camera_name"))
@@ -267,7 +124,49 @@ def test_the_run_record_names_the_camera_on_a_process_that_never_collected(monke
             return default
 
     prov = run_archive._provenance(Config(), os.environ, product="NexaiQ-Core")
-    assert prov["camera_reason"], "a record with no reason is a rotation nobody can see"
-    assert "rotated" in prov["camera_reason"]
+    assert prov["camera"] == "Axis P3247-LV"
+    assert prov["camera_reason"] == "pinned by TEST_CAMERA"
     assert prov["camera"] == conftest._CAMERA_PICK["camera"]
     assert any(line.startswith("[CAMERA]") for line in conftest._STREAM_LINES), "and the summary says it"
+
+
+def test_a_marker_selected_run_drives_that_markers_camera(monkeypatch):
+    """`pytest -m lpr` drives the camera the env file lists for lpr; a second
+    choice in the same process keeps the first, so one run has one camera."""
+    from types import SimpleNamespace
+
+    import conftest
+
+    monkeypatch.delenv(cp.PIN_ENV, raising=False)
+    monkeypatch.setattr(conftest, "_CAMERA_PICK", {})
+    monkeypatch.setattr(conftest, "_STREAM_LINES", [])
+    monkeypatch.setattr(conftest, "_CONFIGURED_CAMERA", CONFIGURED)
+    monkeypatch.setitem(conftest.ENV_SETTINGS, "camera_capabilities", {"lpr": "Gate Plates"})
+    monkeypatch.setitem(conftest.ENV_SETTINGS, "test_camera_name", CONFIGURED)
+    config = SimpleNamespace(getoption=lambda name, default=None: "lpr and not slow" if name == "markexpr" else default)
+    pick = conftest._choose_camera(config)
+    assert pick["camera"] == "Gate Plates"
+    assert conftest.ENV_SETTINGS["test_camera_name"] == "Gate Plates"
+    assert conftest.ENV_SETTINGS["camera_pick"] is pick
+    again = conftest._choose_camera(SimpleNamespace(getoption=lambda name, default=None: default))
+    assert again is pick, "one run, one camera"
+    assert len([ln for ln in conftest._STREAM_LINES if ln.startswith("[CAMERA]")]) == 1
+
+
+def test_the_terminal_line_prints_only_when_the_choice_changed(monkeypatch):
+    """A run on the configured camera says nothing on the terminal; the run
+    page names the camera either way through the provenance record."""
+    from types import SimpleNamespace
+
+    import conftest
+
+    monkeypatch.delenv(cp.PIN_ENV, raising=False)
+    monkeypatch.setattr(conftest, "_CAMERA_PICK", {})
+    monkeypatch.setattr(conftest, "_STREAM_LINES", [])
+    monkeypatch.setattr(conftest, "_CONFIGURED_CAMERA", CONFIGURED)
+    monkeypatch.setitem(conftest.ENV_SETTINGS, "camera_capabilities", {})
+    monkeypatch.setitem(conftest.ENV_SETTINGS, "test_camera_name", CONFIGURED)
+    pick = conftest._choose_camera(SimpleNamespace(getoption=lambda name, default=None: default))
+    assert pick["camera"] == CONFIGURED
+    assert conftest.ENV_SETTINGS["camera_pick"]["camera"] == CONFIGURED
+    assert conftest._STREAM_LINES == []

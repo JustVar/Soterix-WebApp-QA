@@ -393,7 +393,7 @@ class LoginPage:
         items: list[str] = []
         # This build's menu is a box in the secondary header, not a
         # popover: the avatar's initials, the account name, its role and
-        # 'Sign out' as <p> lines (measured 09/12/2026). Read that box
+        # 'Sign out' as <p> lines (measured on the app). Read that box
         # first; the popover selectors below serve older builds.
         sign_out = self.page.locator("p").filter(has_text=re.compile(r"^Sign out$")).first
         if sign_out.count() and sign_out.is_visible():
@@ -464,7 +464,7 @@ class LoginPage:
             # checking the login form
             self.page.wait_for_timeout(5000)
             if not self.is_login_page():
-                # Until 09/21/2026 this branch opened /auth/login itself, and
+                # An earlier version of this branch opened /auth/login itself, and
                 # is_login_page() then said yes: the logout tests passed on a
                 # Sign out that went nowhere. A logout that does not land fails here.
                 raise AssertionError(

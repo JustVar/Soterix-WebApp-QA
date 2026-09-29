@@ -324,11 +324,11 @@ class ViewsPage:
         # the ladder's landed-check decide the outcome
         if handle.count():
             source = handle.first
-        # Headed Chrome on the box's Wayland display stops for good inside
-        # some pointer drags (tests/shared/helpers/drag.py, register row 91:
-        # the 09/20/2026 us leg sat in this gesture until the run cap). There
-        # the same drag events are fired from JavaScript. No frame is
-        # stashed: no pointer is down, so there is no drag to show.
+        # Headed Chrome on a Wayland display stops for good inside some
+        # pointer drags (tests/shared/helpers/drag.py: a run once sat in
+        # this gesture until the run cap). There the same drag events are
+        # fired from JavaScript. No frame is stashed: no pointer is down,
+        # so there is no drag to show.
         if drag_mode() == "js":
             js_drop(source, target)
             return
@@ -415,7 +415,7 @@ class ViewsPage:
         are ONE attempt, retried, rather than a hover followed by a click
         that assumes the reveal survived.
 
-        Measured 09/03/2026 on the US site: the configured camera sat
+        Measured on the app: the configured camera sat
         ~400px below the fold, scroll_into_view_if_needed moved it 17px,
         and a reveal lost this way left the JS fallback waiting its full
         30s default before failing at an unhelpful place.
@@ -518,7 +518,7 @@ class ViewsPage:
         # match on every action, which races that re-render and leaves
         # the checkbox unreachable (measured against HEAD, 09/03/2026).
         # Read every title in ONE call. Asking row by row costs a round
-        # trip each (22 on the US site) and the camera tree collapses a
+        # trip each (22 on a site with 22 cameras) and the camera tree collapses a
         # few seconds after it expands, so a slow scan can lose the rows
         # it is still reading.
         cameras = self.page.locator(".cameraThumbnailWrapper")
@@ -888,7 +888,7 @@ class ViewsPage:
         """
         # Find the location in the left panel (site tree). Exact and
         # escaped: the old text= engine was a case-insensitive substring
-        # (item 19; sidebar node holds the exact bare name, probe 09/02).
+        # (the sidebar node holds the exact bare name).
         location = self.page.get_by_text(location_name, exact=True).first
         try:
             location.wait_for(state="visible", timeout=10000)
@@ -1208,7 +1208,7 @@ class ViewsPage:
             site_name: Specific site name, or None to click the first available site.
         """
         if site_name:
-            # Exact and escaped (item 19): the old text= engine was a
+            # Exact and escaped: the old text= engine was a
             # case-insensitive substring, so a site name that prefixes
             # another could land the wrong panel entry.
             site = self.page.get_by_text(site_name, exact=True).first

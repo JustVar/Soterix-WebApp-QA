@@ -1,3 +1,0 @@
-# The CI runners keep a working directory and an interpreter cache. Bound both.
-# The tool cache clears on Sunday, before the weekly hosted run, so nothing depends on it.
-30 3 * * * root /usr/local/bin/ci-runner-prune >> /var/log/ci-runner-prune.log 2>&1

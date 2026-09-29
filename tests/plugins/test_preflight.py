@@ -28,17 +28,17 @@ def _config(args, worker=False, **options):
 
 
 def test_only_sessions_that_can_reach_a_tenant_get_a_preflight():
-    """The pins, the camera suite, collect-only, setup-plan and xdist workers never ask."""
+    """The pins, collect-only, setup-plan and xdist workers never ask."""
     assert pf.targets_a_tenant([]) is True
     assert pf.targets_a_tenant(["tests/ui"]) is True
     assert pf.targets_a_tenant(["tests/ui/maps/test_maps.py::TestMaps::test_x"]) is True
     assert pf.targets_a_tenant(["tests/plugins", "tests/ui/login"]) is True
     assert pf.targets_a_tenant(["tests/plugins", "tests/tools", "tests/helpers"]) is False
-    assert pf.targets_a_tenant(["tests\\c2c"]) is False
+    assert pf.targets_a_tenant(["tests\\helpers"]) is False
     # absolute paths too: a pin launched by absolute path once read as a tenant target
     assert pf.targets_a_tenant(["C:/work/repo/tests/plugins/xdist_crash_scenario.py"]) is False
-    assert pf.targets_a_tenant(["/data/qa/ci/repo/tests/c2c/test_c2c_auth.py::test_x"]) is False
-    assert pf.targets_a_tenant(["/data/qa/ci/repo/tests/ui/maps"]) is True
+    assert pf.targets_a_tenant(["/data/qa/repo/tests/tools/test_x.py::test_x"]) is False
+    assert pf.targets_a_tenant(["/data/qa/repo/tests/ui/maps"]) is True
     assert pf.skip_reason(_config(["tests/ui"]), {}) is None
     assert pf.skip_reason(_config(["tests/ui"]), {"PREFLIGHT": "off"}) == "PREFLIGHT=off"
     assert "worker" in pf.skip_reason(_config(["tests/ui"], worker=True), {})
@@ -68,15 +68,15 @@ def test_each_failure_class_gets_its_own_named_line():
 
     line = pf.check(URL, "u@example.test", "pw", login=down)
     assert line.startswith("PREFLIGHT: tenant.example.test did not answer (ConnectionError:")
-    line = pf.check(URL, "u@example.test", "pw", box="india", login=refused)
-    assert "the tenant refused u@example.test (box india)" in line
+    line = pf.check(URL, "u@example.test", "pw", login=refused)
+    assert "the tenant refused u@example.test" in line
     assert "Invalid credentials!" in line
     assert "nothing retried the login" in line
     assert "without a session token (IndexError)" in pf.check(URL, "u@example.test", "pw", login=no_token)
     assert "empty session token" in pf.check(URL, "u@example.test", "pw", login=lambda *a: "")
-    empty = pf.check(URL, "", "", box="us", login=lambda *a: pytest.fail("asked"))
+    empty = pf.check(URL, "", "", login=lambda *a: pytest.fail("asked"))
     assert "no account to sign in with" in empty
-    assert "(box us)" in empty
+    assert "QA_USER or QA_PASSWORD" in empty
     for text in (line, empty):
         assert "No test ran" in text
 
@@ -90,7 +90,7 @@ def test_the_password_never_appears_in_a_refusal_line():
 
 def test_the_hook_exits_with_the_line_and_its_own_code(monkeypatch):
     """A refusal ends the session before any test, with exit code 7; a skip reason or a clean check runs on."""
-    monkeypatch.setattr(conftest, "_session_account", lambda: ("u@example.test", "pw", "india"))
+    monkeypatch.setattr(conftest, "_session_account", lambda: ("u@example.test", "pw"))
     monkeypatch.setattr(conftest, "ENV_SETTINGS", {"base_url": URL})
     monkeypatch.setattr(pf, "skip_reason", lambda config, environ=None: None)
     monkeypatch.setattr(pf, "check", lambda *a, **k: "PREFLIGHT: down. No test ran.")

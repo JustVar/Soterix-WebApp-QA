@@ -3,8 +3,8 @@ tabs, the Available table, and what survives a reload or a trip away.
 
 Every check here reads a value the page renders and compares it with
 another one (the summary against itself, the table against the summary,
-the tabs' aria-selected, the same rows before and after), measured on both
-boxes 09/11/2026 - the old checks proved only that a label was visible.
+the tabs' aria-selected, the same rows before and after), all measured on
+the app - the old checks proved only that a label was visible.
 """
 import pytest
 from playwright.sync_api import expect

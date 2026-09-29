@@ -1,26 +1,28 @@
 """Space searches so the account's one search job has freed before the next.
 
-The QA server runs ONE search job for the whole server (not per account: a US search is refused while an india job holds it, measured 09/16/2026) and offers no cancel: not a
-REST call (14 shapes tried, all 404/400), not a WebSocket frame (none sent
-around a search), and not logout (the job outlives the session). The slot
-frees only about 16 s after the client stops polling, or when the job
-completes, which is minutes for a 30-day analytics scan on the Videonetics
-site (register row 100, all measured 09/16/2026). So a test's search that
-lands inside the 16 s after the previous search test's page closed answers
-code 400, and the collision is with the PRIOR test's job, not between
-concurrent workers: it happened even in a single serial process.
+The QA server runs ONE search job for the whole server (not per account: a
+search from one account is refused while another account's job holds the
+slot) and offers no cancel: not a REST call (14 shapes tried, all 404/400),
+not a WebSocket frame (none sent around a search), and not logout (the job
+outlives the session). The slot frees only about 16 s after the client stops
+polling, or when the job completes, which is minutes for a 30-day analytics
+scan on a busy site (all measured). So a test's search that lands inside the
+16 s after the previous search test's page closed answers code 400, and the
+collision is with the PRIOR test's job, not between concurrent workers: it
+happened even in a single serial process.
 
 This helper records when a searching test's page closed (its polling
 stopped) and, before the next search click, waits only for the remainder
 of the free window. The wait overlaps the next test's setup and navigation,
 so the cost per search test is a few seconds, not the full window. The
-timestamp is one file for the server (both boxes share the slot) so it holds across xdist workers and across boxes; the tests
+timestamp is one file for the server (every account shares the slot) so it
+holds across xdist workers and across accounts; the tests
 that search also share the `account_search` xdist group (a static
 `pytestmark` in every tests/ui/search and tests/ui/events module, with
 `--dist loadgroup` in pytest.ini) so they run on one worker and two
 workers never click inside one window. The marker must be static: a
 marker added in a conftest collection hook lands after xdist's own
-node-id rewrite and the group is silently ignored (measured 09/16/2026).
+node-id rewrite and the group is silently ignored (measured).
 """
 from __future__ import annotations
 
@@ -30,8 +32,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 STAMP_DIR = REPO_ROOT / "logs"
-# measured 09/16/2026: a fresh POST answered 400 at 5 s and 11 s after
-# polling stopped, and 200 at 16 s; 17 gives one second of margin
+# measured: a fresh POST answered 400 at 5 s and 11 s after polling
+# stopped, and 200 at 16 s; 17 gives one second of margin
 GAP_S = 17.0
 POLL_S = 0.5
 
@@ -39,7 +41,7 @@ _ran_this_test = False
 
 
 def stamp_path() -> Path:
-    # one stamp: the search slot is server-wide, shared by every box/account
+    # one stamp: the search slot is server-wide, shared by every account
     return STAMP_DIR / ".search_stopped.stamp"
 
 

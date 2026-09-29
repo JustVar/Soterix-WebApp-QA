@@ -130,7 +130,7 @@ class TestViewsFullscreen:
         # _enter_fullscreen already ran assert_stream_playing, so a
         # player that does not read as streaming here contradicts it.
         # The old body skipped instead, which meant the one test named
-        # for streaming could never report a dead stream (item 25).
+        # for streaming could never report a dead stream.
         # run.py --retry-streams reruns exactly this class.
         assert fs.is_streaming(), (
             "The fullscreen player passed assert_stream_playing but does "

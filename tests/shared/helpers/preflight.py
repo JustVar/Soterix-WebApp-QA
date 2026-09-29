@@ -2,17 +2,17 @@
 
 Asked once, in the controlling process, before any browser opens. Without
 it a tenant that is down, a wrong password or a locked account reads as a
-wall: 420 of 432 tests use authenticated_page, and each one errors on its
-own navigation or, after a rejected login, on its own 73-second wait while
-submitting the form again (failure-mode audit, 09/18/2026, register row
-93). The preflight uses the internal API's captcha-free login, the same
-call the api fixtures make, so it costs one request.
+wall: almost every test uses authenticated_page, and each one errors on
+its own navigation or, after a rejected login, on its own 73-second wait
+while submitting the form again. The preflight uses the internal API's
+captcha-free login, the same call the api fixtures make, so it costs one
+request.
 
 The refusal is one line that names the cause, and no test runs:
   PREFLIGHT: <host> did not answer (...). No test ran.
   PREFLIGHT: the tenant refused <account> (...). No test ran, ...
-PREFLIGHT=off skips it. It never runs for the offline suites, the camera
-suite, collect-only or setup-plan sessions, or an xdist worker.
+PREFLIGHT=off skips it. It never runs for the offline suites, collect-only
+or setup-plan sessions, or an xdist worker.
 """
 from __future__ import annotations
 
@@ -22,10 +22,10 @@ from pathlib import PurePosixPath
 from urllib.parse import urlparse
 
 SWITCH = "PREFLIGHT"
-EXIT_CODE = 7   # pytest's own codes stop at 5; nightly.sh prints the code it got
+EXIT_CODE = 7   # pytest's own codes stop at 5, so a wrapper can tell a refusal apart
 _OFF = {"0", "off", "false", "no"}
-# Roots that never sign in to a tenant: the pins, and the cameras' own UIs.
-NO_TENANT_ROOTS = ("tests/plugins", "tests/tools", "tests/helpers", "tests/c2c")
+# Roots that never sign in to a tenant: the pins.
+NO_TENANT_ROOTS = ("tests/plugins", "tests/tools", "tests/helpers")
 
 
 def enabled(environ: Mapping[str, str] | None = None) -> bool:
@@ -43,16 +43,16 @@ def targets_a_tenant(args: list[str]) -> bool:
     if not paths:
         return True
     for path in paths:
-        # relative or absolute: a root counts wherever it sits in the path
-        # (an absolute path to a pin once read as a tenant target and the
-        # offline suite asked the tenant for a login, 09/18/2026)
+        # relative or absolute: a root counts wherever it sits in the path,
+        # or an absolute path to a pin reads as a tenant target and the
+        # offline suite asks the tenant for a login
         text = "/" + path.as_posix().lstrip("./") + "/"
         if not any(f"/{root}/" in text for root in NO_TENANT_ROOTS):
             return True
     return False
 
 
-def check(base_url: str, account: str, password: str, *, box: str = "",
+def check(base_url: str, account: str, password: str, *,
           login: Callable[[str, str, str], object] | None = None) -> str | None:
     """None when the account signs in; else the one line that names why not.
 
@@ -60,10 +60,10 @@ def check(base_url: str, account: str, password: str, *, box: str = "",
     captcha-free login; tests pass a fake.
     """
     host = urlparse(base_url).netloc or base_url
-    who = f"{account or '<no account>'}" + (f" (box {box})" if box else "")
+    who = account or "<no account>"
     if not account or not password:
-        return (f"PREFLIGHT: no account to sign in with for {host}{f' (box {box})' if box else ''}: the user or the "
-                f"password is empty in .env (README > Quick Setup). No test ran.")
+        return (f"PREFLIGHT: no account to sign in with for {host}: QA_USER or QA_PASSWORD "
+                f"is empty in .env (README > Day one). No test ran.")
     login = login or _api_login
     try:
         token = login(base_url, account, password)
@@ -71,7 +71,7 @@ def check(base_url: str, account: str, password: str, *, box: str = "",
         kind = type(e).__name__
         text = str(e).splitlines()[0][:200] if str(e) else ""
         if _is_refusal(e):
-            return (f"PREFLIGHT: the tenant refused {who}: {text}. Check the account pair in .env. "
+            return (f"PREFLIGHT: the tenant refused {who}: {text}. Check QA_USER and QA_PASSWORD in .env. "
                     f"No test ran, so nothing retried the login.")
         if isinstance(e, (IndexError, KeyError, TypeError)):
             return (f"PREFLIGHT: {host} answered the login for {who} without a session token ({kind}). "
@@ -98,8 +98,8 @@ def skip_reason(config, environ: Mapping[str, str] | None = None) -> str | None:
         return f"{SWITCH}=off"
     if hasattr(config, "workerinput"):
         return "xdist worker (the controller asked once)"
-    # each of these runs a session start and no test (--fixtures, --fixtures-per-test and
-    # --cache-show signed in to the tenant until 09/21/2026)
+    # each of these runs a session start and no test, so a login there
+    # costs an attempt against the account for nothing
     for option in ("collectonly", "setupplan", "setuponly", "showfixtures", "show_fixtures_per_test", "cacheshow"):
         if config.getoption(option, default=False):
             return f"--{option}: no test runs"

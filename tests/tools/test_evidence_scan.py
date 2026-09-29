@@ -18,13 +18,13 @@ import pytest  # noqa: E402
 from tools import evidence_scan as es  # noqa: E402
 
 COOKIE = 'A1B2C3D4E5F60718293A4B5C6D7E8F90'
-ENV_SECRETS = {'QA_INDIA_PASSWORD': 'Tr1cky-Value-77', 'C2C_CAMERA_PASS': 'Sp&rt<an"0!x'}
+ENV_SECRETS = {'QA_PASSWORD': 'Tr1cky-Value-77', 'CAMERA_PASS': 'Sp&rt<an"0!x'}
 
 LEFT_ALONE = [
     "login_data = {'email': 'qa@example.com', 'password': '***'}",
     '"password": "***"',
-    '"password_env": "QA_INDIA_PASSWORD",',
-    'QA_INDIA_PASSWORD is not set in .env',
+    '"password_env": "QA_PASSWORD",',
+    'QA_PASSWORD is not set in .env',
     '<input type="password" name="password" placeholder="Password">',
     "password = '{password}'",
     "password: '<your password>'",
@@ -37,8 +37,8 @@ LEFT_ALONE = [
     'autocomplete="current-password" name="password" value=""',
     '3 passed, 1 failed in 12.4s',
     'bypass=true&compass=north',
-    # the run page's own script: the pass/fail key of a JS object, masked to `pass: '***'`
-    # on every published run until 09/25/2026
+    # the run page's own script: the pass/fail key of a JS object, once masked to `pass: '***'`
+    # in every run folder
     "var NAMES = {fail: 'Failed', skip: 'Skipped', pass: 'Passed', unkn: 'Unknown', all: 'All'};",
     "var WORDS = {fail: 'failed', skip: 'were skipped', pass: 'passed'};",
     "{'pass': 'ok', 'fail': 'bad'}",
@@ -61,8 +61,8 @@ FOUND = [
     ('Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.payload-part.sig-part_0123', 'bearer token', 'eyJhbGciOiJIUzI1NiJ9'),
     ("headers = {'x-vsaas-key': 'k3y-0123456789abcdef'}", 'integration key', 'k3y-0123456789abcdef'),
     ("login_data = {'email': 'qa@example.com', 'password': 'hunter2-long'}", 'password value', 'hunter2-long'),
-    ('the form was sent with Tr1cky-Value-77 in it', '.env value of QA_INDIA_PASSWORD', 'Tr1cky-Value-77'),
-    # the forms a report gives a traceback (audit 09/18/2026: run.html held the first one, unseen)
+    ('the form was sent with Tr1cky-Value-77 in it', '.env value of QA_PASSWORD', 'Tr1cky-Value-77'),
+    # the forms a report gives a traceback (run.html once held the first one, unseen)
     ('E  {&quot;email&quot;: &quot;qa@example.com&quot;, &quot;password&quot;: &quot;hunter2-long&quot;}', 'password value', 'hunter2-long'),
     ('E  {&#x27;password&#x27;: &#x27;hunter2-long&#x27;}', 'password value', 'hunter2-long'),
     ('data-jsonblob="{&#34;password&#34;: &#34;hunter2-long&#34;}"', 'password value', 'hunter2-long'),
@@ -72,17 +72,17 @@ FOUND = [
     ("pwd='hunter2-long'", 'password value', 'hunter2-long'),
     # bare values: a URL, a form body, an env line
     ('POST /login?username=justin&password=Hunter22xyz HTTP/1.1', 'password value', 'Hunter22xyz'),
-    ('QA_INDIA_PASSWORD=Hunter22xyz', 'password value', 'Hunter22xyz'),
+    ('QA_PASSWORD=Hunter22xyz', 'password value', 'Hunter22xyz'),
     # cookies and tokens in their other shapes
     ("{'name': 'JSESSIONID', 'value': '" + COOKIE + "', 'domain': 'x'}", 'session cookie', COOKIE),
     ('{"name": "JSESSIONID", "value": "' + COOKIE + '"}', 'session cookie', COOKIE),
     ('Set-Cookie: JSESSIONID=ABC123DEF456; HttpOnly', 'session cookie', 'ABC123DEF456'),
     ('Authorization: Basic YWRtaW46aHVudGVyMg==', 'basic auth', 'YWRtaW46aHVudGVyMg'),
-    ('opening rtsp://admin:hunter2-long@10.2.0.50/stream1', 'password in a URL', 'hunter2-long'),
+    ('opening rtsp://admin:hunter2-long@192.0.2.50/stream1', 'password in a URL', 'hunter2-long'),
     # a .env value with HTML, URL and JSON special characters, in each form
-    ('<td>Sp&amp;rt&lt;an&quot;0!x</td>', '.env value of C2C_CAMERA_PASS', 'Sp&amp;rt&lt;an&quot;0!x'),
-    ('body: user=root&pw=Sp%26rt%3Can%220%21x', '.env value of C2C_CAMERA_PASS', 'Sp%26rt%3Can%220%21x'),
-    ('"text": "typed Sp&rt<an\\"0!x"', '.env value of C2C_CAMERA_PASS', 'Sp&rt<an\\"0!x'),
+    ('<td>Sp&amp;rt&lt;an&quot;0!x</td>', '.env value of CAMERA_PASS', 'Sp&amp;rt&lt;an&quot;0!x'),
+    ('body: user=root&pw=Sp%26rt%3Can%220%21x', '.env value of CAMERA_PASS', 'Sp%26rt%3Can%220%21x'),
+    ('"text": "typed Sp&rt<an\\"0!x"', '.env value of CAMERA_PASS', 'Sp&rt<an\\"0!x'),
 ]
 
 
@@ -114,36 +114,32 @@ def _run_folder(tmp_path: Path) -> Path:
 
 
 def test_report_mode_exits_1_and_writes_nothing(tmp_path, capsys):
-    """Without --redact the files stay as they are, no marker appears, and the exit code is 1."""
+    """Without --redact the files stay as they are and the exit code is 1."""
     run = _run_folder(tmp_path)
     before = (run / 'log' / 'test_login.log').read_text(encoding='utf-8')
     assert es.main([str(run), '--env', str(tmp_path / 'no.env')]) == 1
     assert (run / 'log' / 'test_login.log').read_text(encoding='utf-8') == before
-    assert not (run / es.DONE_MARKER).exists()
     out = capsys.readouterr().out
     assert 'test_login.log:1  password value' in out
     assert 'hunter2-long' not in out
 
 
-def test_redact_cleans_the_file_marks_the_folder_and_skips_it_next_time(tmp_path, capsys):
-    """--redact masks the secret, leaves the zip alone, exits 0, and a second pass reads 0 folders."""
+def test_redact_cleans_the_file_and_leaves_the_zip_alone(tmp_path, capsys):
+    """--redact masks the secret, leaves the zip alone, exits 0, and a second pass finds nothing."""
     run = _run_folder(tmp_path)
-    runs = run.parent
-    env = tmp_path / 'box.env'
-    env.write_text('QA_INDIA_PASSWORD=Tr1cky-Value-77\n', encoding='utf-8')
-    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(env)]) == 0
+    env = tmp_path / 'test.env'
+    env.write_text('QA_PASSWORD=Tr1cky-Value-77\n', encoding='utf-8')
+    assert es.main([str(run), '--redact', '--env', str(env)]) == 0
     assert 'hunter2-long' not in (run / 'log' / 'test_login.log').read_text(encoding='utf-8')
     assert (run / 'traces' / 'a-trace.zip').read_bytes().endswith(COOKIE.encode())
-    assert (run / es.DONE_MARKER).exists()
-    capsys.readouterr()
-    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(env)]) == 0
-    assert '0 run folder(s) read' in capsys.readouterr().out
+    assert '1 secret(s) redacted' in capsys.readouterr().out
+    assert es.main([str(run), '--env', str(env)]) == 0
+    assert '0 secret(s) found' in capsys.readouterr().out
 
 
-def test_no_target_or_two_targets_is_a_tool_error(tmp_path):
-    """One run folder or --runs-dir, not none and not the two."""
-    assert es.main([]) == 2
-    assert es.main([str(tmp_path), '--runs-dir', str(tmp_path)]) == 2
+def test_a_missing_folder_is_a_tool_error(tmp_path):
+    """A path that is not a folder exits 2 and scans nothing."""
+    assert es.main([str(tmp_path / 'missing')]) == 2
 
 
 def test_a_redacted_file_keeps_its_line_endings(tmp_path):
@@ -158,15 +154,12 @@ def test_a_redacted_file_keeps_its_line_endings(tmp_path):
     assert (run / 'x.log').read_bytes() == raw.replace(b'hunter2-long', b'***')
 
 
-def test_a_file_that_cannot_be_written_fails_loud_and_does_not_stop_the_other_folders(tmp_path, monkeypatch, capsys):
-    """Folder A holds a secret in a file that refuses the write: exit 2, A gets no marker, clean folder B gets one."""
-    runs = tmp_path / 'runs'
-    a = runs / '2026-09-17_09-00-06__tests-ui'
-    b = runs / '2026-09-18_09-00-06__tests-ui'
-    a.mkdir(parents=True)
-    b.mkdir()
-    (a / 'x.log').write_text("'password': 'hunter2-long'", encoding='utf-8')
-    (b / 'y.log').write_text('nothing here', encoding='utf-8')
+def test_a_file_that_cannot_be_written_fails_loud_and_scans_the_other_files(tmp_path, monkeypatch, capsys):
+    """A secret in a file that refuses the write: exit 2, the error names the file, the other file is still cleaned."""
+    run = tmp_path / 'runs' / '2026-09-17_09-00-06__tests-ui'
+    run.mkdir(parents=True)
+    (run / 'x.log').write_text("'password': 'hunter2-long'", encoding='utf-8')
+    (run / 'y.log').write_text("'password': 'hunter2-long' again", encoding='utf-8')
     real_open = open
 
     def refuse_write(path, mode='r', *args, **kwargs):
@@ -174,43 +167,43 @@ def test_a_file_that_cannot_be_written_fails_loud_and_does_not_stop_the_other_fo
             raise PermissionError(13, 'read-only')
         return real_open(path, mode, *args, **kwargs)
 
-    env = tmp_path / 'box.env'
-    env.write_text('QA_INDIA_PASSWORD=Tr1cky-Value-77' + chr(10), encoding='utf-8')
+    env = tmp_path / 'test.env'
+    env.write_text('QA_PASSWORD=Tr1cky-Value-77' + chr(10), encoding='utf-8')
     monkeypatch.setattr('builtins.open', refuse_write)
-    assert es.main(['--runs-dir', str(runs), '--redact', '--env', str(env)]) == 2
-    assert not (a / es.DONE_MARKER).exists()
-    assert (b / es.DONE_MARKER).exists()
+    assert es.main([str(run), '--redact', '--env', str(env)]) == 2
+    assert 'hunter2-long' not in (run / 'y.log').read_text(encoding='utf-8')
     captured = capsys.readouterr()
+    assert 'x.log' in captured.err
     assert 'could not be written' in captured.err
     assert 'hunter2-long' not in captured.out + captured.err
 
 
-def test_a_pass_with_no_secret_values_does_not_mark_the_folder(tmp_path):
-    """With no .env the scan reads shapes only, so the folder stays unmarked and is read again when the values are back."""
+def test_a_pass_with_no_secret_values_still_masks_by_shape(tmp_path, capsys):
+    """With no .env the scan reads shapes only, says so, and still redacts a password-shaped value."""
     run = _run_folder(tmp_path)
-    assert es.main(['--runs-dir', str(run.parent), '--redact', '--env', str(tmp_path / 'no.env')]) == 0
+    assert es.main([str(run), '--redact', '--env', str(tmp_path / 'no.env')]) == 0
     assert 'hunter2-long' not in (run / 'log' / 'test_login.log').read_text(encoding='utf-8')
-    assert not (run / es.DONE_MARKER).exists()
+    assert 'patterns only' in capsys.readouterr().err
 
 
 def test_a_long_line_with_no_secret_is_read_in_a_moment():
-    """A 200 KB run of letters took 110 s with the unanchored URL pattern; the nightly scans with no time limit."""
+    """A 200 KB run of letters took 110 s with the unanchored URL pattern."""
     import time
     start = time.perf_counter()
-    clean, found = es.scan_text('a' * 200_000 + ' rtsp://admin:Hunter22x@10.2.0.9/live', {})
+    clean, found = es.scan_text('a' * 200_000 + ' rtsp://admin:Hunter22x@192.0.2.9/live', {})
     assert time.perf_counter() - start < 5
     assert [f['what'] for f in found] == ['password in a URL']
     assert 'Hunter22x' not in clean
 
 
 @pytest.mark.parametrize("line", [
-    "10.2.0.9-rtsp://admin:Hunter22x@10.2.0.9/live",
-    "camera-stream-endpoint-rtsp://admin:Hunter22x@10.2.0.9/live",
+    "192.0.2.9-rtsp://admin:Hunter22x@192.0.2.9/live",
+    "camera-stream-endpoint-rtsp://admin:Hunter22x@192.0.2.9/live",
     "2026-09-21T10:25:54.rtsp://admin:Hunter22x@cam/live",
     "https://oauth2:" + "e" * 403 + "@gitlab.example.test/repo.git",
 ])
 def test_a_password_in_a_url_is_found_whatever_stands_before_the_scheme(line):
-    """A bounded scheme was fast and missed each of these (audit 09/21/2026); the literal :// finds them."""
+    """A bounded scheme was fast and missed each of these; the literal :// finds them."""
     clean, found = es.scan_text(line, {})
     assert [f["what"] for f in found] == ["password in a URL"]
     assert "Hunter22x" not in clean
@@ -218,9 +211,9 @@ def test_a_password_in_a_url_is_found_whatever_stands_before_the_scheme(line):
 
 
 def test_an_all_digit_secret_is_masked_only_on_its_own():
-    """A 6-digit password masked as a bare substring ate ids, epochs and durations in every published run."""
-    clean, found = es.scan_text("id 9912345678 epoch 1712345600 password 123456 here", {"QA_BOX_PASS": "123456"})
+    """A 6-digit password masked as a bare substring ate ids, epochs and durations in every run folder."""
+    clean, found = es.scan_text("id 9912345678 epoch 1712345600 password 123456 here", {"CAMERA_PASS": "123456"})
     assert "9912345678" in clean
     assert "1712345600" in clean
     assert "password *** here" in clean
-    assert [f["what"] for f in found] == [".env value of QA_BOX_PASS"]
+    assert [f["what"] for f in found] == [".env value of CAMERA_PASS"]

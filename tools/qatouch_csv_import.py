@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Import new test cases into QA Touch through the public API.
 
 Replaces the browser-driven import for NEW cases. Needs only the API key -
@@ -7,9 +6,9 @@ no browser, no session that expires, no reverse-engineered endpoints.
     python tools/qatouch_csv_import.py preview cases.csv --project JlW1
     python tools/qatouch_csv_import.py import cases.csv --project JlW1
 
-Input is our canonical CSV, the one `tools/qa_xlsx_to_qatouch_csv.py` emits.
-This tool translates it to the column names the public endpoint wants, so the
-authoring pipeline does not change.
+Input is the CSV `tools/qatouch_cases_from_tests.py` writes from the test
+docstrings. This tool translates it to the column names the public endpoint
+wants.
 
 What the endpoint can and cannot do (measured 2026-08-17):
 
@@ -17,8 +16,7 @@ What the endpoint can and cannot do (measured 2026-08-17):
     is no public way to update a case, so never point this at cases that
     already exist.
   - It sets TAGS on create. That is the only way to write a tag through the
-    public API - changing an existing case's tags still needs a browser
-    session (see tools/qatouch_suite_hold.py).
+    public API - changing an existing case's tags needs the QA Touch web UI.
   - 100 cases per request. This tool chunks automatically.
   - Every column is mandatory. The controller indexes the row without
     checking, so a missing column fails the row with "Undefined index".
@@ -88,9 +86,9 @@ CANONICAL_TO_API = {
 }
 
 
-# The friendly headers of the authoring CSV (tools/qa_touch_import_test.csv,
-# and what tools/qatouch_cases_from_tests.py writes) -> the endpoint's
-# column. "Created By" has no home on the endpoint: dropped, no warning.
+# The friendly headers of the CSV tools/qatouch_cases_from_tests.py writes
+# -> the endpoint's column. "Created By" has no home on the endpoint:
+# dropped, no warning.
 FRIENDLY_TO_API = {
     "Module_name": "module_name",
     "Test Case Title": "title",

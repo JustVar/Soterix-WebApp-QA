@@ -89,9 +89,8 @@ class InternalApi:
         Raises ApiError when `code` is not 200 or the body is not JSON.
         A session the tenant expired is renewed once and the request is
         sent again: the fixture logs in at session start and a full run
-        outlives the token (status 3113 at 28 minutes on india,
-        09/15/2026, which failed a test for a reason that was not the
-        app's behaviour).
+        outlives the token (status 3113 after about 28 minutes, which
+        failed a test for a reason that was not the app's behaviour).
         """
         try:
             return self._send(method, path, **kwargs)

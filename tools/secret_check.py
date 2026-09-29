@@ -1,13 +1,12 @@
-#!/usr/bin/env python3
 """Refuse a commit that carries a secret value from .env into a tracked file.
 
-The values in .env are the credentials: account passwords, API keys, the
-lab camera login. None of them belongs in a file git tracks, and this repo
-is pushed to two GitHub organisations. On 09/11/2026 two QA Touch cases
-spelled the camera login out in their step text, the snapshot backups
-carried it into git, and a later hand edit put it into a conftest. This
-check is the gate that was missing: it reads the values of the secret-
-looking keys in .env and refuses staged content that contains any of them.
+The values in .env are the credentials: account passwords and API keys.
+None of them belongs in a file git tracks, and this repo is pushed to two
+GitHub organisations. Once, two QA Touch cases spelled a camera login out
+in their step text, the snapshot backups carried it into git, and a later
+hand edit put it into a conftest. This check is the gate that was missing:
+it reads the values of the secret-looking keys in .env and refuses staged
+content that contains any of them.
 
 It never prints a value; a finding names the .env KEY and the file:line.
 
@@ -48,13 +47,13 @@ def secret_values(env_text: str) -> dict[str, str]:
     """{KEY: value} for the credential-looking keys in an env file's text."""
     # python-dotenv reads the text, as the suite does. A hand parser kept the inline comment of
     # `KEY=value # note` as a part of the value and kept the backslash of an escaped quote, so
-    # such a secret never matched the evidence (audit 09/21/2026).
+    # such a secret never matched the evidence.
     import io
 
     from dotenv import dotenv_values
     found: dict[str, str] = {}
     # interpolate=False: with it on, ${HOME}/x resolves to a real path, stops matching the
-    # placeholder rule, and the scan then masks that path in every published log (audit 09/22/2026)
+    # placeholder rule, and the scan then masks that path in every log
     for key, value in dotenv_values(stream=io.StringIO(env_text), interpolate=False).items():
         value = (value or '').strip()
         if not SECRET_KEY_RE.search(key) or NOT_SECRET_KEY_RE.search(key):

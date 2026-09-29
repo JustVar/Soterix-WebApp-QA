@@ -12,15 +12,14 @@ except ModuleNotFoundError as exc:
         raise                    # a dependency of the package is missing
     raise ModuleNotFoundError(
         "soterix-qa-shared is not installed. "
-        "Run: pip install -e ../soterix-qa-shared"
+        "Run: pip install -r requirements.txt"
     ) from None
 
-# This repo's folders, not the package's. A rule about tests/c2c/ is
+# This repo's folders, not the package's. A rule about tests/ui/ is
 # meaningless in the API repo, so the package ships none. The roots and
 # their projects live in config/products.py, one place for every tool.
-# The env file may re-point the shared Core root at its own project
-# (config/env/neurosen.py: qatouch_project P0BK), so a run under
-# ENV=neurosen archives and uploads as Neurosen.
+# An env file that names a `qatouch_project` re-points the shared root
+# at that project, so the run archives and uploads under it.
 from config.base_config import config as _env
 from config.products import path_rules
 

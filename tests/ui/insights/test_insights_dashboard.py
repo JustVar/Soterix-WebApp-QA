@@ -1,7 +1,7 @@
 """Insights Dashboard tests - the landing page, its preset, and the creation flow.
 
-Rebuilt 09/08/2026 against the measured page (register item 25; the
-probes are in reports/probe_shots/insights_*). The old file guarded
+Rebuilt against the measured page (the probes are in
+reports/probe_shots/insights_*). The old file guarded
 every step with a `count() == 0 -> skip` on a union such as
 `button:has-text('Create'), div:has-text('Create New')`: that union
 matched 18 elements, its .first was an ancestor div, the click never
@@ -9,7 +9,7 @@ navigated, and the creation tests skipped every run. One of them then
 passed anyway because its oracle was `input count > 0`, which the
 landing's own Search box satisfies.
 
-What the page is, measured on the US box:
+What the page is, measured on the app:
 - Landing (/insights): tabs 'My Dashboards' and 'Widgets', a Search
   box, ONE 'Create New' button, ONE 'View All', and the preset entry
   'System Status' as a link to /insights/systemStatus. There are no
@@ -29,7 +29,7 @@ from tests.shared.pages.insights_page import InsightsPage
 
 # One worker for every module that writes this account's dashboards and widgets: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_insights")
 
 CREATE_URL = "/insights/createNewDashboard"

@@ -3,7 +3,7 @@
 The search box filters the Available table client-side by feature name
 and by the Available count (its placeholder: 'Search by feature,
 availability.'); a filter that matches nothing renders one row reading
-'No Data!' (measured on both boxes 09/11/2026). The terms come from the
+'No Data!' (measured on the app). The terms come from the
 table itself, so the checks hold on any tenant.
 """
 import pytest
@@ -174,7 +174,7 @@ class TestLicenseExport:
     def test_csv_download_triggers_file(self):
         """Verify clicking Download produces a CSV export.
 
-        Known app defect (09/11/2026, both boxes): the click produces no
+        Known app defect: the click produces no
         download, no request and no new page, whether the icon, its parent
         or a dispatched click is used. The test fails naming that until the
         app fix; a download that does arrive must be a .csv.
@@ -197,7 +197,7 @@ class TestLicenseExport:
             raise AssertionError(
                 "The Download icon produced no file in 15 s"
                 + (f"; it sent {len(requests)} API request(s): {requests[:3]}" if requests
-                   else " and sent no request at all (app defect - register, App defects)")
+                   else " and sent no request at all (an app defect)")
             ) from None
         assert download.suggested_filename[-4:] == ".csv", (
             f"Expected a .csv export, got: {download.suggested_filename}")

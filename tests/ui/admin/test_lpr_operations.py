@@ -13,7 +13,7 @@ from tests.shared.pages.lpr_page import LIST_ROW_ICONS, PLATE_HEADERS, LprPage
 
 # One worker for every module that writes this account's LPR lists, views and widgets: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_lpr")
 
 
@@ -35,7 +35,7 @@ class TestLprListOperations:
 
         Taking the tenant's first list made these tests pass only while
         an earlier run had leaked one, and pointed edits and deletes at
-        a real user's data (register item 27).
+        a real user's data.
         """
         name = "AutoTest List " + datetime.datetime.now().strftime("%H%M%S%f")[:12]
         self.lpr.create_list(name)

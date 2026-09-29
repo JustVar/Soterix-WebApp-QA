@@ -1,126 +1,41 @@
+"""The QA server. A new server edits this file and .env, nothing else.
+
+Keys a new server needs: base_url, api_base_url, default_site_id,
+test_site_name, test_camera_name, test_chat_user_search, test_chat_user_name.
+Optional: camera_capabilities (a marker -> the camera it needs), without
+(a marker -> why this server cannot run it). Measure before you fill either.
+"""
 import os
 
 from config.secret import Secret
 
 config = {
-    "base_url": "https://qa.example.invalid",
+    "base_url": "https://qa.example.invalid",          # the QA server
     "api_base_url": "https://qa.example.invalid/v-apiserver",
-
-    # Safety flags
-    "allow_write": True,
-    "allow_delete": True,
-
-    # Test data (site, camera, chat partner) belongs to a box, not to the
-    # environment: edit boxes.<box>.test_data below. There are no top-level
-    # test_* keys. Until 09/18/2026 there were, every box overrode them, and
-    # an edit to them changed nothing.
-    # NOTE: the rule wizard hides cameras that are at rule capacity.
-    # If the test camera is missing from the wizard device list, check for
-    # leftover *_Auto_* rules on it and delete them (verified 08/2026)
-
-    # Box configurations. Each box names the environment variables that hold
-    # the account to use, so every tester signs in as themselves.
-    "boxes": {
-        # The active box's test_data becomes top-level keys at load (BOX
-        # env var; overlay happens in config/base_config.py load_config),
-        # so config.get("test_site_name") is always the ACTIVE box's site
-        # and no test needs box logic.
-        "india": {
-            "email_env": "QA_INDIA_USER",
-            "password_env": "QA_INDIA_PASSWORD",
-            # siteId of test_site_name below; the api fixture builds its
-            # data here, so it must be the site the UI tests open.
-            # Newtown Action Area (site 16, camera 'main gate') is being
-            # rebuilt and its IVMS is down, so india tests run on the
-            # Example Corporate Office site until further notice
-            # (Justin, 09/16/2026; register row 78). Thermal-14 is online
-            # and searchable there (register row 76). When Newtown is
-            # back, the drawing searches can keep their own camera via
-            # search_site_name / search_camera_name (CONVENTIONS.md).
-            "default_site_id": 17,
-            "test_data": {
-                "test_site_name": "Example Corporate Office",
-                "test_camera_name": "Thermal-14",
-                # Chat partners differ per tenant: the accounts on one
-                # box do not exist on the other, so a shared name fails
-                # the chats tests everywhere but home (register item 29)
-                "test_chat_user_search": "QA Engineer B",
-                "test_chat_user_name": "Chat Partner",
-            },
-        },
-        # The US QA box signs in with the automation account
-        # (test-auto-qa@soterixsystems.com, enterprise 132, site "Spartan0").
-        # Set QA_US_USER / QA_US_PASSWORD in .env to those credentials.
-        "us": {
-            "email_env": "QA_US_USER",
-            "password_env": "QA_US_PASSWORD",
-            # siteId of Spartan0, this box's only site
-            "default_site_id": 156,
-            # What this tenant does not have, by pytest marker. A test that
-            # carries one of these markers skips on this box at collection,
-            # with the reason given here, and still runs on the boxes that
-            # have it. The guard is box_skip_reason in conftest.py.
-            "without": {
-                "lpr": "Spartan0 has no LPR cameras and no plate activity "
-                       "(Justin, 09/08/2026); the LPR tests run on india",
-            },
-            "test_data": {
-                # Spartan0 is the box's only site (site id 156); the camera
-                # is a live streaming one (probe 09/01/2026, 22 cameras)
-                "test_site_name": "Spartan0",
-                # The camera a test drives when it does not care which. The run
-                # rotates over the online cameras in
-                # tests/data/camera_pool_us.json instead, one per day, and this
-                # is the fallback when the pool is unmeasured or a capability
-                # has nothing online (tests/shared/helpers/camera_pool.py).
-                "test_camera_name": "Soterix Multicam 1.15",
-                # Cameras that satisfy a marker's requirement, so a test that
-                # needs one is never rotated onto a camera that cannot answer.
-                # Measured 09/23/2026 (16 online of 22, 7 vendors); the names
-                # are the tenant's, so re-probe after a rename.
-                # No `lpr` entry: this box skips the LPR tests (see `without`).
-                "camera_capabilities": {
-                    "audio": ["Advidia (Audio)", "Avigilon Intercom (Audio)", "iPro PTZ (Audio)"],
-                    "thermal": ["Avigilon Thermal"],
-                    "ptz": ["Uniview PTZ", "iPro PTZ (Audio)"],
-                },
-                # 'Dallas QA Lab' is the one real chat account on this
-                # tenant; 'qa' matches it alone (probed 09/04/2026).
-                # The only other searchable names are our own leaked
-                # AutoTest users (register item 11), which are not a
-                # person to message.
-                "test_chat_user_search": "Dallas",
-                "test_chat_user_name": "Dallas QA Lab",
-            },
-        },
-    },
-
-    # Default box if not specified
-    "default_box": "india",
+    "allow_write": True,        # tests marked admin_users, admin_rules, admin_sites, bookmark, sequences run only when True
+    "allow_delete": True,       # tests marked destructive, mutating run only when True
+    "default_site_id": 17,      # siteId of test_site_name; the api fixture builds its data there and refuses when the two disagree
+    "test_site_name": "Example Corporate Office",
+    # The camera a test drives when it does not care which. The stream guard
+    # measures it. The rule wizard hides a camera that is at rule capacity:
+    # if this camera is missing from the wizard's device list, delete the
+    # leftover *_Auto_* rules on it (tools/tenant_cleanup.py).
+    "test_camera_name": "Thermal-14",
+    # The chat partner. Accounts differ per tenant, so a new server needs
+    # a person of its own here.
+    "test_chat_user_search": "QA Engineer B",
+    "test_chat_user_name": "Chat Partner",
+    # A test marked lpr, audio, thermal or ptz drives the camera named here for
+    # that marker. Empty means test_camera_name serves every marker.
+    "camera_capabilities": {},
+    # marker -> reason, for what this server lacks. A test carrying the marker
+    # skips at collection with this reason. Example: "lpr": "no plate camera".
+    "without": {},
 }
 
-# Helper to get active box config
-def get_box_config(box_name=None):
-    box = box_name or os.environ.get("BOX", config["default_box"])
-    if box not in config["boxes"]:
-        raise KeyError(
-            f"Unknown box '{box}' for this environment. "
-            f"Valid boxes: {sorted(config['boxes'])}")
-    return config["boxes"][box]
 
-# Helper to get credentials for active box
-def get_credentials(box_name=None):
-    """Credentials for a box.
-
-    A box gives either a literal `email` (shared accounts) or an `email_env`
-    naming the variable that holds it (per-tester accounts).
-    """
-    box_config = get_box_config(box_name)
-    email = box_config.get("email") or os.environ.get(
-        box_config.get("email_env", ""), "")
-    password = Secret(os.environ.get(box_config["password_env"], ""))
-    return {
-        "email": email,
-        "password": password,
-        "site_id": box_config["default_site_id"],
-    }
+def get_credentials():
+    """The account the tests sign in as, from .env, and the site its data goes to."""
+    return {"email": os.environ.get("QA_USER", ""),
+            "password": Secret(os.environ.get("QA_PASSWORD", "")),
+            "site_id": config["default_site_id"]}

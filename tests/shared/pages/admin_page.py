@@ -140,7 +140,7 @@ class AdminPage:
 
     # --- Navigation ---
 
-    # Measured 09/12/2026 on US: the admin tabs are <p> labels in the
+    # Measured on the app: the admin tabs are <p> labels in the
     # secondary header; the selected one's parent box paints
     # rgb(3, 23, 31), the others stay transparent on the header's
     # rgb(31, 47, 52). No aria-selected, no class, and the address stays
@@ -540,7 +540,7 @@ class AdminPage:
         rule is not a tidiness problem here: the wizard hides a camera
         that is at rule capacity, so a single leftover made the
         configured camera vanish from Select Devices and every later
-        run failed there (measured 09/04/2026, register item 25).
+        run failed there.
         """
         self.search_rule(name)
         try:
@@ -573,7 +573,7 @@ class AdminPage:
         """Open the details drawer of the rule with the given name.
 
         Name-scoped so a test never opens a team-owned rule on the
-        shared tenant (register item 25; the index form did).
+        shared tenant (the index form did).
         """
         self._only_row_named(name)
         self.edit_rule(0)
@@ -591,7 +591,7 @@ class AdminPage:
 
         This is the teardown's only route back, and the teardown is
         what stops a half-made rule from leaking onto the configured
-        camera and putting it at rule capacity (register item 28).
+        camera and putting it at rule capacity.
         """
         if self.rule_search_input.is_visible():
             return
@@ -608,7 +608,7 @@ class AdminPage:
         close icon. Leaving it open is not cosmetic: it covers the rule
         list with a MuiBox backdrop that swallows clicks, so the next
         search - a teardown's delete included - cannot reach the search
-        input at all (register item 25).
+        input at all.
         """
         self.page.keyboard.press("Escape")
         self.rule_details_panel.wait_for(state="hidden", timeout=10000)
@@ -626,7 +626,7 @@ class AdminPage:
         the identity check: exactly one row must survive it. Zero rows
         means the rule is not there and more than one means the filter
         did not settle - both are faults, and both used to read as
-        "no rules with icons found" (register item 25).
+        "no rules with icons found".
         """
         self.search_rule(name)
         expect(self.rule_edit_icons).to_have_count(1, timeout=15000)
@@ -740,7 +740,7 @@ class AdminPage:
         """
         # Same exact match as the old :text-is, but escaped: a site named
         # with an apostrophe returns no match instead of crashing the
-        # selector parser (item 19 recipe).
+        # selector parser.
         site = self.page.get_by_text(site_name, exact=True).and_(
             self.page.locator("p.MuiTypography-root")).first
         site.wait_for(state="visible", timeout=10000)
@@ -1073,7 +1073,7 @@ class AdminPage:
         before = boxes.count()
         search.fill(target)
         self._count_left_baseline(boxes, before, "wizard device filter")
-        # Exact and escaped (item 19): a substring landing 'Thermal-141'
+        # Exact and escaped: a substring landing 'Thermal-141'
         # for 'Thermal-14' would build the rule on the wrong camera.
         row = self.page.get_by_text(target, exact=True).first
         try:

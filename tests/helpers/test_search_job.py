@@ -1,6 +1,6 @@
 """Pins for tests/shared/helpers/search_job.py.
 
-The bodies here are the ones the US box answered on 09/08/2026, trimmed to
+The bodies here are the ones the QA server answered on 09/08/2026, trimmed to
 the fields the helper reads. A fake page delivers them in the order the
 browser would, so the decision logic is exercised without a browser.
 """

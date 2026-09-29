@@ -1,45 +1,50 @@
 #!/bin/sh
 # The collect gate, before the commit exists. CI (.github/workflows/
-# collect-gate.yml) runs the collected-test floor, the offline suites,
-# the inventory check and the lint baseline on every push; this hook
-# runs those four, cheapest first, plus two of its own (secrets,
-# conventions), so a commit that would fail the gate fails here, on the
-# laptop, before a failure email goes out. Eight went out on 09/12/2026
-# because the hook ran only its own two and the inventory. CI alone also
-# runs `pytest --setup-plan` (fixture wiring, 25 s); that stays in CI.
+# collect-gate.yml) runs the same checks on every push. This hook runs
+# them first, on the laptop, cheapest first, so a commit that would fail
+# the gate fails here.
 #
 # Install, once per clone: git config core.hooksPath tools/hooks
-# (README > Quick Setup). CI runs the same conventions check on the
-# lines a push adds, so a commit made without this hook meets it there.
-# Bypass only for a genuine emergency: git commit --no-verify.
+# (README > Day one). Bypass only for a genuine emergency:
+# git commit --no-verify.
 #
-# Why each check is here:
-# - secret_check: no staged line may carry a credential value from .env
-#   (the camera login reached two GitHub orgs through a QA Touch backup
-#   on 08/28/2026 and nearly again through a conftest on 09/11).
+# What each check is for:
+# - secret_check: no staged line may carry a credential value from .env.
+#   A camera login once reached two GitHub organisations through a
+#   QA Touch backup file that was committed.
 # - convention_check: the house conventions, on the lines this commit
-#   adds. HIGH findings block; MEDIUM findings print and pass (justify
+#   adds. HIGH findings block. MEDIUM findings print and pass (justify
 #   them in the commit message).
 # - test_inventory --check: docs/TEST_INVENTORY.md must match the tests
-#   on disk; two commits reached CI stale on 09/08 and 09/11.
-# - lint_baseline: no file may gain ruff findings; two pushes failed CI
-#   on 09/12 over literal non-breaking spaces nobody linted locally.
+#   on disk. Regenerate it with: python tools/test_inventory.py
+# - ruff: the Python style rules in pyproject.toml. A literal
+#   non-breaking space fails CI when nobody lints locally.
 # - collect_floor: the whole repo and the offline suites still collect
-#   and no suite shrank; a broken import fails here, not on main. Its
-#   collect-only pytest is pointed at logs/ too (PYTEST_ADDOPTS), or it
-#   replaces reports/report.html with an empty shell on every commit
-#   (the 09/14 audit found it doing that).
-# - the offline suites: the pins for the plugins, tools and helpers. Six
-#   pushes failed CI on 09/12 over one stream-guard pin nobody ran
-#   locally. The run changes nothing a live UI run writes: the archive,
-#   run record, run guard and screenshots are off, and its html report
-#   goes to logs/hook_report.html instead of reports/report.html.
+#   and no suite shrank. A broken import fails here, not on main. Its
+#   collect-only pytest writes its html to logs/ (PYTEST_ADDOPTS). Without
+#   that it replaces reports/report.html with an empty shell on every commit.
+# - the offline suites: the pins for the plugins, tools and helpers. The
+#   run changes nothing a live UI run writes: the archive, run record,
+#   run guard and screenshots are off, and its html report goes to
+#   logs/hook_report.html instead of reports/report.html.
 #
-# Ten to thirty seconds in all, most of it the last two (measured 09/18/2026).
-py=venv/Scripts/python.exe
+# Ten to thirty seconds in all, most of it the last two.
+#
+# The interpreter: the repo's venv on Windows, then the venv on Linux or
+# macOS, then the python3 on PATH.
+if [ -x venv/Scripts/python.exe ]; then
+    py=venv/Scripts/python.exe
+elif [ -x venv/bin/python ]; then
+    py=venv/bin/python
+elif command -v python3 >/dev/null 2>&1; then
+    py=python3
+else
+    echo "pre-commit: no venv found. Create one: python -m venv venv, then pip install -r requirements.txt" >&2
+    exit 1
+fi
 $py tools/secret_check.py || exit 1
 $py tools/convention_check.py || exit 1
 $py tools/test_inventory.py --check || exit 1
-$py tools/lint_baseline.py || exit 1
+$py -m ruff check . || exit 1
 PYTEST_ADDOPTS="--html=logs/hook_collect.html -p no:cacheprovider" $py tools/collect_floor.py || exit 1
 RUN_ARCHIVE=off RUN_GUARD=off REPORT_SCREENSHOTS=off $py -m pytest tests/plugins tests/tools tests/helpers -p no:cacheprovider --no-run-record --html=logs/hook_report.html || exit 1

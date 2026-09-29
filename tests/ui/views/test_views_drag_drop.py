@@ -9,7 +9,7 @@ from tests.shared.pages.views_page import ViewsPage
 
 # One worker for every module that writes this account's saved views (api_saved_view makes one): under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_views")
 
 
@@ -241,7 +241,7 @@ class TestViewsDragDrop:
         # The drag is the behaviour under test, so it raises. It used
         # to run under a try that turned every failure into a skip,
         # and a drop that landed nothing skipped as well: the test had
-        # no failing path at all (register item 25).
+        # no failing path at all.
         health = self.views.content_health_snapshot()
         # the configured site row is the drag source; None made the
         # locator 'text=None', so this test had only ever skipped
@@ -278,7 +278,7 @@ class TestViewsDragDrop:
 
         # The whole body used to run under `except Exception:
         # pytest.skip(...)`, which caught the closing assert too: the
-        # test could pass or skip but never fail (register item 25).
+        # test could pass or skip but never fail.
         # Step 1: Open maps panel
         self.views.open_maps()
 
@@ -358,8 +358,7 @@ class TestViewsDragDrop:
 
         # The whole body used to run under `except Exception:
         # pytest.skip(...)`, and its verdict was a print on success and
-        # a skip on failure: nothing here could ever go red
-        # (register item 25).
+        # a skip on failure: nothing here could ever go red.
         # Step 1: Click Channels tab in left panel
         channels_tab = self.page.locator("text=Channels").first
         channels_tab.wait_for(state="visible", timeout=10000)

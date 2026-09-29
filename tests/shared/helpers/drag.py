@@ -1,12 +1,13 @@
 """Drop one element on another, in the way that works on the machine that runs the test.
 
 `drop(source, target)` does a real pointer drag (`Locator.drag_to`) on every
-machine but one: headed Chrome on a Wayland display, which is how the nightly
-runs on spartan1. There, Chrome stops drawing in the middle of some drags and
-never answers again. The drag call does not return, its timeout does not fire,
-and each later call on that page hangs too, the after-test screenshot included.
+machine but one: headed Chrome on a Wayland display (a Linux runner started
+with `--ozone-platform=wayland` in CHROME_ARGS). There, Chrome stops drawing in
+the middle of some drags and never answers again. The drag call does not
+return, its timeout does not fire, and each later call on that page hangs too,
+the after-test screenshot included.
 
-Measured on the box on 09/18 and 09/21/2026 with the LPR camera playback class:
+Measured on such a runner with the LPR camera playback class:
 - Pointer drag: 4 of 4 class runs hung, each time inside the drag that plays
   the camera. Chrome's Wayland log shows 60 frames a second, then a frame
   callback from the display that Chrome does not answer, then silence. The
@@ -15,15 +16,13 @@ Measured on the box on 09/18 and 09/21/2026 with the LPR camera playback class:
 - The same HTML5 drag events fired from JavaScript: 5 of 5 class runs finished,
   25 of 25 streams played, no hang. The app's drop handler accepts them for a
   camera row. It does not for an LPR widget card (the drop landed nothing), so
-  try an element on the box before you move its drag here.
+  try an element on a Wayland runner before you move its drag here.
 
 The Views page object's `mouse_drag` and the 3 `drag_to` calls of the Views
-tests use the same rule. On 09/20/2026 the us leg of the nightly hung in one of
-them. Measured on the box on 09/21/2026 with test_views_drag_drop and
-test_views_subtabs, on us and on india: 16 of 16 JavaScript drops landed (a
-camera, a location, a map, a channel, a saved view, an insight), no fallback
-was used, and no run hung. The failures that stayed are in the register
-(row 56) and are not drags.
+tests use the same rule. Measured on the same runner with test_views_drag_drop
+and test_views_subtabs: 16 of 16 JavaScript drops landed (a camera, a location,
+a map, a channel, a saved view, an insight), no fallback was used, and no run
+hung.
 
 Windows Chrome ran the class 2 times with the pointer drag and no hang, so each
 other machine keeps it: a pointer drag is what a user does, and it is the

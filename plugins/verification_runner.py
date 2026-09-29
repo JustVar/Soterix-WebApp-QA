@@ -11,8 +11,8 @@ Activation:
 
 When --verify-mode is NOT active, `step_capture` is a no-op with zero overhead.
 
-Evidence files are consumed by the QA Ops Hub verification page for
-asynchronous review by QA testers.
+The evidence files under verification_output/ are reviewed by hand, or
+by any tool that reads that folder.
 """
 from __future__ import annotations
 

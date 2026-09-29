@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Report what a live camera tile actually receives, next to what the API says it should.
 
     python tools/stream_probe.py --camera "main gate"
@@ -49,7 +48,6 @@ import asyncio
 import base64
 import itertools
 import json
-import os
 import re
 import statistics
 import struct
@@ -518,18 +516,16 @@ def summarize_frames(frames: list[dict]) -> dict:
 
 # ------------------------------------------------------------------ api ---
 def _account() -> tuple[str, str, int]:
-    """(user, password, site_id) of the box the probe was asked for.
-
-    With BOX set these come from config/env/ through get_credentials, the
-    way the tests and explore_app resolve them; the probe used to read
-    QA_USER and site 16 whatever BOX said, so a US probe logged into India
-    and reported "no channel named" for a US camera (09/11/2026).
-    """
-    if os.environ.get("BOX"):
-        from config.base_config import get_credentials
-        creds = get_credentials()
-        return creds["email"], creds["password"], int(creds["site_id"])
-    return *_account()[:2], int(os.environ.get("TEST_SITE_ID", "16"))
+    """(user, password, site_id): the account and site the tests use, from
+    config/env/ through get_credentials, so a probe reads the same tenant
+    the tests drive."""
+    from config.base_config import get_credentials
+    creds = get_credentials()
+    if not creds.get("email") or not creds.get("password"):
+        raise SystemExit("QA_USER and QA_PASSWORD must be set in .env.")
+    if creds.get("site_id") is None:
+        raise SystemExit("default_site_id is not set in config/env/; pass --site-id.")
+    return creds["email"], creds["password"], int(creds["site_id"])
 
 
 def api_facts(api: InternalApi, site_id: int, camera: str) -> dict:
@@ -654,8 +650,7 @@ def open_browser(p, headed: bool, channel: str | None):
     """Launch, hook, log in and land on Views. Returns (browser, page, views, capture).
 
     The launch flags are the session's (CHROME_ARGS, stream_health.chrome_args),
-    so the probe measures the browser the tests get; on spartan1 that is
-    headed Chrome on its Weston display (deploy/spartan1/README.md).
+    so the probe measures the browser the tests get.
     """
     browser = p.chromium.launch(headless=not headed, channel=channel, args=chrome_args())
     ctx = browser.new_context(ignore_https_errors=True, viewport={"width": 1600, "height": 900})
@@ -1591,7 +1586,7 @@ def main() -> int:
     parser.add_argument("--camera", default=config.get("test_camera_name"),
                         help="camera name as shown in the Views tree")
     parser.add_argument("--site-id", type=int, default=None,
-                        help="site to probe (default: the active box's default_site_id, else TEST_SITE_ID)")
+                        help="site to probe (default: default_site_id in config/env/)")
     parser.add_argument("--seconds", type=int, default=None,
                         help="capture window per player (facts: 12, health: 20, --no-browser "
                              "experiment: 8 per variant)")

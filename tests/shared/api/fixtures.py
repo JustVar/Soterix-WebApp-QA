@@ -13,13 +13,12 @@ from __future__ import annotations
 
 import base64
 import datetime
-import os
 import time
 
 import pytest
 import requests
 
-from config.base_config import config
+from config.base_config import config, get_credentials
 from tests.shared.api.client import ApiError, InternalApi
 
 NAME_PREFIX = "AutoTest "
@@ -134,52 +133,48 @@ def location_tree(api: InternalApi) -> list[dict]:
 def api() -> InternalApi:
     """A logged-in InternalApi for the configured test site.
 
-    Box-aware: the active box's account and `default_site_id` win, so
-    BOX=us builds its data on that box's own site with that box's
-    credentials. Falls back to QA_USER / QA_PASSWORD / TEST_SITE_ID.
+    The account is QA_USER / QA_PASSWORD from .env and the site is
+    default_site_id in config/env/, both through get_credentials(). A
+    missing value FAILS the tests that need this fixture and names the
+    key: a skip here would leave a suite green that tested nothing.
 
     The site must be the one `test_site_name` in config/env/ names, or
-    the API writes to a site the UI tests never open. On QA the name
-    "Newtown Action Area" resolved to siteId 16 while a local .env
-    said 17 (2026-08-24). The fixture reads GET /REST/site and skips
-    with both values when they disagree.
+    the API writes to a site the UI tests never open. A site name once
+    resolved to siteId 16 while the configured id said 17. The fixture
+    reads GET /REST/site and fails with both values when they disagree.
+    This is the guard that catches a wrong default_site_id in a config edit.
     """
-    from config.base_config import get_credentials
-    from config.secret import Secret
-    try:
-        box = get_credentials()
-    # an unknown or unconfigured box falls back to QA_USER below
-    except (KeyError, RuntimeError):
-        box = {}
-    user = box.get("email") or os.environ.get("QA_USER")
-    password = box.get("password") or Secret(os.environ.get("QA_PASSWORD") or "")
-    site_id = box.get("site_id") or os.environ.get("TEST_SITE_ID")
+    creds = get_credentials()
+    user = creds.get("email")
+    password = creds.get("password")
+    site_id = creds.get("site_id")
     missing = [
         key for key, value in
-        (("QA_USER", user), ("QA_PASSWORD", password), ("TEST_SITE_ID", site_id))
+        (("QA_USER (.env)", user), ("QA_PASSWORD (.env)", password),
+         ("default_site_id (config/env/)", site_id))
         if not value
     ]
     if missing:
-        pytest.skip(f"API test data needs {', '.join(missing)} in .env")
+        pytest.fail(f"API test data needs {', '.join(missing)}. The tests that build "
+                    f"data through the API cannot run without it.", pytrace=False)
 
     client = InternalApi(config["base_url"], site_id)
     try:
         client.login(user, password)
         sites = {int(site["siteId"]): site["name"] for site in client.get("/REST/site")}
-    # deliberate: this fixture is optional test-data plumbing, so an
-    # internal API that is down blocks the tests that need it without
-    # failing a UI suite that does not (register item 25)
     except (ApiError, requests.RequestException) as e:
-        pytest.skip(f"API login or site list failed on {config['base_url']}: {e}")
+        pytest.fail(f"API login or site list failed on {config['base_url']}: {e}. "
+                    f"The tests that build data through the API cannot run.", pytrace=False)
 
     client.site_name = sites.get(client.site_id)
     expected = config.get("test_site_name")
     if expected and client.site_name != expected:
         by_name = [site_id for site_id, name in sites.items() if name == expected]
-        pytest.skip(
-            f"TEST_SITE_ID={site_id} is site '{client.site_name}' but test_site_name "
+        pytest.fail(
+            f"default_site_id={site_id} is site '{client.site_name}' but test_site_name "
             f"is '{expected}' (siteId {by_name or 'not found'}). API-built data would "
-            f"land on a site the UI tests do not open. Set TEST_SITE_ID to match."
+            f"land on a site the UI tests do not open. Set default_site_id in "
+            f"config/env/ to match.", pytrace=False
         )
     return client
 

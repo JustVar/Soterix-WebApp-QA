@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """The test-to-case mapping, with a review gate and a rename guard.
 
 config/qatouch_case_mapping.json links pytest nodeids to QA Touch cases.
@@ -7,7 +6,7 @@ Now that uploads actually land (08/17), an unreviewed guess writes real
 Pass/Fail onto a case no test verifies. So:
 
   A mapping row is a PROPOSAL until a human marks it reviewed.
-  Only reviewed rows are used by the reporter, run_suite and mode sync.
+  Only reviewed rows are used by the reporter.
 
 Rows also break silently on rename: the mapping is keyed by nodeid, so
 renaming a test orphans its row and the case quietly stops receiving
@@ -42,7 +41,8 @@ def load_raw(path: Path = MAPPING_PATH) -> dict:
     """The whole mapping file, as stored."""
     if not path.exists():
         raise FileNotFoundError(
-            f'Mapping file missing: {path}. Build it: python tools/qatouch_mapper.py build')
+            f'Mapping file missing: {path}. Restore it from git, or write rows with '
+            'python tools/qatouch_cases_from_tests.py --after-import')
     return json.loads(path.read_text(encoding='utf-8'))
 
 
@@ -248,7 +248,7 @@ def cmd_status(_args) -> int:
 
 
 def cmd_check(_args) -> int:
-    """Exit 1 when a mapped test no longer exists. For hooks and run_suite."""
+    """Exit 1 when a mapped test no longer exists. For hooks."""
     orphans = orphaned_nodeids()
     if orphans:
         print(f'MAPPING RENAME GUARD: {len(orphans)} mapped test(s) no longer exist. '

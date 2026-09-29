@@ -1,24 +1,23 @@
-"""The session stream-health guard: does the box's test camera deliver
-frames right now?
+"""The session stream-health guard: does the test camera deliver frames
+right now?
 
-Nine of the seventeen web-app failures in the 09/11/2026 full US run were
-one tenant condition read nine ways: the QA host delivered 0 frames on
-every channel (the media API answered 1506 'Failed to read response from
-the IVMS server'), so Save on a view sent no request, the player never
-left readyState 0, a tile never streamed and the bookmarks panel listed
-nothing. Each test timed out on its own wait and reported its own
-symptom; nothing named the cause.
+One tenant condition reads many ways in a full run: when the server
+delivers 0 frames on every channel (the media API answers 'Failed to read
+response from the IVMS server'), Save on a view sends no request, the
+player never leaves readyState 0, a tile never streams and the bookmarks
+panel lists nothing. Each test times out on its own wait and reports its
+own symptom, and nothing names the cause.
 
 This module measures the cause once per session, the way
 tools/stream_probe.py --health --no-browser does: one media socket from
-Python to the box's configured test camera, a few seconds, count the
-binary frames. conftest.py skips the tests marked `livestream` with the
+Python to the configured test camera, a few seconds, count the binary
+frames. conftest.py skips the tests marked `livestream` with the
 measurement when the count is 0. A measurement that could not be made
 (no login, no such channel, an exception) skips nothing and is printed:
 a guard that cannot see must not hide tests.
 
-The same rule as the box `without` map and require_items: a skip names a
-measured fact, never a guess. STREAM_GUARD=off runs the tests anyway.
+The same rule as the `without` map: a skip names a measured fact, never a
+guess. STREAM_GUARD=off runs the tests anyway.
 """
 from __future__ import annotations
 
@@ -45,10 +44,9 @@ def chrome_args(environ=None) -> list[str]:
     One variable feeds every Chrome the suite opens: the test session
     (conftest's browser_type_launch_args), this guard's decode check and
     tools/stream_probe.py, so what the guard measures is the browser the
-    tests get. spartan1 sets it in deploy/spartan1/nightly.sh: Chrome on
-    Linux decodes the tenants' H.265 only through the GPU's VA-API
-    decoder, and only on its Wayland backend (measured 09/17/2026,
-    deploy/spartan1/README.md). Empty when unset.
+    tests get. Chrome on Linux decodes the tenant's H.265 only through the
+    GPU's VA-API decoder, and only on its Wayland backend: a Linux runner
+    sets the flags for that here (docs/LINUX_H265.md). Empty when unset.
     """
     environ = os.environ if environ is None else environ
     return shlex.split(environ.get(CHROME_ARGS_ENV) or "")
@@ -70,10 +68,9 @@ MSE_TYPES = {
     "H.265": ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'],
     "H.264": ['video/mp4; codecs="avc1.42E01E"'],
 }
-# The tenant's codecType values seen so far: 8 on main gate (Newtown), 2 on
-# the Thermal-* lenses (Videonetics, 09/17/2026); the socket's own init
-# segment showed hvc1 for both, so both are H.265. The map is only the
-# fallback: codec_from_frames reads the truth from the frames.
+# The tenant's codecType values seen so far, both H.265 by their init
+# segments. The map is only the fallback: codec_from_frames reads the
+# truth from the frames.
 CODEC_TYPES = {8: "H.265", 2: "H.265"}
 
 
@@ -81,10 +78,10 @@ def codec_from_frames(frames: list) -> str | None:
     """The codec the media socket actually delivers, read from the fMP4
     init segment (ftyp+moov sample entry: hvc1/hev1 is H.265, avc1/avc3
     H.264) in the first binary frames; None when none parses. The channel
-    parameter map is not to be trusted alone: an unmapped codecType read
-    as "unknown", the decode check gave no verdict, the guard let the
-    livestream tests run, and three of four workers died on a tile Linux
-    Chrome could not decode (india, 09/17/2026, the four-hour run cap).
+    parameter map is not to be trusted alone: an unmapped codecType reads
+    as "unknown", the decode check gives no verdict, and without this the
+    guard let the livestream tests run against a tile Linux Chrome could
+    not decode, which ended three of four workers at the run cap.
     """
     init = b"".join(f.get("data") or b"" for f in (frames or [])[:3] if f.get("opcode") == 2)
     if not init:
@@ -102,7 +99,7 @@ def codec_from_frames(frames: list) -> str | None:
 
 
 def measure_stream(camera_name: str | None, seconds: int = DEFAULT_SECONDS) -> dict:
-    """Frames the box's media socket delivers for `camera_name` in `seconds`,
+    """Frames the media socket delivers for `camera_name` in `seconds`,
     and the codec the channel is configured to stream.
 
     Returns {'camera', 'channel_id', 'frames', 'seconds', 'codec', 'error',
@@ -113,7 +110,7 @@ def measure_stream(camera_name: str | None, seconds: int = DEFAULT_SECONDS) -> d
     out: dict = {"camera": camera_name, "channel_id": None, "frames": 0,
                  "seconds": int(seconds), "codec": None, "error": None, "note": None}
     if not camera_name:
-        out["error"] = "no test_camera_name in config/env/ for this box"
+        out["error"] = "no test_camera_name in config/env/"
         return out
     try:
         import asyncio
@@ -162,12 +159,11 @@ def decode_check(codec: str | None, channel: str | None, headed: bool = False) -
     Chrome on Windows and Mac decodes H.265 out of the box. Chrome on
     Linux has no software H.265 decoder: it answers false to
     MediaSource.isTypeSupported for hvc1 and hev1 unless it reaches a GPU
-    decoder through VA-API, which it does only on its Wayland backend
-    with the flags spartan1 sets in CHROME_ARGS (measured 09/17/2026,
-    deploy/spartan1/README.md). So the check opens Chrome the way the
-    tests will: the session's flags, headed when the session is. A tile's
-    player on a browser that answered false never leaves readyState 0,
-    whatever the socket delivers.
+    decoder through VA-API, which it does only on its Wayland backend with
+    the flags a Linux runner sets in CHROME_ARGS (docs/LINUX_H265.md). So
+    the check opens Chrome the way the tests will: the session's flags,
+    headed when the session is. A tile's player on a browser that answered
+    false never leaves readyState 0, whatever the socket delivers.
     Returns {'decodes': True | False | None, 'browser': str | None}; None
     when the codec is unknown or the check could not run.
     """
@@ -186,14 +182,14 @@ def decode_check(codec: str | None, channel: str | None, headed: bool = False) -
             supported = page.evaluate(
                 "types => types.some(t => window.MediaSource && MediaSource.isTypeSupported(t))", types)
             # The name says how Chrome was opened: a false from a headless
-            # or flagless launch on a box that decodes headed with its flags
-            # is a wiring fault, and the skip reason must show it.
+            # or flagless launch on a machine that decodes headed with its
+            # flags is a wiring fault, and the skip reason must show it.
             name = (f"{'Chrome' if channel == 'chrome' else 'Chromium'} {browser.version} on {platform.system()}, "
                     f"{'headed' if headed else 'headless'}, {len(flags)} flag{'' if len(flags) == 1 else 's'}")
             browser.close()
         # os and headed are returned, not left inside the name string, because
         # a rule reads them: headless Chrome on Windows answers true here and
-        # then never decodes a frame (measured 09/22/2026, register row 128).
+        # then never decodes a frame (measured, see stream_skip_reason).
         return {"decodes": bool(supported), "browser": name,
                 "os": platform.system(), "headed": bool(headed)}
     except Exception as e:  # why: a check that could not run is 'unknown', which skips nothing
@@ -212,55 +208,55 @@ def assess(camera_name: str | None, channel: str | None, seconds: int = DEFAULT_
     return measure
 
 
-def stream_skip_reason(measure: dict, box_name: str) -> str | None:
+def stream_skip_reason(measure: dict) -> str | None:
     """The skip text for a measurement, or None to let the tests run.
 
     None when frames arrived, and None when the measurement failed: an
-    unmeasured box is not a dead one. The text carries the camera, the
+    unmeasured server is not a dead one. The text carries the camera, the
     channel, the count and the sample length, so the report says what was
     seen and where, on whose measurement.
     """
     if measure.get("error"):
         return None
-    tail = (f" (session stream-health guard, tests/shared/helpers/stream_health.py; "
+    tail = (f" (session stream-health guard, tests/shared/helpers/stream_health.py. "
             f"{GUARD_ENV}=off runs them anyway)")
     if measure.get("decodes") is False:
-        return (f"box {box_name} streams {measure.get('codec')} on camera '{measure.get('camera')}' "
+        return (f"the server streams {measure.get('codec')} on camera '{measure.get('camera')}' "
                 f"and this browser ({measure.get('browser')}) cannot decode it: MediaSource.isTypeSupported "
-                f"is false, so a tile's player never leaves readyState 0; the livestream tests need a "
-                f"runner whose Chrome decodes {measure.get('codec')}: Windows, Mac, or spartan1 headed on "
-                f"its Weston display (deploy/spartan1/README.md){tail}")
+                f"is false, so a tile's player never leaves readyState 0. The livestream tests need a "
+                f"runner whose Chrome decodes {measure.get('codec')}: Windows or Mac, or a Linux Chrome "
+                f"that decodes H.265 through VA-API (docs/LINUX_H265.md){tail}")
     # A true from the decode check is not a decoded frame. It is
     # MediaSource.isTypeSupported, which reports what Chrome CLAIMS, and
     # headless Chrome on Windows claims H.265 and then never decodes it: the
     # player stays at readyState 1 with currentTime 0.00 while the socket
-    # delivers frames, and the app shows "The camera failed to load". Measured
-    # 09/22/2026 on one test run twice, minutes apart, same tenant, only this
-    # different: headless failed in 161 s, headed passed in 25 s (register row
-    # 128). Without this rule that machine ran 28 tests red instead of skipping.
+    # delivers frames, and the app shows "The camera failed to load".
+    # Measured on one test run twice, minutes apart, same tenant, only this
+    # different: headless failed in 161 s, headed passed in 25 s. Without
+    # this rule that machine ran 28 tests red instead of skipping.
     if (measure.get("decodes") is True and measure.get("os") == "Windows"
             and measure.get("headed") is False and (measure.get("codec") or "").upper() == "H.265"):
-        return (f"box {box_name} streams {measure.get('codec')} on camera '{measure.get('camera')}' and this "
+        return (f"the server streams {measure.get('codec')} on camera '{measure.get('camera')}' and this "
                 f"browser ({measure.get('browser')}) is headless on Windows, which reports the codec as "
                 f"supported and then never decodes it, so the tile stays at readyState 1. Run the livestream "
-                f"tests headed on this machine (pytest --headed; the Windows runner's task logs on "
+                f"tests headed on this machine (pytest --headed. The Windows scheduled task logs on "
                 f"interactively for exactly this reason, deploy/windows-runner/README.md){tail}")
     if int(measure.get("frames") or 0) > 0 and measure.get("decodes") is None:
         # No verdict is not a green light: running a livestream test against
         # a tile the browser may never decode hangs the driver on the
-        # after-test screenshot and ends the worker (three of four died,
-        # india 09/17/2026). Skip, and say what could not be confirmed.
+        # after-test screenshot and ends the worker. Skip, and say what
+        # could not be confirmed.
         why = (f"its codec is unknown ({measure.get('codec') or 'unread'})" if not MSE_TYPES.get(measure.get("codec") or "")
                else f"the decode check did not run ({measure.get('browser') or 'no browser answer'})")
-        return (f"box {box_name} streams frames on camera '{measure.get('camera')}' but whether this "
+        return (f"the server streams frames on camera '{measure.get('camera')}' but whether this "
                 f"browser decodes them could not be confirmed: {why}. The livestream tests skip rather "
                 f"than run against a tile that may never play{tail}")
     if int(measure.get("frames") or 0) > 0:
         return None
-    note = f"; media socket: {measure['note']}" if measure.get("note") else ""
-    return (f"box {box_name}: the media socket for camera '{measure.get('camera')}' "
+    note = f". Media socket: {measure['note']}" if measure.get("note") else ""
+    return (f"the media socket for camera '{measure.get('camera')}' "
             f"(channel {measure.get('channel_id')}) delivered 0 frames in "
-            f"{measure.get('seconds')} s{note}; the livestream tests need frames{tail}")
+            f"{measure.get('seconds')} s{note}. The livestream tests need frames{tail}")
 
 
 def describe(measure: dict) -> str:

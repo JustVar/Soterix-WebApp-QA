@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate QA Touch cases from test docstrings, and map them after import.
 
 A test's docstring is its QA Touch case. The first line is the title.
@@ -19,7 +18,7 @@ with no "Steps:" block is listed as "needs steps" and gets no row.
     python tools/qatouch_cases_from_tests.py --after-import logs/qatouch_new_cases_<date>.csv
 
 --shared-keys is the worklist for splitting a case key claimed by more
-than one test (docs/TEST_REPAIRS.md item 6). For each such key it puts
+than one test. For each such key it puts
 the case's own title beside each claimant's title, ranks the claimants
 by how well their title matches the case's, and says which of the
 others already have a Steps block (a case can be made now) and which
@@ -43,13 +42,10 @@ Selection (any mix, node ids are de-duplicated):
   --dead-keys    tests whose mapping row points at a case no snapshot holds
   --test         one node id, repeatable
   --file         every test in one file
-  --exclude-dir  a module to skip (default: c2c, whose
-                 project 60W5 is snapshotted separately under
-                 config/qatouch_snapshots/60W5/ and is not what
-                 latest_snapshot() returns)
+  --exclude-dir  a module to skip (repeatable; none by default)
 
 Output: logs/qatouch_new_cases_<date>.csv, one row per test in the
-column order of tools/qa_touch_import_test.csv, plus
+column order tools/qatouch_csv_import.py reads, plus
 logs/qatouch_new_cases_<date>.md to read before the import. The
 Reference column carries the node id without its [param] suffix. That
 is the join key: --after-import reads the project's cases back through
@@ -98,13 +94,12 @@ from tools.qatouch_mapping_audit import (
 TESTS_ROOTS = [ROOT / p.rstrip('/') for p in PRODUCT_ROOTS]   # config/products.py
 LOGS_DIR = ROOT / 'logs'
 DEFAULT_PROJECT = 'JlW1'
-# The Camera 2 Cloud tests (tests/c2c) report to their own project, so the
-# Core flow skips them by default. Theirs:
-#   --file tests/c2c/test_c2c_auth.py --exclude-dir none --project 60W5
-DEFAULT_EXCLUDE = ('c2c',)
+# Modules skipped unless --exclude-dir names others. A product root that
+# reports to a second QA Touch project would be listed here.
+DEFAULT_EXCLUDE: tuple[str, ...] = ()
 
-# The header of tools/qa_touch_import_test.csv, in its order. The
-# importer maps these names to the endpoint's columns (FRIENDLY_TO_API).
+# The header of the import CSV, in its order. The importer
+# (tools/qatouch_csv_import.py) maps these names to the endpoint's columns.
 COLUMNS = [
     'Module_name', 'Test Case Title', 'Test Data', 'Estimate', 'Reference',
     'Precondition', 'Steps', 'Expected_result', 'Test Suite', 'Tags',
@@ -118,10 +113,6 @@ PRECONDITION = (
 PRECONDITION_BY_AREA = {
     'login': 'The QA tenant login page is open and no user is logged in '
              '(config/env/qa.py).',
-    # Camera 2 Cloud tests talk to the cameras' own web UIs, never to a tenant
-    'c2c': 'The camera is on the lab network and answers on port 80 '
-           '(tests/data/c2c_cameras.yaml). The shared lab login is in .env as '
-           'C2C_CAMERA_USER / C2C_CAMERA_PASS; it is never written into a case.',
 }
 TYPE = 'Regression'
 PRIORITY = 'Medium'
@@ -129,7 +120,7 @@ MODE = 'Automation'
 
 # Words in a folder, file, or class name that read as acronyms, and the
 # words a module name keeps in lower case.
-ACRONYMS = {'lpr': 'LPR', 'ptz': 'PTZ', 'c2c': 'C2C', 'ldap': 'LDAP',
+ACRONYMS = {'lpr': 'LPR', 'ptz': 'PTZ', 'ldap': 'LDAP',
             'ui': 'UI', 'api': 'API', 'ai': 'AI', 'vca': 'VCA', 'osd': 'OSD',
             'roi': 'ROI', 'rtsp': 'RTSP'}
 SMALL_WORDS = {'and', 'or', 'of', 'to', 'in', 'for'}
@@ -379,9 +370,7 @@ def _words(name: str) -> list[str]:
     if '_' in name or name.islower():
         raw = [w for w in name.split('_') if w]
     else:
-        # C2C first: the plain CamelCase split reads it as 'C2' + 'C' (the
-        # camera suite's classes are TestC2CVideoConfig, TestC2CVCA, ...)
-        raw = re.findall(r'C2C|[A-Z]+(?=[A-Z][a-z]|\b)|[A-Z]?[a-z0-9]+', name)
+        raw = re.findall(r'[A-Z]+(?=[A-Z][a-z]|\b)|[A-Z]?[a-z0-9]+', name)
     words = [ACRONYMS.get(w.lower(), w.capitalize()) for w in raw]
     return [w.lower() if i and w.lower() in SMALL_WORDS else w for i, w in enumerate(words)]
 
@@ -637,7 +626,7 @@ def select_nodeids(args, tests: dict[str, TestInfo]) -> list[str]:
         cases_path = args.cases or latest_snapshot()
         if not cases_path or not Path(cases_path).exists():
             raise SystemExit('No case snapshot found. Pass --cases, or take one: '
-                             'python tools/qatouch_analytics.py snapshot')
+                             'pass --cases with a snapshot-shaped JSON file')
         cases, _label = load_cases(Path(cases_path))
         chosen.update(dead_key_nodeids(audit_tests, mappings, cases))
     for nodeid in args.test or []:
@@ -844,10 +833,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument('--weak-mappings', action='store_true',
                         help='every mapped test whose title does not read like its '
-                             "case's (register item 6); writes logs/qatouch_weak_mappings_<date>.json")
+                             "case's; writes logs/qatouch_weak_mappings_<date>.json")
     parser.add_argument('--shared-keys', action='store_true',
-                        help='worklist of case keys claimed by more than one test '
-                             '(register item 6); writes logs/qatouch_shared_keys_<date>.json')
+                        help='worklist of case keys claimed by more than one test; '
+                             'writes logs/qatouch_shared_keys_<date>.json')
     parser.add_argument('--unmapped', action='store_true',
                         help='tests under the product roots with no mapping row')
     parser.add_argument('--dead-keys', action='store_true',
@@ -859,7 +848,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--project', default=DEFAULT_PROJECT,
                         help=f'QA Touch project key (default {DEFAULT_PROJECT})')
     parser.add_argument('--exclude-dir', action='append', metavar='DIR',
-                        help=f'module to skip (default {DEFAULT_EXCLUDE[0]}; none for no exclusion)')
+                        help='module to skip (repeatable; none by default)')
     parser.add_argument('--cases', type=Path, default=None,
                         help='snapshot-shaped JSON of cases (default: newest snapshot; '
                              'with --after-import: use instead of reading QA Touch)')
@@ -877,6 +866,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.exclude_dir is None:
         args.exclude_dir = list(DEFAULT_EXCLUDE)
+    args.exclude_dir = [d for d in args.exclude_dir if d != 'none']
     if args.after_import:
         return after_import(args)
     if args.shared_keys:

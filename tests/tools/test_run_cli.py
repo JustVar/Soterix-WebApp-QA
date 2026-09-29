@@ -81,8 +81,8 @@ def test_cli_without_flag_sends_no_rerun(monkeypatch):
 
 
 def test_check_runs_the_reachability_gate_only(monkeypatch):
-    """--check runs tools/pre_run_check.py for the env with the optional
-    integrations skipped, and stops the run when it fails."""
+    """--check runs tools/pre_run_check.py for the env, with no other flag,
+    and stops the run when it fails."""
     seen: list[list[str]] = []
 
     class Done:
@@ -93,10 +93,9 @@ def test_check_runs_the_reachability_gate_only(monkeypatch):
         return Done()
 
     monkeypatch.setattr(run.subprocess, 'run', fake_run)
-    monkeypatch.setenv('ENV', 'stage')
+    monkeypatch.setenv('ENV', 'qa')
     run._check()
-    assert seen[0][1:] == [str(run.ROOT / 'tools' / 'pre_run_check.py'), '--env', 'stage',
-                           '--skip-qatouch', '--skip-qa-ops']
+    assert seen[0][1:] == [str(run.ROOT / 'tools' / 'pre_run_check.py'), '--env', 'qa']
 
     Done.returncode = 1
     with pytest.raises(SystemExit):

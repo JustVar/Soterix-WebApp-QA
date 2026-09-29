@@ -15,10 +15,10 @@ from tests.shared.pages.lpr_page import LprPage
 
 # Position/duration readout in the clip player ('00:00 / 00:20')
 # When the feed was last measured empty in this process (time.monotonic()).
-# An empty feed costs the full wait to prove. On india the feed is empty most
-# nights, and 8 tests each paid the 30 s (09/21/2026 nightly: 4 minutes of the
-# leg). The first test pays it. For the next 5 minutes the others wait 5 s: a
-# feed that fills in that time still shows within it.
+# An empty feed costs the full wait to prove. On a server whose LPR feed is
+# empty, 8 tests each paid the 30 s (4 minutes of one run). The first test
+# pays it. For the next 5 minutes the others wait 5 s: a feed that fills in
+# that time still shows within it.
 _FEED_EMPTY = {"at": None}
 FEED_WAIT_MS = 30000
 FEED_RECHECK_MS = 5000

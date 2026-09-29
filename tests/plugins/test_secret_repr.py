@@ -39,17 +39,17 @@ def test_pytests_own_traceback_repr_masks_it():
     assert VALUE not in saferepr(Secret(VALUE))
 
 
-def test_every_credential_source_returns_a_secret(monkeypatch):
-    """The env modules and conftest wrap the password where it leaves the environment."""
+def test_every_credential_source_returns_a_secret(monkeypatch, request):
+    """The env module and the login fixture wrap the password where it leaves the environment."""
     from config.env import qa
-    monkeypatch.setenv("QA_INDIA_PASSWORD", VALUE)
-    monkeypatch.setenv("QA_INDIA_USER", "someone@example.test")
-    creds = qa.get_credentials("india")
+    monkeypatch.setenv("QA_PASSWORD", VALUE)
+    monkeypatch.setenv("QA_USER", "someone@example.test")
+    creds = qa.get_credentials()
     assert isinstance(creds["password"], Secret)
     assert VALUE not in repr(creds)
-    monkeypatch.setenv("AUTO_USER", "someone@example.test")
-    monkeypatch.setenv("AUTO_PASSWORD", VALUE)
-    data = conftest.build_no_tenant_login_data()
+    # login_data is a session fixture with no browser behind it. Ask for it
+    # after the variables are set, so it reads these values.
+    data = request.getfixturevalue("login_data")
     assert isinstance(data["password"], Secret)
     assert VALUE not in repr(data)
 
@@ -58,7 +58,7 @@ def test_no_module_reads_a_password_variable_without_wrapping_it():
     """A new os.environ read of a *_PASSWORD or *_PASS key in the run path must be wrapped."""
     import re
     offenders = []
-    for rel in ("conftest.py", "tests/c2c/conftest.py", "config/env/qa.py", "config/env/stage.py",
+    for rel in ("conftest.py", "config/env/qa.py", "config/env/stage.py",
                 "config/env/prod.py", "config/env/neurosen.py"):
         for i, line in enumerate((REPO_ROOT / rel).read_text(encoding="utf-8").splitlines(), 1):
             reads = re.search(r"os\.environ(\.get)?[\[(].*(PASSWORD|_PASS\b|password_env)", line)

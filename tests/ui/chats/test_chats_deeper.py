@@ -1,9 +1,8 @@
 """Chat deeper tests - panel toggle, search, conversation flow,
 cross-page behavior.
 
-Rebuilt 08/13/2026 against the redesigned search-first panel (see the
-chats row in docs/TEST_REPAIRS.md). The open marker is the visible
-panel search input; the old Create Group marker is gone.
+Rebuilt against the redesigned search-first panel. The open marker is
+the visible panel search input; the old Create Group marker is gone.
 """
 import re
 
@@ -17,9 +16,9 @@ CHAT_USER_SEARCH = config.get("test_chat_user_search", "QA Engineer B")
 CHAT_USER_NAME = config.get("test_chat_user_name", "Chat Partner")
 
 GROUPS_ABSENT = (
-    "The chat panel is open and shows no Create Group control: group "
-    "creation has no entry point on this box (india, probed 09/04/2026 - "
-    "the US box has it, register item 29)"
+    "The chat panel is open and shows no Create Group control: this tenant "
+    "has no group chat, so the group tests need a tenant whose chat panel "
+    "shows a Create Group button"
 )
 
 
@@ -83,16 +82,16 @@ class TestChatsDeeper:
     @pytest.mark.chats
     @pytest.mark.chats_deeper
     def test_create_group_button_present(self):
-        """The Create Group button is in the open panel on a box that has it.
+        """The Create Group button is in the open panel on a tenant that has group chat.
 
-        Group creation is a box difference (register item 29): the US
-        box shows the button, india shows nothing. The open panel is
-        proved first, so the skip on india is the tenant's data and
-        not a panel that failed to open.
+        Group creation is a tenant setting: a tenant with group chat
+        shows the button, one without shows nothing. The open panel is
+        proved first, so the skip is the tenant's data and not a panel
+        that failed to open.
 
         Steps:
         1. Open the chat panel.
-           Expected: On a box with group chat, one enabled Create Group button is shown.
+           Expected: On a tenant with group chat, one enabled Create Group button is shown.
         """
         self.chat.open_chat_panel()
         if not self.chat.group_creation_affordance():

@@ -17,11 +17,8 @@ Read before making changes:
 3. `docs/FAILURE_TRIAGE.md` - failed tests save Playwright traces to
    `reports/artifacts/`. Read the trace before you rerun or guess: the
    `playwright trace` command works from the terminal.
-4. `docs/TEAM_CHANGES.md` - before a large refactor of shared files
-   (page objects, conftest, fixtures), run
-   `python tools/team_changes.py` and review the overlap list. Other
-   team members fix scripts in this repo; their fixes must survive your
-   refactor or be replaced on purpose, never by accident.
+4. `docs/QA_THINGS_TO_KNOW.md` - the measured facts about the app under
+   test. A fact there is not a bug to work around in a new way.
 
 Hard rules:
 
@@ -33,9 +30,13 @@ Hard rules:
 - API tests and API clients belong in the sibling repo Soterix-API-QA. Do
   not add them here.
 - Never commit `.env` or any credential.
+- Nothing outside `config/env/` names a server, a site or a camera. Tests
+  read them from the config.
 - Before you edit a file you did not create, read it fully and keep its
   intent. Propose a large rewrite instead of applying it.
 - Before every commit, run both gates and fix what they report:
   `python -m ruff check .` and `python tools/convention_check.py`. The
   checker blocks on sleeps without a why-comment and on QA Touch markers
   in test files.
+- Every change goes on a branch and reaches main through a pull request.
+  Never force-push main.

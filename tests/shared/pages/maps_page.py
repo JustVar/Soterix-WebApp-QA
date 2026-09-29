@@ -57,7 +57,7 @@ class MapsPage:
         """Wait for the page to name the site it opened on.
 
         The title is EMPTY for the first instants and the app writes its
-        default about 0.3 s later (measured on india, 09/15/2026). The
+        default about 0.3 s later (measured on the app). The
         old wait only refused the "...sites" loading text, which an empty
         title already satisfies, so a test could pick a site inside that
         window and the app's own default would overwrite the pick a
@@ -107,8 +107,7 @@ class MapsPage:
         Raises listing the sites that ARE offered when the named one is
         missing. The shared tenant renames sites under the tests, and
         the old callers turned that into "No sites available in
-        dropdown" - a skip that read the same as a broken page
-        (register item 25).
+        dropdown" - a skip that read the same as a broken page.
         """
         # the page's own default has to land first, or it overwrites
         # this pick (see _wait_for_dropdown_loaded)
@@ -117,7 +116,7 @@ class MapsPage:
 
         # the options container's own wait is the opened signal
         self.dropdown_options.wait_for(state="visible", timeout=10000)
-        # Exact and escaped (item 19): each option's text-space div holds
+        # Exact and escaped: each option's text-space div holds
         # the bare site name (probe 09/02/2026); the old text= engine was
         # a case-insensitive substring. Strictness kept - no .first.
         index = self._site_option_index(site_name)
@@ -139,8 +138,8 @@ class MapsPage:
         # The dropdown's own title is the app's commit signal. A card
         # being visible is not: the grid still holds the last site's
         # cards, so the old wait passed at once and a read of the title
-        # could still return the site that was selected before (india,
-        # 09/15/2026). Wait for the title, then for a card.
+        # could still return the site that was selected before. Wait
+        # for the title, then for a card.
         expect(self.dropdown_text).to_have_attribute(
             "title", site_name, timeout=15000)
         self.map_cards.first.wait_for(state="visible", timeout=60000)

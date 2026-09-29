@@ -1,23 +1,21 @@
 # conftest.py
-import importlib
 import json
 import logging
 import os
 import re
 import time
-from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 import pytest
 
 # Register plugins
-# The products path rule (tests/c2c -> Camera 2 Cloud) lives in the
-# products shim, which self-configures on import. The reporting modules
-# now import the PACKAGE products directly, so nothing else triggers that
-# side effect - import it here so the rule is set for the session.
+# The products path rule (which QA Touch project a test root reports to)
+# lives in the products shim, which self-configures on import. The
+# reporting modules import the PACKAGE products directly, so nothing else
+# triggers that side effect - import it here so the rule is set for the session.
 import plugins.products
-from config.base_config import config  # dict resolved from ENV
+from config.base_config import config, get_credentials  # dict resolved from ENV
 from config.secret import Secret
 from plugins.paths import fit_name
 from tests.shared.auth_state import auth_state_filename
@@ -40,9 +38,8 @@ def pytest_configure(config):
     pytest.ini sets `--dist loadgroup`, which keeps every module that
     writes this account's state (its `xdist_group` mark) on one worker
     and serialises the one search job the server allows. A `--dist` on
-    the command line overrides the ini silently; the docs said
-    `--dist loadfile` for a month and nobody could tell (audit
-    09/17/2026, row 86). Runs without -n are untouched.
+    the command line overrides the ini silently, and a wrong value ran
+    for a month before anybody could tell. Runs without -n are untouched.
     """
     try:
         workers = config.getoption("numprocesses")
@@ -55,15 +52,11 @@ def pytest_configure(config):
             "modules that write tenant state stay on one worker (docs/PARALLEL_EXECUTION.md).")
 
 
-def _session_account() -> tuple[str, str, str]:
-    """(account, password, box) the UI login will use: the box pair when BOX
-    is set, else the legacy QA_USER pair. The same choice login_data makes."""
-    box = (os.environ.get("BOX") or "").strip()
-    if box:
-        from config.base_config import get_credentials
-        creds = get_credentials()
-        return creds.get("email") or "", Secret(creds.get("password") or ""), box
-    return os.environ.get("QA_USER") or "", Secret(os.environ.get("QA_PASSWORD") or ""), ""
+def _session_account() -> tuple[str, str]:
+    """(account, password) the UI login will use: QA_USER and QA_PASSWORD
+    through the env module. The same choice login_data makes."""
+    creds = get_credentials()
+    return creds.get("email") or "", Secret(creds.get("password") or "")
 
 
 def pytest_sessionstart(session):
@@ -72,17 +65,15 @@ def pytest_sessionstart(session):
     (tests/shared/helpers/preflight.py)."""
     # The run's camera is chosen HERE, on every process, not only at collection.
     # Under xdist the controller never collects, so a choice made there alone
-    # left the workers driving the rotated camera while the run record, built on
-    # the controller, named the configured one with no reason: 2 nightlies said
-    # 'Soterix Multicam 1.15' and their run.log named 1.18 (09/25/2026). The
-    # choice is deterministic, so every process reaches the same camera alone.
-    from config.base_config import get_active_box
-    _choose_camera(get_active_box())
+    # leaves the workers driving one camera while the run record, built on
+    # the controller, names another with no reason. The choice is
+    # deterministic, so every process reaches the same camera alone.
+    _choose_camera(session.config)
     from tests.shared.helpers import preflight
     if preflight.skip_reason(session.config):
         return
-    account, password, box = _session_account()
-    refusal = preflight.check(str(ENV_SETTINGS.get("base_url") or ""), account, password, box=box)
+    account, password = _session_account()
+    refusal = preflight.check(str(ENV_SETTINGS.get("base_url") or ""), account, password)
     if refusal:
         pytest.exit(refusal, returncode=preflight.EXIT_CODE)
 
@@ -93,8 +84,7 @@ def pytest_addoption(parser):
         "--run-destructive",
         action="store_true",
         default=False,
-        help="Run tests marked 'destructive'. These interrupt real hardware - "
-             "e.g. rebooting every camera in the C2C registry. Off by default.",
+        help="Run tests marked 'destructive'. These interrupt real hardware. Off by default.",
     )
 
 
@@ -122,10 +112,10 @@ def env_skip_reason(keywords, settings, env_name: str) -> str | None:
             if marker in keywords:
                 return (f"env {env_name}: {flag} is False in config/env/, so tests "
                         f"marked '{marker}' do not run here")
-    # An env's own `without` map (config/env/<env>.py > without): what the
-    # deployment itself lacks, by marker, with the reason. The Neurosen
-    # private cloud is a build of the web app without some Core features;
-    # a box's `without` says the same thing for one tenant inside an env.
+    # The env's `without` map (config/env/<env>.py > without): what the
+    # server itself lacks, by marker, with the reason. The reason is the
+    # skip text, so the report says what is missing and on whose word,
+    # not just "skipped". An env with no map refuses nothing.
     without = (settings or {}).get("without") or {}
     for marker, why in without.items():
         if marker in keywords:
@@ -134,35 +124,11 @@ def env_skip_reason(keywords, settings, env_name: str) -> str | None:
     return None
 
 
-def box_skip_reason(keywords, box_settings, box_name: str) -> str | None:
-    """Why the active box cannot host this test, or None to let it run.
-
-    A box's `without` map (config/env/<env>.py > boxes > <box>) names the
-    markers of what the tenant does not have, each with the measured or
-    stated reason. The reason is the skip text, so the report says which
-    box lacks what and on whose word, not just "skipped". A box with no
-    `without` map refuses nothing.
-    """
-    without = (box_settings or {}).get("without") or {}
-    for marker, why in without.items():
-        if marker in keywords:
-            return (f"box {box_name} is without '{marker}': {why} "
-                    f"(config/env/ > boxes > {box_name} > without)")
-    return None
-
-
-def active_box_settings(settings, box_name: str) -> dict:
-    """The active box's entry in the env's `boxes` map, or {} when the env has none."""
-    return ((settings or {}).get("boxes") or {}).get(box_name) or {}
-
-
 def pytest_collection_modifyitems(config, items):
     """Skip what this run may not execute.
 
-    Destructive tests need --run-destructive: a plain `pytest tests/c2c/`
-    parametrises over every enabled camera in the registry, so an unguarded
-    reboot test takes out the whole lab fleet. Running it has to be a
-    deliberate act, not the default.
+    Destructive tests need --run-destructive: a test that interrupts real
+    hardware has to be a deliberate act, not the default.
 
     The env guard has no opt-in flag. Prod is read-only by config, and
     --run-destructive does not lift that.
@@ -172,42 +138,35 @@ def pytest_collection_modifyitems(config, items):
         reason="destructive: disrupts real hardware. Pass --run-destructive to run it."
     )
     env_name = (os.environ.get("ENV") or "qa").strip().lower()
-    # The box guard: a tenant that lacks a feature refuses that feature's
-    # tests at collection, saying which box lacks what (config/env/ >
-    # boxes > <box> > without). Resolved once; the box does not change
-    # inside a run.
-    from config.base_config import get_active_box
-    box_name = get_active_box()
-    box_settings = active_box_settings(ENV_SETTINGS, box_name)
     # Which camera this run drives, before the guard measures one: the guard has
     # to measure the camera the tests will actually use. Deterministic, so every
     # xdist worker reaches the same answer on its own and none has to be told.
-    _choose_camera(box_name)
+    _choose_camera(config)
     for item in items:
         if not run_destructive and "destructive" in item.keywords:
             item.add_marker(destructive_skip)
-        reason = (env_skip_reason(item.keywords, ENV_SETTINGS, env_name)
-                  or box_skip_reason(item.keywords, box_settings, box_name))
+        reason = env_skip_reason(item.keywords, ENV_SETTINGS, env_name)
         if reason:
             item.add_marker(pytest.mark.skip(reason=reason))
-    stream_guard(config, items, box_name)
+    stream_guard(config, items)
 
 
 # What the run chose, for the summary line and the run record.
 _CAMERA_PICK: dict = {}
 # The camera config/env/ names, kept before anything overwrites it. Choosing
 # reads this, never ENV_SETTINGS: the choice WRITES test_camera_name, so a
-# second call would have treated the rotated camera as the configured one and
-# lost the fallback (seen in the offline suites, 09/23/2026).
+# second call would treat the chosen camera as the configured one and lose
+# the fallback.
 _CONFIGURED_CAMERA = ENV_SETTINGS.get("test_camera_name")
 
 
-def _choose_camera(box_name: str) -> dict:
+def _choose_camera(config) -> dict:
     """Point test_camera_name at this run's camera and remember why.
 
     One camera for the whole run, so its tests are comparable with each other
-    and the run page's history strip keeps its meaning. A test that needs a
-    particular camera asks for it by marker and is not rotated
+    and the run page's history strip keeps its meaning. TEST_CAMERA pins one
+    by name. A run selected by a camera-specific marker (`-m lpr`) drives the
+    camera config/env/ lists for it under camera_capabilities
     (tests/shared/helpers/camera_pool.py).
 
     Chosen once per process. Collection can run more than once in one
@@ -218,10 +177,11 @@ def _choose_camera(box_name: str) -> dict:
     if _CAMERA_PICK:
         return _CAMERA_PICK
     from tests.shared.helpers import camera_pool
-    pick = camera_pool.choose(camera_pool.load_pool(box_name), _CONFIGURED_CAMERA)
-    # How old the pool is, so a rotation over a list nobody has refreshed says so
-    # on the line people read rather than quietly narrowing.
-    pick["pool_age_days"] = camera_pool.pool_age_days(box_name)
+    getoption = getattr(config, "getoption", None)
+    markexpr = getoption("markexpr", default="") if getoption else ""
+    capabilities = ENV_SETTINGS.get("camera_capabilities") or {}
+    capability = camera_pool.capability_for(camera_pool.markexpr_words(markexpr), capabilities)
+    pick = camera_pool.choose(_CONFIGURED_CAMERA, capability=capability, capabilities=capabilities)
     _CAMERA_PICK = pick
     if pick.get("camera"):
         ENV_SETTINGS["test_camera_name"] = pick["camera"]
@@ -229,13 +189,17 @@ def _choose_camera(box_name: str) -> dict:
     # reason into the run's provenance, so the run page can name the camera and
     # mark it when it changed between two runs.
     ENV_SETTINGS["camera_pick"] = pick
-    _STREAM_LINES.append(camera_pool.describe(pick))
+    # The line prints only when something changed the choice: the run page
+    # names the camera on every run, the terminal only when it is not the
+    # configured one.
+    if pick.get("camera") != _CONFIGURED_CAMERA:
+        _STREAM_LINES.append(camera_pool.describe(pick))
     return pick
 
 
 # The stream guard's lines for the terminal summary: under -n the workers'
 # prints never reach the terminal, and the README tells people to read
-# the [STREAM] line (measured lost, failure-mode audit 09/18/2026).
+# the [STREAM] line.
 _STREAM_LINES: list[str] = []
 WORKER_MEASURE_KEY = "qa_stream_measure"
 
@@ -250,8 +214,8 @@ def _measure_stream(config) -> dict:
     _STREAM_LINES.append(stream_health.describe(measure))
     if measure.get("frames") == 0 and not measure.get("error"):
         # a second look before skipping the whole session on one empty
-        # window: the US camera read 0 frames and then 117 a minute
-        # apart (09/12/2026), and one 8 s sample had skipped 43 tests
+        # window: a camera has read 0 frames and then 117 a minute apart,
+        # and one 8 s sample once skipped 43 tests
         measure = stream_health.assess(camera, channel, headed=headed)
         _STREAM_LINES.append("[STREAM] second measurement: " + stream_health.describe(measure))
     return measure
@@ -302,13 +266,13 @@ def pytest_terminal_summary(terminalreporter):
         terminalreporter.write_line(line)
 
 
-def stream_guard(config, items, box_name: str) -> None:
-    """Measure the box's stream once and skip the `livestream` tests with the
-    measurement when the media socket delivers no frames (nine failures of
-    the 09/11/2026 full run were this one condition, each named after its
-    own timeout). Measures only when a livestream test was collected and
-    the run will execute it; a failed measurement skips nothing and says
-    so. See tests/shared/helpers/stream_health.py."""
+def stream_guard(config, items) -> None:
+    """Measure the test camera's stream once and skip the `livestream` tests
+    with the measurement when the media socket delivers no frames (a dead
+    camera otherwise fails dozens of tests, each named after its own
+    timeout). Measures only when a livestream test was collected and the
+    run will execute it; a failed measurement skips nothing and says so.
+    See tests/shared/helpers/stream_health.py."""
     from tests.shared.helpers import stream_health
     targets = [item for item in items if stream_health.MARKER in item.keywords]
     if not targets or not stream_health.guard_enabled() or config.getoption("--collect-only", default=False):
@@ -317,7 +281,7 @@ def stream_guard(config, items, box_name: str) -> None:
     # what the channel streams. "This browser" is the one the tests get:
     # the session's channel, flags (CHROME_ARGS) and headed-ness, since
     # Chrome on Linux decodes H.265 only headed on a Wayland display with
-    # spartan1's flags (deploy/spartan1/README.md, 09/17/2026).
+    # the VA-API flags (docs/LINUX_H265.md).
     shared = (getattr(config, "workerinput", None) or {}).get(WORKER_MEASURE_KEY)
     if shared:
         measure = json.loads(shared)   # the controller measured once for every worker
@@ -325,7 +289,7 @@ def stream_guard(config, items, box_name: str) -> None:
         measure = _measure_stream(config)
         for line in _STREAM_LINES[-2:]:
             print(line)
-    reason = stream_health.stream_skip_reason(measure, box_name)
+    reason = stream_health.stream_skip_reason(measure)
     if reason:
         for item in targets:
             item.add_marker(pytest.mark.skip(reason=reason))
@@ -343,48 +307,6 @@ def browser_type_launch_args(browser_type_launch_args):
     from tests.shared.helpers import stream_health
     return stream_health.launch_args_with_chrome_flags(browser_type_launch_args)
 
-
-def _from_env_or_config(env_key: str, cfg_key: str, default: str = "") -> str:
-    """Environment var takes precedence; fallback to active env config dict key."""
-    return os.environ.get(env_key) or config.get(cfg_key, default)
-
-def resolve_tenant_data(tenant_name: str) -> dict[str, str]:
-    """
-    Load tenant-specific login data from data/<tenant_name>_login_data.py
-    (must define `login_data` dict).
-    """
-    try:
-        module = importlib.import_module(f"data.{tenant_name}_login_data")
-        return module.login_data
-    except ModuleNotFoundError as e:
-        raise Exception(
-            f"Tenant login data file not found: data/{tenant_name}_login_data.py"
-        ) from e
-
-def build_no_tenant_login_data() -> dict[str, str]:
-    """
-    Build login data for 'no-tenant' mode.
-    Priority:
-      1) AUTO_USER / AUTO_PASSWORD env vars (+ optional EXPECTED_LANDING)
-      2) default_user / default_password from the active env config
-    """
-    username = _from_env_or_config("AUTO_USER", "default_user")
-    password = Secret(_from_env_or_config("AUTO_PASSWORD", "default_password"))
-    expected_landing = os.environ.get("EXPECTED_LANDING", "/dashboard")
-
-    missing = []
-    if not username:
-        missing.append("AUTO_USER or config['default_user']")
-    if not password:
-        missing.append("AUTO_PASSWORD or config['default_password']")
-    if missing:
-        hints = "; ".join(missing)
-        raise RuntimeError(
-            "No-tenant login requires automation credentials. "
-            f"Please set {hints}."
-        )
-
-    return {"username": username, "password": password, "expected_landing": expected_landing}
 
 @pytest.fixture(scope="session")
 def env_config():
@@ -404,75 +326,30 @@ def base_url(env_config):
 
 @pytest.fixture(scope="session")
 def login_data():
-    """Active account credentials.
-
-    Two sources, checked in this order:
-    1. If the BOX env var is set, use that box's account from config/env/
-       (for example BOX=india on ENV=qa). The box names the password variable
-       to read from .env.
-    2. Otherwise read QA_USER and QA_PASSWORD from .env: the legacy pair,
-       for a .env without BOX (the template ships BOX=india).
-    """
-    expected_landing = os.environ.get("EXPECTED_LANDING", "/dashboard")
-
-    box = os.environ.get("BOX")
-    if box:
-        from config.base_config import get_credentials
-        creds = get_credentials()
-        if not creds.get("email") or not creds.get("password"):
-            settings = active_box_settings(ENV_SETTINGS, box)
-            email_env = settings.get("email_env") or f"QA_{box.upper()}_USER"
-            password_env = settings.get("password_env") or f"QA_{box.upper()}_PASSWORD"
-            empty = [k for k in (email_env, password_env) if not os.environ.get(k)]
-            raise ValueError(
-                f"BOX='{box}' is set but {' and '.join(empty) or 'its account pair'} is empty in .env. "
-                f"Fill both {email_env} and {password_env} (README > Quick Setup), or unset BOX to sign "
-                f"in with the legacy QA_USER / QA_PASSWORD pair.")
-        logging.getLogger(__name__).info(f"[CREDENTIALS] Using box '{box}' account from env config")
-        return {"username": creds["email"], "password": Secret(creds["password"]),
-                "expected_landing": expected_landing}
-
-    user = os.environ.get("QA_USER")
-    password = Secret(os.environ.get("QA_PASSWORD") or "")
+    """The account the tests sign in as: QA_USER and QA_PASSWORD from .env,
+    read through the env module (config/env/<ENV>.py get_credentials)."""
+    creds = get_credentials()
+    user = creds.get("email") or ""
+    password = Secret(creds.get("password") or "")
     if not user or not password:
-        raise ValueError("QA_USER and QA_PASSWORD must be set in environment or .env file. See .env.template")
-    logging.getLogger(__name__).info("[CREDENTIALS] Using QA_USER from environment")
-    return {"username": user, "password": password, "expected_landing": expected_landing}
-
-@pytest.fixture
-def login(page, env_config, login_data):
-    """Perform login and wait for expected landing."""
-    page.goto(env_config["base_url"])
-    page.fill("input[type='email']", login_data["username"])
-    page.fill("input[type='password']", login_data["password"])
-    page.click("button[type='submit']")
-    page.wait_for_url(f"**{login_data['expected_landing']}**")
-    return page
-
-
-@pytest.fixture
-def tenant_login(login_data):
-    """Backward-compatible alias for tests using the old `tenant_login` fixture name.
-
-    Returns the same dict as `login_data` so tests that expect
-    `tenant_login[...]` continue to work unchanged.
-    """
-    return login_data
+        raise ValueError("QA_USER and QA_PASSWORD must be set in .env (copy .env.template). "
+                         "The tests sign in as that account.")
+    logging.getLogger(__name__).info("[CREDENTIALS] Using QA_USER from .env")
+    return {"username": user, "password": password,
+            "expected_landing": os.environ.get("EXPECTED_LANDING", "/dashboard")}
 
 
 # ----------------
-# API testing moved to the Soterix-API-QA repo (see docs/REPO_SPLIT_PLAN.md).
-# This repo is UI automation + manual test cases only.
+# API testing lives in the Soterix-API-QA repo. This repo is UI automation
+# and manual test cases only.
 # ----------------
 
 
 # ----------------
 # Session-Cached Authentication (Playwright Storage State)
 # ----------------
-# This optimization saves ~345 seconds on test runs by caching auth state.
-# See docs/archive/SESSION_CACHING_IMPLEMENTATION.md for details.
-
-AUTH_STATE_FILE = ".auth_state.json"
+# Caching the signed-in state saves the login on every test: about 345 s
+# on a full run.
 
 TRACE_DIR = Path("reports") / "artifacts"
 
@@ -504,9 +381,8 @@ def pytest_runtest_teardown(item, nextitem):
 LOGIN_SCREEN = "/auth/login"
 SESSION_DROP_NOTE = (
     "[SESSION] The page was on the login screen when the test failed. The "
-    "app answered 401 to a live session and bounced to login mid-test "
-    "(nightly traces 09/16/2026: india 09:12 and 09:13 UTC, us 09:47 UTC). "
-    "The locator is not the fault; read the 401 responses in the trace."
+    "app answered 401 to a live session and bounced to login mid-test. "
+    "The locator is not the fault. Read the 401 responses in the trace."
 )
 
 
@@ -514,9 +390,8 @@ def _session_drop_note(item, rep) -> str | None:
     """The session-drop line for a failed setup or call whose page shows
     the login screen, else None. The page is the one authenticated_page
     stashed on the item; a fixture layered on it that navigates in setup
-    bounces the same way, and so does a second tab of the same context
-    (both measured without a note, 09/18/2026). A page already closed has
-    no URL and gets no note."""
+    bounces the same way, and so does a second tab of the same context.
+    A page already closed has no URL and gets no note."""
     if rep.when not in ("setup", "call") or not rep.failed:
         return None
     page = getattr(item, "qa_page", None)
@@ -542,9 +417,8 @@ def pytest_runtest_makereport(item, call):
 
     A failed call whose page sits on the login screen gets the session-drop
     note appended to its traceback, so the log names the mechanism instead
-    of the locator that timed out on the login page (three of the 09/16
-    nightly's failures read as locator timeouts until their screenshots
-    were opened).
+    of the locator that timed out on the login page. Such failures read as
+    locator timeouts until somebody opens the screenshots.
     """
     outcome = yield
     rep = outcome.get_result()
@@ -675,9 +549,9 @@ def _track_api_requests(page) -> dict:
     return tracker
 
 
-# The last of the landing page's post-login calls (traces 09/14/2026: the
-# session check, the site tree, then the status), and it lands after the
-# nav shows, so the nav alone is too early to yield on.
+# The last of the landing page's post-login calls (the session check, the
+# site tree, then the status), and it lands after the nav shows, so the
+# nav alone is too early to yield on.
 LANDING_REQUEST = "/api/status"
 
 
@@ -700,19 +574,14 @@ def auth_state_path(base_url):
 
     Scoped to the ENVIRONMENT (its base_url), and under pytest-xdist to the
     worker. A session is only valid for the host it was created against, so
-    the cache filename carries a slug of the base_url: a run against the US
-    tenant must not load the India tenant's session, and two envs running on
+    the cache filename carries a slug of the base_url: two envs running on
     one machine at the same time must not fight over one file. On different
-    domains the reused cookies simply do not apply and a stale cache is
-    caught and refreshed; on shared cookie domains (staging vs prod under
-    *.app.example.invalid) a stage session could otherwise pass validation
-    against prod, which is the case a per-env file prevents outright.
+    domains the reused cookies do not apply and a stale cache is caught and
+    refreshed; on shared cookie domains (staging and prod under one parent
+    domain) a stage session could otherwise pass validation against prod,
+    which is the case a per-env file prevents outright.
     """
-    return auth_state_filename(
-        base_url,
-        os.environ.get("BOX", "").strip().lower(),
-        os.environ.get("PYTEST_XDIST_WORKER") or "",
-    )
+    return auth_state_filename(base_url, os.environ.get("PYTEST_XDIST_WORKER") or "")
 
 
 # The first refused login of this process, kept so the tests after it fail
@@ -725,8 +594,8 @@ def _login_refusal(lp, page, account: str) -> str | None:
 
     LoginPage.login swallows its own wait, and the 60 s wait after it then
     failed as 'Timeout 60000ms exceeded' with the app's message never
-    quoted: 73 s per test, the form resubmitted each time (measured on a
-    loopback app, 09/18/2026). A form still up with an error, a captcha or
+    quoted: 73 s per test, the form resubmitted each time. A form still
+    up with an error, a captcha or
     a lockout text on it is a refusal; a form still up with none of those
     is left to the wait below, because a slow tenant looks the same.
     """
@@ -740,10 +609,9 @@ def _login_refusal(lp, page, account: str) -> str | None:
         return None
     if not (message or captcha or lockout):
         return None
-    box = (os.environ.get("BOX") or "").strip()
     return (f"[LOGIN] {page.url} kept the login form after submit. On screen: {message or 'no message'!r}. "
             f"Captcha shown: {'yes' if captcha else 'no'}. Lockout text: {'yes' if lockout else 'no'}. "
-            f"Account: {account}{f' (box {box})' if box else ''}. Later tests fail with this line "
+            f"Account: {account}. Later tests fail with this line "
             f"and do not submit the form again.")
 
 
@@ -838,10 +706,9 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
             page.wait_for_load_state('domcontentloaded', timeout=30000)
             # The landing page finishes the login on its own: a session
             # check, the site tree and status, about 3 s after the form.
-            # A test that navigated before those answered aborted them
-            # and the app bounced to /auth/login (india traces 09/12 and
-            # 09/14/2026, the logout-from-/search single). Yield on the
-            # same signal the cached path validates on, the nav, and then
+            # A test that navigates before those answered aborts them
+            # and the app bounces to /auth/login. Yield on the same
+            # signal the cached path validates on, the nav, and then
             # once the status request has answered and nothing is in
             # flight.
             page.locator("text=Views").first.wait_for(state="visible", timeout=30000)
@@ -871,69 +738,3 @@ def authenticated_page(browser, auth_state_path, base_url, login_data, request):
     page.close()
     context.close()
     _finish_video(video, request.node.nodeid if _test_failed(request) else None)
-
-
-# Graph's sendMail call carries the whole message in one request with a
-# documented cap of about 4 MB, and base64 inflates the attachment by 4/3.
-# Inline only reports small enough that body + encoded attachment still
-# fit; past the attach cap even the attachment would sink the send, so the
-# body carries a pointer to the per-run archive instead (reports/runs/
-# keeps every run's full report).
-REPORT_INLINE_MAX_BYTES = int(1.5 * 1024 * 1024)
-REPORT_ATTACH_MAX_BYTES = int(2.5 * 1024 * 1024)
-
-
-def pytest_sessionfinish(session, exitstatus):
-    """Email the HTML report after the session finishes, when opted in.
-
-    Opt-in via SEND_TEST_REPORT=1. The recipient must be set explicitly in
-    REPORT_RECIPIENT - there is deliberately no default address so a report
-    can never be mailed to someone unexpected.
-    """
-    if not os.environ.get("SEND_TEST_REPORT"):
-        return
-
-    recipient = os.environ.get("REPORT_RECIPIENT")
-    if not recipient:
-        print("\n[WARNING] SEND_TEST_REPORT is set but REPORT_RECIPIENT is empty - "
-              "no report sent. Set REPORT_RECIPIENT in .env.")
-        return
-
-    try:
-        from tools.email_client import GraphEmailClient
-        report_path = Path("reports/report.html")
-        if not report_path.exists():
-            print(f"\n[WARNING] No report at {report_path} - nothing to send.")
-            return
-
-        size = report_path.stat().st_size
-        attachments = [str(report_path)]
-        if size <= REPORT_INLINE_MAX_BYTES:
-            html = report_path.read_text(encoding="utf-8", errors="replace")
-        elif size <= REPORT_ATTACH_MAX_BYTES:
-            html = "<p>Report too large to inline - see the attached file.</p>"
-        else:
-            attachments = []
-            html = ("<p>Report too large to send by email - open the "
-                    "archived copy under reports/runs/ (index.html lists "
-                    "runs newest first).</p>")
-        status = "PASSED" if exitstatus == 0 else "FAILED"
-
-        body = f"""
-        <h2>Test Run Report</h2>
-        <p><strong>Status:</strong> {status}</p>
-        <p><strong>Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-        <hr>
-        {html}
-        """
-
-        client = GraphEmailClient()
-        client.send_email(
-            to=recipient,
-            subject=f"Test Report - {status}",
-            body_html=body,
-            attachments=attachments,
-        )
-        print(f"\n[SUCCESS] Test report sent to {recipient}")
-    except Exception as e:
-        print(f"\n[WARNING] Failed to send test report: {e}")

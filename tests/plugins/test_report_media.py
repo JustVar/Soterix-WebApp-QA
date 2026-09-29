@@ -158,8 +158,8 @@ def test_live_shortened_screenshot_name_matches_its_test(tmp_path, monkeypatch):
     run_report must still attach the file to the right parametrized twin,
     and a shortened mid-drag frame to its test."""
     monkeypatch.setattr(rm, 'SCREENSHOT_DIR', _deep_dir(tmp_path))
-    twins = ['tests/c2c/test_cams.py::TestCams::test_reboot[camera-3]',
-             'tests/c2c/test_cams.py::TestCams::test_reboot[camera-4]']
+    twins = ['tests/ui/cams/test_cams.py::TestCams::test_reboot[camera-3]',
+             'tests/ui/cams/test_cams.py::TestCams::test_reboot[camera-4]']
     safes = {rr._safe_name(n, rr.SAFE_NAME_MAX): n for n in twins}
     for nodeid in twins:
         name = rm._final_filename(nodeid, 'FAILED')
@@ -557,7 +557,7 @@ def test_should_clean_in_a_plain_run():
 
 
 def test_should_not_clean_during_collect_only():
-    """run_suite's planning pass must never wipe the last real run's images."""
+    """A collect-only pass runs no test, so it must never wipe the last real run's images."""
     assert rm._should_clean(_FakeConfig(collect_only=True), {}) is False
 
 

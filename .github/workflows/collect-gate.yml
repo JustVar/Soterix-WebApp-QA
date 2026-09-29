@@ -1,57 +1,34 @@
 name: collect-gate
 
-# The merge gate this repo did not have. Until now the only workflow was
-# qa-nightly, which runs on demand, so nothing checked a pull request and a
-# broken import reached main and was found by whoever ran the suite next.
+# The merge gate. Every push to main and every pull request runs it, and a
+# push is not done until it is green. docs/CI.md explains each step.
 #
 # Cheap by construction. Collection and setup-plan never execute a test,
-# launch a browser, or send a request: the whole suite collects in under two
-# seconds. It needs ONE credential, a read-only deploy key for the private
-# shared package, and sends no live traffic of any kind. The two suites it does run are offline unit tests of the
-# plugins and tools.
+# launch a browser, or send a request. The two suites it runs are offline
+# unit tests of the plugins, tools and helpers. One job, on GitHub's
+# machines, with no secret and no repository variable: the shared package
+# is a wheel under vendor/, so `pip install -r requirements.txt` is the
+# whole setup, here and on a laptop.
 #
-# This also gives Dependabot something to answer to. A pinned dependency that
-# nothing proves on bump is a pin that gets rubber-stamped.
-
-# Each action is pinned to a commit SHA, with its version in the comment beside it.
-# A tag moves: `actions/checkout@v4` is whatever that tag points at today, and
-# webfactory/ssh-agent is handed a private key. Dependabot reads the comment and
-# keeps the pin current, so this costs nothing to maintain.
+# `runs-on` is the literal ubuntu-latest on purpose. An expression that
+# could resolve to the label of a machine of your own queues every push for
+# 24 hours when that machine is off, and GitHub then cancels it with no red
+# X and no email. If a machine of your own is ever reconsidered, a pull
+# request must still go to GitHub's machines: a workflow file is part of the
+# branch, so anyone who can open a pull request could otherwise run their
+# own code on that machine.
+#
+# Each action is pinned to a commit SHA, with its version in the comment
+# beside it. A tag moves: `actions/checkout@v4` is whatever that tag points
+# at today. Dependabot reads the comment and keeps the pin current.
 
 on:
   push:
     branches: [main]
   pull_request:
-  schedule:
-    # Sunday 06:00 UTC: the full interpreter matrix, which a push no longer runs.
-    - cron: '0 6 * * 0'
   workflow_dispatch:
-    inputs:
-      hosted:
-        description: "Run on GitHub's runners instead of spartan1 (use when the box is down)"
-        type: boolean
-        default: false
 
-# A pull request NEVER runs on spartan1. A workflow file is part of the branch, so anyone who can
-# open a pull request could otherwise run whatever they wrote as the runner's own user, on the box
-# that also runs the nightly, with the secrets the job is given (audit 09/22/2026). Pull requests
-# go to GitHub's machines, where that costs an attacker a throwaway container.
-#
-# spartan1 runs the rest and costs no Actions minutes. Three ways back to GitHub's machines:
-# the `hosted` input on a manual run; the repository variable CI_RUNNER=hosted, which is the one
-# that reaches a push (a dispatch input is null on every automatic event); and the weekly run,
-# which goes there on purpose.
-#
-# The weekly run is hosted because spartan1 never uses the QA_SHARED_DEPLOY_KEY secret: ghrunner
-# has its own on-disk key and `IdentitiesOnly yes` ignores the agent. A revoked or wrong secret
-# would pass green here and fail only on the fallback, which is the one path used in an outage.
-# Once a week the secret is used, the hosted path is proven, and the full interpreter matrix runs.
-# That is about 15 job-minutes a week against a 2000 minute month. The runner there is ghrunner, which
-# cannot read the nightly's .env and cannot write the published archive, and its service yields
-# CPU to the nightly. If the box is off, run this workflow by hand with `hosted` ticked.
-
-# This job only checks out and runs tests. qa-nightly.yml beside it already
-# scopes its token to read; this should not be looser.
+# This job only checks out and runs tests. The token stays read-only.
 permissions:
   contents: read
 
@@ -61,42 +38,28 @@ concurrency:
 
 jobs:
   collect:
-    # Only the company repo holds the QA_SHARED_DEPLOY_KEY secret this gate
-    # needs to fetch the private shared package. On the JustVar mirror the
-    # ssh-agent step gets an empty key and the run fails, emailing the owner
-    # on every push and Dependabot PR. Skip there; the authoritative gate
-    # (and Dependabot's real check) runs on the company repo.
-    if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
-    runs-on: ${{ (github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event.inputs.hosted == 'true' || vars.CI_RUNNER == 'hosted') && 'ubuntu-latest' || 'self-hosted' }}
+    runs-on: ubuntu-latest
+    env:
+      # Every pytest step writes its html report under logs/, never to
+      # reports/report.html, which a collect-only run would otherwise
+      # replace with an empty shell. No cache dir on a throwaway machine.
+      PYTEST_ADDOPTS: "--html=logs/ci.html -p no:cacheprovider"
+      # The offline suites change nothing a live UI run writes: no run
+      # archive, no single-run lock, no screenshots. Same as the hook.
+      RUN_ARCHIVE: "off"
+      RUN_GUARD: "off"
+      REPORT_SCREENSHOTS: "off"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # The whole history: the conventions step diffs this push against
-          # its base, and the attribution step reads every commit it brings.
+          # its base, and the commit-message step reads every commit it brings.
           fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.14"
-      # requirements.txt names the shared package over HTTPS, which is what a
-      # developer's git already speaks, so `pip install -r requirements.txt`
-      # is the only setup step locally. CI has no HTTPS credential for a
-      # private repo, so it loads the read-only deploy key below and rewrites
-      # that ONE url to SSH. The key cannot push and cannot read this
-      # repository. The rewrite is scoped to the single repo on purpose: a
-      # blanket github.com rewrite would also catch anything else in this job
-      # that clones over HTTPS.
-      - uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555  # v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
-      - name: Send the shared package over the deploy key
-        run: >
-          git config --global
-          url."git@github.com:Soterix-Systems/SOTERIX-QA-SHARED.git".insteadOf
-          "https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git"
-      - name: A venv of its own, so a job never inherits the last job's packages
-        run: |
-          python -m venv .civenv
-          echo "$PWD/.civenv/bin" >> "$GITHUB_PATH"
+      # The shared package comes from vendor/ through the --find-links line
+      # in requirements.txt. Nothing here reaches a private repo.
       - run: pip install -r requirements.txt
 
       # No `playwright install`. Collection and fixture planning need the
@@ -114,6 +77,11 @@ jobs:
       - name: Collected-test floor
         run: python tools/collect_floor.py
 
+      # The pins for the plugins, tools and helpers, including the shim
+      # guards (test_shims.py) and the shared package pin
+      # (test_shared_package_pin.py). A shim that stops being a module alias
+      # breaks silently, and a wheel that drifts from requirements.txt makes
+      # two machines test two pipelines.
       - name: Offline suites
         run: pytest tests/plugins tests/tools tests/helpers
 
@@ -122,21 +90,16 @@ jobs:
       - name: Test inventory is current
         run: python tools/test_inventory.py --check
 
-      # Per file against a recorded baseline, not a bare `ruff check`: the
-      # repo held 627 findings when the gate was born and this bar let a
-      # change pass while stopping the count growing. Since 09/14/2026 the
-      # baseline is zero, so any finding fails, and the tool stays because
-      # its message names the file and the way out (fix, or --update with a
-      # reason in the commit message). See tools/lint_baseline.py.
-      - name: Lint, against the recorded baseline
-        run: python tools/lint_baseline.py
+      # Any finding fails. The rule set is in pyproject.toml.
+      - name: Lint
+        run: python -m ruff check .
 
       # The house conventions on the lines this push adds: the same check
       # the pre-commit hook runs on staged lines, so a commit made without
       # the hook (a clone that never ran `git config core.hooksPath
       # tools/hooks`) meets it here. The base is the push's previous head,
       # or the pull request's target. secret_check stays hook-only: its
-      # secrets are the values in a developer's .env, which this runner
+      # secrets are the values in a developer's .env, which this machine
       # does not have.
       - name: House conventions on the added lines
         run: |
@@ -164,67 +127,12 @@ jobs:
           echo "base: $base"
           rc=0
           for sha in $(git rev-list "$base..HEAD"); do
-            # RUNNER_TEMP, not a fixed /tmp path: a self-hosted runner reuses the machine, and a
-            # file left by another user made this step fail with "Permission denied" the moment
-            # each runner got its own user (09/22/2026).
+            # RUNNER_TEMP, not a fixed /tmp path: a machine that is reused
+            # between jobs can hold a file another user left there, and the
+            # write then fails with "Permission denied".
             msg="${RUNNER_TEMP:-/tmp}/commit-msg-$sha.txt"
             git log -n 1 --format=%B "$sha" > "$msg"
             sh tools/hooks/commit-msg "$msg" || { echo "  in commit $sha"; rc=1; }
             rm -f "$msg"
           done
           exit $rc
-
-      # A shim that stops being a module alias breaks silently: the repo's
-      # own suites stay green while every monkeypatch seam quietly stops
-      # reaching the running code. Skipped until the shims land in step 6.
-      - name: Shim guards
-        if: hashFiles('tests/plugins/test_shims.py') != ''
-        run: pytest tests/plugins/test_shims.py
-
-  # A shim is a module alias, and aliasing is import-system behaviour. The
-  # gate above pins ONE interpreter, so until this job the guards had only
-  # ever run on that one, and no interpreter had run both repos' shims: the
-  # UI gate is on 3.14 and the API gate on 3.12, while the package claims
-  # >=3.11 and proves it across 3.11 to 3.14. This closes step 0 of the
-  # foundations plan, which does not close without it.
-  #
-  # Only the shim guards, not the whole gate. Running everything four times
-  # buys little and costs four times as much; what varies by interpreter
-  # here is module identity, patch reachability and CLI dispatch, and those
-  # are exactly what the guards assert.
-  #
-  # fail-fast is off on purpose. "3.11 broke" and "every version broke" are
-  # different diagnoses and a cancelled matrix cannot tell them apart.
-  shim-matrix:
-    # Same as collect: the deploy-key secret only exists on the company repo.
-    # 1 version on a push, every version on a weekly run or by hand. The 4-way
-    # matrix on every push was the largest consumer of the Actions allowance
-    # (09/22/2026), and what it guards changes rarely. 3.14 is what the box,
-    # the laptops and the other jobs here run, so a push is checked on the
-    # version the team actually uses.
-    if: github.repository == 'Soterix-Systems/Soterix-WebApp-QA'
-    runs-on: ${{ (github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event.inputs.hosted == 'true' || vars.CI_RUNNER == 'hosted') && 'ubuntu-latest' || 'self-hosted' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ${{ (contains(fromJSON('["push","pull_request"]'), github.event_name) && fromJSON('["3.14"]')) || fromJSON('["3.11", "3.12", "3.13", "3.14"]') }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-      - uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555  # v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.QA_SHARED_DEPLOY_KEY }}
-      - name: Send the shared package over the deploy key
-        run: >
-          git config --global
-          url."git@github.com:Soterix-Systems/SOTERIX-QA-SHARED.git".insteadOf
-          "https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git"
-      - name: A venv of its own, so a job never inherits the last job's packages
-        run: |
-          python -m venv .civenv
-          echo "$PWD/.civenv/bin" >> "$GITHUB_PATH"
-      - run: pip install -r requirements.txt
-      - name: Shim guards on ${{ matrix.python-version }}
-        run: pytest tests/plugins/test_shims.py

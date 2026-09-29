@@ -4,7 +4,7 @@ Extends the base media tests with deeper filter, view, and tab validation
 that don't require clip/folder content to exist. Every check reads a value
 the page shows: the filter's text and options, the toggle's pressed state
 and the item layout, the selected tab's paint, the names a search returns
-(measured 09/12/2026 on US; register row 53).
+(all measured on the app).
 """
 import re
 

@@ -7,15 +7,14 @@ Vault tab. The rename success toast is the server acknowledgment -
 the inline input updates optimistically and can show a rename that
 never committed (all measured 08/12/2026).
 
-Destructive semantics measured 09/02/2026 (Justin): deleting a folder
-deletes the clips grouped in it - permanently ("cannot be retrieved");
-"Remove From Folder" un-groups a clip back to the level above without
-deleting. Destructive testing on the india tenant's media is
-sanctioned. Folder deletion currently fails on the tenant (filed; the
-register's App defects section maps behavior to tickets), so the
-folder-delete leg tripwires into a skip, and the lifecycle test
-doubles as the repro for the folder-delete-removes-outside-clips
-report. See the register, item 2.
+Destructive semantics, measured on the app: deleting a folder deletes
+the clips grouped in it - permanently ("cannot be retrieved"); "Remove
+From Folder" un-groups a clip back to the level above without
+deleting. Destructive testing on the QA tenant's media is sanctioned
+(config/env/qa.py allow_delete). Folder deletion currently fails on
+the tenant (a filed app defect), so the folder-delete leg tripwires
+into a skip, and the lifecycle test doubles as the repro for the
+folder-delete-removes-outside-clips report.
 """
 import pytest
 from playwright.sync_api import Error as PlaywrightError, expect
@@ -24,7 +23,7 @@ from tests.shared.pages.media_page import MediaPage
 
 # One worker for every module that writes this account's clips and folders: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_media")
 
 
@@ -81,10 +80,10 @@ class TestMediaClipOperations:
         One lifecycle on automation-created data measures every folder
         semantic: Group Clips makes the folder, Remove From Folder must
         return the clip WITHOUT deleting it, and deleting the emptied
-        folder must not touch any clip outside it (Justin reports it
-        once did; this assert is the repro). A folder that survives
-        its delete is the filed folder-delete defect (register, App
-        defects) and skips, leaving it for tools/tenant_cleanup.py.
+        folder must not touch any clip outside it (a tester reported
+        that it once did; this assert is the repro). A folder that survives
+        its delete is the filed folder-delete defect and skips, leaving
+        it for tools/tenant_cleanup.py.
 
         Steps:
         1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.
@@ -172,12 +171,12 @@ class TestMediaClipOperations:
         try:
             self.media.delete_item_named(folder)
         # deliberate: the server refuses folder deletes on this tenant
-        # (filed defect, register App defects), so this handler catches
-        # a known app state, not a test failure
+        # (a filed app defect), so this handler catches a known app
+        # state, not a test failure
         except (PlaywrightError, RuntimeError):
             pytest.skip(
-                "Folder delete did not apply (filed defect - register "
-                f"App defects); folder '{folder}' left for tenant_cleanup"
+                "Folder delete did not apply (a filed app defect); "
+                f"folder '{folder}' left for tenant_cleanup"
             )
 
         # Repro for the unfiled report: deleting a folder must not
@@ -196,7 +195,7 @@ class TestMediaClipOperations:
             f"Clips missing after deleting empty folder '{folder}': "
             f"{sorted(missing)}. If no teammate removed them, this is "
             "the folder-delete-removes-outside-clips report - verify "
-            "and file (see the register)."
+            "and file it."
         )
 
     @pytest.mark.ui
@@ -262,8 +261,8 @@ class TestMediaClipOperations:
         Cancel is proven non-destructive first, and the dialog must
         carry its permanence wording (screenshot 09/02/2026: "deleted
         permanently and cannot be retrieved"). The real delete then
-        consumes ONE tenant clip - sanctioned on the india media set
-        (Justin, 09/02/2026).
+        consumes ONE tenant clip - sanctioned on the QA tenant's media
+        (config/env/qa.py allow_delete).
 
         Steps:
         1. Open Media, set the date filter to Last 30 Days, open the Clips tab, open a clip's options menu, choose Delete, then Cancel.
@@ -504,7 +503,7 @@ class TestMediaFolderOperations:
         """Make a folder from the first clip and return its name.
 
         Create Link, Share and Export answered the toast 'Empty folder'
-        on the first listed folder in the 09/11/2026 full run: the first
+        on the first listed folder in a full run: the first
         folders were the suite's own empty leftovers (Folder_<n>). A test
         of a folder operation must own a folder that holds a clip
         (docs/CONVENTIONS.md > skips, rule 1). Same lifecycle as
@@ -603,9 +602,9 @@ class TestMediaFolderOperations:
         """Verify the Create Link dialog opens for a folder.
 
         Cancelled so no orphan link is left behind. The folder is the
-        test's own, with a clip in it. Known app defect (09/11/2026,
-        US): the tenant answers 'Empty folder' for a folder that holds
-        a clip; the test fails naming that until the app fix.
+        test's own, with a clip in it. Known app defect: the tenant
+        answers 'Empty folder' for a folder that holds a clip; the
+        test fails naming that until the app fix.
 
         Steps:
         1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.
@@ -730,8 +729,8 @@ class TestMediaFolderOperations:
 
         The oracle lives in share_item: it raises when the success
         panel never appears. The folder is the test's own, with a clip
-        in it. Known app defect (09/11/2026, US): a folder's Share icon
-        opens no dialog; the test fails naming that until the app fix.
+        in it. Known app defect: a folder's Share icon opens no dialog;
+        the test fails naming that until the app fix.
 
         Steps:
         1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.
@@ -751,8 +750,8 @@ class TestMediaFolderOperations:
 
         The oracle lives in export_item: a stuck export control
         raises. The folder is the test's own, with a clip in it. Known
-        app defect (09/11/2026, US): a folder's Export opens no control;
-        the test fails naming that until the app fix.
+        app defect: a folder's Export opens no control; the test fails
+        naming that until the app fix.
 
         Steps:
         1. Open Media, set the date filter to Last 30 Days, and on the Clips tab tick a clip and choose Group Clips.

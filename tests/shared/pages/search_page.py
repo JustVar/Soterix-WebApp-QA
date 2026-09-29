@@ -65,7 +65,7 @@ class SearchPage:
 
     # --- Navigation ---
 
-    # Measured 09/12/2026 on US (register row 53): the four filter boxes
+    # Measured on the app: the four filter boxes
     # read '<label>\n<value>' with 'Select' before a choice; the search
     # button is an img whose file is search-disable*.svg until the
     # filters allow a search and /icons/search_icon.svg after.
@@ -139,8 +139,8 @@ class SearchPage:
         """Click a dropdown and select an item by text (same signals
         as the index variant)."""
         dropdown.click()
-        # Exact and escaped (item 20): .dropdownItem holds the bare item
-        # text (probe 09/02/2026 on the same component in insights), and
+        # Exact and escaped: .dropdownItem holds the bare item
+        # text (probed on the same component in insights), and
         # the page renders items of several dropdowns at once, so a
         # substring could land in the wrong dropdown.
         item = self.page.get_by_text(text, exact=True).and_(
@@ -227,7 +227,7 @@ class SearchPage:
         outgoing job proves the click did anything. Raises RuntimeError when
         no job leaves within 15 s. KNOWN APP BEHAVIOR: a search only re-runs
         after filters change; an unchanged or partially re-set view ignores
-        the click by design (see TEST_REPAIRS.md). Prefer a fresh view with
+        the click by design. Prefer a fresh view with
         all filters re-applied; use this when a test genuinely needs to
         prove a warm re-search dispatched. Returns False when the search
         ran and finished empty.
@@ -346,7 +346,7 @@ class SearchPage:
         # Fail fast on a missing site instead of silently picking the
         # first row: the tenant renames sites, and a wrong-site search
         # passes on wrong data or fails with no hint of the cause
-        # Exact inner-element match (item 20): has_text was a substring,
+        # Exact inner-element match: has_text was a substring,
         # so a site name that prefixes another could land the wrong row.
         # A 0-match still fails loud below with the on-screen names.
         site_row = rows.filter(
@@ -603,12 +603,10 @@ class SearchPage:
         rows = panel.locator(".MuiListItemButton-root")
         rows.first.wait_for(state="visible", timeout=10000)
         from config.base_config import config
-        # the drawing searches may run on their own site (india: the
-        # test site's cameras are offline, register row 76)
-        site = config.get("search_site_name") or config.get("test_site_name")
+        site = config.get("test_site_name")
         # Fail fast on a missing site: silently drawing on the first
         # row's cameras would test the wrong site without a trace.
-        # Exact inner-element match (item 20): has_text was a substring,
+        # Exact inner-element match: has_text was a substring,
         # so a site name that prefixes another could land the wrong row.
         site_row = rows.filter(
             has=self.page.get_by_text(site, exact=True)).first
@@ -618,8 +616,8 @@ class SearchPage:
             visible = [t.strip()[:40] for t in rows.all_inner_texts()][:8]
             raise RuntimeError(
                 f"Site '{site}' is not in the Locations panel. "
-                f"On-screen entries: {visible}. Update search_site_name "
-                f"or test_site_name in config/env/ if the tenant renamed it."
+                f"On-screen entries: {visible}. Update test_site_name "
+                f"in config/env/ if the tenant renamed it."
             ) from None
         site_row.click()
         all_row = panel.locator(
@@ -643,14 +641,13 @@ class SearchPage:
                 action_link = container.get_by_text(
                     action_text, exact=True
                 ).first
-                # the panel scrolls: a container below its fold (the 17th
-                # on the box, 09/12/2026) never reveals its action link
-                # under a forced hover, so bring it into view first. The
-                # reveal is hover-driven and the containers repaint with
-                # their snapshots, so one hover can land between paints
-                # and reveal nothing (india, the 7th container, two of
-                # three nights 09/12-09/14): leave, come back, up to
-                # three times, then fail naming the container
+                # the panel scrolls: a container below its fold never
+                # reveals its action link under a forced hover, so bring
+                # it into view first. The reveal is hover-driven and the
+                # containers repaint with their snapshots, so one hover
+                # can land between paints and reveal nothing (measured on
+                # the 7th container in two of three runs): leave, come
+                # back, up to three times, then fail naming the container
                 for _ in range(3):
                     container.scroll_into_view_if_needed()
                     container.hover(force=True)
@@ -660,8 +657,8 @@ class SearchPage:
                     # The link shows, but a plain click waits for the
                     # element to hold still and these containers never do:
                     # they repaint their camera snapshot, so the pointer
-                    # click times out with the link on screen (india,
-                    # 09/15/2026; FAILURE_TRIAGE > Waits and signals).
+                    # click times out with the link on screen
+                    # (FAILURE_TRIAGE > Waits and signals).
                     # Bounded pointer click, then the JS click that needs
                     # no stability, and only then the next hover.
                     try:

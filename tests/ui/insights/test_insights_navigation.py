@@ -4,8 +4,8 @@ Covers navigation to Insights page, System Status dashboard,
 and Widgets tab switching. Every check reads a value the page shows:
 the address, the preset link's target, the site the dashboard is on and
 its device and camera counts adding up, the tab that is inactive, the
-Create New button's label and the Search box's placeholder (measured
-09/12/2026 on US; register row 53).
+Create New button's label and the Search box's placeholder (all
+measured on the app).
 
 Migrated from Selenium:
 - test_insights_system_status_dashboard (line 2147)

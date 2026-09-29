@@ -2,9 +2,9 @@
 
 The checker runs on added lines only, so a rule that misfires blocks
 nobody but a rule that goes quiet lets a class of defect back in. These
-pin the new-test rules (title, Steps block, QA Touch mapping) and the
-helpers they stand on, with the mapping passed in so no test reads the
-live file.
+pin the new-test rules (title, Steps block, QA Touch mapping), the
+tenant-name rule and the helpers they stand on, with the mapping and the
+tenant names passed in so no test reads the live files.
 """
 from __future__ import annotations
 
@@ -21,6 +21,9 @@ import pytest  # noqa: E402
 from tools import convention_check as cc  # noqa: E402
 
 PATH = 'tests/ui/thing/test_thing.py'
+# One mapped row for the product, so the mapping rule is armed (it stays
+# silent for a product with no rows at all)
+ARMED = {'tests/ui/other/test_other.py::test_mapped'}
 
 CLASS_TEST = '''\
 import pytest
@@ -61,7 +64,7 @@ def _def_line(name: str) -> int:
 
 
 def _rules(name: str, mapped: set[str]) -> list[str]:
-    return [f['rule'] for f in cc.check_line(PATH, CLASS_TEST, _def_line(name), mapped=mapped)]
+    return [f['rule'] for f in cc.check_line(PATH, CLASS_TEST, _def_line(name), mapped=mapped | ARMED)]
 
 
 # ---------------------------------------------------------------- helpers
@@ -104,7 +107,7 @@ def test_mapped_test_with_steps_is_clean():
 
 def test_unmapped_test_names_the_generator_command():
     """The mapping finding carries the exact generator command for the node id."""
-    findings = cc.check_line(PATH, CLASS_TEST, _def_line('test_full'), mapped=set())
+    findings = cc.check_line(PATH, CLASS_TEST, _def_line('test_full'), mapped=ARMED)
     assert [f['rule'] for f in findings] == ['test-without-mapping']
     assert findings[0]['sev'] == 'MEDIUM'
     assert f'--test {PATH}::TestThing::test_full' in findings[0]['msg']
@@ -145,10 +148,37 @@ def test_case_rules_apply_to_ui_tests_only():
     """A tooling pin under tests/tools has no QA Touch case: only the
     title rule applies there."""
     lines = ['def test_pin():', '    assert True']
-    rules = [f['rule'] for f in cc.check_line('tests/tools/test_x.py', lines, 0, mapped=set())]
+    rules = [f['rule'] for f in cc.check_line('tests/tools/test_x.py', lines, 0, mapped=ARMED)]
     assert rules == ['test-without-title']
-    rules = [f['rule'] for f in cc.check_line('tests/ui/x/test_x.py', lines, 0, mapped=set())]
+    rules = [f['rule'] for f in cc.check_line('tests/ui/x/test_x.py', lines, 0, mapped=ARMED)]
     assert rules == ['test-without-title', 'test-without-steps', 'test-without-mapping']
+
+
+def test_mapping_rule_is_silent_for_a_product_with_no_rows():
+    """A fresh QA Touch project has no mapping rows yet. The rule waits
+    for the first row of the product instead of flagging every test."""
+    lines = ['def test_pin():', '    """Title."""', '    assert True']
+    rules = [f['rule'] for f in cc.check_line('tests/ui/x/test_x.py', lines, 0, mapped=set())]
+    assert rules == ['test-without-steps']
+    assert cc.product_has_mapping('tests/ui/x/test_x.py', set()) is False
+    assert cc.product_has_mapping('tests/ui/x/test_x.py', ARMED) is True
+    assert cc.product_has_mapping('tests/tools/test_x.py', ARMED) is False
+
+
+def test_tenant_name_rule_reads_the_configured_names_and_escapes_them():
+    """The rule fires on the configured site and camera names, quoted, and
+    a name with regex characters matches itself and nothing else. The
+    names here are invented, so the live rule never fires on this pin."""
+    pattern = cc.tenant_name_pattern(['Harbour Office', 'Dock Cam (1+1)'])
+    lines = ['    page.get_by_text("Harbour Office")',
+             "    site = 'Dock Cam (1+1)'",
+             "    site = 'Dock Cam 11'",
+             '    page.get_by_text(config["test_site_name"])']
+    hits = [f['line'] for i in range(len(lines))
+            for f in cc.check_line('tests/ui/x/test_x.py', lines, i, mapped=set(), tenant_re=pattern)
+            if f['rule'] == 'hardcoded-tenant-name']
+    assert hits == [1, 2]
+    assert cc.tenant_name_pattern([None, '']) is None
 
 
 def test_no_oracle_rule_skips_defs_quoted_in_strings():
@@ -164,7 +194,7 @@ def test_existing_rules_still_fire():
     # built by concatenation so the checker's own scan of this file
     # does not read the pattern as a finding
     lines = ['def test_s():', '    """T."""', '    page.wait_for_' + 'timeout(500)']
-    rules = [f['rule'] for f in cc.check_line(PATH, lines, 2, mapped=set())]
+    rules = [f['rule'] for f in cc.check_line(PATH, lines, 2, mapped=set(), tenant_re=cc.tenant_name_pattern([]))]
     assert rules == ['uncommented-sleep']
 
 
@@ -230,7 +260,7 @@ def test_skip_in_except_is_flagged_high():
 def test_skip_in_except_excused_by_a_why_comment():
     """A commented handler is the deliberate one: absence, not failure."""
     lines = [
-        '    # the wall account is not provisioned on this box',
+        '    # the wall account is not provisioned on this tenant',
         '    except LookupError:',
         '        pytest.' + 'skip("no wall account")',
     ]
@@ -298,7 +328,7 @@ def test_presence_only_oracle_flags_visibility_only_bodies():
     for strong_line in ('    expect(self.rows).to_have_count(before + 1)',
                         '    assert name in self.titles()',
                         '    expect(self.panel).not_to_be_visible()',
-                        '    expect(self.title).to_have_text("Spartan0")',
+                        '    expect(self.title).to_have_text("Main Gate")',
                         '    expect(self.page).to_have_url(re.compile("/insights"))'):
         strong = [*weak[:-1], strong_line]
         assert cc.check_presence_only_tests(PATH, strong) == [], strong_line
@@ -310,7 +340,7 @@ def test_presence_only_is_for_product_tests_only():
             '    expect(self.panel).to_be_visible()']
     assert cc.check_presence_only_tests('tests/tools/test_x.py', weak) == []
     assert cc.check_presence_only_tests('tests/plugins/test_x.py', weak) == []
-    assert [f['rule'] for f in cc.check_presence_only_tests('tests/c2c/test_x.py', weak)] == [
+    assert [f['rule'] for f in cc.check_presence_only_tests('tests/ui/x/test_x.py', weak)] == [
         'presence-only-oracle']
 
 
@@ -344,7 +374,7 @@ def test_first_on_text_lookup_flags_substring_identity():
              '        row = self.page.get_by_text("main gate", exact=True)',
              '        cell = self.rows.filter(has=self.page.locator("span[title=\'main gate\']")).first',
              '        # the tenant has exactly one card with this word; measured 09/11',
-             '        card = self.cards.filter(has_' + 'text="Spartan").first']
+             '        card = self.cards.filter(has_' + 'text="Gate").first']
     hits = [f['line'] for f in [f for i in range(len(lines)) for f in cc.check_line('p.py', lines, i)]
             if f['rule'] == 'first-on-text-lookup']
     assert hits == [1, 2]

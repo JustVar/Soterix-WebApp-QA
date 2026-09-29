@@ -101,8 +101,8 @@ class InsightsPage:
             # Close an open sub-tab first. Ask before clicking: with no
             # sub-tab open, a bare click waited its default 30 s for an icon
             # that is not there and the handler swallowed the timeout, on
-            # every widget search (measured 09/18/2026: 30.0 s per call,
-            # about 7 minutes of each nightly leg).
+            # every widget search (measured: 30.0 s per call, about 7
+            # minutes of a full run).
             if self.close_tab_icon.is_visible():
                 self.close_tab_icon.click(timeout=5000)
                 # a settle, not an oracle: callers wait on their own next element
@@ -162,7 +162,7 @@ class InsightsPage:
         self.close_tab_icon.click(timeout=10000)
         expect(self.close_tab_icon).to_be_hidden(timeout=5000)
 
-    # Measured 09/12/2026 on US (register row 53). The landing (/insights)
+    # Measured on the app. The landing (/insights)
     # reads: tabs My Dashboards and Widgets, Create New, 'Preset Dashboard'
     # with View All and the System Status link, 'My Dashboard' with View
     # All and, with no user dashboards, "My Dashboard is currently empty."
@@ -418,8 +418,8 @@ class InsightsPage:
                 # about 0.5 s after a click once the list has settled; a
                 # single click fired before it settled was the Heat_Person
                 # miss, so click with a short retry.
-                # the list cuts a long name in the DOM ('Soterix Multica...' on
-                # US, 09/17/2026), so match the name or its ellipsis cut
+                # the list cuts a long name in the DOM ('Example Corp...'),
+                # so match the name or its ellipsis cut
                 target = (
                     self.page.locator(".location-popup-accordian")
                     .filter(has_text=shown_as(camera_name))

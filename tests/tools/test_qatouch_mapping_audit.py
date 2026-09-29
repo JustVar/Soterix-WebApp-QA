@@ -1,9 +1,10 @@
 """Pins for tools/qatouch_mapping_audit.py.
 
-The web-app tests map into NexaiQ-Core and the Camera 2 Cloud tests into
-project 60W5, each with its own snapshot folder. Until 09/14/2026 the audit
-read only the NexaiQ-Core snapshot and called every c2c row dead. These
-pins hold the per-project read.
+The web-app tests map into the project of their root (config/products.py).
+A second product root maps into its own project, with its own snapshot
+folder. An audit that read only the top folder once called every row of the
+second project dead. These pins hold the per-project read, with a second
+root supplied by the fixture so no pin depends on the live product list.
 """
 from __future__ import annotations
 
@@ -17,7 +18,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from config import products  # noqa: E402
 from tools import qatouch_mapping_audit as qm  # noqa: E402
+
+CORE = qm.DEFAULT_PROJECT
 
 
 def _snapshot(path: Path, cases: list[tuple[str, str, str]], stamp: str) -> None:
@@ -27,56 +31,73 @@ def _snapshot(path: Path, cases: list[tuple[str, str, str]], stamp: str) -> None
 
 
 @pytest.fixture
-def snapshots(tmp_path, monkeypatch):
-    """A NexaiQ-Core snapshot at the top and a Camera 2 Cloud one in 60W5/, older files beside them."""
+def two_roots(monkeypatch):
+    """The web-app root plus a second product root that reports to project ZZ99."""
+    monkeypatch.setattr(products, "PRODUCT_ROOTS", {products.SHARED_ROOT: CORE, "tests/other/": "ZZ99"})
+    return "ZZ99"
+
+
+@pytest.fixture
+def snapshots(tmp_path, monkeypatch, two_roots):
+    """A web-app snapshot at the top and the second project's in ZZ99/, older files beside them."""
     monkeypatch.setattr(qm, "SNAPSHOTS_DIR", tmp_path)
     _snapshot(tmp_path / "snapshot_2026-09-01.json", [("old1", "Old core case", "Views")], "old")
     _snapshot(tmp_path / "snapshot_2026-09-08.json", [("core1", "Verify a view saves", "Views")], "core")
-    _snapshot(tmp_path / "60W5" / "snapshot_2026-09-11.json", [("cam1", "Verify camera web UI login", "Authentication")], "cam")
+    _snapshot(tmp_path / "ZZ99" / "snapshot_2026-09-11.json", [("oth1", "Verify device web UI login", "Authentication")], "oth")
     return tmp_path
 
 
-def test_project_follows_the_test_root():
-    """c2c tests belong to 60W5; everything else to NexaiQ-Core."""
-    assert qm.project_for("tests/c2c/test_c2c_auth.py::TestC2CAuth::test_login") == "60W5"
-    assert qm.project_for("tests\\c2c\\test_c2c_auth.py") == "60W5"
-    assert qm.project_for("tests/ui/views/test_views_basic.py") == "JlW1"
-    assert qm.project_for("tests/c2c_extra/test_x.py") == "JlW1"
+def test_project_follows_the_test_root(two_roots):
+    """A test under the second root belongs to its project; everything else to the web-app project."""
+    assert qm.project_for("tests/other/test_auth.py::TestAuth::test_login") == "ZZ99"
+    assert qm.project_for("tests\\other\\test_auth.py") == "ZZ99"
+    assert qm.project_for("tests/ui/views/test_views_basic.py") == CORE
+    assert qm.project_for("tests/other_extra/test_x.py") == CORE
+    assert qm.other_projects() == ["ZZ99"]
 
 
 def test_latest_snapshots_picks_the_newest_per_project(snapshots):
-    """The top folder's newest file for NexaiQ-Core, the 60W5 folder's for Camera 2 Cloud."""
+    """The top folder's newest file for the web-app project, the ZZ99 folder's for the second."""
     paths = qm.latest_snapshots()
-    assert paths["JlW1"].name == "snapshot_2026-09-08.json"
-    assert paths["60W5"].name == "snapshot_2026-09-11.json"
-    (snapshots / "60W5" / "snapshot_2026-09-11.json").unlink()
-    assert "60W5" not in qm.latest_snapshots()
+    assert paths[CORE].name == "snapshot_2026-09-08.json"
+    assert paths["ZZ99"].name == "snapshot_2026-09-11.json"
+    (snapshots / "ZZ99" / "snapshot_2026-09-11.json").unlink()
+    assert "ZZ99" not in qm.latest_snapshots()
 
 
 def test_load_all_cases_merges_and_tags_each_project(snapshots):
     """One dict holds both projects' cases, each tagged with its project, under one label."""
     cases, label = qm.load_all_cases(qm.latest_snapshots())
-    assert cases["core1"]["project"] == "JlW1"
-    assert cases["cam1"]["project"] == "60W5"
-    assert "JlW1: snapshot_2026-09-08.json (core)" in label
-    assert "60W5: snapshot_2026-09-11.json (cam)" in label
+    assert cases["core1"]["project"] == CORE
+    assert cases["oth1"]["project"] == "ZZ99"
+    assert f"{CORE}: snapshot_2026-09-08.json (core)" in label
+    assert "ZZ99: snapshot_2026-09-11.json (oth)" in label
 
 
-def test_a_c2c_row_keyed_in_its_own_snapshot_is_not_dead(snapshots):
-    """The 09/14 finding: read against NexaiQ-Core alone the c2c row is dead; read per project it is live."""
-    tests = {"tests/c2c/test_c2c_auth.py::TestC2CAuth::test_login": {"title": "Camera login", "area": "c2c",
-                                                                      "file": "tests/c2c/test_c2c_auth.py", "project": "60W5"}}
-    mappings = {"tests/c2c/test_c2c_auth.py::TestC2CAuth::test_login": {"case_key": "cam1"}}
+def test_a_row_keyed_in_its_own_snapshot_is_not_dead(snapshots):
+    """Read against the web-app snapshot alone the second project's row is dead; read per project it is live."""
+    tests = {"tests/other/test_auth.py::TestAuth::test_login": {"title": "Device login", "area": "other",
+                                                                "file": "tests/other/test_auth.py", "project": "ZZ99"}}
+    mappings = {"tests/other/test_auth.py::TestAuth::test_login": {"case_key": "oth1"}}
     core_only, _ = qm.load_cases(qm.latest_snapshot())
-    assert qm.dead_key_nodeids(tests, mappings, core_only) == ["tests/c2c/test_c2c_auth.py::TestC2CAuth::test_login"]
+    assert qm.dead_key_nodeids(tests, mappings, core_only) == ["tests/other/test_auth.py::TestAuth::test_login"]
     merged, _ = qm.load_all_cases(qm.latest_snapshots())
     assert qm.dead_key_nodeids(tests, mappings, merged) == []
 
 
 def test_candidates_come_from_the_tests_own_project(snapshots):
-    """A c2c test is offered 60W5 cases only, whatever the titles say."""
+    """A test of the second project is offered its own cases only, whatever the titles say."""
     cases, _ = qm.load_all_cases(qm.latest_snapshots())
-    c2c_test = {"title": "Verify camera web UI login", "area": "c2c", "file": "tests/c2c/x.py", "project": "60W5"}
-    core_test = {"title": "Verify camera web UI login", "area": "views", "file": "tests/ui/x.py", "project": "JlW1"}
-    assert [c["key"] for c in qm.candidates(c2c_test, cases, 5)] == ["cam1"]
-    assert "cam1" not in [c["key"] for c in qm.candidates(core_test, cases, 5)]
+    other_test = {"title": "Verify device web UI login", "area": "other", "file": "tests/other/x.py", "project": "ZZ99"}
+    core_test = {"title": "Verify device web UI login", "area": "views", "file": "tests/ui/x.py", "project": CORE}
+    assert [c["key"] for c in qm.candidates(other_test, cases, 5)] == ["oth1"]
+    assert "oth1" not in [c["key"] for c in qm.candidates(core_test, cases, 5)]
+
+
+def test_with_one_root_there_is_one_project(monkeypatch, tmp_path):
+    """One product root: no second project, and the audit reads the top folder only."""
+    monkeypatch.setattr(products, "PRODUCT_ROOTS", {products.SHARED_ROOT: CORE})
+    monkeypatch.setattr(qm, "SNAPSHOTS_DIR", tmp_path)
+    _snapshot(tmp_path / "snapshot_2026-09-08.json", [("core1", "Verify a view saves", "Views")], "core")
+    assert qm.other_projects() == []
+    assert list(qm.latest_snapshots()) == [CORE]

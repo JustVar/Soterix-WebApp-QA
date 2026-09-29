@@ -11,18 +11,14 @@
   The task logs on INTERACTIVELY, so it runs in the signed-in desktop
   session. That is not a preference: the run passes --headed, because
   headless Chrome on Windows claims H.265 support and then never decodes a
-  frame (measured 09/22/2026, README.md). A headed browser with no desktop
-  cannot start, so the machine must also sign in automatically. A task that
-  ran as S4U would land in session 0, find no desktop, and fail every
+  frame (README.md). A headed browser with no desktop cannot start, so the
+  machine must also sign in automatically. A task that ran as S4U or with a
+  stored password would land in session 0, find no desktop, and fail every
   streaming test the way the first trial did.
 
   The cost of Interactive: the task runs only while somebody is signed in.
   Automatic sign-in covers that after a restart. If the machine is ever
   found signed out, the run did not happen and the log has no entry.
-
-  If scp under the task ever asks for a password, re-register with
-  -StorePassword, which prompts once and stores the credential in the
-  task (LogonType Password).
 
 .EXAMPLE
   .\register-task.ps1                                # 05:00 daily, current user
@@ -33,17 +29,11 @@ param(
     [string]$Repo = "C:\qa\Soterix-WebApp-QA",
     [string]$At = "05:00",
     # The machine, never USERDOMAIN: a local account's domain is the computer,
-    # and on this box USERDOMAIN reads WORKGROUP, which names no account, so the
-    # first registration failed with "No mapping between account names and
-    # security IDs" (09/25/2026). Pass -User for a domain account.
+    # and on a workgroup machine USERDOMAIN reads WORKGROUP, which names no
+    # account, so the registration fails with "No mapping between account
+    # names and security IDs". Pass -User for a domain account.
     [string]$User = "$env:COMPUTERNAME\$env:USERNAME",
     [string]$TaskName = "QA livestream run",
-    # Which box the task runs. Left out, the run script takes its own default,
-    # india then us. spartan20 runs us alone: its india leg took 16 to 52 minutes
-    # and hit the 60 minute cap on 09/27/2026, and spartan1 already runs india.
-    # One box only: with -File, PowerShell hands "india,us" over as 1 string.
-    [string]$Boxes = "",
-    [switch]$StorePassword,
     [switch]$Unregister
 )
 
@@ -59,26 +49,20 @@ $script = Join-Path $Repo 'deploy\windows-runner\livestream-run.ps1'
 if (-not (Test-Path $script)) { throw "no run script at $script; clone the repo there first (README.md)" }
 
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' `
-    -Argument ("-NoProfile -ExecutionPolicy Bypass -File `"$script`" -Repo `"$Repo`"" + $(if ($Boxes) { " -Boxes $Boxes" } else { "" })) `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$script`" -Repo `"$Repo`"" `
     -WorkingDirectory $Repo
 $trigger = New-ScheduledTaskTrigger -Daily -At $At
 $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 5) `
     -MultipleInstances IgnoreNew -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 
-if ($StorePassword) {
-    $cred = Get-Credential -UserName $User -Message "Password for the task's account"
-    Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
-        -User $cred.UserName -Password $cred.GetNetworkCredential().Password -RunLevel Highest -Force | Out-Null
-} else {
-    # Interactive, not S4U: the run is --headed and a headed browser needs a
-    # desktop. See the description above.
-    $principal = New-ScheduledTaskPrincipal -UserId $User -LogonType Interactive -RunLevel Highest
-    Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
-        -Principal $principal -Force | Out-Null
-}
+# Interactive, not S4U: the run is --headed and a headed browser needs a
+# desktop. See the description above.
+$principal = New-ScheduledTaskPrincipal -UserId $User -LogonType Interactive -RunLevel Highest
+Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
+    -Principal $principal -Force | Out-Null
+
 $task = Get-ScheduledTask -TaskName $TaskName
 Write-Output "task '$TaskName': $($task.State), daily at $At as $User, script $script"
-Write-Output "boxes: $(if ($Boxes) { $Boxes } else { 'the run script''s default (india, then us)' })"
 Write-Output "logon type: $($task.Principal.LogonType)   (Interactive is required: the run is --headed)"
 $auto = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name AutoAdminLogon -ErrorAction SilentlyContinue).AutoAdminLogon
 if ($auto -ne '1') {

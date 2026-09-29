@@ -51,7 +51,6 @@ from soterix_qa_shared.qatouch.results import (  # noqa: E402
 )
 from soterix_qa_shared.qatouch.upload import QATouchUploadSink  # noqa: E402
 
-from soterix_qa_shared.reporting import email as pkg_email  # noqa: E402
 from soterix_qa_shared.reporting import health as pkg_health  # noqa: E402
 from soterix_qa_shared.reporting import media as pkg_media  # noqa: E402
 from soterix_qa_shared.reporting import run_archive as pkg_run_archive  # noqa: E402
@@ -61,7 +60,6 @@ from plugins import qatouch_reporter as shim_reporter  # noqa: E402
 from plugins import report_media as shim_media  # noqa: E402
 from plugins import run_archive as shim_run_archive  # noqa: E402
 from plugins import run_report as shim_run_report  # noqa: E402
-from tools import email_client as shim_email  # noqa: E402
 from tools import health_summary as shim_health  # noqa: E402
 from tools import qatouch_client as shim_client  # noqa: E402
 from tools import retry_uploads as shim_retry  # noqa: E402
@@ -97,12 +95,6 @@ def test_retry_shim_is_the_package_module():
     """The retry CLI's old import path IS the package module, not a copy."""
     assert shim_retry is pkg_retry, (
         'tools.retry_uploads is not the package module.')
-
-
-def test_email_client_shim_is_the_package_module():
-    """The Graph email client's old import path IS the package module."""
-    assert shim_email is pkg_email, (
-        'tools.email_client is not the package module.')
 
 
 def test_report_media_shim_is_the_package_module():
@@ -296,9 +288,9 @@ def test_the_retry_cli_actually_runs_through_the_shim():
 
 # --- 5. THIS REPO: the injected mapping policy ------------------------------
 #
-# This repo gates on `reviewed`: of its 378 mapping rows only 121 are
-# reviewed, and uploading through an unreviewed guess writes a real status
-# onto a case no test verifies.
+# This repo gates on `reviewed`: most mapping rows were auto-matched by
+# word overlap, and uploading through an unreviewed guess writes a real
+# status onto a case no test verifies.
 
 def test_the_injected_policy_is_this_repos_gate(tmp_path):
     """The shim injected THIS repo's mapping policy, not a permissive default."""

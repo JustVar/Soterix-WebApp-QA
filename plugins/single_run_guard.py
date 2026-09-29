@@ -3,12 +3,11 @@
 Stops a second test run from starting while one is already active. Two
 simultaneous runs share reports/report.html, reports/screenshots/, and
 reports/artifacts/, so the slower run silently overwrites the faster run's
-evidence. tools/run_suite.py and tools/guarded_run.py already serialize
-their runs through the lock in tools/run_lock.py; this plugin takes the
-same lock for bare `pytest` invocations, so every entry point contends on
-one lock file (logs/.run_lock_<env>.json). Because the protected artifacts
-are repo-global, the guard also refuses to start while a live run holds
-ANY other environment's lock - an ENV=stage run corrupts a qa run's
+evidence. The lock is the one in tools/run_lock.py, taken here for bare
+`pytest` invocations, so every entry point contends on one lock file
+(logs/.run_lock_<env>.json). Because the protected artifacts are
+repo-global, the guard also refuses to start while a live run holds ANY
+other environment's lock - an ENV=stage run corrupts a qa run's
 report.html just the same.
 
 A blocked run stops at session start, before any test executes, with:
@@ -31,17 +30,15 @@ backstops: a lock whose holder process is dead, or whose last sign of life
 (the heartbeat, else acquired_at) is older than the 4-hour staleness
 timeout, is cleared automatically by the next run. The sign of life is
 test progress on purpose: a live run past 4 h keeps its lock, a hung run
-does not (before 09/14/2026 nothing refreshed the lock, so a long live run
-lost it).
+does not. Without the heartbeat a long live run lost its lock.
 
 The guard stands aside - no lock taken, run proceeds - when:
   - RUN_GUARD=off (kill switch; same off values as REPORT_SCREENSHOTS);
-  - the run is --collect-only (nothing shared gets written; this is also
-    what keeps run_suite's planning pass out of the lock's way);
-  - RUN_GUARD_HELD is set (a parent such as tools/run_suite.py already
-    holds the lock and exported the marker to its pytest child);
+  - the run is --collect-only (nothing shared gets written);
+  - RUN_GUARD_HELD is set (a parent wrapper already holds the lock and
+    exported the marker to its pytest child);
   - the lock holder is this process's direct parent (same re-entrancy for
-    a wrapper that predates the marker, e.g. tools/guarded_run.py);
+    a wrapper that does not set the marker);
   - running as a pytest-xdist worker (the controller holds for the run).
 
 The guard is protection, not testing: when the guard machinery itself
@@ -81,9 +78,9 @@ _beat_state: dict | None = None
 # Kill switch: same off-values idiom as plugins/report_media.py.
 _OFF_VALUES = ('off', '0', 'false', 'no')
 
-# Exported by a parent (tools/run_suite.py) that already holds the run lock,
-# so the pytest child it launches treats that lock as its own instead of
-# aborting on it.
+# Exported by a parent wrapper that already holds the run lock, so the
+# pytest child it launches treats that lock as its own instead of aborting
+# on it.
 HELD_MARKER = 'RUN_GUARD_HELD'
 
 # decide() actions
@@ -91,27 +88,18 @@ SKIP = 'skip'
 ACQUIRE = 'acquire'
 BLOCK = 'block'
 
-# Same aliases as config.base_config.ENV_ALIAS, collapsed to the env names
-# tools/run_lock.py locks on - every spelling of an environment has to land
-# on the same lock file or two runs against one box would not contend.
-_ENV_LOCK_NAMES = {
-    'staging': 'stage',
-    'uat': 'stage',
-    'production': 'prod',
-    'demo': 'prod',
-    'user': 'prod',
-}
-
-
 def _guard_disabled(environ: Mapping[str, str]) -> bool:
     """Kill switch: RUN_GUARD=off turns the whole guard off."""
     return environ.get('RUN_GUARD', '').strip().lower() in _OFF_VALUES
 
 
 def _lock_env(environ: Mapping[str, str]) -> str:
-    """The environment name the lock file is keyed on, resolved from ENV."""
-    raw = (environ.get('ENV') or 'qa').strip().lower()
-    return _ENV_LOCK_NAMES.get(raw, raw)
+    """The environment name the lock file is keyed on: ENV as written.
+
+    The cross-env scan below treats every other lock file as a rival, so
+    two spellings of one environment still contend.
+    """
+    return (environ.get('ENV') or 'qa').strip().lower()
 
 
 def decide(existing: dict | None, *, environ: Mapping[str, str], collect_only: bool,
@@ -176,8 +164,8 @@ def cross_env_rival(env_name: str, *, environ: Mapping[str, str], own_pid: int,
 
     The artifacts the guard protects (report.html, screenshots/, artifacts/)
     are repo-global, so a stage run corrupts a qa run just the same - the
-    per-env lock keying exists for run_suite's own semantics, not because
-    the blast radius is per-env. Each foreign lock goes through the same
+    per-env lock keying names the run, it does not bound the blast
+    radius. Each foreign lock goes through the same
     decide() matrix; only a BLOCK verdict (live, non-parent holder) makes
     it a rival, so stale and dead foreign locks stand aside as usual.
     """
@@ -235,8 +223,8 @@ def _mute_html_report(config: Any) -> None:
 
     pytest-html writes its report at sessionfinish, which still runs after
     pytest.exit - so without this, being blocked would itself overwrite the
-    last real report with a 0-test shell (the same wipe class as run_suite's
-    old planning pass). Unregistering the report writer prevents the write;
+    last real report with a 0-test shell. Unregistering the report writer
+    prevents the write;
     if pytest-html's internals ever change shape, failing here only means
     the empty report gets written - never that the block is lost.
     """
@@ -315,7 +303,7 @@ def _arm_heartbeat(env_name: str, pids: set[int]) -> None:
 
 def _arm_heartbeat_for_parent(env_name: str, reason: str) -> None:
     """A run under a parent's lock keeps that lock alive for the parent:
-    the parent (run_suite, guarded_run) only waits on its child."""
+    the parent wrapper only waits on its child."""
     pids: set[int] = set()
     if HELD_MARKER in reason:
         marker = os.environ.get(HELD_MARKER, '')
@@ -335,9 +323,9 @@ def pytest_runtest_logreport(report: Any) -> None:
     if state is None:
         return
     now = time.monotonic()
-    # None, not 0: monotonic counts from boot on both platforms, and a box
-    # up for less than the interval would otherwise skip its first stamp
-    # (the CI runner did, 09/14/2026)
+    # None, not 0: monotonic counts from boot on both platforms, and a
+    # machine up for less than the interval would otherwise skip its
+    # first stamp
     if state['last'] is not None and now - state['last'] < HEARTBEAT_INTERVAL_S:
         return
     state['last'] = now

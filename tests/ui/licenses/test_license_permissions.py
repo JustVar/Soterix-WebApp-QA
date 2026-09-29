@@ -102,7 +102,7 @@ class TestLicensePermissions:
     def test_confirmation_dialogs_have_clear_messaging(self):
         """Verify the Suspend confirmation names the action and offers Cancel (device-list tripwire).
 
-        Neither box has a device-list drill-down today (test_license_assignment
+        The app has no device-list drill-down today (test_license_assignment
         module docstring); the test skips on that measured absence and runs
         the day a feature row links somewhere.
 

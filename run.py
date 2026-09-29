@@ -1,14 +1,17 @@
-#!/usr/bin/env python3
 """Run the suite from one front door.
+
+The four verbs a run needs:
 
     python run.py smoke                       # every test marked smoke
     python run.py module views                # tests/ui/views
-    python run.py module c2c                  # tests/c2c (the lab cameras, serial)
     python run.py test tests/ui/views/test_views_basic.py::TestViewsBasic::test_open_my_views
     python run.py rerun latest                # the failed tests of the newest archived run
+
+And three that read the archive:
+
     python run.py open latest                 # that run's run.html in the browser
     python run.py list                        # the last 10 archived runs
-    python run.py health                      # pass rates per product and module, tests to watch
+    python run.py health                      # pass rates per module, tests to watch,
                                               # over the newest 20 runs of each module (or: health 50)
 
 Anything after `--` goes to pytest unchanged:
@@ -16,11 +19,10 @@ Anything after `--` goes to pytest unchanged:
     python run.py module views -- --headed -s
 
 Each run prints the pytest command it starts and, at the end, the run's
-run.html and the archive index (reports/runs/). `--check` runs
-tools/pre_run_check.py against the target environment first.
-`--retry-streams` reruns once, and only, a test that failed on the
-tenant's stream-failure message. One run at a time:
-plugins/single_run_guard.py refuses a second one.
+run.html and the archive index (reports/runs/). `--check` first asks
+tools/pre_run_check.py whether the QA server answers. `--retry-streams`
+reruns once, and only, a test that failed on the server's stream-failure
+message. One run at a time: plugins/single_run_guard.py refuses a second one.
 """
 from __future__ import annotations
 
@@ -34,7 +36,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from config.products import PRODUCT_ROOTS  # noqa: E402
 from plugins.paths import long_root_warning  # noqa: E402
 from plugins.run_archive import RUN_DIR_RE, RUNS_DIR  # noqa: E402
 from plugins.run_report import (  # noqa: E402
@@ -46,15 +47,12 @@ from plugins.run_report import (  # noqa: E402
 
 PYTEST = [sys.executable, '-m', 'pytest']
 MODULES_DIR = Path('tests') / 'ui'
-# `module c2c` runs the Camera 2 Cloud tests, a product root of their own
-# (config/products.py) rather than a folder under tests/ui.
-PRODUCT_DIRS = {Path(p.rstrip('/')).name: Path(p.rstrip('/')) for p in PRODUCT_ROOTS if p != 'tests/ui/'}
 LIST_MAX = 10
 NEEDS_TARGET = ('module', 'test')
-# The one rerun the suite allows, and only on request: the tenant's
+# The one rerun the suite allows, and only on request: the server's
 # live stream fails intermittently with 'The camera failed to load',
 # and that message class is the whole match. Never the default, never
-# broadened - a wider match hides a broken wait or a tenant that
+# broadened. A wider match hides a broken wait or a server that
 # needs a fix (house rule: fix first).
 STREAM_RERUN_ARGS = ['--reruns', '1', '--only-rerun', 'failed to load']
 
@@ -99,9 +97,9 @@ def _pytest_target(args: argparse.Namespace) -> list[str]:
     if args.verb == 'smoke':
         return ['-m', 'smoke']
     if args.verb == 'module':
-        folder = PRODUCT_DIRS.get(args.target, MODULES_DIR / args.target)
+        folder = MODULES_DIR / args.target
         if not folder.is_dir():
-            names = ', '.join(sorted({p.name for p in MODULES_DIR.iterdir() if p.is_dir()} | set(PRODUCT_DIRS)))
+            names = ', '.join(sorted(p.name for p in MODULES_DIR.iterdir() if p.is_dir()))
             sys.exit(f'No module folder at {folder}. Modules: {names}')
         return [folder.as_posix()]
     if args.verb == 'test':
@@ -119,11 +117,9 @@ def _pretty(cmd: list[str]) -> str:
 
 
 def _check() -> None:
-    """The reachability gate. QA Touch and QA Ops Hub stay out: both are
-    optional integrations a test run does not need."""
+    """The reachability gate: does the QA server answer before a run starts."""
     env = (os.environ.get('ENV') or 'qa').strip().lower()
-    cmd = [sys.executable, str(ROOT / 'tools' / 'pre_run_check.py'), '--env', env,
-           '--skip-qatouch', '--skip-qa-ops']
+    cmd = [sys.executable, str(ROOT / 'tools' / 'pre_run_check.py'), '--env', env]
     if subprocess.run(cmd, cwd=ROOT).returncode != 0:
         sys.exit('The pre-run check failed. Fix what it reports, then run again.')
 
@@ -143,7 +139,7 @@ def _run(target: list[str], extra: list[str], check: bool,
         _check()
     cmd = build_command(target, extra, retry_streams)
     if retry_streams:
-        print('Retry policy: a test that failed on "failed to load" (the tenant '
+        print('Retry policy: a test that failed on "failed to load" (the server '
               'stream failure) reruns once. No other failure reruns.')
     # flush: when stdout is a pipe, pytest's output would otherwise land first
     print(f'Command: {_pretty(cmd)}\n', flush=True)
@@ -213,9 +209,9 @@ def main(argv: list[str] | None = None) -> int:
                         help='module name, test node id or path, a run folder (default latest), '
                              'or for health the runs per module (default 20)')
     parser.add_argument('--check', action='store_true',
-                        help='run tools/pre_run_check.py against the target environment first')
+                        help='ask tools/pre_run_check.py whether the QA server answers first')
     parser.add_argument('--retry-streams', action='store_true',
-                        help='rerun once a test that failed on the tenant stream-failure '
+                        help='rerun once a test that failed on the server stream-failure '
                              'message ("failed to load"); no other failure reruns')
     args = parser.parse_args(argv)
     if args.verb in NEEDS_TARGET and not args.target:

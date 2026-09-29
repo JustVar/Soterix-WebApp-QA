@@ -27,7 +27,7 @@ from tests.shared.pages.insights_page import InsightsPage
 
 # One worker for every module that writes this account's dashboards and widgets: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_insights")
 
 # The shared tenant renames sites, so the name lives in config

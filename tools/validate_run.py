@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Post-run result validator - compare local results vs QA Touch.
 
 After a test run with QA Touch upload, this verifies that what QA Touch

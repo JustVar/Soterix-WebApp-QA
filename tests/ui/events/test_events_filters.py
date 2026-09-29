@@ -10,7 +10,7 @@ from config.base_config import config
 from tests.shared.helpers.shown_name import shown_as
 from tests.shared.pages.events_page import EventsPage
 
-# One search job per account and no cancel (register row 100): every
+# The app runs one search job per account and offers no cancel: every
 # searching module shares this xdist group so --dist loadgroup runs them
 # on one worker, and tests/shared/helpers/search_gap.py spaces the searches.
 pytestmark = pytest.mark.xdist_group("account_search")
@@ -116,7 +116,7 @@ class TestEventsFilters:
         rules = self.events.get_rule_options()
         # "All Rules" is always offered, so seeing it proves the dropdown
         # loaded; without that proof an empty read and a broken dropdown
-        # skipped alike (register item 25).
+        # skipped alike.
         assert "All Rules" in rules, (
             f"The Events rule dropdown did not load: it offers {rules}, "
             f"which does not include the standing 'All Rules' entry"

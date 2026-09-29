@@ -2,14 +2,14 @@
 site, feature rows under an expanded site, the site switch), the
 Assign New License panel, and the device-list tripwires.
 
-Measured on both boxes 09/11/2026: a site row reads
+Measured on the app: a site row reads
 "1 | <site> | All Licenses | 18/74 | Enabled" and its expanded feature
 rows "1 | <feature> | 1 / 6 | <issued> | <expires> | <key> | Enabled";
-the site's a/b is the sum of its features' a/b. Neither box has a
+the site's a/b is the sum of its features' a/b. The app has no
 device-list drill-down: no cell in the Assigned table is a link and
 clicking one only toggles the expansion. The device-list tests stay as
-tripwires (register item 25): they skip on that measured absence and run
-the day a feature row links somewhere.
+tripwires: they skip on that measured absence and run the day a
+feature row links somewhere.
 """
 import pytest
 from playwright.sync_api import expect
@@ -18,7 +18,7 @@ from tests.shared.helpers.surface import require_items
 from tests.shared.pages.license_page import LicensePage
 
 NO_DRILL_DOWN = ("this build's Assigned table has no device-list drill-down: no cell "
-                 "of a feature row is a link (probed on both boxes 09/11/2026)")
+                 "of a feature row is a link")
 
 
 class TestLicenseAssignedTab:
@@ -41,7 +41,7 @@ class TestLicenseAssignedTab:
         The Assigned TAB is the surface, not the table: a tenant with
         no assigned licence renders an empty state and no table rows,
         and a row-level container would turn that data fact into a
-        failure (register item 25).
+        failure.
         """
         require_items(
             self.license.site_expand_icons,
@@ -206,7 +206,7 @@ class TestLicenseAssignedTab:
 class TestLicenseDeviceList:
     """Tripwires for a device list under a feature licence.
 
-    Neither box renders one today (module docstring): every test here
+    The app renders none today (module docstring): every test here
     skips on that measured absence and runs the day a feature row links
     somewhere. The oracles are written for that day.
     """

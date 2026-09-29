@@ -6,7 +6,7 @@ from tests.shared.helpers.surface import require_items
 
 # One worker for every module that writes this account's rules and their mute state: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_rules")
 
 
@@ -105,7 +105,7 @@ class TestNotifications:
         # The mute icons are the artifact and the rules list is the
         # surface that proves the page is up. A list with no rule is the
         # tenant's data; a list that never rendered is a fault, and the
-        # old count()==0 read told them apart not at all (item 25).
+        # old count()==0 read told them apart not at all.
         # The rule-owning coverage of mute lives in
         # test_admin_rules.test_mute_rule_notification, which makes its
         # own rule; this test stays on whatever the tenant holds.

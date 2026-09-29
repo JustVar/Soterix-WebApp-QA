@@ -28,7 +28,7 @@ from tests.shared.pages.views_page import ViewsPage
 
 # One worker for every module that writes this account's saved views, tabs, bookmarks and favourites: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_views")
 
 # The shared tenant renames sites, so the name lives in config
@@ -316,8 +316,7 @@ class TestViewsSubtabs:
         health = self.views.content_health_snapshot()
         # The drag is the behaviour under test. It used to run under a
         # handler that skipped on any exception, and a drop that landed
-        # nothing skipped too, so this test had no failing path at all
-        # (register item 25).
+        # nothing skipped too, so this test had no failing path at all.
         self._visible_drag(saved_view, target_tile)
 
         # Give the drop a bounded window to land as either a tile or a tab
@@ -356,7 +355,7 @@ class TestViewsSubtabs:
 
         # Open Maps and expand the CONFIGURED site: click_site(None)
         # picked whichever row its heuristic reached first, so the skip
-        # below named a site the test had never chosen (item 25).
+        # below named a site the test had never chosen.
         self.views.open_maps()
         self.views.click_site(SITE_NAME)
 
@@ -502,8 +501,7 @@ class TestViewsSubtabs:
         assert initial_tiles > 0, "No empty tiles available"
 
         # Widgets are user-created, so this test creates its own rather
-        # than skipping on an empty panel or borrowing a teammate's
-        # (register items 25 and 27).
+        # than skipping on an empty panel or borrowing a teammate's.
         self._own_a_widget()
 
         # Click Insights subtab (top bar within Views, not left nav)
@@ -572,8 +570,7 @@ class TestViewsSubtabs:
 
         assert initial_tiles > 0, "No empty tiles available even after adding new tab"
 
-        # Widgets are user-created, so this test creates its own
-        # (register items 25 and 27).
+        # Widgets are user-created, so this test creates its own.
         self._own_a_widget()
 
         # Click Insights subtab (top bar within Views, not left nav)
@@ -606,7 +603,7 @@ class TestViewsSubtabs:
         """Map thumbnails under the configured site, proved or explained.
 
         An empty Maps panel is the tenant's data and skips; a panel that
-        never rendered is a fault and fails (register item 25).
+        never rendered is a fault and fails.
         """
         thumbs = self.page.locator(".cameraThumbnailWrapper")
         require_items(
@@ -638,7 +635,7 @@ class TestViewsSubtabs:
         Widgets are user-created, so the panel is empty on a clean
         tenant and these tests skipped every run; on a busy one they
         dragged a teammate's widget. Making one is the same fix the LPR
-        lists got (register items 25 and 27). Line/Person is the
+        lists got. Line/Person is the
         cheapest shape the creation form offers.
         """
         name = self.insights.create_widget(
@@ -656,7 +653,7 @@ class TestViewsSubtabs:
 
         _own_a_widget ran first, so an empty panel here means the widget
         did not reach the Views subtab, which is a fault - not the
-        absent artifact the old skip reported (register item 25).
+        absent artifact the old skip reported.
         """
         card = self._find_insight_widget()
         assert card is not None, (

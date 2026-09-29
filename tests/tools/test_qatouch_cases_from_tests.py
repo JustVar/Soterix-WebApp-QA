@@ -469,16 +469,6 @@ def test_weak_mappings_lists_a_test_whose_title_is_not_its_case():
     assert rows[0]["key"] == "K1"
 
 
-def test_c2c_stays_one_acronym_in_class_names():
-    """'C2C' is one word: the camera suite's classes start with it, and the
-    CamelCase split alone read TestC2CVCA as 'C2 Cvca' (09/11/2026)."""
-    assert gen._words('C2CAdditionalSettings') == ['C2C', 'Additional', 'Settings']
-    assert gen._words('C2CVCA') == ['C2C', 'VCA']
-    assert gen._words('C2COSD') == ['C2C', 'OSD']
-    nodeid = 'tests/c2c/test_c2c_camera.py::TestC2CAdditionalSettings::test_corridor_mode_options'
-    assert gen.module_name(nodeid, classes_in_file=4) == 'C2C > Camera > Additional Settings'
-
-
 def test_after_import_for_another_project_adds_the_key_beside_the_home_rows(synthetic, tmp_path, monkeypatch):
     """--project P0BK on a Core test with home rows: the Neurosen key lands under
     case_keys on those rows; nothing is deleted and the Core key stays."""

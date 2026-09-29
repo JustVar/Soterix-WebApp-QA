@@ -51,10 +51,10 @@ class SequencePage:
         )
 
         # Rows of the Views sidebar. They are the SITES until the Sequences section is open
-        # (measured 09/21/2026 on india: 17 rows before, 64 with the section open). A saved
-        # sequence is a row with span[title="<its name>"], and its 3-dot menu has Edit and
-        # Delete. Until that day this locator was read as "the sequence list", so the cleanup
-        # never found a sequence and 55 of them piled up on india from 08/08.
+        # (measured: 17 rows before, 64 with the section open). A saved sequence is a row
+        # with span[title="<its name>"], and its 3-dot menu has Edit and Delete. Before that
+        # measurement this locator was read as "the sequence list", so the cleanup never
+        # found a sequence and 55 of them piled up on the tenant.
         self.sidebar_items = page.locator(
             "div.MuiListItemButton-root.sidebarlist-item-button"
         )
@@ -193,8 +193,8 @@ class SequencePage:
             except PlaywrightError:
                 self.page.evaluate("document.querySelector('button.modalSaveBtn').click()")
 
-        # The form closes with its name input once the save lands. Until 09/21/2026 a
-        # form that stayed open only printed a line: a forced click on a disabled Save
+        # The form closes with its name input once the save lands. An earlier version let a
+        # form that stayed open only print a line: a forced click on a disabled Save
         # raises nothing, and the 2 tests that end here passed with nothing saved.
         if not self._appears_hidden(self.sequence_name_input, timeout=15000):
             raise AssertionError(
@@ -233,8 +233,7 @@ class SequencePage:
         """Show the saved sequences: the Sequences section of the Views sidebar.
 
         False when the sidebar has no Sequences section: the app shows the section only
-        while the tenant has a sequence (measured 09/21/2026 on india and us, after the
-        last one was deleted).
+        while the tenant has a sequence (measured after the last one was deleted).
 
         The section is a toggle with no state attribute. The row count says which way the
         click went: opening adds rows, and a click that removed rows closed an open section,
@@ -263,7 +262,7 @@ class SequencePage:
 
         By name, never by position. The cleanup used a method that removed whatever was last
         in the sidebar: a sequence of a different person on the shared tenant when this test's
-        own create had failed (found 09/21/2026). The proof is the count of items with this
+        own create had failed. The proof is the count of items with this
         name: it must go down by 1. Waiting for "the first item" to hide cannot tell a delete
         from a second item with the same name taking its place.
         """

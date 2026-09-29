@@ -1,11 +1,9 @@
 """Pins for tools/tenant_cleanup.py.
 
-This tool deletes. It read QA_USER directly, so `BOX=us ... --apply`
-logged into India and would have deleted from the wrong tenant
-(register item 30; item 23 was the same defect in explore_app.py).
-These pin the account choice, because the failure is silent - a run
-against the wrong tenant looks exactly like a run against the right
-one until the data is gone.
+This tool deletes. The account choice is pinned because the failure is
+silent: a run against the wrong tenant looks exactly like a run against
+the right one until the data is gone. So the tool reads its account from
+get_credentials() and nowhere else, and stops when the pair is empty.
 """
 from __future__ import annotations
 
@@ -21,44 +19,36 @@ if str(REPO_ROOT) not in sys.path:
 from tools import tenant_cleanup as tc  # noqa: E402
 
 
-def test_the_active_box_account_wins(monkeypatch):
-    """get_credentials decides, so BOX picks the tenant."""
+def test_the_account_comes_from_get_credentials_only(monkeypatch):
+    """get_credentials decides; a QA_USER set beside it is never read directly."""
     monkeypatch.setattr(
         tc, 'get_credentials',
-        lambda: {'email': 'us-account@example.com', 'password': 'us-pw'},
+        lambda: {'email': 'the-account@example.com', 'password': 'the-pw'},
     )
-    monkeypatch.setenv('QA_USER', 'india-account@example.com')
-    monkeypatch.setenv('QA_PASSWORD', 'india-pw')
-    assert tc.active_account() == ('us-account@example.com', 'us-pw')
-
-
-def test_falls_back_to_qa_user_when_the_box_has_no_account(monkeypatch):
-    """A config with no box definitions keeps working."""
-    def _raise():
-        raise KeyError('no boxes here')
-    monkeypatch.setattr(tc, 'get_credentials', _raise)
-    monkeypatch.setenv('QA_USER', 'default@example.com')
-    monkeypatch.setenv('QA_PASSWORD', 'default-pw')
-    assert tc.active_account() == ('default@example.com', 'default-pw')
+    monkeypatch.setenv('QA_USER', 'other-account@example.com')
+    monkeypatch.setenv('QA_PASSWORD', 'other-pw')
+    assert tc.active_account() == ('the-account@example.com', 'the-pw')
 
 
 def test_no_account_at_all_exits_instead_of_guessing(monkeypatch):
-    """A destructive tool with no credentials stops; it never guesses."""
+    """A destructive tool with no credentials stops and names the keys; it never guesses."""
     monkeypatch.setattr(tc, 'get_credentials', lambda: {})
-    monkeypatch.delenv('QA_USER', raising=False)
-    monkeypatch.delenv('QA_PASSWORD', raising=False)
+    monkeypatch.setenv('QA_USER', 'someone@example.com')
+    monkeypatch.setenv('QA_PASSWORD', 'pw')
     with pytest.raises(SystemExit) as e:
         tc.active_account()
-    assert 'box' in str(e.value).lower()
+    assert 'QA_USER' in str(e.value)
+    assert 'QA_PASSWORD' in str(e.value)
 
 
-def test_an_empty_box_account_does_not_beat_the_fallback(monkeypatch):
-    """A box entry present but blank must not log in as nobody."""
-    monkeypatch.setattr(
-        tc, 'get_credentials', lambda: {'email': '', 'password': ''})
-    monkeypatch.setenv('QA_USER', 'default@example.com')
-    monkeypatch.setenv('QA_PASSWORD', 'default-pw')
-    assert tc.active_account() == ('default@example.com', 'default-pw')
+def test_an_empty_pair_does_not_log_in_as_nobody(monkeypatch):
+    """A present but blank pair stops the run the same way."""
+    monkeypatch.setattr(tc, 'get_credentials', lambda: {'email': '', 'password': ''})
+    with pytest.raises(SystemExit):
+        tc.active_account()
+    monkeypatch.setattr(tc, 'get_credentials', lambda: {'email': 'a@example.com', 'password': ''})
+    with pytest.raises(SystemExit):
+        tc.active_account()
 
 
 # ---------------------------------------------------------------- user cards
@@ -78,7 +68,7 @@ def test_card_reader_finds_the_name_below_the_first_line():
 
 def test_card_reader_ignores_a_real_user():
     """A tenant user's card is never a cleanup candidate."""
-    card = "JV\nJustin Varughese\nEnterprise Super Admin\njustin@soterixsystems.com"
+    card = "JV\nSome Person\nEnterprise Super Admin\nperson@example.com"
     assert tc.user_email_from_card(card) is None
 
 

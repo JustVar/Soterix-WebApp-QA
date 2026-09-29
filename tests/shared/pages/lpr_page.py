@@ -10,7 +10,7 @@ from tests.shared.helpers.drag import drop
 EVENT_TIME_RE = re.compile(r"\d{1,2}:\d{2}:\d{2} [AP]M")
 
 
-# What identifies each Admin > LPR page (measured on india, 09/21/2026). The
+# What identifies each Admin > LPR page (measured on the app). The
 # 4 pages share the address /admin, so the address cannot tell them apart.
 CATEGORY_HEADERS = ["Category Name", "List Type", "Quantity", "Status", "Operation"]
 PLATE_HEADERS = ["Plate Number", "Category", "Type", "Make", "Model", "Color", "Country", "Added Time", "Operation"]
@@ -174,7 +174,7 @@ class LprPage:
         """Create an LPR list and return its name.
 
         Tests that need a list should make their own rather than take
-        the first one on the tenant: the shared box is not guaranteed to
+        the first one on the tenant: the shared tenant is not guaranteed to
         hold one, and editing or deleting a borrowed list touches a real
         user's data.
         """
@@ -216,8 +216,7 @@ class LprPage:
         # Wait before deciding the row is absent: the table hydrates a
         # beat after the page settles, and an instant count() of 0 read
         # a list that WAS there as already gone, which left it on the
-        # tenant (measured 09/03/2026, and the same hydration race as
-        # register item 18).
+        # tenant (the same hydration race the LPR lists have).
         try:
             row.wait_for(state="visible", timeout=10000)
         # no row after 10 s means the list is not on the tenant, which is the
@@ -486,8 +485,8 @@ class LprPage:
         before = empty_tiles.count()
         tile.scroll_into_view_if_needed()
         # A pointer drag on every machine: the widget card does not accept drag
-        # events fired from JavaScript (measured on the box 09/21/2026: the drop
-        # landed nothing), and this drag has not hung in a nightly.
+        # events fired from JavaScript (measured: the drop landed nothing), and
+        # this drag has not hung in a run.
         card.first.drag_to(tile)
 
         # baseline comparison: the drop consumed exactly one tile. An
@@ -705,8 +704,8 @@ class LprPage:
         before = self.page.locator("video").count()
         failed_before = self.page.locator("text=failed to load").count()
         tile.scroll_into_view_if_needed()
-        # drop, not drag_to: Chrome on the box's Wayland display hangs inside
-        # some pointer drags (tests/shared/helpers/drag.py, register row 91)
+        # drop, not drag_to: headed Chrome on a Wayland display hangs inside
+        # some pointer drags (tests/shared/helpers/drag.py)
         drop(source, tile)
 
         # No loader wait: empty tiles keep placeholder spinners alive
@@ -818,7 +817,7 @@ class LprPage:
     def wait_for_site_list(self, site_name: str):
         """Wait for site list to load."""
         print(f"[LPR] Waiting for site '{site_name}' to appear")
-        # Escaped exact match (item 20): a site named with a quote broke
+        # Escaped exact match: a site named with a quote broke
         # the old quoted text= selector string. Slightly narrower than
         # that engine (audit 09/02): get_by_text needs an element whose
         # whole text is the name, where text='...' also matched a name
@@ -844,7 +843,7 @@ class LprPage:
         # here had no force and no timeout: the span never passed the
         # click checks, the click waited its default 30 s, the handler
         # printed 'not found', and the test passed because it had started
-        # on Views (measured 09/18/2026: 31 s in every nightly).
+        # on Views (measured: 31 s in every run).
         self.go_to_views_page()
         print("[LPR] Safe reset done")
 

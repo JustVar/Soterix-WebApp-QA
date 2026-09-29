@@ -1,8 +1,0 @@
-/var/log/ci-runner-prune.log {
-  su root syslog
-  weekly
-  rotate 4
-  missingok
-  notifempty
-  compress
-}

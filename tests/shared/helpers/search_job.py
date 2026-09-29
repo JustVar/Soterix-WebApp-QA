@@ -1,7 +1,7 @@
 """Watch the search job behind a Search click, and report what the server said.
 
 The Events page and the Search page (every category: Event, Vehicle, Line,
-Zone) run a search the same way, measured 09/08/2026 on the US box:
+Zone) run a search the same way, measured on the app:
 
     POST .../REST/site/search        -> {"result": [{"jobId": "...", "query": {...}}]}
     POST .../REST/site/search/event  -> {"result": [{"eventList": [...],
@@ -12,10 +12,10 @@ a 60 to 120 second ceiling, so three different facts all read as
 "Locator.wait_for: Timeout exceeded":
 
 - the click sent no job: the app re-runs a search only after a filter
-  changes (docs/TEST_REPAIRS.md > Known app behavior);
+  changes;
 - the job reached 100% with nothing in it: the tenant holds no such data
   for those parameters, and the page says "We couldn't find any data"
-  (24 of the 49 failures on 09/04/2026 were this, on a box with no events);
+  (24 of 49 failures in one run were this, on a tenant with no events);
 - the job never finished: the server-side search hung.
 
 `watch_search` returns the moment the server has answered, whichever of
@@ -239,8 +239,7 @@ def require_finished(job: SearchJob, *, surface: str) -> bool:
 def _fault_hint(job: SearchJob) -> str:
     if job.outcome == "no_request":
         return ("The click sent no search job: the app re-runs a search only after "
-                "a filter changes, so re-apply the filters or start from a fresh view "
-                "(TEST_REPAIRS.md > Known app behavior).")
+                "a filter changes, so re-apply the filters or start from a fresh view.")
     if job.outcome == "incomplete":
         return "The server never reported the job complete: the search hung or the polls stopped."
     if job.outcome == "fault":

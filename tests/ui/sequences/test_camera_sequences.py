@@ -24,7 +24,7 @@ from tests.shared.pages.views_page import ViewsPage
 
 # One worker for every module that writes this account's notification mute state (it mutes notifications first) and sequences: under
 # -n they would otherwise spread across workers and race on the same
-# tenant state (pytest.ini --dist loadgroup; audit 09/17/2026, row 86).
+# tenant state (pytest.ini --dist loadgroup).
 pytestmark = pytest.mark.xdist_group("account_rules")
 
 
@@ -182,7 +182,7 @@ class TestCameraSequences:
         2. On Views, open the Sequences section of the left sidebar.
            Expected: The section lists the new sequence by its name, 1 time.
         """
-        # Until 09/21/2026 this test counted the rows of the sidebar, which are the sites,
+        # An earlier version of this test counted the rows of the sidebar, which are the sites,
         # and called them sequences. It passed with no sequence on the tenant.
         self._navigate_and_verify()
         self.seq.select_all_cameras()

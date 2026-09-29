@@ -1,127 +1,47 @@
-# Ignore virtual environments
+# Interpreter and caches
 venv/
-
-# Ignore Python cache
 __pycache__/
 *.py[cod]
+.pytest_cache/
+nodeids
 
-# Ignore environment files
+# Secrets and per-machine state (never commit)
 .env
 .env.*
 !/.env.template
-
-# Ignore VS Code settings
-.vscode/
-
-# Ignore logs and reports
-*.log
-*.html
-# Dashboard generator moved to dashboards/soterix-internal-dashboards/ repo
-report/
-report.html
-
-# Ignore OS junk
-.DS_Store
-Thumbs.db
-
-# Ignore cached session token used by tests
-.session_cache
-
-# Ignore debug artifacts
-*.png
-!assets/branding/*.png
-*.har
-logs/
-tools/debug_screenshots/
-
-# Playwright auth cache
 .playwright_auth.json
 .auth_state.json
 .auth_state.*.json
-# Pytest cache
-nodeids
-.pytest_cache/
+.session_cache
 
-# Bugasura extraction artifacts (local only)
-BUGASURA_EXTRACTION_GUIDE.md
-BUGASURA_STARTUP_PROMPT.md
-docs/BUGASURA_EXTRACTION_STARTUP.md
+# Run output
+logs/
+reports/
+report/
+*.log
+*.html
+*.png
+!assets/branding/*.png
+*.har
+tools/debug_screenshots/
+verification_output/
+config/verification_status.json
+config/audit_reports/
+
+# Maintainer-local notes and reference material (not part of the shared repo)
+docs/local/
+docs/*.xlsx
+docs/*.csv
+docs/~$*
+tests/data/
+legacy-selenium-tests/
 batch_scripts/
 extraction_progress.json
-
-# QA Touch local-only files
-docs/QA_Touch_Setup_Guide.md
-docs/QA_TOUCH_COMPARISON_GUIDE.md
-
-# Session tracking files (personal/local only)
-docs/SESSION_SUMMARY_*.md
-docs/SESSION_CONTINUE.md
-docs/PROJECT_HOURS_LOG.md
-docs/templates/
-
-# Test data files (large, not automation code).
-# Ignore the CONTENTS rather than the directory itself: git will not consult a
-# negation for a file whose parent directory is excluded, so "tests/data/"
-# would make the exception below unreachable.
-tests/data/*
-# The C2C camera registry is small generated configuration that drives test
-# parametrisation, not bulk data. Without it the C2C suite silently falls back
-# to a single hard-coded camera, so it has to ship with the repo.
-!tests/data/c2c_cameras.yaml
-# The per-model record the C2C tests assert from; without it the conftest
-# stops the run by name (the box run of 09/12/2026 did, on a clone that
-# had the registry but not this file).
-!tests/data/c2c_models.yaml
-# The camera pool a run rotates over, one file per box. Same reason as the two
-# above: small generated configuration that decides what the tests drive, not
-# bulk data. Without it every box silently falls back to its one configured
-# camera, which is a working rotation doing nothing, and CI cannot check the
-# pool it rotates over (the gate caught exactly that on 09/23/2026).
-!tests/data/camera_pool_*.json
 testcases_export.json
 
-# Generated tool output artifacts
-tools/.qatouch_auth_state.json
-tools/review_queue.json
-tools/*.csv
-tools/sanity_tagging_checklist.txt
-
-# Excel/CSV reference files (large binaries, not automation code)
-docs/*.xlsx
-docs/~$*
-docs/*.csv
-
-# Test run output
-full_suite_results.txt
-
-# Legacy Selenium test suite (migration ~99% complete, kept as local reference)
-legacy-selenium-tests/
-
-# Windows artifacts
-nul
-
-# Generated test reports
-reports/
-
-# Local credentials and per-machine state (never commit)
-tools/.qatouch_creds.json
-tools/.partner_admin_backfill.json
-tools/archive/.ota_*.json
-config/verification_status.json
-
-# Point-in-time UI audit snapshots (kept in backups, not in git)
-config/audit_reports/
-
-# Per-developer editor/tool configs (never committed)
+# Editors and OS
+.vscode/
 .cursor/
-
-# Maintainer-local working notes (not part of the shared repo)
-docs/local/
-
-# Generated audit output (contains captured account data)
-config/audit_reports/
-# QA Touch snapshots are deliberately NOT ignored: they are the only backup
-# of the authored step content. They carry work email addresses in the
-# per-case author fields, which is accepted because both repos are private.
-tools/audit_reports/
-verification_output/
+.DS_Store
+Thumbs.db
+nul
