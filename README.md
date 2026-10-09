@@ -1,5 +1,40 @@
 # Soterix WebApp QA
 
+## About this repo
+
+Browser test automation for NexaiQ-Core, the web app of Soterix Systems, an
+AI video-surveillance SaaS startup. Built by Justin Varughese (QA Lead) from
+July 2025 to September 2026. Soterix has since closed. The QA server is gone,
+so only the offline suites can run, and CI, which ran on the company's copies
+of these repos, is switched off here.
+
+- 402 Playwright and pytest tests across 13 product areas. Each one is mapped
+  to its manual test case in QA Touch.
+- 475 tests of the framework itself: the plugins, the gates and the tools.
+- Where to start:
+  - The stream guard ([conftest.py](conftest.py)), which measures whether
+    this browser can decode the server's H.265 video before any live-video
+    test runs.
+  - The convention checker
+    ([tools/convention_check.py](tools/convention_check.py)), where every
+    rule came from a defect found in review.
+  - The case generator
+    ([tools/qatouch_cases_from_tests.py](tools/qatouch_cases_from_tests.py)),
+    which builds QA Touch cases from the steps written in each test.
+- Built with AI coding agents (Claude Code, OpenAI Codex, Microsoft 365
+  Copilot) under the rules in [AGENTS.md](AGENTS.md). Pre-commit hooks
+  enforce those rules.
+- To see it run: follow "Day one" steps 1 to 3 below, then run
+  `venv\Scripts\python.exe -m pytest tests/plugins tests/tools tests/helpers`
+  (`venv/bin/python` on Mac or Linux).
+- The case study that covers all three repos:
+  [qa-automation-case-study](https://github.com/JustVar/qa-automation-case-study).
+- The two sibling repos:
+  [Soterix-API-QA](https://github.com/JustVar/Soterix-API-QA) and
+  [SOTERIX-QA-SHARED](https://github.com/JustVar/SOTERIX-QA-SHARED).
+
+## What this repo does
+
 This repo holds the browser tests of the Soterix web application, NexaiQ-Core,
 against one QA server. A test does what a user does in Google Chrome, and a
 report page shows what failed and why.
