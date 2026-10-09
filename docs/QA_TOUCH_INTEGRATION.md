@@ -76,9 +76,11 @@ rows. `python tools/generate_step_stubs.py --from-docstrings <file>`
 refreshes the JSON step sidecars under `tests/steps/ui/<module>/` from the
 same docstrings and keeps each case key.
 
-`config/qatouch_snapshots/` holds the JSON snapshots of the cases, the
-backup of the authored steps. `--after-import` and `--dead-keys` read the
-newest snapshot, or the file you pass with `--cases`. The tool that took a
+`config/qatouch_snapshots/` holds the newest JSON snapshot of the cases
+for each project, the backup of the authored steps. `--after-import`,
+`--dead-keys` and `tools/qatouch_mapping_audit.py` read the newest
+snapshot, or the file you pass with `--cases`. The older snapshots are
+under the git tag `pre-pivot` (docs/ARCHIVE.md). The tool that took a
 snapshot left the main branch (docs/ARCHIVE.md). A snapshot is a JSON list
 of cases as `getAllTestCases` returns them.
 
