@@ -3,7 +3,7 @@
 ## About this repo
 
 Browser test automation for NexaiQ-Core, the web app of Soterix Systems, an
-AI video-surveillance SaaS startup. Built by Justin Varughese (QA Lead) from
+AI video-surveillance SaaS startup. Built by Justin Varughese (System Platform QA/QC Manager) from
 July 2025 to September 2026. Soterix has since closed. The QA server is gone,
 so only the offline suites can run, and CI, which ran on the company's copies
 of these repos, is switched off here.
