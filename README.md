@@ -3,16 +3,16 @@
 ## About this repo
 
 Browser test automation for NexaiQ-Core, the web app of Soterix Systems, an
-AI video-surveillance SaaS startup. Built by Justin Varughese (System Platform QA/QC Manager) from
-July 2025 to September 2026. Soterix has since closed. The QA server is gone,
-so only the offline suites can run, and CI, which ran on the company's copies
-of these repos, is switched off here.
+AI video-surveillance SaaS company. Built by Justin Varughese, System Platform
+QA/QC Manager.
 
 - 402 Playwright and pytest tests across 13 product areas. Each one is mapped
   to its manual test case in QA Touch.
 - 475 tests of the framework itself: the plugins, the gates and the tools.
 - Where to start:
-  - The stream guard ([conftest.py](conftest.py)), which measures whether
+  - The stream guard
+    ([tests/shared/helpers/stream_health.py](tests/shared/helpers/stream_health.py)),
+    which measures whether
     this browser can decode the server's H.265 video before any live-video
     test runs.
   - The convention checker
@@ -32,6 +32,10 @@ of these repos, is switched off here.
 - The two sibling repos:
   [Soterix-API-QA](https://github.com/JustVar/Soterix-API-QA) and
   [SOTERIX-QA-SHARED](https://github.com/JustVar/SOTERIX-QA-SHARED).
+- Running it today: Soterix has since closed and its QA server is gone, so
+  the browser tests have nothing to run against. The offline suites above
+  still run on any machine. CI ran on the company's copies of these repos and
+  is switched off here.
 
 ## What this repo does
 
