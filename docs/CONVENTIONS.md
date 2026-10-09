@@ -422,6 +422,13 @@ Defined in `pytest.ini`. The main groups:
 
 Run examples: `pytest -m smoke`, `pytest -m "admin and not slow"`.
 
+The smoke set is 1 or 2 read-only tests per module: the tests whose QA
+Touch case carries the smoke tag, and the test that opens each other
+module. A smoke test carries no `livestream`, `slow`, `intermittent` or
+write marker, because a smoke run must give an answer on any machine and
+change nothing. `tests/plugins/test_smoke_set.py` fails when the set is
+empty or breaks this rule.
+
 ## QA Touch mapping
 
 Nothing uploads unless you pass `--qatouch-upload --qatouch-run <key>`.

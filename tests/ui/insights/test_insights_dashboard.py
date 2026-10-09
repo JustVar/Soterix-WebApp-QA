@@ -74,6 +74,7 @@ class TestInsightsDashboard:
     @pytest.mark.ui
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
+    @pytest.mark.smoke
     def test_dashboard_landing_loads(self):
         """Verify the Insights dashboard landing page loads successfully.
 
@@ -105,6 +106,7 @@ class TestInsightsDashboard:
     @pytest.mark.ui
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
+    @pytest.mark.smoke
     def test_preset_dashboard_section_visible(self):
         """Verify the landing shows its sections and the preset entry.
 
@@ -142,6 +144,7 @@ class TestInsightsDashboard:
     @pytest.mark.ui
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
+    @pytest.mark.smoke
     def test_preset_dashboard_view_all(self):
         """Verify the View All controls on the landing.
 
@@ -171,6 +174,7 @@ class TestInsightsDashboard:
     @pytest.mark.ui
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
+    @pytest.mark.smoke
     def test_my_dashboard_section_visible(self):
         """Verify the My Dashboard section on the landing.
 
@@ -195,6 +199,7 @@ class TestInsightsDashboard:
     @pytest.mark.ui
     @pytest.mark.insights
     @pytest.mark.insights_dashboard
+    @pytest.mark.smoke
     def test_my_dashboard_view_all(self):
         """Verify View All keeps the user on the landing when there is nothing more to list.
 

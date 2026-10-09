@@ -216,6 +216,7 @@ class TestViewsBasic:
 
     @pytest.mark.ui
     @pytest.mark.views_myviews
+    @pytest.mark.smoke
     def test_open_my_views(self):
         """Verify the My Views panel opens.
 

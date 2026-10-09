@@ -71,6 +71,7 @@ class TestSearchCategories:
 
     @pytest.mark.ui
     @pytest.mark.search
+    @pytest.mark.smoke
     def test_person_search_results_valid(self):
         """Verify Person search results contain valid images.
 

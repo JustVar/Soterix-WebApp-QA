@@ -38,6 +38,7 @@ class TestEventsFilters:
     @pytest.mark.ui
     @pytest.mark.events
     @pytest.mark.events_filters
+    @pytest.mark.smoke
     def test_site_dropdown_lists_available_sites(self):
         """Verify site dropdown shows at least one selectable site."""
         sites = self.events.get_site_options()

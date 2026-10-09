@@ -135,6 +135,7 @@ class TestEventWallConfig:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.event_wall
+    @pytest.mark.smoke
     def test_event_wall_page_loads(self):
         """The Event Wall page shows its breadcrumb and Add button.
 

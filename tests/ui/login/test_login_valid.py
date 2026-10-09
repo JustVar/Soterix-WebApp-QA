@@ -9,6 +9,7 @@ LOGIN_URL_RE = re.compile(r"/auth/login")
 
 
 @pytest.mark.ui
+@pytest.mark.smoke
 def test_valid_credentials(page, base_url, login_data):
     """Valid credentials log the user in."""
     lp = LoginPage(page, base_url)

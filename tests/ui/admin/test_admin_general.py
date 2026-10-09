@@ -42,6 +42,7 @@ class TestAdminGeneral:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_general
+    @pytest.mark.smoke
     def test_admin_sidebar_tabs_visible(self):
         """Verify the admin header lists its tabs in order.
 

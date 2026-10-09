@@ -142,6 +142,7 @@ class TestChats:
 
     @pytest.mark.ui
     @pytest.mark.chats
+    @pytest.mark.smoke
     def test_open_chat_panel(self):
         """The panel opens from the header icon; the visible panel
         search input is the open marker."""

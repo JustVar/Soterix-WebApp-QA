@@ -49,6 +49,7 @@ class TestMaps:
 
     @pytest.mark.ui
     @pytest.mark.maps
+    @pytest.mark.smoke
     def test_navigate_to_maps(self):
         """Verify the Maps page loads with the site dropdown visible.
 

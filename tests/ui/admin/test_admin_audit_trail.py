@@ -145,6 +145,7 @@ class TestAdminAuditTrail:
     @pytest.mark.ui
     @pytest.mark.admin
     @pytest.mark.admin_audit_trail
+    @pytest.mark.smoke
     def test_audit_trail_has_records(self):
         """The audit trail lists at least one record.
 

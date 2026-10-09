@@ -36,6 +36,7 @@ class TestNotifications:
 
     @pytest.mark.ui
     @pytest.mark.notifications
+    @pytest.mark.smoke
     def test_open_notification_panel(self):
         """Verify clicking the notification bell opens the notification panel."""
         self.header_icons.first.wait_for(state="visible", timeout=10000)

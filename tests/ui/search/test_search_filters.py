@@ -44,6 +44,7 @@ class TestSearchFilters:
 
     @pytest.mark.ui
     @pytest.mark.search
+    @pytest.mark.smoke
     def test_search_page_filters_visible(self):
         """Verify all filter dropdowns are present on the Search page.
 

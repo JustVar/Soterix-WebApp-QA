@@ -51,6 +51,7 @@ class TestMediaNavigation:
 
     @pytest.mark.ui
     @pytest.mark.media
+    @pytest.mark.smoke
     def test_navigate_to_media_page(self):
         """Verify navigation to the Media page via the sidebar.
 

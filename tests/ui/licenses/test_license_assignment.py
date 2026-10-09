@@ -238,6 +238,7 @@ class TestLicenseDeviceList:
 
     @pytest.mark.ui
     @pytest.mark.licenses
+    @pytest.mark.smoke
     def test_device_list_loads(self):
         """Verify a feature licence opens its device list with a breadcrumb and device rows.
 
