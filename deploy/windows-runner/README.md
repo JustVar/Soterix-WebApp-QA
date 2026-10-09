@@ -18,7 +18,7 @@ the task when the team wants a daily run.
 - The clone (any path: pass `-Repo` to both scripts) with a venv:
 
   ```powershell
-  git clone https://github.com/Soterix-Systems/Soterix-WebApp-QA.git C:\qa\Soterix-WebApp-QA
+  git clone https://github.com/JustVar/Soterix-WebApp-QA.git C:\qa\Soterix-WebApp-QA
   cd C:\qa\Soterix-WebApp-QA
   python -m venv venv
   venv\Scripts\python.exe -m pip install -r requirements.txt

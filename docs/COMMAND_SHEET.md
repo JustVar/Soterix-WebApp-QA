@@ -37,7 +37,7 @@ A version number from each command means the setup is ready.
 The full walkthrough is "Day one" in the README. The commands:
 
 ```
-git clone https://github.com/Soterix-Systems/Soterix-WebApp-QA.git C:\qa\Soterix-WebApp-QA
+git clone https://github.com/JustVar/Soterix-WebApp-QA.git C:\qa\Soterix-WebApp-QA
 cd C:\qa\Soterix-WebApp-QA
 python -m venv venv
 venv\Scripts\python.exe -m pip install -r requirements.txt

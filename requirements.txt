@@ -42,7 +42,7 @@ ruff==0.16.5
 #
 # CHANGING THE PACKAGE: clone it beside this repo and install it editable,
 # which overrides the pin until you reinstall:
-#     git clone https://github.com/Soterix-Systems/SOTERIX-QA-SHARED.git ../soterix-qa-shared
+#     git clone https://github.com/JustVar/SOTERIX-QA-SHARED.git ../soterix-qa-shared
 #     pip install -e ../soterix-qa-shared
 --find-links vendor
 soterix-qa-shared==0.38.0
