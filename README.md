@@ -50,8 +50,8 @@ The API tests live in a different repo, Soterix-API-QA.
 
 1. The tests are Python. Playwright drives Google Chrome, and pytest runs
    the tests.
-2. Page objects in `tests/shared/pages/` hold the locators. When the app
-   changes, you correct 1 file.
+2. Page objects in `tests/shared/pages/` hold the locators that several
+   tests share, so a change to a shared screen is corrected in 1 file.
 3. One file, `config/env/qa.py`, names the server, the test site and the
    test camera. One file, `.env`, holds the account. No test names any of
    them.
@@ -64,6 +64,10 @@ The API tests live in a different repo, Soterix-API-QA.
 
 You need read access to this repo and 1 account on the QA server. Nothing
 else.
+
+The commands below are for Windows PowerShell. On Mac or Linux, clone to
+any short path, use `venv/bin/python` wherever a command says
+`venv\Scripts\python.exe`, and use `cp` instead of `copy`.
 
 1. Install Python 3.14 and Google Chrome. The tests drive the Chrome on
    your machine (`--browser-channel chrome` in `pytest.ini`). Playwright's

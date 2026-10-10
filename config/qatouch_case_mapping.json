@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project_key": "JlW1",
-  "total_playwright_tests": 319,
+  "total_playwright_tests": 402,
   "total_mapped": 432,
   "mappings": {
     "tests/ui/admin/test_admin_general.py::TestAdminGeneral::test_admin_sidebar_tabs_visible[chromium]": {
