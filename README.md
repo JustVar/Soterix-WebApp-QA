@@ -219,8 +219,8 @@ the QA server. The repo files no Jira bug and sends no email.
 
 ## Where things went
 
-Everything that served the old setup left the main branch under the git
-tag `pre-pivot`. [docs/ARCHIVE.md](docs/ARCHIVE.md) lists what left, by
+Everything that served the old setup left the main branch and is kept on
+the branch `archive/pre-pivot`. [docs/ARCHIVE.md](docs/ARCHIVE.md) lists what left, by
 area, and the 1 command that brings a file back.
 
 Writing rules for docs, comments and commit messages:

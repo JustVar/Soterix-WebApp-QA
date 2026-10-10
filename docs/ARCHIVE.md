@@ -2,8 +2,8 @@
 
 On 09/29/2026 the framework was cut down to 1 QA server, 1 account pair and
 no scheduled run. Everything that served the old setup left the main branch.
-Nothing was lost. Each of the 3 repos carries the git tag `pre-pivot` and
-the branch `archive/pre-pivot`, both at the last commit before the cut:
+Nothing was lost. Each of the 3 repos carries the branch
+`archive/pre-pivot` at the last commit before the cut:
 
 - Soterix-WebApp-QA (this repo)
 - Soterix-API-QA
@@ -17,7 +17,7 @@ them for how a thing was done, not for what is true today.
 To bring 1 file or folder back into the working tree:
 
 ```
-git checkout pre-pivot -- <path>
+git checkout archive/pre-pivot -- <path>
 ```
 
 Then read it against the current code before you commit it. A restored
