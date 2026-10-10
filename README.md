@@ -9,7 +9,7 @@ QA/QC Manager.
 - 402 Playwright and pytest tests across 13 product areas. Each one is mapped
   to its manual test case in QA Touch, a test management tool that holds the
   team's test cases and the result of each test run.
-- 643 tests of the framework itself: the plugins, the gates and the tools.
+- 645 tests of the framework itself: the plugins, the gates and the tools.
 - Where to start:
   - The stream guard
     ([tests/shared/helpers/stream_health.py](tests/shared/helpers/stream_health.py)),
