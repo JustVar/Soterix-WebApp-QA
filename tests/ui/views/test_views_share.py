@@ -40,7 +40,7 @@ def test_share_live_view(authenticated_page):
 
     # Share the live view
     copied = views.share_live_view_on_tile(
-        email="person@example.com",
+        email="share-recipient@example.com",
         tile_index=0,
     )
     # Copy puts the share link on the clipboard; the helper reads it back

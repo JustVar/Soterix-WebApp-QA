@@ -43,7 +43,7 @@ config = {
     "test_camera_name": "Thermal-14",
     # The chat partner. Accounts differ per server, so a new server needs
     # a person of its own here.
-    "test_chat_user_search": "QA Engineer B",
+    "test_chat_user_search": "Chat Partner",
     "test_chat_user_name": "Chat Partner",
     # A test marked lpr, audio, thermal or ptz drives the camera named here for
     # that marker. Empty means the run's camera serves every marker.

@@ -20,7 +20,7 @@ NAME = "Example Corporate Office"
     "Example Corporate Off...",
     "Example Corporat...",
     "Example Corporate Off…",
-    "  Videonetics   Corporate Office ",
+    "  Example   Corporate Office ",
 ])
 def test_the_name_and_its_cuts_match(text):
     """The full name, and any cut of it ending in an ellipsis, is the site."""

@@ -222,7 +222,7 @@ class TestViewsBookmarks:
         filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
         self.fs.share_bookmark(
             index=self._index(stamp),
-            email="person@example.com",
+            email="share-recipient@example.com",
             filename=filename,
         )
         expect(self.fs.share_success).to_be_visible(timeout=5000)

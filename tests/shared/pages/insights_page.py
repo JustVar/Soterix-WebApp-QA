@@ -400,7 +400,7 @@ class InsightsPage:
 
         if "heat" in graph_name.lower():
             # Heat map needs one specific camera (not "All Cameras", a
-            # header). Pick the CONFIGURED camera: on the Videonetics
+            # header). Pick the CONFIGURED camera: on the test
             # site the first row is an offline emulator camera the app
             # will not select, so picking "the first row" built the heat
             # map against no camera (09/16/2026). Fall back to the first
