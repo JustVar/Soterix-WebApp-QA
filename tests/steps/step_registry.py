@@ -6,7 +6,6 @@ Provides a unified interface for all consumers:
 
 Step files live alongside tests, mirroring the test directory structure:
   tests/steps/ui/admin/test_admin_audit_trail.json   (Playwright tests)
-  tests/steps/manual/admin/licenses.json             (generated/manual cases)
   etc.
 """
 from __future__ import annotations
