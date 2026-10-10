@@ -102,8 +102,9 @@ any short path, use `venv/bin/python` wherever a command says
    git config core.hooksPath tools/hooks
    ```
 
-5. Copy the template and fill the 2 account lines, `QA_USER` and
-   `QA_PASSWORD`. Leave the rest as it is.
+5. Copy the template and fill the 3 account lines: `QA_USER`,
+   `QA_PASSWORD` and `LOGIN_USERNAME_LABEL`, the fixed name the web app
+   sends with every login. Leave the rest as it is.
 
    ```
    copy .env.template .env

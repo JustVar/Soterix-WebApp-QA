@@ -17,15 +17,18 @@ Verified against QA on 2026-08-24.
 from __future__ import annotations
 
 import hashlib
+import os
 import warnings
 
 import requests
 import urllib3
 
-# The web client sends this fixed display name on login. The account
-# is `accountid`. The login answers code 200 with status 2002, so
-# `status` is not an "OK" check (verified 2026-08-24).
-LOGIN_USERNAME = "Example Label"
+# The web client sends one fixed display name on login, the same for every
+# account. The account is `accountid`. The name is a server setting, so it
+# lives in .env as LOGIN_USERNAME_LABEL, not in code. The login answers
+# code 200 with status 2002, so `status` is not an "OK" check (verified
+# 2026-08-24).
+LABEL_SETTING = "LOGIN_USERNAME_LABEL"
 # The tenant answers a dead session with this status (code 401) and the
 # message "Session expired! Re-login required!" (measured 09/15/2026).
 SESSION_EXPIRED_STATUS = 3113
@@ -42,6 +45,22 @@ class ApiError(Exception):
         self.message = message
         self.path = path
         super().__init__(f"{path}: code={code} status={status} {message}")
+
+
+class LoginConfigError(RuntimeError):
+    """A login setting is missing, so no request was sent."""
+
+
+def login_username_label() -> str:
+    """The fixed display name the login carries, read from .env at call time.
+
+    Blank raises LoginConfigError: the tenant answers a blank name with the
+    same refusal as a wrong password, which sends the reader to the wrong fix.
+    """
+    label = os.environ.get(LABEL_SETTING, "").strip()
+    if not label:
+        raise LoginConfigError(f"{LABEL_SETTING} is empty in .env, and the login needs it")
+    return label
 
 
 class InternalApi:
@@ -64,7 +83,7 @@ class InternalApi:
         """
         body = {
             "accountid": user,
-            "username": LOGIN_USERNAME,
+            "username": login_username_label(),
             "password": hashlib.sha512(password.encode()).hexdigest(),
         }
         result = self.post("/REST/central/user/login", body)

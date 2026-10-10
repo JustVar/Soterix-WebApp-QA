@@ -22,9 +22,9 @@ nothing is lost. "Collected" says whether bare `pytest` in this repo runs them.
 | Where | Files | Test functions | Collected | What they are |
 |---|---|---|---|---|
 | `tests/helpers/` | 3 | 17 | yes | Pins for tests/shared/helpers (surface, search_job). Collected by bare pytest. |
-| `tests/plugins/` | 24 | 277 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
+| `tests/plugins/` | 24 | 279 | yes | Pins for the pytest plugins and the shims over the shared package: run guard, archive, report media, env guard, products. Collected by bare pytest. |
 | `tests/tools/` | 14 | 181 | yes | Pins for the repo tools (tools/*.py): QA Touch case generation and mapping, convention checker, tenant cleanup, run CLI, inventory. Collected by bare pytest. |
-| **This repo** | **41** | **475** | | |
+| **This repo** | **41** | **477** | | |
 
 ## NexaiQ-Core
 

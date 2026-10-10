@@ -14,7 +14,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 import conftest  # noqa: E402
-from tests.shared.api.client import ApiError  # noqa: E402
+from tests.shared.api.client import ApiError, LoginConfigError  # noqa: E402
 from tests.shared.helpers import preflight as pf  # noqa: E402
 
 URL = "https://tenant.example.test"
@@ -79,6 +79,15 @@ def test_each_failure_class_gets_its_own_named_line():
     assert "QA_USER or QA_PASSWORD" in empty
     for text in (line, empty):
         assert "No test ran" in text
+
+
+def test_a_missing_login_setting_is_named_as_itself():
+    """A blank login label reads as a setting to fill, not as a refused account."""
+    def no_label(*a):
+        raise LoginConfigError("LOGIN_USERNAME_LABEL is empty in .env, and the login needs it")
+
+    line = pf.check(URL, "u@example.test", "pw", login=no_label)
+    assert line == "PREFLIGHT: LOGIN_USERNAME_LABEL is empty in .env, and the login needs it. No test ran."
 
 
 def test_the_password_never_appears_in_a_refusal_line():

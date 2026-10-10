@@ -70,6 +70,8 @@ def check(base_url: str, account: str, password: str, *,
     except Exception as e:  # why: every failure class gets its own line below; none may escape as a wall
         kind = type(e).__name__
         text = str(e).splitlines()[0][:200] if str(e) else ""
+        if kind == "LoginConfigError":
+            return f"PREFLIGHT: {text}. No test ran."
         if _is_refusal(e):
             return (f"PREFLIGHT: the tenant refused {who}: {text}. Check QA_USER and QA_PASSWORD in .env. "
                     f"No test ran, so nothing retried the login.")

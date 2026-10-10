@@ -48,6 +48,12 @@ class FakeSession:
         return FakeResponse(self.payloads.pop(0))
 
 
+@pytest.fixture(autouse=True)
+def _login_label(monkeypatch):
+    """The login needs its display name from .env; these pins set a placeholder."""
+    monkeypatch.setenv("LOGIN_USERNAME_LABEL", "Example Label")
+
+
 def _client(payloads) -> InternalApi:
     return InternalApi("https://host", 16, session=FakeSession(payloads))
 

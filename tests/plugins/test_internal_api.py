@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tests.shared.api.client import ApiError, InternalApi  # noqa: E402
+from tests.shared.api.client import ApiError, InternalApi, LoginConfigError  # noqa: E402
 from tests.shared.api.fixtures import (  # noqa: E402
     SNAP_PNG,
     bookmark_deleted,
@@ -70,8 +70,9 @@ LOCATION_TREE = [
 
 # ----------------------------------------------------------------- client
 
-def test_login_hashes_the_password_and_keeps_the_cookie():
+def test_login_hashes_the_password_and_keeps_the_cookie(monkeypatch):
     """Login sends the SHA-512 password and keeps the JSESSIONID cookie."""
+    monkeypatch.setenv("LOGIN_USERNAME_LABEL", "Example Label")
     client, session = _client(
         {"status": 2002, "code": 200, "message": "Login Successful!",
          "result": [{"JSESSIONID": "abc123"}]}
@@ -88,6 +89,15 @@ def test_login_hashes_the_password_and_keeps_the_cookie():
     }
     assert session.headers["Cookie"] == "JSESSIONID=abc123"
     assert client.user == "user@example.com"
+
+
+def test_a_blank_login_label_sends_no_request(monkeypatch):
+    """A blank LOGIN_USERNAME_LABEL raises LoginConfigError, naming it, before any request."""
+    monkeypatch.setenv("LOGIN_USERNAME_LABEL", "")
+    client, session = _client({"status": 2002, "code": 200, "result": [{"JSESSIONID": "abc123"}]})
+    with pytest.raises(LoginConfigError, match="LOGIN_USERNAME_LABEL"):
+        client.login("user@example.com", "secret")
+    session.request.assert_not_called()
 
 
 def test_code_decides_success_not_status():
