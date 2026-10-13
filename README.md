@@ -9,8 +9,9 @@ Browser test automation for NexaiQ-Core, the web app of Soterix Systems, an
 AI video-surveillance SaaS company. Built by Justin Varughese, System Platform
 QA/QC Manager.
 
-- 402 Playwright and pytest tests across 13 product areas (pytest collects
-  432, because some run once for each input). Each one is mapped
+- 402 Playwright and pytest tests across 13 web app areas (pytest collects
+  432, because some run once for each input). With the camera hardware
+  suite on the archive branch, the tests cover 14 product areas. Each one is mapped
   to its manual test case in QA Touch, a test management tool that holds the
   team's test cases and the result of each test run.
 - 645 tests of the framework itself: the plugins, the gates and the tools.
