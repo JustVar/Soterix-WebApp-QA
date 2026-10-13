@@ -1,5 +1,8 @@
 # Soterix WebApp QA
 
+Browser test automation (Playwright and pytest) for an AI video analytics
+(VSaaS) web app.
+
 ## About this repo
 
 Browser test automation for NexaiQ-Core, the web app of Soterix Systems, an
